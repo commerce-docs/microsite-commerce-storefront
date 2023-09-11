@@ -10,9 +10,9 @@ export default defineConfig({
     overrideIntegration(),
     react(),
     starlight({
-      title: 'DropIn Kit',
+      title: 'Elsie SDK Docs',
       social: {
-        github: 'https://github.com/commerce-docs/dropins.dev',
+        github: 'https://github.com/commerce-docs/elsie.dev',
       },
       sidebar: [
         { label: 'Quick start', link: '/start/start/' },
@@ -30,8 +30,7 @@ export default defineConfig({
           autogenerate: { directory: 'reference' },
         },
       ],
-      tableOfContents: true,
-      customCss: ['./src/tailwind.css', './src/styles/custom.css'],
+      customCss: ['./src/tailwind.css'],
     }),
     tailwind({ applyBaseStyles: true }),
   ],
