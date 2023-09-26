@@ -1,0 +1,95 @@
+---
+title: Slots
+description: Learn the essentials of using Slots in your DropIn.
+---
+
+import Summary from '@components/Summary.astro';
+
+<Summary>
+A **Container** can be extended to provide a custom UI by specifying callbacks targeting sections of the Container UI.
+If a **slot** is specified, the default view section will not be rendered.
+It is up to the developer to implement the UI for the Container section using the reference to the HTML element and a context object.
+</Summary>
+
+## Usage
+
+```tsx
+// src/containers/MyContainer.tsx
+import { Slot, useSlot } from '@adobe/elsie/lib';
+import { SomeComponent } from '@/my-dropin/components';
+
+export interface MyContainerProps extends HTMLAttributes<HTMLDivElement> {
+  id: string;
+  slots?: {
+    MyOpenSlot?: Slot<{
+      // MyOpenSlot Context
+      id: string;
+      onSuccess: (fn: () => void) => void;
+      onError: (fn: () => void) => void;
+    }>;
+  };
+}
+
+export const MyContainer: Container<MyContainerProps> = ({ id, slots, ...props }) => {
+  const handleOnSuccess = (data) => {
+    // Do something with the data
+  };
+
+  const handleOnError = (err) => {
+    // Do something with the error
+  };
+
+  // Open Slots
+  const myOpenSlot = useSlot(slots?.MyOpenSlot, <div>Default View</div>, {
+    onSuccess: handleOnSuccess,
+    onError: handleOnError,
+    id: id,
+  });
+
+  return (
+    <div {...props}>
+      <SomeComponent
+        // someVNodeProp={<div>Default View</div>} (before)
+        someVNodeProp={paymentMethodSlot} // open slot
+      />
+    </div>
+  );
+};
+```
+
+## Storefront Implementation
+
+```js
+import { render as provider } from '@dropins/my-dropin/render.js';
+import MyContainer from '@dropins/my-dropin/containers/MyContainer.js';
+
+// Render the Checkout container into the DOM
+provider.render(MyContainer, {
+  slots: {
+    MyOpenSlot: (element, context) => {
+      // Manipulate the DOM for the Payment Methods section here using the HTML element reference
+
+      //   Create Button
+      const $button = document.createElement('button');
+      $button.innerText = 'Click Me';
+
+      $button.addEventListener('click', () => {
+        // Call a third-party function given the id from context
+        thirdPartyFunction(context.id)
+          .then((data) => {
+            context.onSuccess(data);
+          })
+          .catch((err) => {
+            context.onError(err);
+          });
+      });
+
+      // Append the button to the element
+      element.appendChild($button);
+
+      // Return the modified element
+      return elem;
+    },
+  },
+})(document.getElementById('my-dropin'));
+```

@@ -1,0 +1,201 @@
+---
+title: Quick start
+description: Learn the essentials of using the SDK.
+---
+
+import Steps from '@components/Steps.astro';
+import FileTree from '@components/FileTree.astro';
+import Screenshot from '@components/Screenshot.astro';
+import Summary from '@components/Summary.astro';
+import frontend from './assets/frontend.png';
+
+<Summary>
+Use the steps below to build your first composable frontend using the Elsie SDK.
+</Summary>
+
+<Steps>
+## Create your composable frontend project
+
+The first step is visiting our GitHub Enterprise project template. You must be logged into Adobe's VPN for this link to work: [Commerce-Storefront/my-domain-package](https://git.corp.adobe.com/Commerce-Storefront/my-domain-package).
+
+From the GitHub page, click "Use this template". You can name your repo whatever you want, but we recommend naming it to reflect the composable frontend you want to build. You might call a login page `login-page`, or maybe ACME-login for your thriving business.
+
+## Clone your new project
+
+Follow the standard process: Click the "Code" button, copy the SSH link, open your terminal, `cd` to a place on your workstation, and run:
+
+```bash
+git clone <your-repository-ssh-url>
+```
+
+## Install the project dependencies
+
+Open your project and install dependencies with your choice of package managers.
+
+```bash
+yarn
+npm install
+pnpm install
+```
+
+## Generate the project config file
+
+Before you can start developing, you need to generate the `.elsie.js` config file. The Elsie CLI uses this file to generate new components, containers, and API functions to specified directories within your projects. Run the following command, replacing `<Domain>` with the name of the frontend project you're building. For example, `npx elsie generate config --name Login` for a login frontend.
+
+```bash
+npx elsie generate config --name <Domain>
+```
+
+After generating the `.elsie.js` config, open it and take a look. Below is an annotated version describing the main properties:
+
+```js
+module.exports = {
+  name: 'Login', // The name of your frontend. This name can be changed at any time.
+  api: {
+    root: './src/api', // Directory where the CLI will add all your generated API functions.
+    importAliasRoot: '@/login/api',
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components', // Directory where the CLI will add all your generated components.
+      importAliasRoot: '@/login/components',
+      cssPrefix: 'elsie',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers', // Directory where the CLI will add all your generated containers.
+    importAliasRoot: '@/login/containers',
+  },
+};
+```
+
+## Explore the project structure
+
+In future versions of the docs, we will provide a detailed explanation of each folder and file in the project structure. For now, here are the highlights.
+
+<FileTree>
+  - .storybook/ *-- Best-practice Storybook configurations right out of the box*
+  - examples/
+    - html-host/ *-- Preconfigured HTML UI for testing your composable frontend*
+      - example.css
+      - favicon.ico
+      - index.html
+      - styles.css
+  - src/
+    - api/  *-- By default, the Elsie CLI adds your API functions here*
+    - docs/ *-- Provides an MDX template to document your frontend*
+    - i18n/ *-- Internationalization setup with starter en_US.json file*
+    - render/
+  - elsie.js *-- Configuration file for creating components, containers and functions*
+  - .env.local *-- Preconfigured settings for a development-only mesh endpoint*
+  - .eslintrc.js *-- Preconfigured linting*
+  - .gitignore
+  - .babel.config.js *-- Preconfigured babel settings*
+  - .jest.config.js *-- Preconfigured unit testing*
+  - package.json *-- Preconfigured dependencies*
+  - prettier.config.js *-- Preconfigured formatting*
+  - README.md *-- Quick instructional overview of frontend development tasks*
+  - storybook-stories.js *-- Additional storybook settings*
+  - tsconfig.js *-- Preconfigured for TypeScript*
+  - webpack.config.js
+</FileTree>
+
+## Update the mesh endpoint
+
+By default, the project is configured to use a development-only mesh endpoint. This endpoint is only available when running the project locally. To use a different mesh endpoint, update the following file:
+
+```bash
+.env.local
+```
+
+## Launch development environment
+
+Let's take it for a spin! Run the following command to launch your project's development environment in its default state:
+
+```bash
+yarn dev
+npm run dev
+pnpm run dev
+```
+
+Congrats! You just launched your first composable frontend! Actually, no. What you're seeing is our frontend development environment. It's a preconfigured HTML page (`examples > html-host > index.html`) that loads your frontend components for testing during development.
+
+<Screenshot src={frontend.src} alt={'Frontend development environment'} />
+
+Now we're ready to start building a composable frontend. Stop the server with `ctrl + c` and let's get started.
+
+## Generate a new UI Component
+
+Start by executing the following command, replacing `<MyUiComponent>` with the name of the component you want to add. For a login form, you might choose, `npx elsie generate component --pathname LoginForm`.
+
+```bash
+npx elsie generate component --pathname <MyUiComponent>
+```
+
+Full details about UI component development will be provided soon. For now, let's take a quick look at the files that are generated for you:
+
+```console
+~/composable-login [main] » npx elsie generate component --pathname LoginForm
+🆕 src/components/LoginForm/LoginForm.css created
+🆕 src/components/LoginForm/LoginForm.stories.tsx created
+🆕 src/components/LoginForm/LoginForm.test.tsx created
+🆕 src/components/LoginForm/LoginForm.tsx created
+🆕 src/components/LoginForm/index.ts created
+🆕 src/components/index.ts created
+~/composable-login [main] »
+```
+
+These files were not only generated with the appropriate names, but they are completely preconfigured to work together as a unit. For example, the `LoginForm` component was automatically imported into `src/components/index.ts` to let you start referencing the component throughout your project.
+
+And if you run `npm run dev` again, you'll see your new component in the Storybook UI, configured with an example and best practices to help you get started with Storybook.
+
+## Generate a new API Function
+
+Start by executing the following command, replacing `<myApiFunction>` with the name of the API function you want to add. For a login form, you might want to add `login` and `logout` functions. In that case, you would run the following command twice:
+
+```bash
+npx elsie generate api --pathname <myApiFunction>
+
+npx elsie generate api --pathname login
+npx elsie generate api --pathname logout
+```
+
+Full details about API function development will be provided soon. For now, let's review what's generated for you:
+
+{/* TODO: Add code block of files generated */}
+
+## Generate a Frontend Container
+
+Start by executing the following command, replacing `<MyContainer>` with the name of the container you want to add. For a login form, you might choose, `npx elsie generate container --pathname LoginContainer`.
+
+```bash
+npx elsie generate container --pathname <MyContainer>
+```
+
+Again, full details about API function development will be provided soon. For now, let's review what's generated:
+
+{/* TODO: Add code block of files generated */}
+
+## Run unit tests
+
+Unit tests are also preconfigured for you. Run the following command to execute the basic default tests, and add to them as you build your frontend.
+
+```bash
+yarn test
+npm run test
+pnpm run test
+```
+
+## Build production bundles
+
+When you're ready to deploy your frontend, run the following command to build production bundles. Like everything else in the SDK, the basic process is configured for you, but you can customize it as you develop.
+
+```bash
+yarn build
+npm run build
+pnpm run build
+```
+
+</Steps>
