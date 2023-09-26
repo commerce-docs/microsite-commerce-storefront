@@ -6,30 +6,30 @@ import StarlightTailwindPlugin from '..';
 
 /** Generate a CSS string based on the passed CSS and HTML content. */
 const generatePluginCss = ({
-  css = '@tailwind base;',
-  html = '',
-  config = {},
+	css = '@tailwind base;',
+	html = '',
+	config = {},
 }: { css?: string; html?: string; config?: Partial<Config> } = {}): Promise<string> => {
-  return postcss(
-    tailwindcss({
-      // Enable Starlight plugin.
-      plugins: [StarlightTailwindPlugin()],
-      // Provide content for Tailwind to scan for class names.
-      content: [{ raw: html, extension: 'html' }],
-      // Spread in any custom Tailwind config.
-      ...config,
-    })
-  )
-    .process(css, { from: '' })
-    .then((result) => result.css);
+	return postcss(
+		tailwindcss({
+			// Enable Starlight plugin.
+			plugins: [StarlightTailwindPlugin()],
+			// Provide content for Tailwind to scan for class names.
+			content: [{ raw: html, extension: 'html' }],
+			// Spread in any custom Tailwind config.
+			...config,
+		})
+	)
+		.process(css, { from: '' })
+		.then((result) => result.css);
 };
 
 describe('@tailwind base;', async () => {
-  // Generate base CSS with no core Tailwind plugins running to see just Starlight’s output.
-  const base = await generatePluginCss({ config: { corePlugins: [] } });
+	// Generate base CSS with no core Tailwind plugins running to see just Starlight’s output.
+	const base = await generatePluginCss({ config: { corePlugins: [] } });
 
-  test('generates Starlight base CSS', async () => {
-    expect(base).toMatchInlineSnapshot(`
+	test('generates Starlight base CSS', async () => {
+		expect(base).toMatchInlineSnapshot(`
 		"*, ::before, ::after {
 		    border-width: 0;
 		    border-style: solid;
@@ -68,36 +68,36 @@ describe('@tailwind base;', async () => {
 		    --sl-color-accent-high: #312e81;
 		}"
 	`);
-  });
+	});
 
-  test('configures `--sl-color-*` variables', () => {
-    expect(base).includes('--sl-color-gray-1: #e5e7eb;');
-    expect(base).includes('--sl-color-accent: #4f46e5;');
-  });
+	test('configures `--sl-color-*` variables', () => {
+		expect(base).includes('--sl-color-gray-1: #e5e7eb;');
+		expect(base).includes('--sl-color-accent: #4f46e5;');
+	});
 
-  describe('with user theme config', async () => {
-    const baseWithConfig = await generatePluginCss({
-      config: {
-        corePlugins: [],
-        theme: { extend: { colors: { accent: colors.amber, gray: colors.slate } } },
-      },
-    });
+	describe('with user theme config', async () => {
+		const baseWithConfig = await generatePluginCss({
+			config: {
+				corePlugins: [],
+				theme: { extend: { colors: { accent: colors.amber, gray: colors.slate } } },
+			},
+		});
 
-    test('generates different CSS from base without user config', () => {
-      expect(baseWithConfig).not.toEqual(base);
-    });
+		test('generates different CSS from base without user config', () => {
+			expect(baseWithConfig).not.toEqual(base);
+		});
 
-    test('uses theme values for Starlight colours', () => {
-      expect(baseWithConfig).includes('--sl-color-gray-1: #e2e8f0;');
-      expect(baseWithConfig).includes('--sl-color-accent: #d97706;');
-    });
-  });
+		test('uses theme values for Starlight colours', () => {
+			expect(baseWithConfig).includes('--sl-color-gray-1: #e2e8f0;');
+			expect(baseWithConfig).includes('--sl-color-accent: #d97706;');
+		});
+	});
 
-  test('disables Tailwind preflight', async () => {
-    const baseWithDefaultPlugins = await generatePluginCss();
-    expect(baseWithDefaultPlugins).not.includes('line-height: 1.5;');
-    expect(baseWithDefaultPlugins).includes('--tw-');
-    expect(baseWithDefaultPlugins).toMatchInlineSnapshot(`
+	test('disables Tailwind preflight', async () => {
+		const baseWithDefaultPlugins = await generatePluginCss();
+		expect(baseWithDefaultPlugins).not.includes('line-height: 1.5;');
+		expect(baseWithDefaultPlugins).includes('--tw-');
+		expect(baseWithDefaultPlugins).toMatchInlineSnapshot(`
 			"*, ::before, ::after {
 			    border-width: 0;
 			    border-style: solid;
@@ -234,32 +234,32 @@ describe('@tailwind base;', async () => {
 			    --tw-backdrop-sepia:  ;
 			}"
 		`);
-  });
+	});
 });
 
 describe('@tailwind utilities;', () => {
-  test('uses [data-theme="dark"] for dark: utility classes', async () => {
-    const utils = await generatePluginCss({
-      css: '@tailwind utilities;',
-      html: '<div class="dark:text-red-50"></div>',
-    });
-    expect(utils).includes('[data-theme="dark"] .dark');
-    expect(utils).toMatchInlineSnapshot(`
+	test('uses [data-theme="dark"] for dark: utility classes', async () => {
+		const utils = await generatePluginCss({
+			css: '@tailwind utilities;',
+			html: '<div class="dark:text-red-50"></div>',
+		});
+		expect(utils).includes('[data-theme="dark"] .dark');
+		expect(utils).toMatchInlineSnapshot(`
 			":is([data-theme=\\"dark\\"] .dark\\\\:text-red-50) {
 			    --tw-text-opacity: 1;
 			    color: rgb(254 242 242 / var(--tw-text-opacity))
 			}"
 		`);
-  });
+	});
 });
 
 test('warns when a prefix of "sl-" is set', async () => {
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-  await generatePluginCss({ config: { prefix: 'sl-' } });
-  expect(warn).toBeCalledTimes(1);
-  expect(warn.mock.lastCall?.[0]).toMatchInlineSnapshot(`
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	await generatePluginCss({ config: { prefix: 'sl-' } });
+	expect(warn).toBeCalledTimes(1);
+	expect(warn.mock.lastCall?.[0]).toMatchInlineSnapshot(`
 		"A Tailwind prefix of \\"sl-\\" will clash with Starlight’s built-in styles.
 		Please set a different prefix in your Tailwind config file."
 	`);
-  warn.mockRestore();
+	warn.mockRestore();
 });

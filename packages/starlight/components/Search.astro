@@ -72,19 +72,22 @@ const pagefindTranslations = {
 
 			const openModal = (event?: MouseEvent) => {
 				dialog.showModal();
+				document.body.toggleAttribute('data-search-modal-open', true);
 				this.querySelector('input')?.focus();
 				event?.stopPropagation();
 				window.addEventListener('click', onClick);
 			};
 
-			const closeModal = () => {
-				dialog.close();
-				window.removeEventListener('click', onClick);
-			};
+			const closeModal = () => dialog.close();
 
 			openBtn.addEventListener('click', openModal);
 			openBtn.disabled = false;
 			closeBtn.addEventListener('click', closeModal);
+
+			dialog.addEventListener('close', () => {
+				document.body.toggleAttribute('data-search-modal-open', false);
+				window.removeEventListener('click', onClick);
+			});
 
 			// Listen for `/` and `cmd + k` keyboard shortcuts.
 			window.addEventListener('keydown', (e) => {
@@ -202,6 +205,7 @@ const pagefindTranslations = {
 	#starlight__search {
 		--pagefind-ui-primary: var(--sl-color-accent-light);
 		--pagefind-ui-text: var(--sl-color-gray-2);
+		--pagefind-ui-font: var(--__sl-font);
 		--pagefind-ui-background: var(--sl-color-black);
 		--pagefind-ui-border: var(--sl-color-gray-5);
 		--pagefind-ui-border-width: 1px;
@@ -230,6 +234,10 @@ const pagefindTranslations = {
 </style>
 
 <style is:global>
+	[data-search-modal-open] {
+		overflow: hidden;
+	}
+
 	#starlight__search {
 		--sl-search-result-spacing: calc(1.25rem * var(--pagefind-ui-scale));
 		--sl-search-result-pad-inline-start: calc(3.75rem * var(--pagefind-ui-scale));
@@ -381,6 +389,12 @@ const pagefindTranslations = {
 	#starlight__search .pagefind-ui__result-nested:last-child::before {
 		-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M8 0v12m6 0H8'/%3E%3C/svg%3E");
 		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M8 0v12m6 0H8'/%3E%3C/svg%3E");
+	}
+
+	/* Flip page and tree icons around the vertical axis when in an RTL layout. */
+	[dir='rtl'] .pagefind-ui__result-title::before,
+	[dir='rtl'] .pagefind-ui__result-nested::before {
+		transform: matrix(-1, 0, 0, 1, 0, 0);
 	}
 
 	#starlight__search .pagefind-ui__result-link::after {
