@@ -1,4 +1,4 @@
-# dropinkit
+# DropIn Kit
 
 To install dependencies:
 
