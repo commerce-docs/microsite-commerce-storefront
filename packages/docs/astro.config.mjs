@@ -2,11 +2,11 @@ import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
-
 //import overrideIntegration from './src/overrideIntegration.mjs'; // import the integration
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://dropins.dev',
   image: {
     service: passthroughImageService(),
   },
