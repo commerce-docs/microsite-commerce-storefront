@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
+  merge_group:
   pull_request:
     branches: [main]
 
@@ -13,19 +16,7 @@ env:
   NODE_VERSION: 18
 
 jobs:
-  unit-test:
-    name: Run unit tests
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i
-
-  pa11y:
+  build:
     name: Check for accessibility issues
     runs-on: ubuntu-20.04
     steps:
@@ -49,3 +40,13 @@ jobs:
         run: pnpm build
         env:
           NO_GRADIENTS: true
+
+  static-dist-dir:
+    needs: build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Run Lighthouse against a static dist dir
+          uses: treosh/lighthouse-ci-action@v10
+          with:
+            budgetPath: './.github/workflows/lighthouse-budget.json'
+            configPath: './.github/workflows/lighthouserc.yml'
