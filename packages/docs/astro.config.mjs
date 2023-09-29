@@ -48,8 +48,10 @@ export default defineConfig({
           ],
         },
         {
-          label: 'ELSIE SDK',
+          label: 'Elsie SDK',
+          collapsed: true,
           items: [
+            { label: 'About', link: '/sdk/about/' },
             { label: 'Quick start', link: '/sdk/start/' },
             { label: 'CLI usage', link: '/sdk/cli/', },
             { label: 'Slots', link: '/sdk/slots/', badge: 'New' },
