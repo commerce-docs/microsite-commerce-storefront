@@ -48,7 +48,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Elsie SDK',
+          label: 'ELSIE SDK',
           items: [
             { label: 'Quick start', link: '/sdk/start/' },
             { label: 'CLI usage', link: '/sdk/cli/', },
