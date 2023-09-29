@@ -35,14 +35,14 @@ export default defineConfig({
               label: 'Product Details DropIn',
               items: [
                 { label: 'About', link: '/dropins/pdp/about/' },
-                { label: 'Anatomy', link: '/dropins/pdp/anatomy' },
+                { label: 'API', link: '/dropins/pdp/api/' },
               ],
             },
             {
               label: 'Checkout DropIn',
               items: [
                 { label: 'About', link: '/dropins/checkout/about/' },
-                { label: 'Anatomy', link: '/dropins/checkout/anatomy' },
+                { label: 'API', link: '/dropins/checkout/api/' },
               ],
             },
           ],
