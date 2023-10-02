@@ -28,23 +28,25 @@ export default defineConfig({
         {
           label: 'DropIns',
           items: [
-            { label: 'About DropIns', link: '/dropins/about/' },
-            { label: 'Using DropIns', link: '/dropins/use/' },
-            { label: 'Customizing DropIns', link: '/dropins/customize/' },
-            {
-              label: 'Product Details DropIn',
-              items: [
-                { label: 'About', link: '/dropins/pdp/about/' },
-                { label: 'API', link: '/dropins/pdp/api/' },
-              ],
-            },
-            {
-              label: 'Checkout DropIn',
-              items: [
-                { label: 'About', link: '/dropins/checkout/about/' },
-                { label: 'API', link: '/dropins/checkout/api/' },
-              ],
-            },
+            { label: 'About DropIns', link: '/about/' },
+            { label: 'Using DropIns', link: '/use/' },
+            { label: 'Customizing DropIns', link: '/customize/' },
+          ],
+        },
+        {
+          label: 'Product Details',
+          items: [
+            { label: 'How it works', link: '/pdp/how_it_works/' },
+            { label: 'How to add it', link: '/pdp/how_to_add/' },
+            { label: 'Add an action button', link: '/pdp/add_action_button/' },
+            { label: 'Hide the quantity input', link: '/pdp/hide_quantity_input/' },
+          ],
+        },
+        {
+          label: 'Checkout',
+          items: [
+            { label: 'How it works', link: '/checkout/how_it_works/' },
+            { label: 'How to add it', link: '/checkout/how_to_add/' },
           ],
         },
       ],
