@@ -1,4 +1,4 @@
-# DropIn Kit
+# Drop-in Components: Styles and Slots Kit
 
 To install dependencies:
 
