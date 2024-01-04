@@ -1,4 +1,4 @@
-# Drop-in Components: Styles and Slots Kit
+# Adobe Drop-in Widgets
 
 To install dependencies:
 
