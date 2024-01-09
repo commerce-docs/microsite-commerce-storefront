@@ -11,7 +11,8 @@ const astroExpressiveCodeOptions = {
 export default defineConfig({
   site: 'https://dropins.dev',
   integrations: [tailwind(), preact(), starlight({
-    title: 'Adobe Commerce Drop-ins',
+    title: 'Adobe Drop-in Widgets',
+    favicon: 'favicon.ico',
     plugins: [starlightLinksValidator({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
@@ -27,8 +28,11 @@ export default defineConfig({
     },
     components: {
       // Override the default `SocialIcons` component.
+      CallToAction: './src/components/overrides/CallToAction.astro',
+      Icon: './src/components/overrides/Icon.astro',
       Header: './src/components/overrides/Header.astro',
       // Card: './src/components/overrides/Card.astro',
+      Hero: './src/components/overrides/Hero.astro',
       PageTitle: './src/components/overrides/PageTitle.astro',
       SiteTitle: './src/components/overrides/SiteTitle.astro',
       PageFrame: './src/components/overrides/PageFrame.astro',
