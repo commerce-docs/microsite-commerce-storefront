@@ -63,6 +63,7 @@ export default defineConfig({
           { label: 'Install', link: '/pdp/pdp-install/' },
           { label: 'Style', link: '/pdp/pdp-style/' },
           { label: 'Extend', link: '/pdp/pdp-extend/' },
+          { label: 'Update', link: '/pdp/pdp-update/' },
           { label: 'Reference', link: '/pdp/pdp-reference/' },
         ],
       },
