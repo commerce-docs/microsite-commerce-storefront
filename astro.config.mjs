@@ -51,7 +51,7 @@ export default defineConfig({
         label: 'Getting started',
         items: [
           { label: 'Understand drop-ins', link: '/understand/' },
-          { label: 'Set up environment', link: '/setup/' },
+          { label: 'Set up drop-in environment', link: '/setup/' },
           { label: 'Style drop-ins', link: '/style/' },
           { label: 'Extend drop-ins', link: '/extend/' },
         ],
@@ -59,21 +59,11 @@ export default defineConfig({
       {
         label: 'Product Details drop-in',
         items: [
-          { label: 'Overview', link: '/pdp/about/' },
-          { label: 'Installation', link: '/pdp/install/' },
-          { label: 'Containers', link: '/pdp/containers/' },
-          { label: 'Slots', link: '/pdp/slots/' },
-          { label: 'API functions', link: '/pdp/api/' },
-        ],
-      },
-      {
-        label: 'Checkout drop-in',
-        items: [
-          { label: 'Overview', link: '/checkout/about/' },
-          { label: 'Installation', link: '/checkout/install/' },
-          { label: 'Containers', link: '/checkout/containers/' },
-          { label: 'Slots', link: '/checkout/slots/' },
-          { label: 'API functions', link: '/checkout/api/' },
+          { label: 'Understand', link: '/pdp/pdp-understand/' },
+          { label: 'Install', link: '/pdp/pdp-install/' },
+          { label: 'Style', link: '/pdp/pdp-style/' },
+          { label: 'Extend', link: '/pdp/pdp-extend/' },
+          { label: 'Reference', link: '/pdp/pdp-reference/' },
         ],
       },
     ],
