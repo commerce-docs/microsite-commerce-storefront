@@ -9,6 +9,9 @@ const docs = defineCollection({
     extend: zod.object({
       description: text(),
       iframe: zod.boolean().default(false),
+      hero: zod.object({
+        subtitle: zod.string(),
+      }).optional(),
     }),
   }),
 });
