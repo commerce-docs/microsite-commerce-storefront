@@ -51,7 +51,7 @@ export default defineConfig({
         label: 'Getting started',
         items: [
           { label: 'Understand drop-ins', link: '/understand/' },
-          { label: 'Set up drop-in environment', link: '/setup/' },
+          { label: 'Install drop-ins', link: '/install/' },
           { label: 'Style drop-ins', link: '/style/' },
           { label: 'Extend drop-ins', link: '/extend/' },
         ],
