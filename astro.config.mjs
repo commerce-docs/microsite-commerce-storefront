@@ -49,22 +49,24 @@ export default defineConfig({
     sidebar: [
       {
         label: 'Getting started',
+        badge: 'IP',
         items: [
-          { label: 'Understand drop-ins', link: '/understand/', badge: { variant: 'tip', text: 'IP' } },
-          { label: 'Install drop-ins', link: '/install/', badge: 'IP' },
-          { label: 'Style drop-ins', link: '/style/', badge: 'IP' },
-          { label: 'Extend drop-ins', link: '/extend/', badge: 'IP' },
+          { label: 'Understand drop-ins', link: '/understand/' },
+          { label: 'Install drop-ins', link: '/install/' },
+          { label: 'Style drop-ins', link: '/style/' },
+          { label: 'Extend drop-ins', link: '/extend/' },
         ],
       },
       {
         label: 'Product Details',
+        badge: 'IP',
         items: [
-          { label: 'Understand', link: '/pdp/pdp-understand/', badge: 'TBD', },
-          { label: 'Install', link: '/pdp/pdp-install/', badge: 'TBD', },
-          { label: 'Style', link: '/pdp/pdp-style/', badge: 'TBD', },
-          { label: 'Extend', link: '/pdp/pdp-extend/', badge: 'TBD', },
-          { label: 'Update', link: '/pdp/pdp-update/', badge: 'TBD', },
-          { label: 'Reference', link: '/pdp/pdp-reference/', badge: 'TBD', },
+          { label: 'Understand', link: '/pdp/pdp-understand/' },
+          { label: 'Install', link: '/pdp/pdp-install/' },
+          { label: 'Style', link: '/pdp/pdp-style/' },
+          { label: 'Extend', link: '/pdp/pdp-extend/' },
+          { label: 'Update', link: '/pdp/pdp-update/' },
+          { label: 'Reference', link: '/pdp/pdp-reference/' },
         ],
       },
       {
