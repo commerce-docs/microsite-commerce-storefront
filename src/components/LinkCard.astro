@@ -1,0 +1,87 @@
+---
+import { Icons } from '@components/overrides/Icons';
+import Icon from '@components/overrides/Icon.astro';
+
+import type { HTMLAttributes } from 'astro/types';
+interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
+  icon?: keyof typeof Icons;
+  description?: string;
+  title: string;
+}
+
+const { icon, description, title, ...attributes } = Astro.props;
+
+console.log(attributes);
+---
+
+<div class="link-card">
+  {icon && <Icon name={icon} class="icon" size="2rem" />}
+  <span class="sl-flex stack">
+    <a {...attributes}>
+      <span class="title" set:html={title} />
+    </a>
+    {description && <span class="description" set:html={description} />}
+  </span>
+  <Icon name="right-arrow" size="1.333em" class="icon-arrow rtl:flip" />
+</div>
+
+<style>
+  .link-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: var(--sl-shadow-sm);
+  }
+
+  .icon {
+    border: 1px solid plum;
+    background-color: plum;
+    padding: 0.2rem;
+    border-radius: 0.25rem;
+  }
+
+  .icon-arrow {
+    color: var(--sl-color-gray-3);
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  /* a11y fix for https://github.com/withastro/starlight/issues/487 */
+  a::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .stack {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .title {
+    color: var(--sl-color-white);
+    font-weight: 600;
+    font-size: 1.5rem;
+    line-height: normal;
+  }
+
+  .description {
+    color: var(--sl-color-gray-3);
+    line-height: normal;
+  }
+
+  /* Hover state */
+  div:hover {
+    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+    border-color: var(--sl-color-gray-2);
+  }
+
+  div:hover .icon {
+    color: var(--sl-color-white);
+  }
+</style>
