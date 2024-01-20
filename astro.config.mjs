@@ -11,7 +11,7 @@ const astroExpressiveCodeOptions = {
 export default defineConfig({
   site: 'https://dropins.dev',
   integrations: [tailwind(), preact(), starlight({
-    title: 'Adobe Drop-in Widgets',
+    title: 'Adobe Drop-in Components',
     favicon: 'favicon.ico',
     plugins: [starlightLinksValidator({
       errorOnFallbackPages: false,
@@ -28,10 +28,10 @@ export default defineConfig({
     },
     components: {
       // Override the default `SocialIcons` component.
+      Badge: './src/components/overrides/Badge.astro',
       CallToAction: './src/components/overrides/CallToAction.astro',
       Icon: './src/components/overrides/Icon.astro',
       Header: './src/components/overrides/Header.astro',
-      // Card: './src/components/overrides/Card.astro',
       Hero: './src/components/overrides/Hero.astro',
       PageTitle: './src/components/overrides/PageTitle.astro',
       SiteTitle: './src/components/overrides/SiteTitle.astro',
@@ -50,21 +50,47 @@ export default defineConfig({
       {
         label: 'Getting started',
         items: [
-          { label: 'Understand drop-ins', link: '/understand/' },
-          { label: 'Install drop-ins', link: '/install/' },
-          { label: 'Style drop-ins', link: '/style/' },
-          { label: 'Extend drop-ins', link: '/extend/' },
+          { label: 'Understand drop-ins', link: '/understand/', badge: { variant: 'tip', text: 'IP' } },
+          { label: 'Install drop-ins', link: '/install/', badge: 'IP' },
+          { label: 'Style drop-ins', link: '/style/', badge: 'IP' },
+          { label: 'Extend drop-ins', link: '/extend/', badge: 'IP' },
         ],
       },
       {
-        label: 'Product Details drop-in',
+        label: 'Product Details',
         items: [
-          { label: 'Understand', link: '/pdp/pdp-understand/' },
-          { label: 'Install', link: '/pdp/pdp-install/' },
-          { label: 'Style', link: '/pdp/pdp-style/' },
-          { label: 'Extend', link: '/pdp/pdp-extend/' },
-          { label: 'Update', link: '/pdp/pdp-update/' },
-          { label: 'Reference', link: '/pdp/pdp-reference/' },
+          { label: 'Understand', link: '/pdp/pdp-understand/', badge: 'TBD', },
+          { label: 'Install', link: '/pdp/pdp-install/', badge: 'TBD', },
+          { label: 'Style', link: '/pdp/pdp-style/', badge: 'TBD', },
+          { label: 'Extend', link: '/pdp/pdp-extend/', badge: 'TBD', },
+          { label: 'Update', link: '/pdp/pdp-update/', badge: 'TBD', },
+          { label: 'Reference', link: '/pdp/pdp-reference/', badge: 'TBD', },
+        ],
+      },
+      {
+        label: 'Cart',
+        badge: 'TBD',
+        collapsed: true,
+        items: [
+          { label: 'Understand', link: '/cart/cart-understand/' },
+          { label: 'Install', link: '/cart/cart-install/' },
+          { label: 'Style', link: '/cart/cart-style/' },
+          { label: 'Extend', link: '/cart/cart-extend/' },
+          { label: 'Update', link: '/cart/cart-update/' },
+          { label: 'Reference', link: '/cart/cart-reference/' },
+        ],
+      },
+      {
+        label: 'Checkout',
+        badge: 'TBD',
+        collapsed: true,
+        items: [
+          { label: 'Understand', link: '/checkout/checkout-understand/' },
+          { label: 'Install', link: '/checkout/checkout-install/' },
+          { label: 'Style', link: '/checkout/checkout-style/' },
+          { label: 'Extend', link: '/checkout/checkout-extend/' },
+          { label: 'Update', link: '/checkout/checkout-update/' },
+          { label: 'Reference', link: '/checkout/checkout-reference/' },
         ],
       },
     ],
