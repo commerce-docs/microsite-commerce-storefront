@@ -4,84 +4,112 @@ import Icon from '@components/overrides/Icon.astro';
 
 import type { HTMLAttributes } from 'astro/types';
 interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
-  icon?: keyof typeof Icons;
-  description?: string;
   title: string;
+  description?: string;
+  icon?: keyof typeof Icons;
 }
 
-const { icon, description, title, ...attributes } = Astro.props;
-
-console.log(attributes);
+const { title, description, icon, ...attributes } = Astro.props;
 ---
 
-<div class="link-card">
-  {icon && <Icon name={icon} class="icon" size="2rem" />}
-  <span class="sl-flex stack">
+<div class="sl-link-card">
+  {icon && <Icon name={icon} class="icon" size="2.5rem" />}
+  <div class="sl-flex stack">
     <a {...attributes}>
       <span class="title" set:html={title} />
     </a>
     {description && <span class="description" set:html={description} />}
-  </span>
+  </div>
   <Icon name="right-arrow" size="1.333em" class="icon-arrow rtl:flip" />
 </div>
 
 <style>
-  .link-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    box-shadow: var(--sl-shadow-sm);
+	.sl-link-card {
+    --sl-card-border: var(--sl-color-purple);
+		--sl-card-bg: var(--sl-color-purple-low);
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		gap: 1rem;
+		border: 1px solid var(--sl-color-gray-5);
+    background-color: var(--sl-color-black);
+		border-radius: 0.5rem;
+		padding: 1rem;
+    padding-top: 0.5rem;
+    margin-top: 1rem;
+		box-shadow: var(--sl-shadow-sm);
+		position: relative;
+	}
+
+  .sl-link-card:nth-child(4n + 1) {
+		--sl-card-border: var(--sl-color-orange);
+		--sl-card-bg: var(--sl-color-orange-low);
+	}
+	.sl-link-card:nth-child(4n + 3) {
+		--sl-card-border: var(--sl-color-green);
+		--sl-card-bg: var(--sl-color-green-low);
+	}
+	.sl-link-card:nth-child(4n + 4) {
+		--sl-card-border: var(--sl-color-red);
+		--sl-card-bg: var(--sl-color-red-low);
+	}
+	.sl-link-card:nth-child(4n + 5) {
+		--sl-card-border: var(--sl-color-blue);
+		--sl-card-bg: var(--sl-color-blue-low);
   }
 
-  .icon {
-    border: 1px solid plum;
-    background-color: plum;
-    padding: 0.2rem;
-    border-radius: 0.25rem;
+  .sl-link-card .icon {
+		border: 1px solid var(--sl-card-border);
+		background-color: var(--sl-card-bg);
+		padding: 0.2em;
+		border-radius: 0.25rem;
+	}
+
+  .sl-link-card svg {
+    margin-top: 1rem;
   }
 
-  .icon-arrow {
-    color: var(--sl-color-gray-3);
-  }
+	a {
+		text-decoration: none;
+		line-height: var(--sl-line-height-headings);
+	}
 
-  a {
-    text-decoration: none;
-  }
+	/* a11y fix for https://github.com/withastro/starlight/issues/487 */
+	a::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+	}
 
-  /* a11y fix for https://github.com/withastro/starlight/issues/487 */
-  a::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
+	.stack {
+		flex-direction: column;
+		gap: 0.25rem;
+	}
 
-  .stack {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .title {
-    color: var(--sl-color-white);
+	.title {
+		/* color: var(--sl-color-white);
+		font-weight: 600;
+		font-size: var(--sl-text-lg); */
     font-weight: 600;
-    font-size: 1.5rem;
-    line-height: normal;
-  }
+		font-size: var(--sl-text-h3);
+		color: var(--sl-color-white);
+		line-height: var(--sl-line-height-headings);
+		gap: 1rem;
+		align-items: center;
+	}
 
-  .description {
-    color: var(--sl-color-gray-3);
-    line-height: normal;
-  }
+	.description {
+		color: var(--sl-color-gray-3);
+		line-height: 1.5;
+    font-size: 1.1rem;
+	}
 
-  /* Hover state */
-  div:hover {
-    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
-    border-color: var(--sl-color-gray-2);
-  }
+	/* Hover state */
+	.sl-link-card:hover {
+		background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+		border-color: var(--sl-color-gray-2);
+	}
 
-  div:hover .icon {
-    color: var(--sl-color-white);
-  }
+	.sl-link-card:hover .icon {
+		color: var(--sl-color-white);
+	}
 </style>
