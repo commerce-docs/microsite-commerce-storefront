@@ -48,13 +48,14 @@ export default defineConfig({
     },
     sidebar: [
       {
-        label: 'Get started',
+        label: 'Essentials',
         badge: 'IP',
         items: [
-          { label: 'Understand drop-ins', link: '/start/understand/' },
-          { label: 'Connect drop-ins', link: '/start/connect/' },
-          { label: 'Brand drop-ins', link: '/start/brand/' },
-          { label: 'Customize drop-ins', link: '/start/customize/' },
+          { label: 'Explore drop-ins', link: '/essentials/explore/' },
+          { label: 'Install drop-ins', link: '/essentials/install/' },
+          { label: 'Connect drop-ins', link: '/essentials/connect/' },
+          { label: 'Brand drop-ins', link: '/essentials/brand/' },
+          { label: 'Customize drop-ins', link: '/essentials/customize/' },
         ],
       },
       {
@@ -94,9 +95,10 @@ export default defineConfig({
       },
       {
         label: 'Integrations',
+        badge: 'TBD',
+        collapsed: true,
         items: [
           { label: 'Edge Delivery', link: '/integrate/integrate-eds/' },
-          { label: 'Vanilla JS', link: '/integrate/integrate-js/' },
           { label: 'Next.js', link: '/integrate/integrate-nextjs/' },
           { label: 'Vue', link: '/integrate/integrate-vue/' },
         ],
