@@ -7,6 +7,7 @@ const astroExpressiveCodeOptions = {
   themes: ['git-dark', 'git-light']
 };
 
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://dropins.dev',
@@ -27,8 +28,6 @@ export default defineConfig({
       themes: ['github-dark', 'github-light']
     },
     components: {
-      // Override the default `SocialIcons` component.
-      Badge: './src/components/overrides/Badge.astro',
       CallToAction: './src/components/overrides/CallToAction.astro',
       Icon: './src/components/overrides/Icon.astro',
       Header: './src/components/overrides/Header.astro',
@@ -36,80 +35,116 @@ export default defineConfig({
       PageTitle: './src/components/overrides/PageTitle.astro',
       SiteTitle: './src/components/overrides/SiteTitle.astro',
       PageFrame: './src/components/overrides/PageFrame.astro',
+      Badge: './src/components/overrides/Badge.astro',
       TwoColumnContent: './src/components/overrides/TwoColumnContent.astro'
     },
-    customCss: ['./src/styles/custom.css', './src/styles/tailwind.css'],
+    customCss: ['./src/styles/fonts.css', './src/styles/overrides.css', './src/styles/tailwind.css'],
     logo: {
       src: 'src/assets/logo.svg',
       replacesTitle: false
     },
     social: {
-      github: 'https://github.com/commerce-docs/dropins.dev',
+      github: 'https://github.com/commerce-docs/dropins.dev'
     },
-    sidebar: [
-      {
-        label: 'Essentials',
-        badge: 'IP',
-        items: [
-          { label: 'Explore drop-ins', link: '/essentials/explore/' },
-          { label: 'Install drop-ins', link: '/essentials/install/' },
-          { label: 'Connect drop-ins', link: '/essentials/connect/' },
-          { label: 'Brand drop-ins', link: '/essentials/brand/' },
-          { label: 'Customize drop-ins', link: '/essentials/customize/' },
-        ],
-      },
-      {
-        label: 'Product Details',
-        badge: 'IP',
-        items: [
-          { label: 'Anatomy', link: '/pdp/pdp-anatomy/' },
-          { label: 'Configure', link: '/pdp/pdp-configure/' },
-          { label: 'Brand', link: '/pdp/pdp-brand/' },
-          { label: 'Customize', link: '/pdp/pdp-customize/' },
-          { label: 'Reference', link: '/pdp/pdp-reference/' },
-        ],
-      },
-      {
-        label: 'Cart',
-        badge: 'TBD',
-        collapsed: true,
-        items: [
-          { label: 'Anatomy', link: '/cart/cart-anatomy/' },
-          { label: 'Configure', link: '/cart/cart-configure/' },
-          { label: 'Brand', link: '/cart/cart-brand/' },
-          { label: 'Customize', link: '/cart/cart-customize/' },
-          { label: 'Reference', link: '/cart/cart-reference/' },
-        ],
-      },
-      {
-        label: 'Checkout',
-        badge: 'TBD',
-        collapsed: true,
-        items: [
-          { label: 'Anatomy', link: '/checkout/checkout-anatomy/' },
-          { label: 'Configure', link: '/checkout/checkout-configure/' },
-          { label: 'Brand', link: '/checkout/checkout-brand/' },
-          { label: 'Customize', link: '/checkout/checkout-customize/' },
-          { label: 'Reference', link: '/checkout/checkout-reference/' },
-        ],
-      },
-      {
-        label: 'Integrations',
-        badge: 'TBD',
-        collapsed: true,
-        items: [
-          { label: 'Edge Delivery', link: '/integrate/integrate-eds/' },
-          { label: 'Next.js', link: '/integrate/integrate-nextjs/' },
-          { label: 'Vue', link: '/integrate/integrate-vue/' },
-        ],
-      },
-    ],
-  }),
-  ],
+    sidebar: [{
+      label: 'Essentials',
+      badge: { text: 'IP', variant: 'default' },
+      items: [{
+        label: 'Explore drop-ins',
+        link: '/essentials/explore/'
+      }, {
+        label: 'Install drop-ins',
+        link: '/essentials/install/'
+      }, {
+        label: 'Connect drop-ins',
+        link: '/essentials/connect/'
+      }, {
+        badge: { text: 'IP', variant: 'default' },
+        label: 'Brand drop-ins',
+        link: '/essentials/brand/'
+      }, {
+        label: 'Customize drop-ins',
+        link: '/essentials/customize/'
+      }]
+    }, {
+      label: 'Product Details',
+      badge: 'IP',
+      items: [{
+        label: 'Anatomy',
+        link: '/pdp/pdp-anatomy/'
+      }, {
+        label: 'Configure',
+        link: '/pdp/pdp-configure/'
+      }, {
+        label: 'Brand',
+        link: '/pdp/pdp-brand/'
+      }, {
+        label: 'Customize',
+        link: '/pdp/pdp-customize/'
+      }, {
+        label: 'Reference',
+        link: '/pdp/pdp-reference/'
+      }]
+    }, {
+      label: 'Cart',
+      badge: 'TBD',
+      collapsed: true,
+      items: [{
+        label: 'Anatomy',
+        link: '/cart/cart-anatomy/'
+      }, {
+        label: 'Configure',
+        link: '/cart/cart-configure/'
+      }, {
+        label: 'Brand',
+        link: '/cart/cart-brand/'
+      }, {
+        label: 'Customize',
+        link: '/cart/cart-customize/'
+      }, {
+        label: 'Reference',
+        link: '/cart/cart-reference/'
+      }]
+    }, {
+      label: 'Checkout',
+      badge: 'TBD',
+      collapsed: true,
+      items: [{
+        label: 'Anatomy',
+        link: '/checkout/checkout-anatomy/'
+      }, {
+        label: 'Configure',
+        link: '/checkout/checkout-configure/'
+      }, {
+        label: 'Brand',
+        link: '/checkout/checkout-brand/'
+      }, {
+        label: 'Customize',
+        link: '/checkout/checkout-customize/'
+      }, {
+        label: 'Reference',
+        link: '/checkout/checkout-reference/'
+      }]
+    }, {
+      label: 'Integrations',
+      badge: 'TBD',
+      collapsed: true,
+      items: [{
+        label: 'Edge Delivery',
+        link: '/integrate/integrate-eds/'
+      }, {
+        label: 'Next.js',
+        link: '/integrate/integrate-nextjs/'
+      }, {
+        label: 'Vue',
+        link: '/integrate/integrate-vue/'
+      }]
+    }]
+  }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
-      entrypoint: 'astro/assets/services/sharp',
-    },
-  },
+      entrypoint: 'astro/assets/services/sharp'
+    }
+  }
 });
