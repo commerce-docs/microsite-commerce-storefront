@@ -11,8 +11,8 @@ module.exports = {
         gray: colors.neutral,
       },
       fontFamily: {
-        sans: ["'Adobe Clean', adobe-clean, 'Trebuchet MS', sans-serif;'"],
-        mono: ["'Courier New', 'Menlo', 'Consolas', monospace"],
+        sans: ["'Adobe Clean', adobe-clean, sans-serif"],
+        mono: ["'Courier New', Menlo, Consolas, monospace"],
       },
     },
   },
