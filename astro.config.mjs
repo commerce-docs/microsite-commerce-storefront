@@ -47,7 +47,7 @@ export default defineConfig({
       github: 'https://github.com/commerce-docs/dropins.dev'
     },
     sidebar: [{
-      label: 'Essentials',
+      label: 'Getting Started',
       badge: { text: 'IP', variant: 'default' },
       items: [{
         label: 'Explore drop-ins',
@@ -133,7 +133,7 @@ export default defineConfig({
         label: 'Edge Delivery',
         link: '/integrate/integrate-eds/'
       }, {
-        label: 'Next.js',
+        label: 'React',
         link: '/integrate/integrate-nextjs/'
       }, {
         label: 'Vue',
