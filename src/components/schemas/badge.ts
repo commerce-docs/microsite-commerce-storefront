@@ -1,17 +1,15 @@
-import { z } from 'astro/zod';
+import { z } from 'astro:content';
 
 const badgeSchema = () =>
   z.object({
-    variant: z
-      .enum(['note', 'danger', 'success', 'caution', 'tip', 'default'])
-      .default('default'),
+    variant: z.enum(['note', 'danger', 'success', 'caution', 'tip', 'default']).default('default'),
     text: z.string(),
   });
 
 export const BadgeConfigSchema = () =>
   z
     .union([z.string(), badgeSchema()])
-    .transform((badge) => {
+    .transform((badge: any) => {
       if (typeof badge === 'string') {
         return { variant: 'default' as const, text: badge };
       }
@@ -19,4 +17,4 @@ export const BadgeConfigSchema = () =>
     })
     .optional();
 
-export type MyBadge = z.output<ReturnType<typeof badgeSchema>>;
+export type Badge = z.output<ReturnType<typeof badgeSchema>>;
