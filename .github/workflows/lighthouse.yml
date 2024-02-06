@@ -1,12 +1,27 @@
-name: Lighthouse
+name: Run Lighthouse CI
+
 on: push
+# Allows you to run this workflow manually from the Actions tab on GitHub.
+workflow_dispatch:
+
 jobs:
-  static-dist-dir:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install, build, and upload your site output
+        uses: withastro/action@v1
+        with:
+          node-version: 18.17.1
+          package-manager: pnpm@8.12.0
+  
+  static-dist-dir:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Run Lighthouse against a static dist dir
         uses: treosh/lighthouse-ci-action@v11
         with:
-          # no urls needed, since it uses local folder to scan .html files
-          configPath: './lighthouserc.json'
+          configPath: '.github/lighthouse/lighthouserc.json'
