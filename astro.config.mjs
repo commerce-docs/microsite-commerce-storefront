@@ -1,12 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import preact from "@astrojs/preact";
+
 const astroExpressiveCodeOptions = {
   themes: ['git-dark', 'git-light']
 };
-
 
 // https://astro.build/config
 export default defineConfig({
@@ -35,10 +38,14 @@ export default defineConfig({
       PageTitle: './src/components/overrides/PageTitle.astro',
       SiteTitle: './src/components/overrides/SiteTitle.astro',
       PageFrame: './src/components/overrides/PageFrame.astro',
-      Badge: './src/components/overrides/Badge.astro',
       TwoColumnContent: './src/components/overrides/TwoColumnContent.astro'
     },
-    customCss: ['./src/styles/fonts.css', './src/styles/overrides.css', './src/styles/tailwind.css'],
+    customCss: [
+      './src/styles/fonts.css',
+      './src/styles/overrides/tokens.css',
+      './src/styles/overrides/badge.css',
+      './src/styles/tailwind.css',
+    ],
     logo: {
       src: 'src/assets/logo.svg',
       replacesTitle: false
@@ -48,7 +55,7 @@ export default defineConfig({
     },
     sidebar: [{
       label: 'Getting Started',
-      badge: { text: 'IP', variant: 'default' },
+      badge: 'IP',
       items: [{
         label: 'Explore drop-ins',
         link: '/essentials/explore/'
@@ -59,7 +66,7 @@ export default defineConfig({
         label: 'Connect drop-ins',
         link: '/essentials/connect/'
       }, {
-        badge: { text: 'IP', variant: 'default' },
+        badge: 'IP',
         label: 'Brand drop-ins',
         link: '/essentials/brand/'
       }, {
