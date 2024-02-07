@@ -70,6 +70,9 @@ export default defineConfig({
         label: 'Brand drop-ins',
         link: '/essentials/brand/'
       }, {
+        label: 'Localize drop-ins',
+        link: '/essentials/localize/'
+      }, {
         label: 'Customize drop-ins',
         link: '/essentials/customize/'
       }]
