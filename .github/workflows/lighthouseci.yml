@@ -1,10 +1,22 @@
 name: CI
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  # Run this workflow manually
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
+    name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
       - name: Install, build, and upload your site output
@@ -22,16 +34,22 @@ jobs:
     name: Run Lighthouse Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.17.1
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18.17.1
-      - name: Install and Build
-        run: |
-          npm install
-          npm run build
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Site
+        run: npm run build
+
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.13.0
-          lhci autorun
+          lhci autorun --preset=lighthouse:recommended --collect.numberOfRuns=1 --staticDirFileDiscoveryDepth=3
+          lhci upload --target=filesystem --outputDir=./.lighthouseci
