@@ -22,16 +22,27 @@ jobs:
         with:
           node-version: 18.17.1
           package-manager: pnpm@8.12.0
-  
+
+      - name: Upload dist folder
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/
+
   static-dist-dir:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Download dist folder
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+      - name: Display structure of dist files
+        run: ls -R your/destination/dir
 
       - name: Run Lighthouse against a static dist dir
         uses: treosh/lighthouse-ci-action@v11
         with:
-          budgetPath: '.github/workflows/budget.json'
-          configPath: '.github/workflows/lighthouserc.yml'
+          # budgetPath: '.github/lighthouse/budget.json'
+          configPath: '.github/lighthouse/lighthouserc.yml'
