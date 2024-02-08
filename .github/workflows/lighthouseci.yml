@@ -1,9 +1,8 @@
-name: CI
+name: Run Lighthouse Audits
 on:
   push:
     branches:
       - main
-  # Run this workflow manually
   workflow_dispatch:
 
 permissions:
@@ -12,26 +11,8 @@ permissions:
   id-token: write
 
 jobs:
-  build:
-    name: Build and Deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-
-      - name: Install, build, and upload your site output
-        uses: withastro/action@v1
-        with:
-          node-version: 18.17.1
-          package-manager: pnpm@8.12.0
-
-      - name: Upload dist folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
   lhci:
-    name: Run Lighthouse Tests
+    name: Build Site and Run Lighthouse CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -51,4 +32,4 @@ jobs:
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.13.0
-          lhci autorun --preset=lighthouse:recommended --collect.numberOfRuns=1 --staticDirFileDiscoveryDepth=3
+          lhci collect
