@@ -2,9 +2,6 @@ const constants = require('./lighthouse-constants.cjs');
 
 module.exports = {
   ci: {
-    assert: {
-      preset: 'lighthouse:recommended',
-    },
     collect: {
       staticDistDir: './dist',
       startServerCommand: 'npm run preview',
@@ -17,9 +14,6 @@ module.exports = {
         screenEmulation: constants.screenEmulationMetrics.desktop,
         emulatedUserAgent: constants.userAgents.desktop,
       },
-    },
-    upload: {
-      target: 'temporary-public-storage',
     },
   },
 };

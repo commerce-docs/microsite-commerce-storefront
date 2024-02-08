@@ -144,7 +144,7 @@ export default defineConfig({
         link: '/integrate/integrate-eds/'
       }, {
         label: 'React',
-        link: '/integrate/integrate-nextjs/'
+        link: '/integrate/integrate-react/'
       }, {
         label: 'Vue',
         link: '/integrate/integrate-vue/'
