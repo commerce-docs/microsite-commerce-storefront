@@ -1,4 +1,4 @@
-# Adobe Drop-in Widgets
+# Adobe drop-in component documentation 
 
 To install dependencies:
 
