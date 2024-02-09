@@ -38,42 +38,35 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
-      - name: Add Lighthouse Results
+      - name: Write Lighthouse Results
         uses: actions/github-script@v5
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const reportPath = './.lighthouseci'; // Adjust based on where your reports are saved
+            const reportPath = './.lighthouseci';
             let commentBody = '### Lighthouse Results\n';
 
-            // Check if the directory exists
-            if (fs.existsSync(reportPath)) {
-              const files = fs.readdirSync(reportPath);
-              // Ensure there are files to process
-              if (files && files.length > 0) {
-                files.forEach(file => {
-                  if (path.extname(file) === '.json') {
-                    const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
-                    console.log(report);
-                    const url = report.requestedUrl;
-                    commentBody += `**URL:** ${url}\n`;
+            const files = fs.readdirSync(reportPath);
+            files.forEach(file => {
+              if (path.extname(file) === '.json') {
+                const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
+                const url = report.requestedUrl;
+                commentBody += `**URL:** ${url}\n`;
 
-                    // Correctly accessing categories
-                    Object.keys(report.categories).forEach((categoryKey) => {
-                      const category = report.categories[categoryKey];
-                      commentBody += `**${category.title}:** ${Math.round(category.score * 100)}\n`;
-                    });
+                if (report.categories && typeof report.categories === 'object') {
+                  Object.keys(report.categories).forEach((categoryKey) => {
+                    const category = report.categories[categoryKey];
+                    commentBody += `**${category.title}:** ${Math.round(category.score * 100)}\n`;
+                  });
+                } else {
+                  commentBody += 'No categories found in report.\n';
+                }
 
-                    commentBody += '\n';
-                  }
-                });
-              } else {
-                commentBody += 'No Lighthouse reports found.\n';
+                commentBody += '\n';
+                console.log(commentBody);
               }
-            } else {
-              commentBody += 'Lighthouse reports directory does not exist.\n';
-            }
+            });
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
