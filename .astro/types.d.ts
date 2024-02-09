@@ -290,6 +290,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
+"essentials/localize.mdx": {
+	id: "essentials/localize.mdx";
+  slug: "essentials/localize";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "index.mdx": {
 	id: "index.mdx";
   slug: "index";
@@ -304,9 +311,9 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"integrate/integrate-nextjs.mdx": {
-	id: "integrate/integrate-nextjs.mdx";
-  slug: "integrate/integrate-nextjs";
+"integrate/integrate-react.mdx": {
+	id: "integrate/integrate-react.mdx";
+  slug: "integrate/integrate-react";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">

@@ -47,7 +47,7 @@ export default defineConfig({
       './src/styles/tailwind.css',
     ],
     logo: {
-      src: 'src/assets/logo.svg',
+      src: 'src/assets/sitelogo.svg',
       replacesTitle: false
     },
     social: {
