@@ -37,3 +37,34 @@ jobs:
         run: lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Add Lighthouse Results
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const reportPath = './.lighthouseci'; // Adjust based on where your reports are saved
+            const files = fs.readdirSync(reportPath);
+
+            let commentBody = '### Lighthouse Results\n';
+            files.forEach(file => {
+              if (path.extname(file) === '.json') {
+                const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
+                const url = report.requestedUrl;
+                commentBody += `**URL:** ${url}\n`;
+                report.categories.forEach(category => {
+                  commentBody += `**${category.title}:** ${category.score * 100}\n`;
+                });
+                commentBody += '\n';
+              }
+            });
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody,
+            })
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
