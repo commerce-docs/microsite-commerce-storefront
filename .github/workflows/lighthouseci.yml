@@ -45,20 +45,35 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const reportPath = './.lighthouseci'; // Adjust based on where your reports are saved
-            const files = fs.readdirSync(reportPath);
-
             let commentBody = '### Lighthouse Results\n';
-            files.forEach(file => {
-              if (path.extname(file) === '.json') {
-                const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
-                const url = report.requestedUrl;
-                commentBody += `**URL:** ${url}\n`;
-                report.categories.forEach(category => {
-                  commentBody += `**${category.title}:** ${category.score * 100}\n`;
+
+            // Check if the directory exists
+            if (fs.existsSync(reportPath)) {
+              const files = fs.readdirSync(reportPath);
+
+              // Ensure there are files to process
+              if (files && files.length > 0) {
+                files.forEach(file => {
+                  if (path.extname(file) === '.json') {
+                    const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
+                    const url = report.requestedUrl;
+                    commentBody += `**URL:** ${url}\n`;
+
+                    // Correctly accessing categories
+                    Object.keys(report.categories).forEach((categoryKey) => {
+                      const category = report.categories[categoryKey];
+                      commentBody += `**${category.title}:** ${Math.round(category.score * 100)}\n`;
+                    });
+
+                    commentBody += '\n';
+                  }
                 });
-                commentBody += '\n';
+              } else {
+                commentBody += 'No Lighthouse reports found.\n';
               }
-            });
+            } else {
+              commentBody += 'Lighthouse reports directory does not exist.\n';
+            }
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
