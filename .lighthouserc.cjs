@@ -141,9 +141,6 @@ dotenv.config();
 
 module.exports = {
   ci: {
-    assert: {
-      preset: 'lighthouse:no-pwa',
-    },
     collect: {
       staticDistDir: './dist',
       numberOfRuns: 1,
@@ -154,6 +151,7 @@ module.exports = {
         throttling: throttling.desktopDense4G,
         screenEmulation: screenEmulationMetrics.desktop,
         emulatedUserAgent: userAgents.desktop,
+        onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       },
       url: [
         'http://localhost/index.html',

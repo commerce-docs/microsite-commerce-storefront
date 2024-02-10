@@ -21,6 +21,17 @@ export default defineConfig({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
     })],
+    head: [
+      // Example: add Fathom analytics script tag.
+      {
+        tag: 'meta',
+        attrs: {
+          'http-equiv': 'Content-Security-Policy',
+          'content': 'script-src "none"',
+          defer: true,
+        },
+      },
+    ],
     expressiveCode: {
       styleOverrides: {
         borderRadius: '0.5rem',
