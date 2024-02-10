@@ -45,7 +45,7 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const reportPath = './.lighthouseci';
-            let commentBody = '### Lighthouse Results\n';
+            let commentBody = ''#### 🚀 Lighthouse Results\n';
 
             const files = fs.readdirSync(reportPath);
             files.forEach(file => {
@@ -53,18 +53,18 @@ jobs:
               if (path.extname(file) === '.json') {
                 const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
                 const url = report.requestedUrl;
-                if (url) {
-                  const page = new URL(url).pathname.substring(1);
-                  commentBody += `**Page:** ${page} `;
-                }
-
                 if (report.categories && typeof report.categories === 'object') {
                   Object.keys(report.categories).forEach((categoryKey) => {
                     const category = report.categories[categoryKey];
-                    commentBody += `**${category.title[0]}:** ${Math.round(category.score * 100)}`;
+                    commentBody += `**${category.title[0]}:** ${Math.round(category.score * 100)} `;
                   });
                 } else {
                   commentBody += 'No categories found in report.\n';
+                }
+
+                if (url) {
+                  const page = new URL(url).pathname.substring(1);
+                  commentBody += `— ${page} `;
                 }
 
                 commentBody += '\n';
