@@ -8,8 +8,8 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  issues: write
+  pull-requests: write
 
 jobs:
   lhci:
@@ -37,3 +37,72 @@ jobs:
         run: lhci autorun
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Write Lighthouse Results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            function loadJSONReport(filePath) {
+              return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            }
+
+            function getScoreEmoji(score) {
+              return score >= 90 ? '🟢' : score >= 50 ? '🟡' : '🔴';
+            }
+
+            function extractPagePath(url) {
+              return new URL(url).pathname.substring(1);
+            }
+
+            function generateCategoryScores(report) {
+              if (!report.categories || typeof report.categories !== 'object') {
+                return 'No categories found in report.\n';
+              }
+
+              return Object.entries(report.categories).map(([categoryKey, category]) => {
+                const score = Math.round(category.score * 100);
+                const emoji = getScoreEmoji(score);
+                return `${emoji} **${category.title[0]}:** ${score}% `;
+              }).join('');
+            }
+
+            // Main function
+            function generateCommentBody(reportPath) {
+              let commentBody = '#### 🚀 Lighthouse Results\n';
+
+              const files = fs.readdirSync(reportPath);
+              files.forEach(file => {
+                if (file.includes('links') || path.extname(file) !== '.json') return;
+
+                const reportFilePath = path.join(reportPath, file);
+                const report = loadJSONReport(reportFilePath);
+                const categoryScores = generateCategoryScores(report);
+                commentBody += categoryScores;
+
+                if (report.requestedUrl) {
+                  const pagePath = extractPagePath(report.requestedUrl);
+                  commentBody += `— ${pagePath} `;
+                }
+
+                commentBody += '\n';
+              });
+
+              return commentBody;
+            }
+
+            // Call Main function
+            const reportPath = './.lighthouseci';
+            const comment = generateCommentBody(reportPath);
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
