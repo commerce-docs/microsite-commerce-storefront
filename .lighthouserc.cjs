@@ -141,6 +141,15 @@ dotenv.config();
 
 module.exports = {
   ci: {
+    assert: {
+      preset: 'lighthouse:no-pwa',
+      assertions: {
+        'categories:performance': ['error', { minScore: 0.9 }],
+        'categories:accessibility': ['error', { minScore: 0.9 }],
+        'categories:best-practices': ['error', { minScore: 0.9 }],
+        'categories:seo': ['error', { minScore: 0.9 }],
+      },
+    },
     collect: {
       staticDistDir: './dist',
       numberOfRuns: 1,
@@ -154,12 +163,12 @@ module.exports = {
       },
       url: [
         'http://localhost/index.html',
-        // 'http://localhost/essentials/explore/index.html',
-        // 'http://localhost/essentials/install/index.html',
-        // 'http://localhost/essentials/connect/index.html',
-        // 'http://localhost/essentials/brand/index.html',
-        // 'http://localhost/essentials/customize/index.html',
-        // 'http://localhost/essentials/localize/index.html',
+        'http://localhost/essentials/explore/index.html',
+        'http://localhost/essentials/install/index.html',
+        'http://localhost/essentials/connect/index.html',
+        'http://localhost/essentials/brand/index.html',
+        'http://localhost/essentials/customize/index.html',
+        'http://localhost/essentials/localize/index.html',
       ],
     },
     upload: {

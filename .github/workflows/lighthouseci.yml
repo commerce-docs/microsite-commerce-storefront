@@ -49,22 +49,22 @@ jobs:
 
             const files = fs.readdirSync(reportPath);
             files.forEach(file => {
+              if (file.includes('links')) return; // Skip links.json
               if (path.extname(file) === '.json') {
                 const report = JSON.parse(fs.readFileSync(path.join(reportPath, file)));
-                const url = report.requestedUrl;
-                commentBody += `**URL:** ${url}\n`;
+                const page = report.requestedUrl.pathname.substring(1);
+                commentBody += `**Page:** ${page} `;
 
                 if (report.categories && typeof report.categories === 'object') {
                   Object.keys(report.categories).forEach((categoryKey) => {
                     const category = report.categories[categoryKey];
-                    commentBody += `**${category.title}:** ${Math.round(category.score * 100)}\n`;
+                    commentBody += `**${category.title[0]}:** ${Math.round(category.score * 100)}`;
                   });
                 } else {
                   commentBody += 'No categories found in report.\n';
                 }
 
                 commentBody += '\n';
-                console.log(commentBody);
               }
             });
 
