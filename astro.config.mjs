@@ -6,10 +6,7 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import preact from "@astrojs/preact";
-
-const astroExpressiveCodeOptions = {
-  themes: ['git-dark', 'git-light']
-};
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 
 // https://astro.build/config
 export default defineConfig({
@@ -21,15 +18,6 @@ export default defineConfig({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
     })],
-    expressiveCode: {
-      styleOverrides: {
-        borderRadius: '0.5rem',
-        codePaddingInline: '0',
-        codePaddingBlock: '1rem',
-        codeLineHeight: '1.3rem'
-      },
-      themes: ['github-dark', 'github-light']
-    },
     components: {
       CallToAction: './src/components/overrides/CallToAction.astro',
       Icon: './src/components/overrides/Icon.astro',
