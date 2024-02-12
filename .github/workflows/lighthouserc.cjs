@@ -7,8 +7,6 @@ module.exports = {
     collect: {
       staticDistDir: './dist',
       numberOfRuns: 2,
-      staticDirFileDiscoveryDepth: 2,
-      maxAutodiscoverUrls: 0,
       settings: {
         formFactor: 'desktop',
         throttling: throttling.desktopDense4G,
