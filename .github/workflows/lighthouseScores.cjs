@@ -34,7 +34,7 @@ module.exports = ({ github, context }) => {
     return Object.entries(report.categories).map(([_, category]) => {
       const score = Math.round(category.score * 100);
       const emoji = scoreToEmoji(score);
-      return `${emoji} ${category.title[2]}: ${score}% `;
+      return `${emoji} ${category.title[0]}: ${score}% `;
     }).join('');
   }
 
