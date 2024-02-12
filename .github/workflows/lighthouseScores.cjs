@@ -60,3 +60,4 @@ module.exports = ({ github, context }) => {
 
     return commentBody;
   }
+}
