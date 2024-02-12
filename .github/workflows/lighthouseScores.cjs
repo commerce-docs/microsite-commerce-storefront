@@ -40,6 +40,8 @@ module.exports = ({ github, context }) => {
 
   function generateLighthouseScoresComment(reportPath) {
     let commentBody = '#### 🚀 Lighthouse Results\n';
+    commentBody += '---------------------------------\n';
+    commentBody += "'🎉'=100 | '🟢'>=90 | '🟡'>=80 | '🔴'<80\n";
 
     const reportFiles = fs.readdirSync(reportPath);
     reportFiles.forEach(file => {
