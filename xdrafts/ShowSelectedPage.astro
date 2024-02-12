@@ -1,19 +1,22 @@
 ---
-import { PAGE_TITLE_ID } from '../constants';
 import type { Props } from '@astrojs/starlight/props';
-
+const PAGE_TITLE_ID = '_top';
 let currentUrl = new URL(Astro.request.url);
 let currentLink = currentUrl.pathname.endsWith('/')
   ? currentUrl.pathname
   : `${currentUrl.pathname}/`;
 
-let selectedSidebarGroup = Astro.props.sidebar.find(
-  (group: any) =>
-    Array.isArray(group.entries) && group.entries.some((entry: any) => entry.href === currentLink)
-);
+console.log('🚀 ~ currentLink:', currentLink);
+console.log('🚀 ~ sidebar:', JSON.stringify(Astro.props.sidebar, null, 2));
+
+let selectedSidebarItem = Astro.props.sidebar
+  .filter((item: any) => Array.isArray(item.entries) && item.entries.length > 0)
+  .flatMap((item: any) => item.entries)
+  .find((item) => item.href === currentLink);
+console.log('🚀 ~ selectedSidebarItem:', selectedSidebarItem);
 ---
 
-<div class="section">{selectedSidebarGroup ? selectedSidebarGroup.label : ''}</div>
+<div class="section">{selectedSidebarItem ? selectedSidebarItem.label : ''}</div>
 <h1 id={PAGE_TITLE_ID}>{Astro.props.entry.data.title}</h1>
 
 <style>
@@ -29,7 +32,7 @@ let selectedSidebarGroup = Astro.props.sidebar.find(
   .section {
     margin-top: 0;
     margin-bottom: -0.25rem;
-    color: #cb361d;
-    font-size: 1.1rem;
+    font-variant-caps: titling-caps;
+    color: #666;
   }
 </style>

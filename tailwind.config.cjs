@@ -12,7 +12,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ["'Adobe Clean', adobe-clean, sans-serif"],
-        mono: ["'Courier New', Menlo, Consolas, monospace"],
+        mono: ["'Courier', Menlo, Consolas, monospace"],
       },
     },
   },
