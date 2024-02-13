@@ -34,15 +34,14 @@ module.exports = ({ github, context }) => {
     return Object.entries(report.categories).map(([_, category]) => {
       const score = Math.round(category.score * 100);
       const emoji = scoreToEmoji(score);
-      return `${emoji} ${category.title[2]}: ${score}% `;
+      return `${emoji} ${category.title[0]}: ${score}% `;
     }).join('');
   }
 
   function generateLighthouseScoresComment(reportPath) {
     let commentBody = '#### 🚀 Lighthouse Results\n';
-    commentBody += '---------------------------------\n';
-    commentBody += "🎉=100 | 🟢>=90 | 🟡>=80 | 🔴<80\n";
-    commentBody += '---------------------------------\n\n';
+    commentBody += "KEY: 🎉=100 | 🟢>=90 | 🟡>=70 | 🔴<70\n";
+    commentBody += '\n';
 
     const reportFiles = fs.readdirSync(reportPath);
     reportFiles.forEach(file => {
