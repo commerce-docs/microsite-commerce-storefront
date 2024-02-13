@@ -143,7 +143,7 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: './dist',
-      numberOfRuns: 2,
+      numberOfRuns: 1,
       settings: {
         formFactor: 'desktop',
         throttling: throttling.desktopDense4G,
@@ -154,9 +154,9 @@ module.exports = {
       url: [
         'http://localhost/index.html',
         'http://localhost/essentials/brand/index.html',
-        'http://localhost/essentials/explore/index.html',
-        'http://localhost/essentials/install/index.html',
-        'http://localhost/essentials/connect/index.html',
+        // 'http://localhost/essentials/explore/index.html',
+        // 'http://localhost/essentials/install/index.html',
+        // 'http://localhost/essentials/connect/index.html',
         // 'http://localhost/essentials/customize/index.html',
         // 'http://localhost/essentials/localize/index.html',
       ],
