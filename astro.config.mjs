@@ -52,7 +52,7 @@ export default defineConfig({
         label: 'Essentials',
         badge: 'IP',
         items: [{
-          label: 'Explore options',
+          label: 'Explore',
           link: '/essentials/explore/'
         }, {
           label: 'Install drop-ins',
@@ -64,6 +64,9 @@ export default defineConfig({
           badge: 'IP',
           label: 'Brand drop-ins',
           link: '/essentials/brand/'
+        }, {
+          label: 'Enrich drop-ins',
+          link: '/essentials/enrich/'
         }, {
           label: 'Localize drop-ins',
           link: '/essentials/localize/'
@@ -83,6 +86,9 @@ export default defineConfig({
         }, {
           label: 'Brand',
           link: '/pdp/pdp-brand/'
+        }, {
+          label: 'Enrich',
+          link: '/pdp/pdp-enrich/'
         }, {
           label: 'Customize',
           link: '/pdp/pdp-customize/'
