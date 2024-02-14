@@ -8,10 +8,16 @@ const docs = defineCollection({
   schema: docsSchema({
     extend: zod.object({
       description: text(),
-      iframe: zod.boolean().default(false),
-      hero: zod.object({
-        subtitle: zod.string(),
-      }).optional(),
+      iframe: zod.boolean().default(false).optional(),
+      hero: zod.object({ subtitle: zod.string() }).optional(),
+      prerequisites: zod
+        .object({
+          html: zod.boolean().default(false).optional(),
+          css: zod.boolean().default(false).optional(),
+          js: zod.boolean().default(false).optional(),
+          github: zod.boolean().default(false).optional(),
+        })
+        .optional(),
     }),
   }),
 });
