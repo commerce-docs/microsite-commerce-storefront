@@ -14,6 +14,7 @@ export default defineConfig({
   integrations: [tailwind(), preact(), starlight({
     title: 'Adobe Drop-in Components',
     favicon: 'favicon.ico',
+    lastUpdated: true,
     plugins: [starlightLinksValidator({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
@@ -33,6 +34,7 @@ export default defineConfig({
       './src/styles/overrides/tokens.css',
       './src/styles/overrides/badge.css',
       './src/styles/tailwind.css',
+      './src/styles/custom.css',
     ],
     logo: {
       src: 'src/assets/sitelogo.svg',
@@ -42,6 +44,10 @@ export default defineConfig({
       github: 'https://github.com/commerce-docs/dropins.dev'
     },
     sidebar: [
+      // {
+      //   label: "Docs for Summit '24",
+      //   link: '/summit'
+      // },
       {
         label: 'Essentials',
         badge: 'IP',

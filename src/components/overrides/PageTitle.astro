@@ -1,6 +1,7 @@
 ---
 import { PAGE_TITLE_ID } from '../constants';
 import type { Props } from '@astrojs/starlight/props';
+import Icon from './Icon.astro';
 
 let currentUrl = new URL(Astro.request.url);
 let currentLink = currentUrl.pathname.endsWith('/')
@@ -11,10 +12,20 @@ let selectedSidebarGroup = Astro.props.sidebar.find(
   (group: any) =>
     Array.isArray(group.entries) && group.entries.some((entry: any) => entry.href === currentLink)
 );
+
+const prerequisites = Astro.props.entry.data.prerequisites;
 ---
 
 <div class="section">{selectedSidebarGroup ? selectedSidebarGroup.label : ''}</div>
-<h1 id={PAGE_TITLE_ID}>{Astro.props.entry.data.title}</h1>
+<div class="prerequisites">
+  <h1 id={PAGE_TITLE_ID}>{Astro.props.entry.data.title}</h1>
+  <div class="icons">
+    {prerequisites?.github && <Icon name="github" size="1.25rem" />}
+    {prerequisites?.html && <Icon name="html" size="1.25rem" />}
+    {prerequisites?.css && <Icon name="css" size="1.25rem" />}
+    {prerequisites?.js && <Icon name="js" size="1.25rem" />}
+  </div>
+</div>
 
 <style>
   h1 {
@@ -25,9 +36,29 @@ let selectedSidebarGroup = Astro.props.sidebar.find(
     line-height: var(--sl-line-height-headings);
     font-weight: 700;
     color: var(--sl-color-white);
+    word-break: keep-all;
   }
-  .section {
+
+  .prerequisites {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     margin-top: 0;
+    justify-content: space-between;
+  }
+
+  .icons {
+    background-color: #f5f5f5;
+    align-items: baseline;
+    padding: 0.5rem;
+    border-radius: 8px;
+    display: flex;
+    gap: 0.5rem;
+    margin-top: -0.25rem;
+  }
+
+  .section {
+    margin-top: 1rem;
     margin-bottom: -0.25rem;
     color: #cb361d;
     font-size: 1.1rem;
