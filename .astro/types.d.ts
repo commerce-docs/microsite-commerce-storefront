@@ -227,6 +227,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
+"essentials/enrich.mdx": {
+	id: "essentials/enrich.mdx";
+  slug: "essentials/enrich";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "essentials/explore.mdx": {
 	id: "essentials/explore.mdx";
   slug: "essentials/explore";
@@ -300,6 +307,13 @@ declare module 'astro:content' {
 "pdp/pdp-customize.mdx": {
 	id: "pdp/pdp-customize.mdx";
   slug: "pdp/pdp-customize";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"pdp/pdp-enrich.mdx": {
+	id: "pdp/pdp-enrich.mdx";
+  slug: "pdp/pdp-enrich";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
