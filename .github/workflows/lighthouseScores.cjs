@@ -52,6 +52,7 @@ module.exports = ({ github, context }) => {
       const reportFilePath = path.join(reportPath, file);
       const report = readJSONFile(reportFilePath);
       const categoryScores = generateScoresForCategories(report);
+      commentBody += '\n';
       commentBody += categoryScores;
 
       if (report.requestedUrl) {
