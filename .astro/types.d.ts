@@ -143,23 +143,30 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"cart/cart-brand.mdx": {
-	id: "cart/cart-brand.mdx";
-  slug: "cart/cart-brand";
+"cart/cart-branding.mdx": {
+	id: "cart/cart-branding.mdx";
+  slug: "cart/cart-branding";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"cart/cart-configure.mdx": {
-	id: "cart/cart-configure.mdx";
-  slug: "cart/cart-configure";
+"cart/cart-configuration.mdx": {
+	id: "cart/cart-configuration.mdx";
+  slug: "cart/cart-configuration";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"cart/cart-customize.mdx": {
-	id: "cart/cart-customize.mdx";
-  slug: "cart/cart-customize";
+"cart/cart-customizations.mdx": {
+	id: "cart/cart-customizations.mdx";
+  slug: "cart/cart-customizations";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"cart/cart-enrichment.mdx": {
+	id: "cart/cart-enrichment.mdx";
+  slug: "cart/cart-enrichment";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -178,23 +185,30 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"checkout/checkout-brand.mdx": {
-	id: "checkout/checkout-brand.mdx";
-  slug: "checkout/checkout-brand";
+"checkout/checkout-branding.mdx": {
+	id: "checkout/checkout-branding.mdx";
+  slug: "checkout/checkout-branding";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"checkout/checkout-configure.mdx": {
-	id: "checkout/checkout-configure.mdx";
-  slug: "checkout/checkout-configure";
+"checkout/checkout-configuration.mdx": {
+	id: "checkout/checkout-configuration.mdx";
+  slug: "checkout/checkout-configuration";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"checkout/checkout-customize.mdx": {
-	id: "checkout/checkout-customize.mdx";
-  slug: "checkout/checkout-customize";
+"checkout/checkout-customizations.mdx": {
+	id: "checkout/checkout-customizations.mdx";
+  slug: "checkout/checkout-customizations";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"checkout/checkout-enrichment.mdx": {
+	id: "checkout/checkout-enrichment.mdx";
+  slug: "checkout/checkout-enrichment";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -213,9 +227,9 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/connect.mdx": {
-	id: "howto/connect.mdx";
-  slug: "howto/connect";
+"howto/configure.mdx": {
+	id: "howto/configure.mdx";
+  slug: "howto/configure";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -255,23 +269,23 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"integrate/integrate-eds.mdx": {
-	id: "integrate/integrate-eds.mdx";
-  slug: "integrate/integrate-eds";
+"integrations/integrate-eds.mdx": {
+	id: "integrations/integrate-eds.mdx";
+  slug: "integrations/integrate-eds";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"integrate/integrate-react.mdx": {
-	id: "integrate/integrate-react.mdx";
-  slug: "integrate/integrate-react";
+"integrations/integrate-react.mdx": {
+	id: "integrations/integrate-react.mdx";
+  slug: "integrations/integrate-react";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"integrate/integrate-vue.mdx": {
-	id: "integrate/integrate-vue.mdx";
-  slug: "integrate/integrate-vue";
+"integrations/integrate-vue.mdx": {
+	id: "integrations/integrate-vue.mdx";
+  slug: "integrations/integrate-vue";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -290,30 +304,30 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-brand.mdx": {
-	id: "pdp/pdp-brand.mdx";
-  slug: "pdp/pdp-brand";
+"pdp/pdp-branding.mdx": {
+	id: "pdp/pdp-branding.mdx";
+  slug: "pdp/pdp-branding";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-configure.mdx": {
-	id: "pdp/pdp-configure.mdx";
-  slug: "pdp/pdp-configure";
+"pdp/pdp-configuration.mdx": {
+	id: "pdp/pdp-configuration.mdx";
+  slug: "pdp/pdp-configuration";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-customize.mdx": {
-	id: "pdp/pdp-customize.mdx";
-  slug: "pdp/pdp-customize";
+"pdp/pdp-customizations.mdx": {
+	id: "pdp/pdp-customizations.mdx";
+  slug: "pdp/pdp-customizations";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-enrich.mdx": {
-	id: "pdp/pdp-enrich.mdx";
-  slug: "pdp/pdp-enrich";
+"pdp/pdp-enrichment.mdx": {
+	id: "pdp/pdp-enrichment.mdx";
+  slug: "pdp/pdp-enrichment";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -321,13 +335,6 @@ declare module 'astro:content' {
 "pdp/pdp-reference.mdx": {
 	id: "pdp/pdp-reference.mdx";
   slug: "pdp/pdp-reference";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
-"understand.mdx": {
-	id: "understand.mdx";
-  slug: "understand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">

@@ -67,8 +67,8 @@ export default defineConfig({
               link: '/howto/install/',
             },
             {
-              label: 'Connect drop-ins',
-              link: '/howto/connect/',
+              label: 'Configure drop-ins',
+              link: '/howto/configure/',
             },
             {
               badge: 'IP',
@@ -99,19 +99,19 @@ export default defineConfig({
             },
             {
               label: 'Configuration',
-              link: '/pdp/pdp-configure/',
+              link: '/pdp/pdp-configuration/',
             },
             {
               label: 'Branding',
-              link: '/pdp/pdp-brand/',
+              link: '/pdp/pdp-branding/',
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrich/',
+              link: '/pdp/pdp-enrichment/',
             },
             {
               label: 'Customizations',
-              link: '/pdp/pdp-customize/',
+              link: '/pdp/pdp-customizations/',
             },
             {
               label: 'Reference',
@@ -130,19 +130,19 @@ export default defineConfig({
             },
             {
               label: 'Configuration',
-              link: '/cart/cart-configure/',
+              link: '/cart/cart-configuration/',
             },
             {
               label: 'Branding',
-              link: '/cart/cart-brand/',
+              link: '/cart/cart-branding/',
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrich/',
+              link: '/pdp/pdp-enrichment/',
             },
             {
-              label: 'Customization',
-              link: '/cart/cart-customize/',
+              label: 'Customizations',
+              link: '/cart/cart-customizations/',
             },
             {
               label: 'Reference',
@@ -161,19 +161,19 @@ export default defineConfig({
             },
             {
               label: 'Configuration',
-              link: '/checkout/checkout-configure/',
+              link: '/checkout/checkout-configuration/',
             },
             {
               label: 'Branding',
-              link: '/checkout/checkout-brand/',
+              link: '/checkout/checkout-branding/',
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrich/',
+              link: '/pdp/pdp-enrichment/',
             },
             {
               label: 'Customizations',
-              link: '/checkout/checkout-customize/',
+              link: '/checkout/checkout-customizations/',
             },
             {
               label: 'Reference',
@@ -187,16 +187,16 @@ export default defineConfig({
           collapsed: true,
           items: [
             {
-              label: 'Edge Delivery sites',
-              link: '/integrate/integrate-eds/',
+              label: 'Edge Delivery Services',
+              link: '/integrations/integrate-eds/',
             },
             {
-              label: 'React sites',
-              link: '/integrate/integrate-react/',
+              label: 'React',
+              link: '/integrations/integrate-react/',
             },
             {
-              label: 'Vue sites',
-              link: '/integrate/integrate-vue/',
+              label: 'Vue',
+              link: '/integrations/integrate-vue/',
             },
           ],
         },
