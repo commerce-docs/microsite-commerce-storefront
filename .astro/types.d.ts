@@ -206,51 +206,44 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/brand.mdx": {
-	id: "essentials/brand.mdx";
-  slug: "essentials/brand";
+"howto/brand.mdx": {
+	id: "howto/brand.mdx";
+  slug: "howto/brand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/connect.mdx": {
-	id: "essentials/connect.mdx";
-  slug: "essentials/connect";
+"howto/connect.mdx": {
+	id: "howto/connect.mdx";
+  slug: "howto/connect";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/customize.mdx": {
-	id: "essentials/customize.mdx";
-  slug: "essentials/customize";
+"howto/customize.mdx": {
+	id: "howto/customize.mdx";
+  slug: "howto/customize";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/enrich.mdx": {
-	id: "essentials/enrich.mdx";
-  slug: "essentials/enrich";
+"howto/enrich.mdx": {
+	id: "howto/enrich.mdx";
+  slug: "howto/enrich";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/explore.mdx": {
-	id: "essentials/explore.mdx";
-  slug: "essentials/explore";
+"howto/install.mdx": {
+	id: "howto/install.mdx";
+  slug: "howto/install";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"essentials/install.mdx": {
-	id: "essentials/install.mdx";
-  slug: "essentials/install";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
-"essentials/localize.mdx": {
-	id: "essentials/localize.mdx";
-  slug: "essentials/localize";
+"howto/localize.mdx": {
+	id: "howto/localize.mdx";
+  slug: "howto/localize";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -279,6 +272,13 @@ declare module 'astro:content' {
 "integrate/integrate-vue.mdx": {
 	id: "integrate/integrate-vue.mdx";
   slug: "integrate/integrate-vue";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"intro/understand.mdx": {
+	id: "intro/understand.mdx";
+  slug: "intro/understand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -325,9 +325,9 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"summit.mdx": {
-	id: "summit.mdx";
-  slug: "summit";
+"understand.mdx": {
+	id: "understand.mdx";
+  slug: "understand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
