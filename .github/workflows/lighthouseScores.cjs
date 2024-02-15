@@ -7,11 +7,11 @@ module.exports = ({ github, context }) => {
 
   return context.issue.number
     ? github.rest.issues.createComment({
-      issue_number: context.issue.number || 'no-issue-number',
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      body: lighthouseScoresComment,
-    })
+        issue_number: context.issue.number || 'no-issue-number',
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        body: lighthouseScoresComment,
+      })
     : lighthouseScoresComment;
 
   function readJSONFile(filePath) {
@@ -31,20 +31,22 @@ module.exports = ({ github, context }) => {
       return 'No categories found in report.\n';
     }
 
-    return Object.entries(report.categories).map(([_, category]) => {
-      const score = Math.round(category.score * 100);
-      const emoji = scoreToEmoji(score);
-      return `${emoji} ${category.title[0]}: ${score}% `;
-    }).join('');
+    return Object.entries(report.categories)
+      .map(([_, category]) => {
+        const score = Math.round(category.score * 100);
+        const emoji = scoreToEmoji(score);
+        return `${emoji} ${category.title[0]}: ${score}% `;
+      })
+      .join('');
   }
 
   function generateLighthouseScoresComment(reportPath) {
     let commentBody = '#### 🚀 Lighthouse Results\n';
-    commentBody += "KEY: 🎉=100 | 🟢>=90 | 🟡>=70 | 🔴<70\n";
-    commentBody += '\n';
+    commentBody += 'KEY: 🎉=100 | 🟢>=90 | 🟡>=70 | 🔴<70\n';
+    commentBody += '\n-----------------------------------\n\n';
 
     const reportFiles = fs.readdirSync(reportPath);
-    reportFiles.forEach(file => {
+    reportFiles.forEach((file) => {
       if (file.includes('links') || path.extname(file) !== '.json') return;
 
       const reportFilePath = path.join(reportPath, file);
@@ -62,4 +64,4 @@ module.exports = ({ github, context }) => {
 
     return commentBody;
   }
-}
+};
