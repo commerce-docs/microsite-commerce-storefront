@@ -79,9 +79,10 @@ const screenEmulationMetrics = {
   desktop: DESKTOP_EMULATION_METRICS,
 };
 
-
-const MOTOG4_USERAGENT = 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36'; // eslint-disable-line max-len
-const DESKTOP_USERAGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'; // eslint-disable-line max-len
+const MOTOG4_USERAGENT =
+  'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36'; // eslint-disable-line max-len
+const DESKTOP_USERAGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'; // eslint-disable-line max-len
 
 const userAgents = {
   mobile: MOTOG4_USERAGENT,
@@ -153,12 +154,12 @@ module.exports = {
       },
       url: [
         'http://localhost/index.html',
-        'http://localhost/essentials/brand/index.html',
-        // 'http://localhost/essentials/explore/index.html',
-        // 'http://localhost/essentials/install/index.html',
-        // 'http://localhost/essentials/connect/index.html',
-        // 'http://localhost/essentials/customize/index.html',
-        // 'http://localhost/essentials/localize/index.html',
+        'http://localhost/howto/brand/index.html',
+        // 'http://localhost/howto/understand/index.html',
+        // 'http://localhost/howto/install/index.html',
+        // 'http://localhost/howto/connect/index.html',
+        // 'http://localhost/howto/customize/index.html',
+        // 'http://localhost/howto/localize/index.html',
       ],
     },
     upload: {
