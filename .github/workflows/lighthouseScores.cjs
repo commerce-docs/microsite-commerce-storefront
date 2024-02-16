@@ -7,11 +7,11 @@ module.exports = ({ github, context }) => {
 
   return context.issue.number
     ? github.rest.issues.createComment({
-        issue_number: context.issue.number || 'no-issue-number',
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        body: lighthouseScoresComment,
-      })
+      issue_number: context.issue.number || 'no-issue-number',
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      body: lighthouseScoresComment,
+    })
     : lighthouseScoresComment;
 
   function readJSONFile(filePath) {
@@ -43,7 +43,7 @@ module.exports = ({ github, context }) => {
   function generateLighthouseScoresComment(reportPath) {
     let commentBody = '#### 🚀 Lighthouse Results\n';
     commentBody += 'KEY: 🎉=100 | 🟢>=90 | 🟡>=70 | 🔴<70\n';
-    commentBody += '\n-----------------------------------\n\n';
+    commentBody += '-----------------------------------\n\n';
 
     const reportFiles = fs.readdirSync(reportPath);
     reportFiles.forEach((file) => {
@@ -52,7 +52,6 @@ module.exports = ({ github, context }) => {
       const reportFilePath = path.join(reportPath, file);
       const report = readJSONFile(reportFilePath);
       const categoryScores = generateScoresForCategories(report);
-      commentBody += '\n';
       commentBody += categoryScores;
 
       if (report.requestedUrl) {
