@@ -2,20 +2,30 @@ import { defineCollection, z as zod } from 'astro:content';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
 import { text } from 'darkmatter';
 
+const prerequisiteSchema = zod.boolean().default(false).optional();
+const heroSchema = zod.object({ subtitle: zod.string() }).optional();
+const iframeSchema = zod.object({ src: zod.string() }).optional();
+
 const i18n = defineCollection({ type: 'data', schema: i18nSchema() });
 const docs = defineCollection({
   type: 'content',
   schema: docsSchema({
     extend: zod.object({
       description: text(),
-      iframe: zod.boolean().default(false).optional(),
-      hero: zod.object({ subtitle: zod.string() }).optional(),
+      iframe: iframeSchema,
+      hero: heroSchema,
       prerequisites: zod
         .object({
-          html: zod.boolean().default(false).optional(),
-          css: zod.boolean().default(false).optional(),
-          js: zod.boolean().default(false).optional(),
-          github: zod.boolean().default(false).optional(),
+          html: prerequisiteSchema,
+          css: prerequisiteSchema,
+          js: prerequisiteSchema,
+          github: prerequisiteSchema,
+          sharepoint: prerequisiteSchema,
+          googledrive: prerequisiteSchema,
+          node: prerequisiteSchema,
+          sidekick: prerequisiteSchema,
+          commerce: prerequisiteSchema,
+          graphql: prerequisiteSchema,
         })
         .optional(),
     }),

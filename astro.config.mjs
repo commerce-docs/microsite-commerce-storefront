@@ -33,6 +33,7 @@ export default defineConfig({
         SiteTitle: './src/components/overrides/SiteTitle.astro',
         PageFrame: './src/components/overrides/PageFrame.astro',
         TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
+        Pagination: './src/components/overrides/Pagination.astro',
       },
       customCss: [
         './src/styles/fonts.css',
@@ -54,7 +55,11 @@ export default defineConfig({
           items: [
             {
               label: 'Understand drop-ins',
-              link: '/intro/understand/',
+              link: '/introduction/understand/',
+            },
+            {
+              label: 'Resources',
+              link: '/introduction/resources/',
             },
           ],
         },
@@ -64,28 +69,28 @@ export default defineConfig({
           items: [
             {
               label: 'Install drop-ins',
-              link: '/howto/install/',
+              link: '/how-to/install/',
             },
             {
-              label: 'Configure drop-ins',
-              link: '/howto/configure/',
+              label: 'Connect drop-ins',
+              link: '/how-to/connect/',
             },
             {
               badge: 'IP',
               label: 'Brand drop-ins',
-              link: '/howto/brand/',
+              link: '/how-to/brand/',
             },
             {
               label: 'Enrich drop-ins',
-              link: '/howto/enrich/',
+              link: '/how-to/enrich/',
             },
             {
               label: 'Localize drop-ins',
-              link: '/howto/localize/',
+              link: '/how-to/localize/',
             },
             {
               label: 'Customize drop-ins',
-              link: '/howto/customize/',
+              link: '/how-to/customize/',
             },
           ],
         },
@@ -95,27 +100,27 @@ export default defineConfig({
           items: [
             {
               label: 'Anatomy',
-              link: '/pdp/pdp-anatomy/',
+              link: '/product-details/pdp-anatomy/',
             },
             {
               label: 'Configuration',
-              link: '/pdp/pdp-configuration/',
+              link: '/product-details/pdp-configuration/',
             },
             {
               label: 'Branding',
-              link: '/pdp/pdp-branding/',
+              link: '/product-details/pdp-branding/',
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrichment/',
+              link: '/product-details/pdp-enrichment/',
             },
             {
               label: 'Customizations',
-              link: '/pdp/pdp-customizations/',
+              link: '/product-details/pdp-customizations/',
             },
             {
               label: 'Reference',
-              link: '/pdp/pdp-reference/',
+              link: '/product-details/pdp-reference/',
             },
           ],
         },
@@ -138,7 +143,7 @@ export default defineConfig({
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrichment/',
+              link: '/cart/cart-enrichment/',
             },
             {
               label: 'Customizations',
@@ -169,7 +174,7 @@ export default defineConfig({
             },
             {
               label: 'Enrichment',
-              link: '/pdp/pdp-enrichment/',
+              link: '/checkout/checkout-enrichment/',
             },
             {
               label: 'Customizations',
