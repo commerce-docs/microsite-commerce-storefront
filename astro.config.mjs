@@ -51,15 +51,19 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Introduction',
+          label: 'Quick Start',
           items: [
             {
-              label: 'Understand drop-ins',
-              link: '/introduction/understand/',
+              label: 'Drop-in Storefront',
+              link: '/quick-start/dropin-storefront/',
             },
             {
-              label: 'Resources',
-              link: '/introduction/resources/',
+              label: 'Drop-in Anatomy',
+              link: '/quick-start/dropin-anatomy/',
+            },
+            {
+              label: 'Drop-in Resources',
+              link: '/quick-start/dropin-resources/',
             },
           ],
         },
@@ -91,6 +95,23 @@ export default defineConfig({
             {
               label: 'Customize drop-ins',
               link: '/how-to/customize/',
+            },
+          ],
+        },
+        {
+          label: 'Best Practices',
+          items: [
+            {
+              label: 'Containers',
+              link: '/best-practices/bp-containers/',
+            },
+            {
+              label: 'Slots',
+              link: '/best-practices/bp-slots/',
+            },
+            {
+              label: 'Events',
+              link: '/best-practices/bp-events/',
             },
           ],
         },

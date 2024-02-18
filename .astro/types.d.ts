@@ -136,6 +136,27 @@ declare module 'astro:content' {
 
 	type ContentEntryMap = {
 		"docs": {
+"best-practices/bp-containers.mdx": {
+	id: "best-practices/bp-containers.mdx";
+  slug: "best-practices/bp-containers";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"best-practices/bp-events.mdx": {
+	id: "best-practices/bp-events.mdx";
+  slug: "best-practices/bp-events";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"best-practices/bp-slots.mdx": {
+	id: "best-practices/bp-slots.mdx";
+  slug: "best-practices/bp-slots";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "cart/cart-anatomy.mdx": {
 	id: "cart/cart-anatomy.mdx";
   slug: "cart/cart-anatomy";
@@ -290,20 +311,6 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"introduction/resources.mdx": {
-	id: "introduction/resources.mdx";
-  slug: "introduction/resources";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
-"introduction/understand.mdx": {
-	id: "introduction/understand.mdx";
-  slug: "introduction/understand";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
 "product-details/pdp-anatomy.mdx": {
 	id: "product-details/pdp-anatomy.mdx";
   slug: "product-details/pdp-anatomy";
@@ -342,6 +349,27 @@ declare module 'astro:content' {
 "product-details/pdp-reference.mdx": {
 	id: "product-details/pdp-reference.mdx";
   slug: "product-details/pdp-reference";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"quick-start/dropin-anatomy.mdx": {
+	id: "quick-start/dropin-anatomy.mdx";
+  slug: "quick-start/dropin-anatomy";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"quick-start/dropin-resources.mdx": {
+	id: "quick-start/dropin-resources.mdx";
+  slug: "quick-start/dropin-resources";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"quick-start/dropin-storefront.mdx": {
+	id: "quick-start/dropin-storefront.mdx";
+  slug: "quick-start/dropin-storefront";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
