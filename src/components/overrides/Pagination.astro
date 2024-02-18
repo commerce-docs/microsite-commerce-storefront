@@ -1,0 +1,96 @@
+---
+import Icon from './Icon.astro';
+import type { Props } from '@astrojs/starlight/props';
+
+const { dir, labels, pagination } = Astro.props;
+const { prev, next } = pagination;
+const isRtl = dir === 'rtl';
+
+function transformPath(inputPath: string) {
+  // Split the input string by slashes and filter out empty strings
+  const segments = inputPath.split('/').filter((segment) => segment.length);
+
+  // Select the first segment, then split by dashes, capitalize each part, and join with spaces
+  const transformed = segments[0]
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  return transformed;
+}
+---
+
+<div class="pagination-links" dir={dir}>
+  {
+    prev && (
+      <a href={prev.href} rel="prev">
+        <Icon name={isRtl ? 'right-arrow' : 'left-arrow'} size="1.5rem" />
+        <div class="pb-3 pt-0">
+          <div class="text-sm text-gray-500">{labels['page.previousLink']}</div>
+          <div class="flex-column">
+            <div class="text-base text-red-600">{transformPath(prev.href)}</div>
+            <div class="link-title">{prev.label}</div>
+          </div>
+        </div>
+      </a>
+    )
+  }
+  {
+    next && (
+      <a href={next.href} rel="next">
+        <Icon name={isRtl ? 'left-arrow' : 'right-arrow'} size="1.5rem" />
+        <div class="pb-3 pt-0">
+          <div class="text-sm text-gray-500">{labels['page.nextLink']}</div>
+          <div class="flex-column">
+            <div class="text-base text-red-600">{transformPath(next.href)}</div>
+            <div class="link-title">{next.label}</div>
+          </div>
+        </div>
+      </a>
+    )
+  }
+</div>
+
+<style>
+  .pagination-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    gap: 1rem;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+    flex-basis: calc(50% - 0.5rem);
+    flex-grow: 1;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    text-decoration: none;
+    color: var(--sl-color-gray-2);
+    box-shadow: var(--sl-shadow-md);
+    overflow-wrap: anywhere;
+  }
+  [rel='next'] {
+    justify-content: end;
+    text-align: end;
+    flex-direction: row-reverse;
+  }
+  a:hover {
+    border-color: var(--sl-color-gray-2);
+  }
+
+  .link-title {
+    color: var(--sl-color-white);
+    font-size: var(--sl-text-xl);
+    font-weight: 700;
+    line-height: var(--sl-line-height-headings);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+</style>

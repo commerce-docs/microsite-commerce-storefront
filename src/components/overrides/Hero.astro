@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import { PAGE_TITLE_ID } from '../constants';
 import type { Props } from '@astrojs/starlight/props';
 import CallToAction from './CallToAction.astro';
+import colorfulBackground from '../../assets/images/colorful-bg-dark.webp';
 
 const { data } = Astro.props.entry;
 const { title = data.title, subtitle, tagline, image, actions = [] } = data.hero || {};
@@ -30,38 +31,54 @@ if (image) {
 }
 ---
 
-<img src="colorful-bg-dark.webp" class="hero-background" alt="colorful background" />
-<div class="hero">
-  {
-    darkImage && (
-      <Image
-        src={darkImage}
-        {...imageAttrs}
-        class:list={{ 'light:sl-hidden': Boolean(lightImage) }}
-      />
-    )
-  }
-  {lightImage && <Image src={lightImage} {...imageAttrs} class="dark:sl-hidden" />}
-  {rawHtml && <div class="hero-html sl-flex" set:html={rawHtml} />}
-  <div class="sl-flex stack">
-    <div class="sl-flex copy">
-      <h1 id={PAGE_TITLE_ID} data-page-title set:html={title} />
-      {subtitle && <div class="subtitle" set:html={subtitle} />}
-      {tagline && <div class="tagline" set:html={tagline} />}
-    </div>
+<div class="hero-wrapper">
+  <Image
+    src={colorfulBackground}
+    class="hero-background"
+    alt="colorful background"
+    widths={[360, 720, 1024, colorfulBackground.width]}
+    sizes={`(max-width: 360px) 360px, (max-width: 720px) 720px, (max-width: 1024px) 1024px, ${colorfulBackground.width}px`}
+  />
+  <div class="hero">
     {
-      actions.length > 0 && (
-        <div class="sl-flex actions">
-          {actions.map(({ text, ...attrs }) => (
-            <CallToAction {...attrs} set:html={text} />
-          ))}
-        </div>
+      darkImage && (
+        <Image
+          src={darkImage}
+          {...imageAttrs}
+          class:list={{ 'light:sl-hidden': Boolean(lightImage) }}
+        />
       )
     }
+    {lightImage && <Image src={lightImage} {...imageAttrs} class="dark:sl-hidden" />}
+    {rawHtml && <div class="hero-html sl-flex" set:html={rawHtml} />}
+    <div class="sl-flex stack">
+      <div class="sl-flex copy">
+        <h1 id={PAGE_TITLE_ID} data-page-title set:html={title} />
+        {subtitle && <div class="subtitle" set:html={subtitle} />}
+        {tagline && <div class="tagline" set:html={tagline} />}
+      </div>
+      {
+        actions.length > 0 && (
+          <div class="sl-flex actions">
+            {actions.map(({ text, ...attrs }: { text: string; [key: string]: any }) => (
+              <CallToAction {...attrs} variant={attrs.variant} link={attrs.link} set:html={text} />
+            ))}
+          </div>
+        )
+      }
+    </div>
   </div>
 </div>
 
 <style>
+  .hero {
+    display: grid;
+    align-items: top;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+  }
+
   .hero-background {
     display: grid;
     position: absolute;
@@ -71,14 +88,6 @@ if (image) {
     object-fit: cover;
     object-position: top;
     z-index: -1;
-  }
-
-  .hero {
-    display: grid;
-    align-items: top;
-    gap: 1rem;
-    padding-bottom: 1rem;
-    padding-top: 1rem;
   }
 
   .hero > img,

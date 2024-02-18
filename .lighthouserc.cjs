@@ -154,12 +154,12 @@ module.exports = {
       },
       url: [
         'http://localhost/index.html',
-        'http://localhost/howto/brand/index.html',
-        // 'http://localhost/howto/understand/index.html',
-        // 'http://localhost/howto/install/index.html',
-        // 'http://localhost/howto/connect/index.html',
-        // 'http://localhost/howto/customize/index.html',
-        // 'http://localhost/howto/localize/index.html',
+        'http://localhost/how-to/brand/index.html',
+        // 'http://localhost/how-to/understand/index.html',
+        // 'http://localhost/how-to/install/index.html',
+        // 'http://localhost/how-to/connect/index.html',
+        // 'http://localhost/how-to/customize/index.html',
+        // 'http://localhost/how-to/localize/index.html',
       ],
     },
     upload: {

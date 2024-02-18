@@ -8,7 +8,7 @@ export default {
   themes: ['github-dark', 'github-light'],
   styleOverrides: {
     borderRadius: '0.5rem',
-    codePaddingInline: '0',
+    codePaddingInline: '1rem',
     codePaddingBlock: '1rem',
     codeLineHeight: '1.2rem',
   },

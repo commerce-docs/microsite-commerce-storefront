@@ -220,44 +220,44 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/brand.mdx": {
-	id: "howto/brand.mdx";
-  slug: "howto/brand";
+"how-to/brand.mdx": {
+	id: "how-to/brand.mdx";
+  slug: "how-to/brand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/configure.mdx": {
-	id: "howto/configure.mdx";
-  slug: "howto/configure";
+"how-to/connect.mdx": {
+	id: "how-to/connect.mdx";
+  slug: "how-to/connect";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/customize.mdx": {
-	id: "howto/customize.mdx";
-  slug: "howto/customize";
+"how-to/customize.mdx": {
+	id: "how-to/customize.mdx";
+  slug: "how-to/customize";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/enrich.mdx": {
-	id: "howto/enrich.mdx";
-  slug: "howto/enrich";
+"how-to/enrich.mdx": {
+	id: "how-to/enrich.mdx";
+  slug: "how-to/enrich";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/install.mdx": {
-	id: "howto/install.mdx";
-  slug: "howto/install";
+"how-to/install.mdx": {
+	id: "how-to/install.mdx";
+  slug: "how-to/install";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"howto/localize.mdx": {
-	id: "howto/localize.mdx";
-  slug: "howto/localize";
+"how-to/localize.mdx": {
+	id: "how-to/localize.mdx";
+  slug: "how-to/localize";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
@@ -290,51 +290,58 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"intro/understand.mdx": {
-	id: "intro/understand.mdx";
-  slug: "intro/understand";
+"introduction/resources.mdx": {
+	id: "introduction/resources.mdx";
+  slug: "introduction/resources";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-anatomy.mdx": {
-	id: "pdp/pdp-anatomy.mdx";
-  slug: "pdp/pdp-anatomy";
+"introduction/understand.mdx": {
+	id: "introduction/understand.mdx";
+  slug: "introduction/understand";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-branding.mdx": {
-	id: "pdp/pdp-branding.mdx";
-  slug: "pdp/pdp-branding";
+"product-details/pdp-anatomy.mdx": {
+	id: "product-details/pdp-anatomy.mdx";
+  slug: "product-details/pdp-anatomy";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-configuration.mdx": {
-	id: "pdp/pdp-configuration.mdx";
-  slug: "pdp/pdp-configuration";
+"product-details/pdp-branding.mdx": {
+	id: "product-details/pdp-branding.mdx";
+  slug: "product-details/pdp-branding";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-customizations.mdx": {
-	id: "pdp/pdp-customizations.mdx";
-  slug: "pdp/pdp-customizations";
+"product-details/pdp-configuration.mdx": {
+	id: "product-details/pdp-configuration.mdx";
+  slug: "product-details/pdp-configuration";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-enrichment.mdx": {
-	id: "pdp/pdp-enrichment.mdx";
-  slug: "pdp/pdp-enrichment";
+"product-details/pdp-customizations.mdx": {
+	id: "product-details/pdp-customizations.mdx";
+  slug: "product-details/pdp-customizations";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"pdp/pdp-reference.mdx": {
-	id: "pdp/pdp-reference.mdx";
-  slug: "pdp/pdp-reference";
+"product-details/pdp-enrichment.mdx": {
+	id: "product-details/pdp-enrichment.mdx";
+  slug: "product-details/pdp-enrichment";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
+"product-details/pdp-reference.mdx": {
+	id: "product-details/pdp-reference.mdx";
+  slug: "product-details/pdp-reference";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
