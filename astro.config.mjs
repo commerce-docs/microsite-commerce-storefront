@@ -12,7 +12,9 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 export default defineConfig({
   site: 'https://dropins.dev',
   integrations: [
-    tailwind(),
+    tailwind({
+      nesting: true,
+    }),
     preact(),
     starlight({
       title: 'Adobe Drop-in Components',
@@ -54,8 +56,8 @@ export default defineConfig({
           label: 'Quick Start',
           items: [
             {
-              label: 'Drop-in Storefront',
-              link: '/quick-start/dropin-storefront/',
+              label: 'Create a storefront',
+              link: '/quick-start/create-storefront/',
             },
             {
               label: 'Drop-in Anatomy',
@@ -80,7 +82,6 @@ export default defineConfig({
               link: '/how-to/connect/',
             },
             {
-              badge: 'IP',
               label: 'Brand drop-ins',
               link: '/how-to/brand/',
             },
@@ -212,10 +213,6 @@ export default defineConfig({
           badge: 'TBD',
           collapsed: true,
           items: [
-            {
-              label: 'Edge Delivery Services',
-              link: '/integrations/integrate-eds/',
-            },
             {
               label: 'React',
               link: '/integrations/integrate-react/',
