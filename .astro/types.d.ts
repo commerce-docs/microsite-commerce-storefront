@@ -290,13 +290,6 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
-"integrations/integrate-eds.mdx": {
-	id: "integrations/integrate-eds.mdx";
-  slug: "integrations/integrate-eds";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
 "integrations/integrate-react.mdx": {
 	id: "integrations/integrate-react.mdx";
   slug: "integrations/integrate-react";
@@ -353,6 +346,13 @@ declare module 'astro:content' {
   collection: "docs";
   data: InferEntrySchema<"docs">
 } & { render(): Render[".mdx"] };
+"quick-start/create-storefront.mdx": {
+	id: "quick-start/create-storefront.mdx";
+  slug: "quick-start/create-storefront";
+  body: string;
+  collection: "docs";
+  data: InferEntrySchema<"docs">
+} & { render(): Render[".mdx"] };
 "quick-start/dropin-anatomy.mdx": {
 	id: "quick-start/dropin-anatomy.mdx";
   slug: "quick-start/dropin-anatomy";
@@ -363,13 +363,6 @@ declare module 'astro:content' {
 "quick-start/dropin-resources.mdx": {
 	id: "quick-start/dropin-resources.mdx";
   slug: "quick-start/dropin-resources";
-  body: string;
-  collection: "docs";
-  data: InferEntrySchema<"docs">
-} & { render(): Render[".mdx"] };
-"quick-start/dropin-storefront.mdx": {
-	id: "quick-start/dropin-storefront.mdx";
-  slug: "quick-start/dropin-storefront";
   body: string;
   collection: "docs";
   data: InferEntrySchema<"docs">
