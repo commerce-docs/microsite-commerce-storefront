@@ -6,7 +6,6 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import preact from '@astrojs/preact';
-import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 
 // https://astro.build/config
 export default defineConfig({
@@ -39,10 +38,10 @@ export default defineConfig({
       },
       customCss: [
         './src/styles/fonts.css',
-        './src/styles/overrides/markdown.css',
-        './src/styles/overrides/tokens.css',
         './src/styles/overrides/badge.css',
         './src/styles/tailwind.css',
+        './src/styles/overrides/markdown.css',
+        './src/styles/overrides/tokens.css',
         './src/styles/custom.css',
       ],
       logo: {
