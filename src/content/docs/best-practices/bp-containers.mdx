@@ -3,4 +3,34 @@ title: Containers
 description: Learn about the best practices for creating and using drop-in containers in a Storefront project.
 ---
 
-Learn about the best practices for creating and using drop-in containers in a Storefront project.
+import { Aside } from '@astrojs/starlight/components';
+
+Use the following best practices for your drop-in containers.
+
+## Load container data before rendering
+
+When you have a drop-in `container` that requires data to be loaded before it's rendered, fetch your data within the optional `getInitialData` function.
+
+The `render` function (which is a Promise) calls `getInitialData` and waits until your data is returned before rendering the `container`. This ensures your container has all the data it needs to render properly, which reduces Cumulative Layout Shift (CLS) to provide users with a great experience.
+
+### Example
+
+```javascript
+ProductDetails.getInitialData = async function ({ sku }) {
+  // check if default selections are made
+  const defaultSelections = getUrlParams().optionUIDs?.split(',');
+
+  // if it has selections, refine the product data
+  if (defaultSelections) {
+    return await getRefinedProduct(sku, defaultSelections);
+  }
+
+  // otherwise return the product data
+  return await getProductData(sku);
+};
+```
+
+<Aside type="caution" title="Caution">
+  If you use the **getInitialData** function to fetch data that's not needed to render your
+  container, you will slow load times and damage the user experience. Be careful out there.
+</Aside>

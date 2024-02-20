@@ -39,6 +39,7 @@ export default defineConfig({
       },
       customCss: [
         './src/styles/fonts.css',
+        './src/styles/overrides/markdown.css',
         './src/styles/overrides/tokens.css',
         './src/styles/overrides/badge.css',
         './src/styles/tailwind.css',
