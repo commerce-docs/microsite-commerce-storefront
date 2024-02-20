@@ -1,9 +1,9 @@
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
-import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+// import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 
 export default {
   expressiveCode: {
-    plugins: [pluginLineNumbers(), pluginCollapsibleSections()],
+    plugins: [pluginCollapsibleSections()],
   },
   themes: ['dark-plus', 'github-light'],
   styleOverrides: {
