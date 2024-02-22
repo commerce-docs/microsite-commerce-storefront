@@ -100,23 +100,6 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Best Practices',
-          items: [
-            {
-              label: 'Containers',
-              link: '/best-practices/bp-containers/',
-            },
-            {
-              label: 'Slots',
-              link: '/best-practices/bp-slots/',
-            },
-            {
-              label: 'Events',
-              link: '/best-practices/bp-events/',
-            },
-          ],
-        },
-        {
           label: 'Product Details',
           badge: 'IP',
           items: [
