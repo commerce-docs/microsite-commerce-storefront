@@ -1,5 +1,6 @@
 ---
 import Icon from './overrides/Icon.astro';
+import Tooltip from './Tooltip.astro';
 
 type IconName =
   | 'github'
@@ -10,32 +11,73 @@ type IconName =
   | 'sharepoint'
   | 'googledrive'
   | 'sidekick'
+  | 'codesync'
   | 'graphql'
   | 'commerce';
 
 interface PrerequisiteProps {
-  prerequisites: Record<IconName, boolean>;
+  prerequisites?: Record<IconName, boolean>;
 }
 
-let { prerequisites } = Astro.props as PrerequisiteProps;
+const DEFAULT_PREREQUISITES: Record<IconName, boolean> = {
+  github: false,
+  html: false,
+  css: false,
+  js: false,
+  node: false,
+  sharepoint: false,
+  googledrive: false,
+  sidekick: false,
+  codesync: false,
+  graphql: false,
+  commerce: false,
+};
+
+const { prerequisites = DEFAULT_PREREQUISITES } = Astro.props as PrerequisiteProps;
+
+const TOOLTIP_TEXTS: Record<IconName, string> = {
+  github: 'GitHub account',
+  html: 'HTML proficiency',
+  css: 'CSS proficiency',
+  js: 'JavaScript proficiency',
+  node: 'Node.js proficiency',
+  sharepoint: 'GoogleDrive or Sharepoint account',
+  googledrive: 'GoogleDrive or Sharepoint account',
+  sidekick: 'Sidekick extension',
+  codesync: 'AEM Code Sync app',
+  graphql: 'GraphQL proficiency',
+  commerce: 'Adobe Commerce installed',
+};
+
+function getTooltipText(prereqs: Record<IconName, boolean>) {
+  const uniqueTooltips = new Set<string>();
+
+  Object.entries(prereqs).forEach(([key, value]) => {
+    if (value) {
+      uniqueTooltips.add(TOOLTIP_TEXTS[key as IconName]);
+    }
+  });
+
+  return 'PREREQUISITES:\n\n' + Array.from(uniqueTooltips).join(', ');
+}
+
+let tooltipText = getTooltipText(prerequisites);
 ---
 
 {
   prerequisites && (
-    <div class="icons">
-      {Object.keys(prerequisites).map(
-        (key) =>
-          prerequisites[key as IconName] && (
-            <Icon name={key as IconName} size="1.5rem" label={key} title={key} />
-          )
-      )}
-    </div>
+    <Tooltip text={tooltipText}>
+      <div class="icons">
+        {Object.keys(prerequisites).map((key) => (
+          <Icon name={key as IconName} size="1.5rem" label={key} title={key} />
+        ))}
+      </div>
+    </Tooltip>
   )
 }
 
 <style>
   .icons {
-    /* border: 1px solid var(--sl-color-gray-5); */
     align-items: baseline;
     padding-bottom: 0.5rem;
     border-radius: 8px;
