@@ -1,0 +1,136 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import Icon from '@components/overrides/Icon.astro';
+
+export interface Props {
+  code: string;
+  lang?: string;
+  meta?: string;
+  locale?: string;
+  title?: string;
+  frame?: 'none';
+  mark?: string;
+  ins?: string;
+  del?: string;
+  collapse?: string;
+  collapsePreserveIndent?: boolean;
+}
+
+type IconName = 'html' | 'css' | 'js' | 'graphql';
+
+const cssBackgroundColor = '#dcf1fa';
+const cssBackgroundColorHover = '#b8e3f5';
+const cssBorderColor = '#95d5f1';
+
+const htmlBackgroundColor = '#fff3ee';
+const htmlBackgroundColorHover = '#fee6dc';
+const htmlBorderColor = '#faccb8';
+
+const jsBackgroundColor = '#fefada';
+const jsBackgroundColorHover = '#fcf4b4';
+const jsBorderColor = '#fbef8f';
+
+const graphqlBackgroundColor = '#feeef8';
+const graphqlBackgroundColorHover = '#fcddf1';
+const graphqlBorderColor = '#f7bce3';
+
+const defaultBackgroundColor = '#fff';
+const defaultBackgroundColorHover = '#fff';
+const defaultBorderColor = '#ddd';
+
+const props = Astro.props;
+
+// Function to dynamically select colors based on props.lang
+function getColors(lang: string) {
+  switch (lang) {
+    case 'html':
+      return {
+        backgroundColor: htmlBackgroundColor,
+        backgroundColorHover: htmlBackgroundColorHover,
+        borderColor: htmlBorderColor,
+      };
+    case 'css':
+      return {
+        backgroundColor: cssBackgroundColor,
+        backgroundColorHover: cssBackgroundColorHover,
+        borderColor: cssBorderColor,
+      };
+    case 'js':
+      return {
+        backgroundColor: jsBackgroundColor,
+        backgroundColorHover: jsBackgroundColorHover,
+        borderColor: jsBorderColor,
+      };
+    case 'graphql':
+      return {
+        backgroundColor: graphqlBackgroundColor,
+        backgroundColorHover: graphqlBackgroundColorHover,
+        borderColor: graphqlBorderColor,
+      };
+    default:
+      return {
+        backgroundColor: defaultBackgroundColor,
+        backgroundColorHover: defaultBackgroundColorHover,
+        borderColor: defaultBorderColor,
+      };
+  }
+}
+
+// Use the function to get the current colors based on props.lang
+const { backgroundColor, backgroundColorHover, borderColor } = getColors(props.lang || 'default');
+---
+
+<section
+  id="collapsible-wrapper"
+  class="collapsible-section"
+  style={`border: 1px solid ${borderColor};`}
+>
+  <button id="toggle-button" class="flex" style={`background-color: ${backgroundColor};`}>
+    <Icon name={props.lang as IconName} size="1.5rem" label={props.lang} title={props.lang} />
+    {props.title}
+  </button>
+  <div id="code-block" class="hidden">
+    <Code {...props} />
+  </div>
+</section>
+
+<script type="module">
+  document.querySelector('#toggle-button').addEventListener('click', () => {
+    document.querySelector('#code-block').classList.toggle('hidden');
+  });
+</script>
+
+<style>
+  .hidden {
+    display: none;
+  }
+
+  .collapsible-section {
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  #toggle-button {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    gap: 0.5rem;
+    color: var(--sl-color-white);
+    font-family: var(--sl-font-system-mono);
+    text-align: left;
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+  }
+
+  #toggle-button:hover {
+    background-color: backgroundColorHover.toString();
+  }
+
+  #code-block {
+    background-color: var(--sl-color-gray-1);
+  }
+</style>
