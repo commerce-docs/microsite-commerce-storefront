@@ -83,7 +83,7 @@ export default defineConfig({
             },
             {
               label: 'Brand drop-ins',
-              link: '/how-to/brand/',
+              link: '/how-to/brand/brand/',
             },
             {
               label: 'Enrich drop-ins',

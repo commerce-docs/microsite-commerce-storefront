@@ -3,11 +3,13 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 
 export default {
   expressiveCode: {
-    plugins: [pluginCollapsibleSections()],
+    plugins: [
+      pluginCollapsibleSections(),
+      // pluginLineNumbers(),
+    ],
   },
   themes: ['dark-plus', 'github-light'],
   styleOverrides: {
-    borderRadius: '0.5rem',
     codePaddingInline: '1rem',
     codePaddingBlock: '1rem',
     codeLineHeight: '1.2rem',
