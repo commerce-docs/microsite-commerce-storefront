@@ -37,9 +37,9 @@ export default defineConfig({
         Pagination: './src/components/overrides/Pagination.astro',
       },
       customCss: [
+        './src/styles/tailwind.css',
         './src/styles/fonts.css',
         './src/styles/overrides/badge.css',
-        './src/styles/tailwind.css',
         './src/styles/overrides/markdown.css',
         './src/styles/overrides/tokens.css',
         './src/styles/custom.css',
@@ -55,6 +55,10 @@ export default defineConfig({
         {
           label: 'Quick Start',
           items: [
+            {
+              label: 'Install tools',
+              link: '/quick-start/setup/',
+            },
             {
               label: 'Create a storefront',
               link: '/quick-start/create-storefront/',
