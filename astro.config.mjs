@@ -75,12 +75,8 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Install',
+          label: 'How To',
           items: [
-            {
-              label: 'Install drop-ins',
-              link: '/how-to/install/',
-            },
             {
               label: 'Connect drop-ins',
               link: '/how-to/connect/',
@@ -105,7 +101,6 @@ export default defineConfig({
         },
         {
           label: 'Product Details',
-          badge: 'IP',
           items: [
             {
               label: 'Anatomy',
