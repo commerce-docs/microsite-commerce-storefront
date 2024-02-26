@@ -158,10 +158,6 @@ module.exports = {
         'http://localhost/quick-start/dropin-anatomy/index.html',
         'http://localhost/quick-start/dropin-resources/index.html',
         'http://localhost/how-to/brand/brand/index.html',
-        // 'http://localhost/how-to/install/index.html',
-        // 'http://localhost/how-to/connect/index.html',
-        // 'http://localhost/how-to/customize/index.html',
-        // 'http://localhost/how-to/localize/index.html',
       ],
     },
     upload: {
