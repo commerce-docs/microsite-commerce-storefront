@@ -14,6 +14,7 @@ export default {
     },
   },
   styleOverrides: {
+    // borderWidth: '0',
     codePaddingInline: '1rem',
     codePaddingBlock: '1rem',
     codeLineHeight: '1.2rem',

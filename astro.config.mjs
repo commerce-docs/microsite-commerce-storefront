@@ -39,10 +39,8 @@ export default defineConfig({
       customCss: [
         './src/styles/tailwind.css',
         './src/styles/fonts.css',
-        './src/styles/overrides/badge.css',
-        './src/styles/overrides/markdown.css',
-        './src/styles/overrides/tokens.css',
         './src/styles/custom.css',
+        './src/styles/badge.css',
       ],
       logo: {
         src: 'src/assets/sitelogo.svg',
