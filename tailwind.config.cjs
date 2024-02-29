@@ -6,13 +6,9 @@ module.exports = {
   content: ['./src/**/*.{astro,html,css,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
   theme: {
     extend: {
-      colors: {
-        accent: colors.slate,
-        gray: colors.neutral,
-      },
       fontFamily: {
         sans: ["'Adobe Clean', adobe-clean, sans-serif"],
-        mono: ["'Courier', Menlo, Consolas, monospace"],
+        mono: ["'Courier', monospace"],
       },
     },
   },
