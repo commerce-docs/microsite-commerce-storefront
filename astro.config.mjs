@@ -39,10 +39,8 @@ export default defineConfig({
       customCss: [
         './src/styles/tailwind.css',
         './src/styles/fonts.css',
-        './src/styles/overrides/badge.css',
-        './src/styles/overrides/markdown.css',
-        './src/styles/overrides/tokens.css',
         './src/styles/custom.css',
+        './src/styles/badge.css',
       ],
       logo: {
         src: 'src/assets/sitelogo.svg',
@@ -53,34 +51,30 @@ export default defineConfig({
       },
       sidebar: [
         {
+          label: 'Welcome!',
+          link: '/welcome/',
+          attrs: { style: 'font-weight: 400' },
+        },
+        {
           label: 'Quick Start',
           items: [
             {
-              label: 'Install tools',
-              link: '/quick-start/setup/',
-            },
-            {
-              label: 'Create a storefront',
+              label: 'Create an EDS storefront',
               link: '/quick-start/create-storefront/',
             },
             {
-              label: 'Drop-in Anatomy',
+              label: 'Drop-in anatomy',
               link: '/quick-start/dropin-anatomy/',
             },
             {
-              label: 'Drop-in Resources',
+              label: 'Drop-in resources',
               link: '/quick-start/dropin-resources/',
             },
           ],
         },
         {
           label: 'How To',
-          badge: 'IP',
           items: [
-            {
-              label: 'Install drop-ins',
-              link: '/how-to/install/',
-            },
             {
               label: 'Connect drop-ins',
               link: '/how-to/connect/',
@@ -105,7 +99,6 @@ export default defineConfig({
         },
         {
           label: 'Product Details',
-          badge: 'IP',
           items: [
             {
               label: 'Anatomy',
