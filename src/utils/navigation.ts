@@ -26,7 +26,7 @@ export interface Link {
   attrs: LinkHTMLAttributes;
 }
 
-interface Group {
+export interface Group {
   type: 'group';
   label: string;
   entries: (Link | Group)[];
@@ -38,8 +38,8 @@ export type SidebarEntry = Link | Group;
 
 /**
  * A representation of the route structure. For each object entry:
- * if it’s a folder, the key is the directory name, and value is the directory
- * content; if it’s a route entry, the key is the last segment of the route, and value
+ * if its a folder, the key is the directory name, and value is the directory
+ * content; if its a route entry, the key is the last segment of the route, and value
  * is the full entry.
  */
 interface Dir {
@@ -62,7 +62,7 @@ function isDir(data: Record<string, unknown>): data is Dir {
   return DirKey in data;
 }
 
-/** Convert an item in a user’s sidebar config to a sidebar entry. */
+/** Convert an item in a users sidebar config to a sidebar entry. */
 function configItemToEntry(
   item: SidebarItem,
   currentPathname: string,
@@ -84,7 +84,7 @@ function configItemToEntry(
   }
 }
 
-/** Autogenerate a group of links from a user’s sidebar config. */
+/** Autogenerate a group of links from a users sidebar config. */
 function groupFromAutogenerateConfig(
   item: AutoSidebarGroup,
   locale: string | undefined,
@@ -156,7 +156,7 @@ function pathsMatch(pathA: string, pathB: string) {
 function getBreadcrumbs(path: string, baseDir: string): string[] {
   // Strip extension from path.
   const pathWithoutExt = stripExtension(path);
-  // Index paths will match `baseDir` and don’t include breadcrumbs.
+  // Index paths will match `baseDir` and dont include breadcrumbs.
   if (pathWithoutExt === baseDir) return [];
   // Ensure base directory ends in a trailing slash.
   baseDir = ensureTrailingSlash(baseDir);
@@ -190,7 +190,7 @@ function treeify(routes: Route[], baseDir: string): Dir {
           part = 'index';
         }
 
-        // Recurse down the tree if this isn’t the leaf node.
+        // Recurse down the tree if this isnt the leaf node.
         if (!isLeaf) {
           const path = currentNode[SlugKey];
           currentNode[part] ||= makeDir(stripLeadingAndTrailingSlashes(path + '/' + part));
@@ -226,7 +226,7 @@ function getOrder(routeOrDir: Route | Dir): number {
       routeOrDir.entry.data.sidebar.order ?? Number.MAX_VALUE;
 }
 
-/** Sort a directory’s entries by user-specified order or alphabetically if no order specified. */
+/** Sort a directorys entries by user-specified order or alphabetically if no order specified. */
 function sortDirEntries(dir: [string, Dir | Route][]): [string, Dir | Route][] {
   const collator = new Intl.Collator(localeToLang(undefined));
   return dir.sort(([_keyA, a], [_keyB, b]) => {
