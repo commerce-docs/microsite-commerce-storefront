@@ -35,6 +35,7 @@ export default defineConfig({
         PageFrame: './src/components/overrides/PageFrame.astro',
         TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
         Pagination: './src/components/overrides/Pagination.astro',
+        Sidebar: './src/components/overrides/Sidebar.astro',
       },
       customCss: [
         './src/styles/tailwind.css',
