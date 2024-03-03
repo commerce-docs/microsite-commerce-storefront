@@ -1,4 +1,4 @@
-# Adobe drop-in component documentation 
+# Adobe dropin component documentation
 
 To install dependencies:
 
