@@ -60,7 +60,7 @@ export default defineConfig({
           label: 'Quick Start',
           items: [
             {
-              label: 'Create an EDS storefront',
+              label: 'Storefront boilerplate',
               link: '/quick-start/create-storefront/',
             },
             {
