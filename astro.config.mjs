@@ -16,7 +16,7 @@ export default defineConfig({
     }),
     preact(),
     starlight({
-      title: 'Adobe Drop-in Components',
+      title: 'Adobe Dropin Components',
       favicon: 'favicon.ico',
       lastUpdated: true,
       plugins: [
@@ -64,11 +64,11 @@ export default defineConfig({
               link: '/quick-start/create-storefront/',
             },
             {
-              label: 'Drop-in anatomy',
+              label: 'Dropin anatomy',
               link: '/quick-start/dropin-anatomy/',
             },
             {
-              label: 'Drop-in resources',
+              label: 'Dropin resources',
               link: '/quick-start/dropin-resources/',
             },
           ],
@@ -77,23 +77,23 @@ export default defineConfig({
           label: 'How To',
           items: [
             {
-              label: 'Connect drop-ins',
+              label: 'Connect dropins',
               link: '/how-to/connect/',
             },
             {
-              label: 'Brand drop-ins',
+              label: 'Brand dropins',
               link: '/how-to/brand/brand/',
             },
             {
-              label: 'Enrich drop-ins',
+              label: 'Enrich dropins',
               link: '/how-to/enrich/',
             },
             {
-              label: 'Localize drop-ins',
+              label: 'Localize dropins',
               link: '/how-to/localize/',
             },
             {
-              label: 'Customize drop-ins',
+              label: 'Customize dropins',
               link: '/how-to/customize/',
             },
           ],
