@@ -26,7 +26,7 @@ export interface Link {
   attrs: LinkHTMLAttributes;
 }
 
-export interface Group {
+interface Group {
   type: 'group';
   label: string;
   entries: (Link | Group)[];
@@ -226,7 +226,7 @@ function getOrder(routeOrDir: Route | Dir): number {
       routeOrDir.entry.data.sidebar.order ?? Number.MAX_VALUE;
 }
 
-/** Sort a directorys entries by user-specified order or alphabetically if no order specified. */
+/** Sort a directories entries by user-specified order or alphabetically if no order specified. */
 function sortDirEntries(dir: [string, Dir | Route][]): [string, Dir | Route][] {
   const collator = new Intl.Collator(localeToLang(undefined));
   return dir.sort(([_keyA, a], [_keyB, b]) => {
@@ -292,6 +292,7 @@ export function getSidebar(pathname: string, locale: string | undefined): Sideba
     return config.sidebar.map((group) => configItemToEntry(group, pathname, locale, routes));
   } else {
     const tree = treeify(routes, locale || '');
+    console.log(tree);
     return sidebarFromDir(tree, pathname, locale, false);
   }
 }
