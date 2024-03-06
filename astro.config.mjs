@@ -6,6 +6,7 @@ import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import preact from '@astrojs/preact';
+import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,6 +16,7 @@ export default defineConfig({
       nesting: true,
     }),
     preact(),
+    react(),
     starlight({
       title: 'Adobe Dropin Components',
       favicon: 'favicon.ico',
@@ -60,16 +62,16 @@ export default defineConfig({
           label: 'Quick Start',
           items: [
             {
-              label: 'Storefront boilerplate',
+              label: 'Create starter storefront',
               link: '/quick-start/create-storefront/',
             },
             {
-              label: 'Dropin anatomy',
-              link: '/quick-start/dropin-anatomy/',
+              label: 'Explore dropins',
+              link: '/quick-start/explore-dropins/',
             },
             {
-              label: 'Dropin resources',
-              link: '/quick-start/dropin-resources/',
+              label: 'Find resources',
+              link: '/quick-start/find-resources/',
             },
           ],
         },

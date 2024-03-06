@@ -292,7 +292,6 @@ export function getSidebar(pathname: string, locale: string | undefined): Sideba
     return config.sidebar.map((group) => configItemToEntry(group, pathname, locale, routes));
   } else {
     const tree = treeify(routes, locale || '');
-    console.log(tree);
     return sidebarFromDir(tree, pathname, locale, false);
   }
 }
