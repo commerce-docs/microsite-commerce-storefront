@@ -17,6 +17,5 @@ export function validateLogoImports(): void {
       }
     }
     if (err) throw new Error(err);
-    console.log('looks good:', config.logo);
   }
 }
