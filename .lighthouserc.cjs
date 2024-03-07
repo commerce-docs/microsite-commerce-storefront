@@ -154,10 +154,10 @@ module.exports = {
       },
       url: [
         'http://localhost/index.html',
-        'http://localhost/quick-start/create-storefront/index.html',
-        'http://localhost/quick-start/dropin-anatomy/index.html',
-        'http://localhost/quick-start/dropin-resources/index.html',
-        'http://localhost/how-to/brand/brand/index.html',
+        'http://localhost/storefront/clone/index.html',
+        'http://localhost/storefront/dropin-anatomy/index.html',
+        'http://localhost/storefront/dropin-resources/index.html',
+        'http://localhost/storefront/brand/brand/index.html',
       ],
     },
     upload: {
