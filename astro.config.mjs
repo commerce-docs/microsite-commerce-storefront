@@ -57,15 +57,15 @@ export default defineConfig({
           label: 'Get Started',
           items: [
             {
-              label: 'Create a Storefront!',
+              label: 'Create your storefront',
               link: '/get-started/create-storefront/',
             },
             {
-              label: 'Dropin Anatomy',
+              label: 'Storefront dropin anatomy',
               link: '/get-started/dropin-anatomy/',
             },
             {
-              label: 'Dropin Resources',
+              label: 'Storefront dropin resources',
               link: '/get-started/dropin-resources/',
             },
           ],
