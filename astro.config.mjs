@@ -66,12 +66,12 @@ export default defineConfig({
               link: '/quick-start/create-storefront/',
             },
             {
-              label: 'Explore dropins',
-              link: '/quick-start/explore-dropins/',
+              label: 'Dropin anatomy',
+              link: '/quick-start/dropin-anatomy/',
             },
             {
-              label: 'Find resources',
-              link: '/quick-start/find-resources/',
+              label: 'Dropin resources',
+              link: '/quick-start/dropin-resources/',
             },
           ],
         },

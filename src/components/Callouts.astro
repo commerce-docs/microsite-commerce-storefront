@@ -13,23 +13,25 @@ const { html } = processCallouts(content);
     --bullet-margin: 0.5rem;
 
     list-style: none;
-    padding-inline-start: 0;
+    padding-inline-start: 2rem;
+
+    /* Add column styles */
+    column-count: 2; /* Number of columns */
+    column-gap: 2rem; /* Space between columns */
   }
 
   .sl-callouts > li {
+    font-size: 17px;
     position: relative;
     padding-inline-start: calc(var(--bullet-size) + 0.5rem);
-    /* HACK: Keeps any `margin-bottom` inside the `<li>`’s padding box to avoid gaps in the hairline border. */
     padding-bottom: 1px;
-    /* Prevent bullets from touching in short list items. */
     min-height: calc(var(--bullet-size) + var(--bullet-margin));
+    break-inside: avoid-column; /* Avoid breaking items across columns */
   }
   .sl-callouts > li + li {
-    /* Remove margin between callouts. */
     margin-top: 0;
   }
 
-  /* Custom list marker element. */
   .sl-callouts > li::before {
     content: counter(list-item);
     position: absolute;
@@ -47,7 +49,6 @@ const { html } = processCallouts(content);
     border-radius: 99rem;
   }
 
-  /* Vertical guideline linking list numbers. */
   .sl-callouts > li:not(:last-of-type)::after {
     --guide-width: 1px;
     content: '';
@@ -59,22 +60,17 @@ const { html } = processCallouts(content);
     background-color: var(--sl-color-hairline-light);
   }
 
-  /* Adjust first item inside a step so that it aligns vertically with the number
-			even if using a larger font size (e.g. a heading) */
   .sl-callouts > li > :first-child {
-    /*
-		The `lh` unit is not yet supported by all browsers in our support matrix
-		— see https://caniuse.com/mdn-css_types_length_lh
-		In unsupported browsers we approximate this using our known line-heights.
-		*/
     --lh: calc(1em * var(--sl-line-height));
     --shift-y: calc(0.5 * (var(--bullet-size) - var(--lh)));
     transform: translateY(var(--shift-y));
     margin-bottom: var(--shift-y);
   }
+
   .sl-callouts > li > :first-child:where(h1, h2, h3, h4, h5, h6) {
     --lh: calc(1em * var(--sl-line-height-headings));
   }
+
   @supports (--prop: 1lh) {
     .sl-callouts > li > :first-child {
       --lh: 1lh;
