@@ -59,44 +59,39 @@ export default defineConfig({
           attrs: { style: 'font-weight: 400' },
         },
         {
-          label: 'Quick Start',
+          label: 'Storefront Tutorial',
           items: [
             {
-              label: 'Create starter storefront',
-              link: '/quick-start/create-storefront/',
+              label: 'Overview',
+              link: '/storefront-tutorial/overview/',
             },
             {
-              label: 'Dropin anatomy',
-              link: '/quick-start/dropin-anatomy/',
+              label: 'Clone the boilerplate',
+              link: '/storefront-tutorial/clone/',
             },
             {
-              label: 'Dropin resources',
-              link: '/quick-start/dropin-resources/',
-            },
-          ],
-        },
-        {
-          label: 'How To',
-          items: [
-            {
-              label: 'Connect dropins',
-              link: '/how-to/connect/',
+              label: 'Connect your services',
+              link: '/storefront-tutorial/connect/',
             },
             {
-              label: 'Brand dropins',
-              link: '/how-to/brand/brand/',
+              label: 'Brand your storefront',
+              link: '/storefront-tutorial/brand/brand/',
             },
             {
-              label: 'Enrich dropins',
-              link: '/how-to/enrich/',
+              label: 'Localize your storefront',
+              link: '/storefront-tutorial/localize/',
             },
             {
-              label: 'Localize dropins',
-              link: '/how-to/localize/',
+              label: 'Enrich your storefront',
+              link: '/storefront-tutorial/enrich/',
             },
             {
-              label: 'Customize dropins',
-              link: '/how-to/customize/',
+              label: 'Customize your storefront',
+              link: '/storefront-tutorial/customize/',
+            },
+            {
+              label: 'Launch your storefront',
+              link: '/storefront-tutorial/launch/',
             },
           ],
         },
@@ -203,6 +198,21 @@ export default defineConfig({
             {
               label: 'Vue',
               link: '/integrations/integrate-vue/',
+            },
+          ],
+        },
+        {
+          label: 'Reference',
+          badge: 'TBD',
+          collapsed: true,
+          items: [
+            {
+              label: 'Dropin anatomy',
+              link: '/dropin-anatomy/',
+            },
+            {
+              label: 'Dropin resources',
+              link: '/storefront-tutorial/dropin-resources/',
             },
           ],
         },
