@@ -159,7 +159,7 @@ module.exports = {
         'http://localhost/quick-start/dropin-resources/index.html',
         'http://localhost/storefront-tutorial/overview/index.html',
         'http://localhost/storefront-tutorial/connect/index.html',
-        'http://localhost/storefront-tutorial/content/index.html',
+        'http://localhost/storefront-tutorial/author/index.html',
         'http://localhost/storefront-tutorial/brand/brand/index.html',
         'http://localhost/storefront-tutorial/localize/index.html',
         'http://localhost/storefront-tutorial/enrich/index.html',
