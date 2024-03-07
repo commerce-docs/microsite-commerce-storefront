@@ -27,6 +27,7 @@ export default defineConfig({
           errorOnInconsistentLocale: true,
         }),
       ],
+      // Compenent overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
         Icon: './src/components/overrides/Icon.astro',
@@ -54,19 +55,24 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Get Started',
+          label: 'Welcome!',
+          link: '/welcome/',
+          attrs: { style: 'font-weight: 400' },
+        },
+        {
+          label: 'Quick Start',
           items: [
             {
-              label: 'Create your storefront',
-              link: '/get-started/create-storefront/',
+              label: 'Create your Storefront',
+              link: '/quick-start/create-storefront/',
             },
             {
-              label: 'Storefront dropin anatomy',
-              link: '/get-started/dropin-anatomy/',
+              label: 'Dropin Anatomy',
+              link: '/quick-start/dropin-anatomy/',
             },
             {
-              label: 'Storefront dropin resources',
-              link: '/get-started/dropin-resources/',
+              label: 'Dropin Resources',
+              link: '/quick-start/dropin-resources/',
             },
           ],
         },
@@ -78,27 +84,31 @@ export default defineConfig({
               link: '/storefront-tutorial/overview/',
             },
             {
-              label: 'Connect your services',
+              label: 'Connect',
               link: '/storefront-tutorial/connect/',
             },
             {
-              label: 'Brand your storefront',
+              label: 'Brand',
               link: '/storefront-tutorial/brand/brand/',
             },
             {
-              label: 'Localize your storefront',
+              label: 'Author',
+              link: '/storefront-tutorial/author/',
+            },
+            {
+              label: 'Localize',
               link: '/storefront-tutorial/localize/',
             },
             {
-              label: 'Enrich your storefront',
+              label: 'Enrich',
               link: '/storefront-tutorial/enrich/',
             },
             {
-              label: 'Customize your storefront',
+              label: 'Customize',
               link: '/storefront-tutorial/customize/',
             },
             {
-              label: 'Launch your storefront',
+              label: 'Launch',
               link: '/storefront-tutorial/launch/',
             },
           ],
