@@ -57,7 +57,7 @@ export default defineConfig({
           label: 'Get Started',
           items: [
             {
-              label: 'Create a Storefront',
+              label: 'Create a Storefront!',
               link: '/get-started/create-storefront/',
             },
             {
