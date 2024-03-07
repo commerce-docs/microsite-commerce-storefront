@@ -1,0 +1,83 @@
+---
+import { processCallouts } from './rehype-callouts';
+
+const content = await Astro.slots.render('default');
+const { html } = processCallouts(content);
+---
+
+<Fragment set:html={html} />
+
+<style is:global>
+  .sl-callouts {
+    --bullet-size: calc(var(--sl-line-height) * 0.85rem);
+    --bullet-margin: 0.5rem;
+
+    list-style: none;
+    padding-inline-start: 0;
+  }
+
+  .sl-callouts > li {
+    position: relative;
+    padding-inline-start: calc(var(--bullet-size) + 0.5rem);
+    /* HACK: Keeps any `margin-bottom` inside the `<li>`’s padding box to avoid gaps in the hairline border. */
+    padding-bottom: 1px;
+    /* Prevent bullets from touching in short list items. */
+    min-height: calc(var(--bullet-size) + var(--bullet-margin));
+  }
+  .sl-callouts > li + li {
+    /* Remove margin between callouts. */
+    margin-top: 0;
+  }
+
+  /* Custom list marker element. */
+  .sl-callouts > li::before {
+    content: counter(list-item);
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    width: var(--bullet-size);
+    height: var(--bullet-size);
+    line-height: var(--bullet-size);
+
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    text-align: center;
+    color: var(--sl-color-black);
+    background-color: #cb361d;
+    border-radius: 99rem;
+  }
+
+  /* Vertical guideline linking list numbers. */
+  .sl-callouts > li:not(:last-of-type)::after {
+    --guide-width: 1px;
+    content: '';
+    position: absolute;
+    top: calc(var(--bullet-size) + var(--bullet-margin));
+    bottom: var(--bullet-margin);
+    inset-inline-start: calc((var(--bullet-size) - var(--guide-width)) / 2);
+    width: var(--guide-width);
+    background-color: var(--sl-color-hairline-light);
+  }
+
+  /* Adjust first item inside a step so that it aligns vertically with the number
+			even if using a larger font size (e.g. a heading) */
+  .sl-callouts > li > :first-child {
+    /*
+		The `lh` unit is not yet supported by all browsers in our support matrix
+		— see https://caniuse.com/mdn-css_types_length_lh
+		In unsupported browsers we approximate this using our known line-heights.
+		*/
+    --lh: calc(1em * var(--sl-line-height));
+    --shift-y: calc(0.5 * (var(--bullet-size) - var(--lh)));
+    transform: translateY(var(--shift-y));
+    margin-bottom: var(--shift-y);
+  }
+  .sl-callouts > li > :first-child:where(h1, h2, h3, h4, h5, h6) {
+    --lh: calc(1em * var(--sl-line-height-headings));
+  }
+  @supports (--prop: 1lh) {
+    .sl-callouts > li > :first-child {
+      --lh: 1lh;
+    }
+  }
+</style>
