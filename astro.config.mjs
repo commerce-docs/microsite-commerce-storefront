@@ -18,7 +18,7 @@ export default defineConfig({
     preact(),
     react(),
     starlight({
-      title: 'Adobe Dropin Components',
+      title: 'Adobe Commerce Storefront',
       favicon: 'favicon.ico',
       lastUpdated: true,
       plugins: [
@@ -54,9 +54,21 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Welcome!',
-          link: '/welcome/',
-          attrs: { style: 'font-weight: 400' },
+          label: 'Get Started',
+          items: [
+            {
+              label: 'Create a Storefront',
+              link: '/get-started/create-storefront/',
+            },
+            {
+              label: 'Dropin Anatomy',
+              link: '/get-started/dropin-anatomy/',
+            },
+            {
+              label: 'Dropin Resources',
+              link: '/get-started/dropin-resources/',
+            },
+          ],
         },
         {
           label: 'Storefront Tutorial',
@@ -64,10 +76,6 @@ export default defineConfig({
             {
               label: 'Overview',
               link: '/storefront-tutorial/overview/',
-            },
-            {
-              label: 'Clone the boilerplate',
-              link: '/storefront-tutorial/clone/',
             },
             {
               label: 'Connect your services',
