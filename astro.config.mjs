@@ -55,17 +55,13 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Find your Storefront',
+          label: 'Find your storefront',
           link: '/find-your-storefront/',
           attrs: { style: 'font-weight: 400' },
         },
         {
-          label: 'Quick Start',
+          label: 'Quick start',
           items: [
-            {
-              label: 'Create your Storefront',
-              link: '/quick-start/create-storefront/',
-            },
             {
               label: 'Dropin Anatomy',
               link: '/quick-start/dropin-anatomy/',
@@ -77,39 +73,43 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Storefront Tutorial',
+          label: 'Storefront tutorial',
           items: [
             {
               label: 'Overview',
               link: '/storefront-tutorial/overview/',
             },
             {
-              label: 'Connect',
-              link: '/storefront-tutorial/connect/',
+              label: 'Clone boilerplate',
+              link: '/storefront-tutorial/clone-boilerplate/',
             },
             {
-              label: 'Brand',
-              link: '/storefront-tutorial/brand/brand/',
+              label: 'Connect services',
+              link: '/storefront-tutorial/connect-services/',
             },
             {
-              label: 'Author',
-              link: '/storefront-tutorial/author/',
+              label: 'Style dropins',
+              link: '/storefront-tutorial/style/style-dropins/',
             },
             {
-              label: 'Localize',
-              link: '/storefront-tutorial/localize/',
+              label: 'Create content',
+              link: '/storefront-tutorial/create-content/',
             },
             {
-              label: 'Enrich',
-              link: '/storefront-tutorial/enrich/',
+              label: 'Localize content',
+              link: '/storefront-tutorial/localize-content/',
             },
             {
-              label: 'Customize',
-              link: '/storefront-tutorial/customize/',
+              label: 'Enrich dropins',
+              link: '/storefront-tutorial/enrich-dropins/',
             },
             {
-              label: 'Launch',
-              link: '/storefront-tutorial/launch/',
+              label: 'Customize dropins',
+              link: '/storefront-tutorial/customize-dropins/',
+            },
+            {
+              label: 'Launch storefront',
+              link: '/storefront-tutorial/launch-storefront/',
             },
           ],
         },
