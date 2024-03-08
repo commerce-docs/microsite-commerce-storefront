@@ -162,7 +162,7 @@ module.exports = {
         'http://localhost/edge-delivery-tutorial/overview/index.html',
         'http://localhost/edge-delivery-tutorial/clone-boilerplate/index.html',
         'http://localhost/edge-delivery-tutorial/connect-services/index.html',
-        'http://localhost/edge-delivery-tutorial/style/style-dropins/index.html',
+        // 'http://localhost/edge-delivery-tutorial/style/style-dropins/index.html',
         'http://localhost/edge-delivery-tutorial/create-content/index.html',
         'http://localhost/edge-delivery-tutorial/localize-content/index.html',
         'http://localhost/edge-delivery-tutorial/enrich-dropins/index.html',
