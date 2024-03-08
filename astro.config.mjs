@@ -18,7 +18,7 @@ export default defineConfig({
     preact(),
     react(),
     starlight({
-      title: 'Adobe Commerce Storefront',
+      title: 'Adobe Commerce Storefronts',
       favicon: 'favicon.ico',
       lastUpdated: true,
       plugins: [
@@ -55,8 +55,8 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Welcome!',
-          link: '/welcome/',
+          label: 'Find your Storefront',
+          link: '/find-your-storefront/',
           attrs: { style: 'font-weight: 400' },
         },
         {
