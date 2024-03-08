@@ -55,61 +55,73 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Find your storefront',
-          link: '/find-your-storefront/',
-          attrs: { style: 'font-weight: 400' },
-        },
-        {
-          label: 'Quick start',
+          label: 'Introduction',
           items: [
             {
-              label: 'Dropin Anatomy',
-              link: '/quick-start/dropin-anatomy/',
+              label: 'About our storefronts',
+              link: '/introduction/about-storefronts/',
             },
             {
-              label: 'Dropin Resources',
-              link: '/quick-start/dropin-resources/',
+              label: 'Storefront requirements',
+              link: '/introduction/storefront-requirements/',
             },
           ],
         },
         {
-          label: 'Storefront tutorial',
+          label: 'Dropin components',
+          items: [
+            {
+              label: 'What are dropins?',
+              link: '/dropin-components/what-are-dropins/',
+            },
+            {
+              label: 'Dropin anatomy',
+              link: '/dropin-components/dropin-anatomy/',
+            },
+            {
+              label: 'Dropin resources',
+              link: '/dropin-components/dropin-resources/',
+            },
+          ],
+        },
+        {
+          label: 'Edge Delivery Tutorial',
           items: [
             {
               label: 'Overview',
-              link: '/storefront-tutorial/overview/',
+              link: '/edge-delivery-tutorial/overview/',
             },
             {
               label: 'Clone boilerplate',
-              link: '/storefront-tutorial/clone-boilerplate/',
+              link: '/edge-delivery-tutorial/clone-boilerplate/',
             },
             {
               label: 'Connect services',
-              link: '/storefront-tutorial/connect-services/',
+              link: '/edge-delivery-tutorial/connect-services/',
             },
             {
               label: 'Style dropins',
-              link: '/storefront-tutorial/style/style-dropins/',
+              link: '/edge-delivery-tutorial/style/style-dropins/',
             },
             {
               label: 'Create content',
-              link: '/storefront-tutorial/create-content/',
+              link: '/edge-delivery-tutorial/create-content/',
             },
             {
               label: 'Localize content',
-              link: '/storefront-tutorial/localize-content/',
+              link: '/edge-delivery-tutorial/localize-content/',
             },
             {
               label: 'Enrich dropins',
-              link: '/storefront-tutorial/enrich-dropins/',
+              link: '/edge-delivery-tutorial/enrich-dropins/',
             },
             {
               label: 'Customize dropins',
-              link: '/storefront-tutorial/customize-dropins/',
+              link: '/edge-delivery-tutorial/customize-dropins/',
             },
             {
               label: 'Launch storefront',
-              link: '/storefront-tutorial/launch-storefront/',
+              link: '/edge-delivery-tutorial/launch-storefront/',
             },
           ],
         },
@@ -201,36 +213,6 @@ export default defineConfig({
             {
               label: 'Reference',
               link: '/checkout/checkout-reference/',
-            },
-          ],
-        },
-        {
-          label: 'Integrations',
-          badge: 'TBD',
-          collapsed: true,
-          items: [
-            {
-              label: 'React',
-              link: '/integrations/integrate-react/',
-            },
-            {
-              label: 'Vue',
-              link: '/integrations/integrate-vue/',
-            },
-          ],
-        },
-        {
-          label: 'Reference',
-          badge: 'TBD',
-          collapsed: true,
-          items: [
-            {
-              label: 'Dropin anatomy',
-              link: '/dropin-anatomy/',
-            },
-            {
-              label: 'Dropin resources',
-              link: '/storefront-tutorial/dropin-resources/',
             },
           ],
         },
