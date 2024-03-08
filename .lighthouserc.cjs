@@ -160,7 +160,7 @@ module.exports = {
         'http://localhost/dropin-components/dropin-anatomy/index.html',
         'http://localhost/dropin-components/dropin-resources/index.html',
         'http://localhost/edge-delivery-tutorial/overview/index.html',
-        'http://localhost/edge-delivery-tutorial/clone-boilerplate/index.html',
+        // 'http://localhost/edge-delivery-tutorial/clone-boilerplate/index.html',
         'http://localhost/edge-delivery-tutorial/connect-services/index.html',
         'http://localhost/edge-delivery-tutorial/style/style-dropins/index.html',
         'http://localhost/edge-delivery-tutorial/create-content/index.html',
