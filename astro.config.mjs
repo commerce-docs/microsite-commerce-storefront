@@ -10,6 +10,9 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
+  markdown: {
+    gfm: true,
+  },
   site: 'https://dropins.dev',
   integrations: [
     tailwind({
@@ -100,8 +103,8 @@ export default defineConfig({
               link: '/edge-delivery-tutorial/connect-services/',
             },
             {
-              label: 'Style dropins',
-              link: '/edge-delivery-tutorial/style/style-dropins/',
+              label: 'Brand dropins',
+              link: '/edge-delivery-tutorial/brand-style/brand-style/',
             },
             {
               label: 'Create content',
