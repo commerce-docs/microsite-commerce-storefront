@@ -100,8 +100,8 @@ export default defineConfig({
               link: '/edge-delivery-tutorial/connect-services/',
             },
             {
-              label: 'Style dropins',
-              link: '/edge-delivery-tutorial/style/style-dropins/',
+              label: 'Brand dropins',
+              link: '/edge-delivery-tutorial/brand-style/brand-style/',
             },
             {
               label: 'Create content',
