@@ -5,8 +5,6 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
-import preact from '@astrojs/preact';
-import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,8 +16,6 @@ export default defineConfig({
     tailwind({
       nesting: true,
     }),
-    preact(),
-    react(),
     starlight({
       title: 'Adobe Commerce Storefronts',
       favicon: 'favicon.ico',
@@ -65,8 +61,8 @@ export default defineConfig({
               link: '/introduction/about-storefronts/',
             },
             {
-              label: 'Storefront requirements',
-              link: '/introduction/storefront-requirements/',
+              label: 'Commerce requirements',
+              link: '/introduction/commerce-requirements/',
             },
           ],
         },
