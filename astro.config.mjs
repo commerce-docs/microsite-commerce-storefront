@@ -10,6 +10,9 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
+  markdown: {
+    gfm: true,
+  },
   site: 'https://dropins.dev',
   integrations: [
     tailwind({
