@@ -1,6 +1,6 @@
 ---
 interface Props {
-  options: string[][];
+  options: (string | { text: string; link: string })[][];
   compact?: boolean;
 }
 
@@ -14,9 +14,7 @@ const newHeaders = headers.map((header) => {
   const headerText = isCodeHeader ? header.replace('(code)', '') : header;
   const minWidthMatch = headerText.match(/\d+px/);
   const minWidth = minWidthMatch ? minWidthMatch[0] : null;
-  const newHeaderText = minWidth
-    ? headerText.replace(minWidth, '')
-    : headerText;
+  const newHeaderText = minWidth ? headerText.replace(minWidth, '') : headerText;
 
   return {
     text: newHeaderText,
@@ -70,11 +68,20 @@ const newRows = rows.map((row) => {
                   : 'codeCell'
                 : cellClassName;
 
-              return (
-                <td key={index} class={cellClassNameOverride}>
-                  {cell}
-                </td>
-              );
+              // Check if the cell contains a link
+              if (typeof cell === 'object' && 'text' in cell && 'link' in cell) {
+                return (
+                  <td key={index} class={cellClassNameOverride}>
+                    <a href={cell.link}>{cell.text}</a>
+                  </td>
+                );
+              } else {
+                return (
+                  <td key={index} class={cellClassNameOverride}>
+                    {cell}
+                  </td>
+                );
+              }
             })}
           </tr>
         ))
