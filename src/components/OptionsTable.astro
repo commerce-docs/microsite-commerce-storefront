@@ -10,11 +10,15 @@ const [headers, ...rows] = options;
 const cellClassName = compact ? 'compactCell' : 'cell';
 
 const newHeaders = headers.map((header) => {
-  const isCodeHeader = header.endsWith('(code)');
+  const isCodeHeader = typeof header === 'string' && header.endsWith('(code)');
   const headerText = isCodeHeader ? header.replace('(code)', '') : header;
-  const minWidthMatch = headerText.match(/\d+px/);
+  const minWidthMatch = typeof headerText === 'string' ? headerText.match(/\d+px/) : null;
   const minWidth = minWidthMatch ? minWidthMatch[0] : null;
-  const newHeaderText = minWidth ? headerText.replace(minWidth, '') : headerText;
+  const newHeaderText = minWidth
+    ? typeof headerText === 'string'
+      ? headerText.replace(minWidth, '')
+      : headerText
+    : headerText;
 
   return {
     text: newHeaderText,
@@ -36,19 +40,14 @@ const newRows = rows.map((row) => {
     <thead class="tableHeader">
       <tr class="headerRow">
         {
-          newHeaders.map((header, index) => {
-            const isCodeHeader = headers[index].endsWith('(code)');
+          newHeaders.map((header) => {
             let headerClassName = 'headerCell';
             if (header.minWidth) {
               headerClassName += ` minWidth`;
             }
 
             return (
-              <th
-                key={headers[index]}
-                class={headerClassName}
-                style={{ minWidth: header.minWidth }}
-              >
+              <th class={headerClassName} style={{ minWidth: header.minWidth }}>
                 {header.text}
               </th>
             );
@@ -58,10 +57,11 @@ const newRows = rows.map((row) => {
     </thead>
     <tbody class="body">
       {
-        newRows.map((row, rowIndex) => (
-          <tr key={rowIndex}>
+        newRows.map((row) => (
+          <tr>
             {row.map((cell, index) => {
-              const isCodeCell = headers[index].endsWith('(code)');
+              const isCodeCell =
+                typeof headers[index] === 'string' && (headers[index] as string).endsWith('(code)');
               let cellClassNameOverride = isCodeCell
                 ? compact
                   ? 'compactCodeCell'
@@ -71,16 +71,12 @@ const newRows = rows.map((row) => {
               // Check if the cell contains a link
               if (typeof cell === 'object' && 'text' in cell && 'link' in cell) {
                 return (
-                  <td key={index} class={cellClassNameOverride}>
+                  <td class={cellClassNameOverride}>
                     <a href={cell.link}>{cell.text}</a>
                   </td>
                 );
               } else {
-                return (
-                  <td key={index} class={cellClassNameOverride}>
-                    {cell}
-                  </td>
-                );
+                return <td class={cellClassNameOverride}>{cell}</td>;
               }
             })}
           </tr>
