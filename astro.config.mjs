@@ -66,7 +66,7 @@ export default defineConfig({
             },
             {
               label: 'Frequently asked questions',
-              link: '/introduction/faq.mdx/',
+              link: '/introduction/faq/',
             },
           ],
         },
