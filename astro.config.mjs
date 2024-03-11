@@ -57,12 +57,16 @@ export default defineConfig({
           label: 'Introduction',
           items: [
             {
-              label: 'About our storefronts',
-              link: '/introduction/about-storefronts/',
+              label: 'About Commerce Storefronts',
+              link: '/introduction/about-commerce-storefronts/',
             },
             {
               label: 'Commerce requirements',
               link: '/introduction/commerce-requirements/',
+            },
+            {
+              label: 'Frequently asked questions',
+              link: '/introduction/faq.mdx/',
             },
           ],
         },
@@ -76,10 +80,6 @@ export default defineConfig({
             {
               label: 'Dropin anatomy',
               link: '/dropin-components/dropin-anatomy/',
-            },
-            {
-              label: 'Dropin resources',
-              link: '/dropin-components/dropin-resources/',
             },
           ],
         },
