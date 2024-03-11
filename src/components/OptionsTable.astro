@@ -1,6 +1,6 @@
 ---
 interface Props {
-  options: string[][];
+  options: (string | { text: string; link: string })[][];
   compact?: boolean;
 }
 
@@ -14,9 +14,7 @@ const newHeaders = headers.map((header) => {
   const headerText = isCodeHeader ? header.replace('(code)', '') : header;
   const minWidthMatch = headerText.match(/\d+px/);
   const minWidth = minWidthMatch ? minWidthMatch[0] : null;
-  const newHeaderText = minWidth
-    ? headerText.replace(minWidth, '')
-    : headerText;
+  const newHeaderText = minWidth ? headerText.replace(minWidth, '') : headerText;
 
   return {
     text: newHeaderText,
@@ -70,11 +68,20 @@ const newRows = rows.map((row) => {
                   : 'codeCell'
                 : cellClassName;
 
-              return (
-                <td key={index} class={cellClassNameOverride}>
-                  {cell}
-                </td>
-              );
+              // Check if the cell contains a link
+              if (typeof cell === 'object' && 'text' in cell && 'link' in cell) {
+                return (
+                  <td key={index} class={cellClassNameOverride}>
+                    <a href={cell.link}>{cell.text}</a>
+                  </td>
+                );
+              } else {
+                return (
+                  <td key={index} class={cellClassNameOverride}>
+                    {cell}
+                  </td>
+                );
+              }
             })}
           </tr>
         ))
@@ -96,15 +103,21 @@ const newRows = rows.map((row) => {
     padding-bottom: 1rem;
   }
 
-  .optionsTable::-webkit-scrollbar {
-    width: 0;
-  }
-
   .table {
+    display: table; /* Ensure the table takes full width */
+    min-width: 100%; /* Prevent the table from shrinking */
+    table-layout: auto; /* Adjust table width based on content */
     border-collapse: collapse;
     font-size: 0.9rem;
     line-height: 1.25rem;
-    width: 100%;
+  }
+
+  .cell {
+    padding: 0.5rem 0; /* Adjust padding as needed */
+    line-height: 1.5rem;
+    font-family: inherit;
+    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .tableHeader {
@@ -112,6 +125,7 @@ const newRows = rows.map((row) => {
     border-bottom: 1px solid rgb(220, 220, 220);
     padding: 1rem 0;
     text-align: left;
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .headerRow {
@@ -119,27 +133,24 @@ const newRows = rows.map((row) => {
     border-bottom: 1px solid rgb(220, 220, 220);
     padding: 1rem 0;
     text-align: left;
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .headerCell {
     border: none;
     padding: 0.5rem 0;
     font-weight: 600;
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .body {
     vertical-align: baseline;
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .row {
     border-bottom: 1px solid rgb(135, 29, 29);
-  }
-
-  .cell {
-    padding: 0.5rem 0 0.5rem 0;
-    line-height: 1.5rem;
-    font-family: inherit;
-    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .codeCell {
@@ -150,14 +161,17 @@ const newRows = rows.map((row) => {
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
     font-size: 0.75rem;
     border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .compactCell {
-    padding: 0;
+    padding: 0; /* Adjust padding as needed */
+    padding-right: 1rem;
     border: none;
     line-height: 1.5rem;
     font-family: inherit;
     border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 
   .compactCodeCell {
@@ -168,5 +182,6 @@ const newRows = rows.map((row) => {
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
     font-size: 0.75rem;
     border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap; /* Prevent text wrapping within cells */
   }
 </style>
