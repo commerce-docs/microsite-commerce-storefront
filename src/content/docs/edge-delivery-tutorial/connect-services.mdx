@@ -5,6 +5,7 @@ description: Learn how to connect your storefront to your Commerce backend.
 
 import OptionsTable from '@components/OptionsTable.astro';
 import Callouts from '@components/Callouts.astro';
+import Tutorial from '@components/Tutorial.astro';
 
 This section describes how a Commerce Edge Delivery storefront connects to a Commerce backend. This boilerplate is pre-configured to connect to the boilerplate backend so you can start learning immediately. But eventually, you'll need to update those connections for your own Commerce backend. When that time comes, you'll know what to do.
 
@@ -55,5 +56,53 @@ Below are brief descriptions of the configuration keys and values in the boilerp
 1. **commerce-x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/docs/commerce-merchant-services/user-guides/integration-services/saas.html?lang=en) for details.
 
 </Callouts>
+
+## Step-by-step
+
+We'll use the `product-details` block as an example of the settings to add to your dropin Commerce block and where to do it.
+
+<Tutorial>
+
+### Import the getConfigValue function.
+
+First step is to import the `getConfigValue` function from your boilerplate's `scripts/configs.js` file. The `getConfigValue` function takes a `string` that matches one of the keys from the `configs.xlsx` file and returns the corresponding value.
+
+```javascript
+import { getConfigValue } from '../../scripts/configs.js';
+```
+
+### Set the endpoint and fetch headers.
+
+Within the Commerce block's `decorate` function, use the `getConfigValue` function to set the **Services endpoint** and **GraphQL headers** for the dropin block.
+
+```javascript
+export default async function decorate(block) {
+  // Initialize Drop-ins
+  initializers.register(product.initialize, {});
+
+  // Set Fetch Endpoint (Service)
+  product.setEndpoint(await getConfigValue('commerce-endpoint'));
+
+  // Set Fetch Headers (Service)
+  product.setFetchGraphQlHeaders({
+    'Content-Type': 'application/json',
+    'Magento-Environment-Id': await getConfigValue('commerce-environment-id'),
+    'Magento-Website-Code': await getConfigValue('commerce-website-code'),
+    'Magento-Store-View-Code': await getConfigValue('commerce-store-view-code'),
+    'Magento-Store-Code': await getConfigValue('commerce-store-code'),
+    'Magento-Customer-Group': await getConfigValue('commerce-customer-group'),
+    'x-api-key': await getConfigValue('commerce-x-api-key'),
+  });
+
+  //more...
+}
+```
+
+### That's all folks! 
+
+You're done! That's all it takes to connect your dropin block to the required backend settings. You'll use the same pattern to connect your own dropin blocks or future dropin blocks.
+
+</Tutorial>
+
 
 
