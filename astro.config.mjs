@@ -54,170 +54,27 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Introduction',
-          items: [
-            {
-              label: 'About Commerce Storefronts',
-              link: '/introduction/about-commerce-storefronts/',
-            },
-            {
-              label: 'Commerce requirements',
-              link: '/introduction/commerce-requirements/',
-            },
-            {
-              label: 'Frequently asked questions',
-              link: '/introduction/faq/',
-            },
-          ],
-        },
-        {
-          label: 'Dropin components',
-          items: [
-            {
-              label: 'What are dropins?',
-              link: '/dropin-components/what-are-dropins/',
-            },
-            {
-              label: 'Dropin anatomy',
-              link: '/dropin-components/dropin-anatomy/',
-            },
-          ],
-        },
-        {
-          label: 'Edge Delivery Tutorial',
-          items: [
-            {
-              label: 'Overview',
-              link: '/edge-delivery-tutorial/overview/',
-            },
-            {
-              label: 'Clone boilerplate',
-              link: '/edge-delivery-tutorial/clone-boilerplate/',
-            },
-            {
-              label: 'Connect services',
-              link: '/edge-delivery-tutorial/connect-services/',
-            },
-            {
-              label: 'Brand dropins',
-              link: '/edge-delivery-tutorial/brand-style/brand-style/',
-            },
-            {
-              label: 'Create content',
-              link: '/edge-delivery-tutorial/create-content/',
-            },
-            {
-              label: 'Localize content',
-              link: '/edge-delivery-tutorial/localize-content/',
-            },
-            {
-              label: 'Enrich dropins',
-              link: '/edge-delivery-tutorial/enrich-dropins/',
-            },
-            {
-              label: 'Customize dropins',
-              link: '/edge-delivery-tutorial/customize-dropins/',
-            },
-            {
-              label: 'Launch storefront',
-              link: '/edge-delivery-tutorial/launch-storefront/',
-            },
-          ],
+          label: 'Storefront Tutorial',
+          autogenerate: { directory: '/storefront-tutorial/' },
         },
         {
           label: 'Product Details',
-          items: [
-            {
-              label: 'Anatomy',
-              link: '/product-details/pdp-anatomy/',
-            },
-            {
-              label: 'Configuration',
-              link: '/product-details/pdp-configuration/',
-            },
-            {
-              label: 'Branding',
-              link: '/product-details/pdp-branding/',
-            },
-            {
-              label: 'Enrichment',
-              link: '/product-details/pdp-enrichment/',
-            },
-            {
-              label: 'Customizations',
-              link: '/product-details/pdp-customizations/',
-            },
-            {
-              label: 'Reference',
-              link: '/product-details/pdp-reference/',
-            },
-          ],
+          autogenerate: { directory: '/product-details/' },
         },
         {
           label: 'Cart',
-          badge: 'TBD',
           collapsed: true,
-          items: [
-            {
-              label: 'Anatomy',
-              link: '/cart/cart-anatomy/',
-            },
-            {
-              label: 'Configuration',
-              link: '/cart/cart-configuration/',
-            },
-            {
-              label: 'Branding',
-              link: '/cart/cart-branding/',
-            },
-            {
-              label: 'Enrichment',
-              link: '/cart/cart-enrichment/',
-            },
-            {
-              label: 'Customizations',
-              link: '/cart/cart-customizations/',
-            },
-            {
-              label: 'Reference',
-              link: '/cart/cart-reference/',
-            },
-          ],
+          autogenerate: { directory: '/cart/' },
         },
         {
           label: 'Checkout',
-          badge: 'TBD',
           collapsed: true,
-          items: [
-            {
-              label: 'Anatomy',
-              link: '/checkout/checkout-anatomy/',
-            },
-            {
-              label: 'Configuration',
-              link: '/checkout/checkout-configuration/',
-            },
-            {
-              label: 'Branding',
-              link: '/checkout/checkout-branding/',
-            },
-            {
-              label: 'Enrichment',
-              link: '/checkout/checkout-enrichment/',
-            },
-            {
-              label: 'Customizations',
-              link: '/checkout/checkout-customizations/',
-            },
-            {
-              label: 'Reference',
-              link: '/checkout/checkout-reference/',
-            },
-          ],
+          autogenerate: { directory: '/checkout/' },
         },
       ],
     }),
   ],
+
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
