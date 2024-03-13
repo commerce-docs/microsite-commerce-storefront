@@ -17,7 +17,7 @@ export default defineConfig({
       nesting: true,
     }),
     starlight({
-      title: 'Adobe Commerce Storefronts',
+      title: 'Adobe Commerce Storefront',
       favicon: 'favicon.ico',
       lastUpdated: true,
       plugins: [
@@ -26,7 +26,7 @@ export default defineConfig({
           errorOnInconsistentLocale: true,
         }),
       ],
-      // Compenent overrides
+      // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
         Icon: './src/components/overrides/Icon.astro',
