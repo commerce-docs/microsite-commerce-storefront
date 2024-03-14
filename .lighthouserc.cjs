@@ -161,7 +161,9 @@ module.exports = {
         'http://localhost/storefront-tutorial/extend/index.html',
         'http://localhost/storefront-tutorial/enrichment/index.html',
         'http://localhost/storefront-tutorial/localize/index.html',
-        'http://localhost/storefront-tutorial/launch-storefront/index.html',
+        'http://localhost/storefront-tutorial/launch/index.html',
+        'http://localhost/references/connections/index.html',
+        'http://localhost/references/requirements/index.html',
       ],
     },
     upload: {
