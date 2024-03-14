@@ -162,7 +162,7 @@ module.exports = {
         'http://localhost/storefront-tutorial/enrich/index.html',
         'http://localhost/storefront-tutorial/localize/index.html',
         'http://localhost/storefront-tutorial/launch/index.html',
-        'http://localhost/references/connect/index.html',
+        'http://localhost/references/configurations/index.html',
         'http://localhost/references/requirements/index.html',
       ],
     },
