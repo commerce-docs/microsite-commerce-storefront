@@ -54,6 +54,10 @@ export default defineConfig({
       },
       sidebar: [
         {
+          label: 'Introduction',
+          autogenerate: { directory: '/introduction/' },
+        },
+        {
           label: 'Storefront Tutorial',
           autogenerate: { directory: '/storefront-tutorial/' },
         },
@@ -70,6 +74,11 @@ export default defineConfig({
           label: 'Checkout',
           collapsed: true,
           autogenerate: { directory: '/checkout/' },
+        },
+        {
+          label: 'References',
+          collapsed: true,
+          autogenerate: { directory: '/references/' },
         },
       ],
     }),
