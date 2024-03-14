@@ -155,7 +155,7 @@ module.exports = {
       url: [
         'http://localhost/index.html',
         'http://localhost/introduction/index.html',
-        'http://localhost/storefront-tutorial/index/index.html',
+        'http://localhost/storefront-tutorial/index.html',
         'http://localhost/storefront-tutorial/brand/index.html',
         'http://localhost/storefront-tutorial/style/index.html',
         'http://localhost/storefront-tutorial/extend/index.html',
