@@ -1,5 +1,6 @@
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import type { UiThemeOption, UiViewOption } from '@stackblitz/sdk';
+import styles from './stackblitz.module.css';
 
 interface Props {
   id: string;
@@ -15,7 +16,7 @@ const StackBlitz = component$<Props>(
   ({
     id,
     file,
-    view = null,
+    view = 'default',
     hideExplorer = true,
     height = 500,
     theme = 'dark',
@@ -27,16 +28,16 @@ const StackBlitz = component$<Props>(
       sdk.embedProjectId('stackblitz-embed', id, {
         forceEmbedLayout: true,
         openFile: file,
-        view: view as UiViewOption | undefined, // Fix: Update the type of 'view' to include 'undefined'
+        view: view as UiViewOption,
         hideExplorer: hideExplorer,
-        hideNavigation: true,
+        hideNavigation: false,
         height: height,
-        theme: theme as UiThemeOption | undefined, // Fix: Update the type of 'theme' to include 'undefined'
+        theme: theme as UiThemeOption,
         clickToLoad: clickToLoad,
       });
     });
 
-    return <div id="stackblitz-embed" />;
+    return <div id="stackblitz-embed" style="border: 1px solid #ccc;" />;
   }
 );
 

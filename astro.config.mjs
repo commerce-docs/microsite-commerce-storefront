@@ -114,7 +114,7 @@ export default defineConfig({
     }),
     qwikdev(),
     (await import('astro-compress')).default({
-      Exclude: ['/style/index.html'],
+      Exclude: ['/storefront-tutorial/'],
       // CSS: false,
       // HTML: false,
       // Image: false,
