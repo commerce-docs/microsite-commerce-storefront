@@ -38,7 +38,7 @@ export default defineConfig({
     },
     customCss: ['./src/styles/tailwind.css', './src/styles/fonts.css', './src/styles/custom.css', './src/styles/badge.css'],
     logo: {
-      src: 'src/assets/sitelogo.svg',
+      src: './src/assets/sitelogo.svg',
       replacesTitle: false
     },
     social: {
