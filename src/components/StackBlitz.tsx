@@ -1,6 +1,5 @@
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import type { UiThemeOption, UiViewOption } from '@stackblitz/sdk';
-import styles from './stackblitz.module.css';
 
 interface Props {
   id: string;

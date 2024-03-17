@@ -4,46 +4,32 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
-import AutoImport from 'astro-auto-import';
 import qwikdev from '@qwikdev/astro';
 
 // https://astro.build/config
 export default defineConfig({
   markdown: {
-    gfm: true,
+    gfm: true
   },
   site: 'https://dropins.dev',
   integrations: [
-    AutoImport({
-      imports: [
-        {
-          'src/components/StackBlitz.tsx': [['default', 'StackBlitz']],
-        },
-      ],
-    }),
     tailwind({
-      nesting: true,
-    }),
-    starlight({
-      head: [
-        {
-          tag: 'meta',
-          attrs: {
-            'http-equiv': 'Content-Security-Policy',
-            content:
-              "default-src 'self'; frame-src 'self' stackblitz.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;",
-          },
-        },
-      ],
+      nesting: true
+    }), starlight({
+      head: [{
+        tag: 'meta',
+        attrs: {
+          'http-equiv': 'Content-Security-Policy',
+          content: "default-src 'self'; frame-src 'self' stackblitz.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+        }
+      }],
       title: 'Adobe Commerce Storefront',
       favicon: 'favicon.ico',
       lastUpdated: true,
-      plugins: [
-        starlightLinksValidator({
-          errorOnFallbackPages: false,
-          errorOnInconsistentLocale: true,
-        }),
-      ],
+      plugins: [starlightLinksValidator({
+        errorOnFallbackPages: false,
+        errorOnInconsistentLocale: true
+      })],
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
@@ -55,77 +41,65 @@ export default defineConfig({
         PageFrame: './src/components/overrides/PageFrame.astro',
         TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
         Pagination: './src/components/overrides/Pagination.astro',
-        Sidebar: './src/components/overrides/Sidebar.astro',
+        Sidebar: './src/components/overrides/Sidebar.astro'
       },
-      customCss: [
-        './src/styles/tailwind.css',
-        './src/styles/fonts.css',
-        './src/styles/custom.css',
-        './src/styles/badge.css',
-      ],
+      customCss: ['./src/styles/tailwind.css', './src/styles/fonts.css', './src/styles/custom.css', './src/styles/badge.css'],
       logo: {
         src: './src/assets/sitelogo.svg',
-        replacesTitle: false,
+        replacesTitle: false
       },
       social: {
-        github: 'https://github.com/commerce-docs/dropins.dev',
+        github: 'https://github.com/commerce-docs/dropins.dev'
       },
-      sidebar: [
-        {
-          label: 'Introduction',
-          autogenerate: {
-            directory: '/introduction/',
-          },
-        },
-        {
-          label: 'Storefront Tutorial',
-          autogenerate: {
-            directory: '/storefront-tutorial/',
-          },
-        },
-        {
-          label: 'Product Details',
-          autogenerate: {
-            directory: '/product-details/',
-          },
-        },
-        {
-          label: 'Cart',
-          collapsed: true,
-          autogenerate: {
-            directory: '/cart/',
-          },
-        },
-        {
-          label: 'Checkout',
-          collapsed: true,
-          autogenerate: {
-            directory: '/checkout/',
-          },
-        },
-        {
-          label: 'References',
-          collapsed: true,
-          autogenerate: {
-            directory: '/references/',
-          },
-        },
-      ],
-    }),
-    qwikdev(),
-    (await import('astro-compress')).default({
+      sidebar: [{
+        label: 'Introduction',
+        autogenerate: {
+          directory: '/introduction/'
+        }
+      }, {
+        label: 'Storefront Tutorial',
+        autogenerate: {
+          directory: '/storefront-tutorial/'
+        }
+      }, {
+        label: 'Product Details',
+        badge: 'beta',
+        autogenerate: {
+          directory: '/product-details/'
+        }
+      }, {
+        label: 'Cart',
+        badge: 'alpha',
+        collapsed: true,
+        autogenerate: {
+          directory: '/cart/'
+        }
+      }, {
+        label: 'Checkout',
+        badge: 'alpha',
+        collapsed: true,
+        autogenerate: {
+          directory: '/checkout/'
+        }
+      }, {
+        label: 'References',
+        collapsed: true,
+        autogenerate: {
+          directory: '/references/'
+        }
+      }]
+    }), qwikdev(), (await import('astro-compress')).default({
       Exclude: ['/storefront-tutorial/'],
-      // CSS: false,
-      // HTML: false,
-      // Image: false,
-      // JavaScript: false,
-      // SVG: false,
-    }),
-  ],
+      CSS: false,
+      HTML: false,
+      Image: false,
+      JavaScript: false,
+      SVG: false,
+    }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
-      entrypoint: 'astro/assets/services/sharp',
-    },
-  },
+      entrypoint: 'astro/assets/services/sharp'
+    }
+  }
 });
