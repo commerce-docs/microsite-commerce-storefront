@@ -13,6 +13,7 @@ export default defineConfig({
   },
   site: 'https://dropins.dev',
   integrations: [
+    qwikdev(),
     tailwind({
       nesting: true
     }), starlight({
@@ -51,50 +52,41 @@ export default defineConfig({
       social: {
         github: 'https://github.com/commerce-docs/dropins.dev'
       },
-      sidebar: [{
-        label: 'Introduction',
-        autogenerate: {
-          directory: '/introduction/'
-        }
-      }, {
-        label: 'Storefront Tutorial',
-        autogenerate: {
-          directory: '/storefront-tutorial/'
-        }
-      }, {
-        label: 'Product Details',
-        badge: 'beta',
-        autogenerate: {
-          directory: '/product-details/'
-        }
-      }, {
-        label: 'Cart',
-        badge: 'alpha',
-        collapsed: true,
-        autogenerate: {
-          directory: '/cart/'
-        }
-      }, {
-        label: 'Checkout',
-        badge: 'alpha',
-        collapsed: true,
-        autogenerate: {
-          directory: '/checkout/'
-        }
-      }, {
-        label: 'References',
-        collapsed: true,
-        autogenerate: {
-          directory: '/references/'
-        }
-      }]
-    }), qwikdev(), (await import('astro-compress')).default({
+      sidebar: [
+        {
+          label: 'Create',
+          autogenerate: {
+            directory: '/create/'
+          }
+        },
+        {
+          label: 'Customize',
+          autogenerate: {
+            directory: '/customize/'
+          }
+        }, {
+          label: 'Launch',
+          autogenerate: {
+            directory: '/launch/'
+          }
+        },
+        {
+          label: 'Dropins',
+          autogenerate: { directory: 'dropins' },
+        }, {
+          label: 'References',
+          collapsed: true,
+          autogenerate: {
+            directory: '/references/'
+          }
+        }]
+    }), (await import('astro-compress')).default({
       Exclude: ['/storefront-tutorial/'],
       CSS: false,
       HTML: false,
-      Image: false,
-      JavaScript: false,
-      SVG: false,
+      Image: true,
+      JavaScript: true,
+      SVG: true,
     }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
@@ -103,3 +95,27 @@ export default defineConfig({
     }
   }
 });
+
+// items: [
+//   {
+//     label: 'Product Details',
+//     badge: 'beta',
+//     autogenerate: {
+//       directory: '/product-details/'
+//     }
+//   }, {
+//     label: 'Cart',
+//     badge: 'alpha',
+//     collapsed: true,
+//     autogenerate: {
+//       directory: '/cart/'
+//     }
+//   }, {
+//     label: 'Checkout',
+//     badge: 'alpha',
+//     collapsed: true,
+//     autogenerate: {
+//       directory: '/checkout/'
+//     }
+//   },
+// ]

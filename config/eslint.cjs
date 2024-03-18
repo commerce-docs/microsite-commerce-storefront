@@ -40,6 +40,7 @@ module.exports = {
         message: 'Please use @adobe/elsie/i18n instead.',
       },
     ],
+    'link.no-such-reference': 'ignore',
   },
   overrides: [
     {
@@ -47,6 +48,7 @@ module.exports = {
       extends: ['plugin:mdx/overrides'],
       rules: {
         'react/self-closing-comp': 'off',
+        'link.no-such-reference': 'off',
       },
     },
   ],
