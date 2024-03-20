@@ -11,7 +11,8 @@ export default defineConfig({
   markdown: {
     gfm: true
   },
-  site: 'https://dropins.dev',
+  site: 'https://experienceleague.adobe.com',
+  base: '/developer/commerce/storefront',
   integrations: [
     qwikdev(),
     tailwind({
@@ -56,7 +57,7 @@ export default defineConfig({
         replacesTitle: false
       },
       social: {
-        github: 'https://github.com/commerce-docs/dropins.dev'
+        github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront'
       },
       sidebar: [
         {
