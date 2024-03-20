@@ -90,9 +90,9 @@ export default defineConfig({
       Exclude: ['/storefront-tutorial/'],
       CSS: false,
       HTML: false,
-      Image: true,
-      JavaScript: true,
-      SVG: true,
+      Image: false,
+      JavaScript: false,
+      SVG: false,
     }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
