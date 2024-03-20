@@ -1,7 +1,7 @@
 ---
 import { PAGE_TITLE_ID } from '../constants';
 import type { Props } from '@astrojs/starlight/props';
-import Prerequisites from '../Prerequisites.astro';
+import Icon from './Icon.astro';
 
 let currentUrl = new URL(Astro.request.url);
 let currentLink = currentUrl.pathname.endsWith('/')
@@ -13,18 +13,41 @@ let selectedSidebarGroup = Astro.props.sidebar.find(
     Array.isArray(group.entries) && group.entries.some((entry: any) => entry.href === currentLink)
 );
 
-const prerequisites = Astro.props.entry.data.prerequisites;
+const { time } = Astro.props.entry.data;
 ---
 
 <div>
   <div class="group">{selectedSidebarGroup ? selectedSidebarGroup.label : ''}</div>
   <div class="title">
     <h1 id={PAGE_TITLE_ID}>{Astro.props.entry.data.title}</h1>
-    {prerequisites && <Prerequisites prerequisites={prerequisites} />}
+    {
+      time && (
+        <div class="time-wrapper">
+          <Icon name="time" size="1.65rem" label="time to complete" title="time to complete" />
+          <div class="time">{time}</div>
+        </div>
+      )
+    }
   </div>
 </div>
 
 <style>
+  .time-wrapper {
+    display: flex;
+    align-items: center;
+    color: var(--sl-color-gray-600);
+    font-size: 1.2rem;
+    gap: 0.25rem;
+    font-style: italic;
+  }
+
+  .time {
+    margin-top: 0.25rem;
+    font-family: var(--sl-font);
+    font-size: 1.1rem;
+    color: #cb361d;
+  }
+
   .group {
     margin-left: 0.1rem;
     margin-bottom: -0.3rem;

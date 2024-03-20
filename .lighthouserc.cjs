@@ -170,7 +170,7 @@ module.exports = {
         'http://localhost/dropins/product-details/pdp-components/index.html',
         'http://localhost/dropins/product-details/pdp-css/index.html',
         'http://localhost/dropins/product-details/pdp-containers/index.html',
-        'http://localhost/dropins/product-details/pdp-installation/index.html',
+        'http://localhost/dropins/product-details/index.html',
         'http://localhost/dropins/product-details/pdp-slots/index.html',
         'http://localhost/references/configurations/index.html',
         'http://localhost/references/requirements/index.html',

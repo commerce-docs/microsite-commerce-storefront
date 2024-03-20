@@ -28,6 +28,7 @@ const docs = defineCollection({
       iframe: iframeSchema,
       hero: heroSchema,
       prerequisites: prerequisiteSchema.optional(),
+      time: zod.string().optional(),
     }),
   }),
 });
