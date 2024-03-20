@@ -1,4 +1,4 @@
-# Adobe dropin component documentation
+# Adobe Commerce Storefront documentation
 
 To install dependencies:
 
