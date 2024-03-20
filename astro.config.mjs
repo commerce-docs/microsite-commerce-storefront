@@ -8,11 +8,18 @@ import qwikdev from '@qwikdev/astro';
 
 // https://astro.build/config
 export default defineConfig({
-  markdown: {
-    gfm: true
-  },
   site: 'https://experienceleague.adobe.com',
   base: '/developer/commerce/storefront',
+  outDir: './storefront',
+  editLink: {
+    baseUrl: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/',
+  },
+  // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp'
+    }
+  },
   integrations: [
     qwikdev(),
     tailwind({
@@ -86,22 +93,20 @@ export default defineConfig({
           autogenerate: {
             directory: '/references/'
           }
-        }]
-    }), (await import('astro-compress')).default({
-      Exclude: ['/storefront-tutorial/'],
-      CSS: false,
-      HTML: false,
-      Image: false,
-      JavaScript: false,
-      SVG: false,
-    }),],
-  // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
-  image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp'
-    }
-  }
+        }
+      ]
+    }),
+    (await import('astro-compress')).default({
+      Exclude: ['/customize/'],
+      CSS: true,
+      HTML: true,
+      Image: true,
+      JavaScript: true,
+      SVG: true,
+    }),
+  ],
 });
+
 
 // items: [
 //   {
