@@ -23,6 +23,12 @@ export default defineConfig({
           'http-equiv': 'Content-Security-Policy',
           content: "default-src 'self'; frame-src 'self' stackblitz.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
         }
+      },
+      {
+        tag: 'script',
+        attrs: {
+          src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js',
+        },
       }],
       title: 'Adobe Commerce Storefront',
       favicon: 'favicon.ico',
