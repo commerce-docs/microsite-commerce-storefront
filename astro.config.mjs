@@ -4,7 +4,6 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
-import qwikdev from '@qwikdev/astro';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,7 +14,6 @@ export default defineConfig({
     baseUrl: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/',
   },
   integrations: [
-    qwikdev(),
     tailwind({
       nesting: true
     }), starlight({
