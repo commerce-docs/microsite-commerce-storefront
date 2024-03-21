@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
+import starlightImageZoom from 'starlight-image-zoom'
 
 // https://astro.build/config
 export default defineConfig({
@@ -34,10 +35,12 @@ export default defineConfig({
       title: 'Adobe Commerce Storefront',
       favicon: 'favicon.ico',
       lastUpdated: true,
-      plugins: [starlightLinksValidator({
-        errorOnFallbackPages: false,
-        errorOnInconsistentLocale: true
-      })],
+      plugins: [
+        starlightImageZoom(),
+        starlightLinksValidator({
+          errorOnFallbackPages: false,
+          errorOnInconsistentLocale: true
+        })],
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
