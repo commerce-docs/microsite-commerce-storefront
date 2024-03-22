@@ -83,6 +83,10 @@ export default defineConfig({
         {
           label: 'Dropins',
           autogenerate: { directory: 'dropins' },
+        }, 
+        {
+          label: 'Blocks',
+          autogenerate: { directory: 'Blocks' },
         }, {
           label: 'References',
           collapsed: true,
