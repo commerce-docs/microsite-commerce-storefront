@@ -36,11 +36,12 @@ export default defineConfig({
       favicon: 'favicon.ico',
       lastUpdated: true,
       plugins: [
-        starlightImageZoom(),
         starlightLinksValidator({
           errorOnFallbackPages: false,
           errorOnInconsistentLocale: true
-        })],
+        }),
+        starlightImageZoom(),
+      ],
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
@@ -54,7 +55,7 @@ export default defineConfig({
         Pagination: './src/components/overrides/Pagination.astro',
         Sidebar: './src/components/overrides/Sidebar.astro'
       },
-      customCss: ['./src/styles/tailwind.css', './src/styles/fonts.css', './src/styles/custom.css', './src/styles/badge.css'],
+      customCss: ['./src/styles/tailwind.css', './src/styles/fonts.css', './src/styles/badge.css', './src/styles/custom.css'],
       logo: {
         src: './src/assets/sitelogo.svg',
         replacesTitle: false
@@ -64,7 +65,7 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Create',
+          label: 'Getting Started',
           autogenerate: {
             directory: '/create/'
           }
@@ -80,33 +81,101 @@ export default defineConfig({
             directory: '/launch/'
           }
         },
+        // DROPIN Navigation.
         {
           label: 'Dropins',
-          autogenerate: { directory: 'dropins' },
-        }, 
+          collapsed: true,
+          items: [
+            // { label: 'Dropins overview', link: '/dropins/dropins-overview/' },
+            // A nested group of links.
+            {
+              label: 'Product Details',
+              attrs: { style: 'font-size: 1rem; font-weight: 400' },
+              items: [
+                { label: 'PDP Install', link: '/dropins/product-details/pdp-install/' },
+                { label: 'PDP Anatomy', link: '/dropins/product-details/pdp-anatomy/' },
+                { label: 'PDP API', link: '/dropins/product-details/pdp-api/' },
+                { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
+                { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
+                { label: 'PDP Components', link: '/dropins/product-details/pdp-components/' },
+                { label: 'PDP CSS Classes', link: '/dropins/product-details/pdp-css/' },
+              ],
+            },
+            {
+              label: 'Checkout',
+              collapsed: true,
+              attrs: { style: 'font-size: 1rem; font-weight: 400' },
+              items: [
+                { label: 'Checkout Install', link: '/dropins/checkout/checkout-install/' },
+                { label: 'Checkout Anatomy', link: '/dropins/checkout/checkout-anatomy/' },
+                { label: 'Checkout API', link: '/dropins/checkout/checkout-api/' },
+                { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
+                { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
+                { label: 'Checkout Components', link: '/dropins/checkout/checkout-components/' },
+                { label: 'Checkout CSS Classes', link: '/dropins/checkout/checkout-css/' },
+              ],
+            },
+            {
+              label: 'Cart',
+              collapsed: true,
+              attrs: { style: 'font-size: 1rem; font-weight: 400' },
+              items: [
+                { label: 'Cart Install', link: '/dropins/cart/cart-install/' },
+                { label: 'Cart Anatomy', link: '/dropins/cart/cart-anatomy/' },
+                { label: 'Cart API', link: '/dropins/cart/cart-api/' },
+                { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
+                { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
+                { label: 'Cart Components', link: '/dropins/cart/cart-components/' },
+                { label: 'Cart CSS Classes', link: '/dropins/cart/cart-css/' },
+              ],
+            },
+            {
+              label: 'User Authentication',
+              collapsed: true,
+              attrs: { style: 'font-size: 1rem; font-weight: 400' },
+              items: [
+                { label: 'User Authentication Install', link: '/dropins/user-auth/userauth-install/' },
+              ],
+            },
+            {
+              label: 'User Account',
+              collapsed: true,
+              attrs: { style: 'font-size: 1rem; font-weight: 400' },
+              items: [
+                { label: 'User Account Install', link: '/dropins/user-account/useraccount-install/' },
+              ],
+            },
+          ],
+        },
         {
           label: 'Blocks',
-          autogenerate: { directory: 'Blocks' },
-        }, {
-          label: 'References',
+          collapsed: true,
+          items: [
+            { label: 'Blocks overview', link: '/blocks/' },
+          ],
+        },
+        {
+          label: 'Reference',
           collapsed: true,
           autogenerate: {
             directory: '/references/'
           }
-        }
-      ]
-    }),
-    // (await import('astro-compress')).default({
-    //   // Exclude: ['/customize/'],
-    //   CSS: false,
-    //   JavaScript: false,
-    //   HTML: false,
-    //   Image: true,
-    //   SVG: true,
-    // }),
-  ],
+        }]
+    }), (await import('astro-compress')).default({
+      Exclude: ['/customize/'],
+      CSS: false,
+      HTML: false,
+      JavaScript: false,
+      Image: true,
+      SVG: true,
+    }),],
+  // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp'
+    }
+  }
 });
-
 
 // items: [
 //   {
