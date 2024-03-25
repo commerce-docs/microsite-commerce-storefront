@@ -92,13 +92,13 @@ export default defineConfig({
               label: 'Product Details',
               attrs: { style: 'font-size: 1rem; font-weight: 400' },
               items: [
-                { label: 'PDP Install', link: '/dropins/product-details/pdp-install/' },
-                { label: 'PDP Anatomy', link: '/dropins/product-details/pdp-anatomy/' },
-                { label: 'PDP API', link: '/dropins/product-details/pdp-api/' },
-                { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
+                { label: 'PDP Introduction', link: '/dropins/product-details/pdp-introduction/' },
+                { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
+                { label: 'PDP Container', link: '/dropins/product-details/pdp-containers/' },
                 { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
                 { label: 'PDP Components', link: '/dropins/product-details/pdp-components/' },
                 { label: 'PDP CSS Classes', link: '/dropins/product-details/pdp-css/' },
+                { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
               ],
             },
             {
@@ -151,14 +151,21 @@ export default defineConfig({
           label: 'Blocks',
           collapsed: true,
           items: [
-            { label: 'Blocks overview', link: '/blocks/' },
+            { label: 'Blocks overview', link: '/blocks/blocks-overview/' },
           ],
         },
         {
-          label: 'Reference',
+          label: 'References',
           collapsed: true,
           autogenerate: {
             directory: '/references/'
+          }
+        },
+        {
+          label: 'Toubleshooting',
+          collapsed: true,
+          autogenerate: {
+            directory: '/troubleshooting/'
           }
         }]
     }), (await import('astro-compress')).default({
