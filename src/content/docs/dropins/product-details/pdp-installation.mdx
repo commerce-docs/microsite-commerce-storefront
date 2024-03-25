@@ -1,0 +1,188 @@
+---
+title: PDP Installation
+description: Learn how to install the Product Details dropin into your site.
+sidebar:
+  order: 2
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Tutorial from '@components/Tutorial.astro';
+
+You can install the Product Details dropin for run-time or build-time environments. The installation steps for both environments are the same after the initial dropin package imports.
+
+:::note[Install @dropins/tools]
+The `@dropins/tools` package is the dropins SDK and is required for all dropins to work correctly.
+:::
+
+## Run-time environments
+
+For run-time environments that don't use a bundler, use an `importmap` in the `<head>` tag of your project's `index.html` or `head.html` page to define the CDNs that your PDP JavaScript file uses for its `import` statements to retreive the required dropins SDK (`@dropins/tools`) and Product Details (`@dropins/storefront-pdp`) files.
+
+## Build-time environments
+
+For build-time environments that use a bundler like Webpack or Vite, you also use an `importmap` in the `<head>` tag of your project's `index.html` or `head.html` page. But instead of a CDN, you will specify the local locations (in your project) for the SDK and PDP packages.
+
+## Step-by-step
+
+The following steps show how to install the Product Details dropin into your site for both run-time and build-time environments.
+
+<Tutorial>
+
+### Install the packages
+
+**Build-time environments only.** Skip this step if your project only supports a run-time environment. 
+
+Use the package manager of your choice to install the dropin SDK (`@dropins/tools`) and the Product Details dropin (`@dropins/storefront-pdp`) packages.
+
+<Tabs>
+  <TabItem label="npm" icon="seti:npm">
+    ```bash frame="none"
+    npm install @dropins/tools @dropins/storefront-pdp
+    ```
+  </TabItem>
+  <TabItem label="yarn" icon="seti:yarn">
+    ```bash frame="none"
+    yarn add @dropins/tools @dropins/storefront-pdp
+    ```
+  </TabItem>
+  <TabItem label="pnpm" icon="pnpm">
+    ```bash frame="none"
+    pnpm add @dropins/tools @dropins/storefront-pdp
+    ```
+  </TabItem>
+</Tabs>
+
+### Map the packages
+
+In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to `@dropin` CDN URLs (for run-time environments) and custom or `node_modules` directories for local installations. 
+
+<Tabs>
+  <TabItem label="CDN" icon="external">
+    This example shows an `importmap` pointing both packages to a CDN for the dropin SDK (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
+
+    ```html title="index.html" {"Replace CDN URLs with correct URLs":1} del='https://cdn.jsdelivr.net/npm/'
+    <head>
+      <script type="importmap">
+        { 
+          "imports": {
+            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
+            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest",
+          }
+        }
+      </script>
+    </head>
+    ```
+  </TabItem>
+  <TabItem label="Custom location" icon="seti:folder">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin SDK (@dropins/tools) and the PDP dropin (@dropins/storefront-pdp):
+
+    ```html title="head.html"
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "/scripts/__dropins__/tools/",
+          "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
+        }
+      }
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+  <TabItem label="node_modules" icon="seti:npm">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed dropin files from the dropin SDK (@dropins/tools) and the PDP dropin (@dropins/storefront-pdp):
+  
+  ```html title="head.html"
+  <script type="importmap">
+    {
+      "imports": {
+        "@dropins/tools/": "/node_modules/@dropins/tools/",
+        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-pdp/",
+      }
+    }
+  </script>
+  <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+</Tabs>
+
+With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your PDP dropin JavaScript file as described in the next step.
+
+### Import the required files
+
+Import the required files from the dropins SDK (`@dropin/tools/initialers.js`) and the Product Details dropin (`@dropins/storefront-pdp/`) into a JavaScript file for your PDP dropin. The example here shows the imports added to a `product-details.js` file. These imports constitute the minimum imports you need to create a fully functioning Product Details dropin for your site:
+
+```js title="product-details.js"
+// Drop-in Tools
+import { initializers } from '@dropins/tools/initializer.js';
+
+// Drop-in Functions
+import * as product from '@dropins/storefront-pdp/api.js';
+
+// Drop-in Provider
+import { render as productRenderer } from '@dropins/storefront-pdp/render.js';
+
+// Drop-in Container
+import ProductDetails from '@dropins/storefront-pdp/containers/ProductDetails.js';
+```
+
+### Connect to the endpoint
+
+Connect your Product Details dropin to the Catalog Service GraphQL enpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
+
+```js title="product-details.js"
+// Set endpoint configuration
+product.setEndpoint('https://<catalog-service-enpoint>/graphql');
+
+product.setFetchGraphQlHeaders({
+  // Environment required headers
+  'Magento-Environment-Id': 'your-environment-id',
+  'Magento-Store-View-Code': 'your-store-view-code',
+  'Magento-Website-Code': 'your-website-code',
+  'x-api-key': 'your-api-key',
+  'Magento-Store-Code': 'main_website_store',
+  'Magento-Customer-Group': 'your-customer-group',
+  'Content-Type': 'application/json',
+});
+```  
+
+### Register and load the dropin
+
+The following example shows how to register the Product Details dropin and mount (load) the dropin:
+
+```js title="product-details.js"
+// Register Product Details Dropin
+initializers.register(product.initialize);
+
+// Mount Initializers
+window.addEventListener('load', initializers.mount);
+```
+
+### Render the dropin
+
+Render the Product Details dropin on the page. The example below provides the minimal configuration options required to render the default Product Details dropin:
+
+```js title="product-details.js"
+// Render Product Details
+productRenderer(ProductDetails, {
+  sku: 'yourSkuFetcher()',
+  // other configuration options
+  // slots for adding custom elements, components, and functions
+})(document.getElementById('your-pdp-element'));
+```
+
+Test the Product Details dropin by viewing your PDP page in a browswer, or running your local dev or build server. If you see the Product Details dropin rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly. 
+
+</Tutorial>
+
+## Troubleshooting
+
+If you have problems with your installation, visit the Troubleshooting section for common dropin installation issues.
+
+## Summary
+
+The installation of all dropins follows the same pattern demonstrated by installing the PDP dropin: Install, Map, Import, Connect, Register, and Render. We like to call the process `iMICRR` for short, pronounced `eye-mike-er`. No, actually, we don't call it that, but if it helps...Enjoy!
+
+## Next steps
+
+If your installation was successful, you're now ready to customize the dropin to fit your site's design and functionality. Instructions for configuring and customizing the Product Details dropin are found in the next topic PDP Containers.
