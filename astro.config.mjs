@@ -47,7 +47,7 @@ export default defineConfig({
       Pagination: './src/components/overrides/Pagination.astro',
       Sidebar: './src/components/overrides/Sidebar.astro'
     },
-    customCss: ['./src/styles/tailwind.css', './src/styles/fonts.css', './src/styles/badge.css', './src/styles/custom.css'],
+    customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/custom.css'],
     logo: {
       src: './src/assets/sitelogo.svg',
       replacesTitle: false
