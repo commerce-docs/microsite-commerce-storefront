@@ -88,14 +88,14 @@ export default defineConfig({
             label: 'PDP Installation',
             link: '/dropins/product-details/pdp-installation/'
           }, {
+            label: 'PDP Styles',
+            link: '/dropins/product-details/pdp-styles/'
+          }, {
             label: 'PDP Container',
             link: '/dropins/product-details/pdp-containers/'
           }, {
             label: 'PDP Slots',
             link: '/dropins/product-details/pdp-slots/'
-          }, {
-            label: 'PDP Styles',
-            link: '/dropins/product-details/pdp-styles/'
           }, {
             label: 'PDP Functions',
             link: '/dropins/product-details/pdp-functions/'
