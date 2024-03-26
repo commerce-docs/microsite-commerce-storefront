@@ -21,13 +21,6 @@ export default defineConfig({
     nesting: true
   }), starlight({
     head: [
-      //   {
-      //   tag: 'meta',
-      //   attrs: {
-      //     'http-equiv': 'Content-Security-Policy',
-      //     content: "default-src 'self'; frame-src 'self' stackblitz.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
-      //   }
-      // },
       {
         tag: 'script',
         attrs: {
@@ -83,8 +76,6 @@ export default defineConfig({
       label: 'Dropins',
       collapsed: true,
       items: [
-        // { label: 'Dropins overview', link: '/dropins/dropins-overview/' },
-        // A nested group of links.
         {
           label: 'Product Details',
           attrs: {
@@ -103,11 +94,8 @@ export default defineConfig({
             label: 'PDP Slots',
             link: '/dropins/product-details/pdp-slots/'
           }, {
-            label: 'PDP Components',
-            link: '/dropins/product-details/pdp-components/'
-          }, {
-            label: 'PDP CSS Classes',
-            link: '/dropins/product-details/pdp-css/'
+            label: 'PDP Styles',
+            link: '/dropins/product-details/pdp-styles/'
           }, {
             label: 'PDP Functions',
             link: '/dropins/product-details/pdp-functions/'
@@ -119,14 +107,11 @@ export default defineConfig({
             style: 'font-size: 1rem; font-weight: 400'
           },
           items: [{
-            label: 'Checkout Install',
-            link: '/dropins/checkout/checkout-install/'
+            label: 'Checkout Introduction',
+            link: '/dropins/checkout/checkout-introduction/'
           }, {
-            label: 'Checkout Anatomy',
-            link: '/dropins/checkout/checkout-anatomy/'
-          }, {
-            label: 'Checkout API',
-            link: '/dropins/checkout/checkout-api/'
+            label: 'Checkout Installation',
+            link: '/dropins/checkout/checkout-installation/'
           }, {
             label: 'Checkout Containers',
             link: '/dropins/checkout/checkout-containers/'
@@ -134,12 +119,12 @@ export default defineConfig({
             label: 'Checkout Slots',
             link: '/dropins/checkout/checkout-slots/'
           }, {
-            label: 'Checkout Components',
-            link: '/dropins/checkout/checkout-components/'
+            label: 'Checkout Styles',
+            link: '/dropins/checkout/checkout-styles/'
           }, {
-            label: 'Checkout CSS Classes',
-            link: '/dropins/checkout/checkout-css/'
-          }]
+            label: 'Checkout Functions',
+            link: '/dropins/checkout/checkout-functions/'
+          },]
         }, {
           label: 'Cart',
           collapsed: true,
@@ -147,14 +132,11 @@ export default defineConfig({
             style: 'font-size: 1rem; font-weight: 400'
           },
           items: [{
-            label: 'Cart Install',
-            link: '/dropins/cart/cart-install/'
+            label: 'Cart Introduction',
+            link: '/dropins/cart/cart-introduction/'
           }, {
-            label: 'Cart Anatomy',
-            link: '/dropins/cart/cart-anatomy/'
-          }, {
-            label: 'Cart API',
-            link: '/dropins/cart/cart-api/'
+            label: 'Cart Installation',
+            link: '/dropins/cart/cart-installation/'
           }, {
             label: 'Cart Containers',
             link: '/dropins/cart/cart-containers/'
@@ -162,12 +144,12 @@ export default defineConfig({
             label: 'Cart Slots',
             link: '/dropins/cart/cart-slots/'
           }, {
-            label: 'Cart Components',
-            link: '/dropins/cart/cart-components/'
+            label: 'Cart Styles',
+            link: '/dropins/cart/cart-styles/'
           }, {
-            label: 'Cart CSS Classes',
-            link: '/dropins/cart/cart-css/'
-          }]
+            label: 'Cart Functions',
+            link: '/dropins/cart/cart-functions/'
+          },]
         }, {
           label: 'User Authentication',
           collapsed: true,
@@ -224,27 +206,3 @@ export default defineConfig({
     }
   }
 });
-
-// items: [
-//   {
-//     label: 'Product Details',
-//     badge: 'beta',
-//     autogenerate: {
-//       directory: '/product-details/'
-//     }
-//   }, {
-//     label: 'Cart',
-//     badge: 'alpha',
-//     collapsed: true,
-//     autogenerate: {
-//       directory: '/cart/'
-//     }
-//   }, {
-//     label: 'Checkout',
-//     badge: 'alpha',
-//     collapsed: true,
-//     autogenerate: {
-//       directory: '/checkout/'
-//     }
-//   },
-// ]
