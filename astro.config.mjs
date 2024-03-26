@@ -196,8 +196,8 @@ export default defineConfig({
     CSS: false,
     HTML: false,
     JavaScript: false,
-    Image: true,
-    SVG: true
+    Image: false,
+    SVG: false
   })],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
