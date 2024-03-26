@@ -110,7 +110,7 @@ export const fileTreeProcessor = rehype().use(() => (tree, file) => {
 
     if (isDirectory) {
       node.children = [
-        h('details', { open: hasContents }, [
+        h('details', { open: false }, [
           h('summary', treeEntry),
           ...(hasContents ? otherChildren : [h('ul', h('li', '…'))]),
         ]),
@@ -121,7 +121,7 @@ export const fileTreeProcessor = rehype().use(() => (tree, file) => {
 
     node.children = [treeEntry, ...otherChildren];
 
-    // Files can’t contain further files or directories, so skip iterating children.
+    // Files can't contain further files or directories, so skip iterating children.
     return SKIP;
   });
 });
