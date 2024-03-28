@@ -83,6 +83,7 @@ export const fileTreeProcessor = rehype().use(() => (tree, file) => {
       otherChildren.some((child) => child.type === 'element' && child.tagName === 'ul');
     const isPlaceholder = /^\s*(\.{3}|…)\s*$/.test(firstChildTextContent);
     const isHighlighted = firstChild.type === 'element' && firstChild.tagName === 'strong';
+    console.log("🚀 ~ visit ~ isHighlighted:", isHighlighted)
     const hasContents = otherChildren.length > 0;
 
     const fileExtension = isDirectory ? 'dir' : firstChildTextContent.trim().split('.').pop() || '';
@@ -110,7 +111,7 @@ export const fileTreeProcessor = rehype().use(() => (tree, file) => {
 
     if (isDirectory) {
       node.children = [
-        h('details', { open: false }, [
+        h('details', { open: isHighlighted }, [
           h('summary', treeEntry),
           ...(hasContents ? otherChildren : [h('ul', h('li', '…'))]),
         ]),

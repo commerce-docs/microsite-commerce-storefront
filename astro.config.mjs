@@ -71,106 +71,108 @@ export default defineConfig({
         directory: '/launch/'
       }
     },
+    {
+      label: 'PDP Dropin',
+      badge: 'Beta',
+      attrs: {
+        style: 'font-size: 1rem; font-weight: 400'
+      },
+      items: [{
+        label: 'PDP Introduction',
+        link: '/dropins/product-details/pdp-introduction/'
+      }, {
+        label: 'PDP Installation',
+        link: '/dropins/product-details/pdp-installation/'
+      }, {
+        label: 'PDP Styles',
+        link: '/dropins/product-details/pdp-styles/'
+      }, {
+        label: 'PDP Container',
+        link: '/dropins/product-details/pdp-containers/'
+      }, {
+        label: 'PDP Slots',
+        link: '/dropins/product-details/pdp-slots/'
+      }, {
+        label: 'PDP Functions',
+        link: '/dropins/product-details/pdp-functions/'
+      }]
+    },
     // DROPIN Navigation.
     {
       label: 'Dropins',
+      badge: 'In Development',
       collapsed: true,
-      items: [
-        {
-          label: 'Product Details',
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
-          items: [{
-            label: 'PDP Introduction',
-            link: '/dropins/product-details/pdp-introduction/'
-          }, {
-            label: 'PDP Installation',
-            link: '/dropins/product-details/pdp-installation/'
-          }, {
-            label: 'PDP Styles',
-            link: '/dropins/product-details/pdp-styles/'
-          }, {
-            label: 'PDP Container',
-            link: '/dropins/product-details/pdp-containers/'
-          }, {
-            label: 'PDP Slots',
-            link: '/dropins/product-details/pdp-slots/'
-          }, {
-            label: 'PDP Functions',
-            link: '/dropins/product-details/pdp-functions/'
-          }]
+      items: [{
+        label: 'Checkout',
+        collapsed: true,
+        attrs: {
+          style: 'font-size: 1rem; font-weight: 400'
+        },
+        items: [{
+          label: 'Checkout Introduction',
+          link: '/dropins/checkout/checkout-introduction/'
         }, {
-          label: 'Checkout',
-          collapsed: true,
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
-          items: [{
-            label: 'Checkout Introduction',
-            link: '/dropins/checkout/checkout-introduction/'
-          }, {
-            label: 'Checkout Installation',
-            link: '/dropins/checkout/checkout-installation/'
-          }, {
-            label: 'Checkout Containers',
-            link: '/dropins/checkout/checkout-containers/'
-          }, {
-            label: 'Checkout Slots',
-            link: '/dropins/checkout/checkout-slots/'
-          }, {
-            label: 'Checkout Styles',
-            link: '/dropins/checkout/checkout-styles/'
-          }, {
-            label: 'Checkout Functions',
-            link: '/dropins/checkout/checkout-functions/'
-          },]
+          label: 'Checkout Installation',
+          link: '/dropins/checkout/checkout-installation/'
         }, {
-          label: 'Cart',
-          collapsed: true,
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
-          items: [{
-            label: 'Cart Introduction',
-            link: '/dropins/cart/cart-introduction/'
-          }, {
-            label: 'Cart Installation',
-            link: '/dropins/cart/cart-installation/'
-          }, {
-            label: 'Cart Containers',
-            link: '/dropins/cart/cart-containers/'
-          }, {
-            label: 'Cart Slots',
-            link: '/dropins/cart/cart-slots/'
-          }, {
-            label: 'Cart Styles',
-            link: '/dropins/cart/cart-styles/'
-          }, {
-            label: 'Cart Functions',
-            link: '/dropins/cart/cart-functions/'
-          },]
+          label: 'Checkout Containers',
+          link: '/dropins/checkout/checkout-containers/'
         }, {
-          label: 'User Authentication',
-          collapsed: true,
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
-          items: [{
-            label: 'User Authentication Install',
-            link: '/dropins/user-auth/userauth-install/'
-          }]
+          label: 'Checkout Slots',
+          link: '/dropins/checkout/checkout-slots/'
         }, {
-          label: 'User Account',
-          collapsed: true,
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
-          items: [{
-            label: 'User Account Install',
-            link: '/dropins/user-account/useraccount-install/'
-          }]
+          label: 'Checkout Styles',
+          link: '/dropins/checkout/checkout-styles/'
+        }, {
+          label: 'Checkout Functions',
+          link: '/dropins/checkout/checkout-functions/'
+        },]
+      }, {
+        label: 'Cart',
+        collapsed: true,
+        attrs: {
+          style: 'font-size: 1rem; font-weight: 400'
+        },
+        items: [{
+          label: 'Cart Introduction',
+          link: '/dropins/cart/cart-introduction/'
+        }, {
+          label: 'Cart Installation',
+          link: '/dropins/cart/cart-installation/'
+        }, {
+          label: 'Cart Containers',
+          link: '/dropins/cart/cart-containers/'
+        }, {
+          label: 'Cart Slots',
+          link: '/dropins/cart/cart-slots/'
+        }, {
+          label: 'Cart Styles',
+          link: '/dropins/cart/cart-styles/'
+        }, {
+          label: 'Cart Functions',
+          link: '/dropins/cart/cart-functions/'
+        },]
+      }, {
+        label: 'User Auth',
+        collapsed: true,
+        attrs: {
+          style: 'font-size: 1rem; font-weight: 400'
+        },
+        items: [{
+          label: 'User Auth Introduction',
+          link: '/dropins/user-auth/userauth-introduction/'
         }]
+      }, {
+        label: 'User Account',
+        collapsed: true,
+        attrs: {
+          style: 'font-size: 1rem; font-weight: 400'
+        },
+        items: [{
+          label: 'User Account Introduction',
+          link: '/dropins/user-account/useraccount-introduction/'
+        }]
+      }]
     }, {
       label: 'Blocks',
       collapsed: true,
