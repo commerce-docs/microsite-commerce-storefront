@@ -6,8 +6,6 @@ import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 
-import compress from "astro-compress";
-
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
@@ -33,7 +31,8 @@ export default defineConfig({
     plugins: [starlightLinksValidator({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
-    }), starlightImageZoom()],
+    }), starlightImageZoom(),
+    ],
     // Component overrides
     components: {
       CallToAction: './src/components/overrides/CallToAction.astro',
@@ -47,7 +46,7 @@ export default defineConfig({
       Pagination: './src/components/overrides/Pagination.astro',
       Sidebar: './src/components/overrides/Sidebar.astro'
     },
-    customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/custom.css'],
+    customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/custom.css', './src/styles/asides.css',],
     logo: {
       src: './src/assets/sitelogo.svg',
       replacesTitle: false
@@ -73,38 +72,36 @@ export default defineConfig({
     },
     {
       label: 'PDP Dropin',
-      badge: 'Beta',
-      attrs: {
-        style: 'font-size: 1rem; font-weight: 400'
-      },
+      badge: { text: 'Beta', variant: 'success' },
+
       items: [{
         label: 'PDP Introduction',
-        link: '/dropins/product-details/pdp-introduction/'
+        link: '/product-details/pdp-introduction/'
       }, {
         label: 'PDP Installation',
-        link: '/dropins/product-details/pdp-installation/'
+        link: '/product-details/pdp-installation/'
       }, {
         label: 'PDP Styles',
-        link: '/dropins/product-details/pdp-styles/'
+        link: '/product-details/pdp-styles/'
       }, {
         label: 'PDP Container',
-        link: '/dropins/product-details/pdp-containers/'
+        link: '/product-details/pdp-containers/'
       }, {
         label: 'PDP Slots',
-        link: '/dropins/product-details/pdp-slots/'
+        link: '/product-details/pdp-slots/'
       }, {
         label: 'PDP Functions',
-        link: '/dropins/product-details/pdp-functions/'
+        link: '/product-details/pdp-functions/'
       }]
     },
     // DROPIN Navigation.
     {
       label: 'Dropins',
-      badge: 'In Development',
+      badge: { text: 'In Development', variant: 'danger' },
       collapsed: true,
       items: [{
         label: 'Checkout',
-        collapsed: true,
+        collapsed: false,
         attrs: {
           style: 'font-size: 1rem; font-weight: 400'
         },
@@ -129,10 +126,7 @@ export default defineConfig({
         },]
       }, {
         label: 'Cart',
-        collapsed: true,
-        attrs: {
-          style: 'font-size: 1rem; font-weight: 400'
-        },
+        collapsed: false,
         items: [{
           label: 'Cart Introduction',
           link: '/dropins/cart/cart-introduction/'
@@ -154,20 +148,14 @@ export default defineConfig({
         },]
       }, {
         label: 'User Auth',
-        collapsed: true,
-        attrs: {
-          style: 'font-size: 1rem; font-weight: 400'
-        },
+        collapsed: false,
         items: [{
           label: 'User Auth Introduction',
           link: '/dropins/user-auth/userauth-introduction/'
         }]
       }, {
         label: 'User Account',
-        collapsed: true,
-        attrs: {
-          style: 'font-size: 1rem; font-weight: 400'
-        },
+        collapsed: false,
         items: [{
           label: 'User Account Introduction',
           link: '/dropins/user-account/useraccount-introduction/'
@@ -193,14 +181,7 @@ export default defineConfig({
         directory: '/troubleshooting/'
       }
     }]
-  }), (await import('astro-compress')).default({
-    Exclude: ['/customize/'],
-    CSS: false,
-    HTML: false,
-    JavaScript: false,
-    Image: false,
-    SVG: false
-  })],
+  }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
