@@ -6,6 +6,8 @@ import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 
+import compress from "astro-compress";
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
@@ -18,21 +20,19 @@ export default defineConfig({
   integrations: [tailwind({
     nesting: true
   }), starlight({
-    head: [
-      {
-        tag: 'script',
-        attrs: {
-          src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js'
-        }
-      }],
+    head: [{
+      tag: 'script',
+      attrs: {
+        src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js'
+      }
+    }],
     title: 'Adobe Commerce Storefront',
     favicon: 'favicon.ico',
     lastUpdated: true,
     plugins: [starlightLinksValidator({
       errorOnFallbackPages: false,
       errorOnInconsistentLocale: true
-    }), starlightImageZoom(),
-    ],
+    }), starlightImageZoom()],
     // Component overrides
     components: {
       CallToAction: './src/components/overrides/CallToAction.astro',
@@ -46,7 +46,7 @@ export default defineConfig({
       Pagination: './src/components/overrides/Pagination.astro',
       Sidebar: './src/components/overrides/Sidebar.astro'
     },
-    customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/custom.css', './src/styles/asides.css',],
+    customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/custom.css', './src/styles/asides.css'],
     logo: {
       src: './src/assets/sitelogo.svg',
       replacesTitle: false
@@ -55,7 +55,7 @@ export default defineConfig({
       github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront'
     },
     sidebar: [{
-      label: 'Getting Started',
+      label: 'Create',
       autogenerate: {
         directory: '/create/'
       }
@@ -69,11 +69,12 @@ export default defineConfig({
       autogenerate: {
         directory: '/launch/'
       }
-    },
-    {
+    }, {
       label: 'PDP Dropin',
-      badge: { text: 'Beta', variant: 'success' },
-
+      badge: {
+        text: 'Beta',
+        variant: 'success'
+      },
       items: [{
         label: 'PDP Introduction',
         link: '/product-details/pdp-introduction/'
@@ -97,7 +98,10 @@ export default defineConfig({
     // DROPIN Navigation.
     {
       label: 'Dropins',
-      badge: { text: 'In Development', variant: 'danger' },
+      badge: {
+        text: 'In Development',
+        variant: 'danger'
+      },
       collapsed: true,
       items: [{
         label: 'Checkout',
@@ -181,7 +185,14 @@ export default defineConfig({
         directory: '/troubleshooting/'
       }
     }]
-  }),],
+  }), (await import('astro-compress')).default({
+    // Exclude: ['/customize/'],
+    CSS: false,
+    HTML: false,
+    JavaScript: false,
+    Image: true,
+    SVG: true
+  })],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
