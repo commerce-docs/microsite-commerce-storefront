@@ -194,9 +194,9 @@ export default defineConfig({
     }]
   }), (await import('astro-compress')).default({
     // Exclude: ['/customize/'],
-    CSS: false,
-    HTML: false,
-    JavaScript: false,
+    CSS: true,
+    HTML: true,
+    JavaScript: true,
     Image: true,
     SVG: true
   })],
