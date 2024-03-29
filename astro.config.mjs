@@ -25,6 +25,13 @@ export default defineConfig({
       attrs: {
         src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js'
       }
+    },
+    {
+      tag: 'meta',
+      attrs: {
+        name: 'google-site-verification',
+        content: 'NwoVbL9MrtJAa4vdfMC0vJmKV3Hvuc4L_UHlv4Uzjgk'
+      }
     }],
     title: 'Adobe Commerce Storefront',
     favicon: 'favicon.ico',
