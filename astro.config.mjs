@@ -119,44 +119,56 @@ export default defineConfig({
         items: [{
           label: 'Checkout Introduction',
           link: '/dropins/checkout/checkout-introduction/'
-        }, {
-          label: 'Checkout Installation',
-          link: '/dropins/checkout/checkout-installation/'
-        }, {
-          label: 'Checkout Containers',
-          link: '/dropins/checkout/checkout-containers/'
-        }, {
-          label: 'Checkout Slots',
-          link: '/dropins/checkout/checkout-slots/'
-        }, {
-          label: 'Checkout Styles',
-          link: '/dropins/checkout/checkout-styles/'
-        }, {
-          label: 'Checkout Functions',
-          link: '/dropins/checkout/checkout-functions/'
-        },]
+        },
+          // {
+          //   label: 'Checkout Installation',
+          //   link: '/dropins/checkout/checkout-installation/'
+          // }, 
+          // {
+          //   label: 'Checkout Containers',
+          //   link: '/dropins/checkout/checkout-containers/'
+          // }, 
+          // {
+          //   label: 'Checkout Slots',
+          //   link: '/dropins/checkout/checkout-slots/'
+          // }, 
+          // {
+          //   label: 'Checkout Styles',
+          //   link: '/dropins/checkout/checkout-styles/'
+          // }, 
+          // {
+          //   label: 'Checkout Functions',
+          //   link: '/dropins/checkout/checkout-functions/'
+          // },
+        ]
       }, {
         label: 'Cart',
         collapsed: false,
         items: [{
           label: 'Cart Introduction',
           link: '/dropins/cart/cart-introduction/'
-        }, {
-          label: 'Cart Installation',
-          link: '/dropins/cart/cart-installation/'
-        }, {
-          label: 'Cart Containers',
-          link: '/dropins/cart/cart-containers/'
-        }, {
-          label: 'Cart Slots',
-          link: '/dropins/cart/cart-slots/'
-        }, {
-          label: 'Cart Styles',
-          link: '/dropins/cart/cart-styles/'
-        }, {
-          label: 'Cart Functions',
-          link: '/dropins/cart/cart-functions/'
-        },]
+        }, 
+        // {
+        //   label: 'Cart Installation',
+        //   link: '/dropins/cart/cart-installation/'
+        // }, 
+        // {
+        //   label: 'Cart Containers',
+        //   link: '/dropins/cart/cart-containers/'
+        // }, 
+        // {
+        //   label: 'Cart Slots',
+        //   link: '/dropins/cart/cart-slots/'
+        // }, 
+        // {
+        //   label: 'Cart Styles',
+        //   link: '/dropins/cart/cart-styles/'
+        // }, 
+        // {
+        //   label: 'Cart Functions',
+        //   link: '/dropins/cart/cart-functions/'
+        // },
+      ]
       }, {
         label: 'User Auth',
         collapsed: false,
