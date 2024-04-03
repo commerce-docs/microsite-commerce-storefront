@@ -58,7 +58,7 @@ const newRows = rows.map((row) => {
     <tbody class="body">
       {
         newRows.map((row) => (
-          <tr>
+          <tr class="row">
             {row.map((cell, index) => {
               const isCodeCell =
                 typeof headers[index] === 'string' && (headers[index] as string).endsWith('(code)');
@@ -78,6 +78,10 @@ const newRows = rows.map((row) => {
                   </td>
                 );
               } else {
+                let isLastCell = index === row.length - 1;
+                if (isLastCell) {
+                  return <td class="lastCell">{cell}</td>;
+                }
                 return <td class={cellClassNameOverride}>{cell}</td>;
               }
             })}
@@ -89,12 +93,94 @@ const newRows = rows.map((row) => {
 </div>
 
 <style>
-  .optionsTable {
+  div.optionsTable {
     overflow-x: auto;
     overscroll-behavior-x: contain;
     margin-bottom: 1rem;
     margin-left: 0;
   }
+  .optionsTable table.table {
+    display: table;
+    min-width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    line-height: 1.5rem;
+  }
+
+  thead.tableHeader {
+    border-top: 0 none transparent;
+    border-bottom: 1px solid rgb(220, 220, 220);
+    padding: 1rem 1rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  tr.headerRow {
+    border-top: 0 none transparent;
+    border-bottom: 1px solid rgb(220, 220, 220);
+    padding: 1rem 1rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td.headerCell {
+    border: none;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  tbody.body {
+    vertical-align: baseline;
+    white-space: nowrap;
+    font-size: 0.9rem;
+  }
+
+  tr.row {
+    white-space: nowrap;
+    border-bottom: 1px solid rgb(220, 220, 220);
+    line-height: 1.5rem;
+  }
+
+  tr td.cell {
+    padding: 0;
+    padding-right: 1.5rem;
+    font-family: inherit;
+    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap;
+  }
+
+  tr td.compactCell {
+    padding: 0;
+    padding-right: 1.5rem;
+    padding-left: 0.25rem;
+    line-height: 1.5rem;
+    border: none;
+    font-family: var(--sl-font);
+    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap;
+  }
+
+  tr td.codeCell {
+    border: none;
+    white-space: pre;
+    padding: 0.5rem 0.5rem;
+    line-height: 1.5rem;
+    font-family: var(--sl-font-mono);
+    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap;
+  }
+
+  tr td.compactCodeCell {
+    border: none;
+    white-space: pre;
+    padding: 0;
+    line-height: 1.5rem;
+    font-family: var(--sl-font-mono);
+    border-bottom: 1px solid rgb(220, 220, 220);
+    white-space: nowrap;
+  }
+
   td a {
     color: var(--sl-color-text-accent);
   }
@@ -102,85 +188,12 @@ const newRows = rows.map((row) => {
     color: var(--sl-color-text-accent);
   }
 
-  .table {
-    display: table; /* Ensure the table takes full width */
-    min-width: 100%; /* Prevent the table from shrinking */
-    table-layout: auto; /* Adjust table width based on content */
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    line-height: 1.25rem;
-  }
-
-  .cell {
-    padding: 0.5rem 0; /* Adjust padding as needed */
-    line-height: 1.5rem;
-    font-family: inherit;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .tableHeader {
-    border-top: 0 none transparent;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    padding: 1rem 1rem;
-    text-align: left;
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .headerRow {
-    border-top: 0 none transparent;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    padding: 1rem 0;
-    text-align: left;
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .headerCell {
-    border: none;
-    padding: 0.5rem 0;
-    font-weight: 600;
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .body {
-    vertical-align: baseline;
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .row {
-    border-bottom: 1px solid rgb(135, 29, 29);
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .codeCell {
-    border: none;
-    white-space: pre;
-    padding: 0.5rem 0.5rem;
-    line-height: 1.5rem;
-    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
-    font-size: 0.75rem;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .compactCell {
-    padding: 0; /* Adjust padding as needed */
-    padding-right: 1.5rem;
-    border: none;
-    line-height: 1.5rem;
-    font-family: inherit;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    white-space: nowrap; /* Prevent text wrapping within cells */
-  }
-
-  .compactCodeCell {
-    border: none;
-    white-space: pre;
-    padding: 0;
-    line-height: 1.5rem;
-    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
-    font-size: 0.75rem;
-    border-bottom: 1px solid rgb(220, 220, 220);
-    white-space: nowrap; /* Prevent text wrapping within cells */
+  @media screen and (max-width: 600px) {
+    tbody.body {
+      font-size: 1rem;
+    }
+    td.lastCell {
+      font-size: 0.75rem;
+    }
   }
 </style>
