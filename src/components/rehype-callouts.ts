@@ -45,6 +45,7 @@ const calloutsProcessor = rehype()
  */
 export const processCallouts = (html: string | undefined) => {
   const file = calloutsProcessor.processSync({ value: html });
+  console.log('file', file.toString());
   return { html: file.toString() };
 };
 

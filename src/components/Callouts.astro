@@ -1,81 +1,63 @@
 ---
-import { processCallouts } from './rehype-callouts';
+interface Props {
+  square?: boolean;
+}
 
-const content = await Astro.slots.render('default');
-const { html } = processCallouts(content);
+const { square } = Astro.props;
+const radius = square ? 0 : '99rem';
 ---
 
-<Fragment set:html={html} />
+<div class="callouts">
+  <slot />
+</div>
 
-<style is:global>
-  .sl-callouts {
-    --bullet-size: calc(var(--sl-line-height) * 0.85rem);
-    --bullet-margin: 0.5rem;
-
-    list-style: none;
-    padding-inline-start: 0;
+<style is:global define:vars={{ radius }}>
+  .callouts.callouts {
     column-count: 2;
     column-gap: 2rem;
     padding-top: 1rem;
+    margin-left: 1rem;
+    overflow-wrap: break-word;
   }
 
-  .sl-callouts > li {
-    position: relative;
-    padding-inline-start: calc(var(--bullet-size) + 0.5rem);
-    padding-bottom: 0.25rem;
-    min-height: calc(var(--bullet-size) + var(--bullet-margin));
-    break-inside: avoid-column;
-  }
-  .sl-callouts > li + li {
+  .callouts ol {
+    padding-inline-start: 0;
+    margin-left: 1.25rem;
     margin-top: 0;
   }
 
-  .sl-callouts > li::before {
-    content: counter(list-item);
+  .callouts ol li {
+    position: relative;
+    padding-inline-start: calc(var(--bullet-size) + 0.5rem);
+    padding-bottom: 0.25rem;
+    list-style: none;
+    counter-increment: list-item;
+    color: var(--sl-color-gray-1);
+    letter-spacing: -0.02rem;
+    min-height: calc(var(--bullet-size) + var(--bullet-margin));
+    break-inside: avoid-column;
+  }
+
+  .callouts ol li::before {
+    --bullet-size: calc(var(--sl-line-height) * 0.85rem);
+    --bullet-margin: 0.25rem;
     position: absolute;
-    inset-inline-start: 0;
+    content: counter(list-item);
+    line-height: var(--bullet-size);
+    font-size: var(--sl-text-sm);
+    font-weight: 700;
+    text-align: center;
+    color: var(--sl-color-gray-7);
+    background-color: var(--sl-color-gray-2);
+    border-radius: var(--radius);
+    margin-left: -2rem;
+    margin-right: var(--bullet-margin);
     width: var(--bullet-size);
     height: var(--bullet-size);
-    line-height: var(--bullet-size);
-    /* margin-top: 0.15rem; */
-    font-size: var(--sl-text-xs);
-    font-weight: 600;
-    text-align: center;
-    color: var(--sl-color-black);
-    background-color: var(--sl-color-white);
-    border-radius: 99rem;
-  }
-
-  .sl-callouts > li:not(:last-of-type)::after {
-    --guide-width: 1px;
-    content: '';
-    position: absolute;
-    top: calc(var(--bullet-size) + var(--bullet-margin));
-    bottom: var(--bullet-margin);
-    inset-inline-start: calc((var(--bullet-size) - var(--guide-width)) / 2);
-    width: var(--guide-width);
-    background-color: var(--sl-color-hairline-light);
-  }
-
-  .sl-callouts > li > :first-child {
-    --lh: calc(1em * var(--sl-line-height));
-    --shift-y: calc(0.5 * (var(--bullet-size) - var(--lh)));
-    transform: translateY(var(--shift-y));
-    margin-bottom: var(--shift-y);
-  }
-
-  .sl-callouts > li > :first-child:where(h1, h2, h3, h4, h5, h6) {
-    --lh: calc(1em * var(--sl-line-height-headings));
-  }
-
-  @supports (--prop: 1lh) {
-    .sl-callouts > li > :first-child {
-      --lh: 1lh;
-    }
   }
 
   @media only screen and (max-width: 600px) {
-    .sl-callouts {
+    callouts {
       column-count: 1;
     }
   }

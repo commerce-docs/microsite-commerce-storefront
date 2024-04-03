@@ -9,6 +9,7 @@ base: /developer/commerce/storefront
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Steps from '@components/Steps.astro';
+import Step from '@components/Step.astro';
 import Callouts from '@components/Callouts.astro';
 
 Our dropins are designed for the browser's JavaScript run-time without the need for a bundler. But they can also be installed and executed in a build-time environment with bundlers like Webpack and Vite. The installation steps for both environments are the same after the initial dropin package imports.
@@ -22,6 +23,8 @@ All dropins require the `@dropins/tools` package. This package contains the libr
 The following steps show how to install the Product Details dropin into your site.
 
 <Steps>
+
+<Step>
 
 ### Install the packages
 
@@ -51,11 +54,45 @@ Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dr
   </TabItem>
 </Tabs>
 
+</Step>
+
+<Step>
 ### Map the packages
 
-In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to `@dropin` CDN URLs (for run-time environments) and custom or `node_modules` directories for local installations.
+In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
 
 <Tabs>
+<TabItem label="node_modules" icon="seti:npm">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed dropin files from the dropin tools (@dropins/tools) and the PDP dropin (@dropins/storefront-pdp):
+  
+  ```html title="head.html"
+  <script type="importmap">
+    {
+      "imports": {
+        "@dropins/tools/": "/node_modules/@dropins/tools/",
+        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-pdp/",
+      }
+    }
+  </script>
+  <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+    <TabItem label="custom" icon="seti:folder">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin tools (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
+
+    ```html title="head.html"
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "/scripts/__dropins__/tools/",
+          "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
+        }
+      }
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    ```
+
+  </TabItem>
   <TabItem label="CDN" icon="external">
     This example shows an `importmap` pointing both packages to a CDN for the dropin tools (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
 
@@ -74,41 +111,14 @@ In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap`
     ```
 
   </TabItem>
-  <TabItem label="Custom location" icon="seti:folder">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin tools (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
 
-    ```html title="head.html"
-    <script type="importmap">
-      {
-        "imports": {
-          "@dropins/tools/": "/scripts/__dropins__/tools/",
-          "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
-        }
-      }
-    </script>
-    <script src="/scripts/scripts.js" type="module"></script>
-    ```
-
-  </TabItem>
-  <TabItem label="node_modules" icon="seti:npm">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed dropin files from the dropin tools (@dropins/tools) and the PDP dropin (@dropins/storefront-pdp):
-  
-  ```html title="head.html"
-  <script type="importmap">
-    {
-      "imports": {
-        "@dropins/tools/": "/node_modules/@dropins/tools/",
-        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-pdp/",
-      }
-    }
-  </script>
-  <script src="/scripts/scripts.js" type="module"></script>
-    ```
-  </TabItem>
 </Tabs>
 
 With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your PDP dropin JavaScript file as described in the next step.
 
+</Step>
+
+<Step>
 ### Import the required files
 
 Import the required files from the dropins tools (`@dropin/tools/initializers.js`) and the Product Details dropin (`@dropins/storefront-pdp`) into a JavaScript file for your PDP dropin. The example here shows the imports added to a `product-details.js` file. These imports constitute the minimum imports you need to create a fully functioning Product Details dropin for your site:
@@ -127,6 +137,9 @@ import { render as productRenderer } from '@dropins/storefront-pdp/render.js';
 import ProductDetails from '@dropins/storefront-pdp/containers/ProductDetails.js';
 ```
 
+</Step>
+
+<Step>
 ### Connect to the endpoint
 
 Connect your Product Details dropin to the Catalog Service GraphQL enpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
@@ -147,6 +160,9 @@ product.setFetchGraphQlHeaders({
 });
 ```
 
+</Step>
+
+<Step>
 ### Register and load the dropin
 
 The code below shows how to register the Product Details dropin, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your Product Details HTML page as shown here:
@@ -170,6 +186,9 @@ The code below shows how to register the Product Details dropin, load it (mount)
 
 </Callouts>
 
+</Step>
+
+<Step>
 ### Render the dropin
 
 Render the Product Details dropin on the page. The example below provides the minimal configuration options required to render the default Product Details dropin:
@@ -185,6 +204,8 @@ productRenderer(ProductDetails, {
 
 Test the Product Details dropin by viewing your PDP page in a browswer, or running your local dev or build server. If you see the Product Details dropin rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
 
+</Step>
+
 </Steps>
 
 ## Troubleshooting
@@ -193,8 +214,4 @@ If you have problems with your installation, visit the [Troubleshooting](/develo
 
 ## Summary
 
-The installation of all dropins follows the same pattern demonstrated by installing the PDP dropin: Install, Map, Import, Connect, Register, and Render. We like to call the process `iMICRR` for short, pronounced `eye-mike-er`. No, really, we don't call it that, but if it helps...Enjoy!
-
-## Next steps
-
-If your installation was successful, you're now ready to customize the dropin to fit your site's design and functionality. Instructions for configuring and customizing the Product Details dropin are found in the next topic [PDP Containers](/developer/commerce/storefront/product-details/pdp-containers/).
+The installation of all dropins follows the same pattern demonstrated by installing the PDP dropin: Install, Map, Import, Connect, Register, and Render. We like to call the process `iMICRR` for short, pronounced `eye-mike-er`. Actually, we don't call it that, but if it helps...Enjoy!
