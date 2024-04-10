@@ -6,8 +6,6 @@ import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 
-import compress from "astro-compress";
-
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
@@ -147,28 +145,28 @@ export default defineConfig({
         items: [{
           label: 'Cart Introduction',
           link: '/dropins/cart/cart-introduction/'
-        }, 
-        // {
-        //   label: 'Cart Installation',
-        //   link: '/dropins/cart/cart-installation/'
-        // }, 
-        // {
-        //   label: 'Cart Containers',
-        //   link: '/dropins/cart/cart-containers/'
-        // }, 
-        // {
-        //   label: 'Cart Slots',
-        //   link: '/dropins/cart/cart-slots/'
-        // }, 
-        // {
-        //   label: 'Cart Styles',
-        //   link: '/dropins/cart/cart-styles/'
-        // }, 
-        // {
-        //   label: 'Cart Functions',
-        //   link: '/dropins/cart/cart-functions/'
-        // },
-      ]
+        },
+          // {
+          //   label: 'Cart Installation',
+          //   link: '/dropins/cart/cart-installation/'
+          // }, 
+          // {
+          //   label: 'Cart Containers',
+          //   link: '/dropins/cart/cart-containers/'
+          // }, 
+          // {
+          //   label: 'Cart Slots',
+          //   link: '/dropins/cart/cart-slots/'
+          // }, 
+          // {
+          //   label: 'Cart Styles',
+          //   link: '/dropins/cart/cart-styles/'
+          // }, 
+          // {
+          //   label: 'Cart Functions',
+          //   link: '/dropins/cart/cart-functions/'
+          // },
+        ]
       }, {
         label: 'User Auth',
         collapsed: false,
@@ -204,14 +202,7 @@ export default defineConfig({
         directory: '/troubleshooting/'
       }
     }]
-  }), (await import('astro-compress')).default({
-    // Exclude: ['/customize/'],
-    CSS: true,
-    HTML: true,
-    JavaScript: true,
-    Image: true,
-    SVG: true
-  })],
+  }),],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {
     service: {
