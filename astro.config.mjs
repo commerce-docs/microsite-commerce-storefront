@@ -244,13 +244,6 @@ export default defineConfig({
       ],
     }),
     (await import("@playform/compress")).default({
-      Exclude: [
-        "add-share-gd-folder.webp",
-        "add-share-sp-folder.webp",
-        "add-gd-content.webp",
-        "pdp-css-findstyles.webp",
-      ],
-      Path: ["./dist"],
       CSS: true,
       HTML: true,
       Image: true,
