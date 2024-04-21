@@ -2,9 +2,10 @@
 interface Props {
   square?: boolean;
   color?: string;
+  columnCount?: number;
 }
 
-const { square } = Astro.props;
+const { square, columnCount = 2 } = Astro.props;
 const radius = square ? 0 : '99rem';
 ---
 
@@ -12,9 +13,9 @@ const radius = square ? 0 : '99rem';
   <slot />
 </div>
 
-<style is:global define:vars={{ radius }}>
+<style is:global define:vars={{ radius, columnCount }}>
   .callouts.callouts {
-    column-count: 2;
+    column-count: var(--columnCount);
     column-gap: 1.5rem;
     padding-top: 1rem;
     overflow-wrap: break-word;
@@ -25,15 +26,21 @@ const radius = square ? 0 : '99rem';
     margin-top: 0;
   }
 
+  .callouts ul {
+    padding-inline-start: 0;
+    margin-top: 0 !important;
+  }
+
   .callouts ol li {
     position: relative;
     padding-inline-start: 2.25rem;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0;
     list-style: none;
     counter-increment: list-item;
     color: var(--sl-color-gray-1);
     letter-spacing: -0.02rem;
     min-height: calc(var(--bullet-size) + var(--bullet-margin));
+    /* min-height: 1rem; */
     break-inside: avoid-column;
     text-wrap: balance;
   }
@@ -52,6 +59,40 @@ const radius = square ? 0 : '99rem';
     border-radius: var(--radius);
     margin-left: -2rem;
     margin-right: var(--bullet-margin);
+    margin-top: 0;
+    width: var(--bullet-size);
+    height: var(--bullet-size);
+  }
+
+  .callouts ol li ul li {
+    margin-top: 0;
+    position: relative;
+    padding-inline-start: 0;
+    padding-bottom: 0;
+    margin-left: 1.25rem;
+    list-style: none;
+    counter-increment: none;
+    color: var(--sl-color-gray-1);
+    letter-spacing: 0;
+    min-height: 1rem;
+    break-inside: auto;
+    text-wrap: pretty;
+  }
+
+  .callouts ol li ul li::before {
+    --bullet-size: 0;
+    --bullet-margin: 0;
+    position: absolute;
+    content: '⚫️';
+    line-height: 1.6rem;
+    font-size: 0.4rem;
+    font-weight: 700;
+    text-align: justify;
+    color: none;
+    background-color: none;
+    border-radius: 0;
+    margin-left: -1rem;
+    margin-right: 0;
     margin-top: 0;
     width: var(--bullet-size);
     height: var(--bullet-size);
