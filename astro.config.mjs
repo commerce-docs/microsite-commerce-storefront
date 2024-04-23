@@ -123,6 +123,18 @@ export default defineConfig({
             },
           ],
         },
+        {
+          label: 'References',
+          autogenerate: {
+            directory: '/references/',
+          },
+        },
+        {
+          label: 'Toubleshooting',
+          autogenerate: {
+            directory: '/troubleshooting/',
+          },
+        },
         // DROPIN Navigation.
         {
           label: 'Dropins',
@@ -226,20 +238,6 @@ export default defineConfig({
               link: '/blocks/blocks-overview/',
             },
           ],
-        },
-        {
-          label: 'References',
-          collapsed: true,
-          autogenerate: {
-            directory: '/references/',
-          },
-        },
-        {
-          label: 'Toubleshooting',
-          collapsed: true,
-          autogenerate: {
-            directory: '/troubleshooting/',
-          },
         },
       ],
     }),
