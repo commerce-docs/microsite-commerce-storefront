@@ -58,6 +58,7 @@ export default defineConfig({
         Sidebar: './src/components/overrides/Sidebar.astro',
       },
       customCss: [
+        './src/styles/reset.css',
         './src/styles/tailwind.css',
         './src/fonts/font-face.css',
         './src/styles/badge.css',
