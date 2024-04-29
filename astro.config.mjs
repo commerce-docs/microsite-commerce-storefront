@@ -62,6 +62,7 @@ export default defineConfig({
         './src/styles/tailwind.css',
         './src/fonts/font-face.css',
         './src/styles/badge.css',
+        './src/styles/colors.css',
         './src/styles/custom.css',
         './src/styles/asides.css',
       ],

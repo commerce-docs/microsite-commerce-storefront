@@ -140,3 +140,15 @@ await provider.render(ProductDetails, {
     mobile: true,
   },
 })(document.getElementById('pdp'));
+
+
+import { render as provider } from '@dropins/checkout/render.js';
+
+provider.render(Checkout, {})(checkout)
+provider.render(AuthCombine, {})(signInForm);
+
+import { render as checkoutProvider } from '@dropins/checkout/render.js';
+import { render as authProvider } from '@dropins/auth/render.js';
+
+checkoutProvider.render(Checkout, {})(checkout)
+authProvider.render(AuthCombine, {})(signInForm);
