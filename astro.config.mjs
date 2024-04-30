@@ -100,7 +100,7 @@ export default defineConfig({
           },
           items: [
             {
-              label: 'PDP Introduction',
+              label: 'Overview',
               link: '/product-details/pdp-introduction/',
             },
             {
