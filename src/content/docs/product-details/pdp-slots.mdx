@@ -39,7 +39,7 @@ The following slots are not currently in use within the default PDP dropin:
 
 ## PDP SlotProps
 
-The slots for Product Details are defined in the `ProductDetailsProps` interface. Their default implementations populates contain UI controls from the dropins library and HTML elements.
+The slots for Product Details are defined in the `ProductDetailsProps` interface. Each slot comes with a set of [primitive functions][link to slots.mdx] and may be extended with custom functions, such as `appendButton`.
 
 ```typescript
 slots?: {
@@ -80,6 +80,8 @@ Here are some examples of how you can customize the Product Details dropin using
 
 ### Title
 
+Adding a decoration to the product title, as well as a ratings element.
+
 ```js
 return productRenderer.render(ProductDetails, {
   sku: getSkuFromUrl(),
@@ -102,14 +104,25 @@ return productRenderer.render(ProductDetails, {
 
 ### SKU
 
+Append some copy with strikethrough to the SKU when out of stock.
+
 ```js
 return productRenderer.render(ProductDetails, {
   sku: getSkuFromUrl(),
   slots: {
-    // Title: (ctx) => {},
     SKU: (ctx) => {
-      const sku = document.createElement('div');
-      // add good example
+      const stockStatus = document.createElement('div');
+      ctx.onChange((next) => {
+        if (next.data.inStock) {
+          stockStatus.style.textDecoration = 'none';
+          stockStatus.innerText = "In Stock";
+        }
+        else {
+          stockStatus.style.textDecoration = 'line-through';
+          stockStatus.innerText = "Out of Stock";
+        }
+      });
+      ctx.appendSibling(stockStatus);
     },
   },
 });
@@ -170,6 +183,8 @@ return productRenderer.render(ProductDetails, {
 
 ### Quantity
 
+Adding some translated copy to the Quantity field.
+
 ```js
 return productRenderer.render(ProductDetails, {
   sku: getSkuFromUrl(),
@@ -178,13 +193,18 @@ return productRenderer.render(ProductDetails, {
       // quantity decoration
       const quantity = document.createElement('div');
       quantity.classList.add('quantity-decoration');
-      quantity.innerHTML = 'Quantity';
+      quantity.innerText = 'Quantity';
       ctx.prependChild(quantity);
 
       const promo = document.createElement('div');
       promo.classList.add('promo');
-      promo.innerHTML = 'Buy 2, Get 1 Free';
+      promo.innerText = 'Buy 2, Get 1 Free';
       ctx.appendChild(promo);
+
+      ctx.onChange((next) => {
+        quantity.innerText = `${next.dictionary.Custom.quantityLabel}
+        promo.innerText = `${next.dictionary.Custom.promoLabel}:`;
+      });
     },
   },
 });
@@ -267,20 +287,6 @@ return productRenderer.render(ProductDetails, {
   slots: {
     Attributes: (ctx) => {
       const attributes = document.createElement('div');
-      // add good example
-    },
-  },
-});
-```
-
-### Breadcrumbs
-
-```js
-return productRenderer.render(ProductDetails, {
-  sku: getSkuFromUrl(),
-  slots: {
-    Breadcrumbs: (ctx) => {
-      const breadcrumbs = document.createElement('div');
       // add good example
     },
   },
