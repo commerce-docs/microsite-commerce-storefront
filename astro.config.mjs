@@ -13,12 +13,12 @@ export default defineConfig({
   base: '/developer/commerce/storefront',
   trailingSlash: 'ignore',
   outDir: './dist',
-  editLink: {
-    baseUrl: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/',
-  },
   integrations: [
     tailwind({ nesting: true }),
     starlight({
+      editLink: {
+        baseUrl: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/edit/develop/',
+      },
       head: [
         {
           tag: 'script',
@@ -71,6 +71,7 @@ export default defineConfig({
         replacesTitle: false,
       },
       social: {
+        discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
         github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront',
       },
       sidebar: [
