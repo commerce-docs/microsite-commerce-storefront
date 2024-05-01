@@ -1,4 +1,5 @@
-import { defineCollection, z as zod } from 'astro:content';
+import { z as zod } from 'astro/zod';
+import { defineCollection } from 'astro:content';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
 
 const prerequisiteSchema = zod
@@ -17,7 +18,21 @@ const prerequisiteSchema = zod
   })
   .optional();
 
-const heroSchema = zod.object({ subtitle: zod.string() }).optional();
+const heroSchema = zod
+  .object({
+    subtitle: zod.string(),
+    actions: zod
+      .object({
+        variant: zod
+          .enum(['primary', 'secondary', 'minimal', 'discord'])
+          .default('primary')
+          .optional(),
+      })
+      .array()
+      .optional(),
+  })
+  .optional();
+
 const iframeSchema = zod.boolean().default(false).optional();
 
 const i18n = defineCollection({ type: 'data', schema: i18nSchema() });
