@@ -53,18 +53,22 @@ export default defineConfig({
         PageTitle: './src/components/overrides/PageTitle.astro',
         SiteTitle: './src/components/overrides/SiteTitle.astro',
         PageFrame: './src/components/overrides/PageFrame.astro',
+        PageSidebar: './src/components/overrides/PageSidebar.astro',
         TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
         Pagination: './src/components/overrides/Pagination.astro',
         Sidebar: './src/components/overrides/Sidebar.astro',
+        SidebarSublist: './src/components/overrides/SidebarSublist.astro',
+        SocialIcons: './src/components/overrides/SocialIcons.astro',
       },
       customCss: [
-        './src/styles/reset.css',
         './src/styles/tailwind.css',
         './src/fonts/font-face.css',
         './src/styles/badge.css',
         './src/styles/colors.css',
         './src/styles/custom.css',
         './src/styles/asides.css',
+        './src/styles/reset.css',
+
       ],
       logo: {
         src: './src/assets/sitelogo.svg',
@@ -72,7 +76,7 @@ export default defineConfig({
       },
       social: {
         discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
-        github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront',
+        github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/tree/develop',
       },
       sidebar: [
         {
