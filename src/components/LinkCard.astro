@@ -1,11 +1,13 @@
 ---
+import { Image } from 'astro:assets';
 import { Icons } from '@components/overrides/Icons';
 import Icon from '@components/overrides/Icon.astro';
-
 import type { HTMLAttributes } from 'astro/types';
+
 interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
   title: string;
   description?: string;
+  image?: string | ImageMetadata | Promise<{ default: ImageMetadata }> | undefined;
   icon?: keyof typeof Icons;
   rightIcon?: keyof typeof Icons;
   noborder?: boolean;
@@ -14,16 +16,25 @@ interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
 const {
   title,
   description,
+  image,
   icon,
   rightIcon = 'right-arrow',
   noborder,
   ...attributes
 } = Astro.props;
+
 const iconClass = noborder ? '' : 'icon';
 const iconSize = noborder ? '1.5rem' : '2rem';
 ---
 
 <div class="sl-link-card">
+  {
+    image && (
+      <div class="sl-flex">
+        <Image src={image as string} alt={title} width="64" height="64" class="rounded-full" />
+      </div>
+    )
+  }
   {icon && <Icon name={icon} class={iconClass} size={iconSize} />}
   <div class="sl-flex stack">
     <a {...attributes}>
@@ -33,6 +44,27 @@ const iconSize = noborder ? '1.5rem' : '2rem';
   </div>
   <Icon name={rightIcon} size="1.5rem" />
 </div>
+
+<script>
+  const cards = document.querySelectorAll('.sl-link-card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('fade-in');
+        // if (index % 2 === 0) {
+        //   entry.target.classList.add('to-left');
+        // } else {
+        //   entry.target.classList.add('to-right');
+        // }
+        observer.unobserve(entry.target);
+      }
+    });
+  });
+
+  cards.forEach((card) => {
+    observer.observe(card);
+  });
+</script>
 
 <style>
   .sl-link-card.sl-link-card {
@@ -49,6 +81,26 @@ const iconSize = noborder ? '1.5rem' : '2rem';
     position: relative;
     padding-top: 0;
     margin-top: 0;
+
+    opacity: 0; /* Initially hidden */
+    transition:
+      opacity 0.5s ease-in-out,
+      transform 0.5s ease-in-out;
+  }
+
+  /* Cards with even indexes (start from right) */
+  .sl-link-card:nth-child(even) {
+    transform: translateX(200px); /* Initial offset for even cards */
+  }
+
+  /* Cards with odd indexes (start from left) */
+  .sl-link-card:nth-child(odd) {
+    transform: translateX(-200px); /* Initial offset for odd cards */
+  }
+
+  .sl-link-card.fade-in {
+    opacity: 1; /* Fade in */
+    transform: translateX(0);
   }
 
   .sl-link-card:nth-child(4n + 1) {
