@@ -80,9 +80,9 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Create',
+          label: 'Get Started',
           autogenerate: {
-            directory: '/create/',
+            directory: '/get-started/',
           },
         },
         {
