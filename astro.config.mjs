@@ -42,7 +42,9 @@ export default defineConfig({
           errorOnFallbackPages: false,
           errorOnInconsistentLocale: true,
         }),
-        starlightImageZoom(),
+        starlightImageZoom({
+          showCaptions: false,
+        }),
       ],
       // Component overrides
       components: {
