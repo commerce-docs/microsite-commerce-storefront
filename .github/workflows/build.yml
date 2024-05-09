@@ -8,9 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [20]
+    env:
+      TARGET_BRANCH: "build"
     steps:
     - uses: actions/checkout@v4
     - name: Install pnpm
@@ -26,17 +25,13 @@ jobs:
       run: pnpm install
     - name: Build
       run: pnpm run build
-    - name: Copy build artifacts to dist
-      run: |
-        find . -type d ! -name 'dist' -exec rm -rf {} + # remove all directories except dist
-        mv dist/* . # move all files from dist to root
-        rm -rf dist # remove dist directory
-    - name: Commit and push changes
-      env:
-        TARGET_BRANCH: "build"
+    - name: Copy build artifacts to the target branch
       run: |
         git fetch # fetch branches
         git checkout ${TARGET_BRANCH} # checkout to your branch
+        cp -r dist/* storeferont # move all files from dist to storeferont
+    - name: Commit and push changes
+      run: |
         git config --global user.name 'devops-devdocs' # set your username
         git config --global user.email 'magento-devops-devdocs-int@adobe.com' # set your email
         git add --all # add all changed files
