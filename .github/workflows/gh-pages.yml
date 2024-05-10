@@ -14,15 +14,23 @@ permissions:
 
 jobs:
   build:
+    name: Build site
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout site
-        uses: actions/checkout@v4
-      - name: Install and build site
-        uses: withastro/action@v2
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
         with:
-          node-version: 18.17.1
-          package-manager: pnpm@9.1.0
+          version: 8
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build
+        run: pnpm run build
 
   deploy:
     needs: build
