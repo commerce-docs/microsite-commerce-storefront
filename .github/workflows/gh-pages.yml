@@ -1,7 +1,14 @@
-name: Update Preview on GitHub Pages
+name: Deploy to GitHub Pages
 
-on: workflow_dispatch
+on:
+  # Trigger the workflow every time you push to the `main` branch
+  # Using a different branch name? Replace `main` with your branch’s name
+  push:
+    branches: [develop]
+  # Allows you to run this workflow manually from the Actions tab on GitHub.
+  workflow_dispatch:
 
+# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
@@ -9,23 +16,12 @@ permissions:
 
 jobs:
   build:
-    name: Build site
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build
-        run: pnpm run build
+      - name: Checkout your repository using git
+        uses: actions/checkout@v4
+      - name: Install, build, and upload your site output
+        uses: withastro/action@v2
 
   deploy:
     needs: build
