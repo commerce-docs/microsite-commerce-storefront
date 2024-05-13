@@ -77,7 +77,7 @@ export default defineConfig({
       },
       social: {
         discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
-        github: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/tree/develop',
+        github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop',
       },
       sidebar: [
         {
