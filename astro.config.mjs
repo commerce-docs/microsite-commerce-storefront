@@ -10,14 +10,13 @@ import playformCompress from '@playform/compress';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
-  base: '/developer/commerce/storefront',
   trailingSlash: 'ignore',
   outDir: './dist',
   integrations: [
     tailwind({ nesting: true }),
     starlight({
       editLink: {
-        baseUrl: 'https://git.corp.adobe.com/AdobeDocs/microsite-commerce-storefront/edit/develop/',
+        baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/develop/',
       },
       head: [
         {
