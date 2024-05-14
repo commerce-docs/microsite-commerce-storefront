@@ -6,7 +6,7 @@ import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 import playformCompress from '@playform/compress';
-import { remarkBasePathLinks } from './remarkBasePathLinks';
+import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGithubPages = process.env.GITHUB_PAGES === 'true';
