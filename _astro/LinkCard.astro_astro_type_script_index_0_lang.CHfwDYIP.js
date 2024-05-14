@@ -1,1 +1,0 @@
-const c=document.querySelectorAll(".sl-link-card"),s=new IntersectionObserver(e=>{e.forEach((r,t)=>{r.isIntersecting&&(r.target.classList.add("fade-in"),s.unobserve(r.target))})});c.forEach(e=>{s.observe(e)});
