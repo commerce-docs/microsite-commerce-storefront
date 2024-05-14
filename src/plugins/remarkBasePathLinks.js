@@ -1,5 +1,5 @@
 import { visit } from 'unist-util-visit';
-import { withBasePath } from './utils';
+import { withBasePath } from '../utils/basePath';
 
 export function remarkBasePathLinks() {
   const isGithubPages = process.env.GITHUB_PAGES === 'true';
