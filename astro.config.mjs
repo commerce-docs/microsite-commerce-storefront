@@ -9,13 +9,11 @@ import playformCompress from '@playform/compress';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isGithubPages = process.env.GITHUB_PAGES === 'true';
-
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
-  base: isProduction && !isGithubPages ? process.env.VITE_BASE_PATH || '/' : '/',
+  base: isProduction ? import.meta.env.VITE_PROD_BASE_PATH : '',
   markdown: {
     remarkPlugins: [remarkBasePathLinks],
   },
