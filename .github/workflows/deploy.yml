@@ -1,39 +1,41 @@
-name: Deploy Site
+name: Deploy to GitHub Pages
 
 on:
   pull_request:
     branches:
-      -develop
-  
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
+      - develop
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install, build, and upload your site output
-        uses: withastro/action@v1
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
         with:
-          node-version: 18.17.1
-          package-manager: npm@8.15.3
+          version: 9
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_dir: ./dist

@@ -6,12 +6,20 @@ import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 import playformCompress from '@playform/compress';
+import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
+  base: isProduction ? import.meta.env.VITE_PROD_BASE_PATH : '',
+  markdown: {
+    remarkPlugins: [remarkBasePathLinks],
+  },
   trailingSlash: 'ignore',
   outDir: './dist',
+
   integrations: [
     tailwind({ nesting: true }),
     starlight({
