@@ -33,14 +33,16 @@ jobs:
           cp -r dist/* storefront # move all files from dist to storeferont
 
       - name: Add SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
 
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_DEPLOY_KEY }}
         run: |
           git config --global user.name 'devops-devdocs' # set your username
           git config --global user.email 'magento-devops-devdocs-int@adobe.com' # set your email
           git add --all # add all changed files
           git diff-index --quiet HEAD || git commit -am "$(git rev-parse --short $GITHUB_SHA): deploy files" # commit to the repository (ignore if no modification)
-          git push origin ${TARGET_BRANCH} # push to the remote target branch
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} ${TARGET_BRANCH} # push to the remote target branch
