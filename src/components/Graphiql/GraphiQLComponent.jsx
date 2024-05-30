@@ -102,7 +102,7 @@ const GraphiQLComponent = (props) => {
         isHeadersEditorEnabled={false}
         showPersistHeadersSettings={false}
         disableTabs="true"
-        plugins={[explorer]}
+        // plugins={[explorer]}
         fetcher={fetcher}
         query={query}
         onEditQuery={() => {}} // Prevents automatic execution on query change
