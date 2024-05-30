@@ -1,32 +1,31 @@
 import 'regenerator-runtime/runtime';
-
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GraphiQLInterface, GraphiQLProvider } from 'graphiql';
-import { ExecuteButton, ToolbarButton } from '@graphiql/react';
+import React, { useState, useCallback } from 'react';
+import { GraphiQLProvider, useExecutionContext } from '@graphiql/react';
+import { GraphiQLInterface } from 'graphiql';
 import { explorerPlugin } from '@graphiql/plugin-explorer';
-import { codeExporterPlugin } from '@graphiql/plugin-code-exporter';
 import '@graphiql/plugin-explorer/dist/style.css';
 import '@graphiql/plugin-code-exporter/dist/style.css';
 import './graphiql.css';
 
-let executionTime = null;
-
 const QUERIES = {
-  getProduct: `{
+  getProduct: `
+  {
     country(code: "CA") {
       name
       capital
       currency
     }
   }`,
-  getCustomer: `{
+  getCustomer: `
+  {
     country(code: "GB") {
       name
       capital
       currency
     }
   }`,
-  getCategories: `{
+  getCategories: `
+  {
     country(code: "FR") {
       name
       capital
@@ -35,20 +34,13 @@ const QUERIES = {
   }`,
 };
 
-console.log('QUERIES', QUERIES['getCustomer']);
-const customLogo = () => null;
 const explorer = explorerPlugin();
 
-export default function GraphiQLEditor() {
+const GraphiQLEditor = () => {
   const [activeQueryKey, setActiveQueryKey] = useState('');
   const [queryResult, setQueryResult] = useState(null);
-  // const [executionTime, setExecutionTime] = useState(null);
+  let [executionTime, setExecutionTime] = useState(null);
   const [error, setError] = useState(null);
-  const executeButtonRef = useRef(null);
-
-  useEffect(() => {
-    executeButtonRef.current = document.querySelector('.graphiql-execute-button');
-  }, []);
 
   const fetcher = useCallback(async (graphQLParams) => {
     try {
@@ -67,7 +59,7 @@ export default function GraphiQLEditor() {
       );
 
       const endTime = performance.now();
-      executionTime = Math.floor(endTime - startTime);
+      setExecutionTime(Math.floor(endTime - startTime));
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
@@ -85,54 +77,10 @@ export default function GraphiQLEditor() {
 
     try {
       const selectedQuery = QUERIES[key];
-      // console.log('selectedQuery:', selectedQuery);
       const result = await fetcher({ query: selectedQuery });
       setQueryResult(result);
     } catch (error) {}
   };
-
-  /*
-  Example code for snippets. See https://github.com/OneGraph/graphiql-code-exporter#snippets for details
-  */
-
-  const removeQueryName = (query) =>
-    query.replace(
-      /^[^{(]+([{(])/,
-      (_match, openingCurlyBracketsOrParenthesis) => `query ${openingCurlyBracketsOrParenthesis}`
-    );
-
-  const getQuery = (arg, spaceCount) => {
-    const { operationDataList } = arg;
-    const { query } = operationDataList[0];
-    const anonymousQuery = removeQueryName(query);
-    return ' '.repeat(spaceCount) + anonymousQuery.replaceAll('\n', '\n' + ' '.repeat(spaceCount));
-  };
-
-  const exampleSnippetOne = {
-    name: 'Example One',
-    language: 'JavaScript',
-    codeMirrorMode: 'jsx',
-    options: [],
-    generate: (arg) => `export const query = graphql\`
-${getQuery(arg, 2)}
-\`
-`,
-  };
-
-  const exampleSnippetTwo = {
-    name: 'Example Two',
-    language: 'JavaScript',
-    codeMirrorMode: 'jsx',
-    options: [],
-    generate: (arg) => `import { graphql } from 'graphql'
-
-export const query = graphql\`
-${getQuery(arg, 2)}
-\`
-`,
-  };
-
-  const snippets = [exampleSnippetOne, exampleSnippetTwo];
 
   return (
     <div>
@@ -153,7 +101,7 @@ ${getQuery(arg, 2)}
 
       <GraphiQLProvider
         fetcher={fetcher}
-        plugins={[explorer, codeExporterPlugin({ snippets })]}
+        plugins={[explorer]}
         defaultQuery={QUERIES[activeQueryKey]}
         query={QUERIES[activeQueryKey]}
         response={queryResult ? JSON.stringify(queryResult, null, 2) : ''}
@@ -164,4 +112,6 @@ ${getQuery(arg, 2)}
       </GraphiQLProvider>
     </div>
   );
-}
+};
+
+export default GraphiQLEditor;
