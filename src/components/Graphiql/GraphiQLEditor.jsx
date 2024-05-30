@@ -1,9 +1,15 @@
-import React, { useState, useCallback } from 'react';
-import { GraphiQLProvider, QueryEditor, ResponseEditor } from '@graphiql/react';
-import { GraphiQLInterface } from 'graphiql';
+import 'regenerator-runtime/runtime';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { GraphiQLInterface, GraphiQLProvider } from 'graphiql';
+import { ExecuteButton, ToolbarButton } from '@graphiql/react';
 import { explorerPlugin } from '@graphiql/plugin-explorer';
-import 'graphiql/graphiql.css';
+import { codeExporterPlugin } from '@graphiql/plugin-code-exporter';
+import '@graphiql/plugin-explorer/dist/style.css';
+import '@graphiql/plugin-code-exporter/dist/style.css';
 import './graphiql.css';
+
+let executionTime = null;
 
 const QUERIES = {
   getProduct: `{
@@ -29,34 +35,43 @@ const QUERIES = {
   }`,
 };
 
+console.log('QUERIES', QUERIES['getCustomer']);
 const customLogo = () => null;
 const explorer = explorerPlugin();
 
 export default function GraphiQLEditor() {
-  const [activeQueryKey, setActiveQueryKey] = useState('getProduct');
+  const [activeQueryKey, setActiveQueryKey] = useState('');
   const [queryResult, setQueryResult] = useState(null);
-  const [executionTime, setExecutionTime] = useState(null);
+  // const [executionTime, setExecutionTime] = useState(null);
   const [error, setError] = useState(null);
+  const executeButtonRef = useRef(null);
+
+  useEffect(() => {
+    executeButtonRef.current = document.querySelector('.graphiql-execute-button');
+  }, []);
 
   const fetcher = useCallback(async (graphQLParams) => {
     try {
       const startTime = performance.now();
 
-      const response = await fetch('https://countries.trevorblades.com/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(graphQLParams),
-      });
+      const response = await fetch(
+        'https://countries.trevorblades.com/',
+        // 'https://edge-sandbox-graph.adobe.io/api/3134367d-63c9-4b79-b243-05f871be7a99/graphql',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(graphQLParams),
+        }
+      );
 
       const endTime = performance.now();
-      setExecutionTime(Math.floor(endTime - startTime));
+      executionTime = Math.floor(endTime - startTime);
 
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
-
       return response.json();
     } catch (error) {
       setError(error.message);
@@ -70,12 +85,54 @@ export default function GraphiQLEditor() {
 
     try {
       const selectedQuery = QUERIES[key];
+      // console.log('selectedQuery:', selectedQuery);
       const result = await fetcher({ query: selectedQuery });
       setQueryResult(result);
-    } catch (error) {
-      // Error message is set in the fetcher
-    }
+    } catch (error) {}
   };
+
+  /*
+  Example code for snippets. See https://github.com/OneGraph/graphiql-code-exporter#snippets for details
+  */
+
+  const removeQueryName = (query) =>
+    query.replace(
+      /^[^{(]+([{(])/,
+      (_match, openingCurlyBracketsOrParenthesis) => `query ${openingCurlyBracketsOrParenthesis}`
+    );
+
+  const getQuery = (arg, spaceCount) => {
+    const { operationDataList } = arg;
+    const { query } = operationDataList[0];
+    const anonymousQuery = removeQueryName(query);
+    return ' '.repeat(spaceCount) + anonymousQuery.replaceAll('\n', '\n' + ' '.repeat(spaceCount));
+  };
+
+  const exampleSnippetOne = {
+    name: 'Example One',
+    language: 'JavaScript',
+    codeMirrorMode: 'jsx',
+    options: [],
+    generate: (arg) => `export const query = graphql\`
+${getQuery(arg, 2)}
+\`
+`,
+  };
+
+  const exampleSnippetTwo = {
+    name: 'Example Two',
+    language: 'JavaScript',
+    codeMirrorMode: 'jsx',
+    options: [],
+    generate: (arg) => `import { graphql } from 'graphql'
+
+export const query = graphql\`
+${getQuery(arg, 2)}
+\`
+`,
+  };
+
+  const snippets = [exampleSnippetOne, exampleSnippetTwo];
 
   return (
     <div>
@@ -94,17 +151,15 @@ export default function GraphiQLEditor() {
 
       {error && <div className="error-message">{error}</div>}
 
-      <GraphiQLProvider fetcher={fetcher} plugins={[explorer]}>
+      <GraphiQLProvider
+        fetcher={fetcher}
+        plugins={[explorer, codeExporterPlugin({ snippets })]}
+        defaultQuery={QUERIES[activeQueryKey]}
+        query={QUERIES[activeQueryKey]}
+        response={queryResult ? JSON.stringify(queryResult, null, 2) : ''}
+      >
         <div className="graphiql-container graphiql-wrapper">
-          <GraphiQLInterface
-            fetcher={fetcher}
-            disableTabs={true}
-            isHeadersEditorEnabled={false}
-            defaultEditorToolsVisibility={false}
-            showPersistHeadersSettings={false}
-            query={QUERIES[activeQueryKey]}
-            response={queryResult ? JSON.stringify(queryResult, null, 2) : ''}
-          />
+          <GraphiQLInterface disableTabs={true} fetcher={fetcher} />
         </div>
       </GraphiQLProvider>
     </div>
