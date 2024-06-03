@@ -98,6 +98,7 @@ const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
 
 const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, responseSize }) => (
   <div className="queries-bar">
+    <span className="queries-title">Sample Queries</span>
     {Object.keys(queries).map((key) => (
       <QueryButton
         key={key}
