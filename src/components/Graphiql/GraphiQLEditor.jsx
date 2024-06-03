@@ -19,7 +19,7 @@ const TEST_ENDPOINT = 'https://countries.trevorblades.com/';
 let isFetching = false;
 
 const QUERIES = {
-  getProduct: dedent`{
+  getCountries: dedent`{
     countries {
       code
       name
@@ -33,27 +33,57 @@ const QUERIES = {
     }
   }
   `,
-  getCustomer: dedent`{
+  getGreatBritian: dedent`{
     country(code: "GB") {
       name
       capital
       currency
+      awsRegion
+      code
+      phone
+      emoji
+      emojiU
+      languages {
+        name
+        native
+        code
+      }
     }
   }`,
-  getCategories: dedent`{
+  getFrance: dedent`{
     country(code: "FR") {
       name
       capital
       currency
+      awsRegion
+      code
+      phone
+      emoji
+      emojiU
+      languages {
+        name
+        native
+        code
+      }
     }
   }`,
 };
 
 const ErrorMessage = ({ message }) => <div className="error-message">{message}</div>;
 
-const ResponseTime = ({ executionTime: responseTime }) => (
-  <div className="response-time-display">
-    {responseTime !== null ? `Response time: ${responseTime.toFixed(2)} ms` : 'No response yet'}
+const ResponseTime = ({ responseTime }) => (
+  <div className="response-display">
+    <span>RESPONSE TIME:</span>
+    <span className="response-value">
+      {responseTime !== null ? ` ${Math.floor(responseTime)} ms` : ''}
+    </span>
+  </div>
+);
+
+const ResponseSize = ({ responseSize }) => (
+  <div className="response-display">
+    <span>RESPONSE SIZE: </span>
+    <span className="response-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
   </div>
 );
 
@@ -66,7 +96,7 @@ const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
   </button>
 );
 
-const QueriesBar = ({ queries, activeQueryKey, onQueryClick, executionTime }) => (
+const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, responseSize }) => (
   <div className="queries-bar">
     {Object.keys(queries).map((key) => (
       <QueryButton
@@ -76,12 +106,16 @@ const QueriesBar = ({ queries, activeQueryKey, onQueryClick, executionTime }) =>
         onQueryClick={onQueryClick}
       />
     ))}
-    <ResponseTime executionTime={executionTime} />
+    <div className="response-display">
+      <ResponseTime responseTime={responseTime} />
+      <ResponseSize responseSize={responseSize} />
+    </div>
   </div>
 );
 
 const useTimedFetcher = (endpoint) => {
-  const [executionTime, setExecutionTime] = useState(null);
+  const [responseTime, setResponseTime] = useState(null);
+  const [responseSize, setResponseSize] = useState(0);
   const [error, setError] = useState(null);
 
   const defaultFetcher = createGraphiQLFetcher({
@@ -98,13 +132,16 @@ const useTimedFetcher = (endpoint) => {
       try {
         const response = await defaultFetcher(params);
         const end = performance.now();
-        setExecutionTime(end - start);
+        setResponseTime(end - start);
+
+        const responseSize = new Blob([JSON.stringify(response)]).size;
+        setResponseSize(responseSize);
 
         isFetching = false;
         return response;
       } catch (err) {
         const end = performance.now();
-        setExecutionTime(end - start);
+        setResponseTime(end - start);
         setError(err.message);
         throw err;
       }
@@ -112,14 +149,15 @@ const useTimedFetcher = (endpoint) => {
     [endpoint]
   );
 
-  return { timedFetcher, executionTime, error, setError };
+  return { timedFetcher, responseTime, responseSize, error, setError };
 };
 
 const GraphiQLEditor = () => {
   const [activeQueryKey, setActiveQueryKey] = useState('');
   const [queryResult, setQueryResult] = useState(null);
 
-  const { timedFetcher, executionTime, error, setError } = useTimedFetcher(TEST_ENDPOINT);
+  const { timedFetcher, responseTime, responseSize, error, setError } =
+    useTimedFetcher(TEST_ENDPOINT);
   const pluginContext = usePluginContext();
   const PluginContent = pluginContext?.visiblePlugin?.content;
 
@@ -146,12 +184,13 @@ const GraphiQLEditor = () => {
   );
 
   return (
-    <div className="editor-wrapper not-content">
+    <div className="editor-wrapper">
       <QueriesBar
         queries={QUERIES}
         activeQueryKey={activeQueryKey}
         onQueryClick={handleQueryClick}
-        executionTime={executionTime}
+        responseTime={responseTime}
+        responseSize={responseSize}
       />
 
       {error && <ErrorMessage message={error} />}
@@ -163,10 +202,22 @@ const GraphiQLEditor = () => {
         query={selectedQuery}
         response={formattedResponse}
       >
+        {/* <div className="endpoint-container">
+          <button type="button" className="post-button">
+            POST
+          </button>
+          <input type="text" className="endpoint-input" value={TEST_ENDPOINT} />
+          <div className="response-header">
+            <ResponseTime responseTime={responseTime} />
+            <ResponseSize responseSize={responseSize} />
+          </div>
+        </div> */}
+
         <GraphiQLInterface>
           <div className="graphiql-sidebar-section">
             {PluginContent && <PluginContent className="not-content" />}
           </div>
+
           <QueryEditor className="custom-query-editor" />
           <div className="vertical">
             <ExecuteButton />
