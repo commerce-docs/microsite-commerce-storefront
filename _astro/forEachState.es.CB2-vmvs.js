@@ -1,0 +1,1 @@
+var a=Object.defineProperty,l=(e,t)=>a(e,"name",{value:t,configurable:!0});function f(e,t){const a=[];let f=e;for(;null!=f&&f.kind;)a.push(f),f=f.prevState;for(let e=a.length-1;e>=0;e--)t(a[e])}l(f,"forEachState");export{f as s};
