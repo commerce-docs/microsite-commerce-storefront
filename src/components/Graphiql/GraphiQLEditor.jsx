@@ -72,19 +72,19 @@ const QUERIES = {
 const ErrorMessage = ({ message }) => <div className="error-message">{message}</div>;
 
 const ResponseTime = ({ responseTime }) => (
-  <div className="response-display">
-    <span>RESPONSE TIME:</span>
-    <span className="response-value">
+  <span className="response-stat">
+    <span className="stat-label">RESPONSE TIME: </span>
+    <span className="stat-value">
       {responseTime !== null ? ` ${Math.floor(responseTime)} ms` : ''}
     </span>
-  </div>
+  </span>
 );
 
 const ResponseSize = ({ responseSize }) => (
-  <div className="response-display">
-    <span>RESPONSE SIZE: </span>
-    <span className="response-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
-  </div>
+  <span className="response-stat">
+    <span className="stat-label">RESPONSE SIZE: </span>
+    <span className="stat-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
+  </span>
 );
 
 const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
@@ -98,7 +98,7 @@ const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
 
 const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, responseSize }) => (
   <div className="queries-bar">
-    <span className="queries-title">Sample Queries</span>
+    <span className="queries-title">SAMPLE QUERIES</span>
     {Object.keys(queries).map((key) => (
       <QueryButton
         key={key}
@@ -107,7 +107,7 @@ const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, respo
         onQueryClick={onQueryClick}
       />
     ))}
-    <div className="response-display">
+    <div className="response-stats">
       <ResponseTime responseTime={responseTime} />
       <ResponseSize responseSize={responseSize} />
     </div>
