@@ -1,31 +1,46 @@
 import 'regenerator-runtime/runtime';
-import React, { useState, useCallback } from 'react';
-import { GraphiQLProvider, useExecutionContext } from '@graphiql/react';
-import { GraphiQLInterface } from 'graphiql';
+import React, { useState, useCallback, useMemo } from 'react';
+import { GraphiQL, GraphiQLInterface } from 'graphiql';
+import {
+  GraphiQLProvider,
+  QueryEditor,
+  ResponseEditor,
+  ExecuteButton,
+  usePluginContext,
+} from '@graphiql/react';
 import { explorerPlugin } from '@graphiql/plugin-explorer';
-import '@graphiql/plugin-explorer/dist/style.css';
-import '@graphiql/plugin-code-exporter/dist/style.css';
-import './graphiql.css';
+import { createGraphiQLFetcher } from '@graphiql/toolkit';
+import dedent from 'dedent';
+import 'graphiql/graphiql.css';
+import './graphiql-root.css';
+import './graphiql-overrides.css';
+
+const TEST_ENDPOINT = 'https://countries.trevorblades.com/';
+let isFetching = false;
 
 const QUERIES = {
-  getProduct: `
-  {
-    country(code: "CA") {
+  getProduct: dedent`{
+    countries {
+      code
       name
-      capital
+      native
+      emoji
       currency
+      languages {
+        code
+        name
+      }
     }
-  }`,
-  getCustomer: `
-  {
+  }
+  `,
+  getCustomer: dedent`{
     country(code: "GB") {
       name
       capital
       currency
     }
   }`,
-  getCategories: `
-  {
+  getCategories: dedent`{
     country(code: "FR") {
       name
       capital
@@ -34,81 +49,132 @@ const QUERIES = {
   }`,
 };
 
-const explorer = explorerPlugin();
+const ErrorMessage = ({ message }) => <div className="error-message">{message}</div>;
+
+const ResponseTime = ({ executionTime: responseTime }) => (
+  <div className="response-time-display">
+    {responseTime !== null ? `Response time: ${responseTime.toFixed(2)} ms` : 'No response yet'}
+  </div>
+);
+
+const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
+  <button
+    className={`query-button ${activeQueryKey === queryKey ? 'active' : ''}`}
+    onClick={() => onQueryClick(queryKey)}
+  >
+    {queryKey}
+  </button>
+);
+
+const QueriesBar = ({ queries, activeQueryKey, onQueryClick, executionTime }) => (
+  <div className="queries-bar">
+    {Object.keys(queries).map((key) => (
+      <QueryButton
+        key={key}
+        queryKey={key}
+        activeQueryKey={activeQueryKey}
+        onQueryClick={onQueryClick}
+      />
+    ))}
+    <ResponseTime executionTime={executionTime} />
+  </div>
+);
+
+const useTimedFetcher = (endpoint) => {
+  const [executionTime, setExecutionTime] = useState(null);
+  const [error, setError] = useState(null);
+
+  const defaultFetcher = createGraphiQLFetcher({
+    url: endpoint,
+    enableIncrementalDelivery: false,
+  });
+
+  const timedFetcher = useCallback(
+    async (params) => {
+      if (isFetching) return;
+      isFetching = true;
+
+      const start = performance.now();
+      try {
+        const response = await defaultFetcher(params);
+        const end = performance.now();
+        setExecutionTime(end - start);
+
+        isFetching = false;
+        return response;
+      } catch (err) {
+        const end = performance.now();
+        setExecutionTime(end - start);
+        setError(err.message);
+        throw err;
+      }
+    },
+    [endpoint]
+  );
+
+  return { timedFetcher, executionTime, error, setError };
+};
 
 const GraphiQLEditor = () => {
   const [activeQueryKey, setActiveQueryKey] = useState('');
   const [queryResult, setQueryResult] = useState(null);
-  let [executionTime, setExecutionTime] = useState(null);
-  const [error, setError] = useState(null);
 
-  const fetcher = useCallback(async (graphQLParams) => {
-    try {
-      const startTime = performance.now();
+  const { timedFetcher, executionTime, error, setError } = useTimedFetcher(TEST_ENDPOINT);
+  const pluginContext = usePluginContext();
+  const PluginContent = pluginContext?.visiblePlugin?.content;
 
-      const response = await fetch(
-        'https://countries.trevorblades.com/',
-        // 'https://edge-sandbox-graph.adobe.io/api/3134367d-63c9-4b79-b243-05f871be7a99/graphql',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(graphQLParams),
-        }
-      );
+  const handleQueryClick = useCallback(
+    async (key) => {
+      setActiveQueryKey(key);
+      setError(null);
 
-      const endTime = performance.now();
-      setExecutionTime(Math.floor(endTime - startTime));
-
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+      try {
+        const selectedQuery = QUERIES[key];
+        const result = await timedFetcher({ query: selectedQuery });
+        setQueryResult(result);
+      } catch (err) {
+        setError(err.message);
       }
-      return response.json();
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    }
-  }, []);
+    },
+    [timedFetcher, setError]
+  );
 
-  const handleQueryClick = async (key) => {
-    setActiveQueryKey(key);
-    setError(null);
-
-    try {
-      const selectedQuery = QUERIES[key];
-      const result = await fetcher({ query: selectedQuery });
-      setQueryResult(result);
-    } catch (error) {}
-  };
+  const selectedQuery = useMemo(() => QUERIES[activeQueryKey], [activeQueryKey]);
+  const formattedResponse = useMemo(
+    () => (queryResult ? JSON.stringify(queryResult, null, 2) : ''),
+    [queryResult]
+  );
 
   return (
-    <div>
-      <div className="queries-bar">
-        {Object.keys(QUERIES).map((key) => (
-          <button
-            className={`button-39 ${activeQueryKey === key ? 'active' : ''}`}
-            key={key}
-            onClick={() => handleQueryClick(key)}
-          >
-            {key}
-          </button>
-        ))}
-        <div className="execution-time">Execution Time: {executionTime} ms</div>
-      </div>
+    <div className="editor-wrapper not-content">
+      <QueriesBar
+        queries={QUERIES}
+        activeQueryKey={activeQueryKey}
+        onQueryClick={handleQueryClick}
+        executionTime={executionTime}
+      />
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <ErrorMessage message={error} />}
 
       <GraphiQLProvider
-        fetcher={fetcher}
-        plugins={[explorer]}
-        defaultQuery={QUERIES[activeQueryKey]}
-        query={QUERIES[activeQueryKey]}
-        response={queryResult ? JSON.stringify(queryResult, null, 2) : ''}
+        fetcher={timedFetcher}
+        plugins={[explorerPlugin()]}
+        defaultQuery={selectedQuery}
+        query={selectedQuery}
+        response={formattedResponse}
       >
-        <div className="graphiql-container graphiql-wrapper">
-          <GraphiQLInterface disableTabs={true} fetcher={fetcher} />
-        </div>
+        <GraphiQLInterface>
+          <div className="graphiql-sidebar-section">
+            {PluginContent && <PluginContent className="not-content" />}
+          </div>
+          <QueryEditor className="custom-query-editor" />
+          <div className="vertical">
+            <ExecuteButton />
+            <GraphiQL.Toolbar />
+          </div>
+          <GraphiQL.Logo>{() => null}</GraphiQL.Logo>
+          <ResponseEditor />
+        </GraphiQLInterface>
       </GraphiQLProvider>
     </div>
   );
