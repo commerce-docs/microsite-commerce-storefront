@@ -1,5 +1,6 @@
 const colors = require('tailwindcss/colors');
 const starlightPlugin = require('@astrojs/starlight-tailwind');
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -12,5 +13,5 @@ module.exports = {
       },
     },
   },
-  plugins: [starlightPlugin()],
+  plugins: [starlightPlugin(), require('@tailwindcss/forms')],
 };
