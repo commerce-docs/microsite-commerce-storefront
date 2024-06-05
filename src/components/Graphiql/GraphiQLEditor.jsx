@@ -1,4 +1,4 @@
-import 'regenerator-runtime/runtime';
+// import 'regenerator-runtime/runtime';
 import React, { useState, useCallback, useMemo } from 'react';
 import { GraphiQL, GraphiQLInterface } from 'graphiql';
 import {
@@ -11,16 +11,23 @@ import {
 import { explorerPlugin } from '@graphiql/plugin-explorer';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
 import dedent from 'dedent';
-import 'graphiql/graphiql.css';
-import './graphiql-root.css';
-import './graphiql-overrides.css';
 
-const ENDPOINT =
-  'https://edge-sandbox-graph.adobe.io/api/3134367d-63c9-4b79-b243-05f871be7a99/graphql';
-let isFetching = false;
+import 'graphiql/graphiql.min.css';
+import './graphiql-overrides.css';
+import './GraphiQLEditor.css';
+
+// import productQuery from './queries/product.graphql';
+// import productsQuery from './queries/products.graphql';
+// import storesQuery from './queries/stores.graphql';
+
+// const QUERIES = {
+//   productQuery,
+//   productsQuery,
+//   storesQuery,
+// };
 
 const QUERIES = {
-  getProduct: dedent`{
+  Product: dedent`{
     products(search: "earrings") {
       items {
         name
@@ -40,7 +47,7 @@ const QUERIES = {
     }
   }
   `,
-  getProducts: dedent`{
+  Products: dedent`{
     country(id: "US") {
       id
       full_name_english
@@ -58,7 +65,7 @@ const QUERIES = {
     }
   }
   `,
-  getStores: dedent`{
+  Stores: dedent`{
     availableStores(useCurrentGroup: true) {
       store_code
       store_name
@@ -82,6 +89,9 @@ const QUERIES = {
   }`,
 };
 
+const ENDPOINT =
+  'https://edge-sandbox-graph.adobe.io/api/3134367d-63c9-4b79-b243-05f871be7a99/graphql';
+
 const ErrorMessage = ({ message }) => <div className="error-message">{message}</div>;
 
 const ResponseTime = ({ responseTime }) => (
@@ -92,14 +102,12 @@ const ResponseTime = ({ responseTime }) => (
     </span>
   </span>
 );
-
 const ResponseSize = ({ responseSize }) => (
   <span className="response-stat">
     <span className="stat-label">RESPONSE SIZE: </span>
     <span className="stat-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
   </span>
 );
-
 const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
   <button
     className={`query-button ${activeQueryKey === queryKey ? 'active' : ''}`}
@@ -108,9 +116,17 @@ const QueryButton = ({ queryKey, activeQueryKey, onQueryClick }) => (
     {queryKey}
   </button>
 );
-
 const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, responseSize }) => (
   <div className="queries-bar">
+    <select
+      id="location"
+      name="location"
+      className="query-selector h-full border-0 text-gray-900"
+      defaultValue="Catalog Service"
+    >
+      <option>Catalog Service</option>
+    </select>
+
     {Object.keys(queries).map((key) => (
       <QueryButton
         key={key}
@@ -125,7 +141,6 @@ const QueriesBar = ({ queries, activeQueryKey, onQueryClick, responseTime, respo
     </div>
   </div>
 );
-
 const useTimedFetcher = (endpoint) => {
   const [responseTime, setResponseTime] = useState(null);
   const [responseSize, setResponseSize] = useState(0);
@@ -138,9 +153,6 @@ const useTimedFetcher = (endpoint) => {
 
   const timedFetcher = useCallback(
     async (params) => {
-      if (isFetching) return;
-      isFetching = true;
-
       const start = performance.now();
       try {
         const response = await defaultFetcher(params);
@@ -150,7 +162,6 @@ const useTimedFetcher = (endpoint) => {
         const responseSize = new Blob([JSON.stringify(response)]).size;
         setResponseSize(responseSize);
 
-        isFetching = false;
         return response;
       } catch (err) {
         const end = performance.now();
@@ -214,17 +225,6 @@ const GraphiQLEditor = () => {
         query={selectedQuery}
         response={formattedResponse}
       >
-        {/* <div className="endpoint-container">
-          <button type="button" className="post-button">
-            POST
-          </button>
-          <input type="text" className="endpoint-input" value={TEST_ENDPOINT} />
-          <div className="response-header">
-            <ResponseTime responseTime={responseTime} />
-            <ResponseSize responseSize={responseSize} />
-          </div>
-        </div> */}
-
         <GraphiQLInterface>
           <div className="graphiql-sidebar-section">
             {PluginContent && <PluginContent className="not-content" />}
@@ -235,7 +235,7 @@ const GraphiQLEditor = () => {
             <ExecuteButton />
             <GraphiQL.Toolbar />
           </div>
-          <GraphiQL.Logo>{() => null}</GraphiQL.Logo>
+          <GraphiQL.Logo>{null}</GraphiQL.Logo>
           <ResponseEditor />
         </GraphiQLInterface>
       </GraphiQLProvider>
