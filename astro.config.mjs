@@ -84,9 +84,9 @@ export default defineConfig({
           directory: '/customize/'
         }
       }, {
-        label: 'Service Explorer',
+        label: 'Explorers',
         items: [{
-          label: 'Services',
+          label: 'Service Explorer',
           link: '/explorers/'
         }]
       }, {
