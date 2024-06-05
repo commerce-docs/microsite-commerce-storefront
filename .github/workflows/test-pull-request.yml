@@ -5,8 +5,6 @@ on: pull_request
 jobs:
   build:
     runs-on: ubuntu-22.04
-    env:
-      TARGET_BRANCH: 'build'
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
@@ -22,16 +20,3 @@ jobs:
         run: pnpm install
       - name: Build
         run: pnpm run build:prod
-      - name: Copy build artifacts to the target branch
-        run: |
-          git fetch # fetch branches
-          git checkout ${TARGET_BRANCH} # checkout to your branch
-          git merge origin/main --no-edit # merge the main branch to your branch
-          cp -r dist/* storefront # move all files from dist to storeferont
-      - name: Commit changes
-        run: |
-          git config --global user.name 'devops-devdocs' # set your username
-          git config --global user.email 'magento-devops-devdocs-int@adobe.com' # set your email
-          git add --all # add all changed files
-          git diff-index --quiet HEAD || git commit -am "$(git rev-parse --short $GITHUB_SHA): deploy files" # commit to the repository (ignore if no modification)
-          git push --dry-run origin ${TARGET_BRANCH} # check pushing to the remote target branch in a dry run mode
