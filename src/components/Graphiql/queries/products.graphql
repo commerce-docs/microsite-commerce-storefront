@@ -1,17 +1,75 @@
-query Products {
-  country(id: "US") {
-    id
-    full_name_english
-  }
-
-  categories(filters: { name: { match: "Tops" } }) {
-    items {
+query ProductQuery($sku: String!) {
+  products(skus: [$sku]) {
+    externalId
+    sku
+    name
+    description
+    shortDescription
+    urlKey
+    inStock
+    metaTitle
+    metaKeyword
+    metaDescription
+    images(roles: []) {
+      url
+      label
+      roles
+    }
+    attributes(roles: []) {
       name
-      products(pageSize: 10, currentPage: 2) {
-        items {
-          sku
+      label
+      value
+      roles
+    }
+    ... on SimpleProductView {
+      price {
+        ...priceFields
+      }
+    }
+    ... on ComplexProductView {
+      options {
+        id
+        title
+        required
+        values {
+          id
+          title
+          inStock
+          ... on ProductViewOptionValueSwatch {
+            type
+            value
+          }
+        }
+      }
+      priceRange {
+        maximum {
+          ...priceFields
+        }
+        minimum {
+          ...priceFields
         }
       }
     }
   }
 }
+fragment priceFields on ProductViewPrice {
+  roles
+  regular {
+    amount {
+      currency
+      value
+    }
+  }
+  final {
+    amount {
+      currency
+      value
+    }
+  }
+}
+
+# Sample Variables:
+
+# {
+#   "sku": "24-WG080"
+# }
