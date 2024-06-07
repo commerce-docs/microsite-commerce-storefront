@@ -48,6 +48,7 @@ const VARIABLES = {
     null,
     2
   ),
+  storeConfig: JSON.stringify({}, null, 2),
   wishlist: JSON.stringify({ id: '5841', currentPage: 1 }, null, 2),
 };
 
