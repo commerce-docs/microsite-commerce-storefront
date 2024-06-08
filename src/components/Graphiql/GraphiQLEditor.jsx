@@ -21,44 +21,6 @@ import 'graphiql/graphiql.min.css';
 import './graphiql-overrides.css';
 import './GraphiQLEditor.css';
 
-const QueriesBar = ({ queries, handleQuerySelection, responseTime, responseSize }) => (
-  <div className="queries-bar">
-    <h2 className="queries-bar-title">Queries</h2>
-
-    {Object.keys(queries).map((query) => (
-      <QueryButton query={query} handleQuerySelection={handleQuerySelection} />
-    ))}
-    <div className="response-stats">
-      <ResponseTime responseTime={responseTime} />
-      <ResponseSize responseSize={responseSize} />
-    </div>
-  </div>
-);
-
-const QueryButton = ({ query, handleQuerySelection }) => (
-  <button className={`query-button`} onClick={() => handleQuerySelection(query)}>
-    {query}
-  </button>
-);
-
-const ResponseTime = ({ responseTime }) => (
-  <span className="response-stat">
-    <span className="stat-label">RESPONSE TIME: </span>
-    <span className="stat-value">
-      {responseTime !== null ? ` ${Math.floor(responseTime)} ms` : ''}
-    </span>
-  </span>
-);
-
-const ResponseSize = ({ responseSize }) => (
-  <span className="response-stat">
-    <span className="stat-label">RESPONSE SIZE: </span>
-    <span className="stat-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
-  </span>
-);
-
-const ErrorMessage = ({ message }) => <div className="error-message">{message}</div>;
-
 const useTimedFetcher = (endpoint, queryHeaders) => {
   const [responseTime, setResponseTime] = useState(null);
   const [responseSize, setResponseSize] = useState(0);
@@ -166,5 +128,52 @@ const GraphiQLEditor = () => {
     </div>
   );
 };
+
+function QueriesBar({ queries, handleQuerySelection, responseTime, responseSize }) {
+  return (
+    <div className="queries-bar">
+      <h2 className="queries-bar-title">QUERIES</h2>
+      {Object.keys(queries).map((query) => (
+        <QueryButton key={query} query={query} handleQuerySelection={handleQuerySelection} />
+      ))}
+      <div className="response-stats">
+        <ResponseTime responseTime={responseTime} />
+        <ResponseSize responseSize={responseSize} />
+      </div>
+    </div>
+  );
+}
+
+function QueryButton({ query, handleQuerySelection }) {
+  return (
+    <button className={`query-button`} onClick={() => handleQuerySelection(query)}>
+      {query}
+    </button>
+  );
+}
+
+function ResponseTime({ responseTime }) {
+  return (
+    <span className="response-stat">
+      <span className="stat-label">RESPONSE TIME: </span>
+      <span className="stat-value">
+        {responseTime !== null ? ` ${Math.floor(responseTime)} ms` : ''}
+      </span>
+    </span>
+  );
+}
+
+function ResponseSize({ responseSize }) {
+  return (
+    <span className="response-stat">
+      <span className="stat-label">RESPONSE SIZE: </span>
+      <span className="stat-value">{responseSize !== null ? ` ${responseSize} bytes` : ''}</span>
+    </span>
+  );
+}
+
+function ErrorMessage({ message }) {
+  return <div className="error-message">{message}</div>;
+}
 
 export default GraphiQLEditor;
