@@ -84,10 +84,10 @@ export default defineConfig({
           directory: '/customize/'
         }
       }, {
-        label: 'Explorers',
+        label: 'Playgrounds',
         items: [{
-          label: 'Service Explorer',
-          link: '/explorers/'
+          label: 'Commerce Playground',
+          link: '/playgrounds/'
         }]
       }, {
         label: 'Launch',
