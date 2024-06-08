@@ -94,8 +94,8 @@ const useTimedFetcher = (endpoint, queryHeaders) => {
 };
 
 const GraphiQLEditor = () => {
-  const [selectedQuery, setSelectedQuery] = useState('');
-  const [selectedVariables, setSelectedVariables] = useState('');
+  const [selectedQuery, setSelectedQuery] = useState(``);
+  const [selectedVariables, setSelectedVariables] = useState(VARIABLES.Default);
   const [queryResult, setQueryResult] = useState(null);
   const [defaultVariables, setDefaultVariables] = useState(null);
 
@@ -144,7 +144,7 @@ const GraphiQLEditor = () => {
         defaultQuery={selectedQuery}
         query={selectedQuery}
         response={queryResult}
-        defaultEditorToolsVisibility={'variables'}
+        defaultEditorToolsVisibility={true}
         defaultVariables={selectedVariables}
         variables={selectedVariables}
         headers={JSON.stringify(queryHeaders, null, 2)}
