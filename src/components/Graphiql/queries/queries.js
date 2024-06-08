@@ -48,7 +48,7 @@ export const QUERIES = {
       postcode
     }
   }
-}
+  }
   `,
   Products: dedent`query ProductQuery($sku: String!) {
   products(skus: [$sku]) {
@@ -103,8 +103,8 @@ export const QUERIES = {
       }
     }
   }
-}
-fragment priceFields on ProductViewPrice {
+  }
+  fragment priceFields on ProductViewPrice {
   roles
   regular {
     amount {
@@ -118,7 +118,7 @@ fragment priceFields on ProductViewPrice {
       value
     }
   }
-}
+  }
   `,
   Recommendations: dedent`query GetRecommendations(
   $pageType: PageType!
@@ -127,7 +127,7 @@ fragment priceFields on ProductViewPrice {
   $cartSkus: [String]
   $userPurchaseHistory: [PurchaseHistory]
   $userViewHistory: [ViewHistory]
-) {
+  ) {
   recommendations(
     cartSkus: $cartSkus
     category: $category
@@ -157,7 +157,7 @@ fragment priceFields on ProductViewPrice {
     }
     totalResults
   }
-}`,
+  }`,
   StoreConfig: dedent`query STORE_CONFIG_QUERY {
   storeConfig {
     minicart_display
@@ -170,7 +170,7 @@ fragment priceFields on ProductViewPrice {
     sales_fixed_product_tax_display_setting
     shopping_cart_display_zero_tax
   }
-}`,
+  }`,
   Wishlist: dedent`query getCustomerWishlist($id: ID!, $currentPage: Int) {
   customer {
     wishlist_v2(id: $id) {
@@ -187,8 +187,8 @@ fragment priceFields on ProductViewPrice {
     }
     __typename
   }
-}
-fragment WishlistItemFragment on WishlistItemInterface {
+  }
+  fragment WishlistItemFragment on WishlistItemInterface {
   id
   product {
     uid
@@ -274,5 +274,5 @@ fragment WishlistItemFragment on WishlistItemInterface {
     __typename
   }
   __typename
-}`,
+  }`,
 };

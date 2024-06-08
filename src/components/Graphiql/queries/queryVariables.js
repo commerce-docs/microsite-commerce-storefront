@@ -17,4 +17,5 @@ export const VARIABLES = {
   ),
   StoreConfig: JSON.stringify({}, null, 2),
   Wishlist: JSON.stringify({ id: '5841', currentPage: 1 }, null, 2),
+  Default: JSON.stringify({}, null, 2),
 };
