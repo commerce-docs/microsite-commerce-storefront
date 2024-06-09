@@ -90,7 +90,7 @@ const GraphiQLEditor = () => {
   );
 
   return (
-    <div className="editor-wrapper">
+    <div className="editor-wrapper not-content">
       <QueriesBar
         queries={QUERIES}
         handleQuerySelection={handleQuerySelection}
@@ -112,9 +112,7 @@ const GraphiQLEditor = () => {
         headers={JSON.stringify(queryHeaders, null, 2)}
       >
         <GraphiQLInterface>
-          <div className="graphiql-sidebar-section">
-            {PluginContent && <PluginContent className="not-content" />}
-          </div>
+          <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
 
           <QueryEditor className="custom-query-editor" />
           <div className="vertical">
