@@ -1,6 +1,7 @@
 ---
-import Icon from './Icon.astro';      // local component override of Icon
+import Icon from './Icon.astro'; // local component override of Icon
 import type { Icons } from './Icons'; // local component override of Icons
+import { setBasePath } from '@utils/basePath';
 
 interface Props {
   variant: 'primary' | 'secondary' | 'minimal' | 'discord' | 'header' | 'sidebar';
@@ -9,10 +10,13 @@ interface Props {
   small?: string;
 }
 
-const { link, variant, icon } = Astro.props;
+const { variant, link, icon } = Astro.props;
 ---
 
-<a class:list={['sl-flex action', variant]} href={link}>
+<a
+  class:list={['sl-flex action', variant]}
+  href={link.startsWith('https://') ? link : setBasePath(link)}
+>
   <slot />
   {icon?.type === 'icon' && <Icon name={icon.name} size="1.5rem" />}
   {icon?.type === 'raw' && <Fragment set:html={icon.html} />}
