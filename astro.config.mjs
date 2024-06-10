@@ -148,13 +148,8 @@ export default defineConfig({
         autogenerate: {
           directory: '/troubleshooting/'
         }
-      },
-      {
-        label: 'Launch',
-        autogenerate: {
-          directory: '/launch/'
-        }
-      },]
+      }
+      ]
     }), (await import("@playform/compress")).default({
       CSS: false,
       HTML: true,
