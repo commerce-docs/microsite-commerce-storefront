@@ -78,115 +78,72 @@ export default defineConfig({
         autogenerate: {
           directory: '/get-started/'
         }
-      }, {
-        label: 'Customize',
-        autogenerate: {
-          directory: '/customize/'
-        }
-      }, {
-        label: 'Dropins',
-        collapsed: false,
-        items: [{
-          label: 'Product Details Page',
-          collapsed: false,
-          items: [{
-            label: 'Overview',
-            link: '/dropins/product-details/',
-          }, {
-            label: 'PDP Installation',
-            link: '/dropins/product-details/pdp-installation/'
-          }, {
-            label: 'PDP Styles',
-            link: '/dropins/product-details/pdp-styles/'
-          }, {
-            label: 'PDP Containers',
-            link: '/dropins/product-details/pdp-containers/'
-          }, {
-            label: 'PDP Slots',
-            link: '/dropins/product-details/pdp-slots/'
-          }, {
-            label: 'PDP Functions',
-            link: '/dropins/product-details/pdp-functions/'
-          }]
-        }, {
-          label: 'Cart',
-          collapsed: true,
-          items: [{
-            label: 'Overview',
-            link: '/dropins/cart/'
-          }
-            // {
-            //   label: 'Cart Installation',
-            //   link: '/dropins/cart/cart-installation/'
-            // },
-            // {
-            //   label: 'Cart Styles',
-            //   link: '/dropins/cart/cart-styles/'
-            // },
-            // {
-            //   label: 'Cart Containers',
-            //   link: '/dropins/cart/cart-containers/'
-            // },
-            // {
-            //   label: 'Cart Slots',
-            //   link: '/dropins/cart/cart-slots/'
-            // },
-            // {
-            //   label: 'Cart Functions',
-            //   link: '/dropins/cart/cart-functions/'
-            // },
-          ]
-        },
-        {
-          label: 'Checkout',
-          collapsed: true,
-          items: [{
-            label: 'Overview',
-            link: '/dropins/checkout/'
-          }
-            // {
-            //   label: 'Checkout Installation',
-            //   link: '/dropins/checkout/checkout-installation/'
-            // },
-            // {
-            //   label: 'Checkout Styles',
-            //   link: '/dropins/checkout/checkout-styles/'
-            // },
-            // {
-            //   label: 'Checkout Containers',
-            //   link: '/dropins/checkout/checkout-containers/'
-            // },
-            // {
-            //   label: 'Checkout Slots',
-            //   link: '/dropins/checkout/checkout-slots/'
-            // },
-            // {
-            //   label: 'Checkout Functions',
-            //   link: '/dropins/checkout/checkout-functions/'
-            // },
-          ]
-        }, {
-          label: 'User Auth',
-          collapsed: true,
-          items: [{
-            label: 'Overview',
-            link: '/dropins/user-auth/'
-          }]
-        }, {
-          label: 'User Account',
-          collapsed: true,
-          items: [{
-            label: 'overview',
-            link: '/dropins/user-account/'
-          }]
-        }]
       },
       {
-        label: 'References',
-        autogenerate: {
-          directory: '/references/'
-        }
-      }, {
+        label: 'Dropins',
+        items: [
+          {
+            label: 'Overview',
+            link: '/dropins/'
+          },
+          {
+            label: 'How to customize',
+            autogenerate: {
+              directory: '/dropins/customize/'
+            }
+          },
+          {
+            label: 'Product Details Page',
+            collapsed: false,
+            items: [
+              { label: 'Overview', link: '/dropins/product-details/' },
+              { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
+              { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
+              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
+              { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
+            ]
+          },
+          {
+            label: 'Cart',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/cart/' },
+              // {label: 'Cart Installation', link: '/dropins/cart/cart-installation/'},
+              // {label: 'Cart Styles', link: '/dropins/cart/cart-styles/'},
+              // {label: 'Cart Containers', link: '/dropins/cart/cart-containers/'},
+              // {label: 'Cart Slots', link: '/dropins/cart/cart-slots/'},
+              // {label: 'Cart Functions', link: '/dropins/cart/cart-functions/'},
+            ]
+          },
+          {
+            label: 'Checkout',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/checkout/' },
+              // {label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/'},
+              // {label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/'},
+              // {label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/'},
+              // {label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/'},
+              // {label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/'},
+            ]
+          },
+          {
+            label: 'User Auth',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/user-auth/' },
+            ]
+          },
+          {
+            label: 'User Account',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/user-account/' },
+            ]
+          }]
+      },
+      {
         label: 'Toubleshooting',
         autogenerate: {
           directory: '/troubleshooting/'
@@ -197,14 +154,7 @@ export default defineConfig({
         autogenerate: {
           directory: '/launch/'
         }
-      }, {
-        label: 'Blocks',
-        collapsed: true,
-        items: [{
-          label: 'Blocks overview',
-          link: '/blocks/blocks-overview/'
-        }]
-      }]
+      },]
     }), (await import("@playform/compress")).default({
       CSS: false,
       HTML: true,
