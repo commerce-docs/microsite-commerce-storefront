@@ -3,8 +3,25 @@ import type { Props } from '@astrojs/starlight/props';
 import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
 import SidebarSublist from './SidebarSublist.astro';
 
-const { sidebar } = Astro.props;
+interface SidebarProps extends Props {
+  title: string;
+  description: string;
+  showHeader?: boolean;
+}
+
+// The showHeader prop will be true if it's defined (even without an explicit value)
+const { sidebar, title, description, showHeader } = Astro.props as SidebarProps;
+const shouldShowHeader = showHeader !== undefined;
 ---
+
+<!-- Conditionally render the title and description based on showHeader prop -->{
+  shouldShowHeader && (
+    <div class="sidebar-header">
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </div>
+  )
+}
 
 <SidebarSublist sublist={sidebar} />
 <div class="md:sl-hidden">
@@ -40,3 +57,21 @@ const { sidebar } = Astro.props;
     });
   })();
 </script>
+
+<style>
+  .sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .sidebar-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .sidebar-header p {
+    margin: 0.5rem 0 0;
+    font-size: 1rem;
+    color: #666;
+  }
+</style>
