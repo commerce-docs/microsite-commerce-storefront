@@ -84,101 +84,44 @@ export default defineConfig({
           directory: '/customize/'
         }
       }, {
-        label: 'Playgrounds',
-        items: [{
-          label: 'Commerce Playground',
-          link: '/playgrounds/'
-        }]
-      }, {
-        label: 'Launch',
-        autogenerate: {
-          directory: '/launch/'
-        }
-      }, {
-        label: 'PDP Dropin',
-        badge: {
-          text: 'Beta',
-          variant: 'success'
-        },
-        items: [{
-          label: 'Overview',
-          link: '/product-details/pdp-introduction/'
-        }, {
-          label: 'PDP Installation',
-          link: '/product-details/pdp-installation/'
-        }, {
-          label: 'PDP Styles',
-          link: '/product-details/pdp-styles/'
-        }, {
-          label: 'PDP Container',
-          link: '/product-details/pdp-containers/'
-        }, {
-          label: 'PDP Slots',
-          link: '/product-details/pdp-slots/'
-        }, {
-          label: 'PDP Functions',
-          link: '/product-details/pdp-functions/'
-        }]
-      }, {
-        label: 'References',
-        autogenerate: {
-          directory: '/references/'
-        }
-      }, {
-        label: 'Toubleshooting',
-        autogenerate: {
-          directory: '/troubleshooting/'
-        }
-      },
-      // DROPIN Navigation.
-      {
         label: 'Dropins',
-        badge: {
-          text: 'In Development',
-          variant: 'danger'
-        },
-        collapsed: true,
+        collapsed: false,
         items: [{
-          label: 'Checkout',
+          label: 'Product Details Page',
           collapsed: false,
-          attrs: {
-            style: 'font-size: 1rem; font-weight: 400'
-          },
           items: [{
-            label: 'Checkout Introduction',
-            link: '/dropins/checkout/checkout-introduction/'
-          }
-            // {
-            //   label: 'Checkout Installation',
-            //   link: '/dropins/checkout/checkout-installation/'
-            // },
-            // {
-            //   label: 'Checkout Containers',
-            //   link: '/dropins/checkout/checkout-containers/'
-            // },
-            // {
-            //   label: 'Checkout Slots',
-            //   link: '/dropins/checkout/checkout-slots/'
-            // },
-            // {
-            //   label: 'Checkout Styles',
-            //   link: '/dropins/checkout/checkout-styles/'
-            // },
-            // {
-            //   label: 'Checkout Functions',
-            //   link: '/dropins/checkout/checkout-functions/'
-            // },
-          ]
+            label: 'Overview',
+            link: '/dropins/product-details/',
+          }, {
+            label: 'PDP Installation',
+            link: '/dropins/product-details/pdp-installation/'
+          }, {
+            label: 'PDP Styles',
+            link: '/dropins/product-details/pdp-styles/'
+          }, {
+            label: 'PDP Containers',
+            link: '/dropins/product-details/pdp-containers/'
+          }, {
+            label: 'PDP Slots',
+            link: '/dropins/product-details/pdp-slots/'
+          }, {
+            label: 'PDP Functions',
+            link: '/dropins/product-details/pdp-functions/'
+          }]
         }, {
           label: 'Cart',
-          collapsed: false,
+          collapsed: true,
           items: [{
-            label: 'Cart Introduction',
-            link: '/dropins/cart/cart-introduction/'
+            label: 'Overview',
+            link: '/dropins/cart/'
           }
             // {
             //   label: 'Cart Installation',
             //   link: '/dropins/cart/cart-installation/'
+            // },
+            // {
+            //   label: 'Cart Styles',
+            //   link: '/dropins/cart/cart-styles/'
             // },
             // {
             //   label: 'Cart Containers',
@@ -189,29 +132,71 @@ export default defineConfig({
             //   link: '/dropins/cart/cart-slots/'
             // },
             // {
-            //   label: 'Cart Styles',
-            //   link: '/dropins/cart/cart-styles/'
-            // },
-            // {
             //   label: 'Cart Functions',
             //   link: '/dropins/cart/cart-functions/'
             // },
           ]
+        },
+        {
+          label: 'Checkout',
+          collapsed: true,
+          items: [{
+            label: 'Overview',
+            link: '/dropins/checkout/'
+          }
+            // {
+            //   label: 'Checkout Installation',
+            //   link: '/dropins/checkout/checkout-installation/'
+            // },
+            // {
+            //   label: 'Checkout Styles',
+            //   link: '/dropins/checkout/checkout-styles/'
+            // },
+            // {
+            //   label: 'Checkout Containers',
+            //   link: '/dropins/checkout/checkout-containers/'
+            // },
+            // {
+            //   label: 'Checkout Slots',
+            //   link: '/dropins/checkout/checkout-slots/'
+            // },
+            // {
+            //   label: 'Checkout Functions',
+            //   link: '/dropins/checkout/checkout-functions/'
+            // },
+          ]
         }, {
           label: 'User Auth',
-          collapsed: false,
+          collapsed: true,
           items: [{
-            label: 'User Auth Introduction',
-            link: '/dropins/user-auth/userauth-introduction/'
+            label: 'Overview',
+            link: '/dropins/user-auth/'
           }]
         }, {
           label: 'User Account',
-          collapsed: false,
+          collapsed: true,
           items: [{
-            label: 'User Account Introduction',
-            link: '/dropins/user-account/useraccount-introduction/'
+            label: 'overview',
+            link: '/dropins/user-account/'
           }]
         }]
+      },
+      {
+        label: 'References',
+        autogenerate: {
+          directory: '/references/'
+        }
+      }, {
+        label: 'Toubleshooting',
+        autogenerate: {
+          directory: '/troubleshooting/'
+        }
+      },
+      {
+        label: 'Launch',
+        autogenerate: {
+          directory: '/launch/'
+        }
       }, {
         label: 'Blocks',
         collapsed: true,
