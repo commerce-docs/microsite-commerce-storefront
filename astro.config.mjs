@@ -70,7 +70,7 @@ export default defineConfig({
         replacesTitle: false
       },
       social: {
-        discord: 'https://discord.gg/TxtVA6ac',
+        discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
         github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop'
       },
       sidebar: [{
