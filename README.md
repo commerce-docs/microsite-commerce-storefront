@@ -1,5 +1,7 @@
 # Adobe Commerce Storefront documentation
 
+Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs . 
+
 ## Prerequisites
 
 Install node and pnpm:
@@ -62,7 +64,7 @@ The available scripts for running the project are defined in the `package.json` 
 1. Create a new branch for your changes.
 1. Make your changes.
 1. Push your changes to your fork.
-1. Create a pull request to the `development` branch of the `commerce-docs/microsite-commerce-storefront` repository.
+1. Create a pull request to the `develop` branch of the `commerce-docs/microsite-commerce-storefront` repository.
 1. Wait for the PR to be reviewed and merged.
 
 ## How to create a new docs page
@@ -75,8 +77,8 @@ The available scripts for running the project are defined in the `package.json` 
    title: Slots
    description: Learn about slots and how to use them to customize dropins.
    sidebar:
-   label: Slots
-   order: 4
+      label: Awesome Slots!   // Overrides the title in the sidebar
+      order: 4                // Use order for auto-generated sidebar links. See src/content/docs/customize files for example.
    ---
    ```
 
@@ -97,27 +99,5 @@ The available scripts for running the project are defined in the `package.json` 
    import Vocabulary from '@components/Vocabulary.astro';
    import Aside from '@components/Aside.astro';
    import Callouts from '@components/Callouts.astro';
-
-   ;
    ```
-
-## Component usage
-
-Usage instructions for all Astro docs components.
-
-### Aside
-
-Use the `Aside` component to add notes to the content. The `Aside` component is a block-level element that can contain text, images, or other components. You can add the `Aside` component using JSX or MDX syntax.
-
-```xml
-<Aside>This is an aside.</Aside>
-```
-
-```md
-:::tip[Did you know?]
-Astro helps you build faster websites with [“Islands Architecture”](https://docs.astro.build/en/concepts/islands/).
-:::
-```
-
-### Callouts
 
