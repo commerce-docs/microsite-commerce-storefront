@@ -109,11 +109,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              // {label: 'Cart Installation', link: '/dropins/cart/cart-installation/'},
-              // {label: 'Cart Styles', link: '/dropins/cart/cart-styles/'},
-              // {label: 'Cart Containers', link: '/dropins/cart/cart-containers/'},
-              // {label: 'Cart Slots', link: '/dropins/cart/cart-slots/'},
-              // {label: 'Cart Functions', link: '/dropins/cart/cart-functions/'},
+              { label: 'Cart Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Cart Styles', link: '/dropins/cart/cart-styles/' },
+              { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
+              { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
+              { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
             ]
           },
           {
