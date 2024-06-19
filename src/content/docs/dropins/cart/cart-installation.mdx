@@ -11,6 +11,7 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
+import Vocabulary from '@components/Vocabulary.astro';
 
 Our dropins are designed for the browser's JavaScript run-time without the need for a bundler. But they can also be installed and executed in a build-time environment with bundlers like Vite. The installation steps for both run-time and build-time environments are the same after the initial dropin package imports.
 
@@ -23,6 +24,10 @@ The steps for installing the Cart dropin are as follows:
 ## Step-by-step
 
 The following steps show how to install the Cart dropin into your site.
+
+:::note[Edge Delivery Service]
+These steps are specific for EDS projects, and may not necessarily be the same for other frameworks such as a static HTML or React framework.
+:::
 
 <Tasks>
 
@@ -127,7 +132,7 @@ With the `importmap` defined for both run-time and build-time environments, you 
 <Task>
 ### Import the required files
 
-Import the required files from the dropins tools (`@dropin/tools/initializers.js`) and the Cart dropin (`@dropins/cart`) into a JavaScript file for your Cart dropin. The example here shows the imports added to a `cart.js` file. These imports constitute the minimum imports you need to create a fully functioning Cart dropin for your site:
+Import the required files from the dropins tools (`@dropins/tools/fetch-graphql.js'`, `@dropin/tools/initializers.js`) and the Cart dropin (`@dropins/cart`) into a JavaScript file for your Cart dropin. The example here shows the imports added to a `cart.js` file. These imports constitute the minimum imports you need to create a fully functioning Cart dropin for your site:
 
 ```js title="cart.js"
 // GraphQL Client
@@ -147,6 +152,30 @@ import Cart from '@dropins/cart/containers/Cart.js';
 import MiniCart from '@dropins/cart/containers/MiniCart.js';
 ```
 
+<Vocabulary>
+
+### GraphQL Client
+
+Enables the ability to set and get endpoints and headers, as well as fetches data and configurations.
+
+### Dropin Tools
+
+The Initializer is responsible for setting up event listeners and initializing a module with the given configuration.
+
+### Dropin Functions
+
+Enables Cart API functions: addProductsToCart, createEmptyCart, getCartData... and more.
+
+### Dropin Provider
+
+Renders the Cart UI.
+
+### Dropin Containers
+
+Structural elements that are responsible for managing and displaying the Cart and Mini-cart.
+
+</Vocabulary>
+
 </Task>
 
 <Task>
@@ -158,6 +187,22 @@ Connect your Cart dropin to the GraphQL (Mesh) endpoint and set the required hea
 // Set endpoint configuration
 mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
 ```
+
+#### Request headers
+
+The Cart dropin does not need additional headers set for basic installation. But if you're looking to enable features for your dropin, the GraphQL request accepts additional headers. The below example shows how you could set the `Commerce-Auth` header with the customer token for the Authorization header, and how to set the store code header for store specific features. Replace the header values with the actual values from your Commerce backend services:
+
+```js title="cart.js"
+// Set the customer token. This method is specific to @dropins/cart package.
+pkg.setFetchGraphQlHeader('commerce-auth', '<token>');
+
+// Set store code header. This method is specific to the @dropins/tools package.
+mesh.setFetchGraphQlHeader('store', '<default>');
+```
+
+:::note[Authentication]
+Note that this setting is specific for GraphQL Mesh, so refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections. Visit the [User Authentication](/dropins/user-auth/) dropin for instructions on setting up Authentication features.
+:::
 
 </Task>
 
