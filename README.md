@@ -1,6 +1,6 @@
 # Adobe Commerce Storefront documentation
 
-Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs . 
+Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs.
 
 ## Prerequisites
 
@@ -77,8 +77,8 @@ The available scripts for running the project are defined in the `package.json` 
    title: Slots
    description: Learn about slots and how to use them to customize dropins.
    sidebar:
-      label: Awesome Slots!   // Overrides the title in the sidebar
-      order: 4                // Use order for auto-generated sidebar links. See src/content/docs/customize files for example.
+     label: Awesome Slots!   // Overrides the title in the sidebar
+     order: 4                // Use order for auto-generated sidebar links. See src/content/docs/customize files for example.
    ---
    ```
 
