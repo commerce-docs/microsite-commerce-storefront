@@ -171,6 +171,7 @@ export const QUERIES = {
     shopping_cart_display_zero_tax
   }
   }`,
+  /*
   Wishlist: dedent`query getCustomerWishlist($id: ID!, $currentPage: Int) {
   customer {
     wishlist_v2(id: $id) {
@@ -275,4 +276,5 @@ export const QUERIES = {
   }
   __typename
   }`,
+*/
 };
