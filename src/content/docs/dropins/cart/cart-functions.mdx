@@ -6,4 +6,350 @@ sidebar:
   order: 6
 ---
 
-Learn about the API functions provided by the Cart dropin.
+import Aside from '@components/Aside.astro';
+
+The Cart dropin provides API functions that allow developers to retrieve and display detailed cart information dynamically.
+
+## addProductsToCart
+
+This function adds products to a cart. It takes `sku`, `quantity`, and `optionsUIDs` as parameters.
+
+```javascript
+import { addProductsToCart } from '@/cart/api/addProductsToCart';
+
+addProductsToCart(
+  Array<{
+    sku: string;
+    quantity: number;
+    optionsUIDs?: string[];
+  }>
+);
+```
+
+Here's the shape of the data returned from the `addProductsToCart` function:
+
+```ts
+type CartModel = {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+};
+```
+
+## createEmptyCart
+
+A function that returns a new empty cart ID.
+
+```js
+import { createEmptyCart } from '@/cart/api/createEmptyCart';
+
+createEmptyCart();
+```
+
+The data returned is a new empty cart ID as a string:
+
+```ts
+type EmptyCartId = string;
+```
+
+## getCartData
+
+A function that returns current cart data.
+
+```js
+import { getCartData } from '@/cart/api/getCartData';
+
+getCartData();
+```
+
+Here's the shape of the data returned from the `getCartData` function:
+
+```ts
+type CartModel = {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+}
+```
+
+## getEstimatedTotals
+
+A function that returns estimated totals for cart based on an address. It takes an `address` parameter.
+
+```js
+import { getEstimatedTotals } from '@/cart/api/getEstimatedTotals';
+
+getEstimatedTotals([
+  {
+    address: {
+      countryCode: string,
+      postcode?: string,
+      region?: {
+        region?: string,
+        code?: string,
+        id?: number,
+      }
+    }
+  }
+]);
+```
+
+Here's the shape of the data returned from the `getEstimatedTotals` function:
+
+```ts
+type EstimatedTotals = {
+  cartId: string;
+  address: {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+      region?: string;
+      code?: string;
+      id?: number;
+    },
+  },
+  shippingMethod: {
+    carrierCode: string;
+    methodCode: string;
+  },
+};
+```
+
+## getEstimateShipping
+
+A function that returns estimated shipping methods based on country ID. It takes the `countryCode`, `postcode`, and `region.code` parameters.
+
+```js
+import { getEstimateShipping } from '@/cart/api/getEstimateShipping';
+
+getEstimateShipping(
+  {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+      code?: string;
+    }
+  }
+);
+```
+
+Here's the shape of the data returned from the `getEstimateShipping` function:
+
+```ts
+type EstimatedShipping = {
+  cartId: string;
+  address: {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+      region?: string;
+      code?: string;
+      id?: number;
+    },
+  },
+  shippingMethod: {
+    carrierCode: string;
+    methodCode: string;
+  },
+};
+```
+
+## getStoreConfig
+
+A function that returns information about a store's configuration.
+
+```js
+import { getStoreConfig } from '@/cart/api/getStoreConfig';
+
+getStoreConfig();
+```
+
+Here's the shape of the data returned from the `getStoreConfig` function:
+
+```ts
+type StoreConfigModel = {
+  displayMiniCart: boolean;
+  miniCartMaxItemsDisplay: number;
+  cartExpiresInDays: number;
+  cartSummaryDisplayTotal: number;
+  defaultCountry: string;
+  categoryFixedProductTaxDisplaySetting: string;
+  productFixedProductTaxDisplaySetting: string;
+  salesFixedProductTaxDisplaySetting: string;
+  shoppingCartDisplaySetting: {
+    fullSummary: boolean;
+    grandTotal: boolean;
+    price: number | string;
+    shipping: number | string;
+    subtotal: number | string;
+    taxGiftWrapping: string;
+    zeroTax: boolean;
+  };
+};
+```
+
+## initializeCart
+
+A function that initializes either a guest or customer Cart.
+
+```js
+import { initializeCart } from '@/cart/api/initializeCart';
+
+initializeCart();
+```
+
+
+Here's the shape of the data returned from the `initializeCart` function:
+
+```ts
+type CartModel = {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+};
+```
+
+## resetCart
+
+A function that resets the cart.
+
+```js
+import { resetCart } from '@/cart/api/resetCart';
+
+resetCart();
+```
+
+Here's the shape of the data returned from the `resetCart` function:
+
+```ts
+type Cart = {
+  cartId: null;
+  authenticated: false;
+};
+
+```
+
+## updateProductsFromCart
+
+A function that updates products in cart. It takes the `uid` and `quantity` parameters.
+
+```js
+import { updateProductsFromCart } from '@/cart/api/updateProductsFromCart';
+
+updateProductsFromCart([
+  {
+    uid: string,
+    quantity: number,
+  },
+]);
+```
+
+Here's the shape of the data returned from the `updateProductsFromCart` function:
+
+```ts
+type CartModel = {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+}
+```
