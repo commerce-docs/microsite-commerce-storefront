@@ -15,173 +15,353 @@ The Cart dropin consists of two containers : `Cart` and `MiniCart`. Configuratio
 
 ## Configurations
 
-The Product Details container provides the following configuration options:
+The following configuration options are available for the Cart and MiniCart containers:
+
+### Cart
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['sku', 'string', 'Yes', 'The unique identifier for the product.'],
-    ['hideSku', 'boolean', 'No', 'Optional boolean to hide the SKU display.'],
-    ['hideQuantity', 'boolean', 'No', 'Hides the quantity selector if set to true.'],
-    ['hideShortDescription', 'boolean', 'No', 'Hides the short description if set to true.'],
-    ['hideDescription', 'boolean', 'No', 'Hides the description if set to true.'],
-    ['hideAttributes', 'boolean', 'No', 'Hides the attributes if set to true.'],
-    [
-      'hideURLParams',
-      'boolean',
-      'No',
-      'Disables synchronization of options with URL parameters if true.',
-    ],
-    [
-      'productData',
-      'ProductModel',
-      'No',
-      'Optional initial product data to preload the component.',
-    ],
-    [
-      'slots',
-      'object',
-      'No',
-      'An object containing slot overrides for customizing various parts of the component display.',
-    ],
-    ['carousel', 'CarouselConfig', 'No', 'Configuration for the product image carousel display.'],
-    [
-      'onAddToCart',
-      'function',
-      'No',
-      'Callback function triggered upon adding the product to the cart.',
-    ],
+    ['children', 'CartModel', 'Yes', 'Child components of the cart.'],
+    ['initialData', 'string', 'Yes', 'Initial cart data to preload the component.'],
+    ['routeProduct', 'function', 'Yes', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'Yes', 'Callback function that returns an empty cart.'],
+    ['routeCheckout', 'function', 'Yes', 'Callback function that navigates cart to checkout.'],
   ]}
 />
 
-## SKU
+### MiniCart
 
-The `sku` property is the only required configuration. It's a string that uniquely identifies the product. This value is used to fetch `ProductModel` data from the backend.
+<OptionsTable
+  compact
+  options={[
+    ['routeProduct', 'function', 'Yes', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'Yes', 'Callback function that returns an empty cart.'],
+    ['routecart', 'function', 'Yes', 'Callback function that navigates to cart.'],
+    [('routeCheckout', 'function', 'Yes', 'Callback function that navigates cart to checkout.')],
+  ]}
+/>
 
-## Hide options
+## InitialData
 
-The hide options (`hideSku`, `hideQuantity`, and the others) let you hide the parts of the Product Details UI that are not relevant for your storefront. These properties are optional and default to `false`.
-
-## ProductData
-
-The `productData` property is an optional object that contains the initial product data to preload the component. The object should follow the `ProductModel` interface:
-
-```ts
-interface ProductModel {
-  name: string;
-  sku: string;
-  addToCartAllowed: boolean;
-  inStock: boolean | null;
-  shortDescription?: string;
-  description?: string;
-  images?: Image[];
-  prices: Prices;
-  attributes?: Attribute[];
-  options?: Option[];
-  optionUIDs?: string[];
-  url?: string;
-  urlKey?: string;
-  externalId?: string;
-}
-```
-
-View the [Example configuration](#example-configuration) section for an example of how to use this property.
-
-## Slots
-
-Slots allow for the customization of component parts. Each slot accepts a `SlotProps` object with a context containing `data`, `values`, and a `valid` state. Custom actions and content can be added through these slots. Visit the [Slots](/dropins/product-details/pdp-slots/) page for slot details and usage information.
-
-## Carousel
-
-The Carousel settings available for configuration are defined in the `CarouselConfig` interface:
+The `initialData` property is an object that contains the initial cart data to preload the component. This property is initially set to null. When the cart recieves a cart data event, initalData is set and follows the `CartModel` interface:
 
 ```ts
-interface CarouselConfig {
-  controls?: 'thumbnailsRow' | 'thumbnailsColumn' | 'dots';
-  mobile?: boolean;
-  loopable?: boolean;
-  peak?: {
-    mobile?: boolean;
-    desktop?: boolean;
+interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
   };
-  thumbnailsLoadingMode?: 'lazy' | 'eager';
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
 }
 ```
 
-<OptionsTable
-  compact
-  options={[
-    ['Option', 'Type', 'Req?', 'Description'],
-    ['controls', 'string', 'No', 'Layout options: thumbnailsRow, thumbnailsColumn, or dots'],
-    ['mobile', 'boolean', 'No', 'Whether to display the carousel on mobile devices.'],
-    [
-      'loopable',
-      'boolean',
-      'No',
-      'Whether the carousel should loop continously or stop at the end.',
-    ],
-    ['peak', 'object', 'No', 'Whether to show part of the next image on mobile and desktop.'],
-    [
-      'thumbnailsLoadingMode',
-      'string',
-      'No',
-      'The loading mode for the thumbnails, lazy or eager.',
-    ],
-  ]}
-/>
+View the [Example configuration: Cart](#example-configuration-cart) section for an example of how to use this property for the Cart container.
 
-The [Example configuration](#example-configuration) section shows a usage example for `carousel`.
+View the [Example configuration: MiniCart](#example-configuration-minicart) section for an example of how to use this property for the MiniCart container.
 
-### onAddToCart
+## Example configuration: Cart
 
-Triggered when the Add to Cart button is clicked. Receives an object with `sku`, `quantity`, and optionally `optionsUIDs` reflecting the user's selection.
+The following example data demonstrates how the Cart container is configured:
 
 ```js
-// values: Values { sku: string, quantity: number, optionsUIDs: string[] }
-onAddToCart: (values) => void;
+const mockData: CartModel = {
+  id: '123',
+  totalQuantity: 2,
+  items: [
+    {
+      itemType: 'SimpleCartItem',
+      uid: '1',
+      name: 'Product 1',
+      url: {
+        urlKey: 'product-1',
+        categories: ['category-1'],
+      },
+      sku: '123',
+      quantity: 1,
+      price: {
+        value: 100,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 1',
+      },
+      total: {
+        value: 100,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: true,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+    {
+      itemType: 'SimpleCartItem',
+      uid: '2',
+      name: 'Product 2',
+      url: {
+        urlKey: 'product-2',
+        categories: ['category-1'],
+      },
+      sku: '456',
+      quantity: 1,
+      price: {
+        value: 200,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 2',
+      },
+      total: {
+        value: 200,
+        currency: 'USD',
+      },
+      discount: {
+        value: 0,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: false,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+  ],
+  total: {
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  totalExcludingTax: {
+    value: 290,
+    currency: 'USD',
+  },
+
+  subtotal: {
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingDiscountOnly: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  appliedTaxes: [
+    {
+      amount: {
+        value: 10,
+        currency: 'USD',
+      },
+      label: 'Tax',
+    },
+  ],
+  totalTax: undefined,
+  appliedDiscounts: [
+    {
+      amount: {
+        value: 20,
+        currency: 'USD',
+      },
+      label: 'Cart Discount',
+    },
+  ],
+  addresses: {},
+  miniCartMaxItems: [],
+  isVirtual: false,
+};
 ```
 
-## Example configuration
+## Example configuration: MiniCart
 
-The following example demonstrates how to configure the Product Details container:
+The following example data demonstrates how the Cart container is configured:
 
 ```js
-return productRenderer.render(ProductDetails, {
-  sku: yourGetSkuFetchFunction(),
-  hideSku: false,
-  productData: {
-    name: 'Product Name',
-    sku: '12345',
-    addToCartAllowed: false;
-    inStock: true,
-    shortDescription: 'Short description of the product.',
-    description: 'Long description of the product.',
-    images: [
-      { url: 'https://via.placeholder.com/150', label: 'Product image', width: 150, height: 150},
-      { url: 'https://via.placeholder.com/150', label: 'Product image', width: 150, height: 150},
-    ],
+const mockPayload: CartModel = {
+  id: '123',
+  totalQuantity: 2,
+  miniCartMaxItems: [
+    {
+      itemType: 'SimpleCartItem',
+      uid: '1',
+      name: 'Product 1',
+      url: {
+        urlKey: 'product-1',
+        categories: ['category-1'],
+      },
+      sku: '123',
+      quantity: 1,
+      price: {
+        value: 100,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 1',
+      },
+      total: {
+        value: 100,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 100,
+        currency: 'USD',
+      },
+      discounted: true,
+      taxedPrice: {
+        value: 110,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 100,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 110,
+        currency: 'USD',
+      },
+    },
+    {
+      itemType: 'SimpleCartItem',
+      uid: '2',
+      name: 'Product 2',
+      url: {
+        urlKey: 'product-2',
+        categories: ['category-1'],
+      },
+      sku: '456',
+      quantity: 1,
+      price: {
+        value: 200,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 2',
+      },
+      total: {
+        value: 200,
+        currency: 'USD',
+      },
+      discount: {
+        value: 0,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: false,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 200,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 210,
+        currency: 'USD',
+      },
+    },
+  ],
+  total: {
+    includingTax: {
+      value: 320,
+      currency: 'USD',
+    },
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
   },
-  hideQuantity: false,
-  hideShortDescription: false,
-  hideDescription: false,
-  hideAttributes: false,
-  hideURLParams: false,
-  carousel: {
-    controls: 'thumbnailsRow', // 'thumbnailsRow' | 'thumbnailsColumn' | 'dots'
-    mobile: true,
-    loopable: true,
-    peak: {
-      mobile: true,
-      desktop: true,
-    }
-    thumbnailsLoadingMode: 'lazy', // 'lazy' | 'eager';
+  subtotal: {
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingTax: {
+      value: 320,
+      currency: 'USD',
+    },
+    includingDiscountOnly: {
+      value: 300,
+      currency: 'USD',
+    },
   },
-  slots: {
-    // See all PDP slots in the next section
-    Title: { },
-    SKU: { },
-  },
-  onAddToCart: (values) => console.log('Added to cart', values),
-});
+  appliedTaxes: [],
+  totalTax: undefined,
+  appliedDiscounts: [
+    {
+      amount: {
+        value: 20,
+        currency: 'USD',
+      },
+      label: 'Cart Discount',
+    },
+  ],
+  addresses: {},
+  items: [],
+};
 ```
