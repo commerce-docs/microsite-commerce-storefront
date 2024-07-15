@@ -6,4 +6,363 @@ sidebar:
   order: 4
 ---
 
-Learn about the containers in the Cart dropin.
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+
+The Cart dropin consists of two containers : `Cart` and `MiniCart`. Configuration options for both containers are provided below.
+
+## Configurations
+
+The following configuration options are available for the Cart and MiniCart containers:
+
+### Cart
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['children', 'CartModel', 'Yes', 'Child components of the cart.'],
+    ['initialData', 'string', 'Yes', 'Initial cart data to preload the component.'],
+    ['routeProduct', 'function', 'Yes', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'Yes', 'Callback function that returns an empty cart.'],
+    ['routeCheckout', 'function', 'Yes', 'Callback function that navigates cart to checkout.'],
+  ]}
+/>
+
+### MiniCart
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['routeProduct', 'function', 'Yes', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'Yes', 'Callback function that returns an empty cart.'],
+    ['routecart', 'function', 'Yes', 'Callback function that navigates to cart.'],
+    ['routeCheckout', 'function', 'Yes', 'Callback function that navigates cart to checkout.'],
+  ]}
+/>
+
+## InitialData
+
+The `initialData` property is an object that contains the initial cart data to preload the component. This property is initially set to null. When the cart recieves a cart data event, initalData is set and follows the `CartModel` interface:
+
+```ts
+interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+}
+```
+
+View the [Example configuration: Cart](#example-configuration-cart) section for an example of how to use this property for the Cart container.
+
+View the [Example configuration: MiniCart](#example-configuration-minicart) section for an example of how to use this property for the MiniCart container.
+
+## Example configuration: Cart
+
+The following example data demonstrates how the Cart container is configured:
+
+```js
+const mockData: CartModel = {
+  id: '123',
+  totalQuantity: 2,
+  items: [
+    {
+      itemType: 'SimpleCartItem',
+      uid: '1',
+      name: 'Product 1',
+      url: {
+        urlKey: 'product-1',
+        categories: ['category-1'],
+      },
+      sku: '123',
+      quantity: 1,
+      price: {
+        value: 100,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 1',
+      },
+      total: {
+        value: 100,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: true,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+    {
+      itemType: 'SimpleCartItem',
+      uid: '2',
+      name: 'Product 2',
+      url: {
+        urlKey: 'product-2',
+        categories: ['category-1'],
+      },
+      sku: '456',
+      quantity: 1,
+      price: {
+        value: 200,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 2',
+      },
+      total: {
+        value: 200,
+        currency: 'USD',
+      },
+      discount: {
+        value: 0,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: false,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+  ],
+  total: {
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  totalExcludingTax: {
+    value: 290,
+    currency: 'USD',
+  },
+
+  subtotal: {
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingDiscountOnly: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  appliedTaxes: [
+    {
+      amount: {
+        value: 10,
+        currency: 'USD',
+      },
+      label: 'Tax',
+    },
+  ],
+  totalTax: undefined,
+  appliedDiscounts: [
+    {
+      amount: {
+        value: 20,
+        currency: 'USD',
+      },
+      label: 'Cart Discount',
+    },
+  ],
+  addresses: {},
+  miniCartMaxItems: [],
+  isVirtual: false,
+};
+```
+
+## Example configuration: MiniCart
+
+The following example data demonstrates how the Cart container is configured:
+
+```js
+const mockPayload: CartModel = {
+  id: '123',
+  totalQuantity: 2,
+  miniCartMaxItems: [
+    {
+      itemType: 'SimpleCartItem',
+      uid: '1',
+      name: 'Product 1',
+      url: {
+        urlKey: 'product-1',
+        categories: ['category-1'],
+      },
+      sku: '123',
+      quantity: 1,
+      price: {
+        value: 100,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 1',
+      },
+      total: {
+        value: 100,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 100,
+        currency: 'USD',
+      },
+      discounted: true,
+      taxedPrice: {
+        value: 110,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 100,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 110,
+        currency: 'USD',
+      },
+    },
+    {
+      itemType: 'SimpleCartItem',
+      uid: '2',
+      name: 'Product 2',
+      url: {
+        urlKey: 'product-2',
+        categories: ['category-1'],
+      },
+      sku: '456',
+      quantity: 1,
+      price: {
+        value: 200,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 2',
+      },
+      total: {
+        value: 200,
+        currency: 'USD',
+      },
+      discount: {
+        value: 0,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: false,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 200,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 210,
+        currency: 'USD',
+      },
+    },
+  ],
+  total: {
+    includingTax: {
+      value: 320,
+      currency: 'USD',
+    },
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  subtotal: {
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingTax: {
+      value: 320,
+      currency: 'USD',
+    },
+    includingDiscountOnly: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  appliedTaxes: [],
+  totalTax: undefined,
+  appliedDiscounts: [
+    {
+      amount: {
+        value: 20,
+        currency: 'USD',
+      },
+      label: 'Cart Discount',
+    },
+  ],
+  addresses: {},
+  items: [],
+};
+```
