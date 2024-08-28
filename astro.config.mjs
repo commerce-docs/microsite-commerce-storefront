@@ -9,12 +9,15 @@ import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import react from "@astrojs/react";
 
 const isProduction = process.env.NODE_ENV === 'production';
+const isGitHub = process.env.NODE_ENV === 'github';
 
+// Determine the base path based on the environment
+const basePath = isProduction ? '/developer/commerce/storefront' : (isGitHub ? process.env.VITE_GITHUB_BASE_PATH : '/microsite-commerce-storefront');
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
-  base: isProduction ? import.meta.env.VITE_PROD_BASE_PATH : '',
+  base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
   },
