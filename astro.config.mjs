@@ -99,12 +99,15 @@ export default defineConfig({
             label: 'Product Details Page',
             collapsed: false,
             items: [
-              { label: 'Overview', link: '/dropins/product-details/' },
+              { label: 'PDP Overview', link: '/dropins/product-details/' },
               { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
-              { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
-              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
+              { label: 'PDP Configurations', link: '/dropins/product-details/pdp-configurations/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
+              { label: 'How to apply branding', link: '/dropins/product-details/pdp-styles/' },
+              { label: 'How to override labels', link: '/dropins/product-details/pdp-styles1/' },
+              { label: 'How to extend PDP', link: '/dropins/product-details/pdp-styles2/' },
+              { label: 'How to enrich PDP', link: '/dropins/product-details/pdp-styles3/' },
             ]
           },
           {
@@ -124,11 +127,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/'},
-              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/'},
-              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/'},
-              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/'},
-              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/'},
+              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
+              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
+              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
+              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
+              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
             ]
           },
           {
