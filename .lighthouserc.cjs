@@ -153,7 +153,7 @@ module.exports = {
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       },
       url: [
-        'http://localhost:4321/microsite-commerce-storefront',
+        // 'http://localhost/microsite-commerce-storefront/index.html',
       ],
     },
     upload: {
