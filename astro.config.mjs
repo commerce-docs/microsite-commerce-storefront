@@ -9,12 +9,19 @@ import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import react from "@astrojs/react";
 
 const isProduction = process.env.NODE_ENV === 'production';
+const isGitHub = process.env.NODE_ENV === 'github';
 
+// Determine the base path based on the environment
+const basePath = isProduction
+  ? '/developer/commerce/storefront'
+  : isGitHub
+    ? process.env.VITE_GITHUB_BASE_PATH
+    : '/microsite-commerce-storefront';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://experienceleague.adobe.com',
-  base: isProduction ? import.meta.env.VITE_PROD_BASE_PATH : '',
+  base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
   },
@@ -121,11 +128,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/'},
-              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/'},
-              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/'},
-              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/'},
-              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/'},
+              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
+              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
+              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
+              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
+              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
             ]
           },
           {
