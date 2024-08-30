@@ -95,44 +95,39 @@ const GraphiQLEditor = () => {
   );
 
   return (
-    <div className={`graphiql-editor ${isFullscreen ? 'fullscreen' : ''}`}>
-      <button className="fullscreen-toggle" onClick={toggleFullscreen}>
-        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-      </button>
-      <div className="editor-wrapper not-content">
-        <QueriesBar
-          queries={QUERIES}
-          handleQuerySelection={handleQuerySelection}
-          responseTime={responseTime}
-          responseSize={responseSize}
-        />
+    <div className="editor-wrapper not-content">
+      <QueriesBar
+        queries={QUERIES}
+        handleQuerySelection={handleQuerySelection}
+        responseTime={responseTime}
+        responseSize={responseSize}
+      />
 
-        {error && <ErrorMessage message={error} />}
+      {error && <ErrorMessage message={error} />}
 
-        <GraphiQLProvider
-          fetcher={timedFetcher}
-          plugins={[explorerPlugin()]}
-          defaultQuery={selectedQuery}
-          query={selectedQuery}
-          response={queryResult}
-          defaultEditorToolsVisibility={true}
-          defaultVariables={selectedVariables}
-          variables={selectedVariables}
-          headers={JSON.stringify(queryHeaders, null, 2)}
-        >
-          <GraphiQLInterface>
-            <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
+      <GraphiQLProvider
+        fetcher={timedFetcher}
+        plugins={[explorerPlugin()]}
+        defaultQuery={selectedQuery}
+        query={selectedQuery}
+        response={queryResult}
+        defaultEditorToolsVisibility={true}
+        defaultVariables={selectedVariables}
+        variables={selectedVariables}
+        headers={JSON.stringify(queryHeaders, null, 2)}
+      >
+        <GraphiQLInterface>
+          <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
 
-            <QueryEditor className="custom-query-editor" />
-            <div className="vertical">
-              <ExecuteButton />
-              <GraphiQL.Toolbar />
-            </div>
-            <GraphiQL.Logo>{null}</GraphiQL.Logo>
-            <ResponseEditor />
-          </GraphiQLInterface>
-        </GraphiQLProvider>
-      </div>
+          <QueryEditor className="custom-query-editor" />
+          <div className="vertical">
+            <ExecuteButton />
+            <GraphiQL.Toolbar />
+          </div>
+          <GraphiQL.Logo>{null}</GraphiQL.Logo>
+          <ResponseEditor />
+        </GraphiQLInterface>
+      </GraphiQLProvider>
     </div>
   );
 };
