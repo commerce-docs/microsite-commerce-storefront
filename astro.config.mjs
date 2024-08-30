@@ -83,25 +83,51 @@ export default defineConfig({
         label: 'Dropins',
         items: [
           {
-            label: 'Overview',
-            link: '/dropins/'
+            label: 'Introduction',
+            link: '/dropins/all/introduction/'
           },
           {
-            label: 'How to customize',
-            autogenerate: {
-              directory: '/dropins/customize/'
-            }
+            label: 'Anatomy of a dropin',
+            link: '/dropins/all/anatomy/'
+          },
+          {
+            label: 'Installing dropins',
+            link: '/dropins/all/installing/'
+          },
+          {
+            label: 'Branding dropins',
+            link: '/dropins/all/branding/'
+          },
+          {
+            label: 'Localizing dropins',
+            link: '/dropins/all/localizing/'
+          },
+          {
+            label: 'Styling dropins',
+            link: '/dropins/all/styling/'
+          },
+          {
+            label: 'Extending dropins',
+            link: '/dropins/all/extending/'
+          },
+          {
+            label: 'Enriching dropins',
+            link: '/dropins/all/enriching/'
           },
           {
             label: 'Product Details Page',
             collapsed: false,
             items: [
-              { label: 'Overview', link: '/dropins/product-details/' },
-              { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
+              { label: 'PDP Anatomy', link: '/dropins/product-details/pdp-anatomy/' },
+              { label: 'PDP Configurations', link: '/dropins/product-details/pdp-configurations/' },
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
-              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
+              { label: 'PDP Data & Events', link: '/dropins/product-details/pdp-data-events/' },
+              { label: 'How to override styles', link: '/dropins/product-details/override-styles/' },
+              { label: 'How to change labels', link: '/dropins/product-details/change-labels/' },
+              { label: 'How to override slots', link: '/dropins/product-details/override-slots/' },
+              { label: 'How to add enrichment', link: '/dropins/product-details/add-enrichment/' },
             ]
           },
           {
@@ -121,11 +147,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/'},
-              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/'},
-              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/'},
-              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/'},
-              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/'},
+              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
+              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
+              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
+              { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
+              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
             ]
           },
           {

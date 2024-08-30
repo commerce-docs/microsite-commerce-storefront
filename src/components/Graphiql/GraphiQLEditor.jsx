@@ -60,6 +60,11 @@ const GraphiQLEditor = () => {
   const [selectedVariables, setSelectedVariables] = useState(VARIABLES.Default);
   const [queryResult, setQueryResult] = useState(null);
   const [defaultVariables, setDefaultVariables] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
 
   const { timedFetcher, responseTime, responseSize, error, setError } = useTimedFetcher(
     ENDPOINT,
@@ -90,39 +95,44 @@ const GraphiQLEditor = () => {
   );
 
   return (
-    <div className="editor-wrapper not-content">
-      <QueriesBar
-        queries={QUERIES}
-        handleQuerySelection={handleQuerySelection}
-        responseTime={responseTime}
-        responseSize={responseSize}
-      />
+    <div className={`graphiql-editor ${isFullscreen ? 'fullscreen' : ''}`}>
+      <button className="fullscreen-toggle" onClick={toggleFullscreen}>
+        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+      </button>
+      <div className="editor-wrapper not-content">
+        <QueriesBar
+          queries={QUERIES}
+          handleQuerySelection={handleQuerySelection}
+          responseTime={responseTime}
+          responseSize={responseSize}
+        />
 
-      {error && <ErrorMessage message={error} />}
+        {error && <ErrorMessage message={error} />}
 
-      <GraphiQLProvider
-        fetcher={timedFetcher}
-        plugins={[explorerPlugin()]}
-        defaultQuery={selectedQuery}
-        query={selectedQuery}
-        response={queryResult}
-        defaultEditorToolsVisibility={true}
-        defaultVariables={selectedVariables}
-        variables={selectedVariables}
-        headers={JSON.stringify(queryHeaders, null, 2)}
-      >
-        <GraphiQLInterface>
-          <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
+        <GraphiQLProvider
+          fetcher={timedFetcher}
+          plugins={[explorerPlugin()]}
+          defaultQuery={selectedQuery}
+          query={selectedQuery}
+          response={queryResult}
+          defaultEditorToolsVisibility={true}
+          defaultVariables={selectedVariables}
+          variables={selectedVariables}
+          headers={JSON.stringify(queryHeaders, null, 2)}
+        >
+          <GraphiQLInterface>
+            <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
 
-          <QueryEditor className="custom-query-editor" />
-          <div className="vertical">
-            <ExecuteButton />
-            <GraphiQL.Toolbar />
-          </div>
-          <GraphiQL.Logo>{null}</GraphiQL.Logo>
-          <ResponseEditor />
-        </GraphiQLInterface>
-      </GraphiQLProvider>
+            <QueryEditor className="custom-query-editor" />
+            <div className="vertical">
+              <ExecuteButton />
+              <GraphiQL.Toolbar />
+            </div>
+            <GraphiQL.Logo>{null}</GraphiQL.Logo>
+            <ResponseEditor />
+          </GraphiQLInterface>
+        </GraphiQLProvider>
+      </div>
     </div>
   );
 };
