@@ -12,7 +12,11 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
 
 // Determine the base path based on the environment
-const basePath = isProduction ? '/developer/commerce/storefront' : (isGitHub ? process.env.VITE_GITHUB_BASE_PATH : '/microsite-commerce-storefront');
+const basePath = isProduction
+  ? '/developer/commerce/storefront'
+  : isGitHub
+    ? process.env.VITE_GITHUB_BASE_PATH
+    : '/microsite-commerce-storefront';
 
 // https://astro.build/config
 export default defineConfig({
@@ -99,15 +103,12 @@ export default defineConfig({
             label: 'Product Details Page',
             collapsed: false,
             items: [
-              { label: 'PDP Overview', link: '/dropins/product-details/' },
+              { label: 'Overview', link: '/dropins/product-details/' },
               { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
-              { label: 'PDP Configurations', link: '/dropins/product-details/pdp-configurations/' },
+              { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
+              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
-              { label: 'How to apply branding', link: '/dropins/product-details/pdp-styles/' },
-              { label: 'How to override labels', link: '/dropins/product-details/pdp-styles1/' },
-              { label: 'How to extend PDP', link: '/dropins/product-details/pdp-styles2/' },
-              { label: 'How to enrich PDP', link: '/dropins/product-details/pdp-styles3/' },
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
             ]
           },
           {
