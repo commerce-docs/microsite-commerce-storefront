@@ -122,6 +122,24 @@ export default defineConfig({
             link: '/dropins/all/enriching/'
           },
           {
+            label: 'Dropin Template',
+            collapsed: false,
+            items: [
+              { label: 'DropinName Features', link: '/dropins/blueprint/dropin-features/' },
+              { label: 'DropinName Prerequisites', link: '/dropins/blueprint/dropin-prerequisites/' },
+              { label: 'DropinName Anatomy', link: '/dropins/blueprint/dropin-anatomy/' },
+              { label: 'DropinName Configurations', link: '/dropins/blueprint/dropin-configurations/' },
+              { label: 'DropinName Styles', link: '/dropins/blueprint/dropin-styles/' },
+              { label: 'DropinName Slots', link: '/dropins/blueprint/dropin-slots/' },
+              { label: 'DropinName Functions', link: '/dropins/blueprint/dropin-functions/' },
+              { label: 'DropinName Data Events', link: '/dropins/blueprint/dropin-data-events/' },
+              { label: 'How to override styles', link: '/dropins/blueprint/override-styles/' },
+              { label: 'How to change labels', link: '/dropins/blueprint/change-labels/' },
+              { label: 'How to override slots', link: '/dropins/blueprint/override-slots/' },
+              { label: 'How to enrich content', link: '/dropins/blueprint/add-enrichment/' },
+            ]
+          },
+          {
             label: 'Product Details Page',
             collapsed: false,
             items: [
