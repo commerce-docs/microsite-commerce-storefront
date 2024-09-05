@@ -60,6 +60,11 @@ const GraphiQLEditor = () => {
   const [selectedVariables, setSelectedVariables] = useState(VARIABLES.Default);
   const [queryResult, setQueryResult] = useState(null);
   const [defaultVariables, setDefaultVariables] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
 
   const { timedFetcher, responseTime, responseSize, error, setError } = useTimedFetcher(
     ENDPOINT,
