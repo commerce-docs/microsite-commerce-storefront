@@ -71,7 +71,7 @@ export default defineConfig({
         SidebarSublist: './src/components/overrides/SidebarSublist.astro',
         SocialIcons: './src/components/overrides/SocialIcons.astro'
       },
-      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/reset.css'],
+      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css', './src/styles/reset.css'],
       logo: {
         src: './src/assets/sitelogo.svg',
         replacesTitle: false
@@ -133,9 +133,9 @@ export default defineConfig({
               { label: 'DROPIN_NAME slots', link: '/dropins/blueprint/dropin-slots/' },
               { label: 'DROPIN_NAME functions', link: '/dropins/blueprint/dropin-functions/' },
               { label: 'DROPIN_NAME data events', link: '/dropins/blueprint/dropin-data-events/' },
-              { label: 'How to override styles', link: '/dropins/blueprint/override-styles/' },
-              { label: 'How to change labels', link: '/dropins/blueprint/change-labels/' },
-              { label: 'How to override slots', link: '/dropins/blueprint/override-slots/' },
+              { label: 'How to override styles', link: '/dropins/blueprint/how-to-override-styles/' },
+              { label: 'How to change labels', link: '/dropins/blueprint/how-to-change-labels/' },
+              { label: 'How to override slots', link: '/dropins/blueprint/how-to-override-slots/' },
             ]
           },
           {
