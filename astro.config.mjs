@@ -69,7 +69,8 @@ export default defineConfig({
         Pagination: './src/components/overrides/Pagination.astro',
         Sidebar: './src/components/overrides/Sidebar.astro',
         SidebarSublist: './src/components/overrides/SidebarSublist.astro',
-        SocialIcons: './src/components/overrides/SocialIcons.astro'
+        SocialIcons: './src/components/overrides/SocialIcons.astro',
+        LinkCard: './src/components/LinkCard.astro',
       },
       customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css', './src/styles/reset.css'],
       logo: {
@@ -125,7 +126,7 @@ export default defineConfig({
             label: 'DROPIN_NAME',
             collapsed: false,
             items: [
-              { label: 'DROPIN_NAME features', link: '/dropins/blueprint/dropin-features/' },
+              { label: 'DROPIN_NAME anatomy', link: '/dropins/blueprint/dropin-anatomy/' },
               { label: 'DROPIN_NAME prerequisites', link: '/dropins/blueprint/dropin-prerequisites/' },
               { label: 'DROPIN_NAME initialization', link: '/dropins/blueprint/dropin-initialization/' },
               { label: 'DROPIN_NAME containers', link: '/dropins/blueprint/dropin-containers/' },
@@ -133,9 +134,6 @@ export default defineConfig({
               { label: 'DROPIN_NAME slots', link: '/dropins/blueprint/dropin-slots/' },
               { label: 'DROPIN_NAME functions', link: '/dropins/blueprint/dropin-functions/' },
               { label: 'DROPIN_NAME data events', link: '/dropins/blueprint/dropin-data-events/' },
-              { label: 'How to override styles', link: '/dropins/blueprint/how-to-override-styles/' },
-              { label: 'How to change labels', link: '/dropins/blueprint/how-to-change-labels/' },
-              { label: 'How to override slots', link: '/dropins/blueprint/how-to-override-slots/' },
             ]
           },
           {

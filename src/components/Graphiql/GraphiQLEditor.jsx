@@ -95,10 +95,7 @@ const GraphiQLEditor = () => {
   );
 
   return (
-    <div className={`graphiql-editor ${isFullscreen ? 'fullscreen' : ''}`}>
-      <button className="fullscreen-toggle" onClick={toggleFullscreen}>
-        {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
-      </button>
+    <div className={`graphiql-editor`}>
       <div className="editor-wrapper not-content">
         <QueriesBar
           queries={QUERIES}
