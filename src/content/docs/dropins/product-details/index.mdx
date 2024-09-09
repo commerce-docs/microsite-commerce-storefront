@@ -10,15 +10,20 @@ import Aside from '@components/Aside.astro';
 import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
 import { Image } from 'astro:assets';
+import List from '@components/List.astro';
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import Task from '@components/Task.astro';
 import Tasks from '@components/Tasks.astro';
 
 The Product Details Page (PDP) dropin provides a variety of fully-customizable controls to help you showcase your products, including image carousels, thumbnails, pricing, descriptions, and more.
 
+## Anatomy
+
+<Diagram caption="PDP slots">![PDP example](@images/slots/pdp-slots.webp)</Diagram>
+
 ## Use cases
 
-The Product Details Page allows you to showcase your products according to your brand's aesthetics and user experience goals. Use cases include:
+The PDP dropin allows you to showcase your products according to your brand's aesthetics and user experience goals. Use cases include:
 
 - **Image Carousel**: Display multiple product images in a carousel format, allowing users to view different angles and details of the product.
 - **Product Information**: Showcase detailed product information, including pricing, descriptions, and specifications.
@@ -26,237 +31,32 @@ The Product Details Page allows you to showcase your products according to your 
 - **Product Reviews**: Include user reviews and ratings to provide social proof and help users make informed purchasing decisions.
 - **Product Recommendations**: Suggest related products or accessories to encourage users to explore additional items.
 - **Customization Options**: Customize the appearance and behavior of the dropin to align with your brand's design aesthetic and user experience goals.
-- **Render different product types**: Render different product types, such as simple, configurable, and bundle products.
+- **Render product types**: Render simple or complex product types to enhance shopper experience.
 
-## Anatomy
+### Render product types
 
-<Diagram caption="PDP slots">![PDP example](@images/slots/pdp-slots.webp)</Diagram>
+The PDP dropin supports rendering different product types configured in your Adobe Commerce instance by default (for example, simple, configurable, and bundle) using data provided by the [Catalog Service GraphQL API](https://developer.adobe.com/commerce/services/graphql/catalog-service/).
 
-## Render product types
+The practical application of rendering different product types is to provide a consistent user experience across different products. For example, a simple product can be rendered with a single price and quantity, while a complex product can be rendered with multiple simple products and different prices. This flexibility allows you to showcase a wide range of products in a consistent and user-friendly manner. These product types allow you to cater to diverse customer needs, streamline operations, and enhance the shopping experience.
 
-The Product Details Page dropin supports rendering different product types, such as simple, configurable, and bundle products. You can customize the dropin to display the appropriate product information based on the product type.
+The following table describes the different product types, their definitions, use cases, and benefits:
 
-1. Follow the [installation](pdp-installation) instructions to get the latest version of the PDP dropin.
+| **Product type**       | **Definition**                                | **Use case**                                                                 | **Benefits**                                                                 |
+|------------------------|-----------------------------------------------|------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [**Simple Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-simple)    | Single items with no variations               | Ideal for straightforward products like books, electronics, or groceries     | Easy to manage, quick to set up, suitable for products with consistent attributes |
+| [**Configurable Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-configurable) | Products with multiple variations (e.g., size, color) | Perfect for apparel, footwear, and accessories where customers need to choose specific attributes | Enhances customer experience by offering choices, reduces the need for multiple product listings, simplifies inventory management |
+| [**Bundle Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-bundle)    | A combination of multiple products sold together | Common in promotions, gift sets, or kits (e.g., skincare sets, computer accessories) | Increases average order value, encourages the sale of complementary products, provides convenience to customers |
+| [**Grouped Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-grouped)   | A collection of related products displayed together | Suitable for items that are often bought together, like furniture sets or toolkits | Simplifies the shopping process, promotes cross-selling, enhances the overall shopping experience |
+| [**Virtual Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-virtual)   | Non-tangible items like services or digital downloads | Ideal for software, e-books, online courses, or subscriptions                | No inventory management, instant delivery, scalable sales                    |
+| [**Downloadable Products**](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/products/types/product-create-downloadable) | Digital products that customers can download | Suitable for music, videos, software, or e-books                             | Immediate access for customers, no shipping costs, easy to distribute        |
 
-1. Functions - is there where the graphql query goes?
+#### Simple and complex products
 
-    <Tabs>
-      <TabItem label="Simple product">
-        ```graphql
-        products(skus: [$sku]) {
-            externalId
-            sku
-            name
-            description
-            shortDescription
-            urlKey
-            inStock
-            metaTitle
-            metaKeyword
-            metaDescription
-            images(roles: []) {
-              url
-              label
-              roles
-            }
-            attributes(roles: []) {
-              name
-              label
-              value
-              roles
-            }
-            ... on SimpleProductView {
-              price {
-                ...priceFields
-              }
-            }
-            ... on ComplexProductView {
-              options {
-                id
-                title
-                required
-                values {
-                  id
-                  title
-                  inStock
-                  ... on ProductViewOptionValueSwatch {
-                    type
-                    value
-                  }
-                }
-              }
-              priceRange {
-                maximum {
-                  ...priceFields
-                }
-                minimum {
-                  ...priceFields
-                }
-              }
-            }
-          }
-          }
-          fragment priceFields on ProductViewPrice {
-          roles
-          regular {
-            amount {
-              currency
-              value
-            }
-          }
-          final {
-            amount {
-              currency
-              value
-            }
-          }
-          }
-        ```
-      </TabItem>
-      <TabItem label="Configurable product">
-        ```graphql
-        products(skus: [$sku]) {
-            externalId
-            sku
-            name
-            description
-            shortDescription
-            urlKey
-            inStock
-            metaTitle
-            metaKeyword
-            metaDescription
-            images(roles: []) {
-              url
-              label
-              roles
-            }
-            attributes(roles: []) {
-              name
-              label
-              value
-              roles
-            }
-            ... on SimpleProductView {
-              price {
-                ...priceFields
-              }
-            }
-            ... on ComplexProductView {
-              options {
-                id
-                title
-                required
-                values {
-                  id
-                  title
-                  inStock
-                  ... on ProductViewOptionValueSwatch {
-                    type
-                    value
-                  }
-                }
-              }
-              priceRange {
-                maximum {
-                  ...priceFields
-                }
-                minimum {
-                  ...priceFields
-                }
-              }
-            }
-          }
-          }
-          fragment priceFields on ProductViewPrice {
-          roles
-          regular {
-            amount {
-              currency
-              value
-            }
-          }
-          final {
-            amount {
-              currency
-              value
-            }
-          }
-          }
-        ```
-      </TabItem>
-      <TabItem label="Bundle product">
-        ```graphql
-        products(skus: [$sku]) {
-            externalId
-            sku
-            name
-            description
-            shortDescription
-            urlKey
-            inStock
-            metaTitle
-            metaKeyword
-            metaDescription
-            images(roles: []) {
-              url
-              label
-              roles
-            }
-            attributes(roles: []) {
-              name
-              label
-              value
-              roles
-            }
-            ... on SimpleProductView {
-              price {
-                ...priceFields
-              }
-            }
-            ... on ComplexProductView {
-              options {
-                id
-                title
-                required
-                values {
-                  id
-                  title
-                  inStock
-                  ... on ProductViewOptionValueSwatch {
-                    type
-                    value
-                  }
-                }
-              }
-              priceRange {
-                maximum {
-                  ...priceFields
-                }
-                minimum {
-                  ...priceFields
-                }
-              }
-            }
-          }
-          }
-          fragment priceFields on ProductViewPrice {
-          roles
-          regular {
-            amount {
-              currency
-              value
-            }
-          }
-          final {
-            amount {
-              currency
-              value
-            }
-          }
-          }
-        ```
-      </TabItem>
-    </Tabs>
-  
-1. Slots?
+The Catalog Service GraphQL API schema reduces the diversity of product types to two classes:
+
+- Simple products are products that are defined with a single price and quantity. Catalog Service maps the simple, virtual, downloadable, and gift card product types to [`simpleProductViews`](https://developer.adobe.com/commerce/services/graphql/catalog-service/products/#return-details-about-a-simple-product).
+- Complex products are comprised of multiple simple products. The component simple products can have different prices. A complex product can also be defined so that the shopper can specify the quantity of component simple products. Catalog Service maps the configurable, bundle, and grouped product types to [`complexProductViews`](https://developer.adobe.com/commerce/services/graphql/catalog-service/products/#return-details-about-a-complex-product).
+
+<Aside type="tip" title="Pro tip!">
+  Go to the [Commerce APIs Playground](https://experienceleague.adobe.com/developer/commerce/storefront/playgrounds/commerce-services/) and run the `product` query to see the product data structure for different product types.
+</Aside>
