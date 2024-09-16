@@ -91,12 +91,14 @@ const estimateShippingMethods = estimateShippingMethods(input);
 
 ## fetchAddressFormFields
 
-The `fetchAddressFormFields` query retrieves a list of EAV attributes associated with customer register address frontend form.
+Retrieves a list of EAV attributes associated with customer register and customer address frontend forms from the Adobe Commerce GraphQL API using the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query.
 
-See [attributesForm query](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) for more details.
+### Returns
+
+Returns a promise that resolves to the transformed data fetched from the API. If the API call fails, it returns an empty array.
 
 ```ts
-import { fetchAddressFormFields } from '@/checkout/api/fetchAddressFormFields';
+transformAddressFormFields
 ```
 
 ### Usage
@@ -111,10 +113,14 @@ const addressFormFields = fetchAddressFormFields();
 
 ## getCart
 
-A function that returns checkout data for a cart ID.
+Fetches the cart details for either a [guest user](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#query-customerCart) or an [authenticated customer](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#query-cart) from the Adobe Commerce GraphQL API.
+
+### Returns
+
+Returns a promise that resolves to the transformed cart data fetched from the API.
 
 ```ts
-import { getCart } from '@/checkout/api/getCart';
+transformCart
 ```
 
 ### Usage
@@ -122,29 +128,40 @@ import { getCart } from '@/checkout/api/getCart';
 See the following example for usage details:
 
 ```ts
+import { getCart } from '@/checkout/api/getCart';
+
 getCart();
 ```
 
 ## getCheckoutData
 
-Add function description...
+Fetches and prepares the necessary data for the checkout process. It uses the `getCart` and `getCustomer` functions to fetch the cart and customer data from the Adobe Commerce GraphQL API.
 
 ### Usage
 
 See the following example for usage details:
 
-{/* Add useful example of using this function within a storefront implementation. */}
+```ts
+import { getCart, getCustomer } from '@/checkout/api';
+import { state } from '@/checkout/lib/state';
 
-```typescript
-code example
+getCheckoutData();
 ```
+
+### Returns
+
+The function does not return any value explicitly; it performs side effects by fetching data and logging errors.
 
 ## getCountries
 
-The `getCountries` function is used to get a list of countries.
+Fetches a list of countries from the Adobe Commerce GraphQL API using the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query:
+
+### Returns
+
+The function returns a promise that resolves to the transformed data fetched from the API. If the API call fails, it returns an empty array.
 
 ```ts
-import { getCountries } from '@/checkout/api/getCountries';
+transformCountries
 ```
 
 ### Usage
@@ -152,29 +169,43 @@ import { getCountries } from '@/checkout/api/getCountries';
 See the following example for usage details:
 
 ```ts
+import { getCountries } from '@/checkout/api/getCountries';
+
 getCountries();
 ```
 
 ## getCustomer
 
-Add function description...
+Fetches customer details for an authenticated user from the Adobe Commerce GraphQL API using the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+### Returns
+
+The function returns a promise that resolves to the transformed customer data fetched from the API or `undefined` if the user is not authenticated.
+
+```ts
+transformCustomer
+```
 
 ### Usage
 
 See the following example for usage details:
 
-{/* Add useful example of using this function within a storefront implementation. */}
-
 ```typescript
-code example
+import { getCustomer } from '@/checkout/api/getCustomer';
+
+getCustomer();
 ```
 
 ## getRegions
 
-A function that returns "Howdy World!".
+Fetches a list of regions (such as states or provinces) for a given country and address type from the Adobe Commerce GraphQL API using the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query.
+
+### Returns
+
+The function returns a promise that resolves to the transformed data fetched from the API. If the API call fails, it returns an empty array.
 
 ```ts
-import { getRegions } from '@/checkout/api/getRegions';
+transformRegions
 ```
 
 ### Usage
@@ -182,17 +213,25 @@ import { getRegions } from '@/checkout/api/getRegions';
 See the following example for usage details:
 
 ```ts
+import { getRegions } from '@/checkout/api/getRegions';
+
 getRegions();
 ```
 
 # getStoreConfig
 
-The storeConfig query defines information about a store's configuration. You can query a non-default store by changing the header in your GraphQL request.
+Fetches information about a store's configuration settings from the Adobe Commerce GraphQL API using the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query.
 
-See [storeConfig query](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/)
+You can query a non-default store by changing the header in your GraphQL request.
+
+### Returns
+
+The function returns a promise that resolves to the transformed store configuration data fetched from the API.
+
+If the API call fails, it returns the default store configuration settings (`STORE_CONFIG_DEFAULTS`).
 
 ```ts
-import { storeConfig } from '@/checkout/api/store/storeConfig';
+transformStoreConfig
 ```
 
 ### Usage
@@ -207,26 +246,46 @@ storeConfig();
 
 ## initializeCheckout
 
-Add function description...
+Initializes the checkout process by fetching necessary configuration and data from various Adobe Commerce GraphQL APIs using the following functions:
+
+- `fetchAddressFormFields`
+- `getCountries`
+- `getStoreConfig`
 
 ### Usage
 
 See the following example for usage details:
 
-{/* Add useful example of using this function within a storefront implementation. */}
-
 ```typescript
-code example
+import {
+  fetchAddressFormFields,
+  getCountries,
+  getStoreConfig,
+} from '@/checkout/api';
+
+initializeCheckout();
+```
+
+### Returns
+
+The function returns a promise that resolves to an array containing the results of the three API calls.
+
+```ts
+Promise.all([getStoreConfig(), getCountries(), fetchAddressFormFields()]);
 ```
 
 ## isEmailAvailable
 
-The isEmailAvailable query checks whether the specified email has already been used to create a customer account. A value of true indicates the email address is available, and the customer can use the email address to create an account.
+Checks whether the specified email has already been used to create a customer account using the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/) Adobe Commerce GraphQL API query.
 
-See [isEmailAvailable query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/)
+A value of `true` indicates that the email address is available and the customer can use the email address to create an account.
+
+### Returns
+
+A promise that resolves to an `EmailAvailability` object indicating whether the email is available.
 
 ```ts
-import { isEmailAvailable } from '@/checkout/api/isEmailAvailable';
+EmailAvailability
 ```
 
 ### Usage
@@ -241,12 +300,14 @@ isEmailAvailable('test@example.com');
 
 ## placeOrder
 
-The `placeOrder` API is used to place an order.
+Handles the process of placing an order in the checkout system using the [`placeOrder`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/place-order/) Adobe Commerce GraphQL API mutation.
 
-See [placeOrder mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/place-order/) for more details.
+### Returns
+
+The transformed order data fetched from the API.
 
 ```ts
-import { placeOrder } from '@/checkout/api/placeOrder';
+transformOrder
 ```
 
 ### Usage
@@ -254,71 +315,79 @@ import { placeOrder } from '@/checkout/api/placeOrder';
 See the following example for usage details:
 
 ```ts
+import { placeOrder } from '@/checkout/api/placeOrder';
+
 placeOrder('4L7E1H0muABuggqWxbzBCBWoeG0rNxDh');
 ```
 
 ## redirect
 
-A function that redirects the user to a URL.
-
-```ts
-import { redirect } from '@/checkout/api/redirect';
-```
+A function that redirects the user to a URL. It takes a single parameter (`url`) of type `string`, which represents the URL to redirect to.
 
 ### Usage
 
 See the following example for usage details:
 
 ```ts
+import { redirect } from '@/checkout/api/redirect';
+
 redirect('https://example.com');
 ```
 
 ## resetCheckout
 
-Add function description...
+Resets the checkout process to its initial state by clearing the cart data.
 
 ### Usage
 
 See the following example for usage details:
 
-{/* Add useful example of using this function within a storefront implementation. */}
+```ts
+import { state } from '@/checkout/lib/state';
 
-```typescript
-code example
+resetCheckout();
 ```
 
 ## resetCustomer
 
-Add function description...
+Clears the current customer information and resets the customer state to its inital value in the checkout process.
 
 ### Usage
 
 See the following example for usage details:
 
-{/* Add useful example of using this function within a storefront implementation. */}
-
 ```typescript
-code example
+import { state } from '@/checkout/lib/state';
+
+resetCustomer();
 ```
 
 ## setBillingAddress
 
-The `setBillingAddress` mutation sets the billing address for a specific cart.
+Sets the billing address for a specific cart using the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/) Adobe Commerce GraphQL mutation.
 
-See [setBillingAddressOnCart mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/) for more details.
+It takes the following parameters:
+
+- `address`: An object that contains the billing address details.
+- `customer_address_id`: The ID of the customer address.
+- `same_as_shipping`: A boolean value that indicates whether the billing address is the same as the shipping address.
+- `use_for_shipping`: A boolean value that indicates whether the billing address should be used as the shipping address.
+
+### Returns
+
+The transformed cart data fetched from the API.
 
 ```ts
-import { setBillingAddress } from '@/checkout/api/setBillingAddress';
+transformCart
 ```
 
 ### Usage
-
-See the following example for usage details:
 
 To set the billing address as the same as the shipping address:
 
 ```ts
 import { setBillingAddress } from '@/checkout/api/setBillingAddress';
+
 setBillingAddress({
   same_as_shipping: true,
 });
@@ -345,12 +414,19 @@ setBillingAddress({
 
 ## setGuestEmailOnCart
 
-A logged-in customer specifies an email address when they create an account. Therefore, you can place the order without explicitly setting the email.
+Sets the email address for a guest user on the cart using the [`setGuestEmailOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/) Adobe Commerce GraphQL API mutation.
 
-See [setGuestEmailOnCart query](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/)
+It takes the following parameters:
+
+- `email`: The email address of the guest.
+- `cart_id`: The unique ID of the cart object.
+
+### Returns 
+
+The function returns a promise that resolves to the transformed cart data fetched from the API.
 
 ```ts
-import { setGuestEmailOnCart } from '@/checkout/api/setGuestEmailOnCart';
+transformCart
 ```
 
 ### Usage
@@ -367,10 +443,16 @@ setGuestEmailOnCart({
 
 ## setPaymentMethod
 
-A function that sets the provided payment method to the current cart.
+Sets the provided payment method for the current cart using the [`setPaymentMethodOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method/) Adobe Commerce GraphQL API mutation.
+
+It takes the following parameter: `paymentMethod`.
+
+### Returns
+
+The function returns a promise that resolves to the transformed cart data fetched from the API.
 
 ```ts
-import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
+transformCart
 ```
 
 ### Usage
@@ -378,17 +460,23 @@ import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
 See the following example for usage details:
 
 ```ts
+import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
+
 setPaymentMethod('payment-method-code');
 ```
 
 ## setShippingAddress
 
-A function that calls `setShippingAddressesOnCart` mutation that sets one or more shipping addresses.
+Sets the shipping address for a specific cart using the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/) Adobe Commerce GraphQL API mutation.
 
-See [`setShippingAddressesOnCart` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/)
+It takes the following parameter: `address`.
+
+### Returns
+
+The function returns a promise that resolves to the transformed cart data fetched from the API.
 
 ```ts
-import { setShippingAddress } from '@/checkout/api/setShippingAddress';
+transformCart
 ```
 
 ### Usage
@@ -396,6 +484,8 @@ import { setShippingAddress } from '@/checkout/api/setShippingAddress';
 See the following example for usage details:
 
 ```ts
+import { setShippingAddress } from '@/checkout/api/setShippingAddress';
+
 setShippingAddress({
   address: {
     city: 'San Francisco',
@@ -415,12 +505,16 @@ setShippingAddress({
 
 ## setShippingMethodsOnCart
 
-The `setShippingMethodsOnCart` mutation sets one or more delivery methods on a cart.
+Sets the shipping methods for a specific cart using the [`setShippingMethodsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/) Adobe Commerce GraphQL API mutation.
 
-See [setShippingMethodsOnCart mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/)
+It takes the following parameter: `shippingMethods`.
+
+### Returns
+
+The function returns a promise that resolves to the transformed cart data fetched from the API.
 
 ```ts
-import { setShippingMethodsOnCart } from '@/checkout/api/setShippingMethods';
+transformCart
 ```
 
 ### Usage
