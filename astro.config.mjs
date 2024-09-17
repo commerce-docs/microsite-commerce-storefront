@@ -69,9 +69,10 @@ export default defineConfig({
         Pagination: './src/components/overrides/Pagination.astro',
         Sidebar: './src/components/overrides/Sidebar.astro',
         SidebarSublist: './src/components/overrides/SidebarSublist.astro',
-        SocialIcons: './src/components/overrides/SocialIcons.astro'
+        SocialIcons: './src/components/overrides/SocialIcons.astro',
+        LinkCard: './src/components/LinkCard.astro',
       },
-      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/reset.css'],
+      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css', './src/styles/reset.css'],
       logo: {
         src: './src/assets/sitelogo.svg',
         replacesTitle: false
@@ -89,16 +90,38 @@ export default defineConfig({
       {
         label: 'Dropins',
         items: [
+          // {
+          //   label: 'Introduction',
+          //   link: '/dropins/all/introduction/'
+          // },
+          // {
+          //   label: 'Anatomy of a dropin',
+          //   link: '/dropins/all/anatomy/'
+          // },
           {
-            label: 'Overview',
-            link: '/dropins/'
+            label: 'Installing dropins',
+            link: '/dropins/all/installing/'
           },
           {
-            label: 'How to customize',
-            autogenerate: {
-              directory: '/dropins/customize/'
-            }
+            label: 'Branding dropins',
+            link: '/dropins/all/branding/'
           },
+          // {
+          //   label: 'Localizing dropins',
+          //   link: '/dropins/all/localizing/'
+          // },
+          {
+            label: 'Styling dropins',
+            link: '/dropins/all/styling/'
+          },
+          {
+            label: 'Extending dropins',
+            link: '/dropins/all/extending/'
+          },
+          // {
+          //   label: 'Enriching dropins',
+          //   link: '/dropins/all/enriching/'
+          // },
           {
             label: 'Product Details Page',
             collapsed: false,
