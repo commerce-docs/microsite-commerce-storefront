@@ -127,15 +127,11 @@ export default defineConfig({
             collapsed: false,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
-              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
+              { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
+              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
-              // { label: 'PDP Data & Events', link: '/dropins/product-details/pdp-data-events/' },
-              // { label: 'How to override styles', link: '/dropins/product-details/override-styles/' },
-              // { label: 'How to change labels', link: '/dropins/product-details/change-labels/' },
-              // { label: 'How to override slots', link: '/dropins/product-details/override-slots/' },
-              // { label: 'How to add enrichment', link: '/dropins/product-details/add-enrichment/' },
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
             ]
           },
           {
