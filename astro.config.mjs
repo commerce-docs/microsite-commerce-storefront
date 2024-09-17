@@ -126,7 +126,7 @@ export default defineConfig({
             label: 'Product Details Page',
             collapsed: false,
             items: [
-              { label: 'PDP Anatomy', link: '/dropins/product-details/pdp-anatomy/' },
+              { label: 'Overview', link: '/dropins/product-details/' },
               { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
