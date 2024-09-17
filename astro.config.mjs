@@ -90,14 +90,14 @@ export default defineConfig({
       {
         label: 'Dropins',
         items: [
-          {
-            label: 'Introduction',
-            link: '/dropins/all/introduction/'
-          },
-          {
-            label: 'Anatomy of a dropin',
-            link: '/dropins/all/anatomy/'
-          },
+          // {
+          //   label: 'Introduction',
+          //   link: '/dropins/all/introduction/'
+          // },
+          // {
+          //   label: 'Anatomy of a dropin',
+          //   link: '/dropins/all/anatomy/'
+          // },
           {
             label: 'Installing dropins',
             link: '/dropins/all/installing/'
@@ -106,10 +106,10 @@ export default defineConfig({
             label: 'Branding dropins',
             link: '/dropins/all/branding/'
           },
-          {
-            label: 'Localizing dropins',
-            link: '/dropins/all/localizing/'
-          },
+          // {
+          //   label: 'Localizing dropins',
+          //   link: '/dropins/all/localizing/'
+          // },
           {
             label: 'Styling dropins',
             link: '/dropins/all/styling/'
@@ -118,24 +118,10 @@ export default defineConfig({
             label: 'Extending dropins',
             link: '/dropins/all/extending/'
           },
-          {
-            label: 'Enriching dropins',
-            link: '/dropins/all/enriching/'
-          },
-          {
-            label: 'DROPIN_NAME',
-            collapsed: false,
-            items: [
-              { label: 'DROPIN_NAME anatomy', link: '/dropins/blueprint/dropin-anatomy/' },
-              { label: 'DROPIN_NAME prerequisites', link: '/dropins/blueprint/dropin-prerequisites/' },
-              { label: 'DROPIN_NAME initialization', link: '/dropins/blueprint/dropin-initialization/' },
-              { label: 'DROPIN_NAME containers', link: '/dropins/blueprint/dropin-containers/' },
-              { label: 'DROPIN_NAME styles', link: '/dropins/blueprint/dropin-styles/' },
-              { label: 'DROPIN_NAME slots', link: '/dropins/blueprint/dropin-slots/' },
-              { label: 'DROPIN_NAME functions', link: '/dropins/blueprint/dropin-functions/' },
-              { label: 'DROPIN_NAME data events', link: '/dropins/blueprint/dropin-data-events/' },
-            ]
-          },
+          // {
+          //   label: 'Enriching dropins',
+          //   link: '/dropins/all/enriching/'
+          // },
           {
             label: 'Product Details Page',
             collapsed: false,
@@ -145,11 +131,11 @@ export default defineConfig({
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
               { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
-              { label: 'PDP Data & Events', link: '/dropins/product-details/pdp-data-events/' },
-              { label: 'How to override styles', link: '/dropins/product-details/override-styles/' },
-              { label: 'How to change labels', link: '/dropins/product-details/change-labels/' },
-              { label: 'How to override slots', link: '/dropins/product-details/override-slots/' },
-              { label: 'How to add enrichment', link: '/dropins/product-details/add-enrichment/' },
+              // { label: 'PDP Data & Events', link: '/dropins/product-details/pdp-data-events/' },
+              // { label: 'How to override styles', link: '/dropins/product-details/override-styles/' },
+              // { label: 'How to change labels', link: '/dropins/product-details/change-labels/' },
+              // { label: 'How to override slots', link: '/dropins/product-details/override-slots/' },
+              // { label: 'How to add enrichment', link: '/dropins/product-details/add-enrichment/' },
             ]
           },
           {
