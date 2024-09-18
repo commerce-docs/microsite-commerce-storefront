@@ -91,7 +91,7 @@ export default defineConfig({
         label: 'Dropins',
         items: [
           {
-            label: 'Introduction',
+            label: 'Overview',
             link: '/dropins/all/introduction/'
           },
           // {
