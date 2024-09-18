@@ -11,11 +11,11 @@ This topic provides the details and instructions you need to use the functions p
 
 Fetches and displays available shipping methods based on a customer's address information. It can take a combination of fields as `criteria`: country, region, region identifier, and postal code.
 
-### Returns
-
 Uses a utility function to send an [`estimateShippingMethodsMutation`](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods) request to the Adobe Commerce GraphQL API.
 
-The function transforms the API response and returns a promise that resolves to an array of `ShippingMethod` objects (or `undefined` if no shipping methods are available).
+### Returns
+
+Returns a promise that resolves to an array of `ShippingMethod` objects (or `undefined` if no shipping methods are available) fetched from the API.
 
 ```ts
 type ShippingMethod = {
@@ -91,7 +91,7 @@ const estimateShippingMethods = estimateShippingMethods(input);
 
 ## fetchAddressFormFields
 
-Retrieves a list of EAV attributes associated with customer register and customer address frontend forms from the Adobe Commerce GraphQL API using the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query.
+Uses the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query to retrieve a list of EAV attributes associated with customer and customer address frontend forms from the Adobe Commerce GraphQL API.
 
 ### Returns
 
@@ -135,7 +135,7 @@ getCart();
 
 ## getCheckoutData
 
-Fetches and prepares the necessary data for the checkout process. It uses the `getCart` and `getCustomer` functions to fetch the cart and customer data from the Adobe Commerce GraphQL API.
+Fetches and prepares the necessary data for the checkout process. It uses the [`getCart`](#getcart) and [`getCustomer`](#getcustomer) functions to fetch the cart and customer data.
 
 ### Usage
 
@@ -185,6 +185,15 @@ The function returns a promise that resolves to the transformed customer data fe
 The `Customer` object is returned:
 
 ```ts
+type Customer = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  addresses: CustomerAddress[];
+  defaultBillingAddress?: CustomerAddress;
+  defaultShippingAddress?: CustomerAddress;
+};
+
 type CustomerAddress = {
   id: string;
   firstName: string;
@@ -198,15 +207,6 @@ type CustomerAddress = {
   region?: Region;
   country: Country;
   customAttributes: CustomAttribute[];
-};
-
-type Customer = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  addresses: CustomerAddress[];
-  defaultBillingAddress?: CustomerAddress;
-  defaultShippingAddress?: CustomerAddress;
 };
 ```
 
@@ -306,9 +306,9 @@ Promise.all([getStoreConfig(), getCountries(), fetchAddressFormFields()]);
 
 ## isEmailAvailable
 
-Checks whether the specified email has already been used to create a customer account using the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/) Adobe Commerce GraphQL API query.
+Checks whether the specified email has already been used to create a customer account using the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#query-isEmailAvailable) Adobe Commerce GraphQL API query.
 
-A value of `true` indicates that the email address is available and the customer can use the email address to create an account.
+A value of `true` indicates that the email address is available and the customer can use the email address to create an account. As of Adobe commerce 2.4.7, the default value is `true`. See the [API documentation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/) for implementation details.
 
 ### Returns
 
@@ -332,6 +332,8 @@ isEmailAvailable('test@example.com');
 
 Handles the process of placing an order in the checkout system using the [`placeOrder`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/place-order/) Adobe Commerce GraphQL API mutation.
 
+Publishes the `place-order` [Adobe Commerce Event](https://github.com/adobe/commerce-events/blob/main/examples/events/place-order.md) within the [`order`](https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/types/schemas/order.ts) and [`shoppingCart`](https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/types/schemas/shoppingCart.ts) contexts to the [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer).
+
 ### Returns
 
 The transformed order data fetched from the API.
@@ -347,7 +349,7 @@ See the following example for usage details:
 ```ts
 import { placeOrder } from '@/checkout/api/placeOrder';
 
-placeOrder('4L7E1H0muABuggqWxbzBCBWoeG0rNxDh');
+placeOrder();
 ```
 
 ## redirect
@@ -428,17 +430,18 @@ To set an specific billing address:
 ```ts
 import { setBillingAddress } from '@/checkout/api/setBillingAddress';
 setBillingAddress({
-  address: {
-    firstname: 'John',
-    lastname: 'Doe',
-    street: ['123 Main St', 'Apt 1'],
-    city: 'New York',
-    state: 'NY',
-    postal_code: '10001',
-    country: 'US',
-    telephone: '555-555-5555',
-  },
-  same_as_shipping: false,
+  input: {
+    address: {
+      firstname: 'John',
+      lastname: 'Doe',
+      street: ['123 Main St', 'Apt 1'],
+      city: 'New York',
+      postcode: '10001',
+      country_code: 'US',
+      telephone: '555-555-5555',
+    },
+    same_as_shipping: false,
+  }
 });
 ```
 
@@ -446,10 +449,7 @@ setBillingAddress({
 
 Sets the email address for a guest user on the cart using the [`setGuestEmailOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/) Adobe Commerce GraphQL API mutation.
 
-It takes the following parameters:
-
-- `email`: The email address of the guest.
-- `cart_id`: The unique ID of the cart object.
+It takes the `email` parameter, which is the email address of the guest.
 
 ### Returns 
 
@@ -466,9 +466,7 @@ See the following example for usage details:
 ```ts
 import { setGuestEmailOnCart } from '@/checkout/api/setGuestEmailOnCart';
 
-setGuestEmailOnCart({
-  email: 'test@example.com',
-});
+setGuestEmailOnCart('test@example.com');
 ```
 
 ## setPaymentMethod
