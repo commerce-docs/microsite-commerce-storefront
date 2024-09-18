@@ -72,7 +72,7 @@ export default defineConfig({
         SocialIcons: './src/components/overrides/SocialIcons.astro',
         LinkCard: './src/components/LinkCard.astro',
       },
-      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css', './src/styles/reset.css'],
+      customCss: ['./src/styles/reset.css', './src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/colors.css', './src/styles/badge.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css',],
       logo: {
         src: './src/assets/sitelogo.svg',
         replacesTitle: false
@@ -90,10 +90,10 @@ export default defineConfig({
       {
         label: 'Dropins',
         items: [
-          // {
-          //   label: 'Introduction',
-          //   link: '/dropins/all/introduction/'
-          // },
+          {
+            label: 'Overview',
+            link: '/dropins/all/introduction/'
+          },
           // {
           //   label: 'Anatomy of a dropin',
           //   link: '/dropins/all/anatomy/'
