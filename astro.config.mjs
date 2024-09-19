@@ -37,7 +37,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
         }
       }, {
         tag: 'meta',
