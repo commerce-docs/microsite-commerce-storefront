@@ -13,15 +13,21 @@ The `estimateShippingMethods` function fetches and displays available shipping m
 
 Uses a utility function to send an [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/) request to the Adobe Commerce GraphQL API.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { estimateShippingMethods } from '@/checkout/api/estimateShippingMethods';
-
-estimateShippingMethods({ criteria: EstimateShippingMethodsCriteria });
+estimateShippingMethods({ criteria: ShippingEstimationCriteria });
 ```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['criteria', 'object', 'Yes', 'An object of type `ShippingEstimationCriteria`, which includes the following fields: `country_code`, `region_name`, `region_id`, and `zip`.'],
+  ]}
+/>
 
 ### Returns
 
@@ -44,6 +50,8 @@ type ShippingMethod = {
 See the following example for usage details:
 
 ```ts
+import { estimateShippingMethods } from '@/checkout/api/estimateShippingMethods';
+
 // By country code and region name
 const input = {
   criteria: {
@@ -98,16 +106,14 @@ const estimateShippingMethods = estimateShippingMethods(input);
 
 ## fetchAddressFormFields
 
-Teh `fetchAddressFormFields` function uses the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query to retrieve a list of EAV attributes associated with customer and customer address frontend forms from the Adobe Commerce GraphQL API.
+The `fetchAddressFormFields` function uses the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query to retrieve a list of EAV attributes associated with customer and customer address frontend forms from the Adobe Commerce GraphQL API.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { fetchAddressFormFields } from '@/checkout/api/fetchAddressFormFields';
-
-fetchAddressFormFields( formCode: string );
+export const fetchAddressFormFields: () => Promise<any>
 ```
 
 ### Returns
@@ -123,21 +129,31 @@ transformAddressFormFields
 See the following example for usage details:
 
 ```ts
-const addressFormFields = fetchAddressFormFields();
+import { fetchAddressFormFields } from '@/checkout/api/fetchAddressFormFields';
+
+async function getAddressFormFields() {
+  try {
+    const addressFormFields = await fetchAddressFormFields();
+    console.log('Address Form Fields:', addressFormFields);
+  } catch (error) {
+    console.error('Error fetching address form fields:', error);
+  }
+}
+
+// Call the function to fetch and log the address form fields
+getAddressFormFields();
 ```
 
 ## getCart
 
 The `getCart` function fetches the cart details for either a [guest user](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/cart/) or an [authenticated customer](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/cart/) from the Adobe Commerce GraphQL API.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { getCart } from '@/checkout/api/getCart';
-
-getCart();
+export const getCart: () => Promise<any>
 ```
 
 ### Returns
@@ -153,48 +169,67 @@ transformCart
 See the following example for usage details:
 
 ```ts
-getCart();
+import { getCart } from '@/checkout/api/getCart';
+
+async function fetchCartData() {
+  try {
+    const cartData = await getCart();
+    console.log('Cart Data:', cartData);
+  } catch (error) {
+    console.error('Error fetching cart data:', error);
+  }
+}
+
+// Call the function to fetch and log the cart data
+fetchCartData();
 ```
 
 ## getCheckoutData
 
 The `getCheckoutData` function fetches and prepares the necessary data for the checkout process. It uses the [`getCart`](#getcart) and [`getCustomer`](#getcustomer) functions to fetch the cart and customer data.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
-
-```ts
-import { getCart, getCustomer } from '@/checkout/api';
-import { state } from '@/checkout/lib/state';
-
-getCheckoutData();
-```
-
-### Usage
-
-See the following example for usage details:
+See the following example for signature details:
 
 ```ts
-getCheckoutData();
+export const getCheckoutData: () => Promise<void>
 ```
 
 ### Returns
 
 The function does not return any value explicitly; it performs side effects by fetching data and logging errors.
 
+### Usage
+
+See the following example for usage details:
+
+```ts
+import { getCheckoutData } from '@/checkout/api/getCheckoutData';
+
+async function fetchAndPrepareCheckoutData() {
+  try {
+    await getCheckoutData();
+    console.log('Checkout data fetched and prepared successfully.');
+  } catch (error) {
+    console.error('Error fetching checkout data:', error);
+  }
+}
+
+// Call the function to fetch and prepare the checkout data
+fetchAndPrepareCheckoutData();
+```
+
 ## getCountries
 
 The `getCountries` function fetches a list of countries from the Adobe Commerce GraphQL API using the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { getCountries } from '@/checkout/api/getCountries';
-
-getCountries();
+export const getCountries: () => Promise<any>
 ```
 
 ### Returns
@@ -210,21 +245,31 @@ transformCountries
 See the following example for usage details:
 
 ```ts
-getCountries();
+import { getCountries } from '@/checkout/api/getCountries';
+
+async function fetchAndLogCountries() {
+  try {
+    const countries = await getCountries();
+    console.log('Countries:', countries);
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+  }
+}
+
+// Call the function to fetch and log the countries
+fetchAndLogCountries();
 ```
 
 ## getCustomer
 
 The `getCustomer` function fetches customer details for an authenticated user from the Adobe Commerce GraphQL API using the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { getCustomer } from '@/checkout/api/getCustomer';
-
-getCustomer();
+export const getCustomer: () => Promise<Customer | null | undefined>
 ```
 
 ### Returns
@@ -264,22 +309,45 @@ type CustomerAddress = {
 See the following example for usage details:
 
 ```typescript
-getCustomer();
+import { getCustomer } from '@/checkout/api/getCustomer';
+
+async function fetchAndLogCustomer() {
+  try {
+    const customer = await getCustomer();
+    if (customer) {
+      console.log('Customer:', customer);
+    } else {
+      console.log('No customer data found.');
+    }
+  } catch (error) {
+    console.error('Error fetching customer data:', error);
+  }
+}
+
+// Call the function to fetch and log the customer data
+fetchAndLogCustomer();
 ```
 
 ## getRegions
 
 The `getRegions` function fetches a list of regions (such as states or provinces) for a given country and address type from the Adobe Commerce GraphQL API using the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { getRegions } from '@/checkout/api/getRegions';
-
-getRegions();
+export const getRegions: (countryCode: string, addressType: AddressFormType) => Promise<RegionModel[] | undefined>
 ```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['countryCode', 'string', 'Yes', 'A string representing the country code.'],
+    ['addressType', 'AddressFormType', 'Yes', 'An enum representing the address type.'],
+  ]}
+/>
 
 ### Returns
 
@@ -300,7 +368,26 @@ type Region = {
 See the following example for usage details:
 
 ```ts
-getRegions();
+import { getRegions } from '@/checkout/api/getRegions';
+
+async function fetchAndLogRegions(countryCode: string, addressType: AddressFormType) {
+  try {
+    const regions = await getRegions(countryCode, addressType);
+    if (regions && regions.length > 0) {
+      console.log('Regions:', regions);
+    } else {
+      console.log('No regions found.');
+    }
+  } catch (error) {
+    console.error('Error fetching regions:', error);
+  }
+}
+
+// Example usage
+const countryCode = 'US';
+const addressType = 'shipping'; // Assuming 'shipping' is a valid value for AddressFormType
+
+fetchAndLogRegions(countryCode, addressType);
 ```
 
 ## getStoreConfig
@@ -309,14 +396,12 @@ The `getStoreConfig` function fetches information about a store's configuration 
 
 You can query a non-default store by changing the header in your GraphQL request.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { getStoreConfig } from '@/checkout/api/getStoreConfig';
-
-getStoreConfig();
+export const getStoreConfig: () => Promise<StoreConfig>
 ```
 
 ### Returns
@@ -334,7 +419,19 @@ transformStoreConfig
 See the following example for usage details:
 
 ```ts
-storeConfig();
+import { getStoreConfig } from '@/checkout/api/getStoreConfig';
+
+async function fetchAndLogStoreConfig() {
+  try {
+    const storeConfig = await getStoreConfig();
+    console.log('Store Config:', storeConfig);
+  } catch (error) {
+    console.error('Error fetching store config:', error);
+  }
+}
+
+// Call the function to fetch and log the store configuration
+fetchAndLogStoreConfig();
 ```
 
 ## initializeCheckout
@@ -345,9 +442,25 @@ The `initializeCheckout` function initializes the checkout process by fetching n
 - `getCountries`
 - `getStoreConfig`
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
+
+```ts
+export const initializeCheckout: () => Promise<[StoreConfig, any, any]>
+```
+
+### Returns
+
+The function returns a promise that resolves to an array containing the results of the three API calls.
+
+```ts
+Promise.all([getStoreConfig(), getCountries(), fetchAddressFormFields()]);
+```
+
+### Usage
+
+See the following example for usage details:
 
 ```ts
 import {
@@ -359,37 +472,27 @@ import {
 initializeCheckout();
 ```
 
-### Usage
-
-See the following example for usage details:
-
-```ts
-initializeCheckout();
-```
-
-### Returns
-
-The function returns a promise that resolves to an array containing the results of the three API calls.
-
-```ts
-Promise.all([getStoreConfig(), getCountries(), fetchAddressFormFields()]);
-```
-
 ## isEmailAvailable
 
 The `isEmailAvailable` function checks whether the specified email has already been used to create a customer account using the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/) Adobe Commerce GraphQL API query.
 
 A value of `true` indicates that the email address is available and the customer can use the email address to create an account. As of Adobe commerce 2.4.7, the default value is `true`.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { isEmailAvailable } from '@/checkout/api/isEmailAvailable';
-
-isEmailAvailable('email');
+export const isEmailAvailable: (email: string) => Promise<EmailAvailability>
 ```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['email', 'string', 'Yes', 'A string representing the email address to check for availability.'],
+  ]}
+/>
 
 ### Returns
 
@@ -404,6 +507,8 @@ type EmailAvailability = boolean;
 See the following example for usage details:
 
 ```ts
+import { isEmailAvailable } from '@/checkout/api/isEmailAvailable';
+
 isEmailAvailable('test@example.com');
 ```
 
@@ -413,14 +518,12 @@ The `placeOrder` function handles the process of placing an order in the checkou
 
 Publishes the `place-order` [Adobe Commerce Event](https://github.com/adobe/commerce-events/blob/main/examples/events/place-order.md) within the [`order`](https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/types/schemas/order.ts) and [`shoppingCart`](https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/types/schemas/shoppingCart.ts) contexts to the [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer).
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { placeOrder } from '@/checkout/api/placeOrder';
-
-placeOrder();
+export const placeOrder: () => Promise<Order>
 ```
 
 ### Returns
@@ -436,6 +539,8 @@ transformOrder
 See the following example for usage details:
 
 ```ts
+import { placeOrder } from '@/checkout/api/placeOrder';
+
 placeOrder();
 ```
 
@@ -443,14 +548,12 @@ placeOrder();
 
 The `redirect` function redirects the user to a specific URL. It takes a single parameter (`url`) of type `string`, which represents the URL to redirect to.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { redirect } from '@/checkout/api/redirect';
-
-redirect('url');
+export const redirect: (url: string) => void
 ```
 
 ### Usage
@@ -458,6 +561,8 @@ redirect('url');
 See the following example for usage details:
 
 ```ts
+import { redirect } from '@/checkout/api/redirect';
+
 redirect('https://example.com');
 ```
 
@@ -465,9 +570,17 @@ redirect('https://example.com');
 
 The `resetCheckout` function resets the checkout process to its initial state by clearing the cart data.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
+
+```ts
+export const resetCheckout: () => void
+```
+
+### Usage
+
+See the following example for usage details:
 
 ```ts
 import { state } from '@/checkout/lib/state';
@@ -476,21 +589,21 @@ import { cartSignal } from '@/checkout/signals';
 resetCheckout();
 ```
 
-### Usage
-
-See the following example for usage details:
-
-```ts
-resetCheckout();
-```
-
 ## resetCustomer
 
 The `resetCustomer` function clears the current customer information and resets the customer state to its inital value in the checkout process.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
+
+```ts
+export const resetCustomer: () => void
+```
+
+### Usage
+
+See the following example for usage details:
 
 ```ts
 import { state } from '@/checkout/lib/state';
@@ -499,17 +612,17 @@ import { customerSignal } from '@/checkout/signals';
 resetCustomer();
 ```
 
-### Usage
-
-See the following example for usage details:
-
-```ts
-resetCustomer();
-```
-
 ## setBillingAddress
 
 The `setBillingAddress` function sets the billing address for a specific cart using the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/) Adobe Commerce GraphQL mutation.
+
+### Signature
+
+See the following example for signature details:
+
+```ts
+`setBillingAddress({input: BillingAddressInput})`
+```
 
 It takes an `input` parameter where `BillingAddressInput` is an interface that contains the specific properties for the billing address:
 
@@ -520,16 +633,6 @@ interface BillingAddressInput {
   same_as_shipping?: boolean;
   use_for_shipping?: boolean;
 }
-```
-
-### Syntax
-
-See the following example for syntax details:
-
-```ts
-import { setBillingAddress } from '@/checkout/api/setBillingAddress';
-
-`setBillingAddress({input: BillingAddressInput})`
 ```
 
 ### Returns
@@ -545,6 +648,8 @@ transformCart
 To set the billing address as the same as the shipping address:
 
 ```ts
+import { setBillingAddress } from '@/checkout/api/setBillingAddress';
+
 setBillingAddress({
   input: {
     same_as_shipping: true,
@@ -555,6 +660,8 @@ setBillingAddress({
 To set a specific billing address:
 
 ```ts
+import { setBillingAddress } from '@/checkout/api/setBillingAddress';
+
 setBillingAddress({
   input: {
     address: {
@@ -577,14 +684,12 @@ The `setGuestEmailOnCart` function sets the email address for a guest user on th
 
 It takes the `email` parameter, which is the email address of the guest.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { setGuestEmailOnCart } from '@/checkout/api/setGuestEmailOnCart';
-
-setGuestEmailOnCart('email');
+export const setGuestEmailOnCart: (email: string) => Promise<any>
 ```
 
 ### Returns 
@@ -600,6 +705,8 @@ transformCart
 See the following example for usage details:
 
 ```ts
+import { setGuestEmailOnCart } from '@/checkout/api/setGuestEmailOnCart';
+
 setGuestEmailOnCart('test@example.com');
 ```
 
@@ -609,9 +716,33 @@ The `setPaymentMethod` function sets the provided payment method for the current
 
 It takes the following parameter: `paymentMethod`.
 
-### Syntax
+### Signature
 
-See the following example for syntax details:
+See the following example for signature details:
+
+```ts
+export const setPaymentMethod: (paymentMethod: string) => Promise<any>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['paymentMethod', 'string', 'Yes', 'A string representing the payment method to be set on the cart.'],
+  ]}
+/>
+
+### Returns
+
+The function returns a promise that resolves to the transformed cart data fetched from the API.
+
+```ts
+transformCart
+```
+
+### Usage
+
+See the following example for usage details:
 
 ```ts
 import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
@@ -619,37 +750,25 @@ import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
 setPaymentMethod('payment-method-code');
 ```
 
-### Returns
-
-The function returns a promise that resolves to the transformed cart data fetched from the API.
-
-```ts
-transformCart
-```
-
-### Usage
-
-See the following example for usage details:
-
-```ts
-setPaymentMethod('payment-method-code');
-```
-
 ## setShippingAddress
 
 The `setShippingAddress` function sets the shipping address for a specific cart using the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/) Adobe Commerce GraphQL API mutation.
 
-It takes the following parameter: `address`.
+### Signature
 
-### Syntax
-
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { setShippingAddress } from '@/checkout/api/setShippingAddress';
-
 setShippingAddress({ input: SetShippingAddressesOnCartInput });
 ```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'AddressInput', 'Yes', 'An object containing the shipping address details.'],
+  ]}
+/>
 
 ### Returns
 
@@ -664,6 +783,8 @@ transformCart
 See the following example for usage details:
 
 ```ts
+import { setShippingAddress } from '@/checkout/api/setShippingAddress';
+
 setShippingAddress({
   address: {
     city: 'San Francisco',
@@ -685,17 +806,21 @@ setShippingAddress({
 
 The `setShippingMethodsOnCart` function sets the shipping methods for a specific cart using the [`setShippingMethodsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/) Adobe Commerce GraphQL API mutation.
 
-It takes the following parameter: `shippingMethods`.
+### Signature
 
-### Syntax
-
-See the following example for syntax details:
+See the following example for signature details:
 
 ```ts
-import { setShippingMethodsOnCart } from '@/checkout/api/setShippingMethods';
-
 setShippingMethodsOnCart({ input: setShippingMethodsOnCartInput });
 ```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['shippingMethods', 'ShippingMethodsOnCart', 'Yes', 'An An array of shipping methods of type ShippingMethodsOnCart.'],
+  ]}
+/>
 
 ### Returns
 
@@ -710,6 +835,8 @@ transformCart
 See the following example for usage details:
 
 ```ts
+import { setShippingMethodsOnCart } from '@/checkout/api/setShippingMethods';
+
 setShippingMethodsOnCart([
   {
     carrier_code: 'flatrate',
