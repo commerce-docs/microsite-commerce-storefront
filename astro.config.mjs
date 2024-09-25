@@ -29,6 +29,8 @@ export default defineConfig({
   outDir: './dist',
   redirects: {
     '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
+    '/references/configurations': '/developer/commerce/storefront/get-started/configurations',
+    '/references/requirements': '/developer/commerce/storefront/get-started/requirements',
   },
   integrations: [
     tailwind({
