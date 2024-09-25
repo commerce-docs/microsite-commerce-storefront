@@ -27,6 +27,9 @@ export default defineConfig({
   },
   trailingSlash: 'ignore',
   outDir: './dist',
+  redirects: {
+    '//dropins': '/developer/commerce/storefront/dropins/all/introduction',
+  },
   integrations: [
     tailwind({
       nesting: true
