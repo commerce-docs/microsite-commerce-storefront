@@ -154,6 +154,8 @@ export default defineConfig({
               // { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
               // { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
               { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
+              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
+              // { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
               // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
               // { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
             ]
