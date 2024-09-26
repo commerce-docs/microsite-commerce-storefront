@@ -21,6 +21,7 @@ slots?: {
   Heading?: SlotProps;
   EmptyCart?: SlotProps;
   Thumbnail?: SlotProps;
+  Footer?: SlotProps;
 };
 ```
 
@@ -99,7 +100,7 @@ export interface Item {
 }
 ```
 
-#### Extend the Thumbnail slot example
+#### Example: Extend the Thumbnail slot
 
 The following example demonstrates how to extend the Thumbnail slot.
 
@@ -160,3 +161,40 @@ The following example demonstrates how to extend the Thumbnail slot.
     }
   })(block);
 ```
+
+### Footer
+
+The Footer slot allows you to add content to the bottom of the CartSummaryList container.
+
+#### Example: Extend the Footer slot
+
+The following example demonstrates how to add a promotional cart rule to each product in the cart.
+
+```js
+return provider.render(Cart, {
+  slots: {
+    ProductList: (ctx) => {
+      const productList = document.createElement('div');
+
+      // Initial render of ProductList
+      provider.render(CartSummaryList, {
+        slots: {
+          Footer: (ctx) => {
+            // Prepend Product Promotions
+            const discountLabel = ctx.item?.discount?.label;
+            if (discountLabel) {
+              discountLabel.map((label) => {
+                const discount = document.createElement('div');
+                discount.style.color = '#3d3d3d';
+                discount.innerText = label;
+                ctx.appendChild(discount);
+              });
+            }
+          },
+        },
+      })(productList);
+
+      ctx.replaceWith(productList);
+    },
+  },
+})(document.getElementById('@dropins/cart'));
