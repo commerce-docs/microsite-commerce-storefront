@@ -19,13 +19,13 @@ If you are not using the boilerplate template, you can follow the steps below to
 
 ## Workflow
 
-The steps for installing the Product Details dropin are as follows:
+The following diagram provides an overview of the installation process for the Checkout dropin:
 
-<Diagram>![PDP Installation](@images/pdp/pdp-installation.svg)</Diagram>
+<Diagram>![Dropin installation](@images/pdp/pdp-installation.svg)</Diagram>
 
 ## Step-by-step
 
-The following steps show how to install the Product Details dropin into your site.
+The following steps show how to install the Checkout dropin on your site.
 
 <Tasks>
 
@@ -33,13 +33,13 @@ The following steps show how to install the Product Details dropin into your sit
 
 ### Install the packages
 
-Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dropins/tools`) and Product Details (`@dropins/storefront-pdp`) packages.
+Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dropins/tools`) and Checkout (`@dropins/storefront-checkout`) packages.
 
 <Tabs>
   <TabItem label="NPM" icon="seti:npm">
 
     ```bash frame="none"
-    npm install @dropins/tools @dropins/storefront-pdp
+    npm install @dropins/tools @dropins/storefront-checkout
     ```
 
   </TabItem>
@@ -52,7 +52,7 @@ Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dr
       <title>Your Storefront</title>
 
       <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-checkout@latest"></script>
     </head>
     ```
 
@@ -60,26 +60,27 @@ Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dr
 </Tabs>
 
 :::note[Install @dropins/tools]
-All dropins require the `@dropins/tools` package. This package contains the libraries that dropins need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+All dropins require the `@dropins/tools` package. This package contains the libraries that dropins need to initialize and communicate, including the `fetch-graphql`, `event-bus`, and `initializer` utilities.
 :::
 
 </Task>
 
 <Task>
+
 ### Map the packages
 
 In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
 
 <Tabs>
 <TabItem label="node_modules" icon="seti:npm">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed dropin files from the dropin tools (@dropins/tools) and the PDP dropin (@dropins/storefront-pdp):
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed dropin files from the dropin tools (@dropins/tools) and the Checkout dropin (@dropins/storefront-checkout):
   
   ```html title="head.html"
   <script type="importmap">
     {
       "imports": {
         "@dropins/tools/": "/node_modules/@dropins/tools/",
-        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-pdp/",
+        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-checkout/",
       }
     }
   </script>
@@ -87,14 +88,14 @@ In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap`
     ```
   </TabItem>
     <TabItem label="custom" icon="seti:folder">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin tools (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin tools (@dropins/tools) and the Checkout dropin (@dropins/storefront-checkout):
 
     ```html title="head.html"
     <script type="importmap">
       {
         "imports": {
           "@dropins/tools/": "/scripts/__dropins__/tools/",
-          "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
+          "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
         }
       }
     </script>
@@ -103,7 +104,7 @@ In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap`
 
   </TabItem>
   <TabItem label="CDN" icon="external">
-    This example shows an `importmap` pointing both packages to a CDN for the dropin tools (@dropins/tools) and the Product Details dropin (@dropins/storefront-pdp):
+    This example shows an `importmap` pointing both packages to a CDN for the dropin tools (@dropins/tools) and the Checkout dropin (@dropins/storefront-checkout):
 
     ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
     <head>
@@ -112,7 +113,7 @@ In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap`
           "imports": {
 
             "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
-            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest",
+            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-checkout@latest",
           }
         }
       </script>
@@ -123,37 +124,50 @@ In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap`
 
 </Tabs>
 
-With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your PDP dropin JavaScript file as described in the next step.
+With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your Checkout dropin JavaScript file as described in the next step.
 
 </Task>
 
 <Task>
+
 ### Import the required files
 
-Import the required files from the dropins tools (`@dropin/tools/initializers.js`) and the Product Details dropin (`@dropins/storefront-pdp`) into a JavaScript file for your PDP dropin. The example here shows the imports added to a `product-details.js` file. These imports constitute the minimum imports you need to create a fully functioning Product Details dropin for your site:
+Import the required files from the dropins tools (`@dropin/tools/initializers.js`) and the Checkout dropin (`@dropins/storefront-checkout`) into a JavaScript file for your Checkout dropin. The example here shows the imports added to a `commerce-checkout.js` file. These imports constitute the minimum imports you need to create a fully functioning Checkout dropin for your site:
 
-```js title="product-details.js"
+```js title="commerce-checkout.js"
 // Dropin Tools
+import { events } from '@dropins/tools/event-bus.js';
 import { initializers } from '@dropins/tools/initializer.js';
 
 // Dropin Functions
-import * as product from '@dropins/storefront-pdp/api.js';
+import * as checkoutApi from '@dropins/storefront-checkout/api.js';
 
 // Dropin Provider
-import { render as productRenderer } from '@dropins/storefront-pdp/render.js';
+import { render as checkoutProvider } from '@dropins/storefront-checkout/render.js';
 
-// Dropin Container
-import ProductDetails from '@dropins/storefront-pdp/containers/ProductDetails.js';
+// Dropin Containers
+import BillToShippingAddress from '@dropins/storefront-checkout/containers/BillToShippingAddress.js';
+import BillingForm from '@dropins/storefront-checkout/containers/BillingForm.js';
+import ErrorBanner from '@dropins/storefront-checkout/containers/ErrorBanner.js';
+import EstimateShipping from '@dropins/storefront-checkout/containers/EstimateShipping.js';
+import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+import MergedCartBanner from '@dropins/storefront-checkout/containers/MergedCartBanner.js';
+import OutOfStock from '@dropins/storefront-checkout/containers/OutOfStock.js';
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
+import ShippingForm from '@dropins/storefront-checkout/containers/ShippingForm.js';
+import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
 ```
 
 </Task>
 
 <Task>
+
 ### Connect to the endpoint
 
-Connect your Product Details dropin to the Catalog Service GraphQL endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
+Connect your Checkout dropin to the Catalog Service GraphQL endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
 
-```js title="product-details.js"
+```js title="commerce-checkout.js"
 // Set endpoint configuration
 product.setEndpoint('https://<catalog-service-endpoint>/graphql');
 
@@ -172,16 +186,17 @@ product.setFetchGraphQlHeaders({
 </Task>
 
 <Task>
+
 ### Register and load the dropin
 
-The code below shows how to register the Product Details dropin, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your Product Details HTML page as shown here:
+The code below shows how to register the Checkout dropin, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your Checkout HTML page as shown here:
 
 ```html title="index.html" ins={"1":5} ins={"2":8}
 <script type="module">
   // more code above...
 
-  // Register and load the Product Details dropin
-  initializers.register(pdp.initialize);
+  // Register and load the Checkout dropin
+  initializers.register(checkoutApi.initialize, {});
 
   // Mount Initializers (must be called after all initializers are registered)
   window.addEventListener('load', initializers.mount);
@@ -190,28 +205,114 @@ The code below shows how to register the Product Details dropin, load it (mount)
 
 <Callouts square color="var(--sl-color-green)">
 
-1. This function registers the Product Details dropin to be loaded on the page by the `initializers.mount` function.
-1. This event handler triggers the initializers.mount function to load the Product Details dropin after the page has loaded.
+1. This function registers the Checkout dropin to be loaded on the page by the `initializers.mount` function.
+1. This event handler triggers the `initializers.mount` function to load the Checkout dropin after the page has loaded.
 
 </Callouts>
 
 </Task>
 
 <Task>
+
 ### Render the dropin
 
-Render the Product Details dropin on the page. The example below provides the minimal configuration options required to render the default Product Details dropin:
+Render the Checkout dropin on the page. The example below provides the minimal configuration options required to render the default Checkout dropin:
 
-```js title="product-details.js"
-// Render Product Details
-productRenderer(ProductDetails, {
-  sku: 'SKU-001',
-  // other configuration options
-  // slots for adding custom elements, components, and functions
-})(document.getElementById('your-pdp-element'));
+```js title="commerce-checkout.js"
+// Render Checkout containers
+  checkoutProvider.render(ErrorBanner)(errorBanner);
+  checkoutProvider.render(MergedCartBanner)(mergedCartBanner);
+
+  checkoutProvider.render(OutOfStock, {
+    routeCart: () => '/cart',
+    onCartProductsUpdate: (items) => {
+      cartApi.updateProductsFromCart(items).catch(console.error);
+    },
+  })(outOfStock);
+
+  checkoutProvider.render(LoginForm, {
+    onSignInClick: async (initialEmailValue) => {
+      const signInForm = document.createElement('div');
+
+      authProvider.render(AuthCombine, {
+        signInFormConfig: {
+          renderSignUpLink: true,
+          initialEmailValue,
+          onSuccessCallback: () => {
+            overlaySpinner.classList.add('checkout__overlay-spinner--shown');
+          },
+        },
+        signUpFormConfig: {},
+        resetPasswordFormConfig: {},
+      })(signInForm);
+
+      modal = await createModal([signInForm]);
+      modal.showModal();
+    },
+    onSignOutClick: () => {
+      authApi.revokeCustomerToken();
+    },
+  })(login);
+
+  checkoutProvider.render(ShippingForm, { hideOnVirtualCart: true })(
+    shippingForm,
+  );
+  checkoutProvider.render(BillToShippingAddress, { hideOnVirtualCart: true })(
+    billToShippingAddress,
+  );
+  checkoutProvider.render(BillingForm)(billingForm);
+
+  checkoutProvider.render(ShippingMethods, {
+    hideOnVirtualCart: true,
+    // onShippingMethodSelect: (shippingMethod) => {},
+    onCheckoutDataUpdate: () => {
+      cartApi.refreshCart().catch(console.error);
+    },
+  })(shippingMethods);
+
+  checkoutProvider.render(PaymentMethods, {
+    // slots: {
+    //   Handlers: {
+    //     checkmo: (_ctx) => {
+    //       const $content = document.createElement('div');
+    //       $content.innerText = 'checkmo';
+    //       _ctx.replaceHTML($content);
+    //     },
+    //   },
+    // },
+  })(paymentMethods);
+    checkoutProvider.render(PlaceOrder, {
+    onPlaceOrder: async () => {
+      overlaySpinner.classList.add('checkout__overlay-spinner--shown');
+
+      try {
+        await checkoutApi.placeOrder();
+      } catch (error) {
+        console.error(error);
+        throw error;
+      } finally {
+        overlaySpinner.classList.remove('checkout__overlay-spinner--shown');
+      }
+    },
+  })(placeOrder);
+
+  /*
+   * Render initial layout and setup event handlers
+   */
+
+  mediaQuery.addEventListener('change', (e) => handleScreenResize(e, block));
+  handleScreenResize(mediaQuery, block);
+
+  events.on('authenticated', handleAuthenticated, { eager: true });
+  events.on('checkout/data', (e) => handleCheckoutData(e, block), {
+    eager: true,
+  });
+  events.on('checkout/customer', handleCheckoutCustomer, { eager: true });
+  events.on('checkout/order', (e) => handleCheckoutOrder(e, block));
+}
 ```
 
-Test the Product Details dropin by viewing your PDP page in a browser, or running your local dev or build server. If you see the Product Details dropin rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
+Test the Checkout dropin by viewing your checkout page in a browser, or running your local dev or build server. If you see the Checkout dropin rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
 
 </Task>
 
