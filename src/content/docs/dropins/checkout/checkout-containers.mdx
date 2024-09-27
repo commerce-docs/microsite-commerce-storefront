@@ -33,7 +33,9 @@ The Checkout dropin includes several containers that provides the layout and fun
 
 ## ErrorBanner configurations
 
-The `ErrorBanner` container accepts a subset of properties defined by the `AlertBannerProps` interface. Here are the configuration options for this container:
+The `ErrorBanner` container is designed to display error messages to the user, such as network errors, validation errors, or other issues that prevent the user from completing their purchase. You can customize the appearance of the banner, the error message, and the behavior of the banner (for example, whether it can be dismissed).
+
+It provides the following configuration options:
 
 <OptionsTable
   compact
@@ -51,13 +53,19 @@ The `ErrorBanner` container accepts a subset of properties defined by the `Alert
 
 ## EstimateShipping configurations
 
-The `EstimateShipping` container provides the following configuration options:
+The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process. You can confiure it to handle various scenarios, such as displaying free shipping and handling different tax display settings. 
+
+It provides the following configuration options:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['slot', 'object', 'No', 'An object that allows you to define custom content to be rendered within specific slots of the OrderSummary container.']
+    ['estimated', 'boolean', 'No', 'A boolean indicating whether the shipping cost is estimated.'],
+    ['price', 'VNode', 'Yes', 'The rendered price component, which can be free shipping, the price including tax, or the price excluding tax.'],
+    ['priceExclTax', 'VNode', 'No', 'The rendered price component excluding tax, if applicable.'],
+    ['taxExcluded', 'boolean', 'No', 'A boolean indicating whether the tax is excluded from the shipping price.'],
+    ['taxIncluded', 'boolean', 'No', 'A boolean indicating whether the tax is included in the shipping price.'],
   ]}
 />
 
@@ -69,11 +77,15 @@ The `LoginForm` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['email', 'string', 'No', 'The email address to prefill in the email field.'],
-    ['onSignInClick', 'function', 'No', 'A function that takes an email (string or null) as an argument and is called when the sign-in button is clicked.'],
-    ['onSignOutClick', 'function', 'No', 'A function that is called when the sign-out button is clicked.'],
-    ['hideOnEmptyCart', 'boolean', 'No', 'If set to true, the component will be hidden when the shopping cart is empty.'],
-    ['hideOnVirtualCart', 'boolean', 'No', 'If set to true, the component will be hidden when the shopping cart contains only virtual items (for example, digital products, services).']
+    ['currentEmail', 'string | null', 'Yes', 'The current email address entered in the form.'],
+    ['hint', 'string', 'No', 'A hint or placeholder text for the email input field.'],
+    ['error', 'string | null', 'No', 'Any error message related to the email input.'],
+    ['onEmailChange', 'function', 'Yes', 'A function that handles changes to the email input field. It takes an event as an argument.'],
+    ['onEmailBlur', 'function', 'Yes', 'A function that handles the blur event (when the email input loses focus). It takes an event as an argument.'],
+    ['onEmailInvalid', 'function', 'Yes', 'A function that handles invalid email input. It takes an event as an argument.'],
+    ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
+    ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+    ['customer', 'Customer | null', 'No', 'The customer information, if available.']
   ]}
 />
 
@@ -85,16 +97,13 @@ The `MergedCartBanner` container accepts a subset of properties defined by the `
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['className', 'string', 'No', 'CSS class to apply to the container.'],
-    ['data-testid', 'string', 'No', 'Identifier for the banner for testing purposes.'],
-    ['icon', 'JSX.Element', 'No', 'Icon to display in the banner.'],
-    ['message', 'string', 'Yes', 'Message to display in the banner.'],
-    ['aria-label', 'string', 'No', 'Accessibility label for the banner.'],
-    ['onDismiss', 'function', 'No', 'Function to call when the banner is dismissed.'],
-    ['variant', 'string', 'No', 'Variant of the banner indicating the type of alert.'],
-    ['type', 'string', 'No', 'Type of alert.'],
-    ['dismissable', 'boolean', 'No', 'Whether the banner can be dismissed.'],
-    ['duration', 'number', 'No', 'Duration in milliseconds before the banner is automatically dismissed.']
+    ['className', 'string', 'No', 'The CSS class name(s) to apply to the component.'],
+    ['data-testid', 'string', 'No', 'Used for testing purposes to identify the component.'],
+    ['icon', 'VNode', 'No', 'The icon to display in the banner.'],
+    ['message', 'VNode', 'No', 'The message to display in the banner.'],
+    ['aria-label', 'string', 'No', 'Provides an accessible label for the banner.'],
+    ['onDismiss', 'function', 'No', 'Handles the dismiss action for the banner.'],
+    ['variant', 'string', 'No', 'The variant of the banner (e.g., "neutral").']
   ]}
 />
 
@@ -106,8 +115,9 @@ The `OutOfStock` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['routeCart', 'string', 'No', 'A function that returns the URL to the cart page.'],
-    ['onCartProductsUpdate', 'function', 'No', 'A callback function that is called when the cart products are updated.']
+    ['items', 'CartItem[]', 'Yes', 'The list of items that are out of stock.'],
+    ['onRemoveOutOfStock', 'function', 'No', 'Handles the removal of out-of-stock items. It takes an event as an argument.'],
+    ['routeCart', 'string', 'No', 'The route to the cart page.']
   ]}
 />
 
@@ -131,7 +141,8 @@ The `PlaceOrder` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['onPlaceOrder', 'function', 'No', 'An asynchronous callback function that handles the place order action, including showing and hiding an overlay spinner and logging any errors that occur.']
+    ['onPlaceOrder', 'function', 'No', 'Handles the place order action. It takes a PlaceOrderContext object as an argument and returns a Promise<void>.'],
+    ['disabled', 'boolean', 'No', 'Indicates whether the place order button is disabled.']
   ]}
 />
 
@@ -143,7 +154,9 @@ The `ServerError` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['onServerError', 'function', 'No', 'A  callback function that is called when a server error occurs.']
+    ['errorMessage', 'string', 'Yes', 'The error message to display.'],
+    ['contactSupport', 'string', 'No', 'Provides a contact support message or link.'],
+    ['onClick', 'function', 'No', 'Handles click events. It takes an event (e: any) as an argument.']
   ]}
 />
 
@@ -155,11 +168,12 @@ The `ShippingMethods` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['onCheckoutDataUpdate', 'function', 'No', 'An optional callback function that is called when the checkout data is updated.'],
-    ['onShippingMethodSelect', 'function', 'No', 'An optional callback function that handles the selection of a shipping method.'],
-    ['preSelectedMethod', 'object', 'No', 'An optional object representing the pre-selected shipping method with carrier and method codes.'],
-    ['shippingMethodsSlot', 'object', 'No', 'An optional slot configuration for the shipping methods.'],
-    ['HTMLAttributes', 'HTMLAttributes', 'No', 'Any standard HTML attributes applicable to a div element, such as className, id, and style.' ]
+    ['isLoading', 'boolean', 'No', 'Indicates whether the shipping methods are loading. Default is false.'],
+    ['onSelectionChange', 'function', 'No', 'Handles the selection of a shipping method. Takes a ShippingMethod object as an argument.'],
+    ['options', 'ShippingMethod[]', 'No', 'The available shipping methods.'],
+    ['selection', 'ShippingMethod', 'No', 'The currently selected shipping method.'],
+    ['className', 'string', 'No', 'The CSS class name(s) to apply to the component.'],
+    ['data-testid', 'string', 'No', 'Used for testing purposes to identify the component.']
   ]}
 />
 
