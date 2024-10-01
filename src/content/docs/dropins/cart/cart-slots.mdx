@@ -22,6 +22,7 @@ slots?: {
   EmptyCart?: SlotProps;
   Thumbnail?: SlotProps;
   Footer?: SlotProps;
+  ProductAttributes?: SlotProps;
 };
 ```
 
@@ -97,6 +98,14 @@ export interface Item {
   outOfStock?: boolean;
   notAvailableMessage?: string;
   stockLevel?: string;
+  productAttributes?: Array<{
+  code: string;
+  value?: string;
+  selected_options?: {
+    value: string;
+    label: string;
+  }[];
+}>;
 }
 ```
 
@@ -198,3 +207,50 @@ return provider.render(Cart, {
     },
   },
 })(document.getElementById('@dropins/cart'));
+```
+
+### ProductAttributes
+
+The ProductAttributes slot allows you to add content to the CartSummaryList container.
+
+#### Example: Extend the ProductAttributes slot
+
+The following example demonstrates how to add the Fashion Material and Fashion Style product attributes to each product in the cart.
+
+```javascript
+  return provider.render(CartSummaryList, {
+    enableRemoveItem: true,
+    enableUpdateItemQuantity: true,
+    routeProduct: (item) => {
+      return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+    },
+    routeEmptyCartCTA: () => '#empty-cart',
+    slots: {
+      ProductAttributes: (ctx) => {
+        // Prepend Product Attributes
+        const ProductAttributes = ctx.item?.productAttributes;
+
+        ProductAttributes?.forEach((attr) => {
+          if(attr.code === "Fashion Material" || attr.code === "Fashion Style") {
+            if(attr.selected_options) {
+              const selectedOptions = attr.selected_options
+              .filter((option) => option.label.trim() !== '')
+              .map((option) => option.label)
+              .join(', ');
+              
+              if(selectedOptions) {
+                const productAttribute = document.createElement('div');
+                productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
+                ctx.appendChild(productAttribute);
+              }
+            } else if (attr.value) {
+              const productAttribute = document.createElement('div');
+              productAttribute.innerText = `${attr.code}: ${attr.value}`;
+              ctx.appendChild(productAttribute);
+            }
+          }
+        })
+      },
+    },
+  })(productList);
+```
