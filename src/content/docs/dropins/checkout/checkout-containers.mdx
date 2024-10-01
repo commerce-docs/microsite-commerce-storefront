@@ -1,9 +1,227 @@
 ---
-title: Checkout Containers
-description: Learn about the containers in the Checkout dropin.
-sidebar:
-  # label: Checkout Containers
-  order: 4
+title: Checkout containers and configuration
+description: Learn about the containers and configurations for the Checkout dropin.
 ---
 
-Learn about the containers in the Checkout dropin.
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The Checkout dropin includes several containers that provides the layout and functionality for the checkout process. They are designed to be flexible and customizable, allowing you to create a checkout experience that meets your business needs.
+
+<Callouts>
+
+1. **ErrorBanner**: Displays error messages to the user.
+1. **EstimateShipping**: Estimates shipping costs.
+1. **LoginForm**: Allows the user to log in or create an account.
+1. **MergedCartBanner**: Displays a banner when the cart is merged.
+1. **OutOfStock**: Displays out-of-stock messages.
+1. **PaymentMethods**: Displays available payment methods.
+1. **PlaceOrder**: Allows the user to place an order.
+1. **ServerError**: Displays server error messages.
+1. **ShippingMethods**: Displays available shipping methods.
+
+</Callouts>
+
+## ErrorBanner configurations
+
+The `ErrorBanner` container is designed to display error messages to the user, such as network errors, validation errors, or other issues that prevent the user from completing their purchase. You can customize the appearance of the banner, the error message, and the behavior of the banner (for example, whether it can be dismissed).
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['className', 'string', 'No', 'CSS class to apply to the container.'],
+    ['data-testid', 'string', 'No', 'Identifier for the banner for testing purposes.'],
+    ['icon', 'JSX.Element', 'No', 'Icon to display in the banner.'],
+    ['message', 'string', 'Yes', 'Message to display in the banner.'],
+    ['aria-label', 'string', 'No', 'Accessibility label for the banner.'],
+    ['onDismiss', 'function', 'No', 'Function to call when the banner is dismissed.'],
+    ['variant', 'string', 'No', 'Variant of the banner indicating the type of alert.'],
+  ]}
+/>
+
+## EstimateShipping configurations
+
+The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process. You can configure it to handle various scenarios, such as displaying free shipping and handling different tax display settings. 
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['estimated', 'boolean', 'No', 'A boolean indicating whether the shipping cost is estimated.'],
+    ['price', 'VNode', 'Yes', 'The rendered price component, which can be free shipping, the price including tax, or the price excluding tax.'],
+    ['priceExclTax', 'VNode', 'No', 'The rendered price component excluding tax, if applicable.'],
+    ['taxExcluded', 'boolean', 'No', 'A boolean indicating whether the tax is excluded from the shipping price.'],
+    ['taxIncluded', 'boolean', 'No', 'A boolean indicating whether the tax is included in the shipping price.'],
+  ]}
+/>
+
+## LoginForm configurations
+
+The `LoginForm` container is designed to handle user email input and validation within the checkout process. You can configure it to display hints, error messages, and handle user input events.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['currentEmail', 'string | null', 'Yes', 'The current email address entered in the form.'],
+    ['hint', 'string', 'No', 'A hint or placeholder text for the email input field.'],
+    ['error', 'string | null', 'No', 'Any error message related to the email input.'],
+    ['onEmailChange', 'function', 'Yes', 'A function that handles changes to the email input field. It takes an event as an argument.'],
+    ['onEmailBlur', 'function', 'Yes', 'A function that handles the blur event (when the email input loses focus). It takes an event as an argument.'],
+    ['onEmailInvalid', 'function', 'Yes', 'A function that handles invalid email input. It takes an event as an argument.'],
+    ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
+    ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+    ['customer', 'Customer | null', 'No', 'The customer information, if available.']
+  ]}
+/>
+
+## MergedCartBanner configurations
+
+The `MergedCartBanner` container is designed to display a notification banner when items from an old cart are merged into the current cart. You can configure it to display a message, an icon, and handle the dismiss action.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['className', 'string', 'No', 'The CSS class name(s) to apply to the component.'],
+    ['data-testid', 'string', 'No', 'Used for testing purposes to identify the component.'],
+    ['icon', 'VNode', 'No', 'The icon to display in the banner.'],
+    ['message', 'VNode', 'No', 'The message to display in the banner.'],
+    ['aria-label', 'string', 'No', 'Provides an accessible label for the banner.'],
+    ['onDismiss', 'function', 'No', 'Handles the dismiss action for the banner.'],
+    ['variant', 'string', 'No', 'The variant of the banner (e.g., "neutral").']
+  ]}
+/>
+
+## OutOfStock configurations
+
+The `OutOfStock` container is designed to handle and display items in the shopping cart that are out of stock or have insufficient quantity. You can configure it to display a message, handle the removal of out-of-stock items, and provide a route to the cart page.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['items', 'CartItem[]', 'Yes', 'The list of items that are out of stock.'],
+    ['onRemoveOutOfStock', 'function', 'No', 'Handles the removal of out-of-stock items. It takes an event as an argument.'],
+    ['routeCart', 'string', 'No', 'The route to the cart page.']
+  ]}
+/>
+
+## PaymentMethods configurations
+
+The `PaymentMethods` container is designed to manage and display the available payment methods during the checkout process. You can configure it to handle the selection of payment methods, display the payment method handlers, and manage the main slot for the payment methods.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['slots.Main', 'SlotProps<PaymentMethodsMainSlotContext>', 'No', 'The main slot for the payment methods.'],
+    ['slots.Handlers', 'PaymentMethodHandlerSlots', 'No', 'The handlers for different payment methods.']
+  ]}
+/>
+
+## PlaceOrder configurations
+
+The `PlaceOrder` container is designed to handle the final step in the checkout process, where the user confirms and places their order. You can configure it to handle the place order action, disable the place order button, and manage the main slot for the place order button.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['onPlaceOrder', 'function', 'No', 'Handles the place order action. It takes a PlaceOrderContext object as an argument and returns a Promise<void>.'],
+    ['disabled', 'boolean', 'No', 'Indicates whether the place order button is disabled.']
+  ]}
+/>
+
+## ServerError configurations
+
+The `ServerError` container is designed to handle and display server error messages during the checkout process. You can configure it to display an error message, provide a contact support message or link, and handle click events.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['errorMessage', 'string', 'Yes', 'The error message to display.'],
+    ['contactSupport', 'string', 'No', 'Provides a contact support message or link.'],
+    ['onClick', 'function', 'No', 'Handles click events. It takes an event (e: any) as an argument.']
+  ]}
+/>
+
+## ShippingMethods configurations
+
+The `ShippingMethods` container is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
+
+It provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['isLoading', 'boolean', 'No', 'Indicates whether the shipping methods are loading. Default is false.'],
+    ['onSelectionChange', 'function', 'No', 'Handles the selection of a shipping method. Takes a ShippingMethod object as an argument.'],
+    ['options', 'ShippingMethod[]', 'No', 'The available shipping methods.'],
+    ['selection', 'ShippingMethod', 'No', 'The currently selected shipping method.'],
+    ['className', 'string', 'No', 'The CSS class name(s) to apply to the component.'],
+    ['data-testid', 'string', 'No', 'Used for testing purposes to identify the component.']
+  ]}
+/>
+
+## Example configuration
+
+The following example demonstrates how to configure the Checkout container:
+
+```ts
+tbd
+```
+
+## How to change configurations
+
+In general, the steps for applying configuration options to containers is the same assuming that you're using the boilerplate code provided in the [Create your storefront tutorial](/get-started) section:
+
+<Steps>
+
+1. Open the file where the container is being rendered.
+
+   For the `Checkout` container, it's the `/blocks/commerce-checkout.js` file.
+
+1. Locate the configuration option(s) you want to change.
+
+1. Modify an existing option or add a new one.
+
+   The boilerplate code doesn't always show all options by default, so you may need to add them manually.
+
+1. Save your changes and start the server. [Editorial note: What if the server is already running? Will these changes be picked up automatically?]
+
+   ```bash
+   npm start
+   ```
+
+1. Test the changes in your browser.
+
+   {/* Replace `placeholder.webp` with side-by-side screenshots of the before and after differences. */}
+
+   <Diagram caption="Checkin container configuration">
+     ![Checkin containers](@images/placeholder.webp)
+   </Diagram>
+
+</Steps>
