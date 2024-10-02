@@ -1,0 +1,58 @@
+---
+title: Search engine optimization
+description: Optimize your Adobe Commerce site for SEO with proper data layers, schema.org annotations, canonical URLs, and redirects.
+---
+
+This page provides guidelines for optimizing Adobe Commerce storefronts on Edge Delivery Services for SEO. It covers data layers, schema.org annotations, canonical URLs, and redirects.
+
+## Recommendations
+
+The following considerations are important for SEO optimization:
+
+### Canonical URLs
+
+When PDPs have multiple URLs, set a consistent canonical URL for each product. Make sure that canonical URLs do not point to redirects (301).
+
+### Redirects
+
+Ensure proper redirects are set up using the redirects sheet or through your CDN:
+
+* Fallbacks for any potential URL changes (e.g. product URLs or missing .html suffix)
+* Redirects that are set up in Adobe Commerce
+
+### Sitemaps
+
+* Submit new sitemaps through Google Search Console (Google takes a while to detect new sitemaps).
+* If your site is using more than one sitemap, reference all sitemaps in your site's `robots.txt` file.
+
+### Multi-store setups
+
+For multi-store setups or stores supporting multiple locales:
+
+* Verify a [correct hreflang setup](https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually). You can validate using the [hreflang Tags Testing Tool](https://technicalseo.com/tools/hreflang/)
+
+* Verify that the store code is part of the URL for every Catalog Service or Live Search request. This is required because Google caches Catalog Service responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data.
+
+  :::tip
+  You can ensure this by proxying the Catalog Service endpoint through Fastly. Alternatively, you can add a query parameter, but this method is incompatible with dropins.
+  :::
+
+## Schema.org data (JSON-LD)
+
+The following schema.org annotations are important for SEO:
+
+* Add schema.org (JSON-LD) annotations to all Commerce pages (in particular PDP and PLP) to expose product data. At a minimum, the following types should be covered:
+  * WebSite
+  * Product
+  * AggregateRating
+  * Rating
+  * BreadcrumbList
+
+* Compare to what data was available on the site before migrating to Edge Delivery Services:
+  * Make sure that SKU's for all product variants are included
+  * Use [Rich Results Test](https://search.google.com/test/rich-results) to validate the schema.org annotations
+  * The PDP dropin in the boilerplate contains an example for JSON-LD data.
+
+:::note
+If you are using Google Shopping features (for example, products available on `shopping.google.com`), consider schema.org annotations with critical priority. Invalid data will be flagged by Google, which leads to a delisting of your products and financial impact.
+:::
