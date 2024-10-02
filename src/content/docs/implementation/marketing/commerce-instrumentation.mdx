@@ -1,0 +1,18 @@
+---
+title: Commerce instrumentation
+description: Learn how to instrument your Adobe Commerce site for marketing and analytics.
+---
+
+For Live Search and Product Recommendation APIs to work correctly, you must collect and send user interaction events to Commerce.
+
+User interaction evets power Adobe Sensei features, like intelligent merchandising for Live Search and to personalize product recommendations units. These events also populate performance dashboards for [Live Search](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/live-search/live-search-admin/performance) and [Product Recommendations](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/product-recommendations/admin/workspace).
+
+## Adobe Client Data Layer (ACDL)
+
+The boilerplate includes the [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer) by default. It uses a custom, more lightweight version that is suitable for loading early in Edge Delivery Services.
+
+To validate events, you can use [this draft validator](https://github.com/adobe/adobe-client-data-layer/pull/156). Events written to ACDL must comply to a specific schema as defined by the [Storefront Event SDK](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-sdk).
+
+For performance considerations, Adobe highly recommends writing events to the ACDL directly without using the Events SDK. Dropins and widgets will send events to ACDL out of the box, but you should double-check the correctness of all events.
+
+The boilerplate loads the [Storefront Events Collector](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-collector) in the delayed phase to automatically send those events. For the collector to work, you must ensure that the configuration file is properly populated with all configuration parameters. The configuration parameters are a mix between those that are required for Catalog Service access and some specific to data services. The easiest way to retrieve them is using the `magento/module-data-services-graphql` module, which exposes additional GraphQL functionality.
