@@ -39,15 +39,19 @@ export default defineConfig({
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
-    '/launch': '/developer/commerce/storefront/get-started/launch-checklist',
+    '/faq': '/developer/commerce/storefront/troublshooting/faq',
+    '/get-started/launch-checklist': '/developer/commerce/storefront/implementation/launch',
+    '/get-started/requirements': '/developer/commerce/storefront/discovery/requirements',
+    '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/launch': '/developer/commerce/storefront/implementation/launch',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/pdp-slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/pdp-styles',
-    '/references/configurations': '/developer/commerce/storefront/get-started/configurations',
-    '/references/requirements': '/developer/commerce/storefront/get-started/requirements',
+    '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/references/requirements': '/developer/commerce/storefront/discovery/requirements',
   },
   integrations: [
     tailwind({
@@ -108,6 +112,99 @@ export default defineConfig({
         autogenerate: {
           directory: '/get-started/'
         }
+      },
+      {
+        label: 'Storefront Implementation',
+        items: [
+          {
+            label: 'Overview',
+            link: '/implementation/'
+          },
+          {
+            label: 'Discovery',
+            collapsed: true,
+            items: [
+              {
+                label: 'Overview',
+                link: '/implementation/discovery/'
+              },
+              {
+                label: 'Commerce requirements',
+                link: '/implementation/discovery/requirements/'
+              },
+              {
+                label: 'Data export validation',
+                link: '/implementation/discovery/data-export-validation/'
+              },
+              {
+                label: 'Luma Bridge',
+                link: '/implementation/discovery/luma-bridge/'
+              },
+            ]
+          },
+          {
+            label: 'Setup',
+            collapsed: true,
+            items: [
+              {
+                label: 'Overview',
+                link: '/implementation/setup/'
+              },
+              {
+                label: 'Content delivery network',
+                link: '/implementation/setup/content-delivery-network/'
+              },
+              {
+                label: 'Commerce configuration',
+                link: '/implementation/setup/commerce-configuration/'
+              },
+              {
+                label: 'Dropins and widgets',
+                link: '/implementation/setup/dropins-and-widgets/'
+              },
+              {
+                label: 'Commerce blocks',
+                link: '/implementation/setup/commerce-blocks/'
+              },
+            ]
+          },
+          {
+            label: 'Marketing and SEO',
+            collapsed: true,
+            items: [
+              {
+                label: 'Overview',
+                link: '/implementation/marketing/'
+              },
+              {
+                label: 'Instrumentation',
+                link: '/implementation/marketing/commerce-instrumentation/'
+              },
+              {
+                label: 'SEO',
+                link: '/implementation/marketing/seo/'
+              },
+              {
+                label: 'Metadata',
+                link: '/implementation/marketing/metadata/'
+              },
+            ]
+          },
+          {
+            label: 'Launch',
+            collapsed: true,
+            items: [
+              {
+                label: 'Overview',
+                link: '/implementation/launch/'
+              },
+              {
+                label: 'Checklist',
+                link: '/implementation/launch/checklist/'
+              },
+            ]
+          },
+        ]
       },
       {
         label: 'Dropins',
@@ -200,7 +297,7 @@ export default defineConfig({
         autogenerate: {
           directory: '/troubleshooting/'
         }
-      }
+      },
       ]
     }), (await import("@playform/compress")).default({
       CSS: false,
