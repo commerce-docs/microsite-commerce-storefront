@@ -1,0 +1,82 @@
+---
+title: SignUp Container
+description: Learn about the SignIn container in the UserAuth dropin.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The SignUp container provides a form where the user enter the details needed to create a new account. The execution of this form can vary, depending on how Commerce is configured:
+
+* If email confirmations have been enabled, the user account is not activated until the user clicks on the confirmation link that Commerce sends to the user's email address.
+
+* If the customer account contains custom attributes, these must be configured to be available to the form. See [Customer attribute properties](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/attributes/attribute-properties) for more information.
+
+## Successful registration
+
+By default, upon a successful registration, the SignUp container renders the [SuccessNotification](./success-notification.mdx) container. 
+
+If the `isAutoSignInEnabled` property is passed, the user is logged in. 
+If the `routeRedirectOnSignIn` property is passed, the user is redirected to the specified URL after a successful login. Neither the SuccessNotification container nor slot willbe rendered.
+
+In this scenario, email confirmation must be disabled.
+
+<Diagram caption="SignIn standard login container">
+  ![SignUp container](@images/user-auth/sign-up-container.png)
+</Diagram>
+
+## Registration with email confirmation enabled
+
+If a user creates an account when email confirmation is enabled, a different form is rendered in place of the sign-up form to inform the user about the next steps. Automatic sign-in is not possible if email confirmation is enabled.
+
+<Diagram caption="SignIn standard login container">
+  ![SignUp container](@images/user-auth/sign-up-verify-email.png)
+</Diagram>
+
+## SignUp configurations
+
+The SignUp container provides the following configuration options:
+
+<OptionsTable
+    compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['addressesData', 'AddressFormProps[]', 'No', 'Allows passing address data into the SignUp drop-in. On successful sign-up, corresponding addresses will be automatically created in the newly created account.'],
+        ['inputsDefaultValueSet', 'inputsDefaultValueSetProps[]', 'No', ' Allows passing default values for inputs (prefilled sign-up form).'],
+        ['fieldsConfigForApiVersion1', 'any', 'No', 'Allows passing a set of field configurations for environments that do not support the createCustomerV2 mutation (fallback, should not be used in environments with the latest AC version).'],
+        ['apiVersion2', 'boolean', 'No', 'Defaults to true. Allows switching to the createCustomer mutation if createCustomerV2 is not supported in the current version of AC (fallback, should not be used in environments with the latest AC version).'],
+        ['displayTermsOfUseCheckbox', 'boolean', 'No', 'Controls displaying of the appropriate checkboxes in the sign-up form. Note: Rendered checkboxes are not functional and should not be used yet. They will be used in the future.'],
+        ['displayNewsletterCheckbox', 'boolean', 'No', ''],
+        ['isAutoSignInEnabled', 'boolean', 'No', 'Determines if the user should be automatically signed in after registration. This has no effect if email confirmation is enabled in the admin panel (automatic sign-in is not possible in this case).'],
+        ['formSize', 'default | small', 'No', 'Controls form paddings and spacing. Use "small" to embed the form in small layout containers like a dropdown in the header.'],
+        ['hideCloseBtnOnEmailConfirmation', 'boolean', 'No', 'Controls the visibility of the “Close” button on the email confirmation view.'],
+        ['routeRedirectOnEmailConfirmationClose', 'function', 'No', 'Determines where the user is redirected when the “Close” button on the email confirmation view is clicked.'],
+        ['slots', 'function', 'No', 'Allows passing the SuccessNotification container or custom component rendered on successful sign-up if routeRedirectOnSignIn is not provided.'],
+        ['routeSignIn', 'function', 'No', 'Determines where the “Already a member? Sign in” link redirects the customer.'],
+        ['routeRedirectOnSignIn', 'function', 'No', 'Determines the page to which the user should be redirected after sign-in (if isAutoSignInEnabled is true). If provided, the user won’t see SuccessNotification or any override provided via slot.'],
+        ['onErrorCallback', 'function', 'No', ' Callback executed when an error occurs, receiving the error object as a parameter.'],
+        ['onSuccessCallback', 'function', 'No', 'Callback executed when the user successfully signs up, receiving userName and status as parameters.'],
+    ]}
+/>
+
+### Example
+
+The following example redirects the user to the account page if they are already authenticated. If not, the user is redirected first to the login page, then to the account page.
+
+```javascript
+export default async function decorate(block) {
+  const isAuthenticated = !!getCookie('auth_dropin_user_token');
+
+  if (isAuthenticated) {
+    window.location.href = '/customer/account';
+  } else {
+    await authRenderer.render(SignUp, {
+      hideCloseBtnOnEmailConfirmation: true,
+      routeSignIn: () => '/customer/login',
+      routeRedirectOnSignIn: () => '/customer/account',
+    })(block);
+  }
+}
