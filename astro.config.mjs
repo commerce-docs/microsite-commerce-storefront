@@ -185,7 +185,17 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
-              { label: 'Containers', link: '/dropins/user-auth/auth-containers/' },
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
+                  { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
+                  { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
+                  { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
+                  { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
+
+                ]
+              },
 
             ]
           },
