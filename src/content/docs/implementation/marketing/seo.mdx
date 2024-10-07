@@ -1,0 +1,36 @@
+---
+title: Search engine optimization
+description: Optimize your Adobe Commerce site for SEO with proper data layers, schema.org annotations, canonical URLs, and redirects.
+---
+
+## SEO considerations
+
+* When PDPs have multiple URLs, please ensure to set a consistent canonical URL for each product.
+* **Ensure that canonical URLs do not point to redirects (301).**
+* Please provide access to Google Search Console / Google Merchant Center to the Adobe team so they can help detect issues after go-live.
+* Submit new sitemaps via the Search Console, as Google takes a while to detect new sitemaps.
+* If the site is using more than one sitemap, ensure that all sitemaps are referenced in robots.txt
+* **Important for multi store setups or stores supporting multiple locales:**
+    * Ensure a correct hreflang setup (see https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually).
+    * You can validate sitemaps using https://technicalseo.com/tools/hreflang/
+    * Please ensure that the store code is part of the URL for every Catalog Service or Live Search request.
+      * This can be assured by proxying the Catalog Service endpoint through Fastly, e.g. [www.merchant.com/de/cs-graphql.](http://www.merchant.com/de/cs-graphql.)
+      * Alternatively you can also add a query parameter. This however does not work with dropins.
+      * This is required, as the Google Bot caches Catalog Service responses without considering headers. Not adding the store code to the URL might lead to wrong data being indexed by Google.
+
+* Ensure proper redirects are set up using the redirects sheet or via CDN:
+    * Fallbacks for any potential URL changes (e.g. product URLs or missing .html suffix)
+    * Redirects that are set up in Adobe Commerce.
+
+## Schema.org data (JSON-LD)
+
+* Please ensure that all Commerce pages (in particular PDP & PLP) add schema.org (JSON-LD) annotations to expose product data.
+
+* Make sure you cover at least the following types: WebSite, Product, AggregateRating, Rating, BreadcrumbList.
+
+* Compare to what data was available on the site before migrating to Edge Delivery.
+  * Note: Make sure that SKU's for all variants from products are also included
+  * Use: https://search.google.com/test/rich-results to test 
+  * The PDP dropin in the boilerplate contains an example for JSON-LD data.
+
+* If you are using Google Shopping features (e.g. products available on shopping.google.com), please consider schema.org annotations with critical priority. Invalid data will be flagged by Google which leads to a delisting of the customer's products and financial impact.

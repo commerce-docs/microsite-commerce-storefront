@@ -1,0 +1,72 @@
+---
+title: Content delivery network (CDN) setup
+description: Learn how to configure a CDN for your Adobe Commerce on Edge Delivery Services storefront project.
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import Task from '@components/Task.astro';
+import Tasks from '@components/Tasks.astro';
+
+Decide early which CDN to use. A popular option is Fastly, which is included with your Adobe Commerce license.
+
+## Configuration
+
+These are the key configurations required for a CDN setup:
+
+<Steps>
+
+1. Configure a subdomain for development (e.g., [aem.customer.com](http://aem.customer.com/)).
+   
+1. Add/update the `robots.txt` file to ensure that this site is not crawl-able by search engines.
+
+   Otherwise this may lead to [keyword cannibalisation](https://ahrefs.com/blog/keyword-cannibalization/), which the site has to recover from post launch and may impact short-term top line.
+
+1. Set up Edge Delivery Services CDN configuration according to the documentation.
+
+   For cache invalidation, a Fastly API key is required. This key can be requested from Adobe Commerce support team.
+
+1. Validate that compression (`gzip`) is working correctly.
+
+1. Proxy certain paths back to Adobe Commerce.
+
+   This should be specific to your project, but generally you should at least proxy the following paths:
+   
+    * Core GraphQL (e.g., `https://customer-commerce/graphql` → `/graphql`)
+
+      Ensure proper CORS headers are sent so that the endpoint can be accessed from `hlx.page`, `hlx.live`, and `localhost:3000` hosts.
+    
+    * Catalog Service/Live Search endpoints
+      * **Production**: `https://catalog-service.adobe.io/graphql` → `/cs-graphql`
+      * **Sandbox**: `https://catalog-service-sandbox.adobe.io/graphql` → `/cs-graphql-sandbox`
+      * Remove all cookies from requests as Catalog Service has a relatively small HTTP header limit
+    
+    * Product images coming from Adobe Commerce (e.g., `/catalog/product/resized/200x200/3/_/3_1_1_12_2.jpeg`)
+    
+    * Additional paths required for Luma Bridge.
+
+</Steps>
+
+## Cache validation
+  
+It is critical that you validate that caching is working correctly. This should include requests with cookie headers and query parameters. 
+
+```bash
+curl -sI -H 'Fastly-Debug: 1' https://www.bulk.com/uk/ | grep x-cache
+
+x-cache: MISS, HIT, HIT, HIT
+x-cache-hits: 0, 16, 102, 1
+```
+
+The `x-cache` values are read right to left, where the right-most value represents your CDN (Commerce Fastly). This value should indicate a cache `HIT`.
+
+## Surrogate key validation
+
+The default Adobe Commerce Fastly configuration overwrites surrogate keys set by Edge Delivery Services.
+
+```bash
+curl -sI -H 'Fastly-Debug: 1' https://www.bulk.com/uk/ | grep surrogate-key
+ 
+surrogate-key: main--bul-eds--thepixel 401e079ea9d66cbdc48fc9bcd3a958206ef36cd2affcd6b672178e7628f RKvjyvNRGjNtCHP3 401e079ea9d66cbdc48fc9bcd3a958206ef36cd2affcd6b672178e7628f_metadata main--bul-eds--thepixel_head
+```
+
+When correctly set, the surrogate keys should include at least two `ref-repo-org` references as indicated in the example above.
