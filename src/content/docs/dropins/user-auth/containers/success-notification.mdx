@@ -1,6 +1,6 @@
 ---
-title: User Authentication Containers
-description: Learn about the containers in the UserAuth dropin.
+title: SuccessNotification Container
+description: Learn about the SuccessNotification container in the UserAuth dropin.
 ---
 
 import Diagram from '@components/Diagram.astro';
@@ -9,27 +9,13 @@ import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-This section describes the containers and configuration options for the User Authentication dropin.
+The SuccessNotification container displays a message to the user after a successful action, such as signing up or updating a password. The SignIn, SignUp, and UpdatePassword containers can pass the SuccessNotification container as a slot.
 
-## Big Picture
+In the following diagram, a SignIn container has passed the SuccessNotification container, which defines the displayed text and action buttons.
 
-{/* Replace `placeholder.webp` with a diagram identifying all its containers. */}
-
-<Diagram caption="DROPIN_NAME containers">
-  ![DROPIN_NAME containers](@images/placeholder.webp)
+<Diagram caption="SuccessNotification container">
+  ![SuccessNotification container](@images/user-auth/success-notification.png)
 </Diagram>
-
-{/* Use `Callouts` control to name the containers in the dropin. */}
-
-<Callouts>
-
-{/* Use a numbered list to identify the slot names. */}
-
-1. **CONTAINER_NAME_1**: Provides the DESCRIBE_PURPOSE.
-1. **CONTAINER_NAME_2**: Provides the DESCRIBE_PURPOSE.
-   {/* Example 1: **ProductDetails**: Provides the layout and configuration options for displaying the details of a product. */}
-
-</Callouts>
 
 ## SuccessNotification configurations
 
@@ -39,39 +25,73 @@ The SuccessNotification container provides the following configuration options:
     compact
     options={[
         ['Options', 'Type', 'Req?', 'Description'],
-        ['slots', '{ SuccessNotification?: SlotProps<DefaultSlotContext> }', 'No', 'Allows overriding the SuccessNotification container action buttons (SuccessNotificationActions).'],
+        ['slots', 'function', 'No', 'Allows overriding the SuccessNotification container action buttons (SuccessNotificationActions).'],
         ['formSize', 'default | small', 'No', 'Controls form paddings and spacing. Use "small" to embed the form in small layout containers like a dropdown in the header.'],
         ['headingText', 'string', 'No', 'Heading text content.'],
         ['messageText', 'string', 'No', 'Message text content.'],
-
     ]}
 />
 
-### How to change configurations
+## Example
 
-{/* Use the Steps control to add numbered steps that describe how to change container configurations. */}
+The following example renders the SignIn container. Upon success, the contain displays a welcome heading, a message, and two action buttons: "My Account" and "Logout".
 
-<Steps>
+```javascript
+export default async function decorate(block) {
+  if (checkIsAuthenticated()) {
+    window.location.href = CUSTOMER_ACCOUNT_PATH;
+  } else {
+    await authRenderer.render(SignIn, {
+      enableEmailConfirmation: true,
+      routeForgotPassword: () => CUSTOMER_FORGOTPASSWORD_PATH,
+      slots: {
+        SuccessNotification: (ctx) => {
+          const userName = ctx?.isSuccessful?.userName || '';
 
-1. Add instructions.
-1. Add instructions.
-1. Add instructions.
-1. Add instructions.
+          const elem = document.createElement('div');
 
-</Steps>
+          authRenderer.render(SuccessNotification, {
+            labels: {
+              headingText: `Welcome ${userName}!`,
+              messageText: 'You have successfully logged in.',
+            },
+            slots: {
+              SuccessNotificationActions: (innerCtx) => {
+                const primaryBtn = document.createElement('div');
 
-### Example of changing configurations
+                authRenderer.render(Button, {
+                  children: 'My Account',
 
-{/* Provide a code example for the changes */}
+                  onClick: () => {
+                    window.location.href = CUSTOMER_ACCOUNT_PATH;
+                  },
+                })(primaryBtn);
 
-```json
-{
-  "PROPERTY_NAME": "New value for the container's configuration property."
+                innerCtx.appendChild(primaryBtn);
+
+                const secondaryButton = document.createElement('div');
+                secondaryButton.style.display = 'flex';
+                secondaryButton.style.justifyContent = 'center';
+                secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
+
+                authRenderer.render(Button, {
+                  children: 'Logout',
+                  variant: 'tertiary',
+                  onClick: async () => {
+                    await authApi.revokeCustomerToken();
+                    window.location.href = '/';
+                  },
+                })(secondaryButton);
+
+                innerCtx.appendChild(secondaryButton);
+              },
+            },
+          })(elem);
+
+          ctx.appendChild(elem);
+        },
+      },
+    })(block);
+  }
 }
 ```
-
-{/* Replace `placeholder.webp` with side-by-side screenshots of the before and after differences. */}
-
-<Diagram caption="DROPIN_NAME containers">
-  ![DROPIN_NAME containers](@images/placeholder.webp)
-</Diagram>
