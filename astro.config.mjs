@@ -27,6 +27,28 @@ export default defineConfig({
   },
   trailingSlash: 'ignore',
   outDir: './dist',
+  redirects: {
+    '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
+    '/customize/enrich': '/developer/commerce/storefront/dropins/all/enriching',
+    '/customize/localize': '/developer/commerce/storefront/dropins/all/localizing',
+    '/customize/slots': '/developer/commerce/storefront/dropins/all/extending',
+    '/customize/style': '/developer/commerce/storefront/dropins/all/styling',
+    '/customize': '/developer/commerce/storefront/dropins/all/introduction',
+    '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
+    '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
+    '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
+    '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
+    '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
+    '/launch': '/developer/commerce/storefront/get-started/launch-checklist',
+    '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
+    '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
+    '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
+    '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
+    '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/pdp-slots',
+    '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/pdp-styles',
+    '/references/configurations': '/developer/commerce/storefront/get-started/configurations',
+    '/references/requirements': '/developer/commerce/storefront/get-started/requirements',
+  },
   integrations: [
     tailwind({
       nesting: true
@@ -37,7 +59,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/a7d65461e54e/6e9802a06173/launch-43baf8381f4b.min.js'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
         }
       }, {
         tag: 'meta',
@@ -72,7 +94,7 @@ export default defineConfig({
         SocialIcons: './src/components/overrides/SocialIcons.astro',
         LinkCard: './src/components/LinkCard.astro',
       },
-      customCss: ['./src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/badge.css', './src/styles/colors.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css', './src/styles/reset.css'],
+      customCss: ['./src/styles/reset.css', './src/styles/tailwind.css', './src/fonts/font-face.css', './src/styles/colors.css', './src/styles/badge.css', './src/styles/custom.css', './src/styles/asides.css', './src/styles/layout.css', './src/styles/text.css',],
       logo: {
         src: './src/assets/sitelogo.svg',
         replacesTitle: false
@@ -90,10 +112,10 @@ export default defineConfig({
       {
         label: 'Dropins',
         items: [
-          // {
-          //   label: 'Introduction',
-          //   link: '/dropins/all/introduction/'
-          // },
+          {
+            label: 'Overview',
+            link: '/dropins/all/introduction/'
+          },
           // {
           //   label: 'Anatomy of a dropin',
           //   link: '/dropins/all/anatomy/'
