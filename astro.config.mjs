@@ -185,6 +185,8 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
+              { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
+
             ]
           },
           {
