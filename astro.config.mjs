@@ -173,10 +173,6 @@ export default defineConfig({
             collapsed: true,
             items: [
               {
-                label: 'Overview',
-                link: '/implementation/marketing/'
-              },
-              {
                 label: 'Instrumentation',
                 link: '/implementation/marketing/commerce-instrumentation/'
               },
