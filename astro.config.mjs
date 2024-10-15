@@ -181,11 +181,7 @@ export default defineConfig({
                 link: '/implementation/marketing/commerce-instrumentation/'
               },
               {
-                label: 'SEO',
-                link: '/implementation/marketing/seo/'
-              },
-              {
-                label: 'Metadata',
+                label: 'Indexing and metadata',
                 link: '/implementation/marketing/metadata/'
               },
             ]
