@@ -185,6 +185,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
+              { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
             ]
           },
           {
@@ -192,6 +193,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+
             ]
           }]
       },
