@@ -26,7 +26,7 @@ The following table provides a high-level comparison of the three routing option
 | **Paths routed to Edge**       | All other paths                              | Product catalog, content pages                         | Homepage                                                      |
 | **VCL snippets focus**         | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
 | **Optimization tips**          | Avoid additional TLS handshake for API calls | Same as full storefront                                | Route resources (JS, CSS) to Edge Delivery Services           |
-| **Common patterns**            | Use CDN as proxy for Catalog Service         | Same as full storefront                                | Move Edge code to subfolder (e.g., `aem`)                     |
+| **Common patterns**            | Use CDN as proxy for Catalog Service         | Same as full storefront                                | Move Edge code to subfolder, such as `aem`                    |
 
 :::note
 All paths for the Adobe Commerce Admin should be routed to Commerce.
@@ -42,7 +42,7 @@ The entire storefront experience is delivered by Edge Delivery Services. Only so
 * CDN must proxy requests to your Catalog Service API endpoint (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql).
 
   :::tip
-  These API endpoints impact largest contentful paint (LCP), so we want to avoid an additional TLS handshake. This optimization has already been [applied](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/blocks/product-list-page/product-list-page.js#L15) to the boilerplate, where we use a "custom" version of the LS Widget to change the API URL used by the widget.
+  These API endpoints impact largest contentful paint (LCP), so we want to avoid an additional TLS handshake. This optimization has already been [applied](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/blocks/product-list-page/product-list-page.js#L15) to the boilerplate, where we use a "custom" version of the Live Search widget to change the API URL used by the widget.
   :::
 
 ### Luma Bridge
@@ -76,7 +76,7 @@ The first step is to configure a backend for each origin/service that Fastly nee
 * Default Adobe Commerce backend
 
 :::note
-The Fastly configuration instructions on this page are based on the [`fastly-magento2`](https://github.com/fastly/fastly-magento2) module, which expsoes Fastly service configurations in the  Adobe Commerce Admin.
+The Fastly configuration instructions on this page are based on the [`fastly-magento2`](https://github.com/fastly/fastly-magento2) module, which exposes Fastly service configurations in the Adobe Commerce Admin.
 :::
 
 <Steps>
@@ -93,7 +93,7 @@ The Fastly configuration instructions on this page are based on the [`fastly-mag
 
    For example: `main--aem-boilerplate-commerce--hlxsites.aem.live`
 
-1. Click **Attach condition*.
+1. Click **Attach condition**.
 
 1. Click **Create a new request condition**.
 
@@ -107,10 +107,10 @@ The Fastly configuration instructions on this page are based on the [`fastly-mag
 
 1. Click **Create**.
 
-1. Select `false` from the **Condition** drop-down list.
+1. Select your new condition from the **Condition** drop-down list.
 
    :::caution
-   Don't forget to set this condition for the default Adobe Commerce backend also, otherwise this can overwrite the changes made by the VCL conditions that you configure in the custom VCL snippets. You could also lose access to the Admin, which may require an Adobe Commerce Support ticket to resolve.
+   Remember to also set this condition for the default Adobe Commerce backend. Otherwise, this condition can overwrite the changes made by the VCL conditions that you configure in the custom VCL snippets. You could also lose access to the Admin, which may require an Adobe Commerce Support ticket to resolve.
    :::
 
 1. Set Shielding to **(none)**.
@@ -130,7 +130,7 @@ You can also rename the Adobe Commerce backend from the generated name to simply
 
 ## VCL configuration
 
-Your routing set up requires five VCL snippets:
+Your routing set up requires the following VCL snippets:
 
 * `recv`
 * `pass`
@@ -159,7 +159,7 @@ To apply these custom VCL snippets to your Adobe Commerce Fastly CDN service, se
 
 ### recv
 
-The following `recv` snippet does a simple redirect if `host` does not contain `www`. It adds it and then redirects to `https` using a [Fastly-specific error code](https://www.fastly.com/documentation/reference/http/http-statuses/). This is done in place of the **Auto-redirect to Base URL** setting in the Commerce Admin. The steps in the [Commerce configuration](#commerce-configuration) section instruct you to set **Auto-redirect to Base URL** to **No** based on this snippet.
+The following `recv` snippet does a simple redirect if `host` does not contain `www`. The snippet adds the string and then redirects to `https` using a [Fastly-specific error code](https://www.fastly.com/documentation/reference/http/http-statuses/). This is done in place of the **Auto-redirect to Base URL** setting in the Commerce Admin. The steps in the [Commerce configuration](#commerce-configuration) section instruct you to set **Auto-redirect to Base URL** to **No** based on this snippet.
 
 **Type**: `recv`
 
