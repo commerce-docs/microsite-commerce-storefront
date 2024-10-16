@@ -1,0 +1,177 @@
+---
+title: reCAPTCHA integration
+description: Learn how to integrate the reCAPTCHA module with your storefront.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Screenshot from '@components/Screenshot.astro';
+
+The reCAPTCHA module is implemented as a standalone SDK package. It enables reCAPTCHA protection, which is natively supported by Adobe Commerce. It also provides an API allowing merchants to integrate reCAPTCHA protection into custom implementations. The current version of the module supports only reCAPTCHA v3 Invisible.
+
+## Installation
+
+To install this functionality, run the following command:
+
+```bash
+npm i @adobe/reCAPTCHA
+```
+
+[Google reCAPTCHA](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/security/captcha/security-google-recaptcha) in the _Admin Systems Guide_ describes how to configure Adobe Commerce.
+
+<Tasks>
+
+## Integrations
+
+To integrate ReCaptcha, follow these steps:
+
+<Steps>
+
+1. Load the app.
+
+   - Call the `setConfig` method to fetch and set reCAPTCHA configuration.
+   - (Optional) Extend the configuration with custom forms if a custom integration not natively supported by Adobe Commerce is planned.
+
+1. Load the page with a protected form.
+
+   Call the `initReCaptcha` method to add the script and initialize the ReCaptcha badge.
+
+1. Render the form.
+
+   - The user interacts with the page and form, providing the required data.
+   - The user clicks the submit button.
+
+1. Call the `verifyReCaptcha` API.
+
+   Retrieve the reCAPTCHA token via the Google API.
+
+</Steps>
+
+</Tasks>
+
+### Flow for forms covered by Adobe Commerce natively
+
+Use the following workflow for standard Adobe Commerce integrations
+
+<Steps>
+
+1.  Set the reCAPTCHA token in the X-ReCaptcha header.
+
+1.  Send the request to the backend.
+
+1.  Commerce validates the token. If it fails, Commerce returns an error.
+
+</Steps>
+
+### Flow for custom integrations
+
+Use one of the following workflows for custom integrations:
+
+- (Recommended) Send the token to Commerce and validate it on the server side. If validation passes, Commerce returns a normal response. Otherwise, it returns an error.
+
+- Validate the token on the client side. If validation passes, send the request.
+
+## reCAPTCHA API
+
+The reCAPTCHA package exposes the following APIs, allowing developers to integrate it with native Adobe Commerce functionality or set up custom integrations:
+
+- `setConfig`
+- `setEndpoint`
+- `initreCAPTCHA`
+- `verifyreCAPTCHA`
+- `enableLogger`
+
+### setConfig
+
+The `setConfig` method fetches and stores the reCAPTCHA configuration from the backend.
+It is essential to call this method before the `initreCAPTCHA` and `verifyreCAPTCHA` methods during app initialization, because other reCAPTCHA functionality will not be fully operational until the configurations are loaded and set up.
+
+#### Usage
+
+The `setConfig` method is intended to be called without parameters, in which case the backend configuration will be used.
+
+```javascript
+import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+
+reCAPTCHA.setConfig();
+```
+
+However, you can pass a configuration object as a parameter to override the backend configurations.
+
+```javascript
+import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+
+reCAPTCHA.setConfig({ is_enabled: true });
+```
+
+### setEndpoint
+
+The `setEndpoint` method sets the endpoint that the reCAPTCHA module uses to fetch configurations. Its use is optional. If reCAPTCHA uses the same API Mesh endpoint as the rest of the application, you do not need to set it explicitly. It will be inherited from the `fetch-graphql` package.
+
+#### Usage
+
+The following example sets the endpoint:
+
+```javascript
+import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+
+reCAPTCHA.setEndpoint('https://www.example.com/graphql');
+```
+
+### initreCAPTCHA
+
+The `initreCAPTCHA` method initializes reCAPTCHA scripts and badges. Call this method after the `setConfig` method and before rendering forms with reCAPTCHA protection.
+
+The `initreCAPTCHA` method should be called before each form rendering. Do not call it at the top level of the application, immediately after the `setConfig` API, because this would load reCAPTCHA scripts on all pages, not just those with forms protected by reCAPTCHA.
+
+Additionally, you must call `initreCAPTCHA` for each form render to ensure the script is in place and the reCAPTCHA badge is properly initialized.
+
+#### Usage
+
+The following example initializes reCAPTCHA:
+
+```javascript
+import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+
+reCAPTCHA.initreCAPTCHA();
+```
+
+### verifyreCAPTCHA
+
+The `verifyreCAPTCHA` method retrieves the reCAPTCHA token via the Google API. It should be called after `setConfig` and `initreCAPTCHA`, and before submitting a protected form to retrieve the reCAPTCHA token.
+
+When the reCAPTCHA token is retrieved, for forms covered by native Adobe Commerce functionality, it is required to pass this token as an X-reCAPTCHA header.
+
+For custom implementations, token validation should be implemented on either the server side or client side, and the token should be used according to the custom implementation.
+
+#### Usage
+
+The following example retrieves the reCAPTCHA token:
+
+```javascript
+import { verifyreCAPTCHA } from '@adobe/reCAPTCHA';
+import { setFetchGraphQlHeader } from '../api';
+
+export const setreCAPTCHAToken = async () => {
+  const token = await verifyreCAPTCHA();
+
+  if (token) {
+    setFetchGraphQlHeader('X-reCAPTCHA', token);
+  }
+};
+```
+
+### enableLogger
+
+The `enableLogger` method enables extensive logging to the console for each step and error during reCAPTCHA operations. It is intended for development and debugging purposes.
+
+#### Usage
+
+The following example enables the logger:
+
+```javascript
+import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+
+reCAPTCHA.enableLogger(true);
+```
