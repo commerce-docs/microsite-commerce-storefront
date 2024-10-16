@@ -185,6 +185,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
+              { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
               { label: 'Containers', 
                 collapsed: true,
                 items: [
@@ -196,7 +197,6 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
-
             ]
           },
           {
