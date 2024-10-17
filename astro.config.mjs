@@ -146,10 +146,11 @@ export default defineConfig({
           // },
           {
             label: 'Product Details Page',
-            collapsed: false,
+            collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
               { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
+              { label: 'PDP Initialization', link: '/dropins/product-details/pdp-initialization/' },
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
               { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
