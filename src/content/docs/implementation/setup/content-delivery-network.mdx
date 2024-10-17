@@ -17,6 +17,21 @@ The main difference between the three use cases described in this section is the
 
 Defaulting to Edge Delivery Services is generally ideal because you'll have to log in to the Commerce Admin and understand Fastly VCLs to add the path for routing in the “default to Commerce” scenario when adding a new page in Edge Delivery Services. Therefore, the VCL snippets below focus on the “default to Edge” use case.
 
+The following table provides a high-level comparison of the three routing options:
+
+| Topic                          | Full storefront                              | Luma Bridge                                            | Homepage only                                                 |
+|--------------------------------|----------------------------------------------|--------------------------------------------------------|---------------------------------------------------------------|
+| **Routing logic**              | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
+| **Paths routed to Commerce**   | Product images, GraphQL endpoint             | Transactional pages, account page, REST endpoints, etc | All paths except those explicitly                             |
+| **Paths routed to Edge**       | All other paths                              | Product catalog, content pages                         | Homepage                                                      |
+| **VCL snippets focus**         | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
+| **Optimization tips**          | Avoid additional TLS handshake for API calls | Same as full storefront                                | Route resources (JS, CSS) to Edge Delivery Services           |
+| **Common patterns**            | Use CDN as proxy for Catalog Service         | Same as full storefront                                | Move Edge code to subfolder, such as `aem`                    |
+
+:::note
+All paths for the Adobe Commerce Admin should be routed to Commerce.
+:::
+
 ### Full storefront
 
 The entire storefront experience is delivered by Edge Delivery Services. Only some paths (for example, images and API calls) are routed to Commerce.
@@ -27,7 +42,7 @@ The entire storefront experience is delivered by Edge Delivery Services. Only so
 * CDN must proxy requests to your Catalog Service API endpoint (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql).
 
   :::tip
-  These API endpoints impact LCP, so we want to avoid an additional TLS handshake. This optimization has already been applied to the boilerplate, where we use a "custom" version of the LS Widget to change the API URL used by the widget.
+  These API endpoints impact largest contentful paint (LCP), so we want to avoid an additional TLS handshake. This optimization has already been [applied](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/blocks/product-list-page/product-list-page.js#L15) to the boilerplate, where we use a "custom" version of the Live Search widget to change the API URL used by the widget.
   :::
 
 ### Luma Bridge
@@ -50,29 +65,74 @@ Only the homepage is delivered by Edge Delivery Services. All Commerce functiona
   A common pattern is to move all Edge Delivery Services code into a subfolder called `aem`, and then route any path starting with `aem` to Edge Delivery Services.
   :::
   
-For general information on setting up Fastly for Adobe Commerce and accessing the Admin UI, see [Fastly services overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/fastly).
+For general information on setting up Fastly for Adobe Commerce and accessing the Adobe Commerce Admin, see [Fastly services overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/fastly).
 
 ## Backend configuration 
 
-The first step in the configuration process is to configure a backend for each origin/service that Fastly needs to route to. Typically, this would be the Catalog Service GraphQL API endpoint, Edge Delivery Services, and default Commerce backend.
+The first step is to configure a backend for each origin/service that Fastly needs to route to, which includes the following:
 
-Make sure that the following is set:
+* Edge Delivery Services
+* Catalog Service GraphQL API endpoint
+* Default Adobe Commerce backend
 
-* **Condition**: We will handle conditional routing in the VCL scripts. Set the condition to `false (REQUEST) false` for all backends. Do not forget to set this condition also for the default backend, otherwise this can overwrite the changes made by your VCL conditions that are configured in the snippets.
+:::note
+The Fastly configuration instructions on this page are based on the [`fastly-magento2`](https://github.com/fastly/fastly-magento2) module, which exposes Fastly service configurations in the Adobe Commerce Admin.
+:::
 
-* **Shielding**: Adobe recommends keeping this off for simplicity. If you're using shielding, see the [shielding section](#shielding).
+<Steps>
 
-In addition to the Edge Delivery Services backend, do the same for the Catalog Service GraphQL API endpoints (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql), plus any other backends you may require. You can also rename the Commerce backend from the generated name to simply `commerce`.
+1. Log in to the Adobe Commerce Admin.
 
-The following screenshot shows the configuration for Edge Delivery Services.
+1. Click **Stores** > _Settings__ > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration** > **Backend Settings** > **Create**.
 
-![Backend configuration for Edge Delivery Services](@images/implementation/backend-config-edge.png)
+1. Enter a name for the Edge Delivery Services backend.
 
-![Backend configuration for Commerce](@images/implementation/backend-config-commerce.png)
+   For example: `edge`.
+
+1. Enter the address for the Edge Delivery Services backend.
+
+   For example: `main--aem-boilerplate-commerce--hlxsites.aem.live`
+
+1. Click **Attach condition**.
+
+1. Click **Create a new request condition**.
+
+1. Enter a name for the condition.
+
+   For example: `false`.
+
+1. Enter `false` in the **Apply if** field.
+
+1. Accept the default (`10`) in the **Priority** field
+
+1. Click **Create**.
+
+1. Select your new condition from the **Condition** drop-down list.
+
+   ![Backend configuration for Commerce](@images/implementation/backend-config-example.png)
+
+   :::caution
+   Remember to also set this condition for the default Adobe Commerce backend. Otherwise, this condition can overwrite the changes made by the VCL conditions that you configure in the custom VCL snippets. You could also lose access to the Admin, which may require an Adobe Commerce Support ticket to resolve.
+   :::
+
+1. Set Shielding to **(none)**.
+
+   If you choose to use shielding, see the [shielding section](#shielding) for additional guidance.
+
+</Steps>
+
+Repeat these steps for the Catalog Service GraphQL API endpoints (plus any other backends that you may require):
+
+* `https://catalog-service.adobe.io/graphql`
+* `https://catalog-service-sandbox.adobe.io/graphql`
+
+:::tip
+You can also rename the Adobe Commerce backend from the generated name to simply `commerce`.
+:::
 
 ## VCL configuration
 
-Your routing set up routing will typically require five VCL snippets:
+Your routing set up requires the following VCL snippets:
 
 * `recv`
 * `pass`
@@ -80,27 +140,28 @@ Your routing set up routing will typically require five VCL snippets:
 * `fetch`
 * `deliver`
 
-See [Getting started with custom VCL](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets) or use the Fastly Admin module UI to apply the custom VCL snippets below to your Adobe Commerce Fastly CDN service.
+![VCL configuration](@images/implementation/vcl-config.png)
 
-These VCL snippets are starting points and can be altered or extended to fit your use cases. There are also examples of potential extended use cases listed further down on the page. The main purposes of the VCL snippets are to:
+See [Using VCL](https://www.fastly.com/documentation/guides/vcl/using/) in the Fastly documentation for more information.
+
+The VCL snippets on this page are a starting point that you can alter or extend to fit your use cases. There are also examples of potential extended use cases listed further down the page. The main purposes of the VCL snippets are to:
 
 * Correctly set the backend based on request path
-* Ensure that the requests do not receive extra caching or headers if they are going to a non-Adobe Commerce backend, achieved by returning early
+* Set the recommended priority setting for each snippet to determine the order in which they are executed (lower numbers are executed first)
+* Ensure that the requests do not receive extra caching or headers if they are going to a non-Adobe Commerce backend (achieved by returning early)
 * Improve performance for non-Adobe Commerce backends by rewriting some features, like compression, that would be provided by the default Adobe Commerce VCL
 
 :::tip
 If you make a change or apply a new VCL snippet, it can take some time to propagate and apply to Fastly's system. It's a best practice to validate the latest change before continuing to other changes, otherwise you may introduce a bug and find it challenging to determine the root cause.
 
-If you need to rename a snippet, delete it first and then recreate it with the new name: https://github.com/fastly/fastly-magento2/issues/708.
+If you need to rename a snippet, delete it first and then recreate it with the new name to avoid this [known issue](https://github.com/fastly/fastly-magento2/issues/708).
 :::
 
-![VCL configuration](@images/implementation/vcl-config.png)
-
-See [Using VCL](https://www.fastly.com/documentation/guides/vcl/using/) in the Fastly documentation for more information.
+To apply these custom VCL snippets to your Adobe Commerce Fastly CDN service, see [Getting started with custom VCL](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets) or use the [`fastly-magento2`](https://github.com/fastly/fastly-magento2) Admin module.
 
 ### recv
 
-The folloing snippet does a simple redirect if `host` does not contain `www`. It adds it and then redirects to `https` using a Fastly-specific error code.
+The following `recv` snippet does a simple redirect if `host` does not contain `www`. The snippet adds the string and then redirects to `https` using a [Fastly-specific error code](https://www.fastly.com/documentation/reference/http/http-statuses/). This is done in place of the **Auto-redirect to Base URL** setting in the Commerce Admin. The steps in the [Commerce configuration](#commerce-configuration) section instruct you to set **Auto-redirect to Base URL** to **No** based on this snippet.
 
 **Type**: `recv`
 
@@ -113,10 +174,11 @@ if (req.http.host == "aemshop.net") {
 }
 ```
 
-The `recv` snippet has the following purpose:
+The following `recv` snippet has the following purpose:
 
-* Path based routing for Edge Delivery Services, Catalog Service, or Adobe Commerce backends
+* Path-based routing for Edge Delivery Services, Catalog Service, and Adobe Commerce backends
 * Preparing the requests for the respective backends
+* Blocking access to non-production environments (non-production environments should not be indexed by search engines)
 
 **Type**: `recv`
 
@@ -184,17 +246,13 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.X-Push-Invalidation = "enabled";
 }
  
-if (req.backend == F_commerce) {
-    set bereq.http.Host = "mcprod.aemshop.net";
-}
- 
 if (!req.http.x-commerce) {
     return(pass);
 }  
 ```
 
 :::note
-Changes to the host header set here will require a Commerce Fastly cache purge due to how and when Fastly calculates cache `HITS`.
+Changes to the host header set here will require a Commerce Fastly cache purge due to [how and when Fastly calculates cache `HITS`](https://docs.fastly.com/en/guides/manipulating-the-cache-key#redefining-the-cache-key).
 :::
 
 ### miss
@@ -212,17 +270,13 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.X-Push-Invalidation = "enabled";
 }
  
-if (req.backend == F_commerce) {
-    set bereq.http.Host = "mcprod.aemshop.net";
-}
- 
 if (!req.http.x-commerce) {
     return(fetch);
 }
 ```
 
 :::note
-Changes to the Host header set here will require a Commerce Fastly cache purge due to how and when Fastly calculates cache `HITS`.
+Changes to the Host header set here will require a Commerce Fastly cache purge due to [how and when Fastly calculates cache `HITS`](https://docs.fastly.com/en/guides/manipulating-the-cache-key#redefining-the-cache-key).
 :::
 
 ### fetch
@@ -422,31 +476,57 @@ if (req.http.x-mesh == "true") {
 
 ## Commerce configuration
 
-In the Adobe Commerce backend, assuming you are using the VCL to do the APEX redirect (`aemshop.net` → `www.aemshop.net` with 801 error), you should do two things:
+If you are using the VCL to do the APEX redirect (`aemshop.net` → `www.aemshop.net` with 801 error), you should do two things in the Adobe Commerce backend:
 
 1. Disable `auto-redirect`.
 1. Set the `base_url` and `secure_base_url` settings to your domain, including `www`.
 
-![Commerce configuration](@images/implementation/commerce-config.png)
+Follow these steps:
+
+<Steps>
+
+1. Log in to the Adobe Commerce Admin.
+
+1. Click **Stores** > _Settings_ > **Configuration** > **General** > **Web**.
+
+1. Expand the **URL options** section.
+
+1. Set **Auto-redirect to Base URL** to **No**.
+
+1. Expand the **Base URLs** section.
+
+1. Set the **Base URL** and **Secure Base URL** to your domain, including `www`.
+
+   For example: `https://www.aemshop.net/`
+
+1. Expand the **Base URLs (Secure)** section.
+
+1. Set the **Secure Base URL** to your domain, including `www`.
+
+   For example: `https://www.aemshop.net/`
+
+1. Click **Save Config**.
+
+</Steps>
 
 ## Edge Delivery Service configuration
 
 To obtain a purge API token for Fastly, you must contact Adobe Commerce Customer Support.
 
-Then, follow the instructions in [Setup push invalidation for Fastly](https://www.aem.live/docs/byo-cdn-fastly-setup#setup-push-invalidation-for-fastly). The remaining configuration described on his page is already taken care of by applying the VCL snippets above.
+Then, follow the instructions in [Setup push invalidation for Fastly](https://www.aem.live/docs/byo-cdn-fastly-setup#setup-push-invalidation-for-fastly). The remaining configuration described on this page is already taken care of by applying the VCL snippets above.
 
 ## Validation
 
 To validate your CDN setup, use `curl` requests to check expected responses from the paths you have configured.
 
-### Edge content encoding, surrogate key, and cache
+### Content encoding, surrogate key, and cache
 
 Validate that surrogate key, cache hits, and content encoding are working as expected by requesting an Edge Delivery Services-served asset from your Commerce domain. Ensure you are checking a warm cache by making the request at least twice. The following examples are to a warmed cache.
 
 Here is an example of validation against an Adobe staging environment:
 
 ```bash
-curl -sI -H 'Fastly-Debug: 1' https://aemshop.net/scripts/aem.js | grep 'x-cache\|surrogate-key\|cache-control'
+curl -sI -H 'Fastly-Debug: 1' https://www.aemshop.net/scripts/aem.js | grep 'x-cache\|surrogate-key\|cache-control'
 content-encoding: gzip
 surrogate-key: develop--aem-boilerplate-commerce--hlxsites develop--aem-boilerplate-commerce--hlxsites_code E3hjdgev7F5OyPUD
 x-cache: MISS, HIT, HIT, HIT
@@ -456,22 +536,21 @@ x-cache-hits: 0, 37, 1, 0
 * `content-encoding`: Should be `gzip` or `br` for things like JS assets and HTML files, which should be encoded from origin.
 * `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths. 
 
-  The reason for this validation step is that the [default Commerce Fastly VCL](https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl#L113) sets this. This overwrites the Edge Delivery Services surrogate key, which is required for cache invalidation to work correctly when a page is re-published.
+   The reason for this validation step is that the [default Commerce Fastly VCL](https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl#L113) sets this. This overwrites the Edge Delivery Services surrogate key, which is required for cache invalidation to work correctly when a page is re-published.
 
 * `x-cache`: Should contain `HIT` entries. The last entry should be `HIT` (`MISS`, `HIT`, `MISS`, `HIT`) is ok.
 
 Also, make sure that you validate `gzip` encoding is applied to HTML pages:
 
 ```bash
-curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://aemshop.net | grep content-encoding
+curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net | grep content-encoding
 content-encoding: gzip
 
-curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://aemshop.net/index.plain.html | grep content-encoding
+curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net/index.plain.html | grep content-encoding
 content-encoding: gzip
 ```
 
-* Validate the CDN configuration with the BYOCDN [push invalidator tool](https://tools.aem.live/).
-* Additionally, preview and publish a document and validate that the changes are correctly reflected.
+Validate the CDN configuration with the BYOCDN [push invalidator tool](https://tools.aem.live/). Additionally, preview and publish a document and validate that the changes are correctly reflected.
 
 ```bash
 curl -Is --http2 https://www.aemshop.net | grep 'HTTP/2'
@@ -487,21 +566,21 @@ location: https://www.aemshop.net/
 
 To validate the APEX redirect, observe the location header returned by a request to the domain without `www`.
 
-### Edge and Commerce image optimization
+### Image optimization
 
 Validate that images are encoded with the expected format. If you get back `image/jpeg` this indicates an issue, probably Commerce Fastly is rewriting the content type header. You'll need to validate the VCL snippets.
 
 To validate Edge Delivery Services, ensure you check some content expected to be served from the Edge Delivery Services origin (such as the hero banner).
 
 ```bash
-curl -sI -H "Accept: image/webp" 'https://aemshop.net/media_12ddec51160a77274a1111c5c7ec6a80ea5c5c2ef.jpeg?width=2000&format=webply&optimize=medium' | grep 'content-type'
+curl -sI -H "Accept: image/webp" 'https://www.aemshop.net/media_12ddec51160a77274a1111c5c7ec6a80ea5c5c2ef.jpeg?width=2000&format=webply&optimize=medium' | grep 'content-type'
 content-type: image/webp
 ```
 
 To validate Commerce, ensure you check some content expected to be served from the Edge Delivery Services origin (such as a product image).
 
 ```bash
-curl -sI  -H "Accept: image/webp" 'https://aemshop.net/media/catalog/product/m/b/mb03-black-0.jpg?quality=80&bg-color=255%2C255%2C255&fit=cover&height=&width=300&auto=webp&crop=false' | grep 'content-type'
+curl -sI  -H "Accept: image/webp" 'https://www.aemshop.net/media/catalog/product/m/b/mb03-black-0.jpg?quality=80&bg-color=255%2C255%2C255&fit=cover&height=&width=300&auto=webp&crop=false' | grep 'content-type'
 content-type: image/webp
 ```
 
@@ -510,7 +589,7 @@ content-type: image/webp
 Ensure that GraphQL `GET` requests result in cache HITs.
 
 ```bash
-curl -sI 'https://aemshop.net/graphql?query=query+STORE_CONFIG_QUERY+%7B+storeConfig+%7B+minicart_display%7D+%7D' | grep x-cache
+curl -sI 'https://www.aemshop.net/graphql?query=query+STORE_CONFIG_QUERY+%7B+storeConfig+%7B+minicart_display%7D+%7D' | grep x-cache
 x-cache: HIT
 x-cache-hits: 1
 ```

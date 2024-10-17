@@ -1,0 +1,97 @@
+---
+title: SuccessNotification container
+description: Learn about the SuccessNotification container in the UserAuth dropin.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The SuccessNotification container displays a message to the user after a successful action, such as signing up or updating a password. The SignIn, SignUp, and UpdatePassword containers can pass the SuccessNotification container as a slot.
+
+In the following diagram, a SignIn container has passed the SuccessNotification container, which defines the displayed text and action buttons.
+
+<Diagram caption="SuccessNotification container">
+  ![SuccessNotification container](@images/user-auth/success-notification.png)
+</Diagram>
+
+## SuccessNotification configurations
+
+The SuccessNotification container provides the following configuration options:
+
+<OptionsTable
+    compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots', 'function', 'No', 'Allows overriding the SuccessNotification container action buttons (SuccessNotificationActions).'],
+        ['formSize', 'default | small', 'No', 'Controls form paddings and spacing. Use "small" to embed the form in small layout containers like a dropdown in the header.'],
+        ['headingText', 'string', 'No', 'Heading text content.'],
+        ['messageText', 'string', 'No', 'Message text content.'],
+    ]}
+/>
+
+## Example
+
+The following example renders the SignIn container. On success, the container displays a welcome heading, a message, and two action buttons: "My Account" and "Logout".
+
+```javascript
+export default async function decorate(block) {
+  if (checkIsAuthenticated()) {
+    window.location.href = CUSTOMER_ACCOUNT_PATH;
+  } else {
+    await authRenderer.render(SignIn, {
+      enableEmailConfirmation: true,
+      routeForgotPassword: () => CUSTOMER_FORGOTPASSWORD_PATH,
+      slots: {
+        SuccessNotification: (ctx) => {
+          const userName = ctx?.isSuccessful?.userName || '';
+
+          const elem = document.createElement('div');
+
+          authRenderer.render(SuccessNotification, {
+            labels: {
+              headingText: `Welcome ${userName}!`,
+              messageText: 'You have successfully logged in.',
+            },
+            slots: {
+              SuccessNotificationActions: (innerCtx) => {
+                const primaryBtn = document.createElement('div');
+
+                authRenderer.render(Button, {
+                  children: 'My Account',
+
+                  onClick: () => {
+                    window.location.href = CUSTOMER_ACCOUNT_PATH;
+                  },
+                })(primaryBtn);
+
+                innerCtx.appendChild(primaryBtn);
+
+                const secondaryButton = document.createElement('div');
+                secondaryButton.style.display = 'flex';
+                secondaryButton.style.justifyContent = 'center';
+                secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
+
+                authRenderer.render(Button, {
+                  children: 'Logout',
+                  variant: 'tertiary',
+                  onClick: async () => {
+                    await authApi.revokeCustomerToken();
+                    window.location.href = '/';
+                  },
+                })(secondaryButton);
+
+                innerCtx.appendChild(secondaryButton);
+              },
+            },
+          })(elem);
+
+          ctx.appendChild(elem);
+        },
+      },
+    })(block);
+  }
+}
+```
