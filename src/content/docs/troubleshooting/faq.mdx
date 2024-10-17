@@ -1,0 +1,76 @@
+---
+title: Frequently Asked Questions (FAQ)
+description: Find answers to common questions about Edge Delivery Services for Adobe Commerce storefronts.
+tableOfContents:
+  maxHeadingLevel: 2
+---
+
+## Where can I find technical documentation?
+
+* [Storefront dropins](https://experienceleague.adobe.com/developer/commerce/storefront/)
+* [Catalog Service](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/catalog-service/guide-overview)
+* [Live Search](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/live-search/overview)
+* [[AEM Gems] Building Storefronts on Edge Delivery Services with Adobe Commerce](https://experienceleaguecommunities.adobe.com/t5/adobe-experience-manager/aem-gems-building-storefronts-on-edge-delivery-services-with/m-p/652692)
+* [[AdaptTo] Build Super Fast Storefront Experiences with Edge Delivery Services and Adobe Commerce](https://adapt.to/2023/schedule/build-super-fast-storefront-experiences-with-edge-delivery-services-and-adobe-commerce)
+* [[Summit 2024] Commerce Lab Workbook](https://bit.ly/L445-workbook)
+
+## What should I do if my Catalog Service/Live Search data is missing or corrupted?
+
+Submit a request to Adobe Commerce Support to clear your data space. This deletes all data within Catalog Service/Live Search for a specific environment ID. Be careful not to lear any data space required for production.
+
+After Adobe Commerce Support clears your data space, you can re-synchronize it using the following commands:
+
+```bash
+bin/magento saas:resync --feed scopesCustomerGroup --cleanup-feed
+bin/magento saas:resync --feed scopesWebsite --cleanup-feed
+bin/magento saas:resync --feed productattributes --cleanup-feed 
+bin/magento saas:resync --feed variants --cleanup-feed 
+bin/magento saas:resync --feed products --cleanup-feed 
+bin/magento saas:resync --feed productoverrides --cleanup-feed 
+bin/magento saas:resync --feed prices --cleanup-feed 
+bin/magento saas:resync --feed categories --cleanup-feed 
+bin/magento saas:resync --feed categoryPermissions --cleanup-feed
+```
+
+See the [_SaaS Data Export Guide_](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/saas-data-export/overview) for more information.
+
+## How can I improve the performance of my catalog pages?
+
+### Images
+
+* Product images should be delivered in the appropriate size and should not be delivered larger than their rendered size. Use Fastly Image Optimizer where possible to deliver images in modern `.webp` format.
+* Use `loading="eager"` on largest contentful paint (LCP) relevant images and `loading="lazy"` on images with lower priority. Be aware that these attributes are a hint only for the browser.
+
+### API
+
+* Blocks that load data from APIs must have proper sizing in their loading state to prevent layout shift when they start to render content.
+* API endpoints should be proxied through a content delivery network (CDN) to prevent overhead of cross-origin resource sharing (CORS) (`OPTIONS` calls) and TLS handshakes.
+* Start GraphQL queries early (for example, in eager phase)
+
+### Preloading
+
+* Frequently used `commerce.js` and `configs.js` files can be loaded early by adding them to the `head.html` file.
+* Remove waterfall loading of files. If you know in advance which files are required, load them early or combine them to load fewer files.
+* You can preload resources/queries in the eager phase of the `scripts.js` file if they are very heavy. You can use global promises or a link tag with preload attribute in the head to prevent downloading the same resource multiple times.
+
+### Loading order
+
+* Everything that is not relevant for LCP can be loaded progressively (dynamic imports) or delayed (`delayed.js`).
+* LCP relevant blocks (for example, product details, product list page) must be loaded in the eager phase. This means that they need to be the first block on the page and added to the `LCP_BLOCKS` array.
+* Only load elements that are required. Elements that are not immediately required should be separated and loaded when needed.
+  * **Example 1:** Logic for newsletter sign-up can be loaded when the user clicks on the subscribe button.
+  * **Example 2:** Minicart block is loaded on every page but only loads lightweight code to display button and a number. Only on click of the button, the full minicart block is loaded.
+
+### Libraries
+
+Use Preact/HTM or other libraries only when necessary.
+
+### Thid-party integrations
+
+* Prefer APIs over embedding third-party scripts.
+* If you mut embed third-party scripts, try using placeholders to prevent cumulative layout shift (CLS) and load them delayed or when they appear in the viewport (`IntersectionObserver`).
+* Be careful with how you add fonts to the project. Ideally, you should avoid using fonts hosted by third parties.
+
+## How do I deploy custom VCLs to Fastly?
+
+See [Getting started with custom VCL](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets) in the _Commerce on Cloud Infrastucture Guide_.
