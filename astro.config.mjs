@@ -129,7 +129,7 @@ export default defineConfig({
                 link: '/implementation/discovery/'
               },
               {
-                label: 'Commerce requirements',
+                label: 'Storefront services',
                 link: '/implementation/discovery/requirements/'
               },
               {
