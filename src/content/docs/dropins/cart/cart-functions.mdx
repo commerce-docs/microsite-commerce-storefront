@@ -169,9 +169,72 @@ import { getCartData } from '@/cart/api/getCartData';
 getCartData();
 ```
 
+## getEstimatedTotals
+
+A function that returns estimated totals for cart based on an address. It takes an `address` parameter.
+
+```ts
+export const getEstimatedTotals = async (
+  address: EstimateAddressShippingInput
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'EstimateAddressShippingInput', 'Yes', 'Defines the shipping address for the estimate.'],
+  ]}
+/>
+
+The `EstimateAddressShippingInput` object has the following parameters:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['countryCode', 'string', 'Yes', 'The two-letter code representing the user\'s country.'],
+    ['postcode', 'string', 'No', 'The user\'s ZIP or postal code.'],
+    ['region', 'object', 'No', 'An object containing the region name, region code, and region ID.'],
+    ['region.region', 'string', 'No', 'The state or province name.'],
+    ['region.id', 'number', 'No', 'The unique ID for a pre-defined region.'],
+    ['shipping_method', 'object', 'No', 'Defines the shipping carrier and method.'],
+    ['shipping_method.carrier_code', 'string', 'No', 'A string that identifies a commercial carrier or an offline delivery method.'],
+    ['shipping_method.method_code', 'string', 'No', 'A string that indicates which service a commercial carrier will use to ship items.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeImport code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To get estimated totals for the cart based on an address:
+
+```js
+import { getEstimatedTotals } from '@/cart/api/getEstimatedTotals';
+
+getEstimatedTotals([
+  {
+    address: {
+      countryCode: string,
+      postcode?: string,
+      region?: {
+        region?: string,
+        code?: string,
+        id?: number,
+      }
+    }
+  }
+]);
+```
+
 ## getEstimateShipping
 
-The `getEstimateShipping` function returns a list of shipping methods and the estimated shipping costs, based on the country ID. The function calls the [`estimateShippingMethods` mutation](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods),  the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query, and the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/)query to resolve the shipping costs.
+The `getEstimateShipping` function returns a list of shipping methods and the estimated shipping costs, based on the country ID. The function calls the [`estimateShippingMethods` mutation](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods). It also calls the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query to populate the list of countries, the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/) query to populate the list of regions within the selected country. and the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/)query to help resolve the shipping costs.
 
 ```ts
 export const getEstimateShipping = async (
@@ -237,69 +300,6 @@ getEstimateShipping({
         code: 'NY',
     }
 });
-```
-
-## getEstimatedTotals
-
-A function that returns estimated totals for cart based on an address. It takes an `address` parameter.
-
-```ts
-export const getEstimatedTotals = async (
-  address: EstimateAddressShippingInput
-): Promise<CartModel | null>
-```
-
-<OptionsTable
-  compact
-  options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
-    ['address', 'EstimateAddressShippingInput', 'Yes', 'Defines the shipping address for the estimate.'],
-  ]}
-/>
-
-The `EstimateAddressShippingInput` object has the following parameters:
-
-<OptionsTable
-  compact
-  options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
-    ['countryCode', 'string', 'Yes', 'The two-letter code representing the user\'s country.'],
-    ['postcode', 'string', 'No', 'The user\'s ZIP or postal code.'],
-    ['region', 'object', 'No', 'An object containing the region name, region code, and region ID.'],
-    ['region.region', 'string', 'No', 'The state or province name.'],
-    ['region.id', 'number', 'No', 'The unique ID for a pre-defined region.'],
-    ['shipping_method', 'object', 'No', 'Defines the shipping carrier and method.'],
-    ['shipping_method.carrier_code', 'string', 'No', 'A string that identifies a commercial carrier or an offline delivery method.'],
-    ['shipping_method.method_code', 'string', 'No', 'A string that indicates which service a commercial carrier will use to ship items.'],
-  ]}
-/>
-
-### Returns
-
-Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
-
-<CodeImport code={cartModel} title="CartModel object" lang="ts" frame="none" />
-
-### Usage
-
-To get estimated totals for the cart based on an address:
-
-```js
-import { getEstimatedTotals } from '@/cart/api/getEstimatedTotals';
-
-getEstimatedTotals([
-  {
-    address: {
-      countryCode: string,
-      postcode?: string,
-      region?: {
-        region?: string,
-        code?: string,
-        id?: number,
-      }
-    }
-  }
-]);
 ```
 
 ## getStoreConfig
