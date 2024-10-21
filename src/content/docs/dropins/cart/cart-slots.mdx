@@ -22,7 +22,6 @@ slots?: {
   EmptyCart?: SlotProps;
   Thumbnail?: SlotProps;
   Footer?: SlotProps;
-  ProductAttributes?: SlotProps;
 };
 ```
 
@@ -98,14 +97,6 @@ export interface Item {
   outOfStock?: boolean;
   notAvailableMessage?: string;
   stockLevel?: string;
-  productAttributes?: Array<{
-  code: string;
-  value?: string;
-  selected_options?: {
-    value: string;
-    label: string;
-  }[];
-}>;
 }
 ```
 
@@ -175,7 +166,9 @@ The following example demonstrates how to extend the Thumbnail slot.
 
 The Footer slot allows you to add content to the bottom of the CartSummaryList container.
 
-The following example demonstrates how to extend the footer slot by adding a promotional cart rule to each product in the cart.
+#### Example: Extend the Footer slot
+
+The following example demonstrates how to add a promotional cart rule to each product in the cart.
 
 ```js
 return provider.render(Cart, {
@@ -186,21 +179,18 @@ return provider.render(Cart, {
       // Initial render of ProductList
       provider.render(CartSummaryList, {
         slots: {
-          // Runs on mount
-          const wrapper = document.createElement('div');
-          ctx.appendChild(wrapper);
-
-          // Append Product Promotions on every update
-          ctx.onChange((next) => {
-            wrapper.innerHTML = '';
-
-            next.item?.discount?.label?.forEach((label) => {
-              const discount = document.createElement('div');
-              discount.style.color = '#3d3d3d';
-              discount.innerText = label;
-              wrapper.appendChild(discount);
-            });
-          });
+          Footer: (ctx) => {
+            // Prepend Product Promotions
+            const discountLabel = ctx.item?.discount?.label;
+            if (discountLabel) {
+              discountLabel.map((label) => {
+                const discount = document.createElement('div');
+                discount.style.color = '#3d3d3d';
+                discount.innerText = label;
+                ctx.appendChild(discount);
+              });
+            }
+          },
         },
       })(productList);
 
@@ -208,109 +198,3 @@ return provider.render(Cart, {
     },
   },
 })(document.getElementById('@dropins/cart'));
-```
-
-### ProductAttributes
-
-The ProductAttributes slot allows you to add content to the CartSummaryList container.
-
-The following example demonstrates how to add the Fashion Material and Fashion Style product attributes to each product in the cart.
-
-```javascript
-  return provider.render(CartSummaryList, {
-    enableRemoveItem: true,
-    enableUpdateItemQuantity: true,
-    routeProduct: (item) => {
-      return `${item.url.categories.join('/')}/${item.url.urlKey}`;
-    },
-    routeEmptyCartCTA: () => '#empty-cart',
-    slots: {
-      ProductAttributes: (ctx) => {
-        // Prepend Product Attributes
-        const ProductAttributes = ctx.item?.productAttributes;
-
-        ProductAttributes?.forEach((attr) => {
-          if(attr.code === "Fashion Material" || attr.code === "Fashion Style") {
-            if(attr.selected_options) {
-              const selectedOptions = attr.selected_options
-              .filter((option) => option.label.trim() !== '')
-              .map((option) => option.label)
-              .join(', ');
-              
-              if(selectedOptions) {
-                const productAttribute = document.createElement('div');
-                productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
-                ctx.appendChild(productAttribute);
-              }
-            } else if (attr.value) {
-              const productAttribute = document.createElement('div');
-              productAttribute.innerText = `${attr.code}: ${attr.value}`;
-              ctx.appendChild(productAttribute);
-            }
-          }
-        })
-      },
-    },
-  })(productList);
-```
-
-## OrderSummary slots
-
-You can customize the appearance of the order summary by using slots.
-
-```ts
-interface OrderSummaryProps
-
-slots?: {
-  EstimateShipping?: SlotProps;
-  Coupons?: SlotProps;
-};
-```
-
-### EstimateShipping
-
-The EstimateShipping slot allows you to add Estimate Shipping layout to the OrderSummary container. 
-
-The following example demonstrates how to add the Estimate Shipping layout to the OrderSummary container.
-
-```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
-
-    errors: ctx.hasErrors,
-
-    slots: {
-      EstimateShipping: (ctx) => {
-        const estimateShippingForm = document.createElement('div');
-
-        provider.render(EstimateShipping)(estimateShippingForm);
-
-        ctx.appendChild(estimateShippingForm);
-      }
-    },
-  })(orderSummary);
-```
-
-### Coupons
-
-The Coupons slot allows you to add the Coupons layout to the OrderSummary container. 
-
-The following example demonstrates how to enable coupons to the OrderSummary container.
-
-```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
-
-    errors: ctx.hasErrors,
-
-    slots: {
-      Coupons: (ctx) => {
-          const coupons = document.createElement('div');
-
-          provider.render(Coupons)(coupons);
-
-          ctx.appendChild(coupons);
-        }
-    },
-  })(orderSummary);
-```
