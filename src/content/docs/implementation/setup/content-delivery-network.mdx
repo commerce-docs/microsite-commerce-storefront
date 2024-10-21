@@ -13,7 +13,7 @@ This page provides instructions and guidance for configuring Adobe Commerce with
 
 ## Routing
 
-The main difference between the three use cases described in this section is the “default” routing logic; whether by default all paths are routed to Commerce or Edge Delivery Services. If you plan to use Edge Delivery Services for your homepage only, it makes more sense to default all paths to the Commerce origin. If you plan to migrate parts of your storefront over time with an eventual goal of being entirely served by Edge Delivery Services, then defaulting to Edge Delivery Services origins is more sensible.
+The main difference between the use cases described in this section is whether all paths should be routed by default to Commerce or Edge Delivery Services. If you plan to use Edge Delivery Services only for your homepage, all paths should default to Commerce. However, if you plan to migrate parts of your storefront over time, the Edge Delivery Services origins are more sensible.
 
 Defaulting to Edge Delivery Services is generally ideal because you'll have to log in to the Commerce Admin and understand Fastly VCLs to add the path for routing in the “default to Commerce” scenario when adding a new page in Edge Delivery Services. Therefore, the VCL snippets below focus on the “default to Edge” use case.
 
@@ -22,7 +22,7 @@ The following table provides a high-level comparison of the three routing option
 | Topic                          | Full storefront                              | Luma Bridge                                            | Homepage only                                                 |
 |--------------------------------|----------------------------------------------|--------------------------------------------------------|---------------------------------------------------------------|
 | **Routing logic**              | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
-| **Paths routed to Commerce**   | Product images, GraphQL endpoint             | Transactional pages, account page, REST endpoints, etc | All paths except those explicitly                             |
+| **Paths routed to Commerce**   | Product images, GraphQL endpoints             | Transactional pages, account page, REST endpoints, etc | All paths except those explicitly                             |
 | **Paths routed to Edge**       | All other paths                              | Product catalog, content pages                         | Homepage                                                      |
 | **VCL snippets focus**         | Default to Edge Delivery Services            | Default to Edge Delivery Services                      | Default to Commerce                                           |
 | **Optimization tips**          | Avoid additional TLS handshake for API calls | Same as full storefront                                | Route resources (JS, CSS) to Edge Delivery Services           |
@@ -39,7 +39,7 @@ The entire storefront experience is delivered by Edge Delivery Services. Only so
 * By default, paths are routed to Edge Delivery Services
 * Product images must be routed to Commerce
 * Commerce GraphQL endpoint must be routed to Commerce
-* CDN must proxy requests to your Catalog Service API endpoint (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql).
+* CDN must proxy requests to your Catalog Service API endpoints (https://catalog-service.adobe.io/graphql and https://catalog-service-sandbox.adobe.io/graphql).
 
   :::tip
   These API endpoints impact largest contentful paint (LCP), so we want to avoid an additional TLS handshake. This optimization has already been [applied](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/blocks/product-list-page/product-list-page.js#L15) to the boilerplate, where we use a "custom" version of the Live Search widget to change the API URL used by the widget.
@@ -49,9 +49,9 @@ The entire storefront experience is delivered by Edge Delivery Services. Only so
 
 The product catalog and content pages are delivered by Edge Delivery Services. Transactional pages (for example, cart, checkout, and account) are delivered by Commerce.
 
-* Includes the same details as the full storefront option, plus the following:
+* Luma Bridge includes the same details as the full storefront option, plus the following:
   * Transactional pages (for example, cart, checkout, and account) are routed to Commerce, depending on the Luma Bridge implementation
-  * Any additional endpoints (eg. REST endpoints, `/customer/sections/load`) that are required by the Luma Bridge implementation are routed to Commerce
+  * Any additional endpoints (such REST endpoints, `/customer/sections/load`) that are required by the Luma Bridge implementation are routed to Commerce
 
 ### Homepage only
 
