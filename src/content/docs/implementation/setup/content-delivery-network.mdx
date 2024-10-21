@@ -51,7 +51,7 @@ The product catalog and content pages are delivered by Edge Delivery Services. T
 
 * Luma Bridge includes the same details as the full storefront option, plus the following:
   * Transactional pages (for example, cart, checkout, and account) are routed to Commerce, depending on the Luma Bridge implementation
-  * Any additional endpoints (such REST endpoints, `/customer/sections/load`) that are required by the Luma Bridge implementation are routed to Commerce
+  * Any additional endpoints (such as REST endpoints, `/customer/sections/load`) that are required by the Luma Bridge implementation are routed to Commerce
 
 ### Homepage only
 
@@ -410,9 +410,7 @@ It is not recommended to handle all paths that need to be routed to Luma like th
 
 ### API Mesh
 
-API Mesh has a header size limit. We may need to remove third-party cookies if using API mesh:
-
-Header size limit. We need to remove custom cookies. Add this in the graphql section of `recv` snippetå:
+API Mesh has a header size limit. You must remove third-party cookies if you're using API mesh. Add this in the graphql section of `recv` snippet:
 
 ```txt
 if (req.http.Cookie) {
@@ -431,7 +429,7 @@ if (req.http.Cookie) {
 
 ### Branch names on staging
 
-You can enable using Edge Delivery Services branches on a staging URL (for example, `branch1.my-staging.com`). Use regex to get the domain name with this addition to the `miss` snippet:
+You can enable the use of Edge Delivery Services branches on a staging URL (for example, `branch1.my-staging.com`). Use regex to get the domain name with this addition to the `miss` snippet:
 
 ```txt
 if (req.backend == F_edge) {
@@ -449,7 +447,7 @@ In the domains configuration, you must use a wildcard. Since the Commerce Admin 
 
 ### Maintainance page workaround
 
-The maintainance page can block requests to API Mesh/GraphQL. The solution is to create a VCL snippet with low priority that comes before the maintainance check in VCL and allows GraphQL requests through. (set commerce backend and pass)
+The maintainance page can block requests to API Mesh/GraphQL. The solution is to create a VCL snippet with low priority that comes before the maintainance check in VCL and allows GraphQL requests through.
 
 ### Mulitple set-cookie headers workaround
 
@@ -527,6 +525,9 @@ Here is an example of validation against an Adobe staging environment:
 
 ```bash
 curl -sI -H 'Fastly-Debug: 1' https://www.aemshop.net/scripts/aem.js | grep 'x-cache\|surrogate-key\|cache-control'
+```
+
+```txt
 content-encoding: gzip
 surrogate-key: develop--aem-boilerplate-commerce--hlxsites develop--aem-boilerplate-commerce--hlxsites_code E3hjdgev7F5OyPUD
 x-cache: MISS, HIT, HIT, HIT
@@ -544,9 +545,17 @@ Also, make sure that you validate `gzip` encoding is applied to HTML pages:
 
 ```bash
 curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net | grep content-encoding
-content-encoding: gzip
+```
 
+```txt
+content-encoding: gzip
+```
+
+```bash
 curl -sI -H 'accept-encoding: gzip, deflate, br, zstd' https://www.aemshop.net/index.plain.html | grep content-encoding
+```
+
+```txt
 content-encoding: gzip
 ```
 
@@ -554,6 +563,9 @@ Validate the CDN configuration with the BYOCDN [push invalidator tool](https://t
 
 ```bash
 curl -Is --http2 https://www.aemshop.net | grep 'HTTP/2'
+```
+
+```txt
 HTTP/2 200
 ```
 
@@ -561,6 +573,9 @@ Validate that all requests are using `HTTP/2` or `HTTP/3` connections.
 
 ```bash
 curl -Is -L https://aemshop.net | grep location
+```
+
+```txt
 location: https://www.aemshop.net/
 ```
 
@@ -574,6 +589,9 @@ To validate Edge Delivery Services, ensure you check some content expected to be
 
 ```bash
 curl -sI -H "Accept: image/webp" 'https://www.aemshop.net/media_12ddec51160a77274a1111c5c7ec6a80ea5c5c2ef.jpeg?width=2000&format=webply&optimize=medium' | grep 'content-type'
+```
+
+```txt
 content-type: image/webp
 ```
 
@@ -581,6 +599,9 @@ To validate Commerce, ensure you check some content expected to be served from t
 
 ```bash
 curl -sI  -H "Accept: image/webp" 'https://www.aemshop.net/media/catalog/product/m/b/mb03-black-0.jpg?quality=80&bg-color=255%2C255%2C255&fit=cover&height=&width=300&auto=webp&crop=false' | grep 'content-type'
+```
+
+```txt
 content-type: image/webp
 ```
 
@@ -590,6 +611,9 @@ Ensure that GraphQL `GET` requests result in cache HITs.
 
 ```bash
 curl -sI 'https://www.aemshop.net/graphql?query=query+STORE_CONFIG_QUERY+%7B+storeConfig+%7B+minicart_display%7D+%7D' | grep x-cache
+```
+
+```txt
 x-cache: HIT
 x-cache-hits: 1
 ```
