@@ -40,10 +40,10 @@ export default defineConfig({
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
-    '/get-started/launch-checklist': '/developer/commerce/storefront/implementation/launch',
+    '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
     '/get-started/requirements': '/developer/commerce/storefront/discovery/requirements',
     '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
-    '/launch': '/developer/commerce/storefront/implementation/launch',
+    '/launch': '/developer/commerce/storefront/launch',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
@@ -114,92 +114,36 @@ export default defineConfig({
         }
       },
       {
-        label: 'Storefront Implementation',
-        items: [
-          {
-            label: 'Overview',
-            link: '/implementation/'
-          },
-          {
-            label: 'Discovery',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/discovery/'
-              },
-              {
-                label: 'Storefront services',
-                link: '/implementation/discovery/requirements/'
-              },
-              {
-                label: 'Data export validation',
-                link: '/implementation/discovery/data-export-validation/'
-              },
-              {
-                label: 'Luma Bridge',
-                link: '/implementation/discovery/luma-bridge/'
-              },
-            ]
-          },
-          {
-            label: 'Setup',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/setup/'
-              },
-              {
-                label: 'Content delivery network',
-                link: '/implementation/setup/content-delivery-network/'
-              },
-              {
-                label: 'Commerce configuration',
-                link: '/implementation/setup/commerce-configuration/'
-              },
-              {
-                label: 'Dropins and widgets',
-                link: '/implementation/setup/dropins-and-widgets/'
-              },
-              {
-                label: 'Commerce blocks',
-                link: '/implementation/setup/commerce-blocks/'
-              },
-            ]
-          },
-          {
-            label: 'Marketing and SEO',
-            collapsed: true,
-            items: [
-              {
-                label: 'Instrumentation',
-                link: '/implementation/marketing/commerce-instrumentation/'
-              },
-              {
-                label: 'Indexing and metadata',
-                link: '/implementation/marketing/metadata/'
-              },
-            ]
-          },
-          {
-            label: 'Launch',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/launch/'
-              },
-              {
-                label: 'Checklist',
-                link: '/implementation/launch/checklist/'
-              },
-            ]
-          },
-        ]
+        label: 'Discovery',
+        collapsed: true,
+        autogenerate: {
+          directory: '/discovery/'
+        },
+      },
+      {
+        label: 'Setup',
+        collapsed: true,
+        autogenerate: {
+          directory: '/setup/'
+        },
+      },
+      {
+        label: 'Analytics',
+        collapsed: true,
+        autogenerate: {
+          directory: '/analytics/'
+        },
+      },
+      {
+        label: 'SEO',
+        collapsed: true,
+        autogenerate: {
+          directory: '/seo/'
+        },
       },
       {
         label: 'Dropins',
+        collapsed: true,
         items: [
           {
             label: 'Overview',
@@ -299,7 +243,15 @@ export default defineConfig({
           }]
       },
       {
+        label: 'Launch',
+        collapsed: true,
+        autogenerate: {
+          directory: '/launch/'
+        },
+      },
+      {
         label: 'Toubleshooting',
+        collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
         }
