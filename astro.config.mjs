@@ -41,7 +41,7 @@ export default defineConfig({
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
-    '/get-started/requirements': '/developer/commerce/storefront/discovery/requirements',
+    '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
     '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
     '/launch': '/developer/commerce/storefront/launch',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
@@ -51,7 +51,7 @@ export default defineConfig({
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/pdp-slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/pdp-styles',
     '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
-    '/references/requirements': '/developer/commerce/storefront/discovery/requirements',
+    '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
   },
   integrations: [
     tailwind({
