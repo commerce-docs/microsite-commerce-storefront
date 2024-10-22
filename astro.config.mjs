@@ -114,89 +114,32 @@ export default defineConfig({
         }
       },
       {
-        label: 'Storefront Implementation',
-        items: [
-          {
-            label: 'Overview',
-            link: '/implementation/'
-          },
-          {
-            label: 'Discovery',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/discovery/'
-              },
-              {
-                label: 'Storefront services',
-                link: '/implementation/discovery/requirements/'
-              },
-              {
-                label: 'Data export validation',
-                link: '/implementation/discovery/data-export-validation/'
-              },
-              {
-                label: 'Luma Bridge',
-                link: '/implementation/discovery/luma-bridge/'
-              },
-            ]
-          },
-          {
-            label: 'Setup',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/setup/'
-              },
-              {
-                label: 'Content delivery network',
-                link: '/implementation/setup/content-delivery-network/'
-              },
-              {
-                label: 'Commerce configuration',
-                link: '/implementation/setup/commerce-configuration/'
-              },
-              {
-                label: 'Dropins and widgets',
-                link: '/implementation/setup/dropins-and-widgets/'
-              },
-              {
-                label: 'Commerce blocks',
-                link: '/implementation/setup/commerce-blocks/'
-              },
-            ]
-          },
-          {
-            label: 'Marketing and SEO',
-            collapsed: true,
-            items: [
-              {
-                label: 'Instrumentation',
-                link: '/implementation/marketing/commerce-instrumentation/'
-              },
-              {
-                label: 'Indexing and metadata',
-                link: '/implementation/marketing/metadata/'
-              },
-            ]
-          },
-          {
-            label: 'Launch',
-            collapsed: true,
-            items: [
-              {
-                label: 'Overview',
-                link: '/implementation/launch/'
-              },
-              {
-                label: 'Checklist',
-                link: '/implementation/launch/checklist/'
-              },
-            ]
-          },
-        ]
+        label: 'Discovery',
+        collapsed: true,
+        autogenerate: {
+          directory: '/discovery/'
+        },
+      },
+      {
+        label: 'Setup',
+        collapsed: true,
+        autogenerate: {
+          directory: '/setup/'
+        },
+      },
+      {
+        label: 'Analytics',
+        collapsed: true,
+        autogenerate: {
+          directory: '/analytics/'
+        },
+      },
+      {
+        label: 'SEO',
+        collapsed: true,
+        autogenerate: {
+          directory: '/seo/'
+        },
       },
       {
         label: 'Dropins',
@@ -299,7 +242,15 @@ export default defineConfig({
           }]
       },
       {
+        label: 'Launch',
+        collapsed: true,
+        autogenerate: {
+          directory: '/launch/'
+        },
+      },
+      {
         label: 'Toubleshooting',
+        collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
         }
