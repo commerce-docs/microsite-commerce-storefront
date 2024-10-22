@@ -43,7 +43,6 @@ export default defineConfig({
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
     '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
     '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
-    '/launch': '/developer/commerce/storefront/launch',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
