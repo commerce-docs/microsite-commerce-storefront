@@ -6,70 +6,125 @@ sidebar:
   order: 6
 ---
 
+import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+import cartModel from '_includes/cartModel.ts?raw';
 
 The Cart dropin provides API functions that allow developers to retrieve and display detailed cart information dynamically.
 
 ## addProductsToCart
 
-This function adds products to a cart. It takes `sku`, `quantity`, and `optionsUIDs` as parameters.
-
-```javascript
-import { addProductsToCart } from '@/cart/api/addProductsToCart';
-
-addProductsToCart(
-  Array<{
-    sku: string;
-    quantity: number;
-    optionsUIDs?: string[];
-  }>
-);
-```
-
-Here's the shape of the data returned from the `addProductsToCart` function:
+The `addProductsToCart` function adds products to a cart. You must supply a `sku` and `quantity`for each product. The other parameters are specified for complex product types. The function calls the [`addProductsToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/) mutation.
 
 ```ts
-type CartModel = {
-  id: string;
-  totalQuantity: number;
-  errors?: ItemError[];
-  items: Item[];
-  miniCartMaxItems: Item[];
-  total: {
-    includingTax: Price;
-    excludingTax: Price;
-  };
-  discount?: Price;
-  subtotal: {
-    excludingTax: Price;
-    includingTax: Price;
-    includingDiscountOnly: Price;
-  };
-  appliedTaxes: TotalPriceModifier[];
-  totalTax?: Price;
-  appliedDiscounts: TotalPriceModifier[];
-  shipping?: Price;
-  isVirtual?: boolean;
-  addresses: {
-    shipping?: {
-      countryCode: string;
-      zipCode?: string;
-      regionCode?: string;
-    }[];
-  };
-  isGuestCart?: boolean;
-};
+export const addProductsToCart = async (
+  items: {
+    sku: string;
+    parentSku?: string;
+    quantity: number;
+    optionsUIDs?: string[];
+    enteredOptions?: { uid: string; value: string }[];
+  }[]
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['sku', 'string', 'Yes', 'The SKU of the product.'],
+    ['parentSku', 'string', 'No', 'For a child product, the SKU of its parent product.'],
+    ['quantity', 'number', 'Yes', 'The amount or number of an item to add.'],
+    ['optionsUIDs', 'string[]', 'No', 'The selected options for the base product, such as color or size, using the unique ID for an object.'],
+    ['enteredOptions', '{ uid: string; value: string }[]', 'No', 'An array of entered options for the base product, such as personalization text.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} lang="ts" frame="none" />
+
+### Usage
+
+To add a simple product to the cart:
+
+```js
+addProductsToCart([
+  {
+    sku: 'VA19-GO-NA',
+    quantity: 1,
+  },
+]);
+```
+
+To add a configurable product to the cart:
+
+```js
+addProductsToCart([
+  {
+    sku: 'VSW01',
+    quantity: 1,
+    optionsUIDs: ['Y29uZmlndXJhYmxlLzE1Ny8zMQ==', 'Y29uZmlndXJhYmxlLzE5MC80NA=='],
+  },
+]);
+```
+
+## applyCouponsToCart
+
+The `applyCouponsToCart` function applies one or more predefined coupon codes to the specified cart. Any previously applied coupons are replaced. The function calls the [`applyCouponsToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupons/) mutation.
+
+```ts
+export const applyCouponsToCart = async (
+  couponCodes: string[],
+    type: ApplyCouponsStrategy
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['couponCodes', 'string', 'Yes', 'An array of coupon codes to apply to the cart.'],
+    ['type', 'ApplyCouponsStrategy', 'Yes', 'Indicates whether the specified coupons replace (REPLACE) or are added (APPEND) to any previously applied coupons.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To apply a single coupon, replacing any existing coupons in the cart:
+
+```js
+import { applyCouponsToCart } from '@/cart/api/applyCouponsToCart';
+
+applyCouponsToCart(['COUPON1'], 'REPLACE');
+```
+
+To apply multiple coupons to the cart:
+
+```js
+import { applyCouponsToCart } from '@/cart/api/applyCouponsToCart';
+
+applyCouponsToCart(['COUPON1', 'COUPON2', 'COUPON3'], 'APPEND');
 ```
 
 ## createEmptyCart
 
-A function that returns a new empty cart ID.
+The `createEmptyCart` function creates an empty shopping cart for a guest or logged in customer. It returns a cart ID. The function calls the [`createEmptyCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/create-empty-cart/) mutation.
 
-```js
-import { createEmptyCart } from '@/cart/api/createEmptyCart';
-
-createEmptyCart();
+```ts
+export const createEmptyCart = async();
 ```
+
+### Returns
 
 The data returned is a new empty cart ID as a string:
 
@@ -77,9 +132,33 @@ The data returned is a new empty cart ID as a string:
 type EmptyCartId = string;
 ```
 
+### Usage
+
+To create an empty cart:
+
+```js
+import { createEmptyCart } from '@/cart/api/createEmptyCart';
+
+createEmptyCart();
+```
+
 ## getCartData
 
-A function that returns current cart data.
+The `getCartData` function returns detailed information about the user's shopping cart. The function gets the user's authentication status and cart ID from the `State` object and runs the [`cart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/cart/) query on behalf of the customer or guest.
+
+```ts
+export const getCartData = async (): Promise<CartModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To get detailed information about the user's shopping cart:
 
 ```js
 import { getCartData } from '@/cart/api/getCartData';
@@ -87,44 +166,50 @@ import { getCartData } from '@/cart/api/getCartData';
 getCartData();
 ```
 
-Here's the shape of the data returned from the `getCartData` function:
-
-```ts
-type CartModel = {
-  id: string;
-  totalQuantity: number;
-  errors?: ItemError[];
-  items: Item[];
-  miniCartMaxItems: Item[];
-  total: {
-    includingTax: Price;
-    excludingTax: Price;
-  };
-  discount?: Price;
-  subtotal: {
-    excludingTax: Price;
-    includingTax: Price;
-    includingDiscountOnly: Price;
-  };
-  appliedTaxes: TotalPriceModifier[];
-  totalTax?: Price;
-  appliedDiscounts: TotalPriceModifier[];
-  shipping?: Price;
-  isVirtual?: boolean;
-  addresses: {
-    shipping?: {
-      countryCode: string;
-      zipCode?: string;
-      regionCode?: string;
-    }[];
-  };
-  isGuestCart?: boolean;
-}
-```
-
 ## getEstimatedTotals
 
 A function that returns estimated totals for cart based on an address. It takes an `address` parameter.
+
+```ts
+export const getEstimatedTotals = async (
+  address: EstimateAddressShippingInput
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'EstimateAddressShippingInput', 'Yes', 'Defines the shipping address for the estimate.',],
+  ]}
+/>
+
+The `EstimateAddressShippingInput` object has the following parameters:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['countryCode', 'string', 'Yes', "The two-letter code representing the user's country."],
+    ['postcode', 'string', 'No', "The user's ZIP or postal code."],
+    ['region', 'object', 'No', 'An object containing the region name, region code, and region ID.'],
+    ['region.region', 'string', 'No', 'The state or province name.'],
+    ['region.id', 'number', 'No', 'The unique ID for a pre-defined region.'],
+    ['shipping_method', 'object', 'No', 'Defines the shipping carrier and method.'],
+    ['shipping_method.carrier_code', 'string', 'No', 'A string that identifies a commercial carrier or an offline delivery method.'],
+    ['shipping_method.method_code', 'string', 'No', 'A string that indicates which service a commercial carrier will use to ship items.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To get estimated totals for the cart based on an address:
 
 ```js
 import { getEstimatedTotals } from '@/cart/api/getEstimatedTotals';
@@ -144,46 +229,42 @@ getEstimatedTotals([
 ]);
 ```
 
-Here's the shape of the data returned from the `getEstimatedTotals` function:
-
-```ts
-type EstimatedTotals = {
-  cartId: string;
-  address: {
-    countryCode: string;
-    postcode?: string;
-    region?: {
-      region?: string;
-      code?: string;
-      id?: number;
-    },
-  },
-  shippingMethod: {
-    carrierCode: string;
-    methodCode: string;
-  },
-};
-```
-
 ## getEstimateShipping
 
-A function that returns estimated shipping methods based on country ID. It takes the `countryCode`, `postcode`, and `region.code` parameters.
+The `getEstimateShipping` function returns a list of shipping methods and the estimated shipping costs, based on the country ID. The function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods) mutation. It also calls the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query to populate the list of countries, the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/) query to populate the list of regions within the selected country. and the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query to help resolve the shipping costs.
 
-```js
-import { getEstimateShipping } from '@/cart/api/getEstimateShipping';
-
-getEstimateShipping(
-  {
-    countryCode: string;
-    postcode?: string;
-    region?: {
-      code?: string;
-    }
-  }
-);
+```ts
+export const getEstimateShipping = async (
+  address: EstimateAddressInput
+): Promise<any | null>
 ```
 
-Here's the shape of the data returned from the `getEstimateShipping` function:
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'EstimateAddressInput', 'No', 'Defines the shipping address for the estimate.'],
+  ]}
+/>
+
+The `EstimateAddressInput` object has the following parameters:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['countryCode', 'string', 'Yes', "The two-letter code representing the user's country."],
+    ['postcode', 'string', 'No', "The user's ZIP or postal code."],
+    ['region', 'object', 'No', 'An object containing the region name, region code, and region ID.'],
+    ['region.region', 'string', 'No', 'The state or province name.'],
+    ['region.code', 'string', 'No', 'The address region code.'],
+    ['region.id', 'number', 'No', 'The unique ID for a pre-defined region.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that contains shipping data or null. The `EstimatedShipping` object has the following shape:
 
 ```ts
 type EstimatedShipping = {
@@ -195,26 +276,41 @@ type EstimatedShipping = {
       region?: string;
       code?: string;
       id?: number;
-    },
-  },
+    };
+  };
   shippingMethod: {
     carrierCode: string;
     methodCode: string;
-  },
+  };
 };
+```
+
+### Usage
+
+To get an estimate of the shipping costs:
+
+```js
+import { getEstimateShipping } from '@/cart/api/getEstimateShipping';
+
+getEstimateShipping({
+  countryCode: 'US',
+  region: {
+    code: 'NY',
+  },
+});
 ```
 
 ## getStoreConfig
 
-A function that returns information about a store's configuration.
+The `getStoreConfig` function returns information about a store's configuration. The function calls the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query.
 
-```js
-import { getStoreConfig } from '@/cart/api/getStoreConfig';
-
-getStoreConfig();
+```ts
+export const getStoreConfig = async (): Promise<StoreConfigModel | null>
 ```
 
-Here's the shape of the data returned from the `getStoreConfig` function:
+### Returns
+
+Returns a promise that resolves to a `StoreConfigModel` object or null. The `StoreConfigModel` object has the following shape:
 
 ```ts
 type StoreConfigModel = {
@@ -238,9 +334,33 @@ type StoreConfigModel = {
 };
 ```
 
+### Usage
+
+To get information about a store's configuration:
+
+```js
+import { getStoreConfig } from '@/cart/api/getStoreConfig';
+
+getStoreConfig();
+```
+
 ## initializeCart
 
-A function that initializes either a guest or customer Cart.
+The `initializeCart` function initializes a guest or customer cart.
+
+```ts
+export const initializeCart = async (): Promise<CartModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To initialize a cart:
 
 ```js
 import { initializeCart } from '@/cart/api/initializeCart';
@@ -248,45 +368,47 @@ import { initializeCart } from '@/cart/api/initializeCart';
 initializeCart();
 ```
 
+## refreshCart
 
-Here's the shape of the data returned from the `initializeCart` function:
+This function refreshes the cart data. It emits the `'cart/updated'` and `'cart/data'` event.
 
 ```ts
-type CartModel = {
-  id: string;
-  totalQuantity: number;
-  errors?: ItemError[];
-  items: Item[];
-  miniCartMaxItems: Item[];
-  total: {
-    includingTax: Price;
-    excludingTax: Price;
-  };
-  discount?: Price;
-  subtotal: {
-    excludingTax: Price;
-    includingTax: Price;
-    includingDiscountOnly: Price;
-  };
-  appliedTaxes: TotalPriceModifier[];
-  totalTax?: Price;
-  appliedDiscounts: TotalPriceModifier[];
-  shipping?: Price;
-  isVirtual?: boolean;
-  addresses: {
-    shipping?: {
-      countryCode: string;
-      zipCode?: string;
-      regionCode?: string;
-    }[];
-  };
-  isGuestCart?: boolean;
-};
+export const refreshCart = async (): Promise<CartModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To refresh the cart data:
+
+```ts
+import { refreshCart } from '@/cart/api/refreshCart';
+
+refreshCart();
 ```
 
 ## resetCart
 
-A function that resets the cart.
+This function resets the cart. As a result, the cart ID is set to null and the authenticated status is set to false.
+
+```ts
+export const resetCart = (): Promise<CartModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To reset the cart:
 
 ```js
 import { resetCart } from '@/cart/api/resetCart';
@@ -294,62 +416,65 @@ import { resetCart } from '@/cart/api/resetCart';
 resetCart();
 ```
 
-Here's the shape of the data returned from the `resetCart` function:
-
-```ts
-type Cart = {
-  cartId: null;
-  authenticated: false;
-};
-
-```
-
 ## updateProductsFromCart
 
-A function that updates products in cart. It takes the `uid` and `quantity` parameters.
+The `updateProductsFromCart` function updates the quantity of a product in the cart. The specified quantity replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the [`updateCartItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutation.
+
+```ts
+export const updateProductsFromCart = async (
+  items: UpdateProductsFromCart
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['items','UpdateProductsFromCart','Yes','An input object that defines products to be updated.'],
+  ]}
+/>
+
+The `UpdateProductsFromCart` object has the following parameters:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['uid', 'string', 'Yes', 'The unique ID of an item in the cart.'],
+    ['quantity', 'number', 'Yes', 'The new quantity of the item.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Usage
+
+To changes the quantity of an item in the cart to 3.
 
 ```js
 import { updateProductsFromCart } from '@/cart/api/updateProductsFromCart';
 
 updateProductsFromCart([
   {
-    uid: string,
-    quantity: number,
+    uid: ''VA19-GO-NA,
+    quantity: 3,
   },
 ]);
 ```
 
-Here's the shape of the data returned from the `updateProductsFromCart` function:
+To remove the item from the cart.
 
-```ts
-type CartModel = {
-  id: string;
-  totalQuantity: number;
-  errors?: ItemError[];
-  items: Item[];
-  miniCartMaxItems: Item[];
-  total: {
-    includingTax: Price;
-    excludingTax: Price;
-  };
-  discount?: Price;
-  subtotal: {
-    excludingTax: Price;
-    includingTax: Price;
-    includingDiscountOnly: Price;
-  };
-  appliedTaxes: TotalPriceModifier[];
-  totalTax?: Price;
-  appliedDiscounts: TotalPriceModifier[];
-  shipping?: Price;
-  isVirtual?: boolean;
-  addresses: {
-    shipping?: {
-      countryCode: string;
-      zipCode?: string;
-      regionCode?: string;
-    }[];
-  };
-  isGuestCart?: boolean;
-}
+```js
+import { updateProductsFromCart } from '@/cart/api/updateProductsFromCart';
+
+updateProductsFromCart([
+  {
+    uid: 'VA19-GO-NA',
+    quantity: 2,
+  },
+]);
 ```
