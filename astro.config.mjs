@@ -143,6 +143,7 @@ export default defineConfig({
       },
       {
         label: 'Dropins',
+        collapsed: true,
         items: [
           {
             label: 'Overview',
