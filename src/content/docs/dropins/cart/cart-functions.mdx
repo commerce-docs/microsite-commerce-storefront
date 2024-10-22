@@ -36,18 +36,8 @@ export const addProductsToCart = async (
     ['sku', 'string', 'Yes', 'The SKU of the product.'],
     ['parentSku', 'string', 'No', 'For a child product, the SKU of its parent product.'],
     ['quantity', 'number', 'Yes', 'The amount or number of an item to add.'],
-    [
-      'optionsUIDs',
-      'string[]',
-      'No',
-      'The selected options for the base product, such as color or size, using the unique ID for an object.',
-    ],
-    [
-      'enteredOptions',
-      '{ uid: string; value: string }[]',
-      'No',
-      'An array of entered options for the base product, such as personalization text.',
-    ],
+    ['optionsUIDs', 'string[]', 'No', 'The selected options for the base product, such as color or size, using the unique ID for an object.'],
+    ['enteredOptions', '{ uid: string; value: string }[]', 'No', 'An array of entered options for the base product, such as personalization text.'],
   ]}
 />
 
@@ -88,7 +78,8 @@ The `applyCouponsToCart` function applies one or more predefined coupon codes to
 
 ```ts
 export const applyCouponsToCart = async (
-  couponCodes: string[]
+  couponCodes: string[],
+    type: ApplyCouponsStrategy
 ): Promise<CartModel | null>
 ```
 
@@ -96,7 +87,8 @@ export const applyCouponsToCart = async (
   compact
   options={[
     ['Parameter', 'Type', 'Req?', 'Description'],
-    ['couponCodes', 'string', 'No', 'An array of coupon codes to apply to the cart.'],
+    ['couponCodes', 'string', 'Yes', 'An array of coupon codes to apply to the cart.'],
+    ['type', 'ApplyCouponsStrategy', 'Yes', 'Indicates whether the specified coupons replace ('REPLACE') or are added ('APPEND') to any previously applied coupons.'],
   ]}
 />
 
@@ -108,20 +100,20 @@ Returns a promise that resolves to a `CartModel` object or null. The `CartModel`
 
 ### Usage
 
-To apply or replace a single coupon to the cart:
+To apply a single coupon, replacing any existing coupons in the cart:
 
 ```js
 import { applyCouponsToCart } from '@/cart/api/applyCouponsToCart';
 
-applyCouponsToCart(['COUPON1']);
+applyCouponsToCart(['COUPON1'], 'REPLACE');
 ```
 
-To apply or replace multiple coupons to the cart:
+To apply multiple coupons to the cart:
 
 ```js
 import { applyCouponsToCart } from '@/cart/api/applyCouponsToCart';
 
-applyCouponsToCart(['COUPON1', 'COUPON2', 'COUPON3']);
+applyCouponsToCart(['COUPON1', 'COUPON2', 'COUPON3'], 'APPEND');
 ```
 
 ## createEmptyCart
