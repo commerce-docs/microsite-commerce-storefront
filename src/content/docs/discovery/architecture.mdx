@@ -3,31 +3,15 @@ title: Storefront architecture
 description: Learn how to plan, develop, and launch a headless Adobe Commerce storefront with Edge Delivery Services.
 ---
 
+import { Aside, CardGrid, Card, Tabs, TabItem } from '@astrojs/starlight/components';
 import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
+import Task from '@components/Task.astro';
+import Tasks from '@components/Tasks.astro';
 
 If you're looking for guidance about launching a production-ready, headless Adobe Commerce storefront with [Edge Delivery Services](https://www.aem.live/), you're in the right place!
 
 ## Big picture
-
-In the [create your storefront](/get-started/) tutorial, you learned how to quickly create a new project based on the [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce). The boilerplate provides a starter storefront that uses a pre-configured Adobe Commerce environment.
-
-The next step is to plan, develop, optimize, and launch a production-ready storefront connected to your own Adobe Commerce instance and storefront services. Here's an overview of the process:
-
-<Diagram caption="Storefront project planning and delivery process.">
-  ![Storefront project planning and delivery process.](@images/implementation/implementation-overview-v1.svg)
-</Diagram>
-
-<Callouts>
-
-1. **Discovery**: Understand the requirements and goals of the project.
-1. **Setup**: Configure the project environment and tools.
-1. **Marketing and SEO**: Optimize the storefront for search engines and marketing campaigns.
-1. **Launch**: Deploy the storefront to a production environment.
-
-</Callouts>
-
-## Composability
 
 Headless Adobe Commerce storefronts on Edge Delivery Services are built using a composable architecture with domain-driven commerce components called [dropins](/dropins/all/introduction/). This architecture allows you to build and deploy a storefront that is composed of multiple Adobe services, each with its own responsibility. Dropins are connected through APIs and can be developed, tested, and deployed independently for faster development cycles.
 
@@ -36,9 +20,149 @@ Dropins rely on [Adobe Commerce](https://developer.adobe.com/commerce/webapi/gra
 The following diagram illustrates the composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services:
 
 <Diagram caption="Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.">
-  ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.](@images/implementation/headless-architecture-v3.svg)
+  ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.](@images/implementation/headless-architecture-v4.svg)
 </Diagram>
 
 :::note
 Although not represented in this diagram, [API Mesh for Adobe Developer App Builder](https://developer.adobe.com/graphql-mesh-gateway/) is an option for integrating multiple APIs into a single API endpoint. It can be used to aggregate data from multiple APIs and provide a single endpoint for the storefront to consume.
 :::
+
+## Storefront
+
+The storefront is the front-end layer of your Adobe Commerce site. It is responsible for rendering the user interface and providing a seamless shopping experience for customers. The storefront is built using a combination of dropins, widgets, and front-end blocks that are connected to Adobe Commerce and other services through APIs and hosted on Edge Delivery Services.
+
+The Commerce boilerplate provides an integrated set of dropins and widgets that you can use to build a headless Adobe Commerce storefront on Edge Delivery Services. See [Create your storefront](/get-started/) for more information.
+
+:::note
+If you have an existing Adobe Commerce storefront (Luma or PWA Studio), you can migrate it to Edge Delivery Services in phases using a [Luma Bridge](/discovery/luma-bridge/).
+:::
+
+## Dropins and widgets
+
+[Dropins]([dropins](/dropins/all/introduction/)) are domain-driven commerce components that provide specific functionality for your storefront. They are designed to be reusable and can be shared across multiple projects. Dropins are connected to Adobe Commerce and other services through APIs and can be developed, tested, and deployed independently for faster development cycles.
+
+You can find the integration patterns for dropins and widgets as pull requests in the [Commerce boilerplate repository](https://github.com/hlxsites/aem-boilerplate-commerce).
+
+The PLP/Search and autocomplete widgets can be fully customized. You can create project-specific forks of the source code [repository](https://github.com/adobe/storefront-product-listing-page). The boilerplate uses a [fork](https://github.com/herzog31/storefront-product-listing-page) with more optimizations. Review open pull requests, which might contain unmerged improvements for Edge Delivery Services.
+
+The source code of dropins is private. You can add them to your project as NPM packages:
+
+ * `@dropins/storefront-cart`
+ * `@dropins/storefront-checkout`
+ * `@dropins/storefront-auth`
+ * `@dropins/storefront-account`
+ * `@dropins/storefront-order`
+ * `@dropins/storefront-order-confirmation`
+ * `@dropins/storefront-pdp`
+ * `@dropins/tools`
+  
+:::note
+Adobe recommends using the documented [extension](/dropins/all/extending/) patterns for dropins.
+:::
+
+If you cannot use dropins and widgets, use the custom PDP and PLP/Search blocks that come with the Commerce boilerplate.
+
+## Front-end blocks
+
+Blocks are the fundamental parts of a page delivered by Edge Delivery Services. A block encapsulates styling and code that drives the logical components of pages.
+
+Edge Delivery Services comes with a comprehensive library of predefined "content" and "commerce" blocks, which can be customized to meet your project needs. Code for Edge Delivery Services projects is managed in GitHub. The code is then deployed to the Edge Delivery Services platform, where it is hosted and served to end users.
+
+### Content blocks
+
+The Edge Delivery Services components that provide the content and layout for non-commerce pages on the storefront. These include Cards, Columns, Headers, Footers, and many more. See [block collection](https://www.aem.live/developer/block-collection) for more information.
+
+### Commerce blocks
+
+Compared to content blocks, commerce blocks enable Adobe Commerce functionality (such as cart, checkout, and account) and can become quite complex. They are built using the same principles as content blocks but are more tightly integrated with Adobe Commerce APIs.
+
+Using a frontend framework can help manage the complexity. In the Commerce boilerplate, you can find examples of blocks that use a buildless version of [Preact](https://preactjs.com/) and [HTM](https://github.com/developit/htm). You should only use it for blocks that require complex state management with different render states. Otherwise, stick with plain JavaScript.
+
+Use the [existing blocks](/get-started/storefront-structure/) in the Commerce boilerplate as a reference (for example, teaser and product recommendations). If you want to use React, it's possible, but not recommended. React is usually too heavy (size + execution) to achieve perfect Lighthouse scores.
+
+## Adobe Commerce
+
+Adobe Commerce is the backend system that powers your Commerce storefront. You must use version 2.4.7 or later with the storefront compatibility package installed.
+
+Before starting the project, ensure that your Adobe Commerce backend meets the following requirements:
+
+* **Product license**: Cloud or on-premises (Magento Open Source is not supported)
+* **Version**: v2.4.7
+* **PHP**: 8.3/8.2 for Adobe Commerce 2.4.7
+* **Storefront services**: Ensure that the latest version of following services are installed and configured:
+  * Data Connection service
+  * Services Connector
+  * Catalog Service
+  * Live Search
+  * Product Recommendations
+
+:::note
+The following links provide the requirements and installation procedures for your Adobe Commerce backend:
+
+- [System requirements for cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
+- [Setup for Commerce on cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/overview)
+:::
+
+## Storefront services
+
+When connecting your storefront dropins to your own instance of Adobe Commerce, you must ensure that your Commmerce backend is configured with the services described here. These services are required for Commerce dropins to function properly.
+
+:::note[Adobe Commerce Services Guides]
+For a complete list of merchandising services available for your Adobe Commerce storefront, refer to the [Adobe Commerce Services Guides](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/home). Direct links to the required services are provided below.
+:::
+
+Storefront services are a set of multi-tenant services (shared app, many users, separate data) that provide access to storefront data via GraphQL APIs. These services are very fast and are not tied to scaling constraints of a Commerce environment. They provide read-only access to catalog data, which can drive product detail and list pages, search, navigation, and product recommendations. [Synchronized data](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) is stored in a "SaaS data space" available through Adobe IMS. 
+
+Availability and setup of these services are a hard requirement for building a storefront on Edge Delivery Services because only these APIs provide the performance to build sites with a 100 Lighthouse score. The storefront services APIs are available in addition to the core Adobe Commerce [GraphQL APIs](https://developer.adobe.com/commerce/webapi/graphql/). 
+    
+This page provides an overview of the services required for your Adobe Commerce storefront.
+
+<Tasks>
+
+<Task>
+
+### Data Connection service
+
+The Data Connection extension connects your Adobe Commerce storefront to the Adobe Experience Platform and the Edge Network so that you can enrich and personalize the shopping experience for your customers. Refer to the [Data Connection Guide](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/data-connection/overview) for details and installation instructions.
+
+</Task>
+
+<Task>
+
+### Services Connector
+
+The Services Connector connects your Commerce storefront to the Commerce backend services listed below. Refer to the [Commerce Services Connector Guide](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details and installation instructions.
+
+</Task>
+
+<Task>
+### Catalog Service
+
+The Catalog Service module provides fast read-only access to Commerce catalog data. The Product Details dropin requires this service to render product data in the storefront. Refer to the [Catalog Service Guide](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/catalog-service/guide-overview) for details and installation instructions.
+
+</Task>
+
+<Task>
+### Live Search
+
+The Live Search service replaces the default Commerce catalog search and installs the Product Listing Page (PLP) widget in your storefront. Refer to the [Live Search Guide](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/live-search/overview) for details and installation instructions.
+
+:::caution[Multiple stores in a single Adobe Commerce environment]
+When using a single Adobe Commerce environment for multiple stores and only a single store should be migrated to Edge Delivery Services, you may need to contact Adobe Commerce Support to ensure that Live Search is activated without disabling Elasticsearch, which should continue to drive the search of the other stores.
+:::
+
+</Task>
+
+<Task>
+### Product Recommendations
+
+Product Recommendations uses artificial intelligence and machine-learning algorithms ([Adobe Sensei](https://business.adobe.com/products/sensei/adobe-sensei.html)) to create personalized storefront experiences. While not a strict requirement, we recommended it for Commerce storefronts. Refer to the [Product Recommendations Guide](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/product-recommendations/guide-overview) for details and installation instructions.
+
+It provides data for product recommendations for the current shopper context and surfaces "units" such as "Customers who viewed this product also viewed" and can be placed in several areas of the site. You can configure the behavior of the service in Adobe Commerce Admin.
+
+</Task>
+</Tasks>
+
+## Edge Delivery Services
+
+Edge Delivery Services is a cloud-based content delivery network (CDN) that provides a scalable, secure, and high-performance platform for delivering your Adobe Commerce storefront to customers around the world. It is designed to deliver dynamic content at the edge, close to the end user, to reduce latency and improve performance.
