@@ -1,0 +1,96 @@
+---
+title: PDP dropin initialization
+description: Learn about the configuration options for the PDP initializer.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+Customizing the PDP dropin initializers can help you meet your project requirements and use cases.
+
+## Configuration options
+
+The PDP dropin initializers allow you to define the language definitions, default locale, and models that your project will use.
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['defaultLocale', 'string', 'No', 'Specifies the default locale. If not provided, defaults to en-US.'],
+    ['models', 'object', 'No', 'Defines the data structure and initial data. Options include initialData, transform, and fallBackData.'],
+  ]}
+/>
+
+:::note
+Models are used to define the data structure and initial data for the PDP dropin. The `initialData` object contains product details, options, and attributes.
+:::
+
+## Example
+
+The following code shows the default implementation of the PDP dropin initializer in the Commerce boilerplate:
+
+```typescript
+// Define the models object with a ProductDetails property
+const models = {
+ProductDetails: {
+  initialData: { ...product },
+  },
+};
+
+// Initialize Dropins
+initializers.register(productApi.initialize, {
+  langDefinitions,
+  models,
+});
+```
+
+## Set default product options
+
+When a user navigates to the product detail page (PDP) on your site, you can set certain options as preselected defaults for complex products. This use case allows merchandisers to set default options through the Adobe Commerce Admin, which provides a more customized and streamlined shopping experience.
+
+Default option selection is _not_ supported out-of-the-box for complex products. Instead, you must use [product attributes](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/product-attributes/product-attributes) and customize the PDP dropin initializers to define which attribute and value is used by default.
+
+<Steps>
+
+1. Log in to the Adobe Commerce Admin.
+
+1. Create a custom attribute (`default_options`) to define default options for each product.
+
+   :::note
+   Be sure to set **Visible on Catalog Pages on Storefront** to _Yes_.
+   :::
+
+1. Ensure that the `default_options` attribute has been [exported](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/saas-data-export/overview) to the Catalog Service _and_ that the attribute's `roles` field includes `visible_in_pdp`. See the [`ProductViewAttribute`](https://developer.adobe.com/commerce/services/graphql/catalog-service/products/#productviewattribute-type) type documentation for details.
+
+1. Use the [`products`](https://developer.adobe.com/commerce/services/graphql/catalog-service/products/#return-details-about-a-complex-product) query to find the `id` of the `default_options` attribute for each product.
+
+1. Add the `id` of the `default_options` attribute to the `initialData` object for each complex product.
+
+1. Use the `id` to set the `optionsUIDs` in the `initialData` object.
+
+   ```ts
+   // Define the models object with a ProductDetails property
+   const models = {
+     ProductDetails: {
+       initialData: {
+         ...initialData,
+         // Set the optionsUIDs for each product
+         optionsUIDs: [
+          '<id>', // Use the id of the default_options attribute for product 1
+          '<id>', // Use the id of the default_options attribute for product 2
+        ],
+       },
+     },
+   };
+
+   // Register Initializers
+   initializers.register(api.initialize, {
+     langDefinitions,
+     models,
+   });
+   ```
+
+</Steps>
