@@ -1,0 +1,69 @@
+---
+title: Luma Bridge
+description: Learn how to implement the Luma Bridge for your Adobe Commerce on Edge Delivery Services project.
+---
+
+import { Icon } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+
+This section provides guidance on how to implement the Luma Bridge for your Adobe Commerce on Edge Delivery Services project.
+
+Before starting an implementation, clarify the following:
+
+  * Architecture of the cart, checkout, and account pages
+  * Complexity of the cart, checkout, and account pages
+  * Requirements for customization of the cart, checkout, and account pages
+
+This information will help you decide whether to use Luma Bridge or a headless implementation for the cart, checkout, and account pages.
+
+## What is Luma Bridge?
+
+Luma Bridge is a session management mechanism between two storefronts:
+
+  * The main storefront (headless storefront) that is built using Adobe Commerce on Edge Delivery Services
+  * The Luma PHP storefront that is built using Adobe Commerce
+
+It allows you to reuse complex transactional parts of your storefront (such as, cart, checkout, and account) instead of rebuilding them. This approach provides a path for Adobe customers currently using Luma to migrate to a highly performant shopping experience. It focuses on converting the top of the funnel while keeping the last mile of the funnel in Luma. This allows you to benefit from Adobe innovations while preserving your investments in the existing storefront.
+
+If the previous discovery steps led to the conclusion that dropins can be used for cart, checkout, and account experiences, Luma Bridge is not necessary or can be reduced to parts that are not covered by dropins (for example, complex customizations). If existing headless implementations for cart, checkout, and account ([PWA Studio](https://github.com/magento/pwa-studio), [Vue Storefront](https://vuestorefront.io/)) are available, Luma Bridge is not necessary.
+
+## Where can I get it?
+
+Luma Bridge is available from the following providers:
+
+  * Adobe Consulting (reach out on [Discord](https://discord.com/channels/1131492224371277874/1220042081209421945))
+  * Atwix (https://www.atwix.com/)
+  * Atama ([open source](https://github.com/AtamaCo/luma-bridge), https://www.atama.co/)
+
+:::tip
+When using Luma Bridge, ensure that you have engineers on the project with backend PHP knowledge on Adobe Commerce.
+:::
+
+## How do I imeplement it?
+
+There are three options for integrating features from both Luma and Edge Delivery Services:
+
+* **[Session cookie only](https://developer.adobe.com/commerce/webapi/get-started/authentication/gs-authentication-session/)** (_recommended_)—Edge Delivery Services falls back to Luma for authentication and customer session handling.
+* **[Session cookie](https://developer.adobe.com/commerce/webapi/get-started/authentication/gs-authentication-session/)** + **[web API token](https://developer.adobe.com/commerce/webapi/get-started/authentication/gs-authentication-token/#customer-access)**—When a customer authenticates through Luma, the web API token must be generated as well. When a customer authenticates through Edge Delivery Services, the customer session cookie must also be generated. It is then the responsibility of Luma and Edge Delivery Services to manage both keys. This approach increases the complexity of authentication handling logic.
+* **[Web API token only](https://developer.adobe.com/commerce/webapi/get-started/authentication/gs-authentication-token/#customer-access)**—Although the most straightforward option, it isn't supported in Luma scenarios and requires modifications in the Luma authentication layer.
+
+:::note
+Adobe recommends the session cookie only option because it is the easiest to implement and the least risky.
+:::
+
+|                                                              | Session Cookie Only | Session Cookie + Web API Token | Web API Token Only |
+|--------------------------------------------------------------|---------------------|-------------------------------|--------------------|
+| Works out-of-the-box for Luma scenarios                      | <Icon name="approve-check" />              | <Icon name="approve-check" />                        | <Icon name="close" />            |
+| Works out-of-the-box for Edge Delivery Services scenarios                  | <Icon name="approve-check" />              | <Icon name="approve-check" />                        | <Icon name="approve-check" />             |
+| Does not require modifications to Luma authentication mechanisms and minimizes security risks | <Icon name="approve-check" />              | <Icon name="close" />                       | <Icon name="close" />            |
+| Supports seamless, custom user experience                                 | <Icon name="approve-check" />              | <Icon name="approve-check" />                        | <Icon name="approve-check" />             |
+| Minimizes complexity of the authentication handling logic for the client application | <Icon name="approve-check" />              | <Icon name="close" />                       | <Icon name="approve-check" />             |
+
+### Details
+
+* Edge Delivery Services relies on iFrames to render the Luma login form; avoiding potential issues with cross-site request forgery (CSRF) tokens that can only be generated by the Luma backend.
+* After a successful login, Luma scripts in the iFrame communicate back to the Edge Delivery Services parent window to perform necessary user interface updates without reloading the entire page.
+* When the customer session cookie is set, all GraphQL queries from the Edge Delivery Services storefront are automatically authenticated.
+* Edge Delivery Services uses invisible iFrames to invoke Luma logout.
+* Luma's authentication behavior remains unchanged.
+* Luma and Edge Delivery Services must be on the same domain and must use the same protocol.

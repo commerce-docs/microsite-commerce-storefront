@@ -1,0 +1,66 @@
+---
+title: Checklist
+description: Review resources about launching your Adobe Commerce on Edge Delivery Services storefront project.
+---
+
+import Callouts from '@components/Callouts.astro';
+import { Icon } from '@astrojs/starlight/components';
+
+Our launch resources are designed specifically to help ensure a smooth and successful lauch of your Commerce + Edge Delivery Services storefront project.
+
+Adobe Commerce projects usually require much more than a simple content delivery network (CDN) switch to launch. Ensure that the launch activities are well defined and planned. You should also consider a rollback plan.
+
+## Documentation
+
+For complete documentation on launching your storefront, visit the [Launch section](https://www.aem.live/docs/#launch) on the Adobe Experience Manager site or select the direct links below. You should also review the Commerce-specific [launch checklist](#launch-checklist).
+
+<Callouts color="#eb1000">
+
+1. [Go-Live Checklist](https://www.aem.live/docs/go-live-checklist): The go-live checklist is a summary of best practices to consider when launching a website.
+1. [Push Invalidation](https://www.aem.live/docs/setup-byo-cdn-push-invalidation): Automatically purge content on your production CDN, whenever an author publishes content changes.
+1. [Cloudflare Worker Setup](https://www.aem.live/docs/byo-cdn-cloudflare-worker-setup): Learn how to configure Cloudflare to deliver content.
+1. [Akamai Setup](https://www.aem.live/docs/byo-cdn-akamai-setup): Discover how to use the Akamai Property Manager to configure a property to deliver content.
+1. [Fastly Setup](https://www.aem.live/docs/byo-cdn-fastly-setup): This guide illustrates how to configure Fastly to deliver content.
+1. [CloudFront Setup](https://www.aem.live/docs/byo-cdn-cloudfront-setup): Set up Amazon Web Services Cloudfront to deliver your AEM site with push invalidation.
+1. [Bring your own DNS](https://www.aem.live/docs/byo-dns): A custom domain without having to set up a content delivery network.
+1. [Redirects](https://www.aem.live/docs/redirects): You can intuitively manage redirects as a spreadsheet called redirects (or redirects.xlsx) in the root of your project folder.
+
+</Callouts>
+
+## Launch checklist
+
+The launch of a new storefront can be an overwhelming and stressful process. If you don't have a checklist, you're likely to forget something.
+
+Tracking all the tasks that need to be completed before the launch of your Adobe Commerce on Edge Delivery Services storefront project is a best practice. This checklist will help you ensure that you have everything in place before you launch.
+
+During the development phase of your project, you'll encounter tasks around migrating implementations that were done on a development or staging environment to production. It is essential to keep track of these changes and make them reproducible on the production environment as part of the launch activities.
+
+:::caution
+Avoid scheduling a launch shortly before a weekend. The Adobe engineering team might have limited availability to fix critical issues if they occur.
+:::
+
+Start your checklist with the [Go-Live Checklist](https://www.aem.live/docs/go-live-checklist). For Commerce sites, you should prioritize SEO tasks. Additionally, consider the following action items.
+  
+* Switch to the Catalog Service production endpoint (https://catalog-service.adobe.io/graphql)
+  * Ensure a production environment is configured in the Service Connector (will result in a new `environmentId`).
+  * Sync the production catalog to the new production environment.
+  * Create a new Commerce production API key-pair and use the public key as the `x-api-key` value.
+  * Double check category IDs and make sure all category pages have a reference to the correct category.
+  * Update `environmentId` and `x-api-key` values in the `.helix/config.xlsx` file.
+  * Let the Catalog Service team know about the new production environment and launch date.
+
+* Use the production GraphQL endpoint `yourproject.com/graphql` (needs to be changed in the CDN).
+  * Make sure to also use this for all the Sidekick extensions and scripts (e.g. sitemap generation, image importer).
+
+* When using Adobe Commerce Fastly, request a new CDN purge token for Commerce production environment.
+  * Update in Sharepoint in the `.helix/config.xlsx` file (`authToken` and `serviceId`).
+
+* Verify/update links for password reset e-mail to match the Edge Delivery Service implementation in the Adobe Commerce Admin.
+* Verify the configuration of integrations and payment providers (reCAPTCHA, Adyen, Bazaarvoice).
+  * Provide and configure production keys.
+  * Verify that the new domains/subdomains are allowlisted and potential backend webhooks are working.
+
+* Add a `robots.txt` file.
+  * Block the `/drafts` path on the CDN to prevent any drafts from being publicly accessible on the production URL.
+  
+* Ensure that the site's Lighthouse score is green; targeting `100` on every page (taking into account previous considerations mentioned on this document).

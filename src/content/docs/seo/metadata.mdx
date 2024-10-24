@@ -1,0 +1,68 @@
+---
+title: Metadata
+description: Learn how to optimize metadata for Adobe Commerce storefronts on Edge Delivery Services.
+---
+
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+Adobe recommends uploading product metadata into Edge Delivery Services so that it can be rendered server-side on product detail pages. This is important so that Google Merchant Center can reliably verify entries from your product sheet. Also, social media sites, which don't usually parse JavaScript, can leverage this metadata to display rich previews of your product page links.
+
+Verify that all pages, especially catalog pages (PDP and PLP), contain the following metadata:
+
+| Type                      | Properties                                                                                                                                                              |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Document title            | `title`                                                                                                                                                                 |
+| Meta tags                 | `description`, `keywords`, `og:type`, `og:title`, `og:description`, `og:url`, `og:image`, `og:image:secure_url`, `og:product:price:amount`, `og:product:price:currency` |
+| Schema.org data (JSON-LD) | `WebSite`, `Product`, `AggregateRating`, `Rating`, `BreadcrumbList`                                                                                                     |
+
+:::note
+When importing pages, ensure that when a metadata block is present on a page, it does not contain any empty fields. This might lead to pages with missing titles, which Google penalizes.
+:::
+
+### Schema.org data (JSON-LD)
+
+JavaScript Object Notation for Linked Data (JSON-LD) is a structured data format that helps search engines understand the content of your web pages more explicitly. It is typically added as a script tag in the `<head>` of your HTML document.
+
+Adobe Commerce storefronts on Edge Delivery Services should include [schema.org](https://schema.org/) annotations to expose product data to search engines. This data should be included on all Commerce pages, especially PDPs and PLPs.
+
+You should compare the data available on the site before migrating to Edge Delivery Services to ensure that SKUs for all product variants are included. Use the [Rich Results Test](https://search.google.com/test/rich-results) to validate the schema.org annotations. The PDP dropin in the boilerplate contains an example for JSON-LD data.
+
+:::note
+If you are using Google Shopping features (for example, products available on `shopping.google.com`), consider schema.org annotations with critical priority. If a single JSON-LD annotation on the page is invalid, Google considers all annotations invalid.
+:::
+
+### Generate metadata
+
+You can use the [PDP Metadata Generator](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/pdp-metadata) tool to automate the process of generating all recommended metadata. The tool fetches product data from the Catalog Service, processes it, and generates a metadata spreadsheet in `.xslx` format. The spreadsheet can be used for the [bulk metadata](https://www.aem.live/docs/bulk-metadata) feature in Edge Delivery Services.
+
+<Aside type="cool" title="Prerequisites">
+* Node.js installed on your machine
+* Access to the Catalog Service with the necessary API keys and configuration
+* Commerce boilerplate repository cloned to your local machine
+</Aside>
+
+To generate metadata using the PDP Metadata Generator tool:
+
+<Steps>
+
+1. Navigate to the `tools/pdp-metadata/` directory in your local project.
+1. Install dependencies.
+  
+   ```bash
+   npm install
+   ```
+
+   :::note
+   Before running the tool, you must ensure that the `configFile` variable in the `pdp-metadata.js` file points to the correct configuration JSON file URL. This file contains the required parameters to access the Catalog Service API and should have been setup as part of your [project onboarding](/setup/commerce-configuration/).
+   :::
+
+1. Run the tool and generate a file named `metadata.xlsx` in the project directory.
+
+   ```bash
+   npm start
+   ```
+
+</Steps>
+
+The resulting `metadata.xlsx` file contains all recommended metadata for all of your products. See the [bulk metadata](https://www.aem.live/docs/bulk-metadata) documentation for instructions on how to upload the generated metadata file to Edge Delivery Services.

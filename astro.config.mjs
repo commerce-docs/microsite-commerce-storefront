@@ -39,15 +39,18 @@ export default defineConfig({
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
-    '/launch': '/developer/commerce/storefront/get-started/launch-checklist',
+    '/faq': '/developer/commerce/storefront/troublshooting/faq',
+    '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
+    '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
+    '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/pdp-slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/pdp-styles',
-    '/references/configurations': '/developer/commerce/storefront/get-started/configurations',
-    '/references/requirements': '/developer/commerce/storefront/get-started/requirements',
+    '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
   },
   integrations: [
     tailwind({
@@ -110,7 +113,36 @@ export default defineConfig({
         }
       },
       {
+        label: 'Discovery',
+        collapsed: true,
+        autogenerate: {
+          directory: '/discovery/'
+        },
+      },
+      {
+        label: 'Setup',
+        collapsed: true,
+        autogenerate: {
+          directory: '/setup/'
+        },
+      },
+      {
+        label: 'Analytics',
+        collapsed: true,
+        autogenerate: {
+          directory: '/analytics/'
+        },
+      },
+      {
+        label: 'SEO',
+        collapsed: true,
+        autogenerate: {
+          directory: '/seo/'
+        },
+      },
+      {
         label: 'Dropins',
+        collapsed: true,
         items: [
           {
             label: 'Overview',
@@ -210,11 +242,19 @@ export default defineConfig({
           }]
       },
       {
+        label: 'Launch',
+        collapsed: true,
+        autogenerate: {
+          directory: '/launch/'
+        },
+      },
+      {
         label: 'Toubleshooting',
+        collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
         }
-      }
+      },
       ]
     }), (await import("@playform/compress")).default({
       CSS: false,

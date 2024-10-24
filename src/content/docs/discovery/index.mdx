@@ -1,0 +1,155 @@
+---
+title: Overview
+description: Learn about Adobe Commerce on Edge Delivery Services project requirements, data validation, dropins, and Luma Bridge.
+---
+
+import Callouts from '@components/Callouts.astro';
+import Diagram from '@components/Diagram.astro';
+
+Before starting any Adobe Commerce on Edge Delivery Services project, you must conduct a discovery phase to scope the project and ensure that there are no major roadblocks or risks.
+
+## Big picture
+
+In the [create your storefront](/get-started/) tutorial, you learned how to quickly create a new project based on the [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce). The boilerplate provides a starter storefront that uses a pre-configured Adobe Commerce environment.
+
+The next step is to plan, build, optimize, and launch a production-ready storefront connected to your own Adobe Commerce instance and storefront services. Here's an overview of the process:
+
+<Diagram caption="Storefront project planning and delivery process.">
+  ![Storefront project planning and delivery process.](@images/implementation/implementation-overview-v1.svg)
+</Diagram>
+
+<Callouts>
+
+1. **Discovery**: Understand the requirements and goals of the project.
+1. **Setup**: Configure the project environment and tools.
+1. **Marketing and SEO**: Optimize the storefront for search engines and marketing campaigns.
+1. **Launch**: Deploy the storefront to a production environment.
+
+</Callouts>
+
+The discovery phase is important because Adobe Commerce is a highly customizable platform with a large thid-party extension ecosystem. Migrating an Adobe Commerce storefront to Edge Delivery Services is similar to migrating to a headless storefront (like [PWA Studio](https://developer.adobe.com/commerce/pwa-studio)).
+
+:::note[Important]
+The key requirement for a headless storefront implementation is that all required data is provided by APIs. Adobe Commerce provides all of the API coverage that you need for a successful implementation.
+:::
+
+## Existing storefronts
+
+There are a couple of options for modernizing your existing storefront with Edge Delivery Services:
+
+* **Progressive implementation**: Rebuild selected parts of the commerce funnel on Edge Delivery Services and the reuse the rest from your existing storefront.
+* **Full implementation**: Rebuild your entire storefront on Edge Delivery Services retire your existing storefront.
+
+A progressive implementation enables you to unlock business value with Edge Delivery Services sooner, minimizing the risks associated with migration. You can start by implementing the home page only and reusing the rest of your existing storefront. The next step could be implementing catalog with product listing, search, and product details and reusing cart, checkout, and account from your  existing storefront.
+
+This approach comes with the cost of maintaining two storefronts in parallel, so before you choose, assess which approach is right for you. These are the key factors to consider:
+
+* **Business metrics to improve**:
+  * What areas of your existing storefront drive business performance?
+  * What are the challenges based on the site analytics that you see?
+
+* **Level of storefront customization**:
+  * How many experiences are built with custom code on your storefront?
+  * Do these eexperiences rely on custom business logic?
+
+* **Third-party extensions**:
+  * How many third-party extensions are you using on your existing storefront?
+  * Do you need to connect to third-party services?
+
+* **B2B**:
+  * Are there any Adobe Commerce B2B modules enabled on your existing storefront?
+
+Adobe recommends the progressive implementation if any of the following are true:
+
+* The main business metrics are brand visibility in search engines, customer acquisition cost, and customer engagement.
+* The existing storefront is heavily customized in the areas of checkout and user account.
+* There are many third-party integrations in the existing storefront that affect transactional flow.
+* The existing storefront supports B2B use cases with Adobe Commerce modules.
+
+The full implementation is a better option if any of the following are true:
+
+* Your business objectives include improving customer conversion and re-engagement.
+* The current checkout flow only relies on a few thid-party integrations (for example, payments, shipping, taxes).
+* No Adobe Commerce B2B modules are enabled on the existing storefront.
+
+| Criteria                        | Progressive Implementation                                                                                                | Full Implementation                                                                                |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| **Description**                 | Rebuild selected parts of the commerce funnel on Edge Delivery Services and reuse the rest from your existing storefront. | Rebuild your entire storefront on Edge Delivery Services and retire your existing storefront.      |
+| **Business Metrics to Improve** | Brand visibility in search engines, customer acquisition cost, customer engagement.                                       | Customer conversion, customer re-engagement.                                                       |
+| **Level of Customization**      | Heavily customized in areas like checkout and user account.                                                               | Minimal customization, relies on a few third-party integrations (e.g., payments, shipping, taxes). |
+| **Third-Party Integrations**    | Many third-party integrations affecting transactional flow.                                                               | Few third-party integrations.                                                                      |
+| **B2B Modules**                 | Supports B2B use cases with Adobe Commerce modules.                                                                       | No Adobe Commerce B2B modules enabled.                                                             |
+| **Project Scope**               | Identify use cases for new and existing storefronts (e.g., catalog, product detail, cart, checkout, customer account).    | Verify use cases are available through Adobe Commerce GraphQL APIs.                                |
+| **Third-Party Extensions**      | Identify necessary extensions and their reliance on third-party services.                                                 | Identify necessary extensions and their reliance on third-party services.                          |
+| **Storefront Bridge Options**   | Plan to connect existing storefront with the new one (e.g., using Luma Bridge).                                           | Not applicable.                                                                                    |
+
+### Progressive implementation
+
+For the progressive implementation, you'll need to look into the following:
+
+* **Project scope**: Identify which use cases the new storefront will handle and which ones the existing storefront will continue to manage, such as catalog, product detail, cart, checkout, and customer account.
+* **Third-party extensions**: Identify the list of extensions you will need on your new storefront and determine if they rely on integrating third-party services.
+* **Storefront bridge options**: Plan to connect the existing storefront with the new one. If you are using Adobe Commerce native storefront with Luma, you can use the Luma Bridge.
+
+### Full implementation
+
+For the full implementation, the list of considerations is similar to the progressive implementation:
+
+* **Project scope**: Identify which use cases the new storefront will handle and verify that they are available through Adobe Commerce GraphQL APIs.
+* **Third-party extensions**: Identify the list of extensions you will need on your new storefront and determine if they rely on integrating third-party services.
+
+## Identify extensions
+
+Before starting the project, use the following list to create an inventory of the Adobe Commerce extensions that are actively being used. This will help you understand which extensions can be replaced by out-of-the-box Adobe Commerce functionality.
+
+* What extensions are currently in use?
+
+* What type of data do the extensions provide (for example, reviews)?
+
+* Is the data required on the frontend?
+    
+* How do the extensions expose the data (for example, GraphQL, REST API)?
+
+* Do the extensions expose an API to access data (for example, [Amasty Labels](https://amasty.com/docs/doku.php?id=magento_2:product_labels))? If not, create an action item to expose the required data through an API. Options include:
+
+  * Customize the Adobe Commerce Catalog Service exporter to export additional custom data to Catalog Service
+  * Create a custom Adobe Commerce GraphQL query
+  * Use [API Mesh for Adobe Developer App Builder](https://developer.adobe.com/graphql-mesh-gateway/)
+
+* Are any of the extensions for delivery options (for example, shipping/BOPIS), payments, or tax providers? If you use third-party solutions, clarify if they expose APIs on the frontend and if they provide their own set of dropin components for the frontend integration.
+
+## Project scope
+
+Document your use cases and requirements and create a plan for how you will implement them. Adobe offers pre-built components that accelerates development (dropins and widgets).
+
+Dropins are re-useable components that define the storefront shopping experience. They are framework agnostic and can be used in any context (Edge Delivery Services, AEM, Luma). However, this documentation focuses on the use of dropins in Edge Delivery Services projects using the [boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce). The dropin development roadmap is synchronised with Adobe Commerce APIs, so new API features are automatically available in dropins and widgets.
+
+Storefront widgets in Adobe Commerce Live Search are tools that enhance the search functionality on your site. Widgets are designed to improve the user experience by making search results more accessible and relevant. There are two main types of widgets:
+
+* **[Live Search Popover](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/live-search/live-search-storefront/storefront-popover)**: This widget appears as a box under the search field, displaying search results dynamically as users type their queries.
+* **[Product Listing Page (PLP)](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/live-search/live-search-storefront/plp-styling)**: This widget provides a searchable product listing page with facets and synonym support, making it easier for users to find products.
+
+:::note
+See the [dropins overview](/dropins/all/introduction/) for a list of all available dropins.
+:::
+
+### Use cases and requirements
+
+If you see gaps in what these components support, Adobe can help with the plan to achieve your scenarios. For example:
+
+* Identify if dropins can solve your use cases and requirements
+* Identify what use cases are already supported, what is a gap, and what needs to be implemented differently from what is available out-of-the-box
+* Reach out to the Adobe team early to share your use cases and get the recommendations about how to fulfill them: [commerce-storefront-compatibility@adobe.com](mailto:commerce-storefront-compatibility@adobe.com)
+
+The Live Search Popover and PLP has two integration paths:
+
+* Using the out-of-the-box hosted option where Adobe hosts the JavaScript file
+  
+    * Automatic updates for fixes and small features
+    * Small upgrades available for major or breaking features
+    * Can change some styling
+
+* Using the customized option where Adobe provides a reference implementation for the components
+
+    * Full control of customization and look and feel
+    * You host the library and own the total cost of ownership
