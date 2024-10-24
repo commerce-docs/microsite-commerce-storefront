@@ -161,11 +161,23 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              { label: 'Cart Installation', link: '/dropins/cart/cart-installation/' },
-              { label: 'Cart Styles', link: '/dropins/cart/cart-styles/' },
-              { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
-              { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
-              { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
+              { label: 'Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Styles', link: '/dropins/cart/cart-styles/' },
+              { label: 'Containers', collapsed: true,
+                items: [
+                  { label: 'Cart', link: '/dropins/cart/containers/cart/' },
+                  { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
+                  { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
+                  { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
+                  { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
+                  { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
+                  { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
+                  { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
+                ]
+              },
+
+              { label: 'Slots', link: '/dropins/cart/cart-slots/' },
+              { label: 'Functions', link: '/dropins/cart/cart-functions/' },
             ]
           },
           {
