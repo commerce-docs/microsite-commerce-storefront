@@ -3,290 +3,88 @@ title: Checkout installation
 description: Learn how to install and initialize the Checkout dropin on your site.
 ---
 
-import Aside from '@components/Aside.astro';
-import Callouts from '@components/Callouts.astro';
-import Diagram from '@components/Diagram.astro';
-import { Steps } from '@astrojs/starlight/components';
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-import Tasks from '@components/Tasks.astro';
-import Task from '@components/Task.astro';import OptionsTable from '@components/OptionsTable.astro';
+import OptionsTable from '@components/OptionsTable.astro';
 
-If you are not using the boilerplate template, you can follow the steps below to install the Checkout dropin on an existing Adobe Commerce storefront project.
+The Checkout dropin provides a customizable UI for the checkout process. The dropin is designed to be integrated into a your storefront and provides a seamless checkout experience for customers.
 
-<Aside type="note" title="Note">
-  Before installing the Checkout dropin, make sure that you have completed the [prerequisites](/get-started/requirements/).
-</Aside>
+## Installation
 
-## Workflow
+Since the Checkout dropin relies on containers from several other dropins, you must install and configure these dropins before you can use the Checkout dropin.
 
-The following diagram provides an overview of the installation process for the Checkout dropin:
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) includes all of the necessary dropins and configurations to help you get started quickly, so Adobe recommends relying on the boilerplate instead of installing, configuring, and integrating the dropins individually.
 
-<Diagram>![Dropin installation](@images/pdp/pdp-installation.svg)</Diagram>
+## Admin configuration
 
-## Step-by-step
+Before you can use the Checkout dropin on your storefront, you must enable and configure [payment providers](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/payments) and [checkout options](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/checkout-process) in the Adobe Commerce Admin.
 
-The following steps show how to install the Checkout dropin on your site.
-
-<Tasks>
-
-<Task>
-
-### Install the packages
-
-Use a CDN or NPM (recommended for performance) to install the dropin tools (`@dropins/tools`) and Checkout (`@dropins/storefront-checkout`) packages.
-
-<Tabs>
-  <TabItem label="NPM" icon="seti:npm">
-
-    ```bash frame="none"
-    npm install @dropins/tools @dropins/storefront-checkout
-    ```
-
-  </TabItem>
-  <TabItem label="CDN" icon="external">
-
-    ```html title="index.html" del={"Replace with actual URLs":5-7}
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Your Storefront</title>
-
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-checkout@latest"></script>
-    </head>
-    ```
-
-  </TabItem>
-</Tabs>
-
-:::note[Install @dropins/tools]
-All dropins require the `@dropins/tools` package. This package contains the libraries that dropins need to initialize and communicate, including the `fetch-graphql`, `event-bus`, and `initializer` utilities.
+:::note
+The Checkout dropin [overview](/dropins/checkout/) provides a summary of supported Adobe Commerce features.
 :::
 
-</Task>
+## Initializer configuration
 
-<Task>
+The Checkout dropin initializers allow you to define the language definitions and models that your project will use.
 
-### Map the packages
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['models', 'object', 'No', 'Defines the data structure and initial data. Options include initialData and transform.'],
+  ]}
+/>
 
-In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to a **custom local directory** or **CDN** (for run-time environments).
+:::note
+Models are used to define the necessary data structure when initializing the Checkout dropin.
+:::
 
-<Tabs>
-  <TabItem label="custom" icon="seti:folder">
-   This example shows an `importmap` added to a `head.html` file. The `importmap` points both packages to local directories that contain all the optimized/minified files from the dropin tools (@dropins/tools) and the Checkout dropin (@dropins/storefront-checkout):
+### Example
 
-   ```html title="head.html"
-   <script type="importmap">
-     {
-       "imports": {
-         "@dropins/tools/": "/scripts/__dropins__/tools/",
-         "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
-       }
-     }
-   </script>
-   <script src="/scripts/scripts.js" type="module"></script>
-  ```
-  </TabItem>
+The following code shows an example implementation of the Checkout dropin initializer configuration:
 
-  <TabItem label="CDN" icon="external">
-    This example shows an `importmap` pointing both packages to a CDN for the dropin tools (@dropins/tools) and the Checkout dropin (@dropins/storefront-checkout):
-
-    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
-    <head>
-      <script type="importmap">
-        {
-          "imports": {
-
-            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
-            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-checkout@latest",
-          }
-        }
-      </script>
-    </head>
-    ```
-  </TabItem>
-
-</Tabs>
-
-With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your Checkout dropin JavaScript file as described in the next step.
-
-</Task>
-
-<Task>
-
-### Import the required files
-
-Import the required files from the dropins tools (`@dropin/tools/initializers.js`) and the Checkout dropin (`@dropins/storefront-checkout`) into a JavaScript file for your Checkout dropin. The example here shows the imports added to a `commerce-checkout.js` file. These imports constitute the minimum imports you need to create a fully functioning Checkout dropin for your site:
-
-```js title="commerce-checkout.js"
-// Dropin Tools
-import { events } from '@dropins/tools/event-bus.js';
-import { initializers } from '@dropins/tools/initializer.js';
-
-// Dropin Functions
-import * as checkoutApi from '@dropins/storefront-checkout/api.js';
-
-// Dropin Provider
-import { render as checkoutProvider } from '@dropins/storefront-checkout/render.js';
-
-// Dropin Containers
-import BillToShippingAddress from '@dropins/storefront-checkout/containers/BillToShippingAddress.js';
-import BillingForm from '@dropins/storefront-checkout/containers/BillingForm.js';
-import ErrorBanner from '@dropins/storefront-checkout/containers/ErrorBanner.js';
-import EstimateShipping from '@dropins/storefront-checkout/containers/EstimateShipping.js';
-import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
-import MergedCartBanner from '@dropins/storefront-checkout/containers/MergedCartBanner.js';
-import OutOfStock from '@dropins/storefront-checkout/containers/OutOfStock.js';
-import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
-import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
-import ShippingForm from '@dropins/storefront-checkout/containers/ShippingForm.js';
-import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
+```ts
+// Initialize dropin
+initializers.register(checkoutApi.initialize, {
+  langDefinitions,
+  models,
+});
 ```
 
-</Task>
+### Set language definitions
 
-<Task>
+The `langDefinitions` property is used to define and register language packs for the Checkout dropin. This allows you to provide localized text for different languages in your application.
 
-### Connect to the endpoint
+```ts
+// Define the language packs for your application
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
 
-Connect your Checkout dropin to the GraphQL endpoint of your Adobe Commerce instance as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce instance:
+// Register the checkout dropin with language definitions
+const langDefinitions = {
+  default: en_US,
+  en_US,
+  fr_FR,
+};
 
-```js title="commerce-checkout.js"
-// Set endpoint configuration
-product.setEndpoint('http://<commerce-server>/graphql');
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
+});
 ```
 
-</Task>
+### Set initial data
 
-<Task>
+The `initialData` property is used to define the initial data for the Checkout dropin. This allows you to define the initial data structure when initializing the Checkout dropin. For example, the `CartID` is required to initialize the Checkout dropin.
 
-### Register and load the dropin
+```ts
+// Define the initial data for the CartID property
+const models = {
+  CartID: {
+    initialData: { cartId: '12345' },
+  },
+};
 
-The code below shows how to register the Checkout dropin and load it (mount). You can add these functions within a `<script>` tag in your Checkout HTML page as shown here:
-
-```html title="index.html" ins={"1":5} ins={"2":8}
-<script type="module">
-  // more code above...
-
-  // Register and load the Checkout dropin
-  initializers.register(checkoutApi.initialize, {});
-
-  // Mount Initializers (must be called after all initializers are registered)
-  window.addEventListener('load', initializers.mount);
-</script>
+// Register initializers
+initializers.register(api.initialize, {
+  models,
+});
 ```
-
-<Callouts square color="var(--sl-color-green)">
-
-1. This function registers the Checkout dropin to be loaded on the page by the `initializers.mount` function.
-1. This event handler triggers the `initializers.mount` function to load the Checkout dropin after the page has loaded.
-
-</Callouts>
-
-</Task>
-
-<Task>
-
-### Render the dropin
-
-The Checkout dropin uses containers from several other dropins (for example, Cart, UserAuth, and User Account) to create a unified checkout experience. The code below shows how to render these containers.
-
-```js title="commerce-checkout.js"
-// Render Checkout containers
-  checkoutProvider.render(ErrorBanner)(errorBanner);
-  checkoutProvider.render(MergedCartBanner)(mergedCartBanner);
-
-  checkoutProvider.render(OutOfStock, {
-    routeCart: () => '/cart',
-    onCartProductsUpdate: (items) => {
-      cartApi.updateProductsFromCart(items).catch(console.error);
-    },
-  })(outOfStock);
-
-  checkoutProvider.render(LoginForm, {
-    onSignInClick: async (initialEmailValue) => {
-      const signInForm = document.createElement('div');
-
-      authProvider.render(AuthCombine, {
-        signInFormConfig: {
-          renderSignUpLink: true,
-          initialEmailValue,
-          onSuccessCallback: () => {
-            overlaySpinner.classList.add('checkout__overlay-spinner--shown');
-          },
-        },
-        signUpFormConfig: {},
-        resetPasswordFormConfig: {},
-      })(signInForm);
-
-      modal = await createModal([signInForm]);
-      modal.showModal();
-    },
-    onSignOutClick: () => {
-      authApi.revokeCustomerToken();
-    },
-  })(login);
-
-  checkoutProvider.render(ShippingForm, { hideOnVirtualCart: true })(
-    shippingForm,
-  );
-  checkoutProvider.render(BillToShippingAddress, { hideOnVirtualCart: true })(
-    billToShippingAddress,
-  );
-  checkoutProvider.render(BillingForm)(billingForm);
-
-  checkoutProvider.render(ShippingMethods, {
-    hideOnVirtualCart: true,
-    // onShippingMethodSelect: (shippingMethod) => {},
-    onCheckoutDataUpdate: () => {
-      cartApi.refreshCart().catch(console.error);
-    },
-  })(shippingMethods);
-
-  checkoutProvider.render(PaymentMethods, {
-    // slots: {
-    //   Handlers: {
-    //     checkmo: (_ctx) => {
-    //       const $content = document.createElement('div');
-    //       $content.innerText = 'checkmo';
-    //       _ctx.replaceHTML($content);
-    //     },
-    //   },
-    // },
-  })(paymentMethods);
-    checkoutProvider.render(PlaceOrder, {
-    onPlaceOrder: async () => {
-      overlaySpinner.classList.add('checkout__overlay-spinner--shown');
-
-      try {
-        await checkoutApi.placeOrder();
-      } catch (error) {
-        console.error(error);
-        throw error;
-      } finally {
-        overlaySpinner.classList.remove('checkout__overlay-spinner--shown');
-      }
-    },
-  })(placeOrder);
-
-  /*
-   * Render initial layout and setup event handlers
-   */
-
-  mediaQuery.addEventListener('change', (e) => handleScreenResize(e, block));
-  handleScreenResize(mediaQuery, block);
-
-  events.on('authenticated', handleAuthenticated, { eager: true });
-  events.on('checkout/data', (e) => handleCheckoutData(e, block), {
-    eager: true,
-  });
-  events.on('checkout/customer', handleCheckoutCustomer, { eager: true });
-  events.on('checkout/order', (e) => handleCheckoutOrder(e, block));
-}
-```
-
-Test the Checkout dropin by viewing your checkout page in a browser, or running your local dev or build server. If you see the Checkout dropin rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
-
-</Task>
-
-</Tasks>
