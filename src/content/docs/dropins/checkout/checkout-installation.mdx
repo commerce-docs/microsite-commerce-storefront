@@ -1,9 +1,90 @@
 ---
-title: Checkout Installation
-description: Learn how to install the Checkout dropin into your site.
-sidebar:
-  # label: Checkout Installation
-  order: 2
+title: Checkout installation
+description: Learn how to install and initialize the Checkout dropin on your site.
 ---
 
-Learn how to install the Checkout dropin into your site.
+import OptionsTable from '@components/OptionsTable.astro';
+
+The Checkout dropin provides a customizable UI for the checkout process. The dropin is designed to be integrated into a your storefront and provides a seamless checkout experience for customers.
+
+## Installation
+
+Since the Checkout dropin relies on containers from several other dropins, you must install and configure these dropins before you can use the Checkout dropin.
+
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) includes all of the necessary dropins and configurations to help you get started quickly, so Adobe recommends relying on the boilerplate instead of installing, configuring, and integrating the dropins individually.
+
+## Admin configuration
+
+Before you can use the Checkout dropin on your storefront, you must enable and configure [payment providers](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/payments) and [checkout options](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/checkout-process) in the Adobe Commerce Admin.
+
+:::note
+The Checkout dropin [overview](/dropins/checkout/) provides a summary of supported Adobe Commerce features.
+:::
+
+## Initializer configuration
+
+The Checkout dropin initializers allow you to define the language definitions and models that your project will use.
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['models', 'object', 'No', 'Defines the data structure and initial data. Options include initialData and transform.'],
+  ]}
+/>
+
+:::note
+Models are used to define the necessary data structure when initializing the Checkout dropin.
+:::
+
+### Example
+
+The following code shows an example implementation of the Checkout dropin initializer configuration:
+
+```ts
+// Initialize dropin
+initializers.register(checkoutApi.initialize, {
+  langDefinitions,
+  models,
+});
+```
+
+### Set language definitions
+
+The `langDefinitions` property is used to define and register language packs for the Checkout dropin. This allows you to provide localized text for different languages in your application.
+
+```ts
+// Define the language packs for your application
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+
+// Register the checkout dropin with language definitions
+const langDefinitions = {
+  default: en_US,
+  en_US,
+  fr_FR,
+};
+
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
+});
+```
+
+### Set initial data
+
+The `initialData` property is used to define the initial data for the Checkout dropin. This allows you to define the initial data structure when initializing the Checkout dropin. For example, the `CartID` is required to initialize the Checkout dropin.
+
+```ts
+// Define the initial data for the CartID property
+const models = {
+  CartID: {
+    initialData: { cartId: '12345' },
+  },
+};
+
+// Register initializers
+initializers.register(api.initialize, {
+  models,
+});
+```
