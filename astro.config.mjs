@@ -128,10 +128,10 @@ export default defineConfig({
             label: 'Branding dropins',
             link: '/dropins/all/branding/'
           },
-          // {
-          //   label: 'Localizing dropins',
-          //   link: '/dropins/all/localizing/'
-          // },
+          {
+            label: 'Localizing dropins',
+            link: '/dropins/all/localizing/'
+          },
           {
             label: 'Styling dropins',
             link: '/dropins/all/styling/'
