@@ -9,7 +9,13 @@ import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-The `Cart` container is responsible for managing and displaying the shopping cart in the application.
+The `Cart` container serves as a central component for displaying and managing the shopping cart, providing various customization options through the `CartProps` interface. This container renders its children and passes down the received props to the relevant components. It also handles initial data and other HTML attributes through the `...props` spread operator.
+
+The Cart container supports the OrderSummary and ProductList slots.
+
+<Diagram caption="Cart container">
+  ![Cart container](@images/dropins/cart/cart-container.png)
+</Diagram>
 
 ## Configurations
 
@@ -25,13 +31,156 @@ The Cart container provides the following configuration options:
     ['slots', 'function', 'No', 'Allows passing a container or custom component.'],
     ['showDiscount', 'boolean', 'No', 'Toggle whether to show discounts.'],
     ['showSavings', 'boolean', 'No', 'Toggle whether to show a savings amount.'],
-    ['quantityType', 'stepper | dropdown', 'No', 'Display quantity changes as a stepper or in a dropdown menu.'],
-    ['dropdownOptions', '{ value: string; text: string }[]', 'No', 'An array of items to display in q dropdown menu.'],
+    ['quantityType', 'stepper' | 'dropdown', 'No', 'Display quantity changes as a stepper or in a dropdown menu.'],
+    ['dropdownOptions', 'function', 'No', 'An array of items to display in a dropdown menu.'],
     ['initialData', 'string', 'Yes', 'Initial cart data to preload the component.'],
   ]}
 />
 
-The Cart container supports the OrderSummary and ProductList slots.
-
 ## Example
 
+The following example data demonstrates how the Cart container is configured:
+
+```js
+const mockData: CartModel = {
+  id: '123',
+  totalQuantity: 2,
+  items: [
+    {
+      itemType: 'SimpleCartItem',
+      uid: '1',
+      name: 'Product 1',
+      url: {
+        urlKey: 'product-1',
+        categories: ['category-1'],
+      },
+      sku: '123',
+      quantity: 1,
+      price: {
+        value: 100,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 1',
+      },
+      total: {
+        value: 100,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: true,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+    {
+      itemType: 'SimpleCartItem',
+      uid: '2',
+      name: 'Product 2',
+      url: {
+        urlKey: 'product-2',
+        categories: ['category-1'],
+      },
+      sku: '456',
+      quantity: 1,
+      price: {
+        value: 200,
+        currency: 'USD',
+      },
+      image: {
+        src: 'https://via.placeholder.com/300',
+        alt: 'Product 2',
+      },
+      total: {
+        value: 200,
+        currency: 'USD',
+      },
+      discount: {
+        value: 0,
+        currency: 'USD',
+      },
+      regularPrice: {
+        value: 200,
+        currency: 'USD',
+      },
+      discounted: false,
+      taxedPrice: {
+        value: 210,
+        currency: 'USD',
+      },
+      rowTotal: {
+        value: 250,
+        currency: 'USD',
+      },
+      rowTotalIncludingTax: {
+        value: 260,
+        currency: 'USD',
+      },
+    },
+  ],
+  total: {
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  totalExcludingTax: {
+    value: 290,
+    currency: 'USD',
+  },
+
+  subtotal: {
+    excludingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingTax: {
+      value: 300,
+      currency: 'USD',
+    },
+    includingDiscountOnly: {
+      value: 300,
+      currency: 'USD',
+    },
+  },
+  appliedTaxes: [
+    {
+      amount: {
+        value: 10,
+        currency: 'USD',
+      },
+      label: 'Tax',
+    },
+  ],
+  totalTax: undefined,
+  appliedDiscounts: [
+    {
+      amount: {
+        value: 20,
+        currency: 'USD',
+      },
+      label: 'Cart Discount',
+    },
+  ],
+  addresses: {},
+  miniCartMaxItems: [],
+  isVirtual: false,
+};
+```
