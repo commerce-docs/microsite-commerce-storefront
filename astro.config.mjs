@@ -223,6 +223,7 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
+              { label: 'User Auth Dictionary', link: '/dropins/user-auth/auth-dictionary/' },
               {
                 label: 'Containers',
                 collapsed: true,
@@ -235,7 +236,7 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
-              // The User Auth dictionary file doesn't currently exist in this dropin.
+              // The Storefront Auth dictionary file doesn't currently exist in this dropin.
               // { label: 'User Auth Dictionary', link: '/dropins/user-auth/auth-dictionary/' },
             ]
           },
@@ -245,7 +246,7 @@ export default defineConfig({
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
               // The User Account dictionary file doesn't currently exist in this dropin.
-              // { label: 'User Account Dictionary', link: '/dropins/user-account/account-dictionary/' },
+              { label: 'User Account Dictionary', link: '/dropins/user-account/account-dictionary/' },
 
             ]
           },
