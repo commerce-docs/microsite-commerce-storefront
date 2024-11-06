@@ -206,12 +206,21 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
-              { label: 'Checkout Initialization', link: '/dropins/checkout/checkout-initialization/' },
-              { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
-              { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
-              // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
-              { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
+              { label: 'Installation', link: '/dropins/checkout/installation/' },
+              { label: 'Initialization', link: '/dropins/checkout/initialization/' },
+              { label: 'Styles', link: '/dropins/checkout/styles/' },
+              { label: 'Containers',
+                collapsed: true,
+                items: [
+                  { label: 'CheckoutBilling', link: '/dropins/checkout/containers/checkout-billing/' },
+                  { label: 'CheckoutPayment', link: '/dropins/checkout/containers/checkout-payment/' },
+                  { label: 'CheckoutShipping', link: '/dropins/checkout/containers/checkout-shipping/' },
+                  { label: 'CheckoutSummary', link: '/dropins/checkout/containers/checkout-summary/' },
+                  { label: 'CheckoutTerms', link: '/dropins/checkout/containers/checkout-terms/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
