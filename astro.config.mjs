@@ -238,7 +238,15 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                  { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                  { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                  { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                ]
+              },
             ]
           }]
       },
