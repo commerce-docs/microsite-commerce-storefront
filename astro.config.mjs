@@ -238,6 +238,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+              { label: 'Functions', link: '/dropins/user-account/functions/' },
 
             ]
           }]
