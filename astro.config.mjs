@@ -141,7 +141,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Dropins',
+        label: 'Drop-ins',
         collapsed: true,
         items: [
           {
@@ -149,31 +149,31 @@ export default defineConfig({
             link: '/dropins/all/introduction/'
           },
           // {
-          //   label: 'Anatomy of a dropin',
+          //   label: 'Anatomy of a drop-in',
           //   link: '/dropins/all/anatomy/'
           // },
           {
-            label: 'Installing dropins',
+            label: 'Installing drop-ins',
             link: '/dropins/all/installing/'
           },
           {
-            label: 'Branding dropins',
+            label: 'Branding drop-ins',
             link: '/dropins/all/branding/'
           },
           // {
-          //   label: 'Localizing dropins',
+          //   label: 'Localizing drop-ins',
           //   link: '/dropins/all/localizing/'
           // },
           {
-            label: 'Styling dropins',
+            label: 'Styling drop-ins',
             link: '/dropins/all/styling/'
           },
           {
-            label: 'Extending dropins',
+            label: 'Extending drop-ins',
             link: '/dropins/all/extending/'
           },
           // {
-          //   label: 'Enriching dropins',
+          //   label: 'Enriching drop-ins',
           //   link: '/dropins/all/enriching/'
           // },
           {
@@ -220,7 +220,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'Containers', 
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },

@@ -75,7 +75,7 @@ The available scripts for running the project are defined in the `package.json` 
    ```mdx
    ---
    title: Slots
-   description: Learn about slots and how to use them to customize dropins.
+   description: Learn about slots and how to use them to customize drop-ins.
    sidebar:
      label: Awesome Slots!   // Overrides the title in the sidebar
      order: 4                // Use order for auto-generated sidebar links. See src/content/docs/customize files for example.
@@ -89,7 +89,7 @@ The available scripts for running the project are defined in the `package.json` 
    ```mdx
    ---
    title: Slots
-   description: Learn about slots and how to use them to customize dropins.
+   description: Learn about slots and how to use them to customize drop-ins.
    sidebar:
    label: Slots
    order: 4
@@ -99,4 +99,6 @@ The available scripts for running the project are defined in the `package.json` 
    import Vocabulary from '@components/Vocabulary.astro';
    import Aside from '@components/Aside.astro';
    import Callouts from '@components/Callouts.astro';
+
+   ;
    ```

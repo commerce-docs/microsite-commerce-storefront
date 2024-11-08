@@ -1,4 +1,4 @@
-// Use these items to create a TOC entry for a new dropin:
+// Use these items to create a TOC entry for a new drop-in:
 
 {
   label: 'DROPIN_NAME';
