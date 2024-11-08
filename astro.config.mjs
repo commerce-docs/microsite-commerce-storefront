@@ -238,6 +238,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+              { label: 'Styles', link: '/dropins/user-account/styles/' },
               { label: 'Containers', 
                 collapsed: true,
                 items: [
@@ -247,6 +248,8 @@ export default defineConfig({
                   { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
                 ]
               },
+              { label: 'Slots', link: '/dropins/user-account/slots/' },
+
               { label: 'Functions', link: '/dropins/user-account/functions/' },
             ]
           }]
