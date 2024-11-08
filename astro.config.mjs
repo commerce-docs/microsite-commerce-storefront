@@ -141,7 +141,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Drop-ins',
+        label: 'Drop-in components',
         collapsed: true,
         items: [
           {
@@ -252,7 +252,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Toubleshooting',
+        label: 'Troubleshooting',
         collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
