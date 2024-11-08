@@ -212,7 +212,6 @@ export default defineConfig({
               { label: 'Containers',
                 collapsed: true,
                 items: [
-                  { label: 'ErrorBanner', link: '/dropins/checkout/containers/error-banner/' },
                   { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                   { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
                   { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },

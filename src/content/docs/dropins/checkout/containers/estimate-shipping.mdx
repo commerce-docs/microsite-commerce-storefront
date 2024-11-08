@@ -1,24 +1,35 @@
 ---
 title: EstimateShipping container
-description: Configure the EstimateShipping container to display shipping costs during checkout.
+description: Learn how the EstimateShipping container displays shipping costs during checkout.
 ---
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process. You can configure it to handle various scenarios, such as displaying free shipping and handling different tax display settings.
+The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process.
 
 ## EstimateShipping configurations
 
-The `EstimateShipping` container provides the following configuration options:
+The `EstimateShipping` container is read-only, unlike the editable [`EstimateShipping`](/dropins/cart/cart-slots/#estimate-shipping) container in the Cart dropin. Initially, it displays estimated shipping costs. After a customer provides a shipping address and selects a shipping method, it shows the actual shipping cost. This container is designed to be used as a slot within the `OrderSummary` container from the Cart dropin, where the estimated shipping information is displayed.
 
-<OptionsTable
-  compact
-  options={[
-    ['Option', 'Type', 'Req?', 'Description'],
-    ['estimated', 'boolean', 'No', 'A boolean indicating whether the shipping cost is estimated.'],
-    ['price', 'VNode', 'Yes', 'The rendered price component, which can be free shipping, the price including tax, or the price excluding tax.'],
-    ['priceExclTax', 'VNode', 'No', 'The rendered price component excluding tax, if applicable.'],
-    ['taxExcluded', 'boolean', 'No', 'A boolean indicating whether the tax is excluded from the shipping price.'],
-    ['taxIncluded', 'boolean', 'No', 'A boolean indicating whether the tax is included in the shipping price.'],
-  ]}
-/>
+## Example
+
+The following example renders an `OrderSummary` container within a checkout page and includes a slot for estimating shipping:
+
+```ts
+import { OrderSummary } from '@dropins/storefront-cart/containers/OrderSummary.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+
+const $orderSummary = checkoutFragment.querySelector(
+  '.checkout__order-summary'
+);
+
+CartProvider.render(OrderSummary, {
+  slots: {
+    EstimateShipping: (esCtx) => {
+      const estimateShippingForm = document.createElement('div');
+      CheckoutProvider.render(EstimateShipping)(estimateShippingForm);
+      esCtx.appendChild(estimateShippingForm);
+    },
+  },
+})($orderSummary),
+```

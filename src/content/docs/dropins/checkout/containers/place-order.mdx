@@ -15,7 +15,69 @@ The `PlaceOrder` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['onPlaceOrder', 'function', 'No', 'Handles the place order action. It takes a PlaceOrderContext object as an argument and returns a Promise<void>.'],
-    ['disabled', 'boolean', 'No', 'Indicates whether the place order button is disabled.']
+    ['handleValidation', 'function', 'No', 'A function that performs validation checks and returns a boolean indicating whether the validation passed'],
+    ['onPlaceOrder', 'function', 'No', 'An asynchronous function that handles the order placement process. It receives a context object containing the selected payment method code.'],
   ]}
 />
+
+## Example
+
+The following example renders the `PlaceOrder` container on a checkout page. It includes functionality to validate login, shipping, and billing forms before placing an order. If the validation passes, it attempts to place the order and handles any errors that occur during the process.
+
+```ts
+import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $placeOrder = checkoutFragment.querySelector('.checkout__place-order');
+
+CheckoutProvider.render(PlaceOrder, {
+  handleValidation: () => {
+    let success = true;
+    const forms = document.forms;
+
+    const loginForm = forms[LOGIN_FORM_NAME];
+
+    if (loginForm) {
+      success = loginForm.checkValidity();
+      if (!success) scrollToElement($login);
+    }
+
+    const shippingForm = forms[SHIPPING_FORM_NAME];
+
+    if (
+      success &&
+      shippingFormRef.current &&
+      shippingForm &&
+      shippingForm.checkVisibility()
+    ) {
+      success = shippingFormRef.current.handleValidationSubmit(false);
+    }
+
+    const billingForm = forms[BILLING_FORM_NAME];
+
+    if (
+      success &&
+      billingFormRef.current &&
+      billingForm &&
+      billingForm.checkVisibility()
+    ) {
+      success = billingFormRef.current.handleValidationSubmit(false);
+    }
+
+    return success;
+  },
+  onPlaceOrder: async () => {
+    displayOverlaySpinner();
+
+    try {
+      await checkoutApi.placeOrder();
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      removeOverlaySpinner();
+    }
+  },
+})($placeOrder),
+]);
+```
