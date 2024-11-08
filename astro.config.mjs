@@ -62,7 +62,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js'
         }
       }, {
         tag: 'meta',
@@ -253,6 +253,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+              { label: 'Functions', link: '/dropins/user-account/functions/' },
 
             ]
           }]
