@@ -248,9 +248,9 @@ export default defineConfig({
                   { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
                 ]
               },
-              { label: 'Slots', link: '/dropins/user-account/slots/' },
-
+              // { label: 'Slots', link: '/dropins/user-account/slots/' },
               { label: 'Functions', link: '/dropins/user-account/functions/' },
+              { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
           }]
       },

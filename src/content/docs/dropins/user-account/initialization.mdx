@@ -5,54 +5,62 @@ description: Learn how to configure initializer for the User Account drop-in.
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The User Account dropin initializer provides options for configuring language definitions and specifying an Authorization Bearer token.
+The User Account drop-in does not require any special data or specific parameters to be initialized. To initialize the drop-in, you must import [`/scripts/initializers/account.js`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/scripts/initializers/account.js) into the appropriate file.
+
+```js
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-account/api.js';
+import { initializeDropin } from './index.js';
+import { fetchPlaceholders } from '../aem.js';
+
+await initializeDropin(async () => {
+  const labels = await fetchPlaceholders();
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+The `langDefinitions` property defines and registers language packs for the dropin. This allows you to provide localized text for different languages in your application.
 
 ## Configuration options
 
-The Checkout dropin initializer accepts the following configuration options:
+The User Account dropin initializer accepts the following configuration options:
 
 <OptionsTable
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
-    ['authHeaderConfig', 'object', 'No', 'Defines an Authorization Bearer token. The object contain a "header" parameter with a value of "Authorization" and a "tokenPrefix" parameter with a value of "Bearer".'],
   ]}
 />
 
 ### Example
 
-The following code shows an example implementation of the User Account drop-in initializer configuration:
+The following example initializes the commerce-addresses block:
 
-```ts
+```js
+// Initialize
+import '../../scripts/initializers/account.js';
 
-```
+export default async function decorate(block) {
+ const {
+   'minified-view': minifiedViewConfig = 'false',
+ } = readBlockConfig(block);
 
-### Set language definitions
-
-The `langDefinitions` property is used to define and register language packs for the Checkout dropin. This allows you to provide localized text for different languages in your application.
-
-```ts
-// Define the language packs for your application
-const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
-const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
-
-// Register the checkout dropin with language definitions
-const langDefinitions = {
-  default: en_US,
-  en_US,
-  fr_FR,
-};
-
-// Register initializers
-initializers.register(api.initialize, {
-  langDefinitions,
-});
-```
-
-### Set header configuration
-
-The `authHeaderConfig` property is used to define an Authorization Bearer token. This allows you to authenticate the user and authorize access to the User Account drop-in.
-
-```ts
-Example code
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(Addresses, {
+     minifiedView: minifiedViewConfig === 'true',
+     withActionsInMinifiedView: false,
+     withActionsInFullSizeView: true,
+     routeAddressesPage: () => CUSTOMER_ADDRESS_PATH,
+   })(block);
+ }
+}
 ```

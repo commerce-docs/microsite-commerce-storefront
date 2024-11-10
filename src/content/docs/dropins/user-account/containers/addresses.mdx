@@ -11,7 +11,7 @@ import { Steps } from '@astrojs/starlight/components';
 
 The `Addresses` container is a standalone component that creates, edits, and deletes customer addresses. It supports custom address attributes and configurable validation through the Adobe Commerce Admin.
 
-The `Addresses` container relies on the [`AddressForm`](../address-form/) container for address creation and editing. It inherits all behaviors from the `AddressForm` container.
+The `Addresses` container relies on the [`AddressForm`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/address-form/) container for address creation and editing. It inherits all behaviors from the `AddressForm` container.
 
 The Addresses container can be implemented in several views.
 
@@ -55,6 +55,11 @@ The following images illustrate the selectable view of the Addresses container. 
   ![Create an address in a selectable Addresses container](@images/dropins/user-account/addresses-selectable-new-address.png)
 </Diagram>
 
+<Aside type="tip" title="Tip">
+Custom address attributes and attribute validation are supported. See [Customer attribute properties](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/attributes/attribute-properties) in the _Customer Management Guide_ for more information.
+</Aside>
+
+
 ## Configurations
 
 The Addresses container provides the following configuration options:
@@ -71,13 +76,12 @@ compact
         ['slots\[`AddressFormInput_${attribute.code}`]', 'slot', 'No', 'Allows overriding input used for a particular form field. Example slot names: “AddressFormInput_firstname”, “AddressFormInput_street”.'],
         ['title', 'string', 'No', 'Custom container header text overriding translations.'],
         ['addressFormTitle', 'string', 'No', 'Custom address form header text overriding translations (optional).'],
-        ['defaultSelectAddressId', '', '', 'Used only in selectable view. Deternines which address is selected by default.'],
+        ['defaultSelectAddressId', 'string', 'No', 'Used only in selectable view. Deternines which address is selected by default.'],
         ['showFormLoader', 'boolean', 'No', 'Determines if a shimmer loader displays instead of the form. Can be used to manage the form\’s loading state externally.'],
-        ['', '', '', 'onAddressData (same as onChange AddressForm callback): Callback executed on each form change, receiving form data as a parameter. Useful for custom integrations. '],
         ['onAddressData', 'function', 'No', 'Callback executed on each form change, receiving form data as a parameter. Useful for custom integrations. This is the same as the onChange AddressForm callback.'],
         ['forwardFormRef', 'HTMLInputElement', 'No', 'Provides a reference to the form\’s DOM element. Useful for custom integrations. This ref also grants access to the "handleValidationSubmit" method to validate form data.'],
         ['selectShipping', 'boolean', 'No', 'Applicable only in the selectable view. When set to true, this configuration enables the container to handle the selection of an address as a shipping address (for example, selecting a shipping address during checkout).'],
-        ['selectBilling', '', '', 'Applicable only in the selectable view. When set to true, this configuration enables the container to handle the selection of an address as a billing address (for example, selecting a billing address during checkout). If both "selectShipping" and "selectBilling" are set to true, the container manages the address selection for both purposes, allowing one address to be used during checkout.'],
+        ['selectBilling', 'boolean', 'No', 'Applicable only in the selectable view. When set to true, this configuration enables the container to handle the selection of an address as a billing address (for example, selecting a billing address during checkout). If both "selectShipping" and "selectBilling" are set to true, the container manages the address selection for both purposes, allowing one address to be used during checkout.'],
         ['showSaveCheckBox', 'boolean', 'No', 'Controls visibility of the "Save in address book" checkbox. Useful for implementations where customers can choose to save the address, with form submission managed externally. Enabling this checkbox hides the action buttons automatically (equivalent to setting "hideActionFormButtons" to "true".)'],
         ['saveCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Save in address book" checkbox.'],
         ['selectable', 'boolean', 'No', 'Whether to enable/disable the selectable view.'],
@@ -99,8 +103,25 @@ compact
 
 ## Example
 
-The following example 
+The following example demonstrates how to use the Addresses container:
 
 ```javascript
+export default async function decorate(block) {
+ const {
+   'minified-view': minifiedViewConfig = 'false',
+ } = readBlockConfig(block);
+
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(Addresses, {
+     minifiedView: minifiedViewConfig === 'true',
+     withActionsInMinifiedView: false,
+     withActionsInFullSizeView: true,
+     routeAddressesPage: () => CUSTOMER_ADDRESS_PATH,
+   })(block);
+ }
+}
+
 
 ```

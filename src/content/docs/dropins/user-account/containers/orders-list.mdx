@@ -58,8 +58,22 @@ compact
 
 ## Example
 
-The following example 
+The following example demonstrates how to use the OrdersList container:
 
 ```javascript
+export default async function decorate(block) {
+ const { 'minified-view': minifiedViewConfig = 'false' } = readBlockConfig(block);
 
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(OrdersList, {
+     minifiedView: minifiedViewConfig === 'true',
+     routeOrdersList: () => CUSTOMER_ORDERS_PATH,
+     routeOrderDetails: (orderNumber) => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
+     routeReturnDetails: ({ orderNumber, returnNumber }) => `${CUSTOMER_RETURN_DETAILS_PATH}?orderRef=${orderNumber}&returnRef=${returnNumber}`,
+     routeOrderProduct: (productData) => (productData ? `/products/${productData.product.urlKey}/${productData.product.sku}` : '#'),
+   })(block);
+ }
+}
 ```
