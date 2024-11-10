@@ -238,6 +238,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
               { label: 'Styles', link: '/dropins/user-account/styles/' },
               { label: 'Containers', 
                 collapsed: true,
