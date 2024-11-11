@@ -1,0 +1,41 @@
+---
+title: OutOfStock container
+description: Configure the OutOfStock container to handle and display out-of-stock items in the cart.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `OutOfStock` container is designed to handle and display items in the shopping cart that are out of stock or have insufficient quantity. You can configure it to handle the removal of out-of-stock items and provide a route to the cart page.
+
+## OutOfStock configurations
+
+The `OutOfStock` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['items', 'CartItem[]', 'Yes', 'The list of items that are out of stock.'],
+    ['onRemoveOutOfStock', 'function', 'No', 'Handles the removal of out-of-stock items. It takes an event as an argument.'],
+    ['routeCart', 'string', 'No', 'The route to the cart page.']
+  ]}
+/>
+
+## Example
+
+The following example renders the `OutOfStock` container to handle and display out-of-stock items in the cart:
+
+```ts
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import OutOfStock from '@dropins/storefront-checkout/containers/OutOfStock.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $outOfStock = checkoutFragment.querySelector('.checkout__out-of-stock');
+
+CheckoutProvider.render(OutOfStock, {
+  routeCart: () => '/cart',
+  onCartProductsUpdate: (items) => {
+    cartApi.updateProductsFromCart(items).catch(console.error);
+  },
+})($outOfStock),
+```

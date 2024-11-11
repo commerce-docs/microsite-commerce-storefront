@@ -207,11 +207,26 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              // { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
-              // { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
-              // { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
-              // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
-              // { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
+              { label: 'Installation', link: '/dropins/checkout/installation/' },
+              { label: 'Initialization', link: '/dropins/checkout/initialization/' },
+              { label: 'Styles', link: '/dropins/checkout/styles/' },
+              { label: 'Containers',
+                collapsed: true,
+                items: [
+                  { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
+                  { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
+                  { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
+                  { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
+                  { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
+                  { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                  { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                  { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
+                  { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
