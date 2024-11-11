@@ -251,6 +251,7 @@ export default defineConfig({
               },
               // { label: 'Slots', link: '/dropins/user-account/slots/' },
               { label: 'Functions', link: '/dropins/user-account/functions/' },
+              { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
               { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
           }]
