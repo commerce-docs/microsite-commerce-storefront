@@ -83,6 +83,7 @@ export default defineConfig({
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
+        Footer: './src/components/overrides/Footer.astro',
         Icon: './src/components/overrides/Icon.astro',
         Header: './src/components/overrides/Header.astro',
         Hero: './src/components/overrides/Hero.astro',
@@ -235,7 +236,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'Containers', 
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
