@@ -255,8 +255,21 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
+              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Styles', link: '/dropins/user-account/styles/' },
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                  { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                  { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                  { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/user-account/slots/' },
               { label: 'Functions', link: '/dropins/user-account/functions/' },
-
+              { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
+              { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
           }]
       },
