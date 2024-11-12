@@ -39,15 +39,18 @@ export default defineConfig({
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
-    '/launch': '/developer/commerce/storefront/get-started/launch-checklist',
+    '/faq': '/developer/commerce/storefront/troublshooting/faq',
+    '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
+    '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
+    '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/pdp-containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/pdp-functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/pdp-installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/pdp-slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/pdp-styles',
-    '/references/configurations': '/developer/commerce/storefront/get-started/configurations',
-    '/references/requirements': '/developer/commerce/storefront/get-started/requirements',
+    '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
   },
   integrations: [
     tailwind({
@@ -59,7 +62,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js'
         }
       }, {
         tag: 'meta',
@@ -80,6 +83,7 @@ export default defineConfig({
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
+        Footer: './src/components/overrides/Footer.astro',
         Icon: './src/components/overrides/Icon.astro',
         Header: './src/components/overrides/Header.astro',
         Hero: './src/components/overrides/Hero.astro',
@@ -110,7 +114,36 @@ export default defineConfig({
         }
       },
       {
+        label: 'Discovery',
+        collapsed: true,
+        autogenerate: {
+          directory: '/discovery/'
+        },
+      },
+      {
+        label: 'Setup',
+        collapsed: true,
+        autogenerate: {
+          directory: '/setup/'
+        },
+      },
+      {
+        label: 'Analytics',
+        collapsed: true,
+        autogenerate: {
+          directory: '/analytics/'
+        },
+      },
+      {
+        label: 'SEO',
+        collapsed: true,
+        autogenerate: {
+          directory: '/seo/'
+        },
+      },
+      {
         label: 'Dropins',
+        collapsed: true,
         items: [
           {
             label: 'Overview',
@@ -146,10 +179,11 @@ export default defineConfig({
           // },
           {
             label: 'Product Details Page',
-            collapsed: false,
+            collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
               { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
+              { label: 'PDP Initialization', link: '/dropins/product-details/pdp-initialization/' },
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
               { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
@@ -185,11 +219,26 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              // { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
-              // { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
-              // { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
-              // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
-              // { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
+              { label: 'Installation', link: '/dropins/checkout/installation/' },
+              { label: 'Initialization', link: '/dropins/checkout/initialization/' },
+              { label: 'Styles', link: '/dropins/checkout/styles/' },
+              { label: 'Containers',
+                collapsed: true,
+                items: [
+                  { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
+                  { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
+                  { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
+                  { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
+                  { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
+                  { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                  { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                  { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
+                  { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
@@ -199,7 +248,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'Containers', 
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
@@ -217,16 +267,38 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-
+              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Styles', link: '/dropins/user-account/styles/' },
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                  { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                  { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                  { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/user-account/slots/' },
+              { label: 'Functions', link: '/dropins/user-account/functions/' },
+              { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
+              { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
           }]
       },
       {
+        label: 'Launch',
+        collapsed: true,
+        autogenerate: {
+          directory: '/launch/'
+        },
+      },
+      {
         label: 'Toubleshooting',
+        collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
         }
-      }
+      },
       ]
     }), (await import("@playform/compress")).default({
       CSS: false,

@@ -1,0 +1,59 @@
+---
+title: LoginForm container
+description: Configure the LoginForm container to handle user email input and validation during checkout.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `LoginForm` container is designed to handle user email input and validation within the checkout process.
+
+## LoginForm configurations
+
+The `LoginForm` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
+    ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+  ]}
+/>
+
+## Example
+
+The following example renders the `LoginForm` container on a checkout page, which includes rendering the [`AuthCombine`](/dropins/user-auth/containers/auth-combine/) container from the user auth drop-in component in a modal for authentication:
+
+```ts
+import AuthCombine from '@dropins/storefront-auth/containers/AuthCombine.js';
+import { render as AuthProvider } from '@dropins/storefront-auth/render.js';
+
+import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => {
+    const signInForm = document.createElement('div');
+
+    AuthProvider.render(AuthCombine, {
+      signInFormConfig: {
+        renderSignUpLink: true,
+        initialEmailValue,
+        onSuccessCallback: () => {
+          displayOverlaySpinner();
+        },
+      },
+      signUpFormConfig: {},
+      resetPasswordFormConfig: {},
+    })(signInForm);
+
+    showModal(signInForm);
+  },
+  onSignOutClick: () => {
+    authApi.revokeCustomerToken();
+  },
+})($login),
+```
