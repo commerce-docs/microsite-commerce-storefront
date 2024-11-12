@@ -1,0 +1,126 @@
+---
+title: AddressForm container
+description: Learn about the AddressForm container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `AddressForm` container is a standalone component designed for creating and editing customer addresses. This container enables merchants to build a custom user experience around address management while leveraging a pre-built form that minimizes development effort. The form integrates seamlessly with the Adobe Commerce backend environment, providing flexible configuration of address attributes, validation, labels, attribute sorting, and more.
+
+The [`Addresses`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/addresses/) container also uses this container.
+
+The following image illustrates a sample AddressForm container:
+
+<Diagram caption="AddressForm container">
+  ![AddressForm container](@images/dropins/user-account/address-form-container.png)
+</Diagram>
+
+<Aside type="tip" title="Tip">
+Custom address attributes and attribute validation are supported. See [Customer attribute properties](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/attributes/attribute-properties) in the _Customer Management Guide_ for more information.
+</Aside>
+
+## Configurations
+
+The `AddressForm` container provides the following configuration options:
+
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['hideActionFormButtons', 'boolean', 'No', 'Controls the visibility of action buttons at the form\'s bottom. Useful for custom integrations where form submission is managed externally.'],
+        ['formName', 'string', 'No', 'Sets the "name" attribute for the form. Defaults to "addressesForm" if not provided. Useful for custom integrations.'],
+        ['showFormLoader', 'boolean', 'No', 'Determines if a shimmer loader displays instead of the form. Can be used to manage the form\’s loading state externally.'],
+        ['showSaveCheckBox', 'boolean', 'No', 'Controls visibility of the "Save in address book" checkbox. Useful for implementations where customers can choose to save the address, with form submission managed externally. Enabling this checkbox hides the action buttons automatically (equivalent to setting "hideActionFormButtons" to "true".)'],
+        ['saveCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Save in address book" checkbox.'],
+        ['forwardFormRef', 'HTMLInputElement', 'No', 'Provides a reference to the form\’s DOM element. Useful for custom integrations. This ref also grants access to the "handleValidationSubmit" method to validate form data.'],
+        ['addressFormId', 'string', 'No', 'Passes an address ID when editing an existing address. Used to identify the address to update in Adobe Commerce.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form.'],
+        ['addressesFormTitle', 'string', 'No', 'Controls visibility of the address form title.'],
+        ['inputsDefaultValueSet', 'CustomerAddressesModel', 'No', 'Allows a set of default values for form inputs.'],
+        ['shippingCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Set as default shipping address" checkbox.'],
+        ['billingCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Set as default billing address" checkbox.'],
+        ['showShippingCheckBox', 'boolean', 'No', 'Controls visibility of the "Set as default shipping address" checkbox. The checkbox remains in the form even if hidden, allowing shippingCheckBoxValue to set its value.'],
+        ['showBillingCheckBox', 'boolean', 'No', 'Controls visibility of the "Set as default billing address" checkbox. As with the shipping checkbox, it remains present even if hidden.'],
+        ['isOpen', 'boolean', 'No', 'Controls the form\'s visibility.'],
+        ['onSubmit', 'function', 'No', 'Allows a custom submit handler to override the default form submission behavior.'],
+        ['slots.AddressFormActions', 'AddressFormActionsContext', 'No', 'Provides an option to override the call-to-action buttons for the address form.'],
+        ['slots.AddressFormInputs', 'AddressFormInputsContext', 'No', 'Allows additional custom inputs or HTML elements at the form’s bottom.'],
+        ['slots\[`AddressFormInput_${attribute.code}`]', 'slot', 'No', 'Allows overriding input used for a particular form field. Example slot names: “AddressFormInput_firstname”, “AddressFormInput_street”.'],
+        ['onCloseBtnClick', 'function', 'No', 'Provides an option to pass a callback to close the form, useful for custom implementations where the form appears in a modal and should close upon successful submission.'],
+        ['onSuccess', 'function', 'No', 'Callback executed upon successful form submission.'],
+        ['onError', 'function', 'No', 'Callback executed if an error occurs during submission. Receives the error as a parameter.'],
+        ['onChange', 'function', 'No', 'Callback executed on each form change, receiving form data as a parameter. Useful for custom integrations.'],
+    ]}
+/>
+
+## Examples
+
+HTMLInputElement usage sample:
+
+```javascript
+const formRef = { current: null };
+
+provider.render(AddressForm, {
+  forwardFormRef: formRef,
+})(containerWrapper);
+
+const isFormValid = formRef.current.handleValidationSubmit();
+const formData = inputRef.current.formData;
+
+return { 
+    handleValidationSubmit,
+    formData: normalizeGetAddressData(modifyFormRef, true),
+    isDataValid, 
+    }; 
+```
+
+`isDataValid` is a boolean value that indicates whether the form has been validated without an explicit submit action.
+
+inputsDefaultValueSet sample payload:
+
+```javascript
+inputsDefaultValueSet: {
+  city: 'City',
+  company: '',
+  countryCode: 'AR',
+  region: {
+    regionCode: 'AR-H',
+    regionId: 1579,
+  },
+  telephone: '123456789',
+  vatId: '999',
+  postcode: '12345',
+  street: 'Street One',
+  streetMultiline_2: 'Street Two',
+}
+```
+
+## Example
+
+The following example renders the `AddressForm` container with custom configurations:
+
+```js
+provider.render(AddressForm, {
+ addressesFormTitle: 'Address form title',
+ addressId: '',
+ isOpen: true,
+ shippingCheckBoxValue: true,
+ billingCheckBoxValue: true,
+ showShippingCheckBox: true,
+ showBillingCheckBox: true,
+ onChange: (values, inputValue) => {
+   console.log('allValues', values);
+   console.log('inputValue', inputValue);
+ },
+ onSuccess: () => {
+   console.log('onSuccess');
+ },
+ onError: () => {
+   console.log('onError');
+ },
+})(containerWrapper);
+```
