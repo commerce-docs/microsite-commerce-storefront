@@ -1,4 +1,4 @@
-// Use these items to create a TOC entry for a new drop-in:
+// Use these items to create a TOC entry for a new drop-in component:
 
 {
   label: 'DROPIN_NAME';
