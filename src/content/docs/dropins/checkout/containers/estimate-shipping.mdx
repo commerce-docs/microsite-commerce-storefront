@@ -1,0 +1,36 @@
+---
+title: EstimateShipping container
+description: Learn how the EstimateShipping container displays shipping costs during checkout.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `EstimateShipping` container is designed to estimate and display shipping costs during the checkout process.
+
+## EstimateShipping configurations
+
+The `EstimateShipping` container is read-only, unlike the editable [`EstimateShipping`](/dropins/cart/cart-slots/#estimateshipping) container in the cart drop-in component. Initially, it displays estimated shipping costs. After a customer provides a shipping address and selects a shipping method, it shows the actual shipping cost. This container is designed to be used as a slot within the `OrderSummary` container from the cart, where the estimated shipping information is displayed.
+
+## Example
+
+The following example renders an `OrderSummary` container within a checkout page and includes a slot for estimating shipping:
+
+```ts
+import { OrderSummary } from '@dropins/storefront-cart/containers/OrderSummary.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+import EstimateShipping from '@dropins/storefront-checkout/containers/EstimateShipping.js';
+
+const $orderSummary = checkoutFragment.querySelector(
+  '.checkout__order-summary'
+);
+
+CartProvider.render(OrderSummary, {
+  slots: {
+    EstimateShipping: (esCtx) => {
+      const estimateShippingForm = document.createElement('div');
+      CheckoutProvider.render(EstimateShipping)(estimateShippingForm);
+      esCtx.appendChild(estimateShippingForm);
+    },
+  },
+})($orderSummary),
+```

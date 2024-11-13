@@ -62,7 +62,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js'
         }
       }, {
         tag: 'meta',
@@ -83,6 +83,7 @@ export default defineConfig({
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
+        Footer: './src/components/overrides/Footer.astro',
         Icon: './src/components/overrides/Icon.astro',
         Header: './src/components/overrides/Header.astro',
         Hero: './src/components/overrides/Hero.astro',
@@ -160,10 +161,10 @@ export default defineConfig({
             label: 'Branding dropins',
             link: '/dropins/all/branding/'
           },
-          {
-            label: 'Localizing dropins',
-            link: '/dropins/all/localizing/'
-          },
+          // {
+          //   label: 'Localizing dropins',
+          //   link: '/dropins/all/localizing/'
+          // },
           {
             label: 'Styling dropins',
             link: '/dropins/all/styling/'
@@ -186,8 +187,7 @@ export default defineConfig({
               { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
               { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
               { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
-              { label: 'PDP Dictionary', link: '/dropins/product-details/pdp-dictionary/' },
+              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
             ]
           },
           {
@@ -200,7 +200,6 @@ export default defineConfig({
               { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
               { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
               { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
-              { label: 'Cart Dictionary', link: '/dropins/cart/cart-dictionary/' },
             ]
           },
           {
@@ -208,12 +207,26 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              { label: 'Checkout Dictionary', link: '/dropins/checkout/checkout-dictionary/' },
-              // { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
-              // { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
-              // { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
-              // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
-              // { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
+              { label: 'Installation', link: '/dropins/checkout/installation/' },
+              { label: 'Initialization', link: '/dropins/checkout/initialization/' },
+              { label: 'Styles', link: '/dropins/checkout/styles/' },
+              { label: 'Containers',
+                collapsed: true,
+                items: [
+                  { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
+                  { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
+                  { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
+                  { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
+                  { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
+                  { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                  { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                  { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
+                  { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
@@ -223,7 +236,6 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'User Auth Dictionary', link: '/dropins/user-auth/auth-dictionary/' },
               {
                 label: 'Containers',
                 collapsed: true,
@@ -236,8 +248,6 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
-              // The Storefront Auth dictionary file doesn't currently exist in this dropin.
-              // { label: 'User Auth Dictionary', link: '/dropins/user-auth/auth-dictionary/' },
             ]
           },
           {
@@ -245,36 +255,23 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-              // The User Account dictionary file doesn't currently exist in this dropin.
-              { label: 'User Account Dictionary', link: '/dropins/user-account/account-dictionary/' },
-
+              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Styles', link: '/dropins/user-account/styles/' },
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                  { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                  { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                  { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/user-account/slots/' },
+              { label: 'Functions', link: '/dropins/user-account/functions/' },
+              { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
+              { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
-          },
-          {
-            label: 'Order',
-            collapsed: true,
-            items: [
-              { label: 'Order Dictionary', link: '/dropins/order/order-dictionary/' },
-
-            ]
-          },
-          {
-            label: 'Order Confirmation',
-            collapsed: true,
-            items: [
-              { label: 'Order Confirmation Dictionary', link: '/dropins/order-confirmation/order-confirm-dictionary/' },
-
-            ]
-          },
-          // {
-          //   label: 'Payment Services',
-          //   collapsed: true,
-          //   items: [
-          //     { label: 'Payment Services Dictionary', link: '/dropins/payment-services/payment-dictionary/' },
-
-          //   ]
-          // },
-        ]
+          }]
       },
       {
         label: 'Launch',
