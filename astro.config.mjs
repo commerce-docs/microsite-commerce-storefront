@@ -173,10 +173,10 @@ export default defineConfig({
             label: 'Extending dropins',
             link: '/dropins/all/extending/'
           },
-          // {
-          //   label: 'Enriching dropins',
-          //   link: '/dropins/all/enriching/'
-          // },
+          {
+            label: 'Enriching dropins',
+            link: '/dropins/all/enriching/'
+          },
           {
             label: 'Product Details Page',
             collapsed: true,
@@ -210,7 +210,8 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/checkout/installation/' },
               { label: 'Initialization', link: '/dropins/checkout/initialization/' },
               { label: 'Styles', link: '/dropins/checkout/styles/' },
-              { label: 'Containers',
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
@@ -257,7 +258,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-account/' },
               { label: ' Initialization', link: '/dropins/user-account/initialization/' },
               { label: 'Styles', link: '/dropins/user-account/styles/' },
-              { label: 'Containers', 
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
