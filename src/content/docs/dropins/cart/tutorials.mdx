@@ -1,0 +1,178 @@
+---
+title: Tutorial
+description: Learn how to implement and customize the cart drop-in component.
+---
+
+import Diagram from '@components/Diagram.astro';
+
+## Customize the layout of the Order Summary to meet your needs
+
+The Cart dropin allows you to customise the layout of the order summary lines to meet your requirements.
+
+You have the opportunity to group and sort the order summary lines into sections using the native Accordion component from [Elsie](https://elsie.dev/).
+
+This means, you can easily configure the settings of the accordion component, such as:
+- title
+- expandable
+- show cost summary per group
+- default state
+
+Apart from that, you can specify the line items shown in the accordion and decide the order in which they are displayed.
+
+### How the customisation is done
+
+This customisation is possible thanks to the attribute `updateLineItems` from the `OrderSummary` container. This attribute allows you to modify the order summary lines before they are rendered.
+
+```typescript
+export const OrderSummary: Container<OrderSummaryProps, CartModel | null> = ({
+  ...
+  updateLineItems = (lineItems) => lineItems,
+  ...
+});
+```
+
+It doesn't matter if you want to customise existing order summary lines, add new ones or hide some of them.
+The `OrderSummary` container passes the `updateLineItems` to the `OrderSummary` component, which will be responsible for rendering them.
+
+`updateLineItems` is an optional function that receives the line items as an argument and returns the updated line items. In both cases, `lineItems` are an array of `OrderSummaryLineItem` object.
+
+```typescript
+export interface OrderSummaryLineItem {
+  key: string;
+  title?: string;
+  className?: string;
+  sortOrder: number;
+  content:
+    | string
+    | JSXInternal.Element
+    | VNode<HTMLAttributes<HTMLDivElement>>
+    | OrderSummaryLineItem[]
+    | undefined;
+}
+```
+
+There are order summary lines created by default on the `OrderSummary` component. This means, if no customisation is needed and nothing is passed using the `updateLineItems` attribute, the default order summary lines will be rendered.
+Let's imagine that `lineItems` is something like this:
+```typescript
+  const lineItems: Array<OrderSummaryLineItem> = [
+    {
+      key: 'subTotalContent',
+      sortOrder: 100,
+      content: subTotalContent,
+    },
+    {
+      key: 'discountsContent',
+      sortOrder: 300,
+      content: discountsContent,
+    },
+    {
+      key: 'taxContent',
+      sortOrder: 400,
+      content: taxContent,
+    },
+  ];
+```
+
+In the example above, the `OrderSummary` component will render the sub-total, discounts and tax lines in this order.
+The bigger the `sortOrder`, the lower the line will be rendered in the order summary.
+
+Regarding the `content` attribute, it can be a string, a JSX element, an array of `OrderSummaryLineItem` objects (whenever is not `undefined`).
+For instance, you could choose to render a JSX element in a form of a `OrderSummaryLine` container.
+This `OrderSummaryLine` container it is defined as follows:
+
+```typescript
+export interface OrderSummaryLineProps extends HTMLAttributes<HTMLDivElement> {
+  label: string;
+  price: VNode<HTMLAttributes<HTMLSpanElement>>;
+  classSuffixes?: Array<string>;
+  labelClassSuffix?: string;
+  testId?: string;
+  children?: any;
+}
+```
+
+See an example of how to use the `OrderSummaryLine` container below, where only the mandatory props are passed:
+```html
+    <OrderSummaryLine
+      label={translations.subtotalLabel}
+      price={subTotal.price}
+      classSuffixes={['subTotal']}
+    >
+      // HTML goes here
+    </OrderSummaryLine>
+  );
+```
+
+Please note that the `OrderSummaryLine` container is just a wrapper for `OrderSummaryLine` component.
+In the end, the component is deciding how to render the line item based on the `children` attribute.
+
+```typescript
+export interface OrderSummaryLineComponentProps
+  extends HTMLAttributes<HTMLDivElement> {
+  label: string;
+  price: VNode<HTMLAttributes<HTMLSpanElement>>;
+  classSuffixes?: Array<string>;
+  labelClassSuffix?: string;
+  testId?: string;
+  children?: any;
+}
+```
+
+### Order Summary extensibility examples
+
+#### Remove all lines below and provide real examples of Order Summary extensibility
+
+The folllwing examples show how to adjust the [storefront-addresses](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/blocks/commerce-addresses/commerce-addresses.css) block CSS in a boilerplate environment to customize the address form layout.
+
+In the default layout, some fields are half width, while others take up the whole width.
+
+<Diagram caption="Default layout of the AddressForm container">
+  ![Default layout of the AddressForm container](@images/dropins/user-account/initial-form-layout.png)
+</Diagram>
+
+To set all fields to half width, add the following CSS rule to the `storefront-addresses` block:
+
+```css
+.commerce-addresses .account-address-form {
+   grid-template-columns: repeat(2,1fr);
+}
+```
+
+<Diagram caption="Two column layout of the AddressForm container">
+  ![Two column layout of the AddressForm container](@images/dropins/user-account/two-column-layout.png)
+</Diagram>
+
+To set the text area and buttons group set to 100% width while the other fields are half width:
+
+```css
+.commerce-addresses .account-address-form div.account-address-form__field--test_text_area,
+.commerce-addresses .account-address-form div.account-address-form-wrapper__buttons {
+   grid-column: span 2;
+}
+```
+Notice that CSS selector includes the modifier `--test_text_area`, allowing you to target a specific field by attribute code.
+
+<Diagram caption="Two column layout with full width text area">
+  ![Two column layout with full width text box](@images/dropins/user-account/mixed-layout.png)
+</Diagram>
+
+To create a three-column layout with a full size text and button area, set the grid template columns to `repeat(2,1fr)`:
+
+```css
+.commerce-addresses .account-address-form {
+   grid-template-columns: repeat(2,1fr);
+}
+
+.commerce-addresses .account-address-form div.dropin-field {
+   grid-column: span 1;
+}
+
+.commerce-addresses .account-address-form div.account-address-form__field--test_text_area,
+.commerce-addresses .account-address-form div.account-address-form-wrapper__buttons {
+   grid-column: span 3;
+}
+```
+
+<Diagram caption="Three column layout with full width text area">
+  ![Three column layout with full width text area](@images/dropins/user-account/three-column-layout.png)
+</Diagram>
