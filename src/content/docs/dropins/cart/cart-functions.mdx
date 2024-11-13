@@ -47,6 +47,10 @@ Returns a promise that resolves to a `CartModel` object or null. The `CartModel`
 
 <CodeInclude code={cartModel} lang="ts" frame="none" />
 
+### Events
+
+The event bus emits the `cart/updated` and `cart/data` events with the `CartModel` as the data payload. It also publishes add-to-cart or remove-from-cart events to the Adobe Commerce Data Layer (ACDL).
+
 ### Usage
 
 To add a simple product to the cart:
@@ -97,6 +101,10 @@ export const applyCouponsToCart = async (
 Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
 
 <CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+The event bus emits the `cart/updated` and `cart/data` events with the `CartModel` as the data payload.
 
 ### Usage
 
@@ -192,6 +200,8 @@ The data returned is a new empty cart ID as a string:
 type EmptyCartId = string;
 ```
 
+If guest carts have been disabled from the Admin, the function returns an error.
+
 ### Usage
 
 To create an empty cart:
@@ -204,7 +214,7 @@ createEmptyCart();
 
 ## getCartData
 
-The `getCartData` function returns detailed information about the user's shopping cart. The function gets the user's authentication status and cart ID from the `State` object and runs the [`cart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/cart/) query on behalf of the customer or guest.
+The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `cart/data` or `cart/updated` events so that you do not need to make another network call.
 
 ```ts
 export const getCartData = async (): Promise<CartModel | null>
@@ -291,7 +301,9 @@ getEstimatedTotals([
 
 ## getEstimateShipping
 
-The `getEstimateShipping` function returns a list of shipping methods and the estimated shipping costs, based on the country ID. The function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods) mutation. It also calls the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query to populate the list of countries, the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/) query to populate the list of regions within the selected country. and the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query to help resolve the shipping costs.
+The `getEstimateShipping` function returns a list of shipping methods and the estimated shipping costs, based on the country ID. The function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql-api/index.html#mutation-estimateShippingMethods) mutation. 
+
+It also calls the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query to populate the list of countries, the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/) query to populate the list of regions within the selected country. and the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query to help resolve the shipping costs.
 
 ```ts
 export const getEstimateShipping = async (
@@ -345,6 +357,10 @@ type EstimatedShipping = {
 };
 ```
 
+### Events
+
+The event bus emits the `shipping/estimate` event, which contains data about the address and shipping method.
+
 ### Usage
 
 To get an estimate of the shipping costs:
@@ -396,7 +412,7 @@ type StoreConfigModel = {
 
 ### Usage
 
-To get information about a store's configuration:
+To get cart-related configuration values:
 
 ```js
 import { getStoreConfig } from '@/cart/api/getStoreConfig';
@@ -406,7 +422,7 @@ getStoreConfig();
 
 ## initializeCart
 
-The `initializeCart` function initializes a guest or customer cart.
+The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a dropin's lifecycle. You do not need to call this manually. It also emits the cart/initialized and cart/data events.
 
 ```ts
 export const initializeCart = async (): Promise<CartModel | null>
@@ -417,6 +433,10 @@ export const initializeCart = async (): Promise<CartModel | null>
 Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
 
 <CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+The event bus emits the `cart/initialized` event and the `cart/data` event, which contains data about the address and shipping method.
 
 ### Usage
 
@@ -454,7 +474,7 @@ refreshCart();
 
 ## resetCart
 
-This function resets the cart. As a result, the cart ID is set to null and the authenticated status is set to false.
+This function resets the cart drop-in. As a result, the cart ID is set to null and the authenticated status is set to false.
 
 ```ts
 export const resetCart = (): Promise<CartModel | null>
@@ -510,6 +530,10 @@ The `UpdateProductsFromCart` object has the following parameters:
 Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
 
 <CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+This function emits the `cart/updated` and `cart/data` events. It also publishes add-to-cart or remove-from-cart events to the Adobe Commerce Data Layer (ACDL).
 
 ### Usage
 
