@@ -1,0 +1,82 @@
+---
+title: Cart initialization
+description: Learn how to configure initializer for the cart drop-in component.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The cart drop-in component initializer provides options for configuring language definitions and extending the default models with new fields and transformers.
+
+## Configuration options
+
+The cart component initializer accepts the following configuration options:
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['disableGuestCart', 'boolean', 'No', 'Whether guest carts have been disabled.'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['models', 'object', 'No', 'Extend the default models (CartModel, CustomerModel, and OrderModel) with new fields and transform them as needed.'],
+  ]}
+/>
+
+### Example
+
+The following code shows an example implementation of the cart initializer configuration:
+
+```ts
+// Initialize cart 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models,
+  });
+})();
+```
+
+### Set language definitions
+
+The `langDefinitions` property is used to define and register language packs for the cart component. This allows you to provide localized text for different languages in your application.
+
+```ts
+// Define the language packs for your application
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+
+// Register the component with language definitions
+const langDefinitions = {
+  default: en_US,
+  en_US,
+  fr_FR,
+};
+
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
+});
+```
+
+### Set models
+
+You can extend the default models in the cart component and provide transformers to process new fields.
+
+The `models` property is an object that contains the default models that you might want to extend and the transformers to use to transform the data. By default, the cart component initializer only accepts the `CartModel`.
+
+The following example shows how to extend the default models with new fields and transformers:
+
+```ts
+// Initialize cart
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models: {
+      CartModel: {
+        transformer: (data) => ({
+          printedCardIncluded: data?.printed_card_included,
+          giftReceiptIncluded: data?.gift_receipt_included,
+        }),
+      },
+    },
+  });
+})();
+```
