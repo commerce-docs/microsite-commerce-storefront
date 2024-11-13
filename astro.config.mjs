@@ -150,35 +150,35 @@ export default defineConfig({
             link: '/dropins/all/introduction/'
           },
           // {
-          //   label: 'Anatomy of a drop-in',
+          //   label: 'Anatomy',
           //   link: '/dropins/all/anatomy/'
           // },
           {
-            label: 'Installing drop-ins',
+            label: 'Install',
             link: '/dropins/all/installing/'
           },
           {
-            label: 'Branding drop-ins',
+            label: 'Brand',
             link: '/dropins/all/branding/'
           },
           // {
-          //   label: 'Localizing drop-ins',
+          //   label: 'Localize',
           //   link: '/dropins/all/localizing/'
           // },
           {
-            label: 'Styling drop-ins',
+            label: 'Style',
             link: '/dropins/all/styling/'
           },
           {
-            label: 'Extending drop-ins',
+            label: 'Extend',
             link: '/dropins/all/extending/'
           },
           // {
-          //   label: 'Enriching drop-ins',
+          //   label: 'Enrich',
           //   link: '/dropins/all/enriching/'
           // },
           {
-            label: 'Product Details Page',
+            label: 'Product details page',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
@@ -230,7 +230,7 @@ export default defineConfig({
             ]
           },
           {
-            label: 'User Auth',
+            label: 'User auth',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
@@ -251,7 +251,7 @@ export default defineConfig({
             ]
           },
           {
-            label: 'User Account',
+            label: 'User account',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
