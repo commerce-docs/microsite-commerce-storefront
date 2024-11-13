@@ -1,0 +1,43 @@
+---
+title: ShippingMethods container
+description: Configure the ShippingMethods container to manage and display available shipping methods during checkout.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `ShippingMethods` container is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
+
+## ShippingMethods configurations
+
+The `ShippingMethods` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['hideOnVirtualCart', 'boolean', 'No', 'Hides the component if the cart is virtual.'],
+    ['onCheckoutDataUpdate', 'function', 'No', 'A function that returns a promise. It is called to update the checkout data.'],
+    ['onShippingMethodSelect', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
+    ['preSelectedMethod', 'object', 'No', 'Object containing carrierCode and methodCode strings. It represents the pre-selected shipping method.'],
+    ['shippingMethodsSlot', 'object', 'No', 'Slot used to provide additional shipping methods.'],
+  ]}
+/>
+
+## Example
+
+The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the component for virtual carts and to refresh the cart data when checkout data is updated.
+
+```ts
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $delivery = checkoutFragment.querySelector('.checkout__delivery');
+
+CheckoutProvider.render(ShippingMethods, {
+  hideOnVirtualCart: true,
+  onCheckoutDataUpdate: () => {
+    cartApi.refreshCart().catch(console.error);
+  },
+})($delivery),
+```

@@ -62,7 +62,7 @@ export default defineConfig({
       head: [{
         tag: 'script',
         attrs: {
-          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js" async'
+          src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js'
         }
       }, {
         tag: 'meta',
@@ -83,6 +83,7 @@ export default defineConfig({
       // Component overrides
       components: {
         CallToAction: './src/components/overrides/CallToAction.astro',
+        Footer: './src/components/overrides/Footer.astro',
         Icon: './src/components/overrides/Icon.astro',
         Header: './src/components/overrides/Header.astro',
         Hero: './src/components/overrides/Hero.astro',
@@ -206,11 +207,26 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/checkout/' },
-              // { label: 'Checkout Installation', link: '/dropins/checkout/checkout-installation/' },
-              // { label: 'Checkout Styles', link: '/dropins/checkout/checkout-styles/' },
-              // { label: 'Checkout Containers', link: '/dropins/checkout/checkout-containers/' },
-              // { label: 'Checkout Slots', link: '/dropins/checkout/checkout-slots/' },
-              // { label: 'Checkout Functions', link: '/dropins/checkout/checkout-functions/' },
+              { label: 'Installation', link: '/dropins/checkout/installation/' },
+              { label: 'Initialization', link: '/dropins/checkout/initialization/' },
+              { label: 'Styles', link: '/dropins/checkout/styles/' },
+              { label: 'Containers',
+                collapsed: true,
+                items: [
+                  { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
+                  { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
+                  { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
+                  { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
+                  { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
+                  { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                  { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                  { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
+                  { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
@@ -220,7 +236,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'Containers', 
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
@@ -238,7 +255,21 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-
+              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Styles', link: '/dropins/user-account/styles/' },
+              { label: 'Containers', 
+                collapsed: true,
+                items: [
+                  { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                  { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                  { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                  { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                ]
+              },
+              // { label: 'Slots', link: '/dropins/user-account/slots/' },
+              { label: 'Functions', link: '/dropins/user-account/functions/' },
+              { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
+              { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
             ]
           }]
       },
