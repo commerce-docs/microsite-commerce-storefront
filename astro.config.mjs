@@ -162,7 +162,7 @@ export default defineConfig({
             link: '/dropins/all/branding/'
           },
           {
-            label: 'Localizing dropins',
+            label: 'Localize',
             link: '/dropins/all/localizing/'
           },
           {
