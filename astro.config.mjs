@@ -142,7 +142,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Dropins',
+        label: 'Drop-in components',
         collapsed: true,
         items: [
           {
@@ -150,35 +150,35 @@ export default defineConfig({
             link: '/dropins/all/introduction/'
           },
           // {
-          //   label: 'Anatomy of a dropin',
+          //   label: 'Anatomy',
           //   link: '/dropins/all/anatomy/'
           // },
           {
-            label: 'Installing dropins',
+            label: 'Install',
             link: '/dropins/all/installing/'
           },
           {
-            label: 'Branding dropins',
+            label: 'Brand',
             link: '/dropins/all/branding/'
           },
           // {
-          //   label: 'Localizing dropins',
+          //   label: 'Localize',
           //   link: '/dropins/all/localizing/'
           // },
           {
-            label: 'Styling dropins',
+            label: 'Style',
             link: '/dropins/all/styling/'
           },
           {
-            label: 'Extending dropins',
+            label: 'Extend',
             link: '/dropins/all/extending/'
           },
           // {
-          //   label: 'Enriching dropins',
+          //   label: 'Enrich',
           //   link: '/dropins/all/enriching/'
           // },
           {
-            label: 'Product Details Page',
+            label: 'Product details page',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
@@ -231,7 +231,7 @@ export default defineConfig({
             ]
           },
           {
-            label: 'User Auth',
+            label: 'User auth',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
@@ -252,7 +252,7 @@ export default defineConfig({
             ]
           },
           {
-            label: 'User Account',
+            label: 'User account',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
@@ -282,7 +282,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Toubleshooting',
+        label: 'Troubleshooting',
         collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
