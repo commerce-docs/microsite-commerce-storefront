@@ -36,6 +36,7 @@ export default defineConfig({
     '/customize': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
+    '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/containers/cart',
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
