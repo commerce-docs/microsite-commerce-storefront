@@ -200,7 +200,13 @@ export default defineConfig({
               { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
               { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
               { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
-              { label: 'Tutorial', link: '/dropins/cart/tutorials/' },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order Summary Lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                ]
+              },
             ]
           },
           {
