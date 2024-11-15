@@ -225,7 +225,7 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
