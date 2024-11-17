@@ -162,7 +162,7 @@ export default defineConfig({
             link: '/dropins/all/branding/'
           },
           {
-            label: 'Localize',
+            label: 'Label & Localize',
             link: '/dropins/all/localizing/'
           },
           {
@@ -293,6 +293,13 @@ export default defineConfig({
         autogenerate: {
           directory: '/troubleshooting/'
         }
+      },
+      {
+        label: 'Resources',
+        collapsed: false,
+        autogenerate: {
+          directory: '/resources/'
+        },
       },
       ]
     }), (await import("@playform/compress")).default({
