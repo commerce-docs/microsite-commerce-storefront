@@ -20,7 +20,7 @@ import Task from '@components/Task.astro';
 
 In this topic, you will learn how to update drop-in component labels by using the resources available in the commerce boilerplate.
 
-## Terms used
+## Key concepts
 
 <Vocabulary>
 
@@ -28,17 +28,21 @@ In this topic, you will learn how to update drop-in component labels by using th
 
 A Google Sheets file (`placeholders`) or a SharePoint Excel file (`placeholders.xlsx`) where you change and maintain your storefront's labels, which includes localization. See the [Placeholders file](/resources/placeholders/) for more information.
 
-### Labeling
+### Language objects
 
-To add or change UI text labels within Commerce drop-in components. Merchants can change the values in the `placeholders` file to change UI labels displayed in the storefront.
-
-### Localizing
-
-To change UI text labels to a specific language. This process includes translating text labels and changing the text direction, date and time formats, and currency symbols to match the target language.
+A JavaScript object (named `langDefinitions` by convention) that contains key-value pairs for UI text labels in a specific language. The object is used to override the default dictionary with the placeholder file's keys and values.
 
 ### Drop-in component dictionaries
 
 JSON files that define the shape, keys, and default values for labels and text within a drop-in component. Each drop-in component has a default dictionary file: `i18n/en_US.json`. But drop-in components can contain multiple dictionary files as the site is localized for other languages, including `fr_CA.json` for French, `de_DE.json` for German, and so on. The documentation for each drop-in component includes the default dictionary for that drop-in component. As an example, see the Product details page [Dictionary](/dropins/product-details/dictionary) topic.
+
+### Labeling
+
+To add or change UI text labels within Commerce drop-in components. Merchants can change the UI labels in their storefronts by changing the values in the `placeholders` file within their Google Docs or SharePoint directories.
+
+### Localizing
+
+To change UI text labels to a specific language. This process includes translating text labels and changing the text direction, date and time formats, and currency symbols to match the target language.
 
 </Vocabulary>
 
@@ -76,7 +80,7 @@ In the boilerplate code, the UI text labels in drop-in components come from the 
 <Task>
 ### Import `fetchPlaceholders` function
 
-In the drop-in component block (for example, `product-details.js`, `cart.js`), import the `fetchPlaceholders` function from the boilerplate's `aem.js` file.
+In the drop-in block (for example, `product-details.js`, `cart.js`), import the `fetchPlaceholders` function from the boilerplate's `aem.js` file.
 
 ```javascript
 import { fetchPlaceholders } from '../../scripts/aem.js';
@@ -86,9 +90,10 @@ import { fetchPlaceholders } from '../../scripts/aem.js';
 <Task>
 ### Fetch placeholders
 
-Use the `fetchPlaceholders` function to retrieve the `placeholders` file key-value pairs from Google Docs or SharePoint folders. The following code snippet shows how to fetch the placeholders for the current store code.
+Within the `decorate` function, Use the `fetchPlaceholders` function to retrieve the `placeholders` language object from Google Docs or SharePoint folders. The following code snippet shows how to fetch the placeholders.
 
 ```javascript
+// Retrieve the placeholders language object
 const placeholders = await fetchPlaceholders();
 ```
 </Task>
@@ -96,15 +101,15 @@ const placeholders = await fetchPlaceholders();
 <Task>
 ### Override default dictionary
 
-Override the drop-in component's default dictionary using the placeholders keys and values. The `JSON` code for each drop-in dictionary can be found in Dictionary topic for each drop-in component. The following code snippet shows how easy it to override the default dictionary with the keys and values from the placeholders file.
+Within the `decorate` function, override the drop-in component's default dictionary with the placeholders object. The `JSON` code for each drop-in dictionary can be found in Dictionary topic.
 
 ```javascript
- // Get labels from placeholders sheet
-  const langDefinitions = {
-    default: {
-      ...placeholders,
-    },
-  };
+// Get labels from placeholders sheet
+const langDefinitions = {
+  default: {
+    ...placeholders,
+  },
+};
 ```
 </Task>
 
