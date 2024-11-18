@@ -239,7 +239,7 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+               { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
             ]
@@ -271,7 +271,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Initialization', link: '/dropins/user-account/initialization/' },
               { label: 'Styles', link: '/dropins/user-account/styles/' },
               {
                 label: 'Containers',
