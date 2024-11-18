@@ -142,7 +142,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Dropins',
+        label: 'Drop-in components',
         collapsed: true,
         items: [
           {
@@ -150,44 +150,44 @@ export default defineConfig({
             link: '/dropins/all/introduction/'
           },
           // {
-          //   label: 'Anatomy of a dropin',
+          //   label: 'Anatomy',
           //   link: '/dropins/all/anatomy/'
           // },
           {
-            label: 'Installing dropins',
+            label: 'Install',
             link: '/dropins/all/installing/'
           },
           {
-            label: 'Branding dropins',
+            label: 'Brand',
             link: '/dropins/all/branding/'
           },
           // {
-          //   label: 'Localizing dropins',
+          //   label: 'Localize',
           //   link: '/dropins/all/localizing/'
           // },
           {
-            label: 'Styling dropins',
+            label: 'Style',
             link: '/dropins/all/styling/'
           },
           {
-            label: 'Extending dropins',
+            label: 'Extend',
             link: '/dropins/all/extending/'
           },
+          // {
+          //   label: 'Enrich',
+          //   link: '/dropins/all/enriching/'
+          // },
           {
-            label: 'Enriching dropins',
-            link: '/dropins/all/enriching/'
-          },
-          {
-            label: 'Product Details Page',
+            label: 'Product details page',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
-              { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
-              { label: 'PDP Initialization', link: '/dropins/product-details/pdp-initialization/' },
-              { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
-              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
-              { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' }
+              { label: 'Installation', link: '/dropins/product-details/pdp-installation/' },
+              { label: 'Initialization', link: '/dropins/product-details/pdp-initialization/' },
+              { label: 'Styles', link: '/dropins/product-details/pdp-styles/' },
+              { label: 'Containers', link: '/dropins/product-details/pdp-containers/' },
+              { label: 'Slots', link: '/dropins/product-details/pdp-slots/' },
+              { label: 'Functions', link: '/dropins/product-details/pdp-functions/' }
             ]
           },
           {
@@ -195,11 +195,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              { label: 'Cart Installation', link: '/dropins/cart/cart-installation/' },
-              { label: 'Cart Styles', link: '/dropins/cart/cart-styles/' },
-              { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
-              { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
-              { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
+              { label: 'Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Styles', link: '/dropins/cart/cart-styles/' },
+              { label: 'Containers', link: '/dropins/cart/cart-containers/' },
+              { label: 'Slots', link: '/dropins/cart/cart-slots/' },
+              { label: 'Functions', link: '/dropins/cart/cart-functions/' },
             ]
           },
           {
@@ -210,8 +210,7 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/checkout/installation/' },
               { label: 'Initialization', link: '/dropins/checkout/initialization/' },
               { label: 'Styles', link: '/dropins/checkout/styles/' },
-              {
-                label: 'Containers',
+              { label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
@@ -226,12 +225,12 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-              // { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
           },
           {
-            label: 'User Auth',
+            label: 'User auth',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-auth/' },
@@ -252,14 +251,13 @@ export default defineConfig({
             ]
           },
           {
-            label: 'User Account',
+            label: 'User account',
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
               { label: ' Initialization', link: '/dropins/user-account/initialization/' },
               { label: 'Styles', link: '/dropins/user-account/styles/' },
-              {
-                label: 'Containers',
+              { label: 'Containers', 
                 collapsed: true,
                 items: [
                   { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
@@ -283,7 +281,7 @@ export default defineConfig({
         },
       },
       {
-        label: 'Toubleshooting',
+        label: 'Troubleshooting',
         collapsed: true,
         autogenerate: {
           directory: '/troubleshooting/'
