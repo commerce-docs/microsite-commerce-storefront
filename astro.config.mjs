@@ -196,6 +196,7 @@ export default defineConfig({
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
               { label: 'Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Initialization', link: '/dropins/cart/initialization/' },
               { label: 'Styles', link: '/dropins/cart/cart-styles/' },
               { label: 'Containers', link: '/dropins/cart/cart-containers/' },
               { label: 'Slots', link: '/dropins/cart/cart-slots/' },
