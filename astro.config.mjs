@@ -184,10 +184,10 @@ export default defineConfig({
             label: 'Extending',
             link: '/dropins/all/extending/'
           },
-          {
-            label: 'Enriching',
-            link: '/dropins/all/enriching/'
-          },
+          // {
+          //   label: 'Enriching',
+          //   link: '/dropins/all/enriching/'
+          // },
           {
             label: 'Product details page',
             collapsed: true,
