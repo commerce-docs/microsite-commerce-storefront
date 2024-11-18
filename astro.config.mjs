@@ -154,23 +154,23 @@ export default defineConfig({
           //   link: '/dropins/all/anatomy/'
           // },
           {
-            label: 'Install',
+            label: 'Installing',
             link: '/dropins/all/installing/'
           },
           {
-            label: 'Brand',
+            label: 'Branding',
             link: '/dropins/all/branding/'
           },
           {
-            label: 'Label & Localize',
-            link: '/dropins/all/localizing/'
+            label: 'Labeling',
+            link: '/dropins/all/labeling/'
           },
           {
-            label: 'Style',
+            label: 'Styling',
             link: '/dropins/all/styling/'
           },
           {
-            label: 'Extend',
+            label: 'Extending',
             link: '/dropins/all/extending/'
           },
           // {
@@ -182,13 +182,13 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/product-details/' },
-              { label: 'PDP Installation', link: '/dropins/product-details/pdp-installation/' },
-              { label: 'PDP Initialization', link: '/dropins/product-details/pdp-initialization/' },
-              { label: 'PDP Styles', link: '/dropins/product-details/pdp-styles/' },
-              { label: 'PDP Containers', link: '/dropins/product-details/pdp-containers/' },
-              { label: 'PDP Slots', link: '/dropins/product-details/pdp-slots/' },
-              { label: 'PDP Functions', link: '/dropins/product-details/pdp-functions/' },
-              { label: 'PDP Dictionary', link: '/dropins/product-details/pdp-dictionary/' },
+              { label: 'Installation', link: '/dropins/product-details/installation/' },
+              { label: 'Initialization', link: '/dropins/product-details/initialization/' },
+              { label: 'Styles', link: '/dropins/product-details/styles/' },
+              { label: 'Containers', link: '/dropins/product-details/containers/' },
+              { label: 'Slots', link: '/dropins/product-details/slots/' },
+              { label: 'Functions', link: '/dropins/product-details/functions/' },
+              { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
             ]
           },
           {
@@ -196,12 +196,12 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              { label: 'Cart Installation', link: '/dropins/cart/cart-installation/' },
-              { label: 'Cart Styles', link: '/dropins/cart/cart-styles/' },
-              { label: 'Cart Containers', link: '/dropins/cart/cart-containers/' },
-              { label: 'Cart Slots', link: '/dropins/cart/cart-slots/' },
-              { label: 'Cart Functions', link: '/dropins/cart/cart-functions/' },
-              { label: 'Cart Dictionary', link: '/dropins/cart/cart-dictionary/' },
+              { label: 'Installation', link: '/dropins/cart/installation/' },
+              { label: 'Styles', link: '/dropins/cart/styles/' },
+              { label: 'Containers', link: '/dropins/cart/containers/' },
+              { label: 'Slots', link: '/dropins/cart/slots/' },
+              { label: 'Functions', link: '/dropins/cart/functions/' },
+              { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
             ]
           },
           {
@@ -214,7 +214,7 @@ export default defineConfig({
               { label: 'Styles', link: '/dropins/checkout/styles/' },
               // { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
-              { label: 'Checkout Dictionary', link: '/dropins/checkout/checkout-dictionary/' },
+              { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
               {
                 label: 'Containers',
                 collapsed: true,
@@ -240,7 +240,7 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/user-auth/' },
               { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-              { label: 'User Auth Dictionary', link: '/dropins/user-auth/auth-dictionary/' },
+              { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
               {
                 label: 'Containers',
                 collapsed: true,
@@ -266,7 +266,7 @@ export default defineConfig({
               { label: 'Functions', link: '/dropins/user-account/functions/' },
               { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
               { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
-              { label: 'User Account Dictionary', link: '/dropins/user-account/account-dictionary/' },
+              { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
               {
                 label: 'Containers',
                 collapsed: true,

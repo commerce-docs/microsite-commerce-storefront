@@ -1,0 +1,132 @@
+---
+title: Labeling drop-in components
+description: How to localize your drop-in components.
+sidebar:
+  label: Labeling
+  order: 5
+---
+
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+import CodeImport from '@components/CodeImport.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+import dictionary from '@dropins/tools/types/elsie/src/i18n/en_US.json.d.ts?raw';
+import Vocabulary from '@components/Vocabulary.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+In this topic, you will learn how to update drop-in component labels by using the resources available in the commerce boilerplate.
+
+## Terms used
+
+<Vocabulary>
+
+### Placeholders file
+
+A Google Sheets file (`placeholders`) or a SharePoint Excel file (`placeholders.xlsx`) where you change and maintain your storefront's labels, which includes localization. See the [Placeholders file](/resources/placeholders/) for more information.
+
+### Labeling
+
+To add or change UI text labels within Commerce drop-in components. Merchants can change the values in the `placeholders` file to change UI labels displayed in the storefront.
+
+### Localizing
+
+To change UI text labels to a specific language. This process includes translating text labels and changing the text direction, date and time formats, and currency symbols to match the target language.
+
+### Drop-in component dictionaries
+
+JSON files that define the shape, keys, and default values for labels and text within a drop-in component. Each drop-in component has a default dictionary file: `i18n/en_US.json`. But drop-in components can contain multiple dictionary files as the site is localized for other languages, including `fr_CA.json` for French, `de_DE.json` for German, and so on. The documentation for each drop-in component includes the default dictionary for that drop-in component. As an example, see the Product details page [Dictionary](/dropins/product-details/dictionary) topic.
+
+</Vocabulary>
+
+## Big picture
+
+Labeling drop-in components in the storefront involves two files:
+
+<Steps>
+1. The **placeholders file** that provides the default drop-in component UI labels that merchants can quickly update as needed.
+2. The **drop-in block** (examples, `product-details.js`, `cart.js`) where you add code to fetch, map, and override the drop-in component dictionary at runtime.
+</Steps>
+
+The following diagram shows the process for adding and overriding labels and text for drop-in components within the boilerplate template.
+
+<Diagram caption="How localization and labeling works in storefronts.">
+  ![How localization and labeling works in storefronts.](@images/DropinDictionaries.svg)
+</Diagram>
+
+<Callouts>
+
+1. **Placeholder files**. Merchants can quickly update the labels in their storefront from one file: `placeholders`, which is either a Google Sheet or Microsoft Excel file.
+1. **Import function**. You need to import the `fetchPlaceholders` function from the boilerplate's `aem.js` file.
+1. **Fetch placeholders.** Use the `fetchPlaceholders` function to retrieve the `placeholders` key-value pairs from Google Docs or SharePoint folders.
+1. **Override default dictionary**. Override the `default` property from the `langDefinitions` object with the keys and values from the `placeholder` object.
+1. **Initialize dictionary**. Use the `register` function to update the dictionary at runtime.
+
+</Callouts>
+
+## Step-by-step
+
+In the boilerplate code, the UI text labels in drop-in components come from the `placeholders` file. Using this file as the source for all storefront UI labels across drop-in components makes it easy for merchants to make label changes without developer involvement.
+
+<Tasks>
+
+<Task>
+### Import `fetchPlaceholders` function
+
+In the drop-in component block (for example, `product-details.js`, `cart.js`), import the `fetchPlaceholders` function from the boilerplate's `aem.js` file.
+
+```javascript
+import { fetchPlaceholders } from '../../scripts/aem.js';
+```
+</Task>
+
+<Task>
+### Fetch placeholders
+
+Use the `fetchPlaceholders` function to retrieve the `placeholders` file key-value pairs from Google Docs or SharePoint folders. The following code snippet shows how to fetch the placeholders for the current store code.
+
+```javascript
+const placeholders = await fetchPlaceholders();
+```
+</Task>
+
+<Task>
+### Override default dictionary
+
+Override the drop-in component's default dictionary using the placeholders keys and values. The `JSON` code for each drop-in dictionary can be found in Dictionary topic for each drop-in component. The following code snippet shows how easy it to override the default dictionary with the keys and values from the placeholders file.
+
+```javascript
+ // Get labels from placeholders sheet
+  const langDefinitions = {
+    default: {
+      ...placeholders,
+    },
+  };
+```
+</Task>
+
+<Task>
+### Register updated dictionary
+
+Use the `initializers.register` API to register the new dictionary. The following code snippet shows how to register the new `langDefinitions` object.
+
+```javascript
+// Register Initializers
+initializers.register(productApi.initialize, {
+  langDefinitions,
+  defaultLocale: locale,
+  models
+});
+```
+</Task>
+
+<Task>
+### Test the changes
+
+After you've updated the drop-in component dictionary with the new `langDefinitions` object, test the changes in the storefront to ensure the new labels are displayed correctly. If the labels are not displaying as expected, review the mapping between the placeholder keys and the drop-in component dictionary keys. Make sure the keys match exactly. If the keys don't match, the drop-in component will use the default dictionary values.
+</Task>
+
+</Tasks>
