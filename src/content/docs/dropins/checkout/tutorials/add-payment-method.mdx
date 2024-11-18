@@ -1,0 +1,133 @@
+---
+title: Add a payment method
+description: Learn how to integrate third-party payment providers with the Commerce boilerplate template.
+---
+
+import Aside from '@components/Aside.astro';
+import FileTree from '@components/FileTree.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) supports a variety of third-party payment providers, enabling you to integrate the payment gateway of your choice.
+
+## Steps-by-step
+
+This tutorial provides a step-by-step guide for integrating the Adyen payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well.
+
+<Aside type="cool" title="Prerequisites">
+  You must [install and configure](https://docs.adyen.com/plugins/adobe-commerce/set-up-the-plugin-in-adobe-commerce) the Adyen Payment Plugin on your Adobe Commerce backend before integrating it with the Commerce boilerplate template.
+</Aside>
+
+<Tasks>
+
+<Task>
+
+### Add your client key
+
+After you install and configure the Adyen Payment Plugin on your Adobe Commerce backend, you need to add your Adyen client key to the Commerce boilerplate configuration.
+
+<Aside type="note">
+  You should use a development or staging environment for integration testing purposes before modifying your production configuration.
+</Aside>
+
+<Steps>
+1. Open your project's `configs-stage` or `configs-dev` Google Sheet or Microsoft Excel file.
+
+1. Add a new key-value pair for your Adyen API key.
+
+   | key               | value           |
+   |-------------------|-----------------|
+   | adyen-client-key  | YOUR_CLIENT_KEY |
+
+1. Save the file.
+1. Publish file changes with the [Sidekick](/get-started/#sidekick) extension.
+   
+</Steps>
+
+</Task>
+
+<Task>
+
+### Install the package
+
+<Steps>
+1. Open a terminal and navigate to your boilerplate-based project.
+1. Install the Adyen NPM package and add it to the list of project dependencies in your `package.json` file with the `--save` flag.
+   
+   ```bash
+   npm install @dropins/adyen-checkout-extension --save
+   ```
+</Steps>
+
+</Task>
+
+<Task>
+
+### Integrate with the boilerplate
+
+To integrate third-party payment providers, like Adyen, with Adobe Commerce, you can use the extensibility features provided by the checkout drop-in component. The checkout component allows you to customize the list of payment methods shown during the checkout process using slots.
+
+<Steps>
+1. Open the `blocks/commerce-checkout/commerce-checkout.js` file.
+
+1. Import the required files.
+   
+   ```js
+   ...
+   // Adyen drop-in modules
+   import * as adyenApi from '@dropins/adyen-checkout-extension/api.js';
+   import { render as AdyenProvider } from '@dropins/adyen-checkout-extension/render.js';
+   import AdyenPaymentMethod from '@dropins/adyen-checkout-extension/containers/AdyenPaymentMethod.js';
+   ...
+   ```
+
+1. Register the Adyen API.
+
+   ```js
+   ...
+   initializers.register(adyenApi.initialize, {});
+   ...
+   ```
+
+1. Use the `PaymentMethod` [handlers slot](/dropins/checkout/slots/) to add a payment method handler for Adyen. This handler will render the Adyen payment method UI when the backend indicates that Adyen credit card is an allowed payment method.
+
+   ```js
+   ...
+   context.addPaymentMethodHandler('adyen_cc', {
+      render: (ctx, element) => {
+         AdyenProvider(AdyenPaymentMethod, ctx, element);
+         if (element) {
+            // Clear the lement first
+            element.innerHTML = '';
+            // Render the Adyen component
+            adyenProvider.render(AdyenPaymentMethod, ctx)(element);
+         }
+      },
+   })
+   ...
+   ```
+</Steps>
+
+</Task>
+
+<Task>
+
+### Verify the integration
+
+<Steps>
+1. Start the development server to view the boilerplate storefront.
+
+   ```bash
+   npm start
+   ```
+
+1. Navigate to a checkout page and verify that the Adyen payment method is displayed as an option.
+
+   [screenshot]
+
+</Steps>
+
+</Task>
+
+</Tasks>

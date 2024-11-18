@@ -228,6 +228,12 @@ export default defineConfig({
               },
               { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
+              { label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
+                ]
+              },
             ]
           //{
           //  label: 'Order',
