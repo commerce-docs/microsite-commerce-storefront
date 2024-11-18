@@ -1,0 +1,577 @@
+---
+title: Buy online, pickup in store
+description: Learn how to implement a buy online, pickup in store checkout flow with Adobe's drop-in components.
+---
+
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+Buy online, pickup in store (BOPIS) is a popular fulfillment option that allows customers to purchase items online and pick them up in-store.
+
+The Commerce boilerplate template does not include a BOPIS checkout flow by default, but you can easily implement one using Adobe's drop-in components.
+
+## Step-by-step
+
+The following steps describe how to create a new [commerce block](/discovery/architecture/#commerce-blocks) that allows users to choose between delivery and in-store pickup. This block is a modified version of the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) block in the boilerplate template.
+
+<Tasks>
+
+<Task>
+
+### Prerequisites
+
+Before you start, you must configure [in-store delivery](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/delivery/basic-methods/shipping-in-store-delivery) options in the Adobe Commerce Admin to define pickup locations.
+
+</Task>
+
+<Task>
+
+### Update content fragment
+
+For the new section, we need to add additional DOM elements, which can be done by modifying the contextual fragment.
+
+```html
+<div class="checkout__delivery-method">
+  <h2 class="checkout-delivery-method__title">Delivery Method</h2>
+  <div class="checkout-delivery-method__toogle-buttons">
+    <div class="checkout-delivery-method__delivery-button"></div>
+    <div class="checkout-delivery-method__in-store-pickup-button"></div>
+  </div>
+</div>
+<div class="checkout__in-store-pickup"></div>
+```
+You must also add new selectors to render the required components and content.
+
+```javascript
+export const $deliveryButton = fragment.querySelector('.checkout-delivery-method__delivery-button');
+export const $inStorePickupButton = fragment.querySelector('.checkout-delivery-method__in-store-pickup-button');
+export const $inStorePickup = fragment.querySelector('.checkout__in-store-pickup');
+```
+
+![Update content fragment](@images/dropins/checkout/bopis-content-fragment.png)
+
+</Task>
+
+<Task>
+
+### Add toggle buttons
+
+During initialization, the code renders two buttons:
+
+- Delivery
+- In-store pickup
+
+These buttons allow users to toggle between the two options.
+
+```js
+UI.render(ToggleButton, {
+  label: 'Delivery',
+  onChange: () => onToggle('delivery'),
+})($deliveryButton)
+
+UI.render(ToggleButton, {
+  label: 'In-store Pickup',
+  onChange: () => onToggle('in-store-pickup'),
+})($inStorePickupButton)
+```
+
+![Toggle buttons](@images/dropins/checkout/bopis-toggle-buttons.png)
+
+</Task>
+
+<Task>
+
+### Toggle between options
+
+The `onToggle` function manages switching between the delivery and in-store pickup options. It updates the selected state of the buttons and toggles the visibility of the corresponding forms.
+
+```js
+async function onToggle(type) {
+  if (type === 'delivery') {
+    deliveryButton.setProps((prev) => ({ ...prev, selected: true }));
+    inStorePickupButton.setProps((prev) => ({ ...prev, selected: false }));
+    $shippingForm.removeAttribute('hidden');
+    $shippingMethods.removeAttribute('hidden');
+    $inStorePickup.setAttribute('hidden', '');
+  } else {
+    inStorePickupButton.setProps((prev) => ({ ...prev, selected: true }));
+    deliveryButton.setProps((prev) => ({ ...prev, selected: false }));
+    $shippingForm.setAttribute('hidden', '');
+    $shippingMethods.setAttribute('hidden', '');
+    $inStorePickup.removeAttribute('hidden');
+  }
+}
+```
+
+</Task>
+
+<Task>
+
+### Fetch pickup locations
+
+The `fetchPickupLocations` function retrieves the list of available pickup locations using a GraphQL query. Shoppers can choose a location where they'd like to pick up their order.
+
+```js
+async function fetchPickupLocations() {
+  return checkoutApi
+    .fetchGraphQl(
+      `query pickupLocations {
+        pickupLocations {
+          items {
+            name
+            pickup_location_code
+          }
+          total_count
+        }
+      }`,
+      { method: 'GET', cache: 'no-cache' }
+    )
+    .then((res) => res.data.pickupLocations.items);
+}
+```
+
+</Task>
+
+<Task>
+
+### Render location options
+
+After the code fetches the pickup locations, it renders options as radio buttons. The user can select a location, which updates the shipping address with the corresponding pickup location code.
+
+```js
+const pickupLocations = await fetchPickupLocations();
+
+pickupLocations.forEach((location) => {
+  const { name, pickup_location_code } = location;
+  const locationRadiobutton = document.createElement('div');
+
+  UI.render(RadioButton, {
+    label: name,
+    value: name,
+    onChange: () => {
+      checkoutApi.setShippingAddress({
+        address: {},
+        pickupLocationCode: pickup_location_code,
+      });
+    },
+  })(locationRadiobutton);
+
+  $inStorePickup.appendChild(locationRadiobutton);
+});
+```
+
+{/* TODO: Add a screenshot of the rendered location options. */}
+
+</Task>
+
+<Task>
+
+### Finalize the flow
+
+After a shopper selects **In-store pickup** and chooses a location, the pickup form is shown, while the shipping form is hidden. This provides a clear and seamless way for shoppers to choose how they want to receive their order.
+
+</Task>
+
+</Tasks>
+
+## Example
+
+The following files show the complete JS and CSS code for the BOPIS checkout flow:
+
+<Tabs>
+  <TabItem label="Commerce block" icon="seti:javascript">
+
+    ```js title="commerce-checkout-bopis.js" ins={"2":32} ins={"2":67} ins={"3":149} ins={"4":162} ins={"4":220} ins={"5":123} ins={"6":239}
+    // Dropin Tools
+    import { debounce } from '@dropins/tools/lib.js';
+    import { events } from '@dropins/tools/event-bus.js';
+    import {
+      RadioButton,
+      ToggleButton,
+      provider as UI,
+    } from '@dropins/tools/components.js';
+
+    // Cart Dropin Modules
+    import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+    import { OrderSummary } from '@dropins/storefront-cart/containers/OrderSummary.js';
+    import { render as cartProvider } from '@dropins/storefront-cart/render.js';
+
+    // Checkout Dropin Modules
+    import * as checkoutApi from '@dropins/storefront-checkout/api.js';
+    import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+    import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+    import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
+    import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
+    import { render as checkoutProvider } from '@dropins/storefront-checkout/render.js';
+
+    // Account Dropin Modules
+    import AddressForm from '@dropins/storefront-account/containers/AddressForm.js';
+    import { render as accountProvider } from '@dropins/storefront-account/render.js';
+
+    const DEBOUNCE_TIME = 1000;
+    const LOGIN_FORM_NAME = 'login-form';
+    const SHIPPING_FORM_NAME = 'selectedShippingAddress';
+    const BILLING_FORM_NAME = 'selectedBillingAddress';
+
+    // Step 2: Update content fragment
+    const fragment = document.createRange().createContextualFragment(`
+      <div class="checkout__content">
+        <div class="checkout__heading">
+          <h1 class="checkout__heading-title">Checkout</h1>
+          <div class="checkout__heading-divider"></div>
+        </div>
+        <div class="checkout__main">
+          <div class="checkout__login"></div>
+          <div class="checkout__delivery-method">
+            <h2 class="checkout-delivery-method__title">Delivery Method</h2>
+            <div class="checkout-delivery-method__toogle-buttons">
+              <div class="checkout-delivery-method__delivery-button"></div>
+              <div class="checkout-delivery-method__in-store-pickup-button"></div>
+            </div>
+          </div>
+          <div class="checkout__in-store-pickup"></div>
+          <div class="checkout__shipping-form"></div>
+          <div class="checkout__shipping-methods"></div>
+          <div class="checkout__payment-methods"></div>
+          <div class="checkout__billing-form"></div>
+        </div>
+        <div class="checkout__aside">
+          <div class="checkout__order-summary"></div>
+          <div class="cart-summary-list"></div>
+        </div>
+        <div class="checkout__place-order"></div>
+      </div>
+    `);
+
+    export const $root = fragment.querySelector('.checkout__content');
+    export const $heading = fragment.querySelector('.checkout__heading');
+    export const $headingTitle = fragment.querySelector('.checkout__heading-title');
+    export const $main = fragment.querySelector('.checkout__main');
+    export const $login = fragment.querySelector('.checkout__login');
+    // Step 2: Update content fragment
+    export const $deliveryButton = fragment.querySelector('.checkout-delivery-method__delivery-button');
+    export const $inStorePickupButton = fragment.querySelector('.checkout-delivery-method__in-store-pickup-button');
+    export const $inStorePickup = fragment.querySelector('.checkout__in-store-pickup');
+    export const $shippingForm = fragment.querySelector('.checkout__shipping-form');
+    export const $billToShippingAddress = fragment.querySelector(
+      '.checkout__bill-to-shipping-address',
+    );
+    export const $shippingMethods = fragment.querySelector(
+      '.checkout__shipping-methods',
+    );
+    export const $paymentMethods = fragment.querySelector(
+      '.checkout__payment-methods',
+    );
+    export const $billingForm = fragment.querySelector('.checkout__billing-form');
+    export const $aside = fragment.querySelector('.checkout__aside');
+    export const $orderSummary = fragment.querySelector('.checkout__order-summary');
+    export const $cartSummaryList = fragment.querySelector('.cart-summary-list');
+    export const $placeOrder = fragment.querySelector('.checkout__place-order');
+
+    function setAddressOnCart(values, setAddressApi) {
+      const { data, isDataValid } = values;
+      const isNewAddress = !data?.id;
+
+      if (!isDataValid) return;
+
+      const customAttributes = data.customAttributes
+        ? Object.entries(data.customAttributes).map(([code, value]) => ({
+          code,
+          value: value.toString(),
+        }))
+        : [];
+
+      const address = !isNewAddress
+        ? { customerAddressId: data.id }
+        : {
+          saveInAddressBook: data.saveAddressBook,
+          address: {
+            city: data.city,
+            company: data?.company,
+            countryCode: data.countryCode,
+            customAttributes,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            postcode: data.postcode,
+            region: data?.region?.regionCode,
+            regionId: data?.region?.regionId,
+            street: data.street,
+            telephone: data.telephone,
+            vatId: data.vatId,
+          },
+        };
+
+      setAddressApi(address);
+    }
+
+    // Step 5: Fetch pickup locations
+    async function fetchPickupLocations() {
+      return checkoutApi
+        .fetchGraphQl(
+          `query pickupLocations {
+            pickupLocations {
+              items {
+                name
+                pickup_location_code
+              }
+              total_count
+            }
+          }`,
+          { method: 'GET', cache: 'no-cache' },
+        )
+        .then((res) => res.data.pickupLocations.items);
+    }
+
+    export default async function decorate(block) {
+      // Initializers
+      import('../../scripts/initializers/account.js');
+      import('../../scripts/initializers/checkout.js');
+
+      events.on('checkout/initialized', async (checkoutData) => {
+        const [
+          _login,
+          // Step 3: Add toggle buttons
+          deliveryButton,
+          inStorePickupButton,
+          _shippingForm,
+          _billingForm,
+          _shippingMethods,
+          _paymentMethods,
+          _orderSummary,
+          _cartSummary,
+          _placeOrder,
+        ] = await Promise.all([
+          checkoutProvider.render(LoginForm, { name: LOGIN_FORM_NAME })($login),
+
+          // Step 3: Add toggle buttons
+          UI.render(ToggleButton, {
+            label: 'Delivery',
+            onChange: () => onToggle('delivery'),
+          })($deliveryButton),
+
+          UI.render(ToggleButton, {
+            label: 'In-store Pickup',
+            onChange: () => onToggle('in-store-pickup'),
+          })($inStorePickupButton),
+
+          accountProvider.render(AddressForm, {
+            addressesFormTitle: 'Shipping address',
+            className: 'checkout-shipping-form__address-form',
+            formName: SHIPPING_FORM_NAME,
+            hideActionFormButtons: true,
+            isOpen: true,
+            showBillingCheckBox: false,
+            showShippingCheckBox: false,
+            onChange: debounce((values) => {
+              setAddressOnCart(values, checkoutApi.setShippingAddress);
+
+              const hasCartShippingAddress = Boolean(
+                checkoutData.shippingAddresses?.[0],
+              );
+              const { data, isDataValid } = values;
+
+              if (hasCartShippingAddress || isDataValid) return;
+
+              const criteria = {
+                country_code: data.countryCode,
+                region_name: String(data.region.regionCode || ''),
+                region_id: String(data.region.regionId || ''),
+              };
+              checkoutApi.estimateShippingMethods({ criteria });
+            }, DEBOUNCE_TIME),
+          })($shippingForm),
+
+          accountProvider.render(AddressForm, {
+            addressesFormTitle: 'Billing address',
+            className: 'checkout-billing-form__address-form',
+            formName: BILLING_FORM_NAME,
+            hideActionFormButtons: true,
+            isOpen: true,
+            showBillingCheckBox: false,
+            showShippingCheckBox: false,
+            onChange: debounce((values) => {
+              setAddressOnCart(values, checkoutApi.setBillingAddress);
+            }, DEBOUNCE_TIME),
+          })($billingForm),
+
+          checkoutProvider.render(ShippingMethods)($shippingMethods),
+          checkoutProvider.render(PaymentMethods)($paymentMethods),
+          cartProvider.render(OrderSummary)($orderSummary),
+          cartProvider.render(CartSummaryList)($cartSummaryList),
+          checkoutProvider.render(PlaceOrder)($placeOrder),
+        ]);
+
+        // Step 4: Toggle functionality
+        async function onToggle(type) {
+          if (type === 'delivery') {
+            deliveryButton.setProps((prev) => ({ ...prev, selected: true }));
+            inStorePickupButton.setProps((prev) => ({ ...prev, selected: false }));
+            $shippingForm.removeAttribute('hidden');
+            $shippingMethods.removeAttribute('hidden');
+            $inStorePickup.setAttribute('hidden', '');
+          } else {
+            inStorePickupButton.setProps((prev) => ({ ...prev, selected: true }));
+            deliveryButton.setProps((prev) => ({ ...prev, selected: false }));
+            $shippingForm.setAttribute('hidden', '');
+            $shippingMethods.setAttribute('hidden', '');
+            $inStorePickup.removeAttribute('hidden');
+          }
+        }
+
+        onToggle('delivery');
+
+        // Step 6: Render pickup options
+        const pickupLocations = await fetchPickupLocations();
+
+        pickupLocations.forEach((location) => {
+          const { name, pickup_location_code } = location;
+          const locationRadiobutton = document.createElement('div');
+
+          UI.render(RadioButton, {
+            label: name,
+            name: 'pickup-location',
+            value: name,
+            onChange: () => {
+              checkoutApi.setShippingAddress({
+                pickupLocationCode: pickup_location_code,
+              });
+            },
+          })(locationRadiobutton);
+
+          $inStorePickup.appendChild(locationRadiobutton);
+        });
+
+        $root.style.display = 'grid';
+      });
+
+      block.appendChild(fragment);
+    }
+    ```
+  </TabItem>
+  
+  <TabItem label="Styles" icon="seti:css">
+    ```css title="commerce-checkout-bopis.css"
+    .checkout__content {
+      display: grid;
+      align-items: start;
+      grid-template-columns: repeat(var(--grid-4-columns), 1fr);
+      gap: var(--spacing-big) var(--grid-4-gutters);
+    }
+
+    .checkout__heading-title {
+      font: var(--type-headline-1-font);
+      letter-spacing: var(--type-headline-1-letter-spacing);
+      color: var(--color-neutral-800);
+    }
+
+    .checkout__shipping-form:empty,
+    .checkout__shipping-methods:has(> div:empty),
+    .checkout__bill-to-shipping-address:has(> div:empty) {
+      display: none;
+    }
+
+    .checkout__main {
+      display: grid;
+      grid-column: 1 / span 7;
+      row-gap: var(--spacing-xbig);
+    }
+
+    .checkout__aside {
+      display: grid;
+      grid-column: 9 / span 4;
+      gap: var(--spacing-xbig);
+    }
+
+    .checkout__place-order {
+      display: grid;
+      grid-column: 1 / span 12;
+      justify-items: center;
+    }
+
+    /* To add into the cart dropin **/
+    .cart-order-summary__taxes.dropin-accordion .dropin-divider {
+      margin: var(--spacing-medium) auto;
+    }
+
+    @media only screen and (width >= 320px) and (width <= 768px) {
+      .checkout__content {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-big) 0;
+      }
+    }
+
+    /* CartSummaryList */
+
+    .cart-summary-list {
+      padding: var(--spacing-medium);
+      background-color: var(--color-neutral-200);
+    }
+
+    .cart-summary-list__heading {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cart-summary-list__heading-text {
+      font: var(--type-headline-2-strong-font);
+      letter-spacing: var(--type-headline-2-strong-letter-spacing);
+      color: var(--color-neutral-800);
+    }
+
+    .cart-cart-summary-list__heading {
+      row-gap: var(--spacing-small);
+      padding-top: 0;
+    }
+
+    .cart-cart-summary-list__heading-text {
+      font: var(--type-headline-2-strong-font);
+      letter-spacing: var(--type-headline-2-strong-letter-spacing);
+      color: var(--color-neutral-800);
+    }
+
+    .cart-summary-list__edit {
+      font: var(--type-body-2-strong-font);
+      letter-spacing: var(--type-body-2-strong-letter-spacing);
+    }
+
+    /* BOPIS specific styles */
+
+    .checkout__in-store-pickup {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-small);
+    }
+
+    .checkout__in-store-pickup[hidden] {
+      display:none;
+    }
+
+    .checkout-delivery-method__title {
+      color: var(--color-neutral-800);
+      font: var(--type-headline-2-default-font);
+      letter-spacing: var(--type-headline-2-default-letter-spacing);
+      margin: 0 0 var(--spacing-medium) 0;
+    }
+
+    .checkout-delivery-method__toogle-buttons {
+      display: flex;
+      gap: var(--spacing-big);
+      max-width: 600px;
+    }
+
+    .checkout-delivery-method__delivery-button {
+      flex: 1;
+    }
+
+    .checkout-delivery-method__in-store-pickup-button {
+      flex: 1;
+    }
+
+    .checkout__content {
+      display: none;
+    }
+    ```
+  </TabItem>
+</Tabs>

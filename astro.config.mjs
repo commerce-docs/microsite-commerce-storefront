@@ -235,6 +235,12 @@ export default defineConfig({
               },
               { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
+              { label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                ]
+              },
             ]
           //{
           //  label: 'Order',
