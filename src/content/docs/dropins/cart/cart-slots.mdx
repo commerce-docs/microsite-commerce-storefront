@@ -1,40 +1,15 @@
 ---
-title: Cart Slots
-description: Learn about the slots provided in the Cart dropin.
-tableOfContents:
-  minHeadingLevel: 2
-  maxHeadingLevel: 3
+title: Cart slots
+description: Learn about the slots provided in the cart component.
+sidebar:
+  order: 5
 ---
 
-Learn about the slots provided in the Cart dropin.
+Learn about the slots provided in the cart drop-in component.
 
-[Extending dropins](/dropins/all/extending/) describes default properties available to all slots.
+[Extending dropin-in components](/dropins/all/extending/) describes default properties available to all slots.
 
-## Cart container
-
-The 
-
-```ts
-interface CartProps {
-  slots?: {
-    OrderSummary?: SlotProps<DefaultSlotContext>;
-    ProductList?: SlotProps;
-  };
-}
-```
-### OrderSummary slot
-
-The OrderSummary slot allows you to customize the appearance of the order summary in the cart.
-
-// Need example
-
-### ProductList slot
-
-The ProductList slot allows you to customize the appearance of the product list in the cart.
-
-// Need example
-
-## CartSummaryList container
+## CartSummaryList slots
 
 The slots for the `CartSummaryList` container allow you to customize the appearance of the cart summary list.
 
@@ -47,23 +22,10 @@ slots?: {
   Thumbnail?: SlotProps;
   Footer?: SlotProps;
   ProductAttributes?: SlotProps;
-  CartSummaryFooter?: SlotProps;
 };
 ```
-### Heading slots
 
-The Heading slot allows you to add content to the top of the `CartSummaryList` container.
-
-// Need example
-
-### EmptyCart slots
-
-The EmptyCart slot allows you to add content to the `CartSummaryList` container when the cart is empty.
-
-// Need example
-
-
-### Thumbnail slots
+### Thumbnail
 
 Define a callback function in the Thumbnail slot of the `CartSummaryList` container to modify or replace the thumbnail section for each item in the cart.
 
@@ -136,81 +98,81 @@ export interface Item {
   notAvailableMessage?: string;
   stockLevel?: string;
   productAttributes?: Array<{
-  code: string;
-  value?: string;
-  selected_options?: {
-    value: string;
-    label: string;
-  }[];
-}>;
+    code: string;
+    value?: string;
+    selected_options?: {
+      value: string;
+      label: string;
+    }[];
+  }>;
 }
 ```
 
-#### Example extension
+#### Example: Extend the Thumbnail slot
 
 The following example demonstrates how to extend the Thumbnail slot.
 
 ```javascript
-  return provider.render(CartSummaryList, {
-    hideHeading: hideHeading === 'true',
-    routeProduct: (product) => `/products/${product.url.urlKey}/${product.sku}`,
-    routeEmptyCartCTA: startShoppingURL ? () => startShoppingURL : undefined,
-    maxItems: parseInt(maxItems, 10) || undefined,
-    attributesToHide: hideAttributes.split(',').map((attr) => attr.trim().toLowerCase()),
-    enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
-    enableRemoveItem: enableRemoveItem === 'true',
-    slots: {
-      Thumbnail: (ctx) => {
-        const { item } = ctx;
+return provider.render(CartSummaryList, {
+  hideHeading: hideHeading === 'true',
+  routeProduct: (product) => `/products/${product.url.urlKey}/${product.sku}`,
+  routeEmptyCartCTA: startShoppingURL ? () => startShoppingURL : undefined,
+  maxItems: parseInt(maxItems, 10) || undefined,
+  attributesToHide: hideAttributes.split(',').map((attr) => attr.trim().toLowerCase()),
+  enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
+  enableRemoveItem: enableRemoveItem === 'true',
+  slots: {
+    Thumbnail: (ctx) => {
+      const { item } = ctx;
 
-        // Create a link to save the item for later
-        const saveForLaterLink  = document.createElement('a');
-        saveForLaterLink.href = '#';
-        saveForLaterLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          console.log(`Saving ${item.name}(${item.sku}) for later`);
-          // TODO: Implement save for later functionality
-        });
-        saveForLaterLink.innerText = 'Save for later';
+      // Create a link to save the item for later
+      const saveForLaterLink = document.createElement('a');
+      saveForLaterLink.href = '#';
+      saveForLaterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(`Saving ${item.name}(${item.sku}) for later`);
+        // TODO: Implement save for later functionality
+      });
+      saveForLaterLink.innerText = 'Save for later';
 
-        // Create a separator
-        const separator = document.createElement('span');
-        separator.innerText = ' | ';
+      // Create a separator
+      const separator = document.createElement('span');
+      separator.innerText = ' | ';
 
-        // Create a link to remove the item from the cart
-        const removeLink = document.createElement('a');
-        removeLink.href = '#';
-        removeLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          console.log(`Removing ${item.name}(${item.sku}) from cart`);
-          // TODO: Implement remove item functionality
-        });
-        removeLink.innerText = 'Remove';
+      // Create a link to remove the item from the cart
+      const removeLink = document.createElement('a');
+      removeLink.href = '#';
+      removeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(`Removing ${item.name}(${item.sku}) from cart`);
+        // TODO: Implement remove item functionality
+      });
+      removeLink.innerText = 'Remove';
 
-        // Create a container to hold the links
-        const container = document.createElement('div');
-        container.innerHTML = '<div class="cart-summary__thumbnail"/>';
+      // Create a container to hold the links
+      const container = document.createElement('div');
+      container.innerHTML = '<div class="cart-summary__thumbnail"/>';
 
-        // Style the container
-        container.style.font = 'var(--type-details-caption-2-font)'
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
+      // Style the container
+      container.style.font = 'var(--type-details-caption-2-font)';
+      container.style.display = 'flex';
+      container.style.justifyContent = 'space-between';
 
-        // Append the links to the container
-        container.appendChild(saveForLaterLink);
-        container.appendChild(separator);
-        container.appendChild(removeLink);
+      // Append the links to the container
+      container.appendChild(saveForLaterLink);
+      container.appendChild(separator);
+      container.appendChild(removeLink);
 
-        // Append the container as a child to the existing thumbnail content
-        ctx.appendChild(container)
-      }
-    }
-  })(block);
+      // Append the container as a child to the existing thumbnail content
+      ctx.appendChild(container);
+    },
+  },
+})(block);
 ```
 
-### Footer slot
+### Footer
 
-The Footer slot allows you to add content to the bottom of the CartSummaryList container.
+The Footer slot allows you to add content to the bottom of the `CartSummaryList` container.
 
 The following example demonstrates how to extend the footer slot by adding a promotional cart rule to each product in the cart.
 
@@ -247,59 +209,53 @@ return provider.render(Cart, {
 })(document.getElementById('@dropins/cart'));
 ```
 
-### ProductAttributes slot
+### ProductAttributes
 
-The ProductAttributes slot allows you to add content to the CartSummaryList container.
+The `ProductAttributes` slot allows you to add content to the `CartSummaryList` container.
 
 The following example demonstrates how to add the Fashion Material and Fashion Style product attributes to each product in the cart.
 
 ```javascript
-  return provider.render(CartSummaryList, {
-    enableRemoveItem: true,
-    enableUpdateItemQuantity: true,
-    routeProduct: (item) => {
-      return `${item.url.categories.join('/')}/${item.url.urlKey}`;
-    },
-    routeEmptyCartCTA: () => '#empty-cart',
-    slots: {
-      ProductAttributes: (ctx) => {
-        // Prepend Product Attributes
-        const ProductAttributes = ctx.item?.productAttributes;
+return provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+  slots: {
+    ProductAttributes: (ctx) => {
+      // Prepend Product Attributes
+      const ProductAttributes = ctx.item?.productAttributes;
 
-        ProductAttributes?.forEach((attr) => {
-          if(attr.code === "Fashion Material" || attr.code === "Fashion Style") {
-            if(attr.selected_options) {
-              const selectedOptions = attr.selected_options
+      ProductAttributes?.forEach((attr) => {
+        if (attr.code === 'Fashion Material' || attr.code === 'Fashion Style') {
+          if (attr.selected_options) {
+            const selectedOptions = attr.selected_options
               .filter((option) => option.label.trim() !== '')
               .map((option) => option.label)
               .join(', ');
-              
-              if(selectedOptions) {
-                const productAttribute = document.createElement('div');
-                productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
-                ctx.appendChild(productAttribute);
-              }
-            } else if (attr.value) {
+
+            if (selectedOptions) {
               const productAttribute = document.createElement('div');
-              productAttribute.innerText = `${attr.code}: ${attr.value}`;
+              productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
               ctx.appendChild(productAttribute);
             }
+          } else if (attr.value) {
+            const productAttribute = document.createElement('div');
+            productAttribute.innerText = `${attr.code}: ${attr.value}`;
+            ctx.appendChild(productAttribute);
           }
-        })
-      },
+        }
+      });
     },
-  })(productList);
+  },
+})(productList);
 ```
 
-### CartSummaryFooter slot
+## OrderSummary slots
 
-The CartSummaryFooter slot allows you to add content to the bottom of the CartSummaryList container.
-
-// Need example
-
-## OrderSummary container
-
-The `OrderSummary` container supports the following slots:
+You can customize the appearance of the order summary by using slots.
 
 ```ts
 interface OrderSummaryProps
@@ -310,50 +266,50 @@ slots?: {
 };
 ```
 
-### EstimateShipping slot
+### EstimateShipping
 
-The `EstimateShipping` slot allows you to add Estimate Shipping layout to the `OrderSummary` container. 
+The EstimateShipping slot allows you to add Estimate Shipping layout to the OrderSummary container.
 
-The following example demonstrates how to do this.
+The following example demonstrates how to add the Estimate Shipping layout to the OrderSummary container.
 
 ```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
+return provider.render(OrderSummary, {
+  routeCheckout: () => '#checkout',
 
-    errors: ctx.hasErrors,
+  errors: ctx.hasErrors,
 
-    slots: {
-      EstimateShipping: (ctx) => {
-        const estimateShippingForm = document.createElement('div');
+  slots: {
+    EstimateShipping: (ctx) => {
+      const estimateShippingForm = document.createElement('div');
 
-        provider.render(EstimateShipping)(estimateShippingForm);
+      provider.render(EstimateShipping)(estimateShippingForm);
 
-        ctx.appendChild(estimateShippingForm);
-      }
+      ctx.appendChild(estimateShippingForm);
     },
-  })(orderSummary);
+  },
+})(orderSummary);
 ```
 
-### Coupons slot
+### Coupons
 
-The `Coupons` slot allows you to add the Coupons layout to the `OrderSummary` container. 
+The Coupons slot allows you to add the Coupons layout to the OrderSummary container.
 
-The following example demonstrates how to do this.
+The following example demonstrates how to enable coupons to the OrderSummary container.
 
 ```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
+return provider.render(OrderSummary, {
+  routeCheckout: () => '#checkout',
 
-    errors: ctx.hasErrors,
+  errors: ctx.hasErrors,
 
-    slots: {
-      Coupons: (ctx) => {
-          const coupons = document.createElement('div');
+  slots: {
+    Coupons: (ctx) => {
+      const coupons = document.createElement('div');
 
-          provider.render(Coupons)(coupons);
+      provider.render(Coupons)(coupons);
 
-          ctx.appendChild(coupons);
-        }
+      ctx.appendChild(coupons);
     },
-  })(orderSummary);
+  },
+})(orderSummary);
 ```
