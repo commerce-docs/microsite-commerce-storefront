@@ -244,7 +244,31 @@ export default defineConfig({
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
             ]
-          },
+          //{
+          //  label: 'Order',
+          //  collapsed: true,
+          //  items: [
+          //    { label: 'Overview', link: '/dropins/order/' },
+          //    { label: 'Initialization', link: '/dropins/order/initialization/' },
+          //    { label: 'Styles', link: '/dropins/order/styles/' },
+          //    { label: 'Containers', 
+          //      collapsed: true,
+          //      items: [
+          //        { label: 'First', link: '/dropins/order/containers/first/' },
+          //        { label: 'Second', link: '/dropins/order/containers/second/' },
+          //      ]
+          //    },
+          //    { label: 'Slots', link: '/dropins/order/slots/' },
+          //    { label: 'Functions', link: '/dropins/order/functions/' },
+          //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
+          //      collapsed: true,
+          //        items: [
+          //          { label: 'First', link: '/dropins/order/tutorials/first/' },
+          //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
+          //    ],
+          //  ]        
+        //  ]
+        },
           {
             label: 'User auth',
             collapsed: true,
