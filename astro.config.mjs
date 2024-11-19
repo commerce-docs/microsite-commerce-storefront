@@ -229,7 +229,31 @@ export default defineConfig({
               { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
             ]
-          },
+          //{
+          //  label: 'Order',
+          //  collapsed: true,
+          //  items: [
+          //    { label: 'Overview', link: '/dropins/order/' },
+          //    { label: 'Initialization', link: '/dropins/order/initialization/' },
+          //    { label: 'Styles', link: '/dropins/order/styles/' },
+          //    { label: 'Containers', 
+          //      collapsed: true,
+          //      items: [
+          //        { label: 'First', link: '/dropins/order/containers/first/' },
+          //        { label: 'Second', link: '/dropins/order/containers/second/' },
+          //      ]
+          //    },
+          //    { label: 'Slots', link: '/dropins/order/slots/' },
+          //    { label: 'Functions', link: '/dropins/order/functions/' },
+          //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
+          //      collapsed: true,
+          //        items: [
+          //          { label: 'First', link: '/dropins/order/tutorials/first/' },
+          //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
+          //    ],
+          //  ]        
+        //  ]
+        },
           {
             label: 'User auth',
             collapsed: true,
@@ -256,7 +280,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/user-account/' },
-              { label: ' Initialization', link: '/dropins/user-account/initialization/' },
+              { label: 'Initialization', link: '/dropins/user-account/initialization/' },
               { label: 'Styles', link: '/dropins/user-account/styles/' },
               { label: 'Containers', 
                 collapsed: true,
