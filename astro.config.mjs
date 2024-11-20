@@ -213,6 +213,13 @@ export default defineConfig({
               },
               { label: 'Slots', link: '/dropins/cart/cart-slots/' },
               { label: 'Functions', link: '/dropins/cart/cart-functions/' },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order Summary Lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                ]
+              },
             ]
           },
           {
