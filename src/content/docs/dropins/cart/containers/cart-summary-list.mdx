@@ -71,4 +71,44 @@ The `CartSummaryList` container supports the following slots:
 
 ## Example configuration
 
-TBD
+The following example demonstrates how to render the `CartSummaryList` container with the `routeProduct` and `routeEmptyCartCTA` callbacks:
+
+```js
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  showDiscount: true,
+  // accordion: true,
+  // showMaxItems: false,
+  // maxItems: 6,
+  // routeCart: () => '#cart',
+  // showSavings: true,
+  // quantityType: 'dropdown',
+  // dropdownOptions: [
+  //   { value: '1', text: '1' },
+  //   { value: '2', text: '2' },
+  //   { value: '3', text: '3' },
+  // ],
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+  slots: {
+    Footer: (ctx) => {
+      // Runs on mount
+      const wrapper = document.createElement('div');
+      ctx.appendChild(wrapper);
+
+      // Append Product Promotions on every update
+      ctx.onChange((next) => {
+        wrapper.innerHTML = '';
+
+        next.item?.discount?.label?.forEach((label) => {
+          const discount = document.createElement('div');
+          discount.style.color = '#3d3d3d';
+          discount.innerText = label;
+          wrapper.appendChild(discount);
+        });
+    });
+},
+```
