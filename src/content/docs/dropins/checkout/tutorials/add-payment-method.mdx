@@ -13,7 +13,11 @@ To integrate third-party payment providers, you can use the extensibility featur
 
 ## Steps-by-step
 
-This tutorial provides a step-by-step guide for integrating the Braintree payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well. Just make sure that the payment provider you choose offers an SDK or API that you can use to integrate with the [slots](/dropins/checkout/slots/) provided by the `PaymentMethods` container in the checkout drop-in component.
+This tutorial provides a step-by-step guide for integrating the Braintree payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well.
+
+<Aside type="note">
+Make sure that the payment provider you choose offers an SDK or API that you can use to integrate with the [slots](/dropins/checkout/slots/) provided by the `PaymentMethods` container in the checkout drop-in component.
+</Aside>
 
 <Tasks>
 
@@ -97,3 +101,38 @@ CheckoutProvider.render(PaymentMethods, {
 </Task>
 
 </Tasks>
+
+## Example
+
+The following files show the complete JS and CSS code for the Braintree payment provider integration:
+
+```js title="commerce-checkout.js" ins={"2":1} ins={"3":5} ins={"4":12} ins={"5":23}
+import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
+
+. . .
+
+// Define the modifier for the Payment Methods section
+const renderBraintreePayments = (element, context) => {
+  const { onPlaceOrder } = context;
+  const $content = document.createElement('div');
+
+  $content.innerHTML = '<div id="dropin-container"></div>';
+
+  if (element) {
+    element.innerHTML = $content.innerHTML;
+    braintree.dropin.create({
+      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
+      container: '#dropin-container',
+    });
+  }
+};
+
+. . .
+
+// Set the function on the slot
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Main: renderBraintreePayments,
+  },
+})(document.getElementById('payment-methods'));
+```
