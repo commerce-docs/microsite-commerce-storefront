@@ -9,30 +9,26 @@ import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) supports a variety of third-party payment providers, enabling you to integrate the payment gateway of your choice.
+To integrate third-party payment providers, you can use the extensibility features provided by the checkout drop-in component. This component allows you to customize the list of payment methods shown during the checkout process using slots.
 
 ## Steps-by-step
 
-This tutorial provides a step-by-step guide for integrating the Adyen payment provider with the Commerce boilerplate template using a custom NPM package developed by Adobe. You can use these steps as a reference to integrate other payment providers as well.
+This tutorial provides a step-by-step guide for integrating the Braintree payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well. Just make sure that the payment provider you choose offers an SDK or API that you can use to integrate with the [slots](/dropins/checkout/slots/) provided by the `PaymentMethods` container in the checkout drop-in component.
 
 <Tasks>
 
 <Task>
 ### Prerequisites
 
-You must [install and configure](https://docs.adyen.com/plugins/adobe-commerce/set-up-the-plugin-in-adobe-commerce) the Adyen Payment Plugin on your Adobe Commerce backend before integrating it with the Commerce boilerplate template.
-
-<Aside type="note" title="Compatibility">
-The Adyen package is not compatible with [API Mesh](https://developer.adobe.com/graphql-mesh-gateway/).
-</Aside>
+You must [configure](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/braintree) the Braintree extension on your Adobe Commerce backend before integrating it with the Commerce boilerplate template.
 
 </Task>
 
 <Task>
 
-### Add your client key
+### Add your client token
 
-After you install and configure the Adyen Payment Plugin on Adobe Commerce, you must add your Adyen client key to the Commerce boilerplate configuration.
+After you configure the Braintree extension, you must add your client token to the Commerce boilerplate configuration.
 
 <Aside type="note">
   You should use a development or staging environment for integration testing purposes before modifying your production configuration.
@@ -41,11 +37,11 @@ After you install and configure the Adyen Payment Plugin on Adobe Commerce, you 
 <Steps>
 1. Open your project's `configs-stage` or `configs-dev` Google Sheet or Microsoft Excel file.
 
-1. Add a new key-value pair for your Adyen API key.
+1. Add a new key-value pair for your Braintree client token.
 
-   | key               | value           |
-   |-------------------|-----------------|
-   | adyen-client-key  | YOUR_CLIENT_KEY |
+   | key                     | value             |
+   |-------------------------|-------------------|
+   | braintree-client-token  | YOUR_CLIENT_TOKEN |
 
 1. Save the file.
 1. Publish file changes with the [Sidekick](/get-started/#sidekick) extension.
@@ -56,84 +52,73 @@ After you install and configure the Adyen Payment Plugin on Adobe Commerce, you 
 
 <Task>
 
-### Install the package
+### Add the Braintree client SDK
 
-<Steps>
-1. Open a terminal and navigate to your boilerplate-based project.
-1. Install the Adyen NPM package and add it to the list of project dependencies in your `package.json` file with the `--save` flag.
-   
-   ```bash
-   npm install @dropins/adyen-checkout-extension --save
-   ```
-</Steps>
-
-</Task>
-
-<Task>
-
-### Integrate with the boilerplate
-
-To integrate third-party payment providers, like Adyen, with Adobe Commerce, you can use the extensibility features provided by the checkout drop-in component. The checkout component allows you to customize the list of payment methods shown during the checkout process using slots.
+To integrate the Braintree payment provider with the Commerce boilerplate template, you must add the Braintree client SDK to the `commerce-checkout.js` file.
 
 <Steps>
 1. Open the `blocks/commerce-checkout/commerce-checkout.js` file.
 
-1. Import the required files.
+1. Import the Braintree client SDK.
    
    ```js
    ...
-   // Adyen drop-in modules
-   import * as adyenApi from '@dropins/adyen-checkout-extension/api.js';
-   import { render as AdyenProvider } from '@dropins/adyen-checkout-extension/render.js';
-   import AdyenPaymentMethod from '@dropins/adyen-checkout-extension/containers/AdyenPaymentMethod.js';
+   import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
    ...
    ```
 
-1. Register the Adyen API.
-
-   ```js
-   ...
-   initializers.register(adyenApi.initialize, {});
-   ...
-   ```
-
-1. Use the `PaymentMethod` [handlers slot](/dropins/checkout/slots/) to add a payment method handler for Adyen. This handler renders the Adyen payment method UI when the backend indicates that Adyen credit card is an allowed payment method.
-
-   ```js
-   ...
-   context.addPaymentMethodHandler('adyen_cc', {
-      render: (ctx, element) => {
-         AdyenProvider(AdyenPaymentMethod, ctx, element);
-         if (element) {
-            // Clear the lement first
-            element.innerHTML = '';
-            // Render the Adyen component
-            adyenProvider.render(AdyenPaymentMethod, ctx)(element);
-         }
-      },
-   })
-   ...
-   ```
 </Steps>
 
 </Task>
 
 <Task>
 
-### Verify the integration
+### Define a payment method modifier
 
-<Steps>
-1. Start the development server to view the boilerplate storefront.
+To render the Braintree payment method UI in the `PaymentMethods` container, you must define a modifier that you can use in the container's `main` slot.
 
-   ```bash
-   npm start
-   ```
+```js
+const renderBraintreePayments = (element, context) => {
+  const { onPlaceOrder } = context;
+  const $content = document.createElement('div');
 
-1. Navigate to a checkout page and verify that the Adyen payment method is displayed as an option.
+  $content.innerHTML = '<div id="dropin-container"></div>';
+```
 
-   [screenshot]
+</Task>
 
-</Steps>
+<Task>
+
+### Create and insert the Braintree drop-in UI
+
+Inside the function, a new `div` element is created and assigned to `$content`. This `div` contains another `div` with the ID `dropin-container`. If the element parameter is provided, its inner HTML is set to the content of `$content`. Then, the Braintree drop-in UI is created and attached to the `#dropin-container` using the provided authorization token.
+
+```js
+  if (element) {
+    element.innerHTML = $content.innerHTML;
+    braintree.dropin.create({
+      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
+      container: '#dropin-container',
+    });
+  }
+};
+```
+
+</Task>
+
+<Task>
+
+### Set the function on the slot
+
+Finally, you must set the `renderBraintreePayments` function on the `main` slot.
+
+```js
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Main: renderBraintreePayments,
+  },
+})(document.getElementById('payment-methods'));
+```
 
 </Task>
 
