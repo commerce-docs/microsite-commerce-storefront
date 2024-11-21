@@ -14,7 +14,7 @@ The Commerce boilerplate template does not include a BOPIS checkout flow by defa
 
 ## Step-by-step
 
-The following steps describe how to create a new [commerce block](/discovery/architecture/#commerce-blocks) that allows users to choose between delivery and in-store pickup. This block is a modified version of the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) block in the boilerplate template.
+The following steps describe how to modify the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) block file in the boilerplate template to allow users to choose between delivery and in-store pickup during the checkout process.
 
 <Aside type="tip">
 A completed version of the code described in each of these steps is available [at the end](#example) of this tutorial.
@@ -26,7 +26,7 @@ A completed version of the code described in each of these steps is available [a
 
 ### Prerequisites
 
-Before you start, you must configure [in-store delivery](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/delivery/basic-methods/shipping-in-store-delivery) options in the Adobe Commerce Admin to define pickup locations.
+Before you start, you must configure [in-store delivery](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/delivery/basic-methods/shipping-in-store-delivery) options in the Adobe Commerce Admin to define pickup locations. The [`fetchPickupLocations`](#fetch-pickup-locations) function retrieves the list of available pickup locations using a GraphQL query.
 
 </Task>
 
@@ -34,27 +34,30 @@ Before you start, you must configure [in-store delivery](https://experienceleagu
 
 ### Update content fragment
 
-For the new section, we need to add additional DOM elements, which can be done by modifying the contextual fragment.
+<Steps>
+1. To create a new section for the delivery options, additional DOM elements are required. You can add these elements by modifying the content fragment.
 
-```html
-<div class="checkout__delivery-method">
-  <h2 class="checkout-delivery-method__title">Delivery Method</h2>
-  <div class="checkout-delivery-method__toogle-buttons">
-    <div class="checkout-delivery-method__delivery-button"></div>
-    <div class="checkout-delivery-method__in-store-pickup-button"></div>
-  </div>
-</div>
-<div class="checkout__in-store-pickup"></div>
-```
-You must also add new selectors to render the required components and content.
+   ```html
+   <div class="checkout__delivery-method">
+     <h2 class="checkout-delivery-method__title">Delivery Method</h2>
+     <div class="checkout-delivery-method__toogle-buttons">
+       <div class="checkout-delivery-method__delivery-button"></div>
+       <div class="checkout-delivery-method__in-store-pickup-button"></div>
+     </div>
+   </div>
+   <div class="checkout__in-store-pickup"></div>
+   ```
 
-```javascript
-export const $deliveryButton = fragment.querySelector('.checkout-delivery-method__delivery-button');
-export const $inStorePickupButton = fragment.querySelector('.checkout-delivery-method__in-store-pickup-button');
-export const $inStorePickup = fragment.querySelector('.checkout__in-store-pickup');
-```
+1. You must also add new selectors to render the required components and content.
 
-![Update content fragment](@images/dropins/checkout/bopis-content-fragment.png)
+   ```javascript
+   export const $deliveryButton = fragment.querySelector('.checkout-delivery-method__delivery-button');
+   export const $inStorePickupButton = fragment.querySelector('.checkout-delivery-method__in-store-pickup-button');
+   export const $inStorePickup = fragment.querySelector('.checkout__in-store-pickup');
+   ```
+
+   ![Update content fragment](@images/dropins/checkout/bopis-content-fragment.png)
+</Steps>
 
 </Task>
 
@@ -115,7 +118,7 @@ async function onToggle(type) {
 
 ### Fetch pickup locations
 
-The `fetchPickupLocations` function retrieves the list of available pickup locations using a GraphQL query. Shoppers can choose a location where they'd like to pick up their order.
+The `fetchPickupLocations` function retrieves the list of available pickup locations using a GraphQL query. Users can choose a location where they'd like to pick up their order.
 
 ```js
 async function fetchPickupLocations() {
@@ -166,7 +169,7 @@ pickupLocations.forEach((location) => {
 });
 ```
 
-{/* TODO: Add a screenshot of the rendered location options. */}
+![Pick up location options](@images/dropins/checkout/bopis-render-pickup-locations.png)
 
 </Task>
 
@@ -174,7 +177,7 @@ pickupLocations.forEach((location) => {
 
 ### Finalize the flow
 
-After a shopper selects **In-store pickup** and chooses a location, the pickup form is shown, while the shipping form is hidden. This provides a clear and seamless way for shoppers to choose how they want to receive their order.
+After a user selects **In-store pickup** and chooses a location, the pickup form is shown, while the shipping form is hidden. This provides a clear and seamless way for users to choose how they want to receive their order.
 
 </Task>
 
