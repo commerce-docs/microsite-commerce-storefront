@@ -214,6 +214,13 @@ export default defineConfig({
               { label: 'Slots', link: '/dropins/cart/cart-slots/' },
               { label: 'Functions', link: '/dropins/cart/cart-functions/' },
               { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order Summary Lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                ]
+              },
             ]
           },
           {
@@ -243,6 +250,12 @@ export default defineConfig({
                { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
+              { label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                ]
+              },
             ]
           //{
           //  label: 'Order',
