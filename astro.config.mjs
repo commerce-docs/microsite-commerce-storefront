@@ -247,41 +247,46 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-               { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
-              { label: 'Tutorials',
+              {
+                label: 'Tutorials',
                 collapsed: true,
                 items: [
-                  { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                  {
+                    label: 'Buy online, pickup in store',
+                    link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/'
+                  },
                 ]
               },
             ]
-          //{
-          //  label: 'Order',
-          //  collapsed: true,
-          //  items: [
-          //    { label: 'Overview', link: '/dropins/order/' },
-          //    { label: 'Initialization', link: '/dropins/order/initialization/' },
-          //    { label: 'Styles', link: '/dropins/order/styles/' },
-          //    { label: 'Containers', 
-          //      collapsed: true,
-          //      items: [
-          //        { label: 'First', link: '/dropins/order/containers/first/' },
-          //        { label: 'Second', link: '/dropins/order/containers/second/' },
-          //      ]
-          //    },
-          //    { label: 'Slots', link: '/dropins/order/slots/' },
-          //    { label: 'Functions', link: '/dropins/order/functions/' },
-          //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
-          //      collapsed: true,
-          //        items: [
-          //          { label: 'First', link: '/dropins/order/tutorials/first/' },
-          //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
-          //    ],
-          //  ]        
-        //  ]
-        },
+          },
+          {
+           label: 'Order',
+           collapsed: true,
+           items: [
+             { label: 'Overview', link: '/dropins/order/' },
+             { label: 'Initialization', link: '/dropins/order/initialization/' },
+             { label: 'Styles', link: '/dropins/order/styles/' },
+             { label: 'Containers',
+               collapsed: true,
+               items: [
+                 { label: 'First', link: '/dropins/order/containers/first/' },
+                 { label: 'Second', link: '/dropins/order/containers/second/' },
+               ]
+             },
+             { label: 'Slots', link: '/dropins/order/slots/' },
+             { label: 'Functions', link: '/dropins/order/functions/' },
+             {
+               label: 'Tutorials',
+               collapsed: true,
+               items: [
+                 { label: 'Order Cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+               ]
+             },
+           ]
+          },
           {
             label: 'User auth',
             collapsed: true,
