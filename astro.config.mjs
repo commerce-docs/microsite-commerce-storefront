@@ -266,18 +266,18 @@ export default defineConfig({
            label: 'Order',
            collapsed: true,
            items: [
-             { label: 'Overview', link: '/dropins/order/' },
-             { label: 'Initialization', link: '/dropins/order/initialization/' },
-             { label: 'Styles', link: '/dropins/order/styles/' },
-             { label: 'Containers',
-               collapsed: true,
-               items: [
-                 { label: 'First', link: '/dropins/order/containers/first/' },
-                 { label: 'Second', link: '/dropins/order/containers/second/' },
-               ]
-             },
-             { label: 'Slots', link: '/dropins/order/slots/' },
-             { label: 'Functions', link: '/dropins/order/functions/' },
+             // { label: 'Overview', link: '/dropins/order/' },
+             // { label: 'Initialization', link: '/dropins/order/initialization/' },
+             // { label: 'Styles', link: '/dropins/order/styles/' },
+             // { label: 'Containers',
+             //   collapsed: true,
+             //   items: [
+             //     { label: 'First', link: '/dropins/order/containers/first/' },
+             //     { label: 'Second', link: '/dropins/order/containers/second/' },
+             //   ]
+             // },
+             // { label: 'Slots', link: '/dropins/order/slots/' },
+             // { label: 'Functions', link: '/dropins/order/functions/' },
              {
                label: 'Tutorials',
                collapsed: true,
