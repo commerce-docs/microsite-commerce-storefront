@@ -241,13 +241,14 @@ export default defineConfig({
                   { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                 ]
               },
-            ]
-          //{
-          //  label: 'Order',
-          //  collapsed: true,
-          //  items: [
+            ],
+          }, 
+          {
+            label: 'Order',
+            collapsed: true,
+            items: [
           //    { label: 'Overview', link: '/dropins/order/' },
-          //    { label: 'Initialization', link: '/dropins/order/initialization/' },
+              { label: 'Initialization', link: '/dropins/order/initialization/' },
           //    { label: 'Styles', link: '/dropins/order/styles/' },
           //    { label: 'Containers', 
           //      collapsed: true,
@@ -257,7 +258,7 @@ export default defineConfig({
           //      ]
           //    },
           //    { label: 'Slots', link: '/dropins/order/slots/' },
-          //    { label: 'Functions', link: '/dropins/order/functions/' },
+              { label: 'Functions', link: '/dropins/order/functions/' },
           //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
           //      collapsed: true,
           //        items: [
@@ -265,7 +266,7 @@ export default defineConfig({
           //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
           //    ],
           //  ]        
-        //  ]
+          ],
         },
           {
             label: 'User auth',
@@ -286,7 +287,7 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
-            ]
+            ],
           },
           {
             label: 'User account',

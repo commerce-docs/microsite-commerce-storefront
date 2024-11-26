@@ -8,3 +8,542 @@ tableOfContents:
 
 import Aside from '@components/Aside.astro';
 import OptionsTable from '@components/OptionsTable.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+import orderDataModel from '_includes/order-data-model.ts?raw';
+
+The Order Drop-in component provides the following API endpoints, allowing developers to perform various account-related operations and create custom implementations:
+
+## cancelOrder
+
+The `cancelOrder` function is a wrapper for the [`cancelOrder`](https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/cancel-order/) mutation. You must pass an order ID and reason,
+
+```ts
+export const cancelOrder = async (
+  orderId: string,
+  reason: string,
+  onSuccess: Function,
+  onError: Function
+): Promise<void | null | undefined>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['orderId', 'string', 'Yes', 'The ID of the order to cancel.'],
+    ['reason', 'string', 'Yes', 'The reason for canceling the order.'],
+    ['onSuccess', 'Function', 'No', 'The callback function to execute when the order is successfully canceled.'],
+    ['onError', 'Function', 'No', 'The callback function to execute when an error occurs.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a void, null, or undefined value.
+
+### Usage
+
+```js
+cancelOrder(
+  {
+    orderId: '12345',;
+    reason: 'I don't like the color;
+  }
+)
+```
+
+## confirmCancelOrder 
+
+The `confirmCancelOrder` function confirms the cancellation of an order after the guest user clicks on a URL provided in an order cancellation confirmation email. The confirmation key is generated when the guest requests to cancel an order.
+
+```ts
+confirmCancelOrder(
+    orderId: string,
+    confirmationKey: string
+): Promise<OrderDataModel>;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['orderId', 'string', 'Yes', 'The ID of the order to cancel.'],
+    ['confirmationKey', 'string', 'Yes', 'A key generated when a guest requests to cancel an order.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an `OrderDataModel` object.
+
+<CodeInclude code={orderDataModel} lang="ts" frame="none" />
+
+### Usage
+
+```js
+import { confirmCancelOrder } from './confirmCancelOrder';
+
+const orderId = '12345';
+const confirmationKey = 'abcde12345';
+
+confirmCancelOrder(orderId, confirmationKey)
+  .then(response => {
+    console.log('Order cancellation confirmed:', response);
+  })
+  .catch(error => {
+    console.error('Error confirming order cancellation:', error);
+  });
+```
+
+## getAttributesForm 
+
+The `getAttributesForm` function is a wrapper for the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query. You must pass an attribute code to retrieve the form.
+
+```ts
+export const getAttributesForm = async (
+  formCode: string
+): Promise<AttributesFormModel[]>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['formCode', 'string', 'Yes', 'One of "customer_account_create", "customer_account_edit", "customer_address_create", "customer_address_edit".'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an array of `AttributesFormModel` objects.
+
+```ts
+export interface AttributesFormItemsProps {
+  code?: string;
+  name?: string;
+  id?: string;
+  required?: boolean;
+  label?: string;
+  options?: { is_default: boolean; label: string; value: string }[];
+  entityType?: string;
+  className?: string;
+  defaultValue?: string | boolean | number;
+  fieldType?: FieldEnumList;
+  multilineCount?: number;
+  isUnique?: boolean;
+  orderNumber: number;
+  isHidden?: boolean;
+  customUpperCode: string;
+  validateRules: Record<string, string>[];
+}
+
+export interface AttributesFormModel extends AttributesFormItemsProps {}
+```
+
+### Usage
+
+```ts
+getAttributesForm(formCode: 'customer_address_edit');
+```
+
+## getAttributesList
+
+The `getAttributesList` function is a wrapper for the [`attributesList`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-list/) query. You must pass an attribute code to retrieve the list. The system default values are `CUSTOMER`, `CUSTOMER_ADDRESS`, `CATALOG_PRODUCT` and `RMA_ITEM`.
+
+```ts
+export const getAttributesList = async (
+  entityType: string
+): Promise<AttributesFormModel[] | []>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['entityType', 'string', 'Yes', 'The entity type for which to retrieve the list of attributes.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an array of `AttributesFormModel` objects or an empty array.
+
+```ts
+export interface AttributesFormItemsProps {
+  code?: string;
+  name?: string;
+  id?: string;
+  required?: boolean;
+  label?: string;
+  options?: { is_default: boolean; label: string; value: string }[];
+  entityType?: string;
+  className?: string;
+  defaultValue?: string | boolean | number;
+  fieldType?: FieldEnumList;
+  multilineCount?: number;
+  isUnique?: boolean;
+  orderNumber: number;
+  isHidden?: boolean;
+  customUpperCode: string;
+  validateRules: Record<string, string>[];
+}
+
+export interface AttributesFormModel extends AttributesFormItemsProps {}
+```
+
+### Usage
+
+```ts
+getAttributesList(entityType: 'RMA_ITEM');
+```
+
+## getCustomer
+
+The `getCustomer` function is a wrapper for the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query. You must pass a customer ID to retrieve the customer data.
+
+```ts
+export const getCustomer = async (): Promise<CustomerDataModelShort>
+```
+### Returns
+
+Returns a promise that resolves to a `CustomerDataModelShort` object.
+
+```ts
+export interface CustomerDataModelShort {
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+```
+
+### Usage
+
+```ts
+getCustomer();
+```
+## getCustomerOrdersReturn
+
+The `getCustomerOrdersReturn` function returns details about the returns a customer has requested. It is a wrapper for the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+```ts
+export const getCustomerOrdersReturn = async (
+  pageSize = 10
+): Promise<CustomerOrdersReturnModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['pageSize', 'number', 'No', 'The number of orders to return at a time.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CustomerOrdersReturnModel` object or null.
+
+```ts 
+export interface CustomerOrdersReturnModel {
+  ordersReturn: OrdersReturnPropsModel[];
+  pageInfo?: PageInfoProps;
+}
+
+export interface OrdersReturnItemsPropsModel extends OrderItemModel {
+  quantity: number;
+  requestQuantity: number;
+  status: string;
+  uid: string;
+}
+
+export interface PageInfoProps {
+  pageSize: number;
+  totalPages: number;
+  currentPage: number;
+}
+```
+
+### Usage
+
+The following example demonstrates how to retrieve a customer's return orders:
+
+```ts
+getCustomerOrdersReturn();
+```
+
+## getGuestOrder
+
+The `getGuestOrder` function is a wrapper for the [`guestOrder`](https://developer.adobe.com/commerce/webapi/graphql/schema/orders/queries/guest-order/) query.
+
+```ts
+export const getGuestOrder = async (form: {
+  number: string;
+  email: string;
+  lastname: string;
+}): Promise<OrderDataModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['number', 'string', 'Yes', 'The order number.'],
+    ['email', 'string', 'Yes', 'The email address associated with the order.'],
+    ['lastname', 'string', 'Yes', 'The last name associated with the order.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an `OrderDataModel` object or null.
+
+<CodeInclude code={orderDataModel} lang="ts" frame="none" />
+
+### Usage
+
+The following example demonstrates how to retrieve a guest order:
+
+```ts
+getGuestOrder({
+  number: '12345',
+  email: 'jdoe@example.com',
+  lastname: 'Doe'
+});
+```
+
+## getOrderDetailsById
+
+The `getOrderDetailsById` function is a wrapper for the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query. You must pass an order ID to retrieve the order details.
+
+```ts
+export const getOrderDetailsById = async <T extends QueryType>({
+  orderId,
+  returnRef,
+  queryType,
+  returnsPageSize = 50,
+}: GetOrderDetailsByIdProps): Promise<TransformedData<T>>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['orderId', 'string', 'Yes', 'The ID of the order to retrieve.'],
+    ['returnRef', 'boolean', 'No', 'Whether to return the reference.'],
+    ['queryType', 'QueryType', 'No', 'The type of query to perform. Use orderData as the value'],
+    ['returnsPageSize', 'number', 'No', 'The number of returns to return at a time.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `TransformedData` object.
+
+### Usage
+
+type QueryType = 'orderData';
+
+```ts
+getOrderDetailsById(
+  orderId?: 12345;
+  queryType: QueryType;
+);
+```
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about the storefront configuration. It is a wrapper for the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query.
+
+```ts
+export const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `StoreConfigModel` object or null.
+
+```ts
+type StoreConfigModel = {
+  order_cancellation_enabled: boolean;
+  order_cancellation_reasons: {
+    description: string;
+  };
+};
+```
+
+### Usage
+
+The following example demonstrates how to retrieve the store configuration:
+
+```ts
+getStoreConfig();
+```
+
+## guestOrderByToken
+
+The `guestOrderByToken` function retrieves a guest order using a token generated by Adobe Commerce. It is a wrapper for the `guestOrderByToken` query.
+
+```ts
+export const guestOrderByToken = async (
+  token?: string,
+  returnRef?: string
+): Promise<OrderDataModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['token', 'string', 'No', 'A token for the order assigned by Adobe Commerce.'],
+    ['returnRef', 'string', 'No', 'The reference to return.'],
+  ]} 
+/>
+
+### Returns
+
+Returns a promise that resolves to an `OrderDataModel` object or null.
+
+<CodeInclude code={orderDataModel} lang="ts" frame="none" />
+
+### Usage
+
+```ts
+guestOrderByToken(token:'abcde12345');
+```
+
+## reorderItems
+
+The `reorderItems` function allows a logged-in customer to add all the products from a previous order into their cart. It is a wrapper for the [`reorderItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/reorder-items/) mutation.
+
+```ts
+export const reorderItems = async (
+  orderNumber: string
+): Promise<ReorderItemsProps>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['orderNumber', 'string', 'Yes', 'The order number to reorder.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `ReorderItemsProps` object.
+
+```ts
+export interface ReorderItemsResponse {
+  data: {
+    reorderItems: {
+      cart: {
+        itemsV2: {
+          items: { uid: string }[];
+        };
+      };
+      userInputErrors: UserInputErrorProps[];
+    };
+  };
+
+  errors?: {
+    message: string;
+  }[];
+}
+```
+
+### Usage
+
+The following example demonstrates how to reorder items from a previous order:
+
+```ts
+reorderItems(orderNumber: '12345');
+```
+
+## requestGuestOrderCancel
+
+The `requestGuestOrderCancel` function is simmilar to the `cancelOrder` function, but it is used for guest orders.
+The token is a unique value generated using guest's email, order number and postcode
+
+```ts
+export const requestGuestOrderCancel = async (
+  token: string,
+  reason: string,
+  onSuccess: Function,
+  onError: Function
+): Promise<void> 
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['token', 'string', 'Yes', 'The token for the order assigned by Adobe Commerce.'],
+    ['reason', 'string', 'Yes', 'The reason for canceling the order.'],
+    ['onSuccess', 'Function', 'No', 'The callback function to execute when the order is successfully canceled.'],
+    ['onError', 'Function', 'No', 'The callback function to execute when an error occurs.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a boolean value.
+
+### Usage
+
+```ts
+requestGuestOrderCancel(
+  {
+    token: `abcde12345`,;
+    reason: `It is too big`;
+  }
+): boolean
+```
+
+## requestReturn
+
+The `requestReturn` function takes the `RequestReturnProps` form as an argument and initiates the process of returning items from an order. It is a wrapper for the [`requestReturn`](https://developer.adobe.com/commerce/webapi/graphql/schema/orders/mutations/request-return/) mutation.
+
+```ts
+export const requestReturn = async (
+  form: RequestReturnProps
+): Promise<{
+  uid: string;
+  number: string;
+  status: string;
+  createdAt: string;
+}>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['form', 'RequestReturnProps', 'Yes', 'The form data for the return request.'],
+  ]}
+/>
+
+The `RequestReturnProps` object has the following properties:
+
+```ts
+export interface RequestReturnProps {
+  orderUid: string;
+  contactEmail: string;
+  items: {
+    orderItemUid: string;
+    quantityToReturn: number;
+    selectedCustomAttributes?: { attribute_code: string; value: string }[];
+    enteredCustomAttributes?: { attribute_code: string; value: string }[];
+  }[];
+}
+```
+
+### Returns
+
+Returns a promise that resolves to an object containing the return request details.
+
+### Usage
+
+```ts
+requestReturn(token:'abcde12345');
+```

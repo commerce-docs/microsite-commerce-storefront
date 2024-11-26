@@ -6,3 +6,92 @@ description: Learn how to configure initializer for the Order drop-in component.
 import OptionsTable from '@components/OptionsTable.astro';
 
 The order drop-in component initializer provides options for configuring language definitions and extending the default models with new fields and transformers.
+
+The initialization code is located in the `/scripts/initializers/order.js` file of the boilerplate.
+
+## Configuration options
+
+The initialization process relies on several key parameters to handle automated redirects and initialize components under different conditions, such as handling errors during order data fetching. Containers within the order drop-in DO NOT fetch data themselves. Instead, they listen for the `order/data` event and use the received order data for initialization. This applies to both order and return pages.
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['orderRef', 'object', 'Yes', 'Contains either a token or an order number and is used to fetch order data.'],
+    ['returnRef', 'object', 'No', 'Used on return pages to fetch return data.'],
+  ]}
+/>
+
+The following code shows an example implementation of the order initializer configuration:
+
+```js
+await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    orderRef,
+    returnRef,
+});
+```
+## Redirection
+
+The following outlines the current redirect behaviors handled within initialization code. The constants referenced below are defined in the `/scripts/constants.js` file within the boilerplate setup:
+
+### Page loads
+
+The authentication status of the user factors into how the page is loaded.
+
+#### Authenticated users
+
+If the user is authenticated and no `orderRef` URL parameter is provided, redirect to CUSTOMER_ORDERS_PATH.
+
+Otherwise, the type of page determines the redirect behavior.
+
+On an account page (the `pathname` includes `CUSTOMER_PATH`):
+
+- If the `orderRef` URL parameter is provided with a valid token, redirect to `${ORDER_DETAILS_PATH}?orderRef={orderRef}`.
+
+- If no valid token is provided in the `orderRef` URL parameter, proceed without a redirect.
+
+On all other pages:
+
+- If an `orderRef` URL parameter is provided with a valid token, proceed without a redirect.
+
+- If a valid token is not provided in the `orderRef` URL parameter, redirect to `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef={orderRef}`.
+
+#### Unauthenticated users
+
+If the user is not authenticated:
+
+- If the `orderRef` URL parameter is provided, proceed without a redirect.
+
+- If no `orderRef` URL parameter is provided, redirect to ORDER_STATUS_PATH.
+
+### Error handling
+
+An `order/error` event is emitted when an error occurs during order data fetching. The event listener redirects the user based on the following conditions:
+
+- If the user is authenticated, redirect to CUSTOMER_ORDERS_PATH.
+
+- If the user is not authenticated, then the behavior depends on the presence of an `orderRef` URL parameter:
+
+  - If it is present, along with a valid order token, redirect to ORDER_STATUS_PATH.
+  - Otherwise, redirect to ORDER_STATUS_PATH with the `orderRef` parameter from the current URL.
+
+## Initialization example
+
+Import /scripts/initializers/order.js into the appropriate file, as shown in the initialization of the `commerce-order-product-list` block:
+
+```js
+/* eslint-disable import/no-unresolved */
+/* eslint-disable import/no-extraneous-dependencies */
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
+
+// Initialize
+import '../../scripts/initializers/order.js';
+
+export default async function decorate(block) {
+ await orderRenderer.render(OrderProductList, {
+   routeProductDetails: (product) => `/products/${product.productUrlKey}/${product.product.sku}`,
+ })(block);
+}
+```
