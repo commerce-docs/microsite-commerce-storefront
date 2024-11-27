@@ -221,6 +221,8 @@ export default defineConfig({
                   { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
                   { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
                   { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
+                  { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
+
                 ]
               },
               { label: 'Slots', link: '/dropins/cart/cart-slots/' },
