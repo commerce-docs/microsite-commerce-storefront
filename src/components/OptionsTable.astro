@@ -6,7 +6,16 @@ interface Props {
 }
 
 const { options, compact = false } = Astro.props;
+
+if (!options || options.length === 0) {
+  throw new Error("OptionsTable: 'options' prop is required and should not be empty.");
+}
+
 const [headers, ...rows] = options;
+
+if (!headers || headers.length === 0) {
+  throw new Error("OptionsTable: 'options' prop should have at least one row for headers.");
+}
 
 const cellClassName = compact ? 'compactCell' : 'cell';
 
@@ -28,7 +37,7 @@ const newHeaders = headers.map((header) => {
 });
 
 const newRows = rows.map((row) => {
-  if (row.length === 0) {
+  if (!row || row.length === 0) {
     return [' ', ' ', ' ', ' '];
   } else {
     return row;
