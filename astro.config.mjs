@@ -288,6 +288,7 @@ export default defineConfig({
           //    },
           //    { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
+              { label: 'Dictionary', link: '/dropins/order/dictionary/' },
           //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
           //      collapsed: true,
           //        items: [
