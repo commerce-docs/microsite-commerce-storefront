@@ -208,12 +208,11 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              { label: 'Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Installation', link: '/dropins/cart/installation/' },
               { label: 'Initialization', link: '/dropins/cart/initialization/' },
-              { label: 'Styles', link: '/dropins/cart/cart-styles/' },
+              { label: 'Styles', link: '/dropins/cart/styles/' },
               { label: 'Containers', collapsed: true,
                 items: [
-                  { label: 'Cart', link: '/dropins/cart/containers/cart/' },
                   { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                   { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
                   { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
@@ -225,8 +224,8 @@ export default defineConfig({
 
                 ]
               },
-              { label: 'Slots', link: '/dropins/cart/cart-slots/' },
-              { label: 'Functions', link: '/dropins/cart/cart-functions/' },
+              { label: 'Slots', link: '/dropins/cart/slots/' },
+              { label: 'Functions', link: '/dropins/cart/functions/' },
               { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
               {
                 label: 'Tutorials',
