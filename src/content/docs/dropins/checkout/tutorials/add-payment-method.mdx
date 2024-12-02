@@ -25,114 +25,128 @@ Make sure that the payment provider you choose offers an SDK or API that you can
 ### Prerequisites
 
 You must [configure](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/braintree) the Braintree extension on your Adobe Commerce backend before integrating it with the Commerce boilerplate template.
-
 </Task>
 
 <Task>
-
 ### Add the Braintree client SDK
 
-To integrate the Braintree payment provider with the Commerce boilerplate template, you must add the Braintree client SDK to the `commerce-checkout.js` file.
+To integrate the Braintree payment provider with the Commerce boilerplate template, you must add the Braintree client SDK to your project.
+
+<Tabs>
+  <TabItem label="HTML element" icon="seti:html">
+
+  Use the following `script` tag to add the Braintree client SDK to an HTML file.
+
+  ```html
+  <script src="https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js"></script>
+  ```
+  </TabItem>
+  <TabItem label="Import declaration" icon="seti:javascript">
+
+  Use the following `import` declaration to add the Braintree client SDK directly to the `commerce-checkout.js` block file.
+
+  ```js
+  import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
+  ```
+  </TabItem>
+</Tabs>
+</Task>
+
+<Task>
+### Define a custom handler
 
 <Steps>
-1. Open the `blocks/commerce-checkout/commerce-checkout.js` file.
+1. Create a `braintreeInstance` variable to manage the Braintree drop-in instance.
 
-1. Import the Braintree client SDK.
-   
    ```js
-   ...
-   import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
-   ...
+   let braintreeInstance;
    ```
 
+1. Update the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container to include a custom handler for the Braintree payment method and set `setOnChange` to `false` to prevent automatic calls to the [`setPaymentMethod`](/dropins/checkout/functions/#setpaymentmethod) function on change.
+
+   ```js
+   CheckoutProvider.render(PaymentMethods, {
+     setOnChange: {
+       braintree: false,
+     },
+     slots: {
+       Handlers: {
+         braintree: async (ctx) => {
+           const container = document.createElement('div');
+
+           window.braintree.dropin.create({
+             authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
+             container,
+           }, (err, dropinInstance) => {
+             if (err) {
+               console.error(err);
+             }
+
+             braintreeInstance = dropinInstance;
+           });
+
+           ctx.replaceHTML(container);
+         },
+       },
+     },
+   })($paymentMethods)
+   ```
 </Steps>
-
 </Task>
 
 <Task>
+### Handle the payment method
 
-### Define a payment method modifier
-
-To render the Braintree payment method UI in the `PaymentMethods` container, you must define a modifier that you can use in the container's `main` slot.
-
-```js
-const renderBraintreePayments = (element, context) => {
-  const { onPlaceOrder } = context;
-  const $content = document.createElement('div');
-
-  $content.innerHTML = '<div id="dropin-container"></div>';
-```
-
-</Task>
-
-<Task>
-
-### Create and insert the Braintree drop-in UI
-
-Inside the function, a new `div` element is created and assigned to `$content`. This `div` contains another `div` with the ID `dropin-container`. If the element parameter is provided, its inner HTML is set to the content of `$content`. Then, the Braintree drop-in UI is created and attached to the `#dropin-container` using the provided authorization token.
+Implement the Braintree payment logic within the `onPlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
 
 ```js
-  if (element) {
-    element.innerHTML = $content.innerHTML;
-    braintree.dropin.create({
-      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
-      container: '#dropin-container',
-    });
-  }
-};
-```
-
-</Task>
-
-<Task>
-
-### Set the function on the slot
-
-Finally, you must set the `renderBraintreePayments` function on the `main` slot.
-
-```js
-CheckoutProvider.render(PaymentMethods, {
-  slots: {
-    Main: renderBraintreePayments,
+CheckoutProvider.render(PlaceOrder, {
+  handleValidation: () => {
+    // validation handlers skipped
   },
-})(document.getElementById('payment-methods'));
-```
+  onPlaceOrder: async (ctx) => {
+    await displayOverlaySpinner();
 
+    const paymentMethodCode = ctx.code;
+
+    try {
+      switch (paymentMethodCode) {
+        case 'braintree': {
+          braintreeInstance.requestPaymentMethod(async (err, payload) => {
+            if (err) {
+              removeOverlaySpinner();
+              console.error(err);
+              return;
+            }
+
+            await checkoutApi.setPaymentMethod({
+              code: 'braintree',
+              braintree: {
+                is_active_payment_token_enabler: false,
+                payment_method_nonce: payload.nonce,
+              },
+            });
+
+            await checkoutApi.placeOrder();
+
+            removeOverlaySpinner();
+          });
+
+          break;
+        }
+
+        default: {
+          await checkoutApi.placeOrder();
+          removeOverlaySpinner();
+        }
+      }
+    } catch (error) {
+      removeOverlaySpinner();
+      throw error;
+    }
+  },
+})($placeOrder)
+```
 </Task>
 
 </Tasks>
-
-## Example
-
-The following files show the complete JS and CSS code for the Braintree payment provider integration:
-
-```js title="commerce-checkout.js" ins={"2":1} ins={"3":5} ins={"4":12} ins={"5":23}
-import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
-
-. . .
-
-// Define the modifier for the Payment Methods section
-const renderBraintreePayments = (element, context) => {
-  const { onPlaceOrder } = context;
-  const $content = document.createElement('div');
-
-  $content.innerHTML = '<div id="dropin-container"></div>';
-
-  if (element) {
-    element.innerHTML = $content.innerHTML;
-    braintree.dropin.create({
-      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
-      container: '#dropin-container',
-    });
-  }
-};
-
-. . .
-
-// Set the function on the slot
-CheckoutProvider.render(PaymentMethods, {
-  slots: {
-    Main: renderBraintreePayments,
-  },
-})(document.getElementById('payment-methods'));
-```
