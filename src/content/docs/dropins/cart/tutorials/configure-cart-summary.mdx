@@ -1,0 +1,119 @@
+---
+title: Customize the cart summary block
+description: Learn how to customize the layout of the cart summary.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This tutorial describes how to make the following customizations to the cart summary block in the Adobe Commerce Boilerplate:
+
+- Change the product quantity selector to a dropdown menu.
+- Configure how to display savings.
+- Configure the savings display from Google Drive or Sharepoint.
+
+<Tasks>
+
+<Task>
+
+## Change the product quantity selector to a dropdown menu:
+
+By default, the product quantity selector is a stepper, as shown below:
+
+
+
+<Steps>
+
+1. Navigate to the `blocks/commerce-cart/commerce-cart.js` file and enable the dropdown selector by adding the following lines to the `provider.render(CartSummaryList)` method:
+
+   ```js
+   quantityType: 'dropdown',
+   dropdownOptions,
+   ```
+
+   The `quantityType` property specifies the type of quantity selector to use. The `dropdownOptions` property specifies the values to display in the dropdown. It is defined in the next step.
+
+1. Configure the dropdown values. Here, we
+
+   ```js
+   const DROPDOWN_MAX_QUANTITY = 20;
+
+   const dropdownOptions = Array.from(
+     { length: parseIng(DROPDOWN_MAX_QUANTITY, 19) },
+     (_, i) => {
+         const quantityOption =n i + 1;
+         return {
+           value: `${quantityOption}`,
+           text: `${quantityOption}`,
+         };
+     }
+     );
+     ```
+
+1. Save the file and generate the page to see the changes. 
+
+</Steps>
+
+</Task>
+
+<Task>
+
+## Display savings as a percentage or a fixed amount:
+
+<Steps>
+
+1. Add the following lines to the `provider.render(CartSummaryList)` method, below the `dropdownOptions,` line:
+
+   ```js
+   showDiscount: true,
+   //showSavings: true
+   ```
+
+   Comment out one of the lines to choose between displaying the discount as a percentage or a fixed amount.
+
+1. Save the file and generate the page to see the changes. 
+
+</Steps>
+
+</Task>
+
+<Task>
+
+## Configure the savings display from Google Drive or Sharepoint
+
+You might want to allow a merchandiser or other non-developer to configure how to display any savings values. To do this, you'll need to make some more changes to the `commerce-cart.js` file and make some modifications to the boilerplate templates store on Google Drive or Sharepoint.
+
+<Steps>
+
+1. Comment out the savings properties from the `provider.render(CartSummaryList)` method.
+
+    ```js
+    //showDiscount: true,
+    //showSavings: true
+    ```
+
+1. Add the following lines to the constant definitions in the `export default async function decorate(block){}` statement:
+
+   ```js
+   'show-discount': showDiscount = 'false',
+   ```
+
+1. Create a new line in the `provider.render(CartSummaryList)` method to check whether `showDiscount` is set to `true`:
+
+   ```js
+   showDiscount: showDiscount === 'true',
+   ```
+
+1. Save the file. When you generate the page, discounts are not displayed.
+
+1. Find the `cart.docx` file in the Google Drive or Sharepoint folder and add a row to the Commerce Cart table the `show-discount` property to `true` or `false`.
+
+</Steps>
+
+</Task>
+
+</Tasks>

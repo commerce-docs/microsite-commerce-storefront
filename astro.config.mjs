@@ -232,7 +232,8 @@ export default defineConfig({
                 label: 'Tutorials',
                 collapsed: true,
                 items: [
-                  { label: 'Order Summary Lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                  { label: 'Configure the cart summary block', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                  { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                 ]
               },
             ]
