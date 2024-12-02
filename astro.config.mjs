@@ -40,7 +40,7 @@ export default defineConfig({
     '/customize': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
-    '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/containers/cart',
+    '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/',
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
     '/dropins/user-account/useraccount-introduction': '/developer/commerce/storefront/dropins/user-account',
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
@@ -213,7 +213,6 @@ export default defineConfig({
               { label: 'Styles', link: '/dropins/cart/styles/' },
               { label: 'Containers', collapsed: true,
                 items: [
-                  { label: 'Cart', link: '/dropins/cart/containers/cart/' },
                   { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                   { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
                   { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
