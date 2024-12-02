@@ -266,6 +266,7 @@ export default defineConfig({
               { label: 'Tutorials',
                 collapsed: true,
                 items: [
+                  { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
                   { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                 ]
               },

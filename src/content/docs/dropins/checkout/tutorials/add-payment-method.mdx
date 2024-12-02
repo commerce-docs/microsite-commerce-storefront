@@ -1,0 +1,157 @@
+---
+title: Add a payment method
+description: Learn how to integrate third-party payment providers with the Commerce boilerplate template.
+---
+
+import Aside from '@components/Aside.astro';
+import FileTree from '@components/FileTree.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+To integrate third-party payment providers, you can use the extensibility features provided by the checkout drop-in component. This component allows you to customize the list of payment methods shown during the checkout process using slots.
+
+## Step-by-step
+
+This tutorial provides a step-by-step guide for integrating the Braintree payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well.
+
+<Aside type="note">
+Make sure that the payment provider you choose offers an SDK or API that you can use to integrate with the [slots](/dropins/checkout/slots/) provided by the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container in the checkout drop-in component.
+</Aside>
+
+<Tasks>
+
+<Task>
+### Prerequisites
+
+For this tutorial, you must configure the Braintree extension on your Adobe Commerce backend before integrating it with the Commerce boilerplate template. The Braintree extension is bundled with Adobe Commerce and can be [configured](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/braintree) in the Admin.
+
+If you choose to integrate with a different payment provider, consider the following:
+
+- The provider must be supported by Adobe Commerce.
+- The provider likely offers an extension that you must install and configure on your Adobe Commerce backend.
+</Task>
+
+<Task>
+### Add the Braintree client SDK
+
+To integrate the Braintree payment provider with the Commerce boilerplate template, you must add the Braintree client SDK to your project.
+
+<Tabs>
+  <TabItem label="HTML element" icon="seti:html">
+
+  Use the following `script` tag to add the Braintree client SDK to an HTML file.
+
+  ```html
+  <script src="https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js"></script>
+  ```
+  </TabItem>
+  <TabItem label="Import declaration" icon="seti:javascript">
+
+  Use the following `import` declaration to add the Braintree client SDK directly to the `commerce-checkout.js` block file.
+
+  ```js
+  import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
+  ```
+  </TabItem>
+</Tabs>
+</Task>
+
+<Task>
+### Define a custom handler
+
+<Steps>
+1. Create a `braintreeInstance` variable to manage the Braintree drop-in instance.
+
+   ```js
+   let braintreeInstance;
+   ```
+
+1. Update the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container to include a custom handler for the Braintree payment method and set `setOnChange` to `false` to prevent automatic calls to the [`setPaymentMethod`](/dropins/checkout/functions/#setpaymentmethod) function on change.
+
+   ```js
+   CheckoutProvider.render(PaymentMethods, {
+     setOnChange: {
+       braintree: false,
+     },
+     slots: {
+       Handlers: {
+         braintree: async (ctx) => {
+           const container = document.createElement('div');
+
+           window.braintree.dropin.create({
+             authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
+             container,
+           }, (err, dropinInstance) => {
+             if (err) {
+               console.error(err);
+             }
+
+             braintreeInstance = dropinInstance;
+           });
+
+           ctx.replaceHTML(container);
+         },
+       },
+     },
+   })($paymentMethods)
+   ```
+</Steps>
+</Task>
+
+<Task>
+### Handle the payment method
+
+Implement the Braintree payment logic within the `onPlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
+
+```js
+CheckoutProvider.render(PlaceOrder, {
+  handleValidation: () => {
+    // validation handlers skipped
+  },
+  onPlaceOrder: async (ctx) => {
+    await displayOverlaySpinner();
+
+    const paymentMethodCode = ctx.code;
+
+    try {
+      switch (paymentMethodCode) {
+        case 'braintree': {
+          braintreeInstance.requestPaymentMethod(async (err, payload) => {
+            if (err) {
+              removeOverlaySpinner();
+              console.error(err);
+              return;
+            }
+
+            await checkoutApi.setPaymentMethod({
+              code: 'braintree',
+              braintree: {
+                is_active_payment_token_enabler: false,
+                payment_method_nonce: payload.nonce,
+              },
+            });
+
+            await checkoutApi.placeOrder();
+
+            removeOverlaySpinner();
+          });
+
+          break;
+        }
+
+        default: {
+          await checkoutApi.placeOrder();
+          removeOverlaySpinner();
+        }
+      }
+    } catch (error) {
+      removeOverlaySpinner();
+      throw error;
+    }
+  },
+})($placeOrder)
+```
+</Task>
+
+</Tasks>
