@@ -208,7 +208,7 @@ export default defineConfig({
             collapsed: true,
             items: [
               { label: 'Overview', link: '/dropins/cart/' },
-              { label: 'Installation', link: '/dropins/cart/cart-installation/' },
+              { label: 'Installation', link: '/dropins/cart/installation/' },
               { label: 'Initialization', link: '/dropins/cart/initialization/' },
               { label: 'Styles', link: '/dropins/cart/styles/' },
               { label: 'Containers', collapsed: true,
