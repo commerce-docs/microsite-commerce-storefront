@@ -274,32 +274,33 @@ export default defineConfig({
                   },
                 ]
               },
-            ]
+            ],
           },
           {
-           label: 'Order',
-           collapsed: true,
-           items: [
-             // { label: 'Overview', link: '/dropins/order/' },
-             // { label: 'Initialization', link: '/dropins/order/initialization/' },
-             // { label: 'Styles', link: '/dropins/order/styles/' },
-             // { label: 'Containers',
-             //   collapsed: true,
-             //   items: [
-             //     { label: 'First', link: '/dropins/order/containers/first/' },
-             //     { label: 'Second', link: '/dropins/order/containers/second/' },
-             //   ]
-             // },
-             // { label: 'Slots', link: '/dropins/order/slots/' },
-             // { label: 'Functions', link: '/dropins/order/functions/' },
-             {
-               label: 'Tutorials',
-               collapsed: true,
-               items: [
-                 { label: 'Order Cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
-               ]
-             },
-           ]
+            label: 'Order',
+            collapsed: true,
+            items: [
+          //    { label: 'Overview', link: '/dropins/order/' },
+              { label: 'Initialization', link: '/dropins/order/initialization/' },
+          //    { label: 'Styles', link: '/dropins/order/styles/' },
+          //    { label: 'Containers',
+          //      collapsed: true,
+          //      items: [
+          //        { label: 'First', link: '/dropins/order/containers/first/' },
+          //        { label: 'Second', link: '/dropins/order/containers/second/' },
+          //      ]
+          //    },
+          //    { label: 'Slots', link: '/dropins/order/slots/' },
+              { label: 'Functions', link: '/dropins/order/functions/' },
+              { label: 'Dictionary', link: '/dropins/order/dictionary/' },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order Cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+                ]
+              },
+            ]
           },
           {
             label: 'User auth',
@@ -321,7 +322,7 @@ export default defineConfig({
               },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
               { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
-            ]
+            ],
           },
           {
             label: 'User account',
