@@ -1,20 +1,20 @@
 ---
-title: Cart Slots
-description: Learn about the slots provided in the Cart dropin.
+title: Cart slots
+description: Learn about the slots provided in the Cart drop-in component.
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 3
 ---
 
-Learn about the slots provided in the Cart dropin.
+Learn about the slots provided in the Cart drop-in component.
 
-[Extending dropins](/dropins/all/extending/) describes default properties available to all slots.
+[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
 
 ## CartSummaryList slots
 
 The slots for the `CartSummaryList` container allow you to customize the appearance of the cart summary list.
 
-```ts
+```js
 interface CartSummaryListProps
 
 slots?: {
@@ -31,13 +31,35 @@ slots?: {
 
 The `Heading` slot allows you to add content to the top of the `CartSummaryList` container.
 
-// Need example
+```js
+ provider.render(CartSummaryList, {
+  slots: {
+    Heading: (ctx) => {
+      // Runs on mount
+      const heading = document.createElement('h2');
+      heading.innerText = 'Cart List';
+      ctx.appendChild(heading);
+    },
+  },
+})($list),
+```
 
 ### EmptyCart slot
 
 The `EmptyCart` slot allows you to add content to the `CartSummaryList` container when the cart is empty.
 
-// Need example
+```js
+ provider.render(CartSummaryList, {
+  slots: {
+    EmptyCart: (ctx) => {
+      // Runs on mount
+      const emptyCart = document.createElement('div');
+      emptyCart.innerText = 'Your cart is empty';
+      ctx.appendChild(emptyCart);
+    },
+  },
+})($list),
+```
 
 
 ### Thumbnail slot
@@ -187,41 +209,28 @@ The following example demonstrates how to extend the `Thumbnail` slot.
 
 ### Footer slot
 
-The `Footer` slot allows you to add content to the bottom of the CartSummaryList container.
+The `Footer` slot allows you to add content to the bottom of the `CartSummaryList` container.
 
 The following example demonstrates how to extend the `Footer` slot by adding a promotional cart rule to each product in the cart.
 
 ```js
-return provider.render(Cart, {
-  slots: {
-    ProductList: (ctx) => {
-      const productList = document.createElement('div');
+Footer: (ctx) => {
+  // Runs on mount
+  const wrapper = document.createElement('div');
+  ctx.appendChild(wrapper);
 
-      // Initial render of ProductList
-      provider.render(CartSummaryList, {
-        slots: {
-          // Runs on mount
-          const wrapper = document.createElement('div');
-          ctx.appendChild(wrapper);
+  // Append Product Promotions on every update
+  ctx.onChange((next) => {
+    wrapper.innerHTML = '';
 
-          // Append Product Promotions on every update
-          ctx.onChange((next) => {
-            wrapper.innerHTML = '';
-
-            next.item?.discount?.label?.forEach((label) => {
-              const discount = document.createElement('div');
-              discount.style.color = '#3d3d3d';
-              discount.innerText = label;
-              wrapper.appendChild(discount);
-            });
-          });
-        },
-      })(productList);
-
-      ctx.replaceWith(productList);
-    },
-  },
-})(document.getElementById('@dropins/cart'));
+    next.item?.discount?.label?.forEach((label) => {
+      const discount = document.createElement('div');
+      discount.style.color = '#3d3d3d';
+      discount.innerText = label;
+      wrapper.appendChild(discount);
+    });
+  });
+},
 ```
 
 ### ProductAttributes slot
@@ -270,15 +279,25 @@ The following example demonstrates how to add the Fashion Material and Fashion S
 
 ### CartSummaryFooter slot
 
-The `CartSummaryFooter` slot allows you to add content to the bottom of the CartSummaryList container.
+The `CartSummaryFooter` slot allows you to add content to the bottom of the `CartSummaryList` container.
 
-// Need example
+```js
+ provider.render(CartSummaryList, {
+  slots: {
+    CartSummaryFooter: (ctx) => {
+      const cartSummaryFooter = document.createElement('div');
+      cartSummaryFooter.innerText = 'Cart summary footer';
+      ctx.appendChild(cartSummaryFooter);
+    },
+  },
+})($list),
+```
 
 ## OrderSummary slots
 
 The `OrderSummaryProps` interface defines two slots for customizing the appearance of the order summary.
 
-```ts
+```js
 interface OrderSummaryProps
 
 slots?: {
