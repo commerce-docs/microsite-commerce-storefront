@@ -280,13 +280,20 @@ export default defineConfig({
           //    { label: 'Overview', link: '/dropins/order/' },
               { label: 'Initialization', link: '/dropins/order/initialization/' },
           //    { label: 'Styles', link: '/dropins/order/styles/' },
-          //    { label: 'Containers', 
-          //      collapsed: true,
-          //      items: [
-          //        { label: 'First', link: '/dropins/order/containers/first/' },
-          //        { label: 'Second', link: '/dropins/order/containers/second/' },
-          //      ]
-          //    },
+              { label: 'Containers' , 
+                collapsed: true,
+                items: [
+                  { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
+                  { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
+                  { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
+                  { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
+                  { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
+                  { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
+                  { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
+                  { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
+                  { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
+                ]
+              },
           //    { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
               { label: 'Dictionary', link: '/dropins/order/dictionary/' },
