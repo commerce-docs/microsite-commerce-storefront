@@ -4,6 +4,7 @@ description: Learn how to implement a multi-step checkout using the Adobe's drop
 ---
 
 import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
 import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
@@ -22,7 +23,7 @@ The Commerce boilerplate template does not include a multi-step checkout flow by
 
 ## Step-by-step
 
-The following steps describe how to modify the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) block file in the boilerplate template to implement a multi-step checkout flow.
+The following steps describe how to modify the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) and [commerce-checkout.css](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.css) block files in the boilerplate template to implement a multi-step checkout flow.
 
 This tutorial covers the guest checkout experience. If you want to implement a custom payment method, customer checkout, virtual cart, or any other feature, you'll need to adapt the code accordingly. The following table shows the features covered in this tutorial:
 
@@ -41,23 +42,32 @@ A completed version of the code described in each of these steps is available [a
 
 <Tasks>
 
-<Task>
+{/* <Task>
 ### Set up
 
 <Steps>
-1. Duplicate the `commerce-checkout.js` and `commerce-checkout.css` files in the boilerplate template.
+1. Open the `commerce-checkout.css` file and delete the contents.
 
-1. Remove all content from the `commerce-checkout.css` file.
+1. Open the `commerce-checkout.js` file and remove everything inside the `decorate` function:
 
-1. Open the `commerce-checkout.js` file and remove everything inside the `decorate` function so that it looks like this:
+   ```diff
+   + export default async function decorate(block) {};
+   -   // Initializers
+   -   import('../../scripts/initializers/account.js');
+   -   import('../../scripts/initializers/checkout.js');
 
-   ```js
-   export default async function decorate(block) {};
+   -   setMetaTags('Checkout');
+   -   document.title = 'Checkout';
+
+   -   events.on('checkout/order', () => {
+   -     setMetaTags('Order Confirmation');
+   -     document.title = 'Order Confirmation';
+   -   });
    ```
 </Steps>
-</Task>
+</Task> */}
 
-<Task>
+{/* <Task>
 ### Initialize
 
 Import the initializers for the user auth and checkout drop-in components:
@@ -84,7 +94,7 @@ export default async function decorate(block) {
 The example above also defines some constants that we are going to use later in this tutorial to render the containers. It also pre-fetches the store configuration that the checkout component is going to use.
 </Aside>
 
-</Task>
+</Task> */}
 
 <Task>
 ### Define layout
@@ -265,9 +275,11 @@ export default async function decorate(block) {
 };
 ```
 
-At this point, if you access the page were you are using the block, you should see that all containers are being rendered. The layout still needs some work, so let's move on to the next step.
+At this point, if you access the page where you are using the block, you should see that all containers are being rendered. The layout still needs some work, so let's move on to the next step.
 
-{/* TODO: Add screenshot */}
+<Diagram caption="Render initial containers without styles">
+![Render initial containers](@images/dropins/checkout/render-containers-no-styles.png)
+</Diagram>
 </Task>
 
 <Task>
@@ -387,6 +399,10 @@ Add some styles to the layout and containers to make them look good. Open the `c
   }
 }
 ```
+
+<Diagram caption="Render containers with styles">
+![Render containers with styles](@images/dropins/checkout/render-containers-no-styles.png)
+</Diagram>
 </Task>
 
 <Task>
@@ -462,15 +478,17 @@ Check if the cart is empty and display a message to the user. To do this, create
 
    At this point, if you access the checkout page without a cart, you should see the `EmptyCart` container displayed.
 
-   {/* TODO: Add screenshot */}
+   <Diagram caption="Empty cart">
+   ![Empty cart](@images/dropins/checkout/empty-cart.png)
+   </Diagram>
 </Steps>
 </Task>
 
 <Task>
-### Handle shipping form
+### Handle shipping method form
 
 <Steps>
-1. You've probably noticed that even after initializing the checkout the shipping form still loads. To resolve this, create a new utility method called `continueToShipping` to remove the skeleton and render the shipping form when the checkout is initialized.
+1. You've probably noticed that even after initializing the checkout the shipping method form still loads. To resolve this, create a new utility method called `continueToShipping` to remove the skeleton and render the shipping method form when the checkout is initialized.
 
    ```js
    let shippingForm;
@@ -535,7 +553,7 @@ Check if the cart is empty and display a message to the user. To do this, create
 </Task>
 
 <Task>
-### Enable delivery
+### Enable shipping
 
 In the [render initial containers](#render-initial-containers) step, we added a call to a non-existing `continueToDelivery` method and disabled the **CONTINUE TO SHIPPING METHOD** button by default. Now we are going to enable the button when the user selects a shipping address and implement the missing method.
 
@@ -622,6 +640,10 @@ In the [render initial containers](#render-initial-containers) step, we added a 
      })($continueToPaymentBtn);
    };
    ```
+
+   <Diagram caption="Continue to shipping">
+   ![Continue to shipping](@images/dropins/checkout/continue-to-shipping.png)
+   </Diagram>
 </Steps>
 </Task>
 
@@ -731,8 +753,12 @@ Similar to the [enable delivery](#enable-delivery) step, you now need to add the
    };
    ```
 
-   At this point, you should have a fully functional multi-step checkout, but there's still some work to do. Let's move on to the last step.
+   <Diagram caption="Continue to payment">
+   ![Continue to payment](@images/dropins/checkout/continue-to-payment.png)
+   </Diagram>
 </Steps>
+
+At this point, you should have a fully functional multi-step checkout, but there's still some work to do. Let's move on to the last step.
 </Task>
 
 <Task>
@@ -752,6 +778,10 @@ The last step to complete the multi-step checkout process is to create an order 
    + events.on('checkout/order', handleCheckoutOrder);
      events.on('checkout/updated', handleCheckoutUpdated);
    ```
+
+   <Diagram caption="Order confirmation">
+   ![Order confirmation](@images/dropins/checkout/order-confirmation.png)
+   </Diagram>
 </Steps>
 </Task>
 
