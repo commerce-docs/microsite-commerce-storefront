@@ -6,15 +6,16 @@ description: Learn the Order Cancellation workflow.
 import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
 import OptionsTable from '@components/OptionsTable.astro';
+import { Steps } from '@astrojs/starlight/components';
 
 The Order dropin allows both logged in and guest users to cancel an order.
 
 In this tutorial, we will show:
-- the requirements to be able to cancel an order,
+- the prerequisites to be able to cancel an order,
 - the cancellation workflow, and
 - the queries and mutations involved in the order cancellation process.
 
-## Requirements
+## Prerequisites
 
 To be able to cancel an order, you need to have the configuration enabled in the backend.
 You can find it in the backoffice under *Stores > Configuration > Sales > Sales > Order Cancellation*.
@@ -34,39 +35,54 @@ Note: There is a default list of reasons, but you can customise according to you
 :::
 
 <Diagram caption="The order cancellation configurations you can customise in the backoffice">
-  ![Cancellation configurations in the backoffice](@images/dropins/order/requirements-cancellation-configs.png)
+  ![Cancellation configurations in the backoffice](@images/dropins/order/cancellation-prerequisites.png)
 </Diagram>
 
 ## Workflow
 
-Generally speaking, the workflow for order cancellation is as follows:
-- The user selects an order to cancel.
-- Submits the cancellation form after selecting a cancellation reason.
-- In case it is a logged-in user, the order is `Canceled` immediately.
-- But if it is a guest user, an email is sent with a link to confirm the cancellation. Once the user clicks the link, the order is `Canceled`.
+The order cancellation workflow is as follows:
+  <Steps>
+1. Select an order to cancel.
+1. Submit the cancellation form after selecting a cancellation reason.
+1. In case it is a *logged-in user*, the order is `Canceled` immediately.
 
-Let's review more in detail the workflow for a guest order cancellation:
+   When it is a *guest user*, the order remains in status `Pending`and an email is sent with a link to confirm the cancellation. Once the link is clicked, the order becomes `Canceled`.
+  </Steps>
+
+Let's review the workflow in both cases.
 
 ### Select an order to cancel
 
-The guest user provides the details to load an order to cancel:
+A *logged-in user* can select an order to cancel in two different ways:
+- from the *Order History* page,
 
-<Diagram caption="Form presented to the guest user to load order details.">
-  ![Guest user provides order details](@images/dropins/order/workflow-select-order-to-cancel.png)
+<Diagram caption="Order history page listing orders placed by a logged in user .">
+  ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
+</Diagram>
+- using the *Order Search* form to load the order to request the cancellation afterwards.
+<Diagram caption="Form presented to the the user to search for an order">
+  ![Order Search form to search for an order](@images/dropins/order/order-search.png)
 </Diagram>
 
-### Submit the form
+<Aside type="caution" title="Guest users">
+A *guest user* do not have access to the *Order History* page. Therefore, the only way to access an order is by using the *Order Search* form.
+</Aside>
+### Submit the cancellation form
 
-The guest user is able to select a cancellation reason and submit the form:
+The user is able to select a cancellation reason and submit the form:
 
 <Diagram caption="Form presented to the guest user with different cancellation reasons.">
-  ![Guest user selects a cancellation reason](@images/dropins/order/workflow-select-cancellation-reason.png)
+  ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
 </Diagram>
 
 After submitting the form, the changes are reflected on the *Order Status* page:
 
+<Diagram caption="Order is canceled straight away for logged-in users.">
+  ![Cancellation is performed straight away for logged-in users](@images/dropins/order/cancellation-performed.png)
+</Diagram>
+
 <Diagram caption="Guest user is notified that cancellation has been requested.">
-  ![Cancellation has been requested](@images/dropins/order/workflow-cancellation-requested.png)
+  ![Cancellation has been requested for a guest user](@images/dropins/order/cancellation-requested.png)
 </Diagram>
 
 ### Confirm order cancellation
