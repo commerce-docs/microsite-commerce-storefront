@@ -7,10 +7,13 @@ import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
 
 The Order dropin allows both logged in and guest users to cancel an order.
 
 In this tutorial, we will show:
+
 - the prerequisites to be able to cancel an order,
 - the cancellation workflow, and
 - the queries and mutations involved in the order cancellation process.
@@ -18,85 +21,107 @@ In this tutorial, we will show:
 ## Prerequisites
 
 To be able to cancel an order, you need to have the configuration enabled in the backend.
-You can find it in the backoffice under *Stores > Configuration > Sales > Sales > Order Cancellation*.
+You can find it in the backoffice under _Stores > Configuration > Sales > Sales > Order Cancellation_.
 
 There are the following configurations:
-  <OptionsTable
-    compact
-    options={[
+
+{' '}
+<OptionsTable
+  compact
+  options={[
     ['Configuration', 'Description'],
-    ['Order cancellation through GraphQL', 'It is a boolean. When it is set to `true`, the order cancellation will be enabled.'],
-    ['Order cancellation reasons', 'It is an array of reasons that can be selected by the user when cancelling an order.'],
-    ]}
-  />
+    [
+      'Order cancellation through GraphQL',
+      'It is a boolean. When it is set to `true`, the order cancellation will be enabled.',
+    ],
+    [
+      'Order cancellation reasons',
+      'It is an array of reasons that can be selected by the user when cancelling an order.',
+    ],
+  ]}
+/>
 
 :::note[Note]
 Note: There is a default list of reasons, but you can customise according to your needs.
 :::
 
 <Diagram caption="The order cancellation configurations you can customise in the backoffice">
-  ![Cancellation configurations in the backoffice](@images/dropins/order/cancellation-prerequisites.png)
+  ![Cancellation configurations in the
+  backoffice](@images/dropins/order/cancellation-prerequisites.png)
 </Diagram>
 
 ## Workflow
 
 The order cancellation workflow is as follows:
+
   <Steps>
 1. Select an order to cancel.
 1. Submit the cancellation form after selecting a cancellation reason.
-1. In case it is a *logged-in user*, the order is `Canceled` immediately.
+1. In case it is a *logged-in user*, the order is `Canceled` immediately. But when it is a _guest user_, the order remains in status `Pending` until the user confirms the cancellation.
 
-   When it is a *guest user*, the order remains in status `Pending`and an email is sent with a link to confirm the cancellation. Once the link is clicked, the order becomes `Canceled`.
   </Steps>
 
-Let's review the workflow in both cases.
+Let's review the workflow in more detail:
 
-### Select an order to cancel
+<Tasks>
+  <Task>
+  ### Select an order to cancel
 
-A *logged-in user* can select an order to cancel in two different ways:
-- from the *Order History* page,
+  A _logged-in user_ can select an order to cancel in two different ways:
 
-<Diagram caption="Order history page listing orders placed by a logged in user .">
-  ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
-</Diagram>
-- using the *Order Search* form to load the order to request the cancellation afterwards.
-<Diagram caption="Form presented to the the user to search for an order">
-  ![Order Search form to search for an order](@images/dropins/order/order-search.png)
-</Diagram>
+  - from the _Order History_ page,
 
-<Aside type="caution" title="Guest users">
-A *guest user* do not have access to the *Order History* page. Therefore, the only way to access an order is by using the *Order Search* form.
-</Aside>
-### Submit the cancellation form
+  <Diagram caption="Order history page listing orders placed by a logged in user .">
+    ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
+  </Diagram>
+  - using the *Order Search* form to load the order to request the cancellation afterwards.
+  <Diagram caption="Form presented to the the user to search for an order">
+    ![Order Search form to search for an order](@images/dropins/order/order-search.png)
+  </Diagram>
 
-The user is able to select a cancellation reason and submit the form:
+  <Aside type="caution" title="Guest users">
+    A *guest user* do not have access to the *Order History* page. Therefore, the only way to access
+    an order is by using the *Order Search* form.
+  </Aside>
+  </Task>
 
-<Diagram caption="Form presented to the guest user with different cancellation reasons.">
-  ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
-</Diagram>
+  <Task>
+  ### Submit the cancellation form
 
-After submitting the form, the changes are reflected on the *Order Status* page:
+  The user is able to select a cancellation reason and submit the form:
 
-<Diagram caption="Order is canceled straight away for logged-in users.">
-  ![Cancellation is performed straight away for logged-in users](@images/dropins/order/cancellation-performed.png)
-</Diagram>
+  <Diagram caption="Form presented to the guest user with different cancellation reasons.">
+    ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
+  </Diagram>
 
-<Diagram caption="Guest user is notified that cancellation has been requested.">
-  ![Cancellation has been requested for a guest user](@images/dropins/order/cancellation-requested.png)
-</Diagram>
+  After submitting the form, the changes are reflected on the _Order Status_ page:
 
-### Confirm order cancellation
+  <Diagram caption="Order is canceled straight away for logged-in users.">
+    ![Cancellation is performed straight away for logged-in
+    users](@images/dropins/order/cancellation-performed.png)
+  </Diagram>
 
-The guest order remains in status `Pending` until the user clicks the link in the email to confirm the cancellation.
+  <Diagram caption="Guest user is notified that cancellation has been requested.">
+    ![Cancellation has been requested for a guest
+    user](@images/dropins/order/cancellation-requested.png)
+  </Diagram>
 
-<Aside type="choose" title="Confirm Your Main Website Store Order Cancellation">
-  It seems that you'd like to cancel your order #000000001. If this is correct, please _click here_ to confirm your cancellation request.
+  </Task>
 
-  If you have questions about your order, you can email us at _support@example.com_.
-</Aside>
+  <Task>
+    ### Confirm order cancellation
 
-Once clicked, the order becomes `Canceled` and *Order Status* page is updated accordingly.
+    The guest order remains in status `Pending` until the user clicks the link in the email to confirm the cancellation.
 
+    <Aside type="choose" title="Confirm Your Main Website Store Order Cancellation">
+      It seems that you'd like to cancel your order #000000001. If this is correct, please _click here_ to confirm your cancellation request.
+
+      If you have questions about your order, you can email us at _support@example.com_.
+    </Aside>
+    Once clicked, the order becomes `Canceled` and _Order Status_ page is updated accordingly.
+  </Task>
+
+</Tasks>
 ## Queries & Mutations
 
 There are different GraphQl queries and mutations involved in the order cancellation process.
@@ -112,13 +137,7 @@ This query is used to get the `token` for the guest order using the `email`, `or
 
 ```graphql
 query guestOrder($email: String!, $number: String!, $postcode: String!) {
-  guestOrder(
-    input: {
-      email: $email
-      number: $number
-      postcode: $postcode
-    }
-  ) {
+  guestOrder(input: { email: $email, number: $number, postcode: $postcode }) {
     token
   }
 }
@@ -133,7 +152,7 @@ The following mutation is used to request the cancellation of the guest order ba
 ```graphql
 mutation requestGuestOrderCancel($token: String!, $reason: String!) {
   requestGuestOrderCancel(input: { token: $token, reason: $reason }) {
-		error
+    error
     order {
       status
       id
@@ -152,7 +171,7 @@ Both are necessary to confirm the cancellation of the order as you can see below
 The following mutation is used to confirm the cancellation of the guest order based on the `order_id` and the `confirmation_key`:
 
 ```graphql
-mutation confirmCancelOrder($order_id: ID! , $confirmation_key: String!) {
+mutation confirmCancelOrder($order_id: ID!, $confirmation_key: String!) {
   confirmCancelOrder(input: { order_id: $order_id, confirmation_key: $confirmation_key }) {
     errorV2 {
       message
