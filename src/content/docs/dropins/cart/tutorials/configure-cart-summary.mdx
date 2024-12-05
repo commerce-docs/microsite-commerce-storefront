@@ -1,0 +1,149 @@
+---
+title: Customize the cart summary block
+description: Learn how to customize the layout of the cart summary.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This tutorial describes how to make the following customizations to the `CartSummaryList` container using the Adobe Commerce Boilerplate:
+
+- Change the product quantity selector to a dropdown menu.
+- Configure how to display savings.
+- Configure the savings display from Google Drive or Sharepoint.
+
+<Tasks>
+
+<Task>
+
+## Change the product quantity selector to a dropdown menu
+
+By default, the product quantity selector is a stepper, as shown below:
+
+<Diagram caption="Stepper quantity selector">
+   ![Stepper quantity selector](@images/dropins/cart/cart-summary-stepper.png)
+</Diagram>
+
+In this task, you'll change the quantity selector to a dropdown menu. The dropdown allows shoppers to select a maximum of 20 items.
+
+<Diagram caption="Dropdown quantity selector">
+   ![Dropdown quantity selector](@images/dropins/cart/cart-summary-dropdown.png)
+</Diagram>
+
+<Steps>
+
+1. Navigate to the `blocks/commerce-cart/commerce-cart.js` file and enable the dropdown selector by adding the following lines to the `provider.render(CartSummaryList)` method:
+
+   ```js
+   quantityType: 'dropdown',
+   dropdownOptions,
+   ```
+
+   The `quantityType` property specifies the type of quantity selector to use. The `dropdownOptions` property specifies the values to display in the dropdown. It is defined in the next step.
+
+1. Define the `dropdownOptions` constant at the top of the file, in the `export defult async function decorate(block){}` statement.
+
+   ```js
+   const DROPDOWN_MAX_QUANTITY = 20;
+
+   const dropdownOptions = Array.from(
+     { length: parseInt(DROPDOWN_MAX_QUANTITY, 10) },
+     (_, i) => {
+         const quantityOption = i + 1;
+         return {
+           value: `${quantityOption}`,
+           text: `${quantityOption}`,
+         };
+     }
+   );
+     ```
+
+     This code creates an array of objects with `value` and `text` properties. The `value` property is the quantity value, and the `text` property is the text displayed in the dropdown.
+
+1. Save the file and generate the page to see the changes. 
+
+</Steps>
+
+</Task>
+
+<Task>
+
+## Display savings as a percentage or a fixed amount
+
+In order to encourage shoppers to buy more, you can display the savings they'll get by purchasing more items. You can display the savings on an item that's on sale as a percentage or as a fixed amount.
+
+<Diagram caption="Savings expressed as a percentage">
+   ![Savings expressed as a percentage](@images/dropins/cart/cart-summary-percentage.png)
+</Diagram>
+
+<Diagram caption="Savings expressed as a total">
+   ![Savings expressed as a percentage](@images/dropins/cart/cart-summary-total.png)
+</Diagram>
+
+<Steps>
+
+1. Add the following lines to the `provider.render(CartSummaryList)` method, below the `dropdownOptions,` line:
+
+   ```js
+   showDiscount: true,
+   //showSavings: true
+   ```
+
+   Comment out one of the lines to choose between displaying the discount as a percentage or a fixed amount.
+
+1. Save the file and generate the page to see the changes. 
+
+</Steps>
+
+</Task>
+
+<Task>
+
+## Configure the savings display from Google Drive or Sharepoint
+
+You might want to allow a merchandiser or other non-developer to configure how to display savings values. To do this, you'll need to make some more changes to the `commerce-cart.js` file. You'll also need to make some modifications to the starter content boilerplate templates stored on Google Drive or Sharepoint. Review [Create your storefront](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/) for information about the starter content and Sidekick browser extension.
+
+<Steps>
+
+1. Comment out the savings properties from the `provider.render(CartSummaryList)` method.
+
+    ```js
+    //showDiscount: true,
+    //showSavings: true
+    ```
+
+1. Add the following lines to the constant definitions in the `export default async function decorate(block){}` statement:
+
+   ```js
+   'show-discount': showDiscount = 'false',
+   'show-savings': showSavings = 'false',
+   ```
+
+1. Add new lines in the `provider.render(CartSummaryList)` method to check whether `showDiscount` or `showSavings` is set to `true`:
+
+   ```js
+   showDiscount: showDiscount === 'true',
+   showSavings: showSavings === 'true',
+   ```
+
+1. Save the file. When you generate the page, discounts are not displayed because the default values are `false`.
+
+1. Find the `cart` starter content file in the Google Drive or Sharepoint folder and add two rows to the Commerce Cart table that set the visibility values for these properties.
+
+   <Diagram caption="Commerce Cart table">
+      ![Commerce Cart table](@images/dropins/cart/cart-table.png)
+   </Diagram>
+
+   Set the values of the Show Discount and Show Savings rows to either `true` or `false`.
+
+1. Preview the changes with the Sidekick browser extension. Then publish the changes to your staging or production environment.
+
+</Steps>
+
+</Task>
+
+</Tasks>

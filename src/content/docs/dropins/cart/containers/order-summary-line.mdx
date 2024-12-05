@@ -1,0 +1,70 @@
+---
+title: OrderSummaryLine container
+description: Learn about the OrderSummaryLine container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+import CodeInclude from '@components/CodeInclude.astro';
+import cartModel from '../_includes/cartModel.ts?raw';
+
+The `OrderSummaryLine` container  displays a line item in the order summary. The `OrderSummaryLine` container behaves like a wrapper for the `OrderSummaryLine` component. The component ultimately decides how to render the line item, based on the `children` attribute.
+
+<Diagram caption="OrderSummaryLine container">
+  ![OrderSummaryLine container](@images/dropins/cart/order-summary-line.png)
+</Diagram>
+
+
+## Configurations
+
+The `OrderSummaryLine` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['label', 'string', 'Yes', 'The label for the order summary line.'],
+    ['price', 'VNode', 'Yes', 'The price for the order summary line.'],
+    ['classSuffixes', 'string[]', 'No', 'An array of class suffixes to apply to the order summary line.'],
+    ['labelClassSuffix', 'string', 'No', 'The class suffix to apply to the label.'],
+    ['testId', 'string', 'No', 'The test ID for the order summary line.'],
+    ['children', 'VNode[]', 'No', 'The child elements to be rendered inside the order summary.'],
+  ]}
+/>
+
+## Example configuration
+
+The following example adds the Fixed Product Tax (PDT) line to the order summary:
+
+```js
+updateLineItems: (lineItems) => {
+    const totalFpt = ctx.data.items.reduce((allItemsFpt, item) => {
+    const itemFpt = item.fixedProductTaxes.reduce((accumulator, fpt) => {
+      accumulator.labels.push(fpt.label);
+      accumulator.total += fpt.amount.value;
+      return accumulator;
+    }, {
+      labels: [],
+      total: 0
+    });
+    allItemsFpt.labels = [...allItemsFpt.labels, ...itemFpt.labels];
+    allItemsFpt.total += itemFpt.total;
+    return allItemsFpt;
+  }, {
+    labels: [],
+    total: 0
+  });
+
+  lineItems.push({
+    key: 'fpt',
+    sortOrder: 350,
+    title: 'Fixed Product Tax',
+    content: OrderSummaryLine({label: "FPT(" + totalFpt.labels.join(',') + ')', price: Price({amount: totalFpt.total}), classSuffix: 'fpt'})
+  })
+
+  return lineItems;
+};
+```
