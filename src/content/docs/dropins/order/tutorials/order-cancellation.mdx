@@ -16,7 +16,7 @@ In this tutorial, we will show:
 
 - the prerequisites to be able to cancel an order,
 - the cancellation workflow, and
-- the queries and mutations involved in the order cancellation process.
+- implementation details of some components involved in the process.
 
 ## Prerequisites
 
@@ -25,7 +25,6 @@ You can find it in the backoffice under _Stores > Configuration > Sales > Sales 
 
 There are the following configurations:
 
-{' '}
 <OptionsTable
   compact
   options={[
@@ -67,17 +66,19 @@ Let's review the workflow in more detail:
   <Task>
   ### Select an order to cancel
 
-  A _logged-in user_ can select an order to cancel in two different ways:
+A _logged-in user_ can select an order to cancel in two different ways:
 
-  - from the _Order History_ page,
+- from the _Order History_ page,
 
-  <Diagram caption="Order history page listing orders placed by a logged in user .">
-    ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
-  </Diagram>
-  - using the *Order Search* form to load the order to request the cancellation afterwards.
-  <Diagram caption="Form presented to the the user to search for an order">
-    ![Order Search form to search for an order](@images/dropins/order/order-search.png)
-  </Diagram>
+{' '}
+
+<Diagram caption="Order history page listing orders placed by a logged in user .">
+  ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
+</Diagram>
+- using the *Order Search* form to load the order to request the cancellation afterwards.
+<Diagram caption="Form presented to the the user to search for an order">
+  ![Order Search form to search for an order](@images/dropins/order/order-search.png)
+</Diagram>
 
   <Aside type="caution" title="Guest users">
     A *guest user* do not have access to the *Order History* page. Therefore, the only way to access
@@ -88,23 +89,29 @@ Let's review the workflow in more detail:
   <Task>
   ### Submit the cancellation form
 
-  The user is able to select a cancellation reason and submit the form:
+The user is able to select a cancellation reason and submit the form:
 
-  <Diagram caption="Form presented to the guest user with different cancellation reasons.">
-    ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
-  </Diagram>
+{' '}
 
-  After submitting the form, the changes are reflected on the _Order Status_ page:
+<Diagram caption="Form presented to the guest user with different cancellation reasons.">
+  ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
+</Diagram>
 
-  <Diagram caption="Order is canceled straight away for logged-in users.">
-    ![Cancellation is performed straight away for logged-in
-    users](@images/dropins/order/cancellation-performed.png)
-  </Diagram>
+After submitting the form, the changes are reflected on the _Order Status_ page:
 
-  <Diagram caption="Guest user is notified that cancellation has been requested.">
-    ![Cancellation has been requested for a guest
-    user](@images/dropins/order/cancellation-requested.png)
-  </Diagram>
+{' '}
+
+<Diagram caption="Order is canceled straight away for logged-in users.">
+  ![Cancellation is performed straight away for logged-in
+  users](@images/dropins/order/cancellation-performed.png)
+</Diagram>
+
+{' '}
+
+<Diagram caption="Guest user is notified that cancellation has been requested.">
+  ![Cancellation has been requested for a guest
+  user](@images/dropins/order/cancellation-requested.png)
+</Diagram>
 
   </Task>
 
@@ -119,66 +126,197 @@ Let's review the workflow in more detail:
       If you have questions about your order, you can email us at _support@example.com_.
     </Aside>
     Once clicked, the order becomes `Canceled` and _Order Status_ page is updated accordingly.
+
   </Task>
 
 </Tasks>
-## Queries & Mutations
 
-There are different GraphQl queries and mutations involved in the order cancellation process.
-They are described below.
+## Implementation details
 
-:::note[Note]
-The GraphQL queries and mutations shown below are part of Storefront Compatibility Package and will be added for 2.4.8 beta2.
-:::
+Find below implementation details of some components involved in the order cancellation process:
 
-### Guest Order
+### Order History page
 
-This query is used to get the `token` for the guest order using the `email`, `order number`, and `postcode`:
+The _Order History_ page uses the `OrderProductListContent` component to render the list of orders placed by the user.
+It iterates over the list of orders and uses the `CartSummaryItem` component to render each order item.
+The order item are instances of the `OrderItemModel`, which contains all the necessary properties of an order item.
 
-```graphql
-query guestOrder($email: String!, $number: String!, $postcode: String!) {
-  guestOrder(input: { email: $email, number: $number, postcode: $postcode }) {
-    token
-  }
-}
+See a sample of the `OrderProductListContent` implementation below:
+
+```jsx
+...
+<ul className="order-order-product-list-content__items">
+  {item.list?.map((product: OrderItemModel) => (
+    <li
+      data-testid="order-product-list-content-item"
+      key={product.id}
+    >
+      <CartSummaryItem
+        loading={loading}
+        product={product}
+        itemType={item.type}
+        taxConfig={taxConfig}
+        translations={translations}
+        showConfigurableOptions={showConfigurableOptions}
+        routeProductDetails={routeProductDetails}
+      />
+    </li>
+  ))}
+</ul>
+...
 ```
 
-The `token` you get from the above query is necessary to request the cancellation of the guest order as you can see below.
+### Order Search form
 
-### Request guest order cancel
+The `OrderSearchForm` component is responsible for rendering the form to search for an order.
+It basically receives the following parameters:
+- `fieldsConfig`: an array of fields to be rendered in the form
+- `loading`: a boolean to indicate if the form is loading
+- `inLineAlert`: after submitting the form, an inline alert is shown with the result of the operation (success, warning, error) with its respective message
+- `onSubmit`: a function to be called when the form is submitted and a flag to indicate if the form is valid
 
-The following mutation is used to request the cancellation of the guest order based on the `token` and the `reason` selected by the user:
+See a sample of the implementation below:
 
-```graphql
-mutation requestGuestOrderCancel($token: String!, $reason: String!) {
-  requestGuestOrderCancel(input: { token: $token, reason: $reason }) {
-    error
-    order {
-      status
-      id
-      token
-    }
-  }
-}
+```jsx
+...
+{inLineAlert.text ? (
+  <InLineAlert
+    data-testid="orderAlert"
+    className={'order-order-search-form__alert'}
+    type={inLineAlert.type}
+    variant="secondary"
+    heading={inLineAlert.text}
+    icon={<Icon source={WarningFilled} />}
+  />
+) : null}
+
+<Form
+  className={'order-order-search-form__wrapper'}
+  name="orderSearchForm"
+  loading={loading}
+  fieldsConfig={fieldsConfig}
+  onSubmit={onSubmit}
+>
+  <div className="order-order-search-form__button-container">
+    <Button
+      className={'order-order-search-form__button'}
+      size={'medium'}
+      variant={'primary'}
+      key={'logIn'}
+      type={'submit'}
+      disabled={loading}
+    >
+      <Text id={'Order.OrderSearchForm.button'} />
+    </Button>
+  </div>
+</Form>
 ```
 
-After requesting the cancellation, an email is sent to the user with a link to confirm it.
-This link contains the `order_id` and a `confirmation_key` generated on the fly during this process.
-Both are necessary to confirm the cancellation of the order as you can see below.
+### Order cancellation form
 
-### Confirm guest order cancel
+The `OrderCancel` component renders the `OrderCancelForm` inside a modal.
+This modal receives two parameters:
+- `orderRef`, to identify the order, and
+- `cancelReasons`, with all possible cancellation reasons.
 
-The following mutation is used to confirm the cancellation of the guest order based on the `order_id` and the `confirmation_key`:
+See the details below:
 
-```graphql
-mutation confirmCancelOrder($order_id: ID!, $confirmation_key: String!) {
-  confirmCancelOrder(input: { order_id: $order_id, confirmation_key: $confirmation_key }) {
-    errorV2 {
-      message
-    }
-    order {
-      status
-    }
+```jsx
+...
+<Modal
+  centered={true}
+  size="medium"
+  onClose={handleClose}
+  className={'order-order-cancel__modal'}
+  title={
+    <h2 className={'order-order-cancel__title'}>
+      <Text id={'Order.OrderCancelForm.title'} />
+    </h2>
   }
-}
+  data-testid="order-cancellation-reasons-modal"
+>
+  <OrderCancelForm
+    orderRef={orderRef}
+    cancelReasons={transformCancelReasons(orderCancellationReasons)}
+  />
+</Modal>
+...
 ```
+
+The `OrderCancelForm` component is responsible for:
+
+- rendering the form with the different cancellation reasons and submission button
+- handling the form submission
+- showing the appropriate error messages in case of failure after submitting the form
+
+```jsx
+...
+{isErrorVisible && (
+  <InLineAlert
+    heading={translations.ErrorHeading}
+    description={translations.ErrorDescription}
+  />
+)}
+<div className="order-order-cancel-reasons-form__text">
+  <Text id={'Order.OrderCancelForm.description'} />
+</div>
+<Picker
+  name="cancellationReasons"
+  floatingLabel={translations.orderCancellationLabel}
+  defaultOption={cancelReasons[0]}
+  variant="primary"
+  options={cancelReasons}
+  value={String(selectedReason)}
+  handleSelect={handleReasonSelect}
+  required={true}
+  data-testid="order-cancellation-reasons-selector"
+  {...pickerProps}
+/>
+<div className="order-order-cancel-reasons-form__button-container">
+  <Button
+    variant="primary"
+    data-testid="order-cancel-submit-button"
+    {...submitButtonProps}
+  >
+    <Text id={'Order.OrderCancelForm.button'} />
+  </Button>
+</div>
+...
+```
+
+### Order Status page
+
+The _Order Status_ page uses the `OrderStatusContent` component to render the order with all its properties and the available actions.
+
+
+See a sample of the `OrderStatusContent` implementation below:
+```jsx
+...
+<Card className="order-order-status-content" variant="secondary">
+  <Header title={headerTitle} />
+  <div className="order-order-status-content__wrapper">
+    <div
+      className={classes([
+        'order-order-status-content__wrapper-description',
+        [
+          'order-order-status-content__wrapper-description--actions-slot',
+          !!slots?.OrderActions,
+        ],
+      ])}
+    >
+      <p>{isReturnPage ? returnMessage : orderMessage}</p>
+    </div>
+    <OrderActions
+      orderData={orderData}
+      slots={slots}
+      routeCreateReturn={routeCreateReturn}
+      routeOnSuccess={routeOnSuccess}
+      onError={onError}
+    />
+  </div>
+</Card>
+...
+```
+
+After performing any action, the _Order Status_ page is re-rendered, so that, it reflects the new status and the available actions.
+Also, the appropriate messages is shown to the user, depending on the action performed.
