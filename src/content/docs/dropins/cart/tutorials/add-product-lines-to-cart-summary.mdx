@@ -1,0 +1,136 @@
+---
+title: Add custom product lines to the cart summary
+description: Learn how to add custom lines related to products in the cart summary.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This tutorial describes how to make the following customizations to the `CartSummaryList` container using the Adobe Commerce Boilerplate:
+
+- Add text from a custom product attribute
+- Display promotional information in the footer of each product in the cart
+
+## Prerequisites
+
+This tutorial requires that you create the following entities in the Adobe Commerce Admin:
+
+- A custom product attribute. Here, the product attribute is assigned the label `Shipping Notes`, and the **Catalog Input Type for Store Owner* is set to **Text Field**. You can optionally set the **Used for Sorting in Product Listing** option to **Yes** to make the product attribute easier to find applicable products in the Products grid. [Product attributes overview](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/product-attributes/product-attributes) describes how to create a custom product attribute.
+
+  In addition, you must assign the product attribute to one or more products. In this tutorial, the text fields will contain the strings "These item(s) are available to ship on Nov 1, 2024" and "FINAL SALE: This item ships separately and is ineligible for return.".
+
+- A custom cart price rule. In this tutorial, a cart price rule named `25% Off $75+ with Code BOO24` has been created. Its definition defines the coupon code, the discount amount, and the conditions that must be met to apply the discount. [Cart price rules overview](https://experienceleague.adobe.com/en/docs/commerce-admin/marketing/promotions/cart-rules/price-rules-cart) describes how to create a cart price rule.
+
+<Tasks>
+
+<Task>
+
+## Add text from a custom product attribute
+
+In this task, we'll add text that provides shipping information when certain conditions apply. For example, an item might be out of stock, and therefore cannot be shipped immediately. Or maybe the product is on clearance and cannot be returned. The `CartSummaryList` component is extended to display text defined by a merchant in the Admin using a custom product attribute. If the custom product attribute is not assigned to a product, then no additional information is displayed.
+
+The following images show how these custom lines can be rendered:
+
+<Diagram caption="">
+   ![](@images/dropins/cart/cart-product-line-shipping.png)
+</Diagram>
+
+<Diagram caption="">
+   ![](@images/dropins/cart/cart-product-line-final.png)
+</Diagram>
+
+<Steps>
+
+1. Open the `blocks/commerce-cart/commerce-cart.js` boilerplate file. This file imports the `CartSummaryList` container, and we want to use a slot to display the custom product attribute. Find the `provider.render(CartSummaryList, {` line in the file and insert a `ProductAttributes` slot with the following code:
+
+   ```javascript
+    slots: {
+      ProductAttributes: (ctx) => {
+        // Prepend Product Attributes
+        const ProductAttributes = ctx.item?.productAttributes;
+
+        ProductAttributes?.forEach((attr) => {
+          if(attr.code === "Fashion Material" || attr.code === "Fashion Style") {
+            if(attr.selected_options) {
+              const selectedOptions = attr.selected_options
+              .filter((option) => option.label.trim() !== '')
+              .map((option) => option.label)
+              .join(', ');
+              
+              if(selectedOptions) {
+                const productAttribute = document.createElement('div');
+                productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
+                ctx.appendChild(productAttribute);
+              }
+            } else if (attr.value) {
+              const productAttribute = document.createElement('div');
+              productAttribute.innerText = `${attr.code}: ${attr.value}`;
+              ctx.appendChild(productAttribute);
+            }
+          }
+        })
+      },
+   ```
+
+   This code creates a slot named `ProductAttributes` that displays the custom product attribute `Shipping Notes`, if it is assigned to a product. If the corresponding attribute is found, the slot creates a new `div` element and appends the attribute code and value to the element. The element is then appended to the `ctx` element, which is the product line in the cart summary.
+
+1. Save the file and generate the page to see the changes.
+
+
+</Steps>
+
+</Task>
+
+<Task>
+
+## Display promotional information in the footer of a cart item
+
+Now we'll add information defined in a custom cart price rule to the footer of the `CartSummaryList. container. If the the conditions set in the cart price rules are not met, then no additional information is displayed. For example, if a specific coupon has not been applied or if the subtotal threshold has not been met, then this information is not displayed.
+
+<Diagram caption="Display coupon information">
+   ![Display coupon information](@images/dropins/cart/cart-product-line-footer.png)
+</Diagram>
+
+<Steps>
+
+1. Add a `Header` slot beneath the `ProductAttributes` slot.
+
+   ```javascript
+
+    slots: {
+      ProductAttributes: (ctx) => {
+        ...
+        }
+        
+      Footer: (ctx) => {
+        // Runs on mount
+        const wrapper = document.createElement('div');
+        ctx.appendChild(wrapper);
+
+        // Append Product Promotions on every update
+        ctx.onChange((next) => {
+        wrapper.innerHTML = '';
+
+          next.item?.discount?.label?.forEach((label) => {
+          const discount = document.createElement('div');
+          discount.style.color = '#3d3d3d';
+          discount.innerText = label;
+          wrapper.appendChild(discount);
+        });
+      });
+    },
+   ```
+
+   This code creates a slot named `Footer`, which displays the promotional information defined in the custom cart price rule. If the conditions set in the cart price rule are met, the slot creates a new `div` element and appends the promotional information to the element. The element is then appended to the `ctx` element, which is the product line in the cart summary.
+
+1. Save the file. Add products that total at least $75 and apply the BOO24 coupon code to th cart. The page the rule name beneath each item in the cart.
+
+</Steps>
+
+</Task>
+
+</Tasks>
