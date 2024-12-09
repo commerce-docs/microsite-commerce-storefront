@@ -1,0 +1,110 @@
+---
+title: Customize the order summary block
+description: Learn how to add custom lines related to products in the cart summary.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The `OrderSummary` container displays the order summary with details such as the subtotal, shipping cost, and total cost. This tutorial describes how to make the following customizations to the `OrderSummary` container using the Adobe Commerce Boilerplate:
+
+- Enable estimated shipping costs and total savings amounts to be displayed automatically.
+- Group the subtotal and tax in an accordion.
+
+## Step-by-step
+
+The following steps describe how to modify the [commerce-cart.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js) block file in the boilerplate template to add custom content to the `OrderSummary` container.
+
+<Tasks>
+
+<Task>
+
+### 
+
+In this task, 
+
+To 
+`await provider.render(EstimateShipping, {})(wrapper);`
+
+```js
+showDefaultEstimatedShippingCost: true,
+```
+```
+
+
+we'll add text that provides shipping information when certain conditions apply. For example, an item might be out of stock, and therefore cannot be shipped immediately. Or maybe the product is on clearance and cannot be returned. The `CartSummaryList` component is extended to display text defined by a merchant in the Admin using a custom product attribute. If the custom product attribute is not assigned to a product, then no additional information is displayed.
+
+The following images show how these custom lines can be rendered:
+
+<Diagram caption="">
+   ![](@images/dropins/cart/cart-product-line-shipping.png)
+</Diagram>
+
+<Diagram caption="">
+   ![](@images/dropins/cart/cart-product-line-final.png)
+</Diagram>
+
+<Steps>
+
+1. 
+
+1. 
+
+
+</Steps>
+
+</Task>
+
+<Task>
+
+### 
+
+
+
+<Diagram caption="Display coupon information">
+   ![Display coupon information](@images/dropins/cart/cart-product-line-footer.png)
+</Diagram>
+
+<Steps>
+
+1. 
+
+1. 
+
+</Steps>
+
+</Task>
+
+</Tasks>
+
+
+```js
+updateLineItems: (lineItems) => {
+  // Group subtotal and tax in an accordion
+
+  const totalsIndex = lineItems.map(item => item.key).indexOf('taxContent');
+  const taxContent = lineItems.splice(totalsIndex, 1)[0];
+  const subtotalIndex = lineItems.map(item => item.key).indexOf('subTotalContent');
+  const subTotalContent = lineItems.splice(subtotalIndex, 1)[0];
+
+  lineItems.push({
+    key: 'subTotalTaxGrouped',
+    sortOrder: 50,
+    title: 'Subtotal and Tax',
+    content: [
+        taxContent,
+        subTotalContent,
+    ],
+  });
+
+  return lineItems;
+},
+
+
+`
+```
+```
