@@ -201,13 +201,13 @@ export default defineConfig({
                 items: [
                   { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                   { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
-                  { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                   { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
                   { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
                   { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                   { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                   { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                   { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
+                  { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                 ]
               },
               { label: 'Slots', link: '/dropins/product-details/slots/' },
