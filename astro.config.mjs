@@ -197,7 +197,19 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/product-details/installation/' },
               { label: 'Initialization', link: '/dropins/product-details/initialization/' },
               { label: 'Styles', link: '/dropins/product-details/styles/' },
-              { label: 'Containers', link: '/dropins/product-details/containers/' },
+              { label: 'Containers', collapsed: true,
+                items: [
+                  { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                  { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                  { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
+                  { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
+                  { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
+                  { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
+                  { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
+                  { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
+                  { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                ]
+              },
               { label: 'Slots', link: '/dropins/product-details/slots/' },
               { label: 'Functions', link: '/dropins/product-details/functions/' },
               { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
@@ -232,6 +244,7 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                   { label: 'Configure the cart summary block', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                  { label: 'Add custom product lines to the cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
                   { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                 ]
               },

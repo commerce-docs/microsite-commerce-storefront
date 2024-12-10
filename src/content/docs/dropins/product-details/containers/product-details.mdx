@@ -1,76 +1,53 @@
 ---
-title: PDP containers
-description: Learn about the configuration variables for the product details page drop-in component.
-sidebar:
-  order: 4
+title: ProductDetails
+description: Configure the ProductDetails container for the product details page drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
 ---
 
-import Diagram from '@components/Diagram.astro';
-import Callouts from '@components/Callouts.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 
-The product details page (PDP) drop-in component has a single container called `ProductDetails`. The container's configuration options are provided below.
+The `ProductDetails` container displays detailed information about a product on the product details page.
 
-## Configuration options
+## ProductDetails configuration options
 
-The product details page provides the following configuration options:
+The `ProductDetails` container provides the following configuration options:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['sku', 'string', 'Yes', 'The unique identifier for the product.'],
+    ['productData', 'ProductModel', 'No', 'Optional initial product data to preload the component.'],
     ['hideSku', 'boolean', 'No', 'Optional boolean to hide the SKU display.'],
     ['hideQuantity', 'boolean', 'No', 'Hides the quantity selector if set to true.'],
-    ['hideSelectedOptionValue', 'boolean', 'No', 'Hides the selected values of the option.'],
     ['hideShortDescription', 'boolean', 'No', 'Hides the short description if set to true.'],
     ['hideDescription', 'boolean', 'No', 'Hides the description if set to true.'],
     ['hideAttributes', 'boolean', 'No', 'Hides the attributes if set to true.'],
-    [
-      'hideURLParams',
-      'boolean',
-      'No',
-      'Disables synchronization of options with URL parameters if true.',
-    ],
-    [
-      'productData',
-      'ProductModel',
-      'No',
-      'Optional initial product data to preload the component.',
-    ],
-    [
-      'slots',
-      'object',
-      'No',
-      'An object containing slot overrides for customizing various parts of the component display.',
-    ],
+    ['hideSelectedOptionValue', 'boolean', 'No', 'Hides the selected values of the option.'],
+    ['hideURLParams', 'boolean', 'No', 'Disables synchronization of options with URL parameters if true.'],
+    ['slots', 'object', 'No', 'An object containing slot overrides for customizing various parts of the component display.'],
     ['carousel', 'CarouselConfig', 'No', 'Configuration for the product image carousel display.'],
-    [
-      'onAddToCart',
-      'function',
-      'No',
-      'Callback function triggered upon adding the product to the cart.',
-    ],
-    [
-      'zoomType',
-      'string',
-      'No',
-      'Specifies the type of zoom functionality for a product image. Options: "zoom" or "overlay".',
-    ],
+    ['optionsConfig', 'OptionsConfig', 'No', 'Configuration for product options, including anchor options.'],
+    ['useACDL', 'boolean', 'No', 'Enables Adobe Client Data Layer (ACDL) integration for tracking product page views.'],
+    ['onAddToCart', 'function', 'No', 'Callback function triggered upon adding the product to the cart.'],
+    [ 'zoomType', 'string', 'No', 'Specifies the type of zoom functionality for a product image. Options: "zoom" or "overlay".'],
     ['closeButton', 'boolean', 'No', 'Indicates whether a close button should be displayed.'],
+    ['disableDropdownPreselection', 'boolean', 'No', 'Disables the automatic preselection of the first option in dropdowns if set to true.']
   ]}
 />
 
-## SKU
+### SKU
 
 The `sku` property is the only required configuration. It's a string that uniquely identifies the product. This value is used to fetch `ProductModel` data from the backend.
 
-## Hide options
+### Hide options
 
 The hide options (`hideSku`, `hideQuantity`, and the others) let you hide the parts of the product details UI that are not relevant for your storefront. These properties are optional and default to `false`.
 
-## Product Data
+### Product Data
 
 The `productData` property is an optional object that contains the initial product data to preload the component. The object should follow the `ProductModel` interface:
 
@@ -78,6 +55,7 @@ The `productData` property is an optional object that contains the initial produ
 interface ProductModel {
   name: string;
   sku: string;
+  isBundle: boolean;
   addToCartAllowed: boolean;
   inStock: boolean | null;
   shortDescription?: string;
@@ -95,16 +73,17 @@ interface ProductModel {
   externalId?: string;
   externalParentId?: string;
   variantSku?: string;
+  productType?: ProductType | undefined;
 }
 ```
 
 View the [Example configuration](#example-configuration) section for an example of how to use this property.
 
-## Slots
+### Slots
 
 Slots allow for the customization of component parts. Each slot accepts a `SlotProps` object with a context containing `data`, `values`, and a `valid` state. Custom actions and content can be added through these slots. Visit the [Slots](/dropins/product-details/slots/) page for slot details and usage information.
 
-## Carousel
+### Carousel
 
 The Carousel settings available for configuration are defined in the `CarouselConfig` interface:
 
@@ -169,7 +148,7 @@ interface CarouselConfig {
 
 The [Example configuration](#example-configuration) section shows a usage example for `carousel`.
 
-## onAddToCart
+### onAddToCart
 
 Triggered when the **Add to Cart** button is clicked. Receives an object with `sku`, `quantity`, and optionally `optionsUIDs` reflecting the user's selection.
 
@@ -178,16 +157,22 @@ Triggered when the **Add to Cart** button is clicked. Receives an object with `s
 onAddToCart: (values) => void;
 ```
 
-## zoomType
+### zoomType
 
 This property can take one of two string values: `zoom` or `overlay`. It is used to enhance product image viewing by providing zoom or overlay functionality:
 
 - `overlay` (_default_): Provides a larger, distraction-free view of a product image. The clicked image is opened in full screen.
 - `zoom`: Provides a close-up view of the product's image in the gallery. The clicked image is not opened in full screen.
 
-## closeButton
+### closeButton
 
 This property is a boolean that can only be used in combination with the `zoomType` property. The default value is `false`. If `true`, the close button is shown; if `false` or not provided, the close button is not shown.
+
+### optionsConfig
+
+The `optionsConfig` property allows for additional configuration of product options. It accepts an object with the following properties:
+
+- `anchorOptions`: An array of option IDs that should not be refined when other options are selected.
 
 ## Example configuration
 
