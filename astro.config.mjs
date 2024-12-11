@@ -274,10 +274,11 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-               { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
-              { label: 'Tutorials',
+              {
+                label: 'Tutorials',
                 collapsed: true,
                 items: [
                   { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
@@ -286,7 +287,7 @@ export default defineConfig({
                 ]
               },
             ],
-          }, 
+          },
           {
             label: 'Order',
             collapsed: true,
@@ -294,7 +295,7 @@ export default defineConfig({
           //    { label: 'Overview', link: '/dropins/order/' },
               { label: 'Initialization', link: '/dropins/order/initialization/' },
           //    { label: 'Styles', link: '/dropins/order/styles/' },
-              { label: 'Containers' , 
+              { label: 'Containers' ,
                 collapsed: true,
                 items: [
                   { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
@@ -311,15 +312,15 @@ export default defineConfig({
           //    { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
               { label: 'Dictionary', link: '/dropins/order/dictionary/' },
-          //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
-          //      collapsed: true,
-          //        items: [
-          //          { label: 'First', link: '/dropins/order/tutorials/first/' },
-          //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
-          //    ],
-          //  ]        
-          ],
-        },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+                ]
+              },
+            ]
+          },
           {
             label: 'User auth',
             collapsed: true,
