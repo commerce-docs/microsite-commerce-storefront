@@ -10,129 +10,64 @@ import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-The Order dropin allows both logged in and guest users to cancel an order.
+The Order dropin enables both logged in and guest users to cancel an order.
 
-In this tutorial, we will show:
+## Big picture
 
-- the prerequisites to be able to cancel an order,
-- the cancellation workflow, and
-- implementation details of some components involved in the process.
+The order cancellation workflow is as follows:
+
+<Steps>
+
+  1. The shopper selects an order to cancel. Guest users must use the order search form to locate the order. Logged-in customers can select an order from their order history or use the search form.
+
+  1. The shopper submits the cancellation form after selecting a cancellation reason.
+
+  1. If the shopper is a logged-in customer, the order is `Canceled` immediately. Otherwise, the order remains in status `Pending` until the guest clinks a link in an confirmation email.
+
+</Steps>
 
 ## Prerequisites
 
-To be able to cancel an order, you need to have the configuration enabled in the backend.
-You can find it in the backoffice under _Stores > Configuration > Sales > Sales > Order Cancellation_.
-
-There are the following configurations:
+Adobe Commerce must be configured to allow order cancellations. In the Admin, go to **Stores** > Configuration > **Sales** > **Sales** > **Order Cancellation** and set the following options:
 
 <OptionsTable
   compact
   options={[
     ['Configuration', 'Description'],
-    [
-      'Order cancellation through GraphQL',
-      'It is a boolean. When it is set to `true`, the order cancellation will be enabled.',
-    ],
-    [
-      'Order cancellation reasons',
-      'It is an array of reasons that can be selected by the user when cancelling an order.',
-    ],
-  ]}
+    ['Order cancellation through GraphQL', 'Set to Yes to enable order cancellations.'],
+    ['Order cancellation reasons', 'A set of reasons that the shopper selects from to explain why they want to cancel the order. You can customize the default options to provide a list that is applicable to your business.'],
+    ]}
 />
 
-:::note[Note]
-Note: There is a default list of reasons, but you can customise according to your needs.
-:::
-
-<Diagram caption="The order cancellation configurations you can customise in the backoffice">
-  ![Cancellation configurations in the
-  backoffice](@images/dropins/order/cancellation-prerequisites.png)
+<Diagram caption="Order cancellation configuration options">
+  ![Order cancellation configuration options](@images/dropins/order/cancellation-prerequisites.png)
 </Diagram>
 
-## Workflow
+## Step-by-step
 
-The order cancellation workflow is as follows:
-
-  <Steps>
-  1. Select an order to cancel.
-  1. Submit the cancellation form after selecting a cancellation reason.
-  1. In case it is a *logged-in user*, the order is `Canceled` immediately. But when it is a _guest user_, the order remains in status `Pending` until the user confirms the cancellation.
-  </Steps>
-
-Let's review the workflow in more detail:
+The following steps describe how to implement the order cancellation workflow for both logged in customers and guests.
 
 <Tasks>
-  <Task>
-    ### Select an order to cancel
 
-    A _logged-in user_ can select an order to cancel in two different ways:
+<Task>
 
-    - from the _Order History_ page, where all orders placed by the user are listed.
-    <Diagram caption="Order history page listing orders placed by a logged in user .">
-      ![Logged-in user - Order history page](@images/dropins/order/cancellation-order-history.png)
-    </Diagram>
+### Display the order history (logged-in customers only)
 
-    - using the *Order Search* form to load the order to request the cancellation afterwards.
-    <Diagram caption="Form presented to the the user to search for an order">
-      ![Order Search form to search for an order](@images/dropins/order/order-search.png)
-    </Diagram>
+The workflow for logged-in customers is straightforward.  An order can be canceled only if it has a status of `Received`, `Pending`, or `Processing`.
 
-    <Aside type="caution" title="Guest users">
-      A *guest user* do not have access to the *Order History* page. Therefore, the only way to access
-      an order is by using the *Order Search* form.
-    </Aside>
+<Aside>
+The logged-in customer can also use the order search form to locate the order. See [Search for the order](#search-for-the-order) for this use case.
+</Aside>
 
-  </Task>
+The customer selects an active order from their order history to cancel.
 
-  <Task>
-    ### Submit the cancellation form
+<Diagram caption="Order history">
+   ![Order history](@images/dropins/order/cancellation-order-history.png)
+</Diagram>
 
-    The user is able to select a cancellation reason and submit the form:
+The order history page uses the `OrderProductListContent` component to render the list of orders that the customer previously placed. It iterates over the list of orders and uses the `CartSummaryItem` component to render each order item. The order item are instances of the `OrderItemModel`, which contains all the necessary properties of an order item.
 
-    <Diagram caption="Form presented to the guest user with different cancellation reasons.">
-      ![Guest user selects a cancellation reason](@images/dropins/order/cancellation-form.png)
-    </Diagram>
-
-    After submitting the form, the changes are reflected on the _Order Status_ page:
-
-    <Diagram caption="Order is canceled straight away for logged-in users.">
-      ![Cancellation is performed straight away for logged-in
-      users](@images/dropins/order/cancellation-performed.png)
-    </Diagram>
-
-    <Diagram caption="Guest user is notified that cancellation has been requested.">
-      ![Cancellation has been requested for a guest
-      user](@images/dropins/order/cancellation-requested.png)
-    </Diagram>
-
-  </Task>
-
-  <Task>
-    ### Confirm order cancellation
-
-    The guest order remains in status `Pending` until the user clicks the link in the email to confirm the cancellation.
-
-    <Aside type="choose" title="Confirm Your Main Website Store Order Cancellation">
-      It seems that you'd like to cancel your order #000000001. If this is correct, please _click here_ to confirm your cancellation request.
-
-      If you have questions about your order, you can email us at _support@example.com_.
-    </Aside>
-    Once clicked, the order becomes `Canceled` and _Order Status_ page is updated accordingly.
-
-  </Task>
-</Tasks>
-
-## Implementation details
-
-Find below implementation details of some components involved in the order cancellation process:
-
-### Order History page
-
-The _Order History_ page uses the `OrderProductListContent` component to render the list of orders placed by the user.
-It iterates over the list of orders and uses the `CartSummaryItem` component to render each order item.
-The order item are instances of the `OrderItemModel`, which contains all the necessary properties of an order item.
-
-See a sample of the `OrderProductListContent` implementation below:
+The following example shows an implementation of the `OrderProductListContent` component:
 
 ```jsx
 ...
@@ -156,16 +91,32 @@ See a sample of the `OrderProductListContent` implementation below:
 </ul>
 ...
 ```
+</Task>
 
-### Order Search form
+<Task>
+
+### Search for the order
+
+A guest user does not have access to the order history page. Therefore, the only way to access an order is by using the Order Search form. The search order form retrieves the order that matches the specified email address, last name, and order name, as shown below:
+
+<Diagram caption="Order cancellation form">
+   ![Order cancellation form](@images/dropins/order/cancellation-form.png)
+</Diagram>
 
 The `OrderSearchForm` component is responsible for rendering the form to search for an order.
-It basically receives the following parameters:
+It receives the following parameters:
 
+<OptionsTable
+  compact
+  options={[
+    ['Configuration', 'Description'],
+    ['fieldsConfig', 'An array of fields to be rendered in the form'],
+    ['loading', 'A boolean to indicate whether the form is loading'],
+    ['inLineAlert', 'After submitting the form, an inline alert is shown with the result of the operation (success, warning, error) with its respective message'],
+    ['onSubmit', 'A function to be called when the form is submitted and a flag to indicate if the form is valid'],
+    ]}
+/>
 - `fieldsConfig`: an array of fields to be rendered in the form
-- `loading`: a boolean to indicate if the form is loading
-- `inLineAlert`: after submitting the form, an inline alert is shown with the result of the operation (success, warning, error) with its respective message
-- `onSubmit`: a function to be called when the form is submitted and a flag to indicate if the form is valid
 
 See a sample of the implementation below:
 
@@ -204,16 +155,31 @@ See a sample of the implementation below:
 </Form>
 ...
 ```
+</Task>
 
-### Order cancellation form
+<Task>
+
+### Render and submit the cancellation form
+
+The cancellation form allows the customer to select a cancellation reason and submit the form.
+
+<Diagram caption="Order cancellation form">
+   ![Order cancellation form](@images/dropins/order/cancellation-form.png)
+</Diagram>
 
 The `OrderCancel` component renders the `OrderCancelForm` inside a modal.
 This modal receives two parameters:
 
-- `orderRef`, to identify the order, and
-- `cancelReasons`, with all possible cancellation reasons.
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Description'],
+    ['orderRef', 'Identifies the order'],
+    ['cancelReasons', 'Contains all the configured cancellation reason'],
+    ]}
+/>
 
-See the details below:
+For example:
 
 ```jsx
 ...
@@ -229,9 +195,9 @@ See the details below:
   }
   data-testid="order-cancellation-reasons-modal"
 >
-  <OrderCancelForm
-    orderRef={orderRef}
-    cancelReasons={transformCancelReasons(orderCancellationReasons)}
+<OrderCancelForm
+  orderRef={orderRef}
+  cancelReasons={transformCancelReasons(orderCancellationReasons)}
   />
 </Modal>
 ...
@@ -239,9 +205,9 @@ See the details below:
 
 The `OrderCancelForm` component is responsible for:
 
-- rendering the form with the different cancellation reasons and submission button
-- handling the form submission
-- showing the appropriate error messages in case of failure after submitting the form
+- Rendering the form with multiple cancellation reasons and a submission button
+- Handling the form submission
+- Showing the appropriate error messages in case of failure after submitting the form
 
 ```jsx
 ...
@@ -277,10 +243,35 @@ The `OrderCancelForm` component is responsible for:
 </div>
 ...
 ```
+</Task>
 
-### Order Status page
+<Task>
 
-The _Order Status_ page uses the `OrderStatusContent` component to render the order with all its properties and the available actions.
+### Display the confirmation notice
+
+When a logged-in customer submits the cancellation form, Commerce immediately sets the status of the order to `Canceled` and the drop-in displays a confirmation notice.
+
+<Diagram caption="Confirmation for logged-in users.">
+  ![Confirmation for logged-in users](@images/dropins/order/cancellation-performed.png)
+</Diagram>
+
+If the shopper is a guest user, the drop-in displays the following dialog:
+
+<Diagram caption="Guest user is notified that cancellation has been requested.">
+  ![Cancellation has been requested for a guest user](@images/dropins/order/cancellation-requested.png)
+</Diagram>
+
+The order remains in status `Pending` until the user clicks the link in an email similar to the following to confirm the cancellation.
+
+<Aside type="choose" title="Confirm Your Main Website Store Order Cancellation">
+It seems that you'd like to cancel your order #000000001. If this is correct, please _click here_ to confirm your cancellation request.
+
+If you have questions about your order, you can email us at _support@example.com_.
+</Aside>
+
+Once clicked, the order becomes `Canceled` and the order status page is updated accordingly.
+
+The order status page uses the `OrderStatusContent` component to render the order with all its properties and the available actions.
 
 See a sample of the `OrderStatusContent` implementation below:
 
@@ -312,5 +303,8 @@ See a sample of the `OrderStatusContent` implementation below:
 ...
 ```
 
-After performing any action, the _Order Status_ page is re-rendered, so that, it reflects the new status and the available actions.
-Also, the appropriate message is shown to the user, depending on the action performed.
+After performing any action, the order status page is re-rendered, so that it reflects the new status and the available actions. The appropriate message is shown to the user, depending on the action performed.
+
+</Task>
+
+</Tasks>
