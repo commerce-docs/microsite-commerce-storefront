@@ -315,7 +315,7 @@ export default defineConfig({
                 label: 'Tutorials',
                 collapsed: true,
                 items: [
-                  { label: 'Order Cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+                  { label: 'Order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
                 ]
               },
             ]
