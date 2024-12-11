@@ -291,9 +291,9 @@ export default defineConfig({
             label: 'Order',
             collapsed: true,
             items: [
-          //    { label: 'Overview', link: '/dropins/order/' },
+              { label: 'Overview', link: '/dropins/order/' },
               { label: 'Initialization', link: '/dropins/order/initialization/' },
-          //    { label: 'Styles', link: '/dropins/order/styles/' },
+              { label: 'Styles', link: '/dropins/order/styles/' },
               { label: 'Containers' ,
                 collapsed: true,
                 items: [
