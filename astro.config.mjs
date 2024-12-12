@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -24,6 +24,9 @@ export default defineConfig({
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
+  },
+  image: {
+    service: passthroughImageService(),
   },
   trailingSlash: 'ignore',
   outDir: './dist',
@@ -306,7 +309,7 @@ export default defineConfig({
               //          { label: 'First', link: '/dropins/order/tutorials/first/' },
               //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
               //    ],
-              //  ]        
+              //  ]
             ],
           },
           {
