@@ -1,11 +1,282 @@
 ---
 title: Order slots
 description: Learn about the slots provided in the order drop-in component.
-tableOfContents:
-  minHeadingLevel: 2
-  maxHeadingLevel: 3
 ---
 
-Learn about the slots provided in the order drop-in component.
+This topic describes the slots that are provided in the order drop-in component.
 
 [Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
+
+## CreateReturn slots
+
+The `CreateReturn` container provides slots for customizing the process of initiating a return.
+
+### ReturnOrderItem
+
+The `ReturnOrderItem` slot renders additional information for return items.
+
+```js
+slots: {
+ ReturnOrderItem: (ctx) => {
+   const container = document.createElement('div');
+   container.insertAdjacentHTML(
+     'afterbegin',
+     `
+       <div id="info-container" class="info-container">
+         <h2 class="info-heading">Product Details</h2>
+         <ul class="info-list">
+           <li class="info-item">Detail 1: Placeholder information about the product.</li>
+           <li class="info-item">Detail 2: Additional placeholder information about the product.</li>
+         </ul>
+       </div>
+     `
+   );
+   ctx.appendChild(container);
+ }
+}
+```
+
+### ReturnFormActions
+
+The `ReturnFormActions` slot renders custom return form actions.
+
+```js
+slots: {
+ ReturnFormActions: (ctx) => {
+   const container = document.createElement('div');
+
+   provider.render(Button, {
+     variant: 'secondary',
+     children: 'Get a Better Offer',
+     onClick: () => alert('Custom event listener!'),
+   })(container);
+   ctx.appendChild(container);
+ },
+}
+```
+
+## CustomerDetails slots
+
+The `CustomerDetails` container provides slots for customizing the customer details section on the order details page.
+
+### OrderReturnInformation slot
+
+The `OrderReturnInformation` slot renders custom elements in the return information section on the return details page.
+
+```js
+slots: {
+ OrderReturnInformation: (ctx) => {
+   const container = document.createElement('div');
+
+   provider.render(TextArea, {
+     children: 'Custom Action Button',
+     required: true,
+     name: 'custom_text_area',
+     label: 'Custom User information',
+     disabled: true,
+     onChange: (event) => {
+       console.log('event', event);
+     },
+   })(container);
+
+   ctx.appendChild(container);
+ }
+}
+```
+
+### PaymentMethodIcon
+
+The `PaymentMethodIcon` slot renders custom elements based on the selected payment method on the order details page.
+
+```js
+slots: {
+ PaymentMethodIcon: (ctx) => {
+   const { selectedPaymentMethodCode } = ctx;
+
+   const container = document.createElement('div');
+
+   let iconMarkup = '';
+   switch (selectedPaymentMethodCode) {
+     case 'credit_card':
+       iconMarkup = `<div>Credit Card Icon</div>`;
+       break;
+     case 'paypal':
+       iconMarkup = `<div>PayPal Icon</div>`;
+       break;
+     case 'bank_transfer':
+       iconMarkup = `<div>Bank Transfer Icon</div>`;
+       break;
+     default:
+       iconMarkup = `<div>Default Icon</div>`;
+   }
+
+   container.insertAdjacentHTML(
+     'afterbegin',
+     `
+       <div class="payment-method-icon">
+         ${iconMarkup}
+       </div>
+     `
+   );
+
+   ctx.appendChild(container);
+ }
+}
+```
+
+## OrderReturns slots
+
+The `OrderReturns` container provides slots that customize elements in the order returns section on the order details page.
+
+### DetailsActionParams slot
+
+The `DetailsActionParams` slot renders custom actions for each return in the order returns section of the order details page.
+
+```js
+slots: {
+ DetailsActionParams: (ctx) => {
+   const {
+     returnOrderItem: { returnNumber },
+   } = ctx;
+
+   const container = document.createElement('div');
+
+   container.insertAdjacentHTML(
+     'afterbegin',
+     `
+       <div>
+         <a
+           href="https://example.com/returns/${returnNumber}"
+           class="details-link"
+         >Return Details</a>
+         <button
+           class="cancel-return-button"
+           onclick="console.log('Cancel return callback placeholder')"
+         >Cancel Return</button>
+       </div>
+     `
+   );
+
+   ctx.appendChild(container);
+ }
+}
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot renders additional details for each return in the order returns section of the order details page.
+
+```js
+slots: {
+ ReturnItemsDetails: (ctx) => {
+   const { items } = ctx;
+   const container = document.createElement('div');
+
+   const itemStatus = items?.[0]?.customStatus || 'No status available';
+
+   container.innerHTML = `Custom return status: ${itemStatus}`;
+   ctx.appendChild(container);
+ }
+}
+```
+
+### OrderStatus slot
+
+The `OrderStatus` slot renders custom order status elements on the order details page.
+
+## DeliveryTimeLine
+
+The `DeliveryTimeLine` slot renders a custom stepper to track delivery progress.
+
+```js
+slots: {
+ DeliveryTimeLine: (ctx) => {
+   const container = document.createElement('div');
+
+   container.insertAdjacentHTML(
+     'afterbegin',
+     `
+      <div class="shipping-stepper">
+        <div class="step">
+          <div class="step-marker"></div>
+          <span class="step-label">Order Placed</span>
+        </div>
+        <div class="step">
+          <div class="step-marker"></div>
+          <span class="step-label">Shipped</span>
+        </div>
+        <div class="step">
+          <div class="step-marker"></div>
+          <span class="step-label">Out for Delivery</span>
+        </div>
+        <div class="step">
+          <div class="step-marker"></div>
+          <span class="step-label">Delivered</span>
+        </div>
+      </div>
+    `
+   );
+
+   ctx.appendChild(container);
+ }
+}
+```
+
+### DeliveryTrackActions slot
+
+The `DeliveryTrackActions` slot renders custom delivery tracking actions.
+
+```js
+slots: {
+ DeliveryTrackActions: (ctx) => {
+   const {
+     trackInformation: { number, title },
+   } = ctx;
+
+   const container = document.createElement('div');
+
+   container.insertAdjacentHTML(
+     'afterbegin',
+     `
+       <button
+         type="button"
+         class="track-action-button"
+         data-track-number="${number}"
+       >
+         ${title}
+       </button>
+     `
+   );
+
+   ctx.appendChild(container);
+ }
+}
+```
+
+### ReturnItemsDetails
+
+The `ReturnItemsDetails` slot renders additional return details in the shipping status container on the return details page.
+  
+  ```js
+slots: {
+ ReturnItemsDetails: (ctx) => {
+   const { items } = ctx;
+   const container = document.createElement('div');
+   container.classList.add('return-items-details');
+
+   items.forEach(({ quantity, requestQuantity, status, uid }) => {
+     const html = `
+       <div class="return-item" id="return-${uid}">
+         <h3 class="return-status">${status}</h3>
+         <p class="return-request-quantity">Requested: ${requestQuantity}</p>
+         <p class="return-quantity">Quantity: ${quantity}</p>
+         <a href="#" class="return-info-link">More information about the return</a>
+       </div>
+     `;
+     container.insertAdjacentHTML('beforeend', html);
+   });
+
+   ctx.appendChild(container);
+ }
+}
+```
