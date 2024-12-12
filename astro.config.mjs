@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -24,6 +24,9 @@ export default defineConfig({
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
+  },
+  image: {
+    service: passthroughImageService(),
   },
   trailingSlash: 'ignore',
   outDir: './dist',
@@ -185,10 +188,10 @@ export default defineConfig({
             label: 'Extending',
             link: '/dropins/all/extending/'
           },
-          // {
-          //   label: 'Enriching',
-          //   link: '/dropins/all/enriching/'
-          // },
+          {
+            label: 'Enriching',
+            link: '/dropins/all/enriching/'
+          },
           {
             label: 'Product details page',
             collapsed: true,
@@ -197,7 +200,19 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/product-details/installation/' },
               { label: 'Initialization', link: '/dropins/product-details/initialization/' },
               { label: 'Styles', link: '/dropins/product-details/styles/' },
-              { label: 'Containers', link: '/dropins/product-details/containers/' },
+              { label: 'Containers', collapsed: true,
+                items: [
+                  { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                  { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                  { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
+                  { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
+                  { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
+                  { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
+                  { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
+                  { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
+                  { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                ]
+              },
               { label: 'Slots', link: '/dropins/product-details/slots/' },
               { label: 'Functions', link: '/dropins/product-details/functions/' },
               { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
@@ -211,7 +226,8 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/cart/installation/' },
               { label: 'Initialization', link: '/dropins/cart/initialization/' },
               { label: 'Styles', link: '/dropins/cart/styles/' },
-              { label: 'Containers', collapsed: true,
+              {
+                label: 'Containers', collapsed: true,
                 items: [
                   { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                   { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
@@ -232,6 +248,7 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                   { label: 'Configure the cart summary block', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                  { label: 'Add custom product lines to the cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
                   { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                 ]
               },
@@ -261,26 +278,28 @@ export default defineConfig({
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                 ]
               },
-               { label: 'Slots', link: '/dropins/checkout/slots/' },
+              { label: 'Slots', link: '/dropins/checkout/slots/' },
               { label: 'Functions', link: '/dropins/checkout/functions/' },
               { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
-              { label: 'Tutorials',
+              {
+                label: 'Tutorials',
                 collapsed: true,
                 items: [
                   { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
                   { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                  { label: 'Multi-step guest checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                 ]
               },
             ],
-          }, 
+          },
           {
             label: 'Order',
             collapsed: true,
             items: [
-          //    { label: 'Overview', link: '/dropins/order/' },
+              { label: 'Overview', link: '/dropins/order/' },
               { label: 'Initialization', link: '/dropins/order/initialization/' },
-          //    { label: 'Styles', link: '/dropins/order/styles/' },
-              { label: 'Containers' , 
+              { label: 'Styles', link: '/dropins/order/styles/' },
+              { label: 'Containers' ,
                 collapsed: true,
                 items: [
                   { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
@@ -294,18 +313,18 @@ export default defineConfig({
                   { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
                 ]
               },
-          //    { label: 'Slots', link: '/dropins/order/slots/' },
+              { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
               { label: 'Dictionary', link: '/dropins/order/dictionary/' },
-          //    { label: 'Tutorial', link: '/dropins/order/tutorials/' },
-          //      collapsed: true,
-          //        items: [
-          //          { label: 'First', link: '/dropins/order/tutorials/first/' },
-          //          { label: 'Second', link: '/dropins/order/tutorials/second/' },
-          //    ],
-          //  ]        
-          ],
-        },
+              {
+                label: 'Tutorials',
+                collapsed: true,
+                items: [
+                  { label: 'Order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+                ]
+              },
+            ]
+          },
           {
             label: 'User auth',
             collapsed: true,
