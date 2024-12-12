@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import { defineConfig } from 'astro/config';
+import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -24,6 +24,9 @@ export default defineConfig({
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
+  },
+  image: {
+    service: passthroughImageService(),
   },
   trailingSlash: 'ignore',
   outDir: './dist',
@@ -185,10 +188,10 @@ export default defineConfig({
             label: 'Extending',
             link: '/dropins/all/extending/'
           },
-          // {
-          //   label: 'Enriching',
-          //   link: '/dropins/all/enriching/'
-          // },
+          {
+            label: 'Enriching',
+            link: '/dropins/all/enriching/'
+          },
           {
             label: 'Product details page',
             collapsed: true,
@@ -223,7 +226,8 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/cart/installation/' },
               { label: 'Initialization', link: '/dropins/cart/initialization/' },
               { label: 'Styles', link: '/dropins/cart/styles/' },
-              { label: 'Containers', collapsed: true,
+              {
+                label: 'Containers', collapsed: true,
                 items: [
                   { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                   { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
@@ -309,7 +313,7 @@ export default defineConfig({
                   { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
                 ]
               },
-          //    { label: 'Slots', link: '/dropins/order/slots/' },
+              //    { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
               { label: 'Dictionary', link: '/dropins/order/dictionary/' },
               {
