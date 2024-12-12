@@ -1,0 +1,583 @@
+---
+title: User account functions
+description: Learn about the API functions provided by the user account drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The user account drop-in component provides API functions that allow developers to retrieve and display account details, including shipping and billing addresses and previous orders.
+
+## createCustomerAddress
+
+The `createCustomerAddress` function creates an address for an existing customer using the `CustomerAddressesModel` object as an argument. The function calls the [`createCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-customer-address/) mutation.
+
+```ts
+export const createCustomerAddress = async (
+  address: CustomerAddressesModel
+): Promise<string>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'CustomerAddressesModel', 'Yes', 'An object containing the address information.'],
+  ]}
+/>
+
+The `CustomerAddressesModel` object has the following fields:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['firstName', 'string', 'No', 'The first name of the customer.'],
+    ['lastName', 'string', 'No', 'The family name of the customer.'],
+    ['city', 'string', 'No', 'The city of the address.'],
+    ['company', 'string', 'No', 'An optional company name specified by the customer.'],
+    ['countryCode', 'string', 'No', 'The two-letter code representing the customer\'s country.'],
+    ['region', 'object', 'No', 'This object has the structure  "{ region: string; regionCode: string; regionId: string | number }".'],
+    ['telephone', 'string', 'No', 'The telephone number.'],
+    ['id', 'string', 'No', 'The address ID.'],
+    ['vatId', 'string', 'No', 'The VAT ID.'],
+    ['postcode', 'string', 'No', 'The postcode.'],
+    ['street', 'string', 'No', 'The street address.'],
+    ['streetMultiline_2', 'string', 'No', 'The second line of the street address.'],
+    ['defaultShipping', 'boolean', 'No', 'Whether the address is the default shipping address.'],
+    ['defaultBilling', 'boolean', 'No', 'Whether the address is the default billing address.'],
+  ]}
+/>
+
+
+### Returns
+
+Returns a promise that resolves to a string, which could be a success message or an error message.
+
+### Usage
+
+To create a new address:
+
+```ts
+import { createCustomerAddress } from '@/account/api/createCustomerAddress';
+
+const address = {
+  firstName: 'John',
+  lastName: 'Doe',
+  city: 'Los Angeles',
+  company: 'Adobe',
+  countryCode: 'US',
+  region: {
+    region: 'California',
+    regionCode: 'CA',
+    regionId: '12',
+  },
+  telephone: '1234567890',
+  postcode: '90001',
+  street: '123 Main St',
+  streetMultiline_2: 'Suite 100',
+  defaultShipping: true,
+  defaultBilling: true,
+};
+```
+
+## getAttributesForm
+
+The `getAttributesForm` function uses the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query to retrieve EAV attributes associated with customer and customer address frontend forms. The `formCode` parameter must be one of the following values: `customer_account_create`, `customer_account_edit`, `customer_address_create`, or `customer_address_edit`.
+
+```ts
+export const getAttributesForm = async (
+  formCode: string
+): Promise<AttributesFormModel[]>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['formCode', 'string', 'Yes', 'One of "customer_account_create", "customer_account_edit", "customer_address_create", "customer_address_edit".'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an `AttributesFormModel` array. It has the following structure:
+
+```javascript
+{
+      items {
+        code
+        default_value
+        entity_type
+        frontend_class
+        frontend_input
+        is_required
+        is_unique
+        label
+        options {
+          is_default
+          label
+          value
+        }
+        ... on CustomerAttributeMetadata {
+          multiline_count
+          sort_order
+          validate_rules {
+            name
+            value
+          }
+        }
+      }
+      errors {
+        type
+        message
+      }
+}
+```
+
+### Usage
+
+To get attributes associated with the `customer_address_edit` form:
+
+```ts
+import { getAttributesForm } from '@/account/api/getAttributesForm';
+
+getAttributesForm(formCode: 'customer_address_edit');
+```
+
+## getCountries
+
+The `getCountries` function uses the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/directory/queries/countries/) query to retrieve a list of countries.
+
+```ts
+export const getCountries = async (): Promise<{
+  availableCountries: Country[] | [];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+### Returns
+
+Returns a promise that resolves to arrays of countries, regions, and postal codes.
+
+```ts
+{
+    countries {
+      two_letter_abbreviation
+      full_name_locale
+    }
+    storeConfig {
+      countries_with_required_region
+      optional_zip_countries
+    }
+}
+```
+
+### Usage
+
+To get a list of countries:
+
+```javascript
+import { getCountries } from '@/account/api/getCountries';
+
+getCountries();
+```
+
+## getCustomer
+
+The `getCustomer` function retrieves the customer information for the logged-in customer. The function uses the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+```ts
+export const getCustomer = async (): Promise<CustomerDataModelShort>
+```
+
+### Returns
+
+Returns a promise that resolves to `CustomerDataModelShort` object:
+
+```ts
+export interface CustomerDataModelShort {
+  firstName: string;
+  lastName: string;
+  middleName: string;
+  dateOfBirth: string;
+  dob: string;
+  prefix: string;
+  gender: 1 | 2 | string;
+  suffix: string;
+  email: string;
+  createdAt: string;
+  [key: string]: string | boolean | number;
+}
+```
+
+### Usage
+
+To get details about the customer:
+
+```javascript
+import { getCustomer } from '@/account/api/getCustomer';
+
+getCustomer();
+```
+
+## getCustomerAddress
+
+The `getCustomerAddress` function returns an array of addresses associated with the current customer. The function uses the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+```ts
+export const getCustomerAddress = async (): Promise<
+  CustomerAddressesModel[]
+>
+```
+
+### Returns
+
+Returns a promise that resolves to `CustomerAddressesModel` object:
+
+```ts
+export interface CustomerAddressesModel {
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  company?: string;
+  countryCode?: string;
+  region?: { region: string; regionCode: string; regionId: string | number };
+  telephone?: string;
+  id?: string;
+  vatId?: string;
+  postcode?: string;
+  street?: string;
+  streetMultiline_2?: string;
+  defaultShipping?: boolean;
+  defaultBilling?: boolean;
+}
+```
+
+### Usage
+
+To get information about the customer address:
+
+```javascript
+import { getCustomerAddress } from '@/account/api/getCustomerAddress';
+
+getCustomerAddress();
+```
+
+## getOrderHistoryList
+
+The `getOrderHistoryList` function is an asynchronous function that retrieves a list of customer orders using the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query. It optionally takes parameters for pagination and filtering.
+
+```ts
+export const getOrderHistoryList = async (
+  pageSize: number,
+  selectOrdersDate: string,
+  currentPage: number
+): Promise<OrderHistory | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['pageSize', 'number', 'No', 'The maximum number of results to return at once. The default value is 20.'],
+    ['selectOrdersDate', 'string', 'No', 'Represents a date filter for the orders.'],
+    ['currentPage', 'number', 'No', 'The current page of the order history list. The default value is 1.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to an `OrderHistory` object or null.
+
+### Usage
+
+To get a list of customer orders:
+
+```ts
+import { getOrderHistoryList } from '@/account/api/getOrderHistoryList';
+
+getOrderHistoryList();
+```
+
+
+## getRegions
+
+The `getRegions` function uses the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/directory/queries/country/) query to retrieve a list of states or provinves for a specific country.
+
+
+```ts
+export const getRegions = async (
+  countryCode: string
+): Promise<RegionTransform[]
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['countryCode', 'string', 'Yes', 'A two-letter abbreviation for the country ID.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `RegionTransform` array:
+
+```ts
+export interface RegionTransform {
+  text: string;
+  value: string;
+  id?: string | number;
+}
+```
+
+### Usage
+
+To get a list of regions for a specific country:
+
+```ts
+import { getRegions } from '@/account/api/getRegions';
+
+getRegions(countryCode: "AS");
+```
+
+## getStoreConfig
+
+The `getStoreConfig` function uses the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query to retrieve details about password requirements.
+
+```ts
+export const getStoreConfig = async (): Promise<StoreConfigModel>
+```
+
+### Returns
+
+Returns a promise that resolves to a `StoreConfigModel` object:
+
+```ts
+export interface StoreConfigModel {
+  minLength: number;
+  requiredCharacterClasses: number;
+}
+```
+
+### Usage
+
+To get the store configuration:
+
+```ts
+import { getStoreConfig } from '@/account/api/getStoreConfig';
+
+getStoreConfig();
+```
+
+## removeCustomerAddress
+
+The `removeCustomerAddress` function removes an address associated with the current customer. The function uses the [`deleteCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/delete-address/) mutation.
+
+
+```ts
+export const removeCustomerAddress = async (
+  addressId: number
+): Promise<boolean>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['addressId', 'number', 'Yes', 'An internal ID for the address.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a boolean value that indicates whether the address was removed.
+
+### Usage
+
+To remove an address:
+
+```ts
+import { removeCustomerAddress } from '@/account/api/removeCustomerAddress';
+
+removeCustomerAddress(id: "1");
+```
+
+## updateCustomer
+
+The `updateCustomer` function updates the logged-in customer. The function uses the [`updateCustomerV2`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-v2/) mutation.
+
+The `form` object keys are converted to snake_case using the `convertKeysCase` utility with specific mappings for `firstName`, `lastName`, `middleName`, and `custom_attributesV2`.
+
+```ts
+export const updateCustomer = async (
+  form: Record<string, string>
+): Promise<string>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['form', 'object', 'Yes', 'Contains the attributes to update.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a string, which could be a success message or an error message.
+
+### Usage
+
+To update the customer:
+
+```ts
+import { updateCustomer } from '@/account/api/updateCustomer';
+
+updateCustomer(form: CustomerUpdateInput);
+```
+
+## updateCustomerAddress
+
+The `updateCustomerAddress` function updates an address associated with the current customer. The function uses the [`updateCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-address/) mutation.
+
+The `forms` object includes an `addressId`, which is a number representing the ID of the address to be updated and other address details as defined in `CustomerAddressesModel`.
+
+```ts
+export const updateCustomerAddress = async (
+  forms: ExtendedAddressFormProps
+): Promise<string>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['forms', 'object', 'Yes', 'Contains the attributes to update.'],
+  ]}
+/>
+
+The `CustomerAddressesModel` object has the following shape:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['firstName', 'string', 'No', 'The first name of the customer.'],
+    ['lastName', 'string', 'No', 'The family name of the customer.'],
+    ['city', 'string', 'No', 'The city of the address.'],
+    ['company', 'string', 'No', 'A company .'],
+    ['countryCode', 'string', 'No', 'The two-letter code representing the customer\'s country.'],
+    ['region', 'object', 'No', 'This object has the shape  "{ region: string; regionCode: string; regionId: string | number }".'],
+    ['telephone', 'string', 'No', 'The telephone number.'],
+    ['id', 'string', 'No', 'The address ID.'],
+    ['vatId', 'string', 'No', 'The VAT ID.'],
+    ['postcode', 'string', 'No', 'The postcode.'],
+    ['street', 'string', 'No', 'The street address.'],
+    ['streetMultiline_2', 'string', 'No', 'The second line of the street address.'],
+    ['defaultShipping', 'boolean', 'No', 'Whether the address is the default shipping address.'],
+    ['defaultBilling', 'boolean', 'No', 'Whether the address is the default billing address.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a string, which could be a success message or an error message.
+
+### Usage
+
+To update the customer address:
+
+```ts
+updateCustomerAddress(forms: {
+  "addressId": 1,
+  "city": "Austin",
+  "countryCode": "US",
+  "countryId": "US",
+  "defaultBilling": true,
+  "defaultShipping": true,
+  "firstname": "John",
+  "lastname": "Doe",
+  "postcode": "78759",
+  "region": {
+    "regionId": 57,
+    "regionCode": "TX"
+  },
+  "street": ["123 Main St"],
+});
+```
+
+## updateCustomerEmail
+
+The `updateCustomerEmail` function updates the email address of the logged-in customer. The function calls the [`updateCustomerEmail`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-email/) mutation.
+
+```ts
+export const updateCustomerEmail = async (
+  email: string,
+  password: string
+): Promise<string>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['email', 'string', 'Yes', 'The new email address of the customer.'],
+    ['password', 'string', 'Yes', 'The current password of the customer.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a string, which could be a success message or an error message.
+
+### Usage
+
+To update the customer's email address:
+
+```ts
+import { updateCustomerEmail } from '@/account/api/updateCustomerEmail';
+
+updateCustomerEmail(forms: {
+  "email": "test@email.com",
+  "password": "xyz789abc123",
+});
+```
+
+## updateCustomerPassword
+
+The `updateCustomerPassword` function updates the password of the logged-in customer. The function calls the [`changeCustomerPassword`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/change-password/) mutation.
+
+```ts
+export const updateCustomerPassword = async ({
+  currentPassword,
+  newPassword,
+}: ChangeCustomerPasswordProps): Promise<string>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['currentPassword', 'string', 'Yes', 'The password before it is changed.'],
+    ['newPassword', 'string', 'Yes', 'The new password.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a string, which could be the customer's email if the password change is successful, or an error message if there are errors.
+
+### Usage
+
+To update the customer's password:
+
+```ts
+import { updateCustomerPassword } from '@/account/api/updateCustomerPassword';
+
+updateCustomerPassword({ "currentPassword": "xyz789abc123", "newPassword": "123xyz789abc" });
+```

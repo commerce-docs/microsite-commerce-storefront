@@ -1,0 +1,66 @@
+---
+title: User account initialization
+description: Learn how to configure initializer for the user account drop-in component.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The user account drop-in component does not require any special data or specific parameters to be initialized. To initialize the dropin-in component, you must import [`/scripts/initializers/account.js`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/scripts/initializers/account.js) into the appropriate file.
+
+```js
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-account/api.js';
+import { initializeDropin } from './index.js';
+import { fetchPlaceholders } from '../aem.js';
+
+await initializeDropin(async () => {
+  const labels = await fetchPlaceholders();
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+The `langDefinitions` property defines and registers language packs for the user account component. This allows you to provide localized text for different languages in your application.
+
+## Configuration options
+
+The user account component initializer accepts the following property:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+  ]}
+/>
+
+### Example
+
+The following example initializes the `commerce-addresses` block:
+
+```js
+import '../../scripts/initializers/account.js';
+
+export default async function decorate(block) {
+ const {
+   'minified-view': minifiedViewConfig = 'false',
+ } = readBlockConfig(block);
+
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(Addresses, {
+     minifiedView: minifiedViewConfig === 'true',
+     withActionsInMinifiedView: false,
+     withActionsInFullSizeView: true,
+     routeAddressesPage: () => CUSTOMER_ADDRESS_PATH,
+   })(block);
+ }
+}
+```

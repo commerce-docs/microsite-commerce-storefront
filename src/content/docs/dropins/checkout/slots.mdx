@@ -1,0 +1,117 @@
+---
+title: Checkout slots
+description: Learn about the slots provided in the checkout drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Aside from '@components/Aside.astro';
+
+Learn about the slots provided in the checkout drop-in component.
+
+[Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
+
+## PaymentMethods slots
+
+The slots for the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container are defined in the `PaymentMethodsProps` interface shown below. The slots allow you to customize the list of payment methods to show during the checkout process.
+
+```ts
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+  slots?: {
+    Main?: SlotProps<PaymentMethodsMainSlotContext>;
+    Handlers?: PaymentMethodHandlerSlots;
+  };
+}
+```
+
+### Main
+
+Defines a callback function in the Main slot of the `PaymentMethods` container to extend or replace the list of payment methods.
+
+The Main slot implements the following interface:
+
+```ts
+export interface PaymentMethodsMainSlotContext {
+  replaceHTML: (domElement: HTMLElement) => void;
+}
+```
+
+The context object passed to the Main slot includes a `replaceHTML` property that is a callback function.
+
+#### How to override it
+
+The following example shows how to use the Braintree Drop-in UI to render the payment methods section:
+
+```js
+import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
+
+. . .
+
+// Define the modifier for the Payment Methods section
+const renderBraintreePayments = (element, context) => {
+  const { onPlaceOrder } = context;
+  const $content = document.createElement('div');
+
+  $content.innerHTML = '<div id="dropin-container"></div>';
+
+  if (element) {
+    element.innerHTML = $content.innerHTML;
+    braintree.dropin.create({
+      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
+      container: '#dropin-container',
+    });
+  }
+};
+
+. . .
+
+// Set the function on the slot
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Main: renderBraintreePayments,
+  },
+})(document.getElementById('payment-methods'));
+```
+
+<Aside type="note">
+See the [add payment method](/dropins/checkout/tutorials/add-payment-method/) tutorial for more information.
+</Aside>
+
+### Handlers
+
+Defines an array of payment method codes and their callback functions in the Handlers slot of the PaymentMethods container to provide handlers to be executed in case of being selected.
+
+The Handlers slot implements the following interface:
+
+```ts
+export interface PaymentMethodHandlerSlots {
+  [code: string]: SlotProps<PaymentMethodHandlerSlotContext>;
+}
+
+export interface PaymentMethodHandlerSlotContext {
+  cartId: string;
+  replaceHTML: (domElement: HTMLElement) => void;
+}
+```
+
+The context object passed to the Handlers slot includes a `replaceHTML` property that is a callback function and the `cartId` got from the internal state.
+
+#### How to override it
+
+The following example shows how to assign handlers for the check/money Order and bank transfer payment methods:
+
+```js
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Handlers: {
+      checkmo: (ctx, element) => {
+        element.textContent = 'Selected checkmo as payment method!';
+      },
+      banktransfer: (ctx, element) => {
+        element.textContent = 'Selected banktransfer as payment method!';
+      },
+    },
+  },
+})(document.getElementById('payment-methods'));
+```
