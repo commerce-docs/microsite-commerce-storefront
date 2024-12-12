@@ -309,7 +309,7 @@ export default defineConfig({
                   { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
                 ]
               },
-          //    { label: 'Slots', link: '/dropins/order/slots/' },
+              { label: 'Slots', link: '/dropins/order/slots/' },
               { label: 'Functions', link: '/dropins/order/functions/' },
               { label: 'Dictionary', link: '/dropins/order/dictionary/' },
               {
