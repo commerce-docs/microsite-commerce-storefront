@@ -20,13 +20,13 @@ const basePath = isProduction
 
 // https://astro.build/config
 export default defineConfig({
+  image: {
+    service: passthroughImageService(),
+  },
   site: 'https://experienceleague.adobe.com',
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
-  },
-  image: {
-    service: passthroughImageService(),
   },
   trailingSlash: 'ignore',
   outDir: './dist',
