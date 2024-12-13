@@ -7,6 +7,9 @@ import Diagram from '@components/Diagram.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 import Aside from '@components/Aside.astro';
 import Callouts from '@components/Callouts.astro';
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
 
 Using slots provides the deepest level of customization. Slots are built-in extension points in the drop-in. A slot provides a place in the drop-in component to add your own UI components and functions. This architecture makes it easy to change the default look, layout, and behavior. Let's learn how it works.
 
@@ -44,3 +47,131 @@ Component that provides placeholders to add other components. You can use a drop
 Overloaded term in web development. Everything is a component. It's components all the way down. This is why we need to be specific about what kind of component we are talking about. For example, from top-to-bottom, big-to-small, a **drop-in component** can contain multiple **container components** that can contain multiple **slot components** that can contain multiple **UI components**.
 
 </Vocabulary>
+
+## Add third-party components
+
+In this how-to, we'll walk through the steps needed to integrate a third-party ratings component on the product-details commerce page. We will add the ratings component under the product's title and the detailed reviews to show below the gallery. However, how you fetch and display these reviews can impact performance, especially CLS. In this guide, we'll show you how to:
+
+- Configure API keys (Yotpo example)
+- Emit and listen for ratings events for the stars under the product title
+- Delay load the full reviews to improve page performance
+
+### Prerequisites
+
+<Steps>
+1. Yotpo (or other third-party) API key — you’ll need this to fetch rating data.
+1. Config Excel — a spreadsheet or config file that stores your API key for easy reference.
+1. Event Emitter — a mechanism (like the events object) to emit a ratings event and listen for it in the code.
+</Steps>
+
+### Step-by-step
+
+<Tasks>
+
+<Task>
+### Set the API Key in Config Excel
+
+- Open the config Excel file and locate the row or cell dedicated to reviews/ratings integration.
+- Enter the Yotpo API key (or any other provider key) in the appropriate cell.
+- Save your changes. Make sure the system can read from this config file at runtime.
+
+:::tip[API Keys!]
+Keep your API keys safe and out of version control. Treat them like a precious family heirloom from ’80s cinema—guard them with your life.
+:::
+
+</Task>
+
+<Task>
+### Fetch the data
+
+After the page loads, your code needs to fetch ratings data from Yotpo (or the relevant third-party). Once the API key is set, you can trigger a call to the Yotpo endpoint.
+
+Below is a sample fetch call. Adjust it to match your environment:
+
+```js
+fetch(`https://api.yotpo.com/v1/widget/<YOUR_API_KEY>/products/<PRODUCT_ID>/reviews`)
+  .then(response => response.json())
+  .then(data => {
+    const { average_score, total_reviews } = data;
+    events.emit('eds/pdp/ratings', { average: average_score, total: total_reviews });
+  })
+  .catch(error => {
+    console.error('Error fetching reviews:', error);
+  });
+```
+
+1. Replace `<YOUR_API_KEY>` and `<PRODUCT_ID>` with real values.
+2. Adapt the API endpoint to the provider’s docs if not using Yotpo.
+
+</Task>
+
+<Task>
+### Render the Star Rating (Title Slot)
+
+Star ratings appearing right under the product title can cause unwanted Cumulative Layout Shift (CLS) if not planned carefully. To mitigate CLS, reserve space for the star rating element or render it after the reviews are fetched.
+
+Listen for the event you just emitted:
+
+```js
+events.on('eds/pdp/ratings', ({ average, total }) => {
+  // Title slot logic
+  const titleSlotElement = document.querySelector('.title-slot');
+
+  // Optionally reserve space for the star rating to avoid CLS
+  // e.g., setting a placeholder element or CSS min-height
+
+  // Render stars
+  titleSlotElement.innerHTML = `
+    <div class="star-rating">
+      <span>Average Rating: ${average.toFixed(1)}</span>
+      <span>(${total} reviews)</span>
+    </div>
+  `;
+});
+```
+</Task>
+
+<Task>
+### Delay Loading Full Reviews (Below the Gallery)
+
+The reviews that show below the gallery are often large blocks of text or user-generated content, so delay load them. This approach:
+
+- Improves First Contentful Paint (FCP) since you don't fetch them until truly needed.
+- Minimizes layout shift by loading the content in a reserved space or after user interaction.
+
+#### Example implementation:
+
+```js
+// Trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews"
+const reviewsSection = document.getElementById('reviews-section');
+
+const loadReviews = () => {
+  // Fetch or render the full reviews only when needed
+  fetch(`/path/to/full-reviews?apiKey=${YOUR_API_KEY}&productId=${PRODUCT_ID}`)
+    .then(response => response.json())
+    .then(data => {
+      reviewsSection.innerHTML = data.reviewsHtml;
+    })
+    .catch(console.error);
+};
+
+// Event listener approach for a "View All Reviews" button
+document.getElementById('view-reviews-btn').addEventListener('click', loadReviews);
+
+// OR intersection observer approach to load when user scrolls near the section
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      loadReviews();
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.1 });
+
+observer.observe(reviewsSection);
+```
+
+
+</Task>
+
+</Tasks>
