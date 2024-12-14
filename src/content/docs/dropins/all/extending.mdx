@@ -51,19 +51,27 @@ Overloaded term in web development. Everything is a component. It's components a
 
 ## Add third-party components
 
-This tutorial describes the steps needed to integrate a third-party ratings component on the product detail page. We will add the ratings component under the product's title, and the detailed reviews will be displayed below the gallery. However, how you fetch and display these reviews can impact performance, especially Cumulative Layout Shift (CLS).
+This tutorial describes the steps needed to integrate a third-party component (the Yotpo ratings & reviews component) within the product detail drop-in. We will add one component instance below the product's title (under the title slot), and a second instance below the product gallery.
 
-In this guide, we'll show you how to:
-
-- Configure API keys (Yotpo example)
-- Emit and listen for ratings events for the stars under the product title
-- Delay load the full reviews to improve page performance
+:::note[Performance]
+Be vigilant about how you display and fetch data for your 3rd-party component because these things can slow performance, especially Cumulative Layout Shift (CLS).
+:::
 
 ### Prerequisites
 
-- Yotpo (or other third-party) API key — you'll need this to fetch rating data.
-- Config Excel — a spreadsheet or config file that stores your API key for easy reference.
-- Event Emitter — a mechanism (like the events object) to emit a ratings event and listen for it in the code.
+- Third-party component API key — you'll need this to fetch rating data.
+- Config file — a spreadsheet that stores your API key for easy reference.
+- EventBus import — to emit a ratings event and listen for it in the code.
+
+### What you'll learn
+
+In this guide, we'll show you how to:
+
+- Configure API keys for 3rd-party components (Yotpo ratings & reviews)
+- Emit and listen for ratings events for the stars under the product title
+- Delay loading the full reviews to improve page performance
+
+
 
 ### Step-by-step
 
@@ -73,7 +81,7 @@ In this guide, we'll show you how to:
 ### Set the API Key in Config Excel
 
 - Open the config Excel file and locate the row or cell dedicated to reviews/ratings integration.
-- Enter the Yotpo API key (or any other provider key) in the appropriate cell.
+- Enter your 3rd-party API key in the appropriate cell.
 - Save your changes. Make sure the system can read from this config file at runtime.
 
 :::tip[API Keys!]
@@ -85,7 +93,7 @@ Keep your API keys safe and out of version control. Use environment variables or
 <Task>
 ### Fetch the data
 
-After the page loads, your code needs to fetch ratings data from Yotpo. Once the API key is set, you can trigger a call to the Yotpo endpoint.
+After the page loads, your commerce drop-in code will likely need to fetch some data. In our case, the ratings component needs to fetch data from Yotpo. Once the API key is set, you can trigger a call to the Yotpo endpoint.
 
 Below is a sample fetch call. Adjust it to match your environment:
 
@@ -112,7 +120,7 @@ fetch(`https://api.yotpo.com/v1/widget/<YOUR_API_KEY>/products/<PRODUCT_ID>/revi
 
 Star ratings appearing right under the product title can cause unwanted CLS if not planned carefully. To mitigate CLS, reserve space for the star rating element or render it after the reviews are fetched.
 
-Listen for the event you just emitted:
+To listen for the event you just emitted, add an event listener for the 3rd-party component's event. Here's an example implementation for the ratings component:
 
 ```js
 events.on('eds/pdp/ratings', ({ average, total }) => {
@@ -134,12 +142,12 @@ events.on('eds/pdp/ratings', ({ average, total }) => {
 </Task>
 
 <Task>
-### Delay loading full reviews (Below the gallery)
+### Delay loading data from the 3rd-party component
 
-The reviews that show below the gallery are often large blocks of text or user-generated content, so delay load them. This approach:
+In our example, The ratings & reviews component can load large amounts of data when displaying reviews. The reviews that show below the gallery are often large blocks of text or user-generated content that you need to load later, which helps:
 
-- Improves First Contentful Paint (FCP) since you don't fetch them until truly needed.
-- Minimizes layout shift by loading the content in a reserved space or after user interaction.
+- Improve First Contentful Paint (FCP) performance because you won't fetch the data until needed.
+- Minimize Cumulative Layout Shift (CLS) by loading the content in a reserved space or after user interaction.
 
 #### Example implementation:
 
