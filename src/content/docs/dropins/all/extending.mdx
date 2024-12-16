@@ -78,49 +78,52 @@ In this guide, we'll show you how to:
 <Task>
 ### Add the API key to your config files
 
-The boilerplate starter code contains three config files, one for each environment: `configs.xlsx` (prod), `configs-stage.xlsx` and `configs-dev.xlsx` (or the equivalent Google sheets files). Add your 3rd-party API key to the config environments you want to test or development against. Here's how:
+The boilerplate starter code contains three config files, one for each environment: `configs.xlsx` (prod), `configs-stage.xlsx` and `configs-dev.xlsx` (or the equivalent Google sheets files). Add your 3rd-party API key to the config environments you want to test or develop against. For example, if you're working in the dev environment, add the key to `configs-dev.xlsx` (or the equivalent Google sheet).
 
-- Open the appropriate config file.
-- Find the cell for the 3rd-party API key.
+| Key                      | Value                      |
+| ------------------------ | -------------------------- |
+| yotpo-api-key            | \<3RD-PARTY_KEY_VALUE\>    |
 
-```plaintext
-+-----------------+-----------------+
-| 3rd-party
-| API key         | <YOUR_API_KEY>  |
-+-----------------+-----------------+
-```
-
-- Enter your 3rd-party API key in the appropriate cell.
-- Save your changes. Make sure the system can read from this config file at runtime.
-
-:::tip[API Keys!]
-Keep your API keys safe and out of version control. Use environment variables or a secure config file.
-:::
+Replace `yotpo-api-key` and `<3RD-PARTY_KEY_VALUE>` with the actual API key name and value.
 
 </Task>
 
 <Task>
-### Fetch the data
+### Fetch the component data
 
-After the page loads, your commerce drop-in code will likely need to fetch some data. In our case, the ratings component needs to fetch data from Yotpo. Once the API key is set, you can trigger a call to the Yotpo endpoint.
+After the page loads, your 3rd-party component will likely need to fetch some data. In our case, the ratings component needs to fetch data from Yotpo to display the star-rating for the product. Once the API key is set, you can trigger a call to the Yotpo endpoint.
 
 Below is a sample fetch call. Adjust it to match your environment:
 
 ```js
-fetch(`https://api.yotpo.com/v1/widget/<YOUR_API_KEY>/products/<PRODUCT_ID>/reviews`)
-  .then(response => response.json())
-  .then(data => {
-    const { average_score, total_reviews } = data;
-    events.emit('eds/pdp/ratings', { average: average_score, total: total_reviews });
-  })
-  .catch(error => {
-    console.error('Error fetching reviews:', error);
-  });
+function setRatingsJson(product, yotpoApiKey) {
+  try {
+    fetch(`https://api.yotpo.com/products/${yotpoApiKey}/${product.externalId}/bottomline`).then(e => e.ok ? e.json() : {}).then(body => {
+      const { average_score, total_reviews } = body?.response?.bottomline || {};
+      setHtmlProductJsonLd({
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: average_score || 0,
+          reviewCount: total_reviews || 0,
+        }
+      });
+
+      events.emit('eds/pdp/ratings', {average: average_score, total: total_reviews});
+    });
+} catch (error) {
+    console.log(`Error fetching product ratings: ${error}`);
+    setHtmlProductJsonLd({
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: 0,
+        reviewCount: 0,
+      }
+    });
+
+    events.emit('eds/pdp/ratings', {average: 0, total: 0});
+  }
+}
 ```
-<Steps>
-1. Replace `<YOUR_API_KEY>` and `<PRODUCT_ID>` with real values.
-2. Adapt the API endpoint to the provider's docs if not using Yotpo.
-</Steps>
 
 </Task>
 
@@ -151,7 +154,7 @@ events.on('eds/pdp/ratings', ({ average, total }) => {
 </Task>
 
 <Task>
-### Delay loading data from the 3rd-party component
+### Delay loading large data payloads from the 3rd-party component
 
 In our example, The ratings & reviews component can load large amounts of data when displaying reviews. The reviews that show below the gallery are often large blocks of text or user-generated content that you need to load later, which helps:
 
@@ -189,7 +192,6 @@ const observer = new IntersectionObserver((entries) => {
 
 observer.observe(reviewsSection);
 ```
-
 
 </Task>
 
