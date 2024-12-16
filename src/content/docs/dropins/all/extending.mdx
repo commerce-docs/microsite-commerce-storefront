@@ -8,6 +8,7 @@ import Diagram from '@components/Diagram.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 import Aside from '@components/Aside.astro';
 import Callouts from '@components/Callouts.astro';
+import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
@@ -47,3 +48,169 @@ Component that provides placeholders to add other components. You can use a drop
 Overloaded term in web development. Everything is a component. It's components all the way down. This is why we need to be specific about what kind of component we are talking about. For example, from top-to-bottom, big-to-small, a **drop-in component** can contain multiple **container components** that can contain multiple **slot components** that can contain multiple **UI components**.
 
 </Vocabulary>
+
+## Extend with third-party components
+
+This tutorial describes the steps needed to extend a drop-in by integrating a fictitious third-party ratings & reviews component in the product details drop-in.
+
+:::note[Performance]
+Be vigilant about how you display and fetch data for your third-party component to ensure you avoid any Cumulative Layout Shifts (CLS) that could significantly affect the site's core web vital scores.
+:::
+
+### Prerequisites
+
+- Third-party component API key. You typically need an API key to fetch data for the component.
+- Familiarity with [project configurations](https://www.aem.live/docs/configuration).
+
+### What you'll learn
+
+- How to configure third-party API keys for use in drop-ins.
+- How to use the `EventBus` to emit events and listen for events from the third-party component.
+- How to delay loading large data sets from third-party components to improve page performance.
+
+### Step-by-step
+
+<Tasks>
+
+<Task>
+### Add your third-party API key
+
+The boilerplate starter code contains three config files, one for each environment: `configs.xlsx` (prod), `configs-stage.xlsx` and `configs-dev.xlsx` (or the equivalent Google sheets files). Add your third-party API key to the config environments you want to test or develop against. For example, if you're working in the dev environment, add the key to `configs-dev.xlsx` (or the equivalent Google sheet).
+
+| Key                      | Value                      |
+| ------------------------ | -------------------------- |
+| third-party-api-key      | third-party-api-value      |
+
+Replace `third-party-api-key` and `third-party-api-value` with the actual API key name and value.
+
+</Task>
+
+<Task>
+### Fetch the API key
+
+To fetch the API key, you need to import the `getConfigValue` function from the `configs.js` file. This function reads the API key from the config file and returns the value. You can then use this value to fetch data from the third-party service.
+
+```js
+import { getConfigValue } from '../../scripts/configs.js';
+
+export default async function decorate(block) {
+  // Fetch API key from the config file
+  const thirdPartyApiKey = await getConfigValue('third-party-api-key');
+
+  // Fetch the component data
+  setRatingsJson(product, thirdPartyApiKey);
+}
+
+```
+
+</Task>
+
+<Task>
+### Fetch the component data
+
+After the page loads, your third-party component likely needs to fetch some data. In our case, our ratings & reviews component needs to fetch data from its rating service to display the star-rating for the product. After your API key is fetched (`thirdPartyApiKey`), you can trigger a call to the service's endpoint and use the EventBus to emit an event when the data is received.
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+function setRatingsJson(product, thirdPartyApiKey) {
+  try {
+    fetch(`https://api.rating.service.com/products/${thirdPartyApiKey}/${product.externalId}/bottomline`).then(e => e.ok ? e.json() : {}).then(body => {
+      const { average_score, total_reviews } = body?.response?.bottomline || {};
+      setHtmlProductJsonLd({
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: average_score || 0,
+          reviewCount: total_reviews || 0,
+        }
+      });
+
+      events.emit('eds/pdp/ratings', {average: average_score, total: total_reviews});
+    });
+} catch (error) {
+    console.log(`Error fetching product ratings: ${error}`);
+    setHtmlProductJsonLd({
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: 0,
+        reviewCount: 0,
+      }
+    });
+
+    events.emit('eds/pdp/ratings', {average: 0, total: 0});
+  }
+}
+```
+
+</Task>
+
+<Task>
+### Render the component
+
+To ensure the least amount of CLS, we'll make sure we don't render the component until after its data is returned. To do this, we need to add an event listener for the third-party component's event. This strategy, along with reserving a predefined space for the component, will minimize CLS. Here's an example implementation for our third-party ratings component:
+
+```js
+events.on('eds/pdp/ratings', ({ average, total }) => {
+  // Title slot logic
+  const titleSlotElement = document.querySelector('.title-slot');
+
+  // Optionally reserve space for the star rating to avoid CLS
+  // e.g., setting a placeholder element or CSS min-height
+
+  // Render star rating
+  titleSlotElement.innerHTML = `
+    <div class="star-rating">
+      <span>Average Rating: ${average.toFixed(1)}</span>
+      <span>(${total} reviews)</span>
+    </div>
+  `;
+});
+```
+</Task>
+
+<Task>
+### Delay loading large data sets
+
+Our fictitious ratings & reviews component loads large blocks of text to display a product's reviews. So we need to ensure all that data is not loaded initially with the page. We need to delay loading the reviews until the user scrolls near the reviews section or clicks a "View All Reviews" button. This strategy will improve the page's First Contentful Paint (FCP) and Cumulative Layout Shift (CLS) scores.
+
+Here's an example implementation using an Intersection Observer to trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews":
+
+```js
+// Trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews"
+const reviewsSection = document.getElementById('reviews-section');
+
+const loadReviews = () => {
+  // Fetch or render the full reviews only when needed
+  fetch(`/path/to/full-reviews?apiKey=${YOUR_API_KEY}&productId=${PRODUCT_ID}`)
+    .then(response => response.json())
+    .then(data => {
+      reviewsSection.innerHTML = data.reviewsHtml;
+    })
+    .catch(console.error);
+};
+
+// Event listener approach for a "View All Reviews" button
+document.getElementById('view-reviews-btn').addEventListener('click', loadReviews);
+
+// OR intersection observer approach to load when user scrolls near the section
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      loadReviews();
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.1 });
+
+observer.observe(reviewsSection);
+```
+
+</Task>
+
+<Task>
+### Conclusion
+
+This tutorial showed you the key steps required to integrate a fictitious third-party component into a drop-in. You've learned how to configure API keys, fetch data, and delay loading large data sets to improve page performance. You can now apply these concepts to other third-party components you want to integrate into your drop-ins.
+</Task>
+
+</Tasks>
