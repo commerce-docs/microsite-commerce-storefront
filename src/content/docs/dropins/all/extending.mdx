@@ -49,13 +49,345 @@ Overloaded term in web development. Everything is a component. It's components a
 
 </Vocabulary>
 
-## Extend with third-party components
+## Extend drop-ins with Commerce APIs
 
-This tutorial describes the steps needed to extend a drop-in by integrating a fictitious third-party ratings & reviews component in the product details drop-in.
+The following steps describe how to add existing Commerce API services to a drop-in. For example, the Commerce API provides the necessary endpoints to fetch and update gift messages through GraphQL, but the checkout drop-in doesn't provide this feature out of the box. We will extend the checkout drop-in by adding a UI for gift messages and then integrating the Commerce GraphQL API to fetch and update those messages.
 
-:::note[Performance]
-Be vigilant about how you display and fetch data for your third-party component to ensure you avoid any Cumulative Layout Shifts (CLS) that could significantly affect the site's core web vital scores.
-:::
+### Step-by-step
+
+<Tasks>
+
+<Task>
+### Add your UI to the drop-in
+
+The first step is to add a new UI component to the checkout drop-in. This component will allow users to enter a gift message for their order. We'll call this component `GiftOptionsField` and create it as a web component for fun as shown in the example implementation below.
+
+```js title='gift-options-field.js'
+import { Button, Input, TextArea, provider as UI } from '@dropins/tools/components.js';
+
+const sdkStyle = document.querySelector('style[data-dropin="sdk"]');
+const checkoutStyle = document.querySelector('style[data-dropin="checkout"]');
+
+class GiftOptionsField extends HTMLElement {
+    static observedAttributes = ['cartid', 'giftmessage', 'fromname', 'toname', 'loading'];
+
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+
+        this._submitGiftMessageHandler = (event) => {
+            event.preventDefault();
+        }
+    }
+
+    set submitGiftMessageHandler(callback) {
+        this._submitGiftMessageHandler = callback;
+    }
+
+    connectedCallback() {
+        this._formTemplate = document.createElement('template');
+
+        this._formTemplate.innerHTML = `
+            <h2 class="checkout-payment-methods__title">Gift Message</h2>
+            <form id="gift-options-form" class="checkout-fields-form__form">
+                <div class="fromName-wrapper"></div>
+                <div class="toName-wrapper"></div>
+                <div class="giftMessage-wrapper dropin-field dropin-field--multiline"></div>
+                <input type="hidden" name="cartId" />
+                <div class="submit-wrapper"></div>
+            </form>
+        `;
+
+        this.render();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        const toName = this.shadowRoot.querySelector('input[name="toName"]');
+        const fromName = this.shadowRoot.querySelector('input[name="fromName"]');
+        const giftMessage = this.shadowRoot.querySelector('textarea[name="giftMessage"]');
+        const cartId = this.shadowRoot.querySelector('input[name="cartId"]');
+
+        switch (name) {
+            case 'cartid':
+                cartId.value = newValue;
+                break;
+            case 'giftmessage':
+                giftMessage.value = newValue;
+                break;
+            case 'fromname':
+                fromName.value = newValue;
+                break;
+            case 'toname':
+                toName.value = newValue;
+                break;
+            case 'loading':
+                if (newValue) {
+                    toName?.setAttribute('disabled', '');
+                    fromName?.setAttribute('disabled', '');
+                    giftMessage?.setAttribute('disabled', '');
+                } else {
+                    toName?.removeAttribute('disabled');
+                    fromName?.removeAttribute('disabled');
+                    giftMessage?.removeAttribute('disabled');
+                }
+                break;
+        }
+    }
+
+    render() {
+        this.shadowRoot.innerHTML = '';
+
+        this.shadowRoot.appendChild(this._formTemplate.content.cloneNode(true));
+        this.shadowRoot.querySelector('input[name="cartId"]').value = this.getAttribute('cartId');
+        this.shadowRoot.querySelector('#gift-options-form').addEventListener('submit', this._submitGiftMessageHandler?.bind(this));
+
+        const submitWrapper = this.shadowRoot.querySelector('.submit-wrapper');
+        const fromNameWrapper = this.shadowRoot.querySelector('.fromName-wrapper');
+        const toNameWrapper = this.shadowRoot.querySelector('.toName-wrapper');
+        const giftMessageWrapper = this.shadowRoot.querySelector('.giftMessage-wrapper');
+
+        UI.render(Input,
+            {
+                type: "text",
+                name: "toName",
+                placeholder: "To name",
+                floatingLabel: "To name",
+                value: this.getAttribute('toName'),
+                disabled: !!this.hasAttribute('loading')
+            })(toNameWrapper);
+        UI.render(Input,
+            {
+                type: "text",
+                name: "fromName",
+                placeholder: "From name",
+                floatingLabel: "From name",
+                value: this.getAttribute('fromName'),
+                disabled: !!this.hasAttribute('loading')
+            })(fromNameWrapper);
+        UI.render(TextArea,
+            {
+                name: "giftMessage",
+                placeholder: "Message",
+                value: this.getAttribute('giftMessage'),
+                disabled: !!this.hasAttribute('loading')
+            })(giftMessageWrapper);
+        UI.render(Button,
+            {
+                variant: "primary",
+                children: "Add Message",
+                type: "submit",
+                enabled: true,
+                size: "medium",
+                disabled: !!this.hasAttribute('loading')
+            })(submitWrapper);
+
+        this.shadowRoot.appendChild(sdkStyle.cloneNode(true));
+        this.shadowRoot.appendChild(checkoutStyle.cloneNode(true));
+    }
+}
+
+customElements.define('gift-options-field', GiftOptionsField);
+```
+</Task>
+
+<Task>
+### Render the UI into a checkout container
+
+Next, we need to render the `GiftOptionsField` component into the checkout drop-in by creating a container to render the component into.
+
+```js
+const GiftOptionsField = document.createElement('gift-options-field');
+GiftOptionsField.setAttribute('loading', 'true');
+```
+
+Then, add the container to the layouts of the checkout drop-in. The following example shows how to add the container to the `checkout` layout.
+
+```js title='commerce-checkout.js'
+function renderMobileLayout(block) {
+  root.replaceChildren(
+    heading,
+    giftOptionsField,
+    ...
+  );
+
+  block.replaceChildren(root);
+}
+
+function renderDesktopLayout(block) {
+  main.replaceChildren(
+    heading,
+    giftOptionsField,
+    ...
+  );
+
+  block.replaceChildren(block);
+}
+```
+
+</Task>
+
+<Task>
+### Add handler for gift message submission
+
+Now that we have the UI in place, we need to add a handler to submit the gift message to the Commerce API. We'll use the `fetch` API to send a GraphQL mutation to update the gift message.
+
+```js title='commerce-checkout.js'
+giftOptionsField.submitGiftMessageHandler = async (event) => {
+  event.preventDefault();
+
+  const form = event.target;
+  const formData = new FormData(form);
+  const cartId = formData.get('cartId');
+  const fromName = formData.get('fromName');
+  const toName = formData.get('toName');
+  const giftMessage = formData.get('giftMessage');
+
+  giftOptionsField.setAttribute('loading', 'true');
+  console.log('form data', cartId, fromName, toName, giftMessage);
+
+  const giftMessageInput = {
+    from: fromName,
+    to: toName,
+    message: giftMessage,
+  }
+
+  fetchGraphQl(`
+    mutation SET_GIFT_OPTIONS($cartId: String!, $giftMessage: GiftMessageInput!) {
+        setGiftOptionsOnCart(input: {
+          cart_id: $cartId,
+          gift_message: $giftMessage
+          gift_receipt_included: false
+          printed_card_included: false
+        }) {
+					cart {
+						id
+						gift_message {
+							from
+							to
+							message
+						}
+					}
+        }
+      }
+    `,
+    {
+    variables: {
+      cartId,
+      giftMessage: giftMessageInput,
+    },
+  }).then(() => {
+    refreshCart();
+    giftOptionsField.removeAttribute('loading');
+  });
+};
+```
+</Task>
+
+<Task>
+### Extend the data payload for the drop-in
+
+To extend the data payload of a drop-in, you need to add a GraphQL fragment to the `cart` payload by modifying the `build.mjs` script at the root of your storefront project. For our example, the fragment should add the gift message data in the cart. Here's an example of what the GraphQL should look like:
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+// Extend the cart fragment to include the gift message
+overrideGQLOperations([
+  {
+    // The name of the drop-in to extend
+    npm: '@dropins/storefront-cart',
+    // Additional fields to include in the cart results (gift_message)
+    operations: [
+      `fragment CART_FRAGMENT on Cart {
+        gift_message {
+          from
+          to
+          message
+        }
+      }`
+    ],
+  },
+]);
+```
+
+When you run the install command, the `build.mjs` script will generate a new GraphQL query for the cart drop-in that includes the `gift_message` data.  extend the cart fragment to include the gift message data.
+
+</Task>
+
+<Task>
+
+### Add new data to the payload
+
+Map the updated GraphQL query to the data that the cart events provide to listeners. In this way, the checkout drop-in can access gift message data.
+
+Configure the cart drop-in's initializer to add the new cart data to the existing cart payload. This includes the new data with the payload that the cart events provide to listeners. As an example, here is how it might be configured:
+
+```js title='cart.js'
+/* eslint-disable import/no-cycle */
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart/api.js';
+import { initializeDropin } from './index.js';
+
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    models: {
+      CartModel: {
+        transformer: (data) => {
+          const { gift_message: giftMessage } = data;
+          return {
+            giftMessage,
+          }
+        }
+      }
+    }
+  });
+})();
+```
+
+Now when the cart emits an event with cart data, the `giftMessage` data is included.
+
+</Task>
+
+<Task>
+
+### Retrieve the data and render it
+
+Get the data from the cart event and use it to populate the gift message fields on the checkout page. Here's an example of how you might do this:
+
+```js title='commerce-checkout.js'
+// Event listener to hydrate the new fields with the cart data
+events.on('cart/data', data => {
+  if (!data) return;
+
+  const { id, orderAttributes, giftMessage } = data;
+
+  // Update gift options fields
+  giftOptionsField.setAttribute('cartId', id);
+  if(giftMessage) {
+    giftOptionsField.setAttribute('giftmessage', giftMessage.message);
+    giftOptionsField.setAttribute('fromname', giftMessage.from);
+    giftOptionsField.setAttribute('toname', giftMessage.to);
+  }
+  giftOptionsField.removeAttribute('loading');
+}, { eager: true });
+```
+
+</Task>
+
+<Task>
+
+### Summary
+
+After just a few changes, we were able to add a new feature to the checkout drop-in that allows users to add a gift message to their order. We added a new UI component, integrated the Commerce API to fetch and update gift messages, and extended the data payload for the drop-in to include the gift message data. You can apply these same concepts to any drop-in.
+
+</Task>
+
+</Tasks>
+
+## Extend drop-ins with third-party components
+
+The following steps guide you through adding a third-party component to a drop-in. We'll add a fictitious ratings & reviews component to the product details drop-in as an example.
 
 ### Prerequisites
 
@@ -100,7 +432,6 @@ export default async function decorate(block) {
   // Fetch the component data
   setRatingsJson(product, thirdPartyApiKey);
 }
-
 ```
 
 </Task>
@@ -171,9 +502,9 @@ events.on('eds/pdp/ratings', ({ average, total }) => {
 <Task>
 ### Delay loading large data sets
 
-Our fictitious ratings & reviews component loads large blocks of text to display a product's reviews. So we need to ensure all that data is not loaded initially with the page. We need to delay loading the reviews until the user scrolls near the reviews section or clicks a "View All Reviews" button. This strategy will improve the page's First Contentful Paint (FCP) and Cumulative Layout Shift (CLS) scores.
+Components like ratings & reviews typically load large blocks of text to display a product's reviews. In such cases, we need to ensure that those reviews are not loaded until the user scrolls near the reviews section or clicks a "View All Reviews" button. This strategy keeps the First Contentful Paint (FCP) and Cumulative Layout Shift (CLS) scores low.
 
-Here's an example implementation using an Intersection Observer to trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews":
+The following example uses an Intersection Observer to load reviews only when a user scrolls near the reviews section or clicks "View All Reviews".
 
 ```js
 // Trigger the delayed load when the user scrolls near the reviews section or clicks "View All Reviews"
@@ -208,9 +539,9 @@ observer.observe(reviewsSection);
 </Task>
 
 <Task>
-### Conclusion
+### Summary
 
-This tutorial showed you the key steps required to integrate a fictitious third-party component into a drop-in. You've learned how to configure API keys, fetch data, and delay loading large data sets to improve page performance. You can now apply these concepts to other third-party components you want to integrate into your drop-ins.
+Throughout this tutorial, we examined the key steps of integrating a fictitious third-party component. We learned how to configure API keys, fetch data, and delay loading data sets to improve page performance. You can apply these same concepts to any drop-in.
 </Task>
 
 </Tasks>
