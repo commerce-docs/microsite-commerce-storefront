@@ -16,7 +16,7 @@ Drop-in components are designed to be flexible and extensible. This guide provid
 
 ## Extend drop-ins with Commerce APIs
 
-The following steps describe how to add existing Commerce API services to a drop-in. For example, the Commerce API provides the necessary endpoints to fetch and update gift messages through GraphQL, but the checkout drop-in doesn't provide this feature out of the box. We will extend the checkout drop-in by adding a UI for gift messages and then integrating the Commerce GraphQL API to fetch and update those messages.
+The following steps describe how to add existing Commerce API services to a drop-in. For example, the Commerce API provides the necessary endpoints to fetch and update gift messages through GraphQL, but the checkout drop-in doesn't provide this feature out of the box. We will extend the checkout drop-in by adding a UI for gift messages, use the Commerce GraphQL API to update the message data on the cart, and extend the cart drop-in to include the message data when it fetches the cart.
 
 ### Step-by-step
 
@@ -25,7 +25,7 @@ The following steps describe how to add existing Commerce API services to a drop
 <Task>
 ### Add your UI to the drop-in
 
-The first step is to add a new UI component to the checkout drop-in. This component will allow users to enter a gift message for their order. We'll call this component `GiftOptionsField` and create it as a web component for fun as shown in the example implementation below.
+The first step is to add a new UI component to the checkout drop-in. This component will allow users to enter a gift message for their order. We'll call this component `GiftOptionsField` and create it as a web component, as shown in the example implementation below.
 
 ```js title='gift-options-field.js'
 import { Button, Input, TextArea, provider as UI } from '@dropins/tools/components.js';
@@ -158,14 +158,14 @@ customElements.define('gift-options-field', GiftOptionsField);
 <Task>
 ### Render the UI into a checkout container
 
-Next, we need to render the `GiftOptionsField` component into the checkout drop-in by creating a container to render the component into.
+Next, we need to render the `GiftOptionsField` component into the checkout page by creating the `gift-options-field` [custom element](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements).
 
 ```js
 const GiftOptionsField = document.createElement('gift-options-field');
 GiftOptionsField.setAttribute('loading', 'true');
 ```
 
-Then, add the container to the layouts of the checkout drop-in. The following example shows how to add the container to the `checkout` layout.
+Then, insert the custom element into the layouts defined on the checkout page. The following example updates the render function for mobile and desktop to insert the `giftOptionsField` element into the layouts.
 
 ```js title='commerce-checkout.js'
 function renderMobileLayout(block) {
@@ -194,7 +194,7 @@ function renderDesktopLayout(block) {
 <Task>
 ### Add handler for gift message submission
 
-Now that we have the UI in place, we need to add a handler to submit the gift message to the Commerce API. We'll use the `fetch` API to send a GraphQL mutation to update the gift message.
+Now that we have the UI in place, we need to add a handler to save the gift message data. We'll use the `fetchGraphl()` function from the API to send a GraphQL mutation to set the gift message on the cart.
 
 ```js title='commerce-checkout.js'
 giftOptionsField.submitGiftMessageHandler = async (event) => {
@@ -251,7 +251,7 @@ giftOptionsField.submitGiftMessageHandler = async (event) => {
 <Task>
 ### Extend the data payload for the drop-in
 
-To extend the data payload of a drop-in, you need to add a GraphQL fragment to the `cart` payload by modifying the `build.mjs` script at the root of your storefront project. For our example, the fragment should add the gift message data in the cart. Here's an example of what the GraphQL should look like:
+To extend the data payload of a drop-in, first you need to update the GraphQL fragment used by the cart drop-in to request the additional field. This is done by modifying the `build.mjs` script at the root of your storefront project. In the following example, the `CART_FRAGMENT` fragment is extended to include the gift message data whenever the cart drop-in requests the cart data from GraphQL:
 
 ```js title='build.mjs'
 /* eslint-disable import/no-extraneous-dependencies */
@@ -276,7 +276,7 @@ overrideGQLOperations([
 ]);
 ```
 
-When you run the install command, the `build.mjs` script will generate a new GraphQL query for the cart drop-in that includes the `gift_message` data.  extend the cart fragment to include the gift message data.
+When you run the install command, the `build.mjs` script generates a new GraphQL query for the cart drop-in that includes the `gift_message` data. 
 
 </Task>
 
@@ -284,9 +284,9 @@ When you run the install command, the `build.mjs` script will generate a new Gra
 
 ### Add new data to the payload
 
-Map the updated GraphQL query to the data that the cart events provide to listeners. In this way, the checkout drop-in can access gift message data.
+Map the new GraphQL data to the payload data that the cart events provide to listeners so they can access the gift message values.
 
-Configure the cart drop-in's initializer to add the new cart data to the existing cart payload. This includes the new data with the payload that the cart events provide to listeners. As an example, here is how it might be configured:
+Configure the cart drop-in's initializer to add the new cart data to the existing cart payload. This is done by defining a transformer function on the CartModel. This function receives the GraphQL data and returns an object that gets merged with the rest of the cart payload. As an example, here is how it might be configured:
 
 ```js title='cart.js'
 /* eslint-disable import/no-cycle */
