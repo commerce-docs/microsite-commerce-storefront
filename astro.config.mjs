@@ -31,9 +31,6 @@ export default defineConfig({
   trailingSlash: 'ignore',
   outDir: './dist',
 
-
-
-
   redirects: {
     '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
     '/customize/enrich': '/developer/commerce/storefront/dropins/all/enriching',
@@ -183,6 +180,10 @@ export default defineConfig({
           {
             label: 'Styling',
             link: '/dropins/all/styling/'
+          },
+          {
+            label: 'Slots',
+            link: '/dropins/all/slots/'
           },
           {
             label: 'Layouts',
