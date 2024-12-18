@@ -20,19 +20,16 @@ const basePath = isProduction
 
 // https://astro.build/config
 export default defineConfig({
+  image: {
+    service: passthroughImageService(),
+  },
   site: 'https://experienceleague.adobe.com',
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
   },
-  image: {
-    service: passthroughImageService(),
-  },
   trailingSlash: 'ignore',
   outDir: './dist',
-
-
-
 
   redirects: {
     '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
@@ -185,6 +182,14 @@ export default defineConfig({
             link: '/dropins/all/styling/'
           },
           {
+            label: 'Slots',
+            link: '/dropins/all/slots/'
+          },
+          {
+            label: 'Layouts',
+            link: '/dropins/all/layouts/'
+          },
+          {
             label: 'Extending',
             link: '/dropins/all/extending/'
           },
@@ -200,7 +205,8 @@ export default defineConfig({
               { label: 'Installation', link: '/dropins/product-details/installation/' },
               { label: 'Initialization', link: '/dropins/product-details/initialization/' },
               { label: 'Styles', link: '/dropins/product-details/styles/' },
-              { label: 'Containers', collapsed: true,
+              {
+                label: 'Containers', collapsed: true,
                 items: [
                   { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                   { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
@@ -299,7 +305,8 @@ export default defineConfig({
               { label: 'Overview', link: '/dropins/order/' },
               { label: 'Initialization', link: '/dropins/order/initialization/' },
               { label: 'Styles', link: '/dropins/order/styles/' },
-              { label: 'Containers' ,
+              {
+                label: 'Containers',
                 collapsed: true,
                 items: [
                   { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
