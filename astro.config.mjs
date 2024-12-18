@@ -198,6 +198,10 @@ export default defineConfig({
             link: '/dropins/all/enriching/'
           },
           {
+            label: 'Experimenting',
+            link: '/dropins/all/experimenting/'
+          },
+          {
             label: 'Product details page',
             collapsed: true,
             items: [
