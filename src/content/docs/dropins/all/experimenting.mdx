@@ -14,19 +14,6 @@ import Task from '@components/Task.astro';
 
 This topic introduces you to the concept of creating A/B experiments for drop-in components. You will learn how to create experiments, define variants, and track the performance of each variant.
 
-## Big picture
-
-<Diagram caption="What is an A/B experiment?">![What is an A/B experiment?](@images/placeholder.webp)</Diagram>
-
-<Callouts>
-
-1. **Experiment**: A test that compares two or more variants of a drop-in component to determine which variant performs better.
-1. **Variant**: A version of a drop-in component that is different from the original version. Variants are created to test different features, designs, or content.
-1. **Control**: The original version of the drop-in component that is used as a baseline for comparison.
-1. **Challenger**: The variant of the drop-in component being tested.
-
-</Callouts>
-
 ## Vocabulary
 
 <Vocabulary>
@@ -54,14 +41,15 @@ The variant of the drop-in component being tested.
 The steps for creating an A/B experiment for a commerce storefront page, are summarized below, and detailed in the following tasks:
 
 <Steps>
-1. Create a new variant page for the experiment.
+1. Create a variant page for the experiment.
 1. Add the experiment to the metadata block of the original page.
 1. Preview the experiment using AEM Sidekick Preview button.
+1. Make code changes for experiments, if necessary.
 </Steps>
 
 <Tasks>
 <Task>
-### Create an experiment page
+### Create an variant page for the experiment
 
 Duplicate the original page and make the necessary changes to create a new variant page for the experiment. Update any placeholder labels or content in the variant page to reflect the changes you want to test. For example, you can change the color of a button, update the text of a call-to-action, or rearrange the layout of the page. Save the variant page with a new name to distinguish it from the original page.
 
@@ -90,9 +78,43 @@ Use the AEM Sidekick Preview button to preview the experiment and compare the or
 <Diagram caption="Preview the experiment">![Preview the experiment](@images/ExperimentOne.png)</Diagram>
 
 </Task>
+
+<Task>
+### Code changes for experiments
+
+Some experiments, such as creating variants of labels with the `placeholders` file, require code changes to a drop-in's initializer code. For example, by making the following additions to the default `cart.js` initializer, you can read the metadata block from the cart page and identify when a variant is being delivered, then apply an alternate `placeholders` file.
+
+<Diagram caption="Alternate placeholders file with different labels">![Alternate placeholders file with different labels](@images/PlaceholderChanges.png)</Diagram>
+
+```js
+/* eslint-disable import/no-cycle */
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart/api.js';
+import { initializeDropin } from './index.js';
+import { fetchPlaceholders } from '../aem.js';
+
+await initializeDropin(async () => {
+
+  // Identify experiment page (Challenger 1)
+  const isVariantPlaceholder = document.body.classList.contains('experiment-cart001') && document.body.classList.contains('variant-challenger-1');
+
+  // Fetch labels from an alternate placeholders file
+  const labels = await fetchPlaceholders(isVariantPlaceholder ? '/drafts/marketer' : undefined);
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+
+</Task>
 </Tasks>
 
 ## Next steps
 
-Now that you understand how to create A/B experiments for drop-in components, you can start experimenting with different variants to optimize the performance of your storefront. Remember to analyze the results and iterate on your experiments to drive continuous improvement.
-
+Now that you understand how to create A/B experiments for drop-in components, you can start experimenting with different variants to optimize the performance of your storefront.
