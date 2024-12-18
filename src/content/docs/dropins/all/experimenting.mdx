@@ -26,6 +26,11 @@ A test that compares two or more pages to determine which page performs better.
 
 A version of a page that is different from the original version. Variants are created to test different features, designs, or content.
 
+### UI label changes
+
+Changes to the text or labels displayed on a page. Experimenting with label changes require you to create an alternate `placeholders` file and make minor changes to the drop-in's initializer.
+
+
 ### Control
 
 The original version of the drop-in component that is used as a baseline for comparison.
@@ -34,7 +39,23 @@ The original version of the drop-in component that is used as a baseline for com
 
 The variant of the drop-in component being tested.
 
+### Experimentation plugin
+
+This plugin is included in the Commerce boilerplate ([hlxsites/aem-boilerplate-commerce](https://github.com/hlxsites/aem-boilerplate-commerce)) provides all the features for running A/B experiments on your storefront pages.
+
 </Vocabulary>
+
+## About storefront A/B experiments
+
+The Experimentation plugin provides all the features for running A/B experiments on your storefront pages. You can track conversions and experiment with different page variations quickly, using real user metrics.
+
+The features include setting up A/B tests, serving different content to multiple audiences, and integrating marketing campaigns without collecting personal user data. Metadata markers and rules define which versions of a page visitors see. By default, tests do not require user consent and don't require cookies.
+
+Additionally, the plugin allows A/B experiments that can be run on mobile or desktop users and success can be tracked for each variant. You can also customize sample rates, data storage, and environment detection to suit your project. And with marketing campaigns, you can tailor experiences so visitors from a particular email or social link see unique content.
+
+This plugin integrates seamlessly with the AEM boilerplate code, allowing experiments to be loaded early and with minimal impact.
+
+For detailed development information, see https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/plugins/experimentation/README.md.
 
 ## Step-by-step
 
@@ -51,22 +72,23 @@ Creating an A/B experiment for a commerce storefront page includes the following
 <Task>
 ### Create a variant page for the experiment
 
-Duplicate the original page and make the necessary changes to create a new variant page for the experiment. Update any placeholder labels or content in the variant page to reflect the changes you want to test. For example, you can change the color of a button, update the text of a call-to-action, or rearrange the layout of the page. Save the variant page with a new name to distinguish it from the original page.
+Duplicate the original page and make the changes you need to create a new page with the new content or features you want to use in the experiment. For most content changes, you can add those changes directly to the page/document. Examples include adding any of the [AEM content blocks](https://www.aem.live/developer/block-collection#boilerplate), additional commerce blocks (such as product recommendations) and more.
+
+:::note
+If you want to test changes to the UI labels in the drop-in, you can do that in code as part of the drop-in's initializer. See [Step 4: Code changes for experiments](#code-changes-for-experiments).
+:::
 
 </Task>
 
 <Task>
 ### Add the experiment to the original page
 
-Add the experiment to the metadata block of the original page by adding the experiment name and the URL to the experiment page. For example:
+Add the experiment to the metadata block of the original page by adding the experiment name and the URL to the experiment pages. The following example shows how to add an experiment to the cart drop-in block using the `metadata` block on the cart page. The keys are:
 
-| Metadata                      | |
-| ------------------------ | -------------------------- |
-| Title     | Cart      |
-| Robots | noindex,nofollow |
-| Experiment | CART001 |
-| Experiment Variants | https://marketer-demo---aem-boilerplate-commerce--hlxsites.aem.page/drafts/marketer/cart-new |
+- **Experiment**: The name of the experiment. The Experimentation plugin uses this name to track this experiment.
+- **Experiment Variants**: The URLs to the variant/challenger pages in the experiment. The Experimentation plugin uses these URLs to set up the experiment.
 
+<Diagram caption="Add experiment to metadata block">![Add experiment to metadata block](@images/MetadataExperiment.png)</Diagram>
 
 </Task>
 
@@ -110,7 +132,6 @@ await initializeDropin(async () => {
   return initializers.mountImmediately(initialize, { langDefinitions });
 })();
 ```
-
 
 </Task>
 </Tasks>
