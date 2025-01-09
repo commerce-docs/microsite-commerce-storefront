@@ -12,5 +12,5 @@
     { label: 'DROPIN_NAME slots', link: '/dropins/blueprint/dropin-slots/' },
     { label: 'DROPIN_NAME functions', link: '/dropins/blueprint/dropin-functions/' },
     { label: 'DROPIN_NAME data events', link: '/dropins/blueprint/dropin-data-events/' },
-  ]
+  ];
 }
