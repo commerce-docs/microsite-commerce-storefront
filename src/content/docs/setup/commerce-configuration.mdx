@@ -9,55 +9,65 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 
-In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from the `configs.xlsx` in the root of your SharePoint content directory.
+In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from the `configs`, `configs-stage` or `configs-dev` spreadsheets in the root of your SharePoint content directory.
 
-In the [Create your storefront tutorial](/get-started/), the sample content archive provided you with a `configs.xlsx` file in the root folder. This file is used to expose Adobe Commerce configuration parameters to the frontend blocks.
+In the [Create your storefront tutorial](/get-started/), the sample content archive provided you with several `configs` spreadsheet files in the root folder. These files are one way in which authors can provide values to frontend blocks. Notably, the three files correspond to the different EDS environments. `configs` is used by aem.live, and represents production. `configs-stage` is used by aem.page and represents staging. `configs-dev` is used on localhost when you are running your EDS storefront locally.
+
+You can forcibly change which config is fetched and used on your page by setting `environment` in SessionStorage to either `dev`, `stage`, or `prod`.
 
 When implementing your own project, you must update the configuration values with:
 
-- The Catalog Service header values specific to your Adobe Commerce backend.
+- The Catalog Service header or query parameter values specific to your Adobe Commerce backend.
 
-- The configuration values with the core Adobe Commerce GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](/setup/content-delivery-network/).
+- The Adobe Commerce and Catalog Service GraphQL endpoints that you configured as part of the [content delivery network (CDN) setup](/setup/content-delivery-network/).
+
+- Other values which are utilized by the Storefront codebase like `commerce-environment`, `commerce-base-currency-code` etc.
 
 ## Vocabulary
 
 <Vocabulary>
 ### Storefront configuration
 
-The `configs.xlsx` file contains the connection settings for your Commerce blocks. Each row in the file contains a `key` and a `value` that corresponds to a specific setting in your Commerce backend. The `key` is used to retrieve the `value` from the `configs.xlsx` file and is used to connect your Commerce blocks to your Commerce backend.
+The `configs`, `configs-stage` and `configs-dev` spreadsheets contain the connection settings for your Commerce blocks. Each row in the sheet contains a `key` and a `value` that corresponds to a specific setting or usage in your Commerce backend or in the Storefront codebase. The `key` is used to retrieve the `value` from the `configs` spreadsheet and is used to connect your Commerce blocks to your Commerce backend.
 
 ### default values
 
-By default, the values in the `configs.xlsx` file are from the boilerplate's sample backend to ensure everything works out of the box. But when it comes time to connect your own backend, you need to know what each key means so you can update it with the correct value from your own Commerce instance.
+By default, the values in the `configs` spreadsheet are from the boilerplate's sample backend to ensure everything works out of the box. But when it comes time to connect your own backend, you need to know what each key means so you can update it with the correct value from your own Commerce instance.
 
 ### getConfigValue function
 
-The `getConfigValue` function is a helper function that retrieves the `value` from the `configs.xlsx` file using the `key` as an argument. The `getConfigValue` function is used to connect your Commerce blocks to your Commerce backend.
+The `getConfigValue` function is a helper function that retrieves the `value` from the `configs` file using the `key` as an argument. The `getConfigValue` function is used to connect your Commerce blocks to your Commerce backend.
 
-### Commerce block connection
+### getHeaders function
 
-To connect a Commerce block to your Commerce backend, you'll use the `getConfigValue` function to set the **Services endpoint** and **GraphQL headers** for the block. The **Services endpoint** is the URL for the block's GraphQL endpoint, and the **GraphQL headers** are the headers required to make a request to the endpoint.
+The `getHeaders` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `header` keys and returns an object map of those rows. For example, if you have rows in config like `"commerce.headers.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
+
+### getQueryParams
+
+The `getQueryParams` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `queryparam` keys and returns an object map of those rows. For example, if you have rows in config like `"commerce.queryparam.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
 
 </Vocabulary>
 
 ## Examples
 
-You can find the `configs.xlsx` file in your content drive by clicking on the mountpoint link in your project's `fstab.yaml` file. You should see the `configs.xlsx` file at the root of the SharePoint directory. Open the file to view the connection **keys** and **values** of the sample backend. They should look similar (but not exact) to the following:
+You can find the `configs` file in your content drive by clicking on the mountpoint link in your project's `fstab.yaml` file. You should see the `configs` file at the root of the SharePoint directory. Open the file to view the connection **keys** and **values** of the sample backend. They should look similar (but not exact) to the following:
 
 <OptionsTable
   options={[
     ['#', 'Key', 'Value'],
-    ['1', 'commerce-endpoint', 'https://catalog-service-sandbox.adobe.io/graphql'],
+    ['1', 'commerce-endpoint', 'https://catalog-service.adobe.io/graphql'],
     ['2', 'commerce-core-endpoint', 'https://mystorefront.com/graphql'],
-    ['3', 'commerce-environment-id', '7cb935fd-d3bc-487b-9a2f-e5965c30f2a1'],
-    ['4', 'commerce-root-category-id', '2'],
-    ['5', 'commerce-website-code', 'base'],
-    ['6', 'commerce-store-code', 'main_website_store'],
-    ['7', 'commerce-store-view-code', 'default'],
-    ['8', 'commerce-customer-group', 'd0b8ea36fca097dc92c02b1d104e6f41099184cb'],
-    ['9', 'commerce-x-api-key', 'a6b4e2f69a4a4267a8f423c8caaf6a47'],
+    ['3', 'commerce-root-category-id', '2'],
+    ['4', 'commerce.headers.cs.Magento-Environment-Id', '7cb935fd-d3bc-487b-9a2f-e5965c30f2a1'],
+    ['5', 'commerce.headers.cs.Magento-Website-Code', 'base'],
+    ['6', 'commerce.headers.cs.Magento-Store-Code', 'main_website_store'],
+    ['7', 'commerce.headers.cs.Magento-Store-View-Code', 'default'],
+    ['8', 'commerce.headers.cs.Magento-Customer-group', 'd0b8ea36fca097dc92c02b1d104e6f41099184cb'],
+    ['9', 'commerce.headers.cs.x-api-key', 'a6b4e2f69a4a4267a8f423c8caaf6a47'],
   ]}
 />
+
+Note: The `commerce.headers.cs` fields are required, at minimum. To use query parameters for Catalog Service queries made by the PDP Dropin, copy all 5 rows except for the `x-api-key` row to the bottom of your config, and replace `headers` with `queryparam`. For example, `commerce.headers.cs.Magento-Environment-Id` would continue to exist but also be duplicated to a new config of `commerce.queryparam.cs.Magento-Environment-Id`.
 
 Each `key` is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
 
@@ -67,25 +77,27 @@ Each `key` is described below with links to more details. The `value` for each k
 
 1. **commerce-core-endpoint:** (read/write) Core GraphQL endpoint for a variety of queries and mutations. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
 
-1. **commerce-environment-id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
-
 1. **commerce-root-category-id:** Determines the products in the storefront's main menu. See [Step 1: Create root categories](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-1-create-root-categories), [Catagories overview](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/categories/categories), and [Root category and hierarchy](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/categories/category-root) for details.
 
-1. **commerce-website-code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+1. **commerce.headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
 
-1. **commerce-store-code:** Determines the store to connect to. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+1. **commerce.headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
 
-1. **commerce-store-view-code:** Determines the store view to connect to. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
+1. **commerce.headers.cs.Magento-Store-Code:** Determines the store to connect to. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
 
-1. **commerce-customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
+1. **commerce.headers.cs.Magento-Store-View-Code:** Determines the store view to connect to. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
 
-1. **commerce-x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details.
+1. **commerce.headers.cs.Magento-Customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
+
+1. **commerce.headers.cs.x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details.
+
+All of the initializer blocks now automatically use any headers for the corresponding block if they are in the config. For example `commerce.headers.cart.Foo` will add a `Foo` header to graphql requests made by the cart dropin. This can be useful if you need to append certain headers for specific requests.
 
 </Callouts>
 
 ## Step-by-step
 
-We'll use the `product-details` Commerce block as an example of where and how to updated the connection settings for your Commerce blocks when switching to your own Commerce backend.
+We'll use a mock PDP / Catalog Service block as an example of where and how to utilize the various config utilities and values.
 
 <Tasks>
 
@@ -93,7 +105,7 @@ We'll use the `product-details` Commerce block as an example of where and how to
 
 ### Import the getConfigValue function.
 
-First, import the `getConfigValue` function from your boilerplate's `scripts/configs.js` file. The `getConfigValue` function takes a `string` that matches one of the keys from the `configs.xlsx` file and returns the corresponding value.
+First, import the `getConfigValue` function from your boilerplate's `scripts/configs.js` file.
 
 ```javascript
 import { getConfigValue } from '../../scripts/configs.js';
@@ -103,30 +115,22 @@ import { getConfigValue } from '../../scripts/configs.js';
 
 <Task>
 
-### Set the endpoint and fetch headers.
+### Fetch and use some values.
 
-Within the Commerce block's `decorate` function, use the `getConfigValue` function to set the **Services endpoint** and **GraphQL headers** for the drop-in component block.
+Within the block's `decorate` function, use the `getConfigValue` function which takes a `string` that matches one of the keys from the `configs` file and returns the corresponding value.
 
 ```javascript
+
 export default async function decorate(block) {
-  // Initialize Drop-in components
-  initializers.register(product.initialize, {});
+  // Get the catalog service endpoint
+  const endpoint = await getConfigValue('commerce-endpoint');
+  // get the catalog service query params and headers
+  const headers = await getHeaders('cs');
+  const queryparams = await getQueryParams('cs');
 
-  // Set Fetch Endpoint (Service)
-  product.setEndpoint(await getConfigValue('commerce-endpoint'));
+  const response = await fetch(endpointWithParams(endpoint, queryparams), { headers });
 
-  // Set Fetch Headers (Service)
-  product.setFetchGraphQlHeaders({
-    'Content-Type': 'application/json',
-    'Magento-Environment-Id': await getConfigValue('commerce-environment-id'),
-    'Magento-Website-Code': await getConfigValue('commerce-website-code'),
-    'Magento-Store-View-Code': await getConfigValue('commerce-store-view-code'),
-    'Magento-Store-Code': await getConfigValue('commerce-store-code'),
-    'Magento-Customer-Group': await getConfigValue('commerce-customer-group'),
-    'x-api-key': await getConfigValue('commerce-x-api-key'),
-  });
-
-  //more...
+  // do stuff with response
 }
 ```
 
