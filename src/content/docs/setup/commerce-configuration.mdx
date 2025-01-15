@@ -17,7 +17,7 @@ You can forcibly change which config is fetched and used on your page by setting
 
 When implementing your own project, you must update the configuration values with:
 
-- The Catalog Service header or query parameter values specific to your Adobe Commerce backend.
+- The Catalog Service header values specific to your Adobe Commerce backend.
 
 - The Adobe Commerce and Catalog Service GraphQL endpoints that you configured as part of the [content delivery network (CDN) setup](/setup/content-delivery-network/).
 
@@ -42,10 +42,6 @@ The `getConfigValue` function is a helper function that retrieves the `value` fr
 
 The `getHeaders` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `header` keys and returns an object map of those rows. For example, if you have rows in config like `"commerce.headers.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
 
-### getQueryParams
-
-The `getQueryParams` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `queryparam` keys and returns an object map of those rows. For example, if you have rows in config like `"commerce.queryparam.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
-
 </Vocabulary>
 
 ## Examples
@@ -67,7 +63,7 @@ You can find the `configs` file in your content drive by clicking on the mountpo
   ]}
 />
 
-Note: The `commerce.headers.cs` fields are required, at minimum. To use query parameters for Catalog Service queries made by the PDP Dropin, copy all 5 rows except for the `x-api-key` row to the bottom of your config, and replace `headers` with `queryparam`. For example, `commerce.headers.cs.Magento-Environment-Id` would continue to exist but also be duplicated to a new config of `commerce.queryparam.cs.Magento-Environment-Id`.
+Note: The `commerce.headers.cs` fields are required, at minimum.
 
 Each `key` is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
 
@@ -124,11 +120,10 @@ Within the block's `decorate` function, use the `getConfigValue` function which 
 export default async function decorate(block) {
   // Get the catalog service endpoint
   const endpoint = await getConfigValue('commerce-endpoint');
-  // get the catalog service query params and headers
+  // get the catalog service required headers
   const headers = await getHeaders('cs');
-  const queryparams = await getQueryParams('cs');
 
-  const response = await fetch(endpointWithParams(endpoint, queryparams), { headers });
+  const response = await fetch(endpoint, { headers });
 
   // do stuff with response
 }
