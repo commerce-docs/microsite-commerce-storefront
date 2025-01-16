@@ -1,0 +1,115 @@
+---
+title: User auth slots
+description: Learn about the slots provided in the User Auth drop-in component.
+---
+
+This topic describes the slots that are provided in the order drop-in component.
+
+[Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
+
+## FormInput_*attributeCode* and SignUpFormInput_*attributeCode* slots
+
+The `FormInput_*attributeCode*` and `SignUpFormInput_*attributeCode*` slots allow you to customize the input fields in the `Form` and `SignUpForm` forms. The value of `*attributeCode*` is a valid attribute code used in the form. For example, a slot named `SignUpFormInput_lastname` would customize the `lastname` input field in the `SignUpForm` form.
+
+The following example illustrates the usage of the `SignUpFormInput_lastname` slot:
+
+```javascript
+await provider.render(SignUp, {
+ requireRetypePassword: true,
+ inputsDefaultValueSet: [
+   { code: 'firstname', defaultValue: 'Prefilled value from props' },
+ ],
+ apiVersion2: true,
+ routeSignIn: () => 'login.html',
+ slots: {
+   SignUpFormInput_lastname: async (ctx) => {
+     // Extract context properties required to enable custom input
+     const {
+       inputName,
+       handleOnChange,
+       handleOnBlur,
+       handleOnFocus,
+       config,
+     } = ctx;
+
+     // Create required DOM elements, applying some basic styling
+     const wrapper = document.createElement('div');
+     const errorContainer = document.createElement('div');
+     errorContainer.classList.add(
+       ...[
+         'dropin-field__hint',
+         'dropin-field__hint--medium',
+         'dropin-field__hint--error',
+       ]
+     );
+     errorContainer.style.display = 'none';
+
+     // Rendering SDK Input component in DOM wrapper, passing event listeners decomposed from slot context
+     const inputComponent = await provider.render(Input, {
+       name: inputName,
+       onChange: handleOnChange,
+       onBlur: handleOnBlur,
+       onFocus: handleOnFocus,
+       floatingLabel: `${config.label} *`,
+       placeholder: "Custom placeholder 'Last Name'",
+     })(wrapper);
+
+     const inputElement = wrapper.querySelector('input');
+
+     wrapper.appendChild(errorContainer);
+     ctx.appendChild(wrapper);
+
+     // Apply some additional styling to Slot for consistency
+     const slotElement = document.querySelector(
+       '[data-slot="SignUpFormInput_lastname"]'
+     );
+     slotElement.style.width = '100%';
+     slotElement.style.backgroundColor = 'lightblue';
+     slotElement.style.marginBottom = 'var(--spacing-medium)';
+
+     // Declaring function supposed to update Input component on each dropin state change
+     const handleStateChange = (next) => {
+       const { errorMessage, errors, handleOnChange, handleOnBlur } =
+         next;
+
+       const getNextProps = ({ value, ...prev }, error) => ({
+         ...prev,
+         error,
+         onChange: (e) => {
+           if (e.target.value === 'test') {
+             alert("You can't use 'test' as a last name");
+           }
+           handleOnChange(e, errors);
+         },
+         onBlur: (e) => handleOnBlur(e, errors),
+       });
+
+       if (errorMessage) {
+         errorContainer.innerText = errorMessage;
+         errorContainer.style.display = 'block';
+         inputComponent.setProps((prev) => getNextProps(prev, true));
+       } else {
+         errorContainer.innerText = '';
+         errorContainer.style.display = 'none';
+         inputComponent.setProps((prev) => getNextProps(prev, false));
+       }
+
+       // Make sure that focus stay in input on re-render
+       if (document.activeElement === inputElement) {
+         setTimeout(() => {
+           inputElement.focus();
+         }, 0);
+       }
+     };
+
+     ctx.onChange((nextState) => handleStateChange(nextState));
+   },
+ },
+})(document.getElementById('SignUp'));
+```
+
+## SuccessNotification slot
+
+The SuccessNotification slot allows you to display custom content on authentication containers and forms. This slot is useful for displaying success messages after a user successfully performs and action, such as signing in, creating an account, or updating their password.
+
+The [SignIn](/dropins/user-auth/containers/sign-in/), [SignUp](/dropins/user-auth/containers/sign-up/), and [UpdatePassword](/dropins/user-auth/containers/update-password/) containers can implement this slot.
