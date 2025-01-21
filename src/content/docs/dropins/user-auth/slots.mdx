@@ -7,9 +7,9 @@ This topic describes the slots that are provided in the order drop-in component.
 
 [Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
 
-## FormInput_*attributeCode* and SignUpFormInput_*attributeCode* slots
+## SignUpFormInput_*attributeCode* slot
 
-The `FormInput_*attributeCode*` and `SignUpFormInput_*attributeCode*` slots allow you to customize the input fields in the `Form` and `SignUpForm` forms. The value of `*attributeCode*` is a valid attribute code used in the form. For example, a slot named `SignUpFormInput_lastname` would customize the `lastname` input field in the `SignUpForm` form.
+The `SignUpFormInput_`*attributeCode* slot allows you to customize the input fields in the `Form` and `SignUpForm` forms. The value of `*attributeCode*` is a valid attribute code used in the form. For example, a slot named `SignUpFormInput_lastname` would customize the `lastname` input field in the `SignUpForm` form.
 
 The following example illustrates the usage of the `SignUpFormInput_lastname` slot:
 
@@ -110,6 +110,29 @@ await provider.render(SignUp, {
 
 ## SuccessNotification slot
 
-The SuccessNotification slot allows you to display custom content on authentication containers and forms. This slot is useful for displaying success messages after a user successfully performs and action, such as signing in, creating an account, or updating their password.
+The `SuccessNotification` slot allows you to display custom content on authentication containers and forms. This slot is useful for displaying success messages after a user successfully performs and action, such as signing in, creating an account, or updating their password.
 
 The [SignIn](/dropins/user-auth/containers/sign-in/), [SignUp](/dropins/user-auth/containers/sign-up/), and [UpdatePassword](/dropins/user-auth/containers/update-password/) containers can implement this slot.
+
+```javascript
+provider.render(SignUp, {
+  routeSignIn: () => getRoute('#SignIn'),
+  routeRedirectOnSignIn: () => getRoute('#AuthCombine'),
+  slots: {
+    SuccessNotification: (ctx) => {
+      const userName = ctx?.isSuccessful?.userName || '';
+
+      const elem = document.createElement('div');
+
+      // Render SuccessNotification container in SuccessNotification slot
+      provider.render(SuccessNotification, {
+        labels: {
+          headingText: `Welcome ${userName}!`,
+        },
+      })(elem);
+
+      ctx.appendChild(elem);
+    },
+  },
+})(document.getElementById('SignUp'));
+```
