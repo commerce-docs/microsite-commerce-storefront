@@ -88,15 +88,20 @@ CheckoutProvider.render(PaymentMethods)($paymentMethods),
 
 ## Example 2
 
-The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing handlers for `checkmo` and `braintree` payment methods, and finally configuring `braintree` to not be set to the cart when selected:
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing handlers for `PaymentServices` and `braintree` payment methods, and finally configuring `braintree` to not be set to the cart when selected:
 
 ```ts
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
+import CreditCard, { CREDIT_CARD_CODE } from '@dropins/payment-services/containers/CreditCard.js';
+import { render as paymentServicesProvider } from '@dropins/payment-services/render.js';
+
 const $paymentMethods = checkoutFragment.querySelector(
   '.checkout__payment-methods',
 );
+
+const apiUrl = await getConfigValue('commerce-core-endpoint');
 
 CheckoutProvider.render(PaymentMethods, {
   setOnChange: {
@@ -104,11 +109,24 @@ CheckoutProvider.render(PaymentMethods, {
   },
   slots: {
     Handlers: {
-      checkmo: (_ctx) => {
+      // Render Payment Services Dropin
+      [CREDIT_CARD_CODE]: (ctx) => {
         const $content = document.createElement('div');
 
-        $content.innerText = 'Pay later with Checkmo';
-        _ctx.replaceHTML($content);
+        $content.innerText = CREDIT_CARD_CODE;
+        ctx.replaceHTML($content);
+        placeOrder.setProps((props) => ({ ...props, disabled: true }));
+        paymentServicesProvider.render(CreditCard, {
+          apiUrl,
+          getCustomerToken: getUserTokenCookie,
+          getCartId: () => ctx.cartId,
+          onValidation: (isValid) => {
+            placeOrder.setProps((props) => ({ ...props, disabled: !isValid }));
+          },
+          onRender: (creditCard) => {
+            paymentServicesCreditCard = creditCard;
+          },
+        })($content);
       },
       braintree: async (ctx) => {
         const container = document.createElement('div');
