@@ -5,22 +5,73 @@ description: Configure the PaymentMethods container to manage and display availa
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `PaymentMethods` container is designed to manage and display the available payment methods during the checkout process. You can configure it to handle the selection of payment methods, display the payment method handlers, and manage the main slot for the payment methods.
+The `PaymentMethods` container is designed to manage and display the available payment methods during the checkout process. You can configure it to decide whether the container should not set the payment method automatically when it is selected (for instance because it needs more information provided by the payment method during the place order action), provide specific handlers to the payment methods, and manage the main slot for the payment methods.
 
 ## PaymentMethods configurations
 
-The `PaymentMethods` container provides the following configuration options:
+The `PaymentMethods` container provides the following configuration options implementing the `PaymentMethodsProps` interface:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['slots.Main', 'SlotProps<PaymentMethodsMainSlotContext>', 'No', 'The main slot for the payment methods.'],
-    ['slots.Handlers', 'PaymentMethodHandlerSlots', 'No', 'The handlers for different payment methods.']
+    ['setOnChange', 'object', 'No', 'Object with a list of "[key: string]: boolean". Only if a payment method is specifically set to false, the container will not set the payment method when selected. By default, the container takes an empty object.'],
+    ['slots', 'object', 'No', 'Object with a "Main" payment method or a list of "Handlers" for existing payment methods.'],
   ]}
 />
 
-## Example
+### PaymentMethodsProps interface
+
+The `PaymentMethods` container receives an object as parameter which implements the `PaymentMethodsProps` interface:
+
+```ts
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+  setOnChange?: { [key: string]: boolean };
+  slots?: {
+    Main?: SlotProps<PaymentMethodsMainSlotContext>;
+    Handlers?: PaymentMethodHandlerSlots;
+  };
+}
+```
+
+The `slots` parameter is an object within the following fields:
+
+### Main field
+
+Function which provides a context and returns a Promise. It should be used if the merchant wants to configure just a main payment method.
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface PaymentMethodsMainSlotContext {
+  replaceHTML: (domElement: HTMLElement) => void;
+}
+```
+
+### Handlers field
+
+List of payment method codes providing a handler to be executed when the payment method is selected.
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface PaymentMethodHandlerSlotContext {
+  cartId: string;
+  replaceHTML: (domElement: HTMLElement) => void;
+}
+
+export interface PaymentMethodHandlerSlots {
+  [code: string]: SlotProps<PaymentMethodHandlerSlotContext>;
+}
+```
+
+## Example 1
 
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`:
 
@@ -29,8 +80,90 @@ import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMetho
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
 const $paymentMethods = checkoutFragment.querySelector(
-  '.checkout__payment-methods'
+  '.checkout__payment-methods',
 );
 
 CheckoutProvider.render(PaymentMethods)($paymentMethods),
+```
+
+## Example 2
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing handlers for `checkmo` and `braintree` payment methods, and finally configuring `braintree` to not be set to the cart when selected:
+
+```ts
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  setOnChange: {
+    braintree: false,
+  },
+  slots: {
+    Handlers: {
+      checkmo: (_ctx) => {
+        const $content = document.createElement('div');
+
+        $content.innerText = 'Pay later with Checkmo';
+        _ctx.replaceHTML($content);
+      },
+      braintree: async (ctx) => {
+        const container = document.createElement('div');
+
+        window.braintree.dropin.create({
+          authorization: 'sandbox_cstz6tw9_sbj9bzvx2ngq77n4',
+          container,
+        }, (err, dropinInstance) => {
+          if (err) {
+            console.error(err);
+          }
+
+          braintreeInstance = dropinInstance;
+        });
+
+        ctx.replaceHTML(container);
+      },
+    },
+  },
+})($paymentMethods),
+```
+
+## Example 3
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying a main payment method in the element with the class `checkout__payment-methods`:
+
+```ts
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.min.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+// Define the modifier for the Payment Methods section
+const renderBraintreePayments = (ctx, element) => {
+  const container = document.createElement('div');
+
+  if (element) {
+    element.innerHTML = container.innerHTML;
+    window.braintree.dropin.create({
+      authorization: 'sandbox_cstz6tw9_sbj9bzvx2ngq77n4',
+      container,
+    });
+  }
+
+  ctx.replaceHTML(container);
+};
+
+// CheckoutProvider.render(PaymentMethods)($paymentMethods),
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Main: renderBraintreePayments,
+  },
+})($paymentMethods),
 ```
