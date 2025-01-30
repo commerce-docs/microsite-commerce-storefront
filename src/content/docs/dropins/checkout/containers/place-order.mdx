@@ -66,14 +66,18 @@ CheckoutProvider.render(PlaceOrder, {
       success = billingFormRef.current.handleValidationSubmit(false);
     }
 
+    if (success && creditCardFormRef.current) {
+      success = creditCardFormRef.current.validate();
+    }
+
     return success;
   },
   handlePlaceOrder: async ({ code, cartId }) => {
     await displayOverlaySpinner();
     try {
-      // Submit Payment Services credit card form
       if (code === CREDIT_CARD_CODE) {
-        await paymentServicesCreditCard.submit();
+        // Submit payment services credit card form
+        await creditCardFormRef.current.submit();
       }
       // Place order
       await orderApi.placeOrder(cartId);
