@@ -119,16 +119,18 @@ The following example renders the `PaymentMethods` container on a checkout page,
 
 ```ts
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
-import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
-
 import CreditCard, { CREDIT_CARD_CODE } from '@dropins/payment-services/containers/CreditCard.js';
-import { render as paymentServicesProvider } from '@dropins/payment-services/render.js';
+import { getConfigValue } from '../../scripts/configs.js';
+import { getUserTokenCookie } from '../../scripts/initializers/index.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+import { render as PaymentServices } from '@dropins/payment-services/render.js';
 
 const $paymentMethods = checkoutFragment.querySelector(
   '.checkout__payment-methods',
 );
 
-const apiUrl = await getConfigValue('commerce-core-endpoint');
+const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
+const creditCardFormRef = { current: null }; // Use this to validate and submit the form
 
 CheckoutProvider.render(PaymentMethods, {
   slots: {
@@ -136,20 +138,13 @@ CheckoutProvider.render(PaymentMethods, {
       // Render Payment Services Dropin
       [CREDIT_CARD_CODE]: (ctx) => {
         const $content = document.createElement('div');
-
-        $content.innerText = CREDIT_CARD_CODE;
         ctx.replaceHTML($content);
-        placeOrder.setProps((props) => ({ ...props, disabled: true }));
+
         paymentServicesProvider.render(CreditCard, {
-          apiUrl,
+          apiUrl: commerceCoreEndpoint,
           getCustomerToken: getUserTokenCookie,
           getCartId: () => ctx.cartId,
-          onValidation: (isValid) => {
-            placeOrder.setProps((props) => ({ ...props, disabled: !isValid }));
-          },
-          onRender: (creditCard) => {
-            paymentServicesCreditCard = creditCard;
-          },
+          creditCardFormRef,
         })($content);
       },
     },
