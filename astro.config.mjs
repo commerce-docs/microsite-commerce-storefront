@@ -300,6 +300,7 @@ export default defineConfig({
                   { label: 'Multi-step guest checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                 ]
               },
+              { label: 'Release notes', link: '/dropins/checkout/release-notes/' },
             ],
           },
           {
