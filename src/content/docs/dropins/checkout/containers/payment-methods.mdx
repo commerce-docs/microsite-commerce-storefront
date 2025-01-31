@@ -9,6 +9,8 @@ The `PaymentMethods` container is designed to manage and display the available p
 
 ## PaymentMethods configurations
 
+🚧 TODO: Update to take into account changes to API made in https://git.corp.adobe.com/Commerce-Storefront/storefront-checkout/pull/963 (with new `slots: {Methods: []}` structure) 🚧
+
 The `PaymentMethods` container provides the following configuration options implementing the `PaymentMethodsProps` interface:
 
 <OptionsTable
@@ -33,7 +35,7 @@ export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
 }
 ```
 
-The `slots` parameter is an object within the following fields:
+The `slots` parameter is an object with the following fields:
 
 ### Handlers field
 
@@ -113,39 +115,38 @@ CheckoutProvider.render(PaymentMethods, {
 })($paymentMethods),
 ```
 
-## Example 3: How to customize a payment method using the `slots.Handlers` configuration
+## Example 3: How to customize a payment method using the `slots.Methods` configuration
 
-The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for `PaymentServices` payment method:
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for Payment Services' `CREDIT_CARD` payment method:
 
 ```ts
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
-import CreditCard, { CREDIT_CARD_CODE } from '@dropins/payment-services/containers/CreditCard.js';
-import { getConfigValue } from '../../scripts/configs.js';
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
 import { getUserTokenCookie } from '../../scripts/initializers/index.js';
-import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
-import { render as PaymentServices } from '@dropins/payment-services/render.js';
+import { getConfigValue } from '../../scripts/configs.js';
 
 const $paymentMethods = checkoutFragment.querySelector(
   '.checkout__payment-methods',
 );
 
 const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
-const creditCardFormRef = { current: null }; // Use this to validate and submit the form
 
 CheckoutProvider.render(PaymentMethods, {
   slots: {
-    Handlers: {
-      // Render Payment Services Dropin
-      [CREDIT_CARD_CODE]: (ctx) => {
+    Methods: {
+      [PaymentMethodCode.CREDIT_CARD]: (ctx) => {
         const $content = document.createElement('div');
-        ctx.replaceHTML($content);
 
-        paymentServicesProvider.render(CreditCard, {
+        PaymentServices.render(CreditCard, {
           apiUrl: commerceCoreEndpoint,
           getCustomerToken: getUserTokenCookie,
+          creditCardFormRef: { current: null },
           getCartId: () => ctx.cartId,
-          creditCardFormRef,
         })($content);
+
+        ctx.replaceHTML($content);
       },
     },
   },
