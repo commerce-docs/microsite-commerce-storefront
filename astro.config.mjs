@@ -298,6 +298,7 @@ export default defineConfig({
                   { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
                   { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                   { label: 'Multi-step guest checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+                  { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
                 ]
               },
               { label: 'Release notes', link: '/dropins/checkout/release-notes/' },
