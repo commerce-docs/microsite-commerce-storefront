@@ -103,6 +103,7 @@ export interface PaymentMethodConfig {
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`:
 
 ```ts
+// Checkout Dropin
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
@@ -118,6 +119,7 @@ CheckoutProvider.render(PaymentMethods)($paymentMethods),
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing an icon for `checkmo` and `banktransfer`, and hiding the label for `banktransfer`:
 
 ```ts
+// Checkout Dropin
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
@@ -152,6 +154,7 @@ CheckoutProvider.render(PaymentMethods, {
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for `braintree` payment method indicating it cannot be set to the cart when selected:
 
 ```ts
+// Checkout Dropin
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
@@ -196,54 +199,52 @@ CheckoutProvider.render(PaymentMethods, {
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for the credit card payment option but disabling the rest of payment options from `PaymentServices` payment method:
 
 ```ts
+// Checkout Dropin
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
-import CreditCard, {
-  CREDIT_CARD_CODE,
-  SMART_BUTTONS_CODE,
-  APPLE_PAY_CODE,
-  GOOGLE_PAY_CODE,
-  VAULT_CODE,
-} from '@dropins/storefront-payment-services/containers/CreditCard.js';
-import { render as paymentServicesProvider } from '@dropins/payment-services/render.js';
+// Payment Services Dropin
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServicesProvider } from '@dropins/storefront-payment-services/render.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
 
 const $paymentMethods = checkoutFragment.querySelector(
   '.checkout__payment-methods',
 );
 
-const apiUrl = await getConfigValue('commerce-core-endpoint');
+// Container and component references
+const creditCardFormRef = { current: null };
+
+// Adobe Commerce GraphQL endpoint
+const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
 
 CheckoutProvider.render(PaymentMethods, {
   slots: {
     Methods: {
-      [CREDIT_CARD_CODE]: {
+      [PaymentMethodCode.CREDIT_CARD]: {
         render: (ctx) => {
           const $content = document.createElement('div');
 
-          paymentServicesProvider.render(CreditCard, {
-            apiUrl,
+          PaymentServicesProvider.render(CreditCard, {
+            apiUrl: commerceCoreEndpoint,
             getCustomerToken: getUserTokenCookie,
             getCartId: () => ctx.cartId,
-            onValidation: () => {},
-            onRender: (creditCard) => {
-              paymentServicesCreditCard = creditCard;
-            },
+            creditCardFormRef,
           })($content);
 
           ctx.replaceHTML($content);
         },
       },
-      [SMART_BUTTONS_CODE]: {
+      [PaymentMethodCode.SMART_BUTTONS]: {
         enabled: false,
       },
-      [APPLE_PAY_CODE]: {
+      [PaymentMethodCode.APPLE_PAY]: {
         enabled: false,
       },
-      [GOOGLE_PAY_CODE]: {
+      [PaymentMethodCode.GOOGLE_PAY]: {
         enabled: false,
       },
-      [VAULT_CODE]: {
+      [PaymentMethodCode.VAULT]: {
         enabled: false,
       },
     },
