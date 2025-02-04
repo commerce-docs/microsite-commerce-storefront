@@ -339,6 +339,21 @@ export default defineConfig({
             ]
           },
           {
+            label: 'Payment Services',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/payment-services/' },
+              { label: 'Installation', link: '/dropins/payment-services/installation/' },
+              {
+                label: 'Containers', collapsed: true,
+                items: [
+                  { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                ]
+              },
+              { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
+            ]
+          },
+          {
             label: 'User auth',
             collapsed: true,
             items: [
