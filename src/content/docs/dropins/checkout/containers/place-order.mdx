@@ -16,21 +16,35 @@ The `PlaceOrder` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['disabled', 'boolean', 'No', 'Disables the Place Order button.'],
-    ['handleValidation', 'function', 'No', 'A function that performs validation checks and returns a boolean indicating whether the validation passed. If it returns false, the order will not be placed.'],
+    ['handleValidation', 'function', 'No', 'A function that performs validation checks and returns a boolean indicating whether the validation passed; in case it returns false, the order will not be placed.'],
     ['handlePlaceOrder', 'function', 'Yes', 'An asynchronous function that handles the order placement process. It receives a context object containing the selected payment method code and the cart ID.'],
   ]}
 />
 
 ## Example
 
-The following example renders the `PlaceOrder` container on a checkout page using the Payment Services drop-in component as a payment method. It includes functionality to validate login, shipping, and billing forms before placing an order. If the validation passes, it attempts to place the order and handles any errors.
+The following example renders the `PlaceOrder` container on a checkout page using the `PaymentServices` drop-in component as a payment method. It includes functionality to validate login, shipping, and billing forms before placing an order. If the validation passes, it attempts to place the order and handles any errors.
 
 ```ts
-import * as orderApi from '@dropins/storefront-order/api.js';
+// Checkout Dropin
 import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
+// Order Dropin Modules
+import * as orderApi from '@dropins/storefront-order/api.js';
+
+// Payment Services Dropin
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+
+const LOGIN_FORM_NAME = 'login-form';
+const SHIPPING_FORM_NAME = 'selectedShippingAddress';
+const BILLING_FORM_NAME = 'selectedBillingAddress';
+
 const $placeOrder = checkoutFragment.querySelector('.checkout__place-order');
+
+const shippingFormRef = { current: null };
+const billingFormRef = { current: null };
+const creditCardFormRef = { current: null };
 
 CheckoutProvider.render(PlaceOrder, {
   handleValidation: () => {
@@ -68,7 +82,7 @@ CheckoutProvider.render(PlaceOrder, {
 
     return success;
   },
-  handlePlaceOrder: async ({ code, cartId }) => {
+  handlePlaceOrder: async ({ cartId, code }) => {
     await displayOverlaySpinner();
     try {
       // Payment Services credit card
@@ -93,5 +107,5 @@ CheckoutProvider.render(PlaceOrder, {
       removeOverlaySpinner();
     }
   },
-})($placeOrder)
+})($placeOrder),
 ```
