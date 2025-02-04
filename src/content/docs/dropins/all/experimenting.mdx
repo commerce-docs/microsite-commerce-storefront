@@ -59,13 +59,12 @@ For detailed development information, see https://github.com/hlxsites/aem-boiler
 
 ## Step-by-step
 
-Creating an A/B experiment for a commerce storefront page includes the following tasks:
+Creating an A/B experiment for a Commerce storefront page includes the following tasks:
 
 <Steps>
 1. Create a variant page for the experiment.
 1. Add the experiment to the metadata block of the original page.
 1. Preview the experiment using the AEM Sidekick extension.
-1. Make code changes for experiments, if necessary.
 </Steps>
 
 <Tasks>
@@ -73,10 +72,6 @@ Creating an A/B experiment for a commerce storefront page includes the following
 ### Create a variant page for the experiment
 
 Duplicate the original page and make the changes you need to create a new page with the new content or features you want to use in the experiment. For most content changes, you can add those changes directly to the page/document. Examples include adding any of the [AEM content blocks](https://www.aem.live/developer/block-collection#boilerplate), additional commerce blocks (such as product recommendations) and more.
-
-:::note
-If you want to test changes to the UI labels in the drop-in, you can do that in code as part of the drop-in's initializer. See [Step 4: Code changes for experiments](#code-changes-for-experiments).
-:::
 
 </Task>
 
@@ -101,39 +96,6 @@ Use the AEM Sidekick Preview button to preview the experiment and compare the or
 
 </Task>
 
-<Task>
-### Code changes for experiments
-
-Some experiments, such as creating variants of labels with the `placeholders` file, require code changes to a drop-in component's initializer code. For example, by making the following additions to the default `cart.js` initializer, you can read the metadata block from the cart page and identify when a variant is being delivered, then apply an alternate `placeholders` file.
-
-<Diagram caption="Alternate placeholders file with different labels">![Alternate placeholders file with different labels](@images/PlaceholderChanges.png)</Diagram>
-
-```js
-/* eslint-disable import/no-cycle */
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-cart/api.js';
-import { initializeDropin } from './index.js';
-import { fetchPlaceholders } from '../aem.js';
-
-await initializeDropin(async () => {
-
-  // Identify experiment page (Challenger 1)
-  const isVariantPlaceholder = document.body.classList.contains('experiment-cart001') && document.body.classList.contains('variant-challenger-1');
-
-  // Fetch labels from an alternate placeholders file
-  const labels = await fetchPlaceholders(isVariantPlaceholder ? '/drafts/marketer' : undefined);
-
-  const langDefinitions = {
-    default: {
-      ...labels,
-    },
-  };
-
-  return initializers.mountImmediately(initialize, { langDefinitions });
-})();
-```
-
-</Task>
 </Tasks>
 
 ## Next steps
