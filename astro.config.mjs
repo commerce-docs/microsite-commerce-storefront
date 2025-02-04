@@ -301,7 +301,6 @@ export default defineConfig({
                   { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
                 ]
               },
-              { label: 'Release notes', link: '/dropins/checkout/release-notes/' },
             ],
           },
           {
