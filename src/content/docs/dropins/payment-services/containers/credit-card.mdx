@@ -1,0 +1,57 @@
+---
+title: CreditCard container
+description: Use the CreditCard container to render a credit card form during checkout.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `CreditCard` container allows a shopper to enter credit card details during the checkout process. You can configure it to manage and display the credit card fields.
+
+## CreditCard configurations
+
+The `CreditCard` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['apiUrl', 'string', 'Yes', 'The URL to the Adobe Commerce GraphQL endpoint, such as "https://example.com/graphql".'],
+    ['getCartId', 'function', 'Yes', 'Should return a promise that resolves to the shopper`s cart ID.'],
+    ['getCustomerToken', 'function', 'Yes', 'The credit card container may send GraphQL requests on behalf of the shopper. This requires GraphQL authorization, which can be performed using authorization tokens or session cookies. For token-based authorization, the "getCustomerToken" function should return a customer token as a string, or null for guest checkouts. For session-based authorization, the "getCustomerToken" property must explicitly be set to "null".'],
+    ['creditCardFormRef', 'object', 'Yes', 'Credit card form reference. Initially, { current: null } should be passed. Once rendered, the credit card container will set the "current" property to an { validate: () => boolean; submit: () => Promise<void> } object, which parent containers can use to (programmatically) validate and submit the credit card form.'],
+    ['onSuccess', 'function', 'No', 'Called when the payment flow finishes successfully. This function is not passed any arguments.'],
+    ['onError', 'function', 'No', 'Called when the payment flow was aborted due to an error. The function receives a single argument, {message: string}, containing the reason of error.'],
+  ]}
+/>
+
+## Example
+
+The following example shows how to render and submit a credit card form.
+
+```js
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import { getUserTokenCookie } from '../../scripts/initializers/index.js';
+import { getConfigValue } from '../../scripts/configs.js';
+
+const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
+
+PaymentServices.render(CreditCard, {
+  apiUrl: commerceCoreEndpoint,
+  getCustomerToken: getUserTokenCookie,
+  getCartId: () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
+
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate() {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
+}
+```

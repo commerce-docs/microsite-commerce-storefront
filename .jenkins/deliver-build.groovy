@@ -14,7 +14,7 @@
 micrositeBuildDeliverPipeline(
     repoName: 'microsite-commerce-storefront',
     reviewer: 'jmatthew',
-    runBuildScript: 'node --version && corepack enable && corepack prepare pnpm@latest-9 --activate && pnpm version && pnpm install && pnpm run build:prod',
+    runBuildScript: 'node --version && corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm version && pnpm install && pnpm run build:prod',
     deliverBuildScript: 'cp -r dist/* storefront',
     dockerImage: 'node:20.13.1'
 )
