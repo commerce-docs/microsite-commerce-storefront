@@ -370,6 +370,7 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
+              { label: 'Slots', link: '/dropins/user-auth/slots/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
               { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
             ],
