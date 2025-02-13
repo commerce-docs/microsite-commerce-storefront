@@ -5,7 +5,7 @@ description: Configure the PlaceOrder container to handle the final checkout ste
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `PlaceOrder` container is designed to handle the final step in the checkout process, where the user confirms and places their order. You can configure it to handle the place order action and manage the main slot for the place order button.
+The `PlaceOrder` container is designed to handle the final step in the checkout process, where the user confirms and places their order. You can configure it to disable the button, perform some validations before submit the form, handle the place order action and manage the content slot for the place order button.
 
 ## PlaceOrder configurations
 
@@ -18,10 +18,60 @@ The `PlaceOrder` container provides the following configuration options:
     ['disabled', 'boolean', 'No', 'Disables the Place Order button.'],
     ['handleValidation', 'function', 'No', 'A function that performs validation checks and returns a boolean indicating whether the validation passed; in case it returns false, the order will not be placed.'],
     ['handlePlaceOrder', 'function', 'Yes', 'An asynchronous function that handles the order placement process. It receives a context object containing the selected payment method code and the cart ID.'],
+    ['slots', 'object', 'No', 'Object with the content to be displayed on the container. This slot allows setting the PlaceOrder container content dynamically based on the selected payment method.'],
   ]}
 />
 
-## Example
+These configuration options are implementing the `PlaceOrderProps` interface:
+
+### PlaceOrderProps interface
+
+The `PlaceOrder` container receives an object as parameter which implements the `PlaceOrderProps` interface with the following properties:
+
+```ts
+export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
+  disabled?: boolean;
+  handleValidation?: () => boolean;
+  handlePlaceOrder: (ctx: HandlePlaceOrderContext) => Promise<void>;
+  slots?: {
+    Content?: SlotProps<ContentSlotContext>;
+  };
+}
+```
+
+<li>The `disabled` property set to _true_ forces the Place Order button to be disabled.</li>
+
+<li>The `handleValidation` property is a handler used to perform some validation checks before submitting the checkout forms and placing the order.</li>
+
+<li>The `handlePlaceOrder` property is a handler used to perform some actions related to the order placement process. It is executed when the Place Order button is clicked and if the `handleValidation` returns _true_ (in case it is provided, otherwise it will be executed without validation checks).</li>
+
+The asynchronous function provided accepts a context as parameter which implements the `HandlePlaceOrderContext` interface:
+
+```ts
+export interface HandlePlaceOrderContext {
+  code: string;
+  cartId: string;
+}
+```
+
+<li>The `slots` property is an object containing the following properties:</li>
+
+#### Content property
+
+The `Content` property is a handler used to render the PlaceOrder container content based on the selected payment method code:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface ContentSlotContext {
+  code: string;
+}
+```
+
+## Example 1: Render performing validations and a handler for order placement
 
 The following example renders the `PlaceOrder` container on a checkout page using the `PaymentServices` drop-in component as a payment method. It includes functionality to validate login, shipping, and billing forms before placing an order. If the validation passes, it attempts to place the order and handles any errors.
 
@@ -106,6 +156,52 @@ CheckoutProvider.render(PlaceOrder, {
     } finally {
       removeOverlaySpinner();
     }
+  },
+})($placeOrder),
+```
+
+## Example 2: Render providing explicit content for the button
+
+The following example renders the `PlaceOrder` container on a checkout page providing different text for the Place Order button depending on the payment method selected.
+
+```ts
+// Checkout Dropin
+import PlaceOrder from '@dropins/storefront-checkout/containers/PlaceOrder.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+// Order Dropin Modules
+import * as orderApi from '@dropins/storefront-order/api.js';
+
+const $placeOrder = checkoutFragment.querySelector('.checkout__place-order');
+
+CheckoutProvider.render(PlaceOrder, {
+  handlePlaceOrder: async ({ cartId }) => {
+    orderApi.placeOrder(cartId).catch(console.error);
+  },
+  slots: {
+    Content: (ctx) => {
+      const content = document.createElement('span');
+      ctx.appendChild(content);
+
+      function setContent(currentCtx) {
+        switch (currentCtx.code) {
+          case 'checkmo': {
+            content.textContent = 'Pay Now';
+            break;
+          }
+          case 'banktransfer': {
+            content.textContent = 'Make a transfer';
+            break;
+          }
+          default: {
+            content.textContent = currentCtx.dictionary.Checkout.PlaceOrder.button;
+          }
+        }
+      }
+
+      setContent(ctx);
+      ctx.onChange(setContent);
+    },
   },
 })($placeOrder),
 ```
