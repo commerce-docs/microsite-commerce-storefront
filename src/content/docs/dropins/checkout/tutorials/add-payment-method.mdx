@@ -102,16 +102,14 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
 <Task>
 ### Handle the payment method
 
-Implement the Braintree payment logic within the `onPlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
+Implement the Braintree payment logic within the `handlePlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
 
 ```js
 CheckoutProvider.render(PlaceOrder, {
-  handleValidation: () => {
-    // validation handlers skipped
-  },
-  onPlaceOrder: async (ctx) => {
+  handlePlaceOrder: async (ctx) => {
     await displayOverlaySpinner();
 
+    const cart = ctx.cartId;
     const paymentMethodCode = ctx.code;
 
     try {
@@ -132,7 +130,7 @@ CheckoutProvider.render(PlaceOrder, {
               },
             });
 
-            await checkoutApi.placeOrder();
+            await orderApi.placeOrder(cart);
 
             removeOverlaySpinner();
           });
@@ -141,7 +139,7 @@ CheckoutProvider.render(PlaceOrder, {
         }
 
         default: {
-          await checkoutApi.placeOrder();
+          await orderApi.placeOrder(cart);
           removeOverlaySpinner();
         }
       }
@@ -150,7 +148,7 @@ CheckoutProvider.render(PlaceOrder, {
       throw error;
     }
   },
-})($placeOrder)
+})($placeOrder),
 ```
 </Task>
 
