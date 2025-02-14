@@ -385,6 +385,13 @@ export default defineConfig({
           }]
       },
       {
+        label: 'Merchant',
+        collapsed: true,
+        autogenerate: {
+          directory: '/merchant/'
+        },
+      },
+      {
         label: 'Launch',
         collapsed: true,
         autogenerate: {
