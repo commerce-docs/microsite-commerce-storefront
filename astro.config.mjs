@@ -23,7 +23,7 @@ export default defineConfig({
   image: {
     service: passthroughImageService(),
   },
-  site: 'https://experienceleague.adobe.com',
+  site: 'https://experienceleague.adobe.com/developer/commerce/storefront/',
   base: basePath,
   markdown: {
     remarkPlugins: [remarkBasePathLinks]
