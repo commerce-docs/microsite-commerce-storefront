@@ -1,38 +1,48 @@
-name: Deploy to GitHub Pages
-
-on:
-  workflow_dispatch:
-
+---
+name: Deploy site to Pages
+on: workflow_dispatch
 permissions:
   contents: read
   pages: write
   id-token: write
-
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
-      - name: Use Node.js
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
       - name: Install dependencies
         run: pnpm install
-
-      - name: Build
-        run: pnpm run build:gh-pages
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Build with Astro
+        id: build
+        run: NODE_ENV=github VITE_GITHUB_BASE_PATH=${{ steps.pages.outputs.base_path }} pnpm astro build \
+            --site "${{ steps.pages.outputs.origin }}"
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
         with:
-          personal_token: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          publish_dir: ./dist
+          path: dist
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
