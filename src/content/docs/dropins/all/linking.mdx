@@ -1,0 +1,77 @@
+---
+title: Localizing links
+description: Learn how to programmatically manage localized links.
+---
+
+The best practice for localizing the text in a URL is to maintain this text within the content on Google Drive or Microsoft SharePoint. However, you can use functions defined in the `scripts/scripts.js` file to localize links programmatically.
+
+## decorateLinks
+
+The `decorateLinks` function prepends all your content links (links within Google Drive or Microsoft SharePoint) automatically. It prepends the root path of each language to the link that it receives.
+
+```js
+/**
+ * Decorates links.
+ * @param {Element} main The main element
+ */
+export function decorateLinks(main) {
+  const root = getRootPath();
+  if (root === '/') return;
+  const links = main.querySelectorAll('a');
+
+  links.forEach((link) => {
+    const url = new URL(link.href, window.location.origin);
+    const { pathname } = url;
+
+    // If the link is already localized, do nothing
+    if (pathname.startsWith('//') || pathname.startsWith(root)) return;
+
+    if (
+      link.href.startsWith('/')
+      || link.href.startsWith(window.location.origin)
+    ) {
+      link.href = `${root}${url.pathname.substring(1)}${url.search}${url.hash}`;
+    }
+  });
+}
+```
+
+This function is disabled by default. To enable the function, add it to your main element. The boilerplate handles it as follows within `scripts/scripts/js`.
+
+
+```js
+/**
+ * Decorates the main element.
+ * @param {Element} main The main element
+ */
+// eslint-disable-next-line import/prefer-default-export
+export function decorateMain(main) {
+  // hopefully forward compatible button decoration
+  decorateButtons(main);
+  decorateIcons(main);
+  buildAutoBlocks(main);
+  decorateSections(main);
+  decorateBlocks(main);
+  // decorateLinks(main); // author can decide when to localize links
+}
+```
+
+## rootLink
+
+Use the `rootLink` function within Blocks to localize links on a code-base level, coming from a drop-in for loading scripts, styles, or linking to other pages within a drop-in. This approach is necessary for maintaining consistency across different languages and store views. This function prepends the root path of each language to the link that it receives.
+
+Links within your drop-ins must be localized. To accomplish this, use the `rootLink` function to wrap your links.
+
+```js
+/**
+ * Decorates links.
+ * @param {string} [url] url to be localized
+ */
+export function rootLink(link) {
+  const root = getRootPath().replace(/\/$/, '');
+
+  // If the link is already localized, do nothing
+  if (link.startsWith(root)) return link;
+  return `${root}${link}`;
+}
+```
