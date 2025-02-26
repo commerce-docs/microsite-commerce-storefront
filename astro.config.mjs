@@ -47,14 +47,14 @@ export default defineConfig({
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
     '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
-    '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/get-started/configurations': '/developer/commerce/storefront/discovery/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/styles',
-    '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/references/configurations': '/developer/commerce/storefront/discovery/commerce-configuration',
     '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
     '/dropins/cart/cart-installation': '/developer/commerce/storefront/dropins/cart/installation',
     '/dropins/cart/cart-styles': '/developer/commerce/storefront/dropins/cart/styles',
@@ -121,40 +121,23 @@ export default defineConfig({
       },
       sidebar: [{
         label: 'Get Started',
-        autogenerate: {
-          directory: '/get-started/'
-        }
+        items: [
+          {
+            label: 'Create your storefront',
+            link: '/get-started/'
+          },
+          {
+            label: 'Explore the boilerplate',
+            link: '/get-started/storefront-structure/'
+          },
+          {
+            label: 'Run Lighthouse audits',
+            link: '/get-started/run-lighthouse/'
+          },
+        ]
       },
       {
-        label: 'Discovery',
-        collapsed: true,
-        autogenerate: {
-          directory: '/discovery/'
-        },
-      },
-      {
-        label: 'Setup',
-        collapsed: true,
-        autogenerate: {
-          directory: '/setup/'
-        },
-      },
-      {
-        label: 'Analytics',
-        collapsed: true,
-        autogenerate: {
-          directory: '/analytics/'
-        },
-      },
-      {
-        label: 'SEO',
-        collapsed: true,
-        autogenerate: {
-          directory: '/seo/'
-        },
-      },
-      {
-        label: 'Drop-in components',
+        label: 'Storefront Drop-ins',
         collapsed: true,
         items: [
           {
@@ -401,11 +384,44 @@ export default defineConfig({
           }]
       },
       {
-        label: 'Launch',
-        collapsed: true,
-        autogenerate: {
-          directory: '/launch/'
-        },
+        label: 'Storefront Setup',
+        items: [
+          {
+            label: 'Discovery',
+            collapsed: true,
+            autogenerate: {
+              directory: '/discovery/'
+            },
+          },
+          {
+            label: 'Configuration',
+            collapsed: true,
+            autogenerate: {
+              directory: '/config/'
+            },
+          },
+          {
+            label: 'Analytics',
+            collapsed: true,
+            autogenerate: {
+              directory: '/analytics/'
+            },
+          },
+          {
+            label: 'SEO',
+            collapsed: true,
+            autogenerate: {
+              directory: '/seo/'
+            },
+          },
+          {
+            label: 'Launch',
+            collapsed: true,
+            autogenerate: {
+              directory: '/launch/'
+            },
+          },
+        ]
       },
       {
         label: 'Troubleshooting',
@@ -420,6 +436,10 @@ export default defineConfig({
         autogenerate: {
           directory: '/resources/'
         },
+      },
+      {
+        label: 'Releases',
+        link: '/releases/'
       },
       ],
     }), (await import("@playform/compress")).default({
