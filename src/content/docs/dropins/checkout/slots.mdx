@@ -18,100 +18,100 @@ The slots for the [`PaymentMethods`](/dropins/checkout/containers/payment-method
 
 ```ts
 export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+  /**
+   * @deprecated This property is deprecated and will be removed in future versions.
+   * Please use the "slots.Methods" property instead to provide this information.
+   */
+  setOnChange?: { [key: string]: boolean };
   slots?: {
-    Main?: SlotProps<PaymentMethodsMainSlotContext>;
-    Handlers?: PaymentMethodHandlerSlots;
+    /**
+     * @deprecated This property is deprecated and will be removed in future versions.
+     * Please use the "slots.Methods" property instead to provide this information.
+     */
+    Handlers?: PaymentMethodsHandlerSlot;
+    Methods?: PaymentMethodsSlot;
   };
 }
 ```
 
-### Main
+### Methods
 
-Defines a callback function in the Main slot of the `PaymentMethods` container to extend or replace the list of payment methods.
-
-The Main slot implements the following interface:
+The `Methods` property is an object which implements the `PaymentMethodsSlot` interface:
 
 ```ts
-export interface PaymentMethodsMainSlotContext {
-  replaceHTML: (domElement: HTMLElement) => void;
+export interface PaymentMethodsSlot {
+  [code: string]: PaymentMethodConfig;
 }
 ```
 
-The context object passed to the Main slot includes a `replaceHTML` property that is a callback function.
-
-#### How to override it
-
-The following example shows how to use the Braintree Drop-in UI to render the payment methods section:
-
-```js
-import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
-
-. . .
-
-// Define the modifier for the Payment Methods section
-const renderBraintreePayments = (element, context) => {
-  const { onPlaceOrder } = context;
-  const $content = document.createElement('div');
-
-  $content.innerHTML = '<div id="dropin-container"></div>';
-
-  if (element) {
-    element.innerHTML = $content.innerHTML;
-    braintree.dropin.create({
-      authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
-      container: '#dropin-container',
-    });
-  }
-};
-
-. . .
-
-// Set the function on the slot
-CheckoutProvider.render(PaymentMethods, {
-  slots: {
-    Main: renderBraintreePayments,
-  },
-})(document.getElementById('payment-methods'));
-```
-
-<Aside type="note">
-See the [add payment method](/dropins/checkout/tutorials/add-payment-method/) tutorial for more information.
-</Aside>
-
-### Handlers
-
-Defines an array of payment method codes and their callback functions in the Handlers slot of the PaymentMethods container to provide handlers to be executed in case of being selected.
-
-The Handlers slot implements the following interface:
+It consists on a list of payment method codes providing a set of configurations to customize the payment method. Each payment method will have its own set of configurations implementing the `PaymentMethodConfig` interface:
 
 ```ts
-export interface PaymentMethodHandlerSlots {
-  [code: string]: SlotProps<PaymentMethodHandlerSlotContext>;
+export interface PaymentMethodConfig {
+  displayLabel?: boolean;
+  enabled?: boolean;
+  icon?: string;
+  setOnChange?: boolean;
+  render?: SlotProps<PaymentMethodRenderCtx>;
 }
+```
 
-export interface PaymentMethodHandlerSlotContext {
+Finally the `render` property is a callback function used to render and configure the payment method in case of being selected. The `render` slot receives a context implementing the following `PaymentMethodRenderCtx` interface:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface PaymentMethodRenderCtx {
   cartId: string;
   replaceHTML: (domElement: HTMLElement) => void;
 }
 ```
 
-The context object passed to the Handlers slot includes a `replaceHTML` property that is a callback function and the `cartId` got from the internal state.
+The context object passed to the `render` slot includes a _replaceHTML_ property that is a callback function and the _cartId_ got from the internal state.
 
-#### How to override it
+<Aside type="note">
+Please visit the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container page to learn more about of the properties, and how to override the slots to configure and customize payment methods described on different examples.
+</Aside>
 
-The following example shows how to assign handlers for the check/money Order and bank transfer payment methods:
+<Aside type="note">
+See the [add payment method](/dropins/checkout/tutorials/add-payment-method/) tutorial for more information on how to configure the Braintree payment method.
+</Aside>
 
-```js
-CheckoutProvider.render(PaymentMethods, {
-  slots: {
-    Handlers: {
-      checkmo: (ctx, element) => {
-        element.textContent = 'Selected checkmo as payment method!';
-      },
-      banktransfer: (ctx, element) => {
-        element.textContent = 'Selected banktransfer as payment method!';
-      },
-    },
-  },
-})(document.getElementById('payment-methods'));
+## PlaceOrder slots
+
+The slots for the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container are defined in the `PlaceOrderProps` interface shown below. The slots allow you to set the container content dynamically based on the selected payment method.
+
+```ts
+export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
+  disabled?: boolean;
+  handleValidation?: () => boolean;
+  handlePlaceOrder: (ctx: HandlePlaceOrderContext) => Promise<void>;
+  slots?: {
+    Content?: SlotProps<ContentSlotContext>;
+  };
+}
 ```
+
+### Content
+
+The `Content` property is a callback function used to render the container content. The `Content` slot receives a context implementing the following `ContentSlotContext` interface:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface ContentSlotContext {
+  code: string;
+}
+```
+
+The context object passed to the `Content` slot includes the _code_ got from the selected payment method.
+
+<Aside type="note">
+Please visit the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container page to learn more about of the properties, and how to override the slots to configure and customize the place order button described on different examples.
+</Aside>
