@@ -47,14 +47,14 @@ export default defineConfig({
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
     '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
-    '/get-started/configurations': '/developer/commerce/storefront/discovery/commerce-configuration',
+    '/get-started/configurations': '/developer/commerce/storefront/config/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/styles',
-    '/references/configurations': '/developer/commerce/storefront/discovery/commerce-configuration',
+    '/references/configurations': '/developer/commerce/storefront/config/commerce-configuration',
     '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
     '/dropins/cart/cart-installation': '/developer/commerce/storefront/dropins/cart/installation',
     '/dropins/cart/cart-styles': '/developer/commerce/storefront/dropins/cart/styles',
@@ -137,7 +137,47 @@ export default defineConfig({
         ]
       },
       {
-        label: 'Storefront Drop-ins',
+        label: 'Set up Storefront',
+        items: [
+          {
+            label: 'Discovery',
+            collapsed: true,
+            autogenerate: {
+              directory: '/discovery/'
+            },
+          },
+          {
+            label: 'Configuration',
+            collapsed: true,
+            autogenerate: {
+              directory: '/config/'
+            },
+          },
+          {
+            label: 'Analytics',
+            collapsed: true,
+            autogenerate: {
+              directory: '/analytics/'
+            },
+          },
+          {
+            label: 'SEO',
+            collapsed: true,
+            autogenerate: {
+              directory: '/seo/'
+            },
+          },
+          {
+            label: 'Launch',
+            collapsed: true,
+            autogenerate: {
+              directory: '/launch/'
+            },
+          },
+        ]
+      },
+      {
+        label: 'Customize Drop-ins',
         collapsed: true,
         items: [
           {
@@ -383,46 +423,7 @@ export default defineConfig({
             ]
           }]
       },
-      {
-        label: 'Storefront Setup',
-        items: [
-          {
-            label: 'Discovery',
-            collapsed: true,
-            autogenerate: {
-              directory: '/discovery/'
-            },
-          },
-          {
-            label: 'Configuration',
-            collapsed: true,
-            autogenerate: {
-              directory: '/config/'
-            },
-          },
-          {
-            label: 'Analytics',
-            collapsed: true,
-            autogenerate: {
-              directory: '/analytics/'
-            },
-          },
-          {
-            label: 'SEO',
-            collapsed: true,
-            autogenerate: {
-              directory: '/seo/'
-            },
-          },
-          {
-            label: 'Launch',
-            collapsed: true,
-            autogenerate: {
-              directory: '/launch/'
-            },
-          },
-        ]
-      },
+     
       {
         label: 'Troubleshooting',
         collapsed: true,
