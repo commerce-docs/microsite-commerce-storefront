@@ -440,7 +440,10 @@ export default defineConfig({
       },
       {
         label: 'Releases',
-        link: '/releases/'
+        collapsed: true,
+        autogenerate: {
+          directory: '/releases/'
+        },
       },
       ],
     }), (await import("@playform/compress")).default({
