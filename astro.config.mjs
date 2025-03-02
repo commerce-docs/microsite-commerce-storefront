@@ -118,7 +118,7 @@ export default defineConfig({
         github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop'
       },
       sidebar: [{
-        label: 'Get Started',
+        label: 'Get started',
         items: [
           {
             label: 'Create your storefront',
@@ -131,6 +131,23 @@ export default defineConfig({
           {
             label: 'Run Lighthouse audits',
             link: '/get-started/run-lighthouse/'
+          },
+        ]
+      },
+      {
+        label: 'Tutorials',
+        items: [
+          {
+            label: 'Tutorial 1',
+            link: '/tutorials/'
+          },
+          {
+            label: 'Tutorial 3',
+            link: '/tutorials/'
+          },
+          {
+            label: 'Tutorial 3',
+            link: '/tutorials/'
           },
         ]
       },
@@ -201,6 +218,10 @@ export default defineConfig({
           {
             label: 'Labeling',
             link: '/dropins/labeling/'
+          },
+          {
+            label: 'Linking',
+            link: '/dropins/linking/'
           },
           {
             label: 'Styling',
