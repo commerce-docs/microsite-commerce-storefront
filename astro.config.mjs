@@ -32,13 +32,6 @@ export default defineConfig({
   outDir: './dist',
 
   redirects: {
-    '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
-    '/customize/enrich': '/developer/commerce/storefront/dropins/all/enriching',
-    '/customize/localize': '/developer/commerce/storefront/dropins/all/localizing',
-    '/customize/slots': '/developer/commerce/storefront/dropins/all/extending',
-    '/customize/style': '/developer/commerce/storefront/dropins/all/styling',
-    '/customize': '/developer/commerce/storefront/dropins/all/introduction',
-    '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
     '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/',
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
@@ -63,6 +56,11 @@ export default defineConfig({
     '/dropins/cart/cart-functions': '/developer/commerce/storefront/dropins/cart/functions',
     '/dropins/cart/cart-dictionary': '/developer/commerce/storefront/dropins/cart/dictionary',
     '/dropins/order/order-dictionary': '/developer/commerce/storefront/dropins/order/dictionary',
+    '/setup': '/developer/commerce/storefront/config',
+    '/setup/commerce-configuration': '/developer/commerce/storefront/config/commerce-configuration',
+    '/setup/content-delivery-network': '/developer/commerce/storefront/config/content-delivery-network',
+    '/setup/storefront-compatibility': '/developer/commerce/storefront/config/storefront-compatibility',
+    '/get-started/release': '/developer/commerce/storefront/releases/',
   },
   integrations: [
     tailwind({
