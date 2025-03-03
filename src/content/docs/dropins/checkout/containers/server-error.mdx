@@ -15,14 +15,35 @@ The `ServerError` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['onRetry', 'Function', 'No', 'A function to handle retry actions.'],
-    ['onServerError', 'Function', 'No', 'A function to handle server errors.'],
+    ['autoScroll', 'boolean', 'No', 'Scrolls the element`s ancestor containers such that the error message is visible to the user.'],
+    ['onRetry', 'function', 'No', 'A function to handle retry actions.'],
+    ['onServerError', 'function', 'No', 'A function to handle when there are server errors.'],
   ]}
 />
 
+These configuration options are implementing the `ServerErrorProps` interface:
+
+### ServerErrorProps interface
+
+The `ServerError` container receives an object as parameter which implements the `ServerErrorProps` interface with the following properties:
+
+```ts
+export interface ServerErrorProps {
+  autoScroll?: boolean;
+  onRetry?: () => void;
+  onServerError?: (error: string) => void;
+}
+```
+
+<li>The `autoScroll` property is a boolean to indicate if the page should scroll to the element containing the error message and put the focus on it to be visible to the user.</li>
+
+<li>The `onRetry` property is a handler used to perform actions called when the retry button is clicked.</li>
+
+<li>The `onServerError` property is a handler used to perform actions called when there is a new error message.</li>
+
 ## Example
 
-The following example renders the `ServerError` container on a checkout page. It provides functionality to handle retry actions by removing an error class from the content element and to handle server errors by adding an error class to the content element.
+The following example renders the `ServerError` container on a checkout page. It provides functionality to handle retry actions by removing an error class from the content element and to handle server errors by adding an error class to the content element. The page will scroll to the element containing the error message focusing on it.
 
 ```ts
 import ServerError from '@dropins/storefront-checkout/containers/ServerError.js';
@@ -33,6 +54,7 @@ const $serverError = checkoutFragment.querySelector(
 );
 
 CheckoutProvider.render(ServerError, {
+  autoScroll: true,
   onRetry: () => {
     $content.classList.remove('checkout__content--error');
   },
