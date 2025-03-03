@@ -63,6 +63,11 @@ export default defineConfig({
     '/dropins/cart/cart-functions': '/developer/commerce/storefront/dropins/cart/functions',
     '/dropins/cart/cart-dictionary': '/developer/commerce/storefront/dropins/cart/dictionary',
     '/dropins/order/order-dictionary': '/developer/commerce/storefront/dropins/order/dictionary',
+    '/developer/commerce/storefront/setup/index': '/developer/commerce/storefront/config/index',
+    '/developer/commerce/storefront/setup/commerce-configuration': '/developer/commerce/storefront/config/commerce-configuration',
+    '/developer/commerce/storefront/setup/content-delivery-network': '/developer/commerce/storefront/config/content-delivery-network',
+    '/developer/commerce/storefront/setup/storefront-compatibility': '/developer/commerce/storefront/config/storefront-compatibility',
+    '/developer/commerce/storefront/get-started/release/index': '/developer/commerce/storefront/releases/index',
   },
   integrations: [
     tailwind({
