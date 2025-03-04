@@ -32,6 +32,13 @@ export default defineConfig({
   outDir: './dist',
 
   redirects: {
+    '/customize/design-tokens': '/developer/commerce/storefront/dropins/branding',
+    '/customize/enrich': '/developer/commerce/storefront/dropins/enriching',
+    '/customize/localize': '/developer/commerce/storefront/dropins/localizing',
+    '/customize/slots': '/developer/commerce/storefront/dropins/extending',
+    '/customize/style': '/developer/commerce/storefront/dropins/styling',
+    '/customize': '/developer/commerce/storefront/dropins/introduction',
+    '/dropins': '/developer/commerce/storefront/dropins/introduction',
     '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
     '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/',
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
@@ -39,16 +46,16 @@ export default defineConfig({
     '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
-    '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
-    '/get-started/configurations': '/developer/commerce/storefront/config/commerce-configuration',
+    '/get-started/requirements': '/developer/commerce/storefront/storefront-setup/discovery/architecture',
+    '/get-started/configurations': '/developer/commerce/storefront/storefront-setup/configuration/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/styles',
-    '/references/configurations': '/developer/commerce/storefront/config/commerce-configuration',
-    '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
+    '/references/configurations': '/developer/commerce/storefront/storefront-setup/configuration/commerce-configuration',
+    '/references/requirements': '/developer/commerce/storefront/storefront-setup/discovery/architecture',
     '/dropins/cart/cart-installation': '/developer/commerce/storefront/dropins/cart/installation',
     '/dropins/cart/cart-styles': '/developer/commerce/storefront/dropins/cart/styles',
     '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/containers',
@@ -99,12 +106,10 @@ export default defineConfig({
         Hero: './src/components/overrides/Hero.astro',
         PageTitle: './src/components/overrides/PageTitle.astro',
         SiteTitle: './src/components/overrides/SiteTitle.astro',
-        PageFrame: './src/components/overrides/PageFrame.astro',
         PageSidebar: './src/components/overrides/PageSidebar.astro',
+        PageFrame: './src/components/overrides/PageFrame.astro',
         TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
         Pagination: './src/components/overrides/Pagination.astro',
-        Sidebar: './src/components/overrides/Sidebar.astro',
-        SidebarSublist: './src/components/overrides/SidebarSublist.astro',
         SocialIcons: './src/components/overrides/SocialIcons.astro',
         LinkCard: './src/components/LinkCard.astro',
       },
@@ -118,7 +123,7 @@ export default defineConfig({
         github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop'
       },
       sidebar: [{
-        label: 'Get Started',
+        label: 'Get started',
         items: [
           {
             label: 'Create your storefront',
@@ -135,41 +140,62 @@ export default defineConfig({
         ]
       },
       {
-        label: 'Set up Storefront',
+        label: 'Tutorials',
         items: [
+          {
+            label: 'Tutorial 1',
+            link: '/tutorials/'
+          },
+          {
+            label: 'Tutorial 3',
+            link: '/tutorials/'
+          },
+          {
+            label: 'Tutorial 3',
+            link: '/tutorials/'
+          },
+        ]
+      },
+      {
+        label: 'Storefront Setup',
+        items: [
+          {
+            label: 'Overview',
+            link: '/storefront-setup/'
+          },
           {
             label: 'Discovery',
             collapsed: true,
             autogenerate: {
-              directory: '/discovery/'
+              directory: '/storefront-setup/discovery/'
             },
           },
           {
             label: 'Configuration',
             collapsed: true,
             autogenerate: {
-              directory: '/config/'
+              directory: '/storefront-setup/configuration/'
             },
           },
           {
             label: 'Analytics',
             collapsed: true,
             autogenerate: {
-              directory: '/analytics/'
+              directory: '/storefront-setup/analytics/'
             },
           },
           {
             label: 'SEO',
             collapsed: true,
             autogenerate: {
-              directory: '/seo/'
+              directory: '/storefront-setup/seo/'
             },
           },
           {
             label: 'Launch',
             collapsed: true,
             autogenerate: {
-              directory: '/launch/'
+              directory: '/storefront-setup/launch/'
             },
           },
         ]
@@ -180,47 +206,51 @@ export default defineConfig({
         items: [
           {
             label: 'Overview',
-            link: '/dropins/all/introduction/'
+            link: '/dropins/introduction/'
           },
           // {
           //   label: 'Anatomy',
-          //   link: '/dropins/all/anatomy/'
+          //   link: '/dropins/anatomy/'
           // },
           {
             label: 'Installing',
-            link: '/dropins/all/installing/'
+            link: '/dropins/installing/'
           },
           {
             label: 'Branding',
-            link: '/dropins/all/branding/'
+            link: '/dropins/branding/'
           },
           {
             label: 'Labeling',
-            link: '/dropins/all/labeling/'
+            link: '/dropins/labeling/'
+          },
+          {
+            label: 'Linking',
+            link: '/dropins/linking/'
           },
           {
             label: 'Styling',
-            link: '/dropins/all/styling/'
+            link: '/dropins/styling/'
           },
           {
             label: 'Slots',
-            link: '/dropins/all/slots/'
+            link: '/dropins/slots/'
           },
           {
             label: 'Layouts',
-            link: '/dropins/all/layouts/'
+            link: '/dropins/layouts/'
           },
           {
             label: 'Extending',
-            link: '/dropins/all/extending/'
+            link: '/dropins/extending/'
           },
           {
             label: 'Enriching',
-            link: '/dropins/all/enriching/'
+            link: '/dropins/enriching/'
           },
           {
             label: 'Experimenting',
-            link: '/dropins/all/experimenting/'
+            link: '/dropins/experimenting/'
           },
           {
             label: 'Product details page',
