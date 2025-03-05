@@ -327,11 +327,11 @@ export default defineConfig({
                 label: 'Containers',
                 collapsed: true,
                 items: [
+                  { label: 'Overview', link: '/dropins/checkout/containers/overview/' },
                   { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                   { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                   { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
                   { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
-                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
                   { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
                   { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
                   { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },

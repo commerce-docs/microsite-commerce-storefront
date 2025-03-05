@@ -5,7 +5,7 @@ description: Configure the ShippingMethods container to manage and display avail
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ShippingMethods` container is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
+The `ShippingMethods` is a _conditional_ container. It is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
 
 ## ShippingMethods configurations
 
@@ -15,20 +15,41 @@ The `ShippingMethods` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['hideOnVirtualCart', 'boolean', 'No', 'Hides the component if the cart is virtual.'],
-    ['onCheckoutDataUpdate', 'function', 'No', 'A function that returns a promise. It is called to update the checkout data.'],
+    ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
+    ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
     ['onShippingMethodSelect', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
     ['preSelectedMethod', 'object', 'No', 'Object containing carrierCode and methodCode strings. It represents the pre-selected shipping method.'],
     ['shippingMethodsSlot', 'object', 'No', 'Slot used to provide additional shipping methods.'],
   ]}
 />
 
-## Example
+(*) Properties inherited from `ConditionalContainer`
 
-The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the component for virtual carts and to refresh the cart data when checkout data is updated.
+These configuration options are implementing the `ShippingMethodsProps` interface:
+
+### ShippingMethodsProps interface
+
+The `ShippingMethods` container receives an object as a parameter which implements the `ShippingMethodsProps` interface with the following properties:
 
 ```ts
-import * as cartApi from '@dropins/storefront-cart/api.js';
+export interface ShippingMethodsProps extends HTMLAttributes<HTMLDivElement> {
+  onShippingMethodSelect?: (method: ShippingMethod) => void;
+  preSelectedMethod?: { carrierCode: string; methodCode: string };
+  shippingMethodsSlot?: SlotProps;
+}
+```
+
+<li>The `onShippingMethodSelect` property is a handler used to perform actions called when a shipping method is selected.</li>
+
+<li>The `preSelectedMethod` property is an object containing the pair of _carrierCode_ and _methodCode_ values which defines the pre-selected shipping method to show.</li>
+
+<li>The `shippingMethodsSlot` property is an object used to provide additional shipping methods.</li>
+
+## Example
+
+The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the component for virtual carts, pre-selecting the free shipping in case no shipping method is selected, and showing a message in case the chosen shipping method is `Best Way` (Table Rate).
+
+```ts
 import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
@@ -36,8 +57,13 @@ const $delivery = checkoutFragment.querySelector('.checkout__delivery');
 
 CheckoutProvider.render(ShippingMethods, {
   hideOnVirtualCart: true,
-  onCheckoutDataUpdate: () => {
-    cartApi.refreshCart().catch(console.error);
+  preSelectedMethod: { carrierCode: 'freeshipping', methodCode: 'freeshipping' },
+  onShippingMethodSelect: (method) => {
+    if (method.carrier.code === 'tablerate' && method.code === 'bestway') {
+      const shippingMsg = document.createElement('div');
+      shippingMsg.innerText = 'Shipping method not available for Canary Islands';
+      $delivery.appendChild(shippingMsg);
+    }
   },
 })($delivery),
 ```

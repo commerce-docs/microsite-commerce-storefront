@@ -5,7 +5,7 @@ description: Configure the LoginForm container to handle user email input and va
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `LoginForm` container is designed to handle user email input and validation within the checkout process.
+The `LoginForm` is a _conditional_ container. It is designed to handle user email input and validation within the checkout process.
 
 ## LoginForm configurations
 
@@ -15,23 +15,65 @@ The `LoginForm` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
+    ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
+    ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
     ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
     ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
   ]}
 />
+
+(*) Properties inherited from `ConditionalContainer`
+
+These configuration options are implementing the `LoginFormProps` interface:
+
+### LoginFormProps interface
+
+The `LoginForm` container receives an object as a parameter which implements the `LoginFormProps` interface with the following properties:
+
+```ts
+export interface LoginFormProps extends HTMLAttributes<HTMLFormElement> {
+  onSignInClick?: (email: string) => void;
+  onSignOutClick?: () => void;
+}
+```
+
+<li>The `onSignInClick` property is a handler used to perform actions called when the sign-in button is clicked. It accepts an email as an input parameter.</li>
+
+<li>The `onSignOutClick` property is a handler used to perform actions called when the sign-out button is clicked.</li>
 
 ## Example
 
 The following example renders the `LoginForm` container on a checkout page, which includes rendering the [`AuthCombine`](/dropins/user-auth/containers/auth-combine/) container from the user auth drop-in component in a modal for authentication:
 
 ```ts
+import {
+  ProgressSpinner,
+  provider as UI,
+} from '@dropins/tools/components.js';
+
+import * as authApi from '@dropins/storefront-auth/api.js';
 import AuthCombine from '@dropins/storefront-auth/containers/AuthCombine.js';
 import { render as AuthProvider } from '@dropins/storefront-auth/render.js';
 
 import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
+import { authPrivacyPolicyConsentSlot } from '../../scripts/constants.js';
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $loader = checkoutFragment.querySelector('.checkout__loader');
 const $login = checkoutFragment.querySelector('.checkout__login');
+
+let loader;
+
+const displayOverlaySpinner = async () => {
+  if (loader) return;
+
+  loader = await UI.render(ProgressSpinner, {
+    className: '.checkout__overlay-spinner',
+  })($loader);
+};
 
 CheckoutProvider.render(LoginForm, {
   name: LOGIN_FORM_NAME,
@@ -46,7 +88,11 @@ CheckoutProvider.render(LoginForm, {
           displayOverlaySpinner();
         },
       },
-      signUpFormConfig: {},
+      signUpFormConfig: {
+        slots: {
+          ...authPrivacyPolicyConsentSlot,
+        },
+      },
       resetPasswordFormConfig: {},
     })(signInForm);
 

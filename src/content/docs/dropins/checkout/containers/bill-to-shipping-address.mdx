@@ -5,7 +5,7 @@ description: Configure the BillToShippingAddress container to manage and display
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `BillToShippingAddress` container includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
+The `BillToShippingAddress` is a _conditional_ container. It includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
 
 ## BillToShippingAddress configurations
 
@@ -15,35 +15,60 @@ The `BillToShippingAddress` container provides the following configuration optio
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['hideOnVirtualCart', 'boolean', 'No', 'Hides the container if the cart is virtual.'],
+    ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
+    ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
     ['onChange', 'function', 'No', 'Callback function that is called when the checkbox state changes.'],
   ]}
 />
 
-## Example
+(*) Properties inherited from `ConditionalContainer`
 
-The following example renders the `BillToShippingAddress` container on a checkout page. It includes functionality to hide the component for virtual carts and to handle changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart.
+These configuration options implement the `BillToShippingAddressProps` interface:
+
+### BillToShippingAddressProps interface
+
+The `BillToShippingAddress` container receives an object as a parameter which implements the `BillToShippingAddressProps` interface with the following properties:
 
 ```ts
+export interface BillToShippingAddressProps {
+  onChange?: (checked: boolean) => void;
+}
+```
+
+<li>The `onChange` property is a handler used to perform actions called when the checkbox is checked/unchecked.</li>
+
+## Example
+
+The following example renders the `BillToShippingAddress` container on a checkout page. It includes functionality to hide the empty and/or virtual cart component and handle changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart.
+
+```ts
+import * as checkoutApi from '@dropins/storefront-checkout/api.js';
 import BillToShippingAddress from '@dropins/storefront-checkout/containers/BillToShippingAddress.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
+const DEBOUNCE_TIME = 1000;
+
 const $billToShipping = checkoutFragment.querySelector(
-  '.checkout__bill-to-shipping'
+  '.checkout__bill-to-shipping',
 );
+const $billingForm = checkoutFragment.querySelector(
+  '.checkout__billing-form',
+);
+
+const billingFormRef = { current: null };
 
 CheckoutProvider.render(BillToShippingAddress, {
   hideOnVirtualCart: true,
   onChange: (checked) => {
     $billingForm.style.display = checked ? 'none' : 'block';
+    if (!checked && billingFormRef?.current) {
+      const { formData, isDataValid } = billingFormRef.current;
 
-    if (!checked && billingFormRef.current) {
-      const isDataValid = billingFormRef.current.handleValidationSubmit();
-
-      setAddressOnCart(
-        { data: billingFormRef.current.formData, isDataValid },
-        checkoutApi.setBillingAddress
-      );
+      setAddressOnCart({
+        api: checkoutApi.setBillingAddress,
+        debounceMs: DEBOUNCE_TIME,
+        placeOrderBtn: placeOrder,
+      })({ data: formData, isDataValid });
     }
   },
 })($billToShipping),
