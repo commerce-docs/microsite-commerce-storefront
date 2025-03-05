@@ -1,0 +1,297 @@
+---
+title: TermsAndConditions container
+description: Configure the TermsAndConditions container to manage and display the terms and conditions form during checkout.
+---
+
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The `TermsAndConditions` container is designed to handle and display a checkbox for each agreement. The user must check all the agreements in order to place the order during a guest checkout process. If any of the agreements is unchecked, a validation error will appear when the user clicks on Place Order button.
+
+Please note the `TermsAndConditions` container won't be displayed in case the user has signed-in, because the customer accepted those agreements previously during the registration process.
+
+It will also not be displayed for a specific store view if the component is not properly enabled on it.
+
+## TermsAndConditions configurations
+
+The `TermsAndConditions` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['slots', 'object', 'No', 'Object with a list of agreements to be accepted by the guest user.'],
+  ]}
+/>
+
+These configuration options are implementing the `TermsAndConditionsProps` interface:
+
+### TermsAndConditionsProps interface
+
+The `TermsAndConditions` container receives an object as parameter which implements the `TermsAndConditionsProps` interface with the following properties:
+
+```ts
+export interface TermsAndConditionsProps {
+  slots?: {
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        mode: AgreementMode;
+        name: string;
+        translationId?: string;
+        text?: string;
+      }>;
+    }>;
+  };
+}
+```
+
+<li>The `slots` property is an object containing the following properties:</li>
+
+#### Agreements property
+
+The `Agreements` property is a handler used to render and configure the list of agreements. It provides a context including the method `appendAgreement()` to add a new agreement:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export type SlotMethod<P = any> = (
+  callback: (next: unknown, state: State) => P
+) => void;
+
+export enum AgreementMode {
+  MANUAL = 'manual',
+  AUTO = 'auto',
+}
+
+. . .
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        mode: AgreementMode;
+        name: string;
+        translationId?: string;
+        text?: string;
+      }>;
+    }>;
+. . .
+```
+
+<li>The `appendAgreement` configuration is a callback function which accepts the following attributes to configure an agreement:</li>
+
+  - **`mode`**
+    It defines how the checkbox should be shown:
+    - 'manual' for unchecked; the user should manually check it
+    - 'auto' for checked; the checkbox will appear checked by default
+  - **`name`**
+    It's the agreement identifier
+  - **`translationId`**
+    It references to the translation label containing the text to show on the checkbox. First of all the component tries to find this label into the **`placeholders.json`** file, otherwise it tries to find it as a dictionary entry (i.e.: **`en_US.json`** file)
+  - **`text`**
+    It contains directly the text to show; it accepts HTML with links to a specific page in EDS. In case the `translationId` is provided too, the `text` has more preference and its content will be shown first
+
+## How to enable and configure the Terms and Conditions
+
+This checkout component is configurable on a per-store-view basis on EDS, but a merchant can also rely on the Admin Panel's configuration.
+
+<Tasks>
+
+<Task>
+
+### Enable the component
+
+Merchant has to enable the Terms and Conditions component using the Admin Panel as following:
+
+<Steps>
+
+1. Log in to the Admin Panel dashboard.
+1. Go to the _"Stores"_ menu and click on the _"SETTINGS" > "Configuration"_ option.
+1. Navigate to the _"SALES"_ section and click on the _"Checkout"_ option.
+1. Finally, into the _"Checkout Options"_ enable the _"Enable Terms and Conditions"_ configuration selecting the _**Yes**_ value for the store view desired.
+
+</Steps>
+
+See [Terms and conditions for checkout](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/terms-and-conditions) documentation to enable the terms and conditions using the Admin Panel for more details.
+
+</Task>
+
+<Task>
+
+### Create the agreement document
+
+The agreements pages will be created **ONLY** using _document-based authoring (DBA)_ within EDS instead of using the Admin Panel, allowing the merchant to create and manage as many agreements pages and content as required for each store view and language.
+
+</Task>
+
+<Task>
+
+### Configure the agreement text label
+
+Since the agreements pages will be created using _DBA_ within EDS, the agreements checkbox text should support different links for each store view, directing them to the appropriate agreements pages.
+
+The merchant has two options in order to configure the text to display next to the checkbox:
+
+<Callouts columnCount="1">
+
+1. **Using EDS only**
+
+    The merchant has to configure the checkbox label and text for each agreement into the **`placeholders.xlsx`** EDS file. The checkbox label is directly retrieved from the Boilerplate translations for a specific store-view and language.
+    As reminder, the text to show accepts HTML with links to a specific page in EDS.
+
+    Also the merchant is able to configure the translation for the validation error when the user clicks on `Place Order` button and exist an agreement not checked, using the **"Checkout.TermsAndConditions.error"** label.
+
+    Sample of **placeholders.xlsx** file:
+    ```xlsx
+    "Checkout.TermsAndConditions.label", "I have read, understand, and accept the <a href='/privacy-policy' target='_blank'>Terms of Use, Terms of Sales, Privacy Policy, and Return Policy</a>."
+    "Checkout.TermsAndConditions.terms_label", "By placing an order, you are agreeing to be bound by our <a href="/en/terms-and-conditions" target="_blank">Terms And Conditions</a>."
+    "Checkout.TermsAndConditions.privacy_label", "By placing an order, you acknowledge our <a href="/en/privacy-policy" target="_blank">Privacy Policy</a>."
+    "Checkout.TermsAndConditions.error", "Please accept the Terms and Conditions to continue."
+    ```
+
+    These labels will be used in order to render the `TermsAndConditions` container inside of the **commerce-checkout.js** block file. Some examples will be provided below.
+
+</Callouts>
+
+<Callouts columnCount="1">
+
+2. **Using Admin Panel**
+
+    The merchant has to configure the checkbox text for each agreement using the Admin Panel. As mentioned before, the Admin Panel allows to create configurations per store view level as following:
+
+</Callouts>
+
+<Steps>
+
+1. Log in to the Admin Panel dashboard.
+1. Go to the _"Stores"_ menu and click on the _"SETTINGS" > "Terms and Conditions"_ option.
+1. Click the "Add New Condition" button providing the next Terms and Conditions information:
+
+    - **`Condition Name`**
+      It's the agreement identifier
+    - **`Status`**
+      Attribute to indicate if it's available or not:
+      - 'Enabled'; the agreement will be retrieved by the GraphQL API
+      - 'Disabled'; the agreement won't be retrieved by the GraphQL API
+    - **`Applied`**
+      It defines the mode how the checkbox should be shown:
+      - 'Manually' for unchecked; the user should manually check it
+      - 'Automatically' for checked; the checkbox will appear checked by default
+    - **`Store View`**
+      It defines the scope at store level for this agreement
+    - **`Checkbox Text`**
+      It contains directly the text to show; it accepts HTML with links to a specific page in EDS
+
+    Please note the following attributes have not been mentioned and won't be provided by the merchant because they will be handled in EDS:
+  
+      - **`Content`**
+        As described above, the content for the agreements pages will be created **ONLY** using EDS
+      - **`Show Content as`** (Text, HTML)
+        Not really needed because EDS pages accepts HTML code
+      - **`Content Height (css)`**
+
+    These entries will be used in order to render the `TermsAndConditions` container inside of the **commerce-checkout.js** block file. Some examples will be provided below.
+
+    See [Terms and conditions for checkout](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/terms-and-conditions) documentation to configure the terms and conditions using the Admin Panel for more details.
+
+</Steps>
+
+</Task>
+
+</Tasks>
+
+## Example 1: Render a custom agreement
+
+The following example renders the `TermsAndConditions` container on a checkout page, displaying a custom agreement providing directly the text to show with the link to the EDS page, in the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'custom',
+        mode: 'auto',
+        text: 'Custom terms and conditions <b><a href="/terms-and-conditions">Terms & Conditions</a></b>.',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 2: Render the available agreements labels configured in EDS
+
+The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured into the **`placeholders.xlsx`** EDS file, in the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'default',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'terms',
+        mode: 'manual',
+        translationId: 'Checkout.TermsAndConditions.terms_label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'privacy',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.privacy_label',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 3: Render the available agreements configured in the Admin Panel
+
+The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured in the Admin Panel, in the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import * as checkoutApi from '@dropins/storefront-checkout/api.js';
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: async (ctx) => {
+      const agreements = await checkoutApi.getCheckoutAgreements();
+
+      agreements.forEach((agreement) => {
+        ctx.appendAgreement(() => ({
+          name: agreement.name,
+          mode: agreement.mode,
+          text: agreement.text,
+        }));
+      });
+    },
+  },
+})($termsAndConditions),
+```
