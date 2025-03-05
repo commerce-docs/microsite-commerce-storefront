@@ -1,6 +1,7 @@
 import { z as zod } from 'astro/zod';
 import { defineCollection } from 'astro:content';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
+import { docsLoader, i18nLoader } from "@astrojs/starlight/loaders";
 
 const prerequisiteSchema = zod
   .object({
@@ -35,17 +36,20 @@ const heroSchema = zod
 
 const iframeSchema = zod.boolean().default(false).optional();
 
-const i18n = defineCollection({ type: 'data', schema: i18nSchema() });
+const i18n = defineCollection({ 
+    loader: i18nLoader(), 
+    schema: i18nSchema() 
+});
 const docs = defineCollection({
-  type: 'content',
-  schema: docsSchema({
-    extend: zod.object({
-      iframe: iframeSchema,
-      hero: heroSchema,
-      prerequisites: prerequisiteSchema.optional(),
-      time: zod.string().optional(),
+    loader: docsLoader(),
+    schema: docsSchema({
+        extend: zod.object({
+        iframe: iframeSchema,
+        hero: heroSchema,
+        prerequisites: prerequisiteSchema.optional(),
+        time: zod.string().optional(),
+        }),
     }),
-  }),
 });
 
 export const collections = { docs, i18n };
