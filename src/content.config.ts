@@ -2,6 +2,7 @@ import { z as zod } from 'astro/zod';
 import { defineCollection } from 'astro:content';
 import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
 import { docsLoader, i18nLoader } from "@astrojs/starlight/loaders";
+import { topicSchema } from 'starlight-sidebar-topics/schema'
 
 const prerequisiteSchema = zod
   .object({
@@ -41,15 +42,19 @@ const i18n = defineCollection({
     schema: i18nSchema() 
 });
 const docs = defineCollection({
-    loader: docsLoader(),
-    schema: docsSchema({
-        extend: zod.object({
-        iframe: iframeSchema,
-        hero: heroSchema,
-        prerequisites: prerequisiteSchema.optional(),
-        time: zod.string().optional(),
-        }),
-    }),
+  loader: docsLoader(),
+  schema: docsSchema(
+    {
+      extend: zod.object(
+        {
+          iframe: iframeSchema,
+          hero: heroSchema,
+          prerequisites: prerequisiteSchema.optional(),
+          time: zod.string().optional(),
+        }
+      ).merge(topicSchema),
+    }
+  ),
 });
 
 export const collections = { docs, i18n };
