@@ -9,7 +9,7 @@ import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-To integrate third-party payment providers, you can use the extensibility features provided by the checkout drop-in component. This component allows you to customize the list of payment methods shown during the checkout process using slots.
+To integrate third-party payment providers, you can use the extensibility features provided by the Checkout drop-in component. This component allows you to customize the list of payment methods shown during the checkout process using slots.
 
 ## Step-by-step
 
@@ -43,7 +43,7 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
   Use the following `script` tag to add the Braintree client SDK to an HTML file.
 
   ```html
-  <script src="https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js"></script>
+  <script src="https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.min.js"></script>
   ```
   </TabItem>
   <TabItem label="Import declaration" icon="seti:javascript">
@@ -51,7 +51,7 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
   Use the following `import` declaration to add the Braintree client SDK directly to the `commerce-checkout.js` block file.
 
   ```js
-  import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.js';
+  import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.min.js';
   ```
   </TabItem>
 </Tabs>
@@ -71,30 +71,30 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
 
    ```js
    CheckoutProvider.render(PaymentMethods, {
-     setOnChange: {
-       braintree: false,
-     },
      slots: {
-       Handlers: {
-         braintree: async (ctx) => {
-           const container = document.createElement('div');
+       Methods: {
+         braintree: {
+           setOnChange: false,
+           render: async (ctx) => {
+             const container = document.createElement('div');
 
-           window.braintree.dropin.create({
-             authorization: 'sandbox_g42y39zw_348pk9cgf3bgyw2b',
-             container,
-           }, (err, dropinInstance) => {
-             if (err) {
-               console.error(err);
-             }
+             window.braintree.dropin.create({
+               authorization: 'sandbox_cstz6tw9_sbj9bzvx2ngq77n4',
+               container,
+             }, (err, dropinInstance) => {
+               if (err) {
+                 console.error(err);
+               }
 
-             braintreeInstance = dropinInstance;
-           });
+               braintreeInstance = dropinInstance;
+             });
 
-           ctx.replaceHTML(container);
+             ctx.replaceHTML(container);
+           },
          },
        },
      },
-   })($paymentMethods)
+   })($paymentMethods),
    ```
 </Steps>
 </Task>
@@ -102,20 +102,14 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
 <Task>
 ### Handle the payment method
 
-Implement the Braintree payment logic within the `onPlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
+Implement the Braintree payment logic within the `handlePlaceOrder` handler of the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container. This involves processing the payment using the Braintree [nonce](https://developer.paypal.com/braintree/docs/guides/payment-method-nonces).
 
 ```js
 CheckoutProvider.render(PlaceOrder, {
-  handleValidation: () => {
-    // validation handlers skipped
-  },
-  onPlaceOrder: async (ctx) => {
+  handlePlaceOrder: async ({ cartId, code }) => {
     await displayOverlaySpinner();
-
-    const paymentMethodCode = ctx.code;
-
     try {
-      switch (paymentMethodCode) {
+      switch (code) {
         case 'braintree': {
           braintreeInstance.requestPaymentMethod(async (err, payload) => {
             if (err) {
@@ -132,25 +126,24 @@ CheckoutProvider.render(PlaceOrder, {
               },
             });
 
-            await checkoutApi.placeOrder();
-
-            removeOverlaySpinner();
+            await orderApi.placeOrder(cartId);
           });
 
           break;
         }
 
         default: {
-          await checkoutApi.placeOrder();
-          removeOverlaySpinner();
+          await orderApi.placeOrder(cartId);
         }
       }
     } catch (error) {
-      removeOverlaySpinner();
+      console.error(error);
       throw error;
+    } finally {
+      await removeOverlaySpinner();
     }
   },
-})($placeOrder)
+})($placeOrder),
 ```
 </Task>
 

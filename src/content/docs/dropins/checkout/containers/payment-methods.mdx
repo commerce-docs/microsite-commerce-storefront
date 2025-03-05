@@ -5,7 +5,7 @@ description: Configure the PaymentMethods container to manage and display availa
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `PaymentMethods` container is designed to manage and display the available payment methods during the checkout process. You can configure it to handle the selection of payment methods, display the payment method handlers, and manage the main slot for the payment methods.
+The `PaymentMethods` is a _conditional_ container. It is designed to manage and display the available payment methods during the checkout process. You can configure it to decide whether the container should not set the payment method automatically when it is selected, display or not a payment method, show an icon beside of the label, display or not the label and finally provide a specific handler to render the payment method.
 
 ## PaymentMethods configurations
 
@@ -15,22 +15,243 @@ The `PaymentMethods` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['slots.Main', 'SlotProps<PaymentMethodsMainSlotContext>', 'No', 'The main slot for the payment methods.'],
-    ['slots.Handlers', 'PaymentMethodHandlerSlots', 'No', 'The handlers for different payment methods.']
+    ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
+    ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
+    ['setOnChange', 'object', 'No', '@deprecated Object with a list of "[key: string]: boolean". Only if a payment method is specifically set to false, the container will not automatically set the payment method to the cart when selected. By default, the container takes an empty object. Please note this property is deprecated and will be removed in future versions.'],
+    ['slots', 'object', 'No', 'Object with a list of configurations for existing payment methods.'],
   ]}
 />
 
-## Example
+(*) Properties inherited from `ConditionalContainer`
+
+These configuration options are implementing the `PaymentMethodsProps` interface:
+
+### PaymentMethodsProps interface
+
+The `PaymentMethods` container receives an object as parameter which implements the `PaymentMethodsProps` interface with the following properties:
+
+```ts
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+  /**
+   * @deprecated This property is deprecated and will be removed in future versions.
+   * Please use the "slots.Methods" property instead to provide this information.
+   */
+  setOnChange?: { [key: string]: boolean };
+  slots?: {
+    /**
+     * @deprecated This property is deprecated and will be removed in future versions.
+     * Please use the "slots.Methods" property instead to provide this information.
+     */
+    Handlers?: PaymentMethodsHandlerSlot;
+    Methods?: PaymentMethodsSlot;
+  };
+}
+```
+
+<li>The `setOnChange` property has been _deprecated_ and will be removed in future versions. It has been replaced by the following one: `slots.Methods.<payment-method-code>.setOnChange`.</li>
+
+<li>The `slots` property is an object containing the following properties:</li>
+
+#### Handlers property (_@deprecated_)
+
+The `Handlers` property has been _deprecated_ and will be removed in future versions. It has been replaced by the following one: `slots.Methods.<payment-method-code>.render`.
+
+#### Methods property
+
+The `Methods` property is an object which implements the `PaymentMethodsSlot` interface:
+
+```ts
+export interface PaymentMethodsSlot {
+  [code: string]: PaymentMethodConfig;
+}
+```
+
+It consists on a list of payment method codes providing a set of configurations to customize the payment method.
+
+### PaymentMethodConfig interface
+
+Each payment method will have its own set of configurations implementing the `PaymentMethodConfig` interface:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export interface PaymentMethodRenderCtx {
+  cartId: string;
+  replaceHTML: (domElement: HTMLElement) => void;
+}
+
+export interface PaymentMethodConfig {
+  displayLabel?: boolean;
+  enabled?: boolean;
+  icon?: string;
+  setOnChange?: boolean;
+  render?: SlotProps<PaymentMethodRenderCtx>;
+}
+```
+
+<li>The `displayLabel` configuration hides the payment method label (for instance, if you only want to display the icon).</li>
+
+<li>The `enabled` configuration allows merchants to individually hide payment methods filtering them from the available payment methods list (for instance, it is useful when a payment provider has enabled a payment method in the backend, which is configured with more than one payment option and you don't want to display one of them).</li>
+
+<li>The `icon` configuration specifies the name of the icon to be shown beside of the label. The icon name must exist within the list of available icons defined on [Elsie](https://elsie.dev/docs/?path=/story/components-icon--all-icons).</li>
+
+<li>The `setOnChange` configuration sets the payment method automatically when it is selected. Only if a payment method is specifically set to _false_, the container will not automatically set the payment method to the cart when selected (for instance, if a payment method needs more information obtained during the place order action).</li>
+
+<li>The `render` configuration is a handler used to render and configure the payment method.</li>
+
+## Example 1: Render the available payment methods without customization
 
 The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`:
 
 ```ts
+// Checkout Dropin
 import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
 import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
 
 const $paymentMethods = checkoutFragment.querySelector(
-  '.checkout__payment-methods'
+  '.checkout__payment-methods',
 );
 
 CheckoutProvider.render(PaymentMethods)($paymentMethods),
+```
+
+## Example 2: Render with the `displayLabel` and `icon` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing an icon for `checkmo` and `banktransfer`, and hiding the label for `banktransfer`:
+
+```ts
+// Checkout Dropin
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      checkmo: {
+        icon: 'Wallet',
+        render: (ctx) => {
+          const $content = document.createElement('div');
+
+          $content.innerText = 'Pay later with Checkmo config handler';
+          ctx.replaceHTML($content);
+        },
+      },
+      banktransfer: {
+        displayLabel: false,
+        icon: 'Card',
+      },
+    },
+  },
+})($paymentMethods),
+
+```
+
+## Example 3: Render with the `setOnChange` and `render` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for `braintree` payment method indicating it cannot be set to the cart when selected:
+
+```ts
+// Checkout Dropin
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+import 'https://js.braintreegateway.com/web/dropin/1.43.0/js/dropin.min.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+let braintreeInstance;
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      braintree: {
+        setOnChange: false,
+        render: async (ctx) => {
+          const container = document.createElement('div');
+
+          window.braintree.dropin.create({
+            authorization: 'sandbox_cstz6tw9_sbj9bzvx2ngq77n4',
+            container,
+          }, (err, dropinInstance) => {
+            if (err) {
+              console.error(err);
+            }
+
+            braintreeInstance = dropinInstance;
+          });
+
+          ctx.replaceHTML(container);
+        },
+      },
+    },
+  },
+})($paymentMethods),
+
+```
+
+## Example 4: Render with the `enabled` configurations
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying the available payment methods in the element with the class `checkout__payment-methods`, providing a specific handler for the credit card payment option but disabling the rest of payment options from `PaymentServices` payment method:
+
+```ts
+// Checkout Dropin
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+// Payment Services Dropin
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServicesProvider } from '@dropins/storefront-payment-services/render.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+// Container and component references
+const creditCardFormRef = { current: null };
+
+// Adobe Commerce GraphQL endpoint
+const commerceCoreEndpoint = await getConfigValue('commerce-core-endpoint');
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      [PaymentMethodCode.CREDIT_CARD]: {
+        render: (ctx) => {
+          const $content = document.createElement('div');
+
+          PaymentServicesProvider.render(CreditCard, {
+            apiUrl: commerceCoreEndpoint,
+            getCustomerToken: getUserTokenCookie,
+            getCartId: () => ctx.cartId,
+            creditCardFormRef,
+          })($content);
+
+          ctx.replaceHTML($content);
+        },
+      },
+      [PaymentMethodCode.SMART_BUTTONS]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.APPLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.GOOGLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.VAULT]: {
+        enabled: false,
+      },
+    },
+  },
+})($paymentMethods),
 ```

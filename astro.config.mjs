@@ -47,14 +47,14 @@ export default defineConfig({
     '/faq': '/developer/commerce/storefront/troublshooting/faq',
     '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
     '/get-started/requirements': '/developer/commerce/storefront/discovery/architecture',
-    '/get-started/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/get-started/configurations': '/developer/commerce/storefront/config/commerce-configuration',
     '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
     '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
     '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
     '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
     '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/slots',
     '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/styles',
-    '/references/configurations': '/developer/commerce/storefront/setup/commerce-configuration',
+    '/references/configurations': '/developer/commerce/storefront/config/commerce-configuration',
     '/references/requirements': '/developer/commerce/storefront/discovery/architecture',
     '/dropins/cart/cart-installation': '/developer/commerce/storefront/dropins/cart/installation',
     '/dropins/cart/cart-styles': '/developer/commerce/storefront/dropins/cart/styles',
@@ -63,6 +63,11 @@ export default defineConfig({
     '/dropins/cart/cart-functions': '/developer/commerce/storefront/dropins/cart/functions',
     '/dropins/cart/cart-dictionary': '/developer/commerce/storefront/dropins/cart/dictionary',
     '/dropins/order/order-dictionary': '/developer/commerce/storefront/dropins/order/dictionary',
+    '/setup': '/developer/commerce/storefront/config',
+    '/setup/commerce-configuration': '/developer/commerce/storefront/config/commerce-configuration',
+    '/setup/content-delivery-network': '/developer/commerce/storefront/config/content-delivery-network',
+    '/setup/storefront-compatibility': '/developer/commerce/storefront/config/storefront-compatibility',
+    '/get-started/release': '/developer/commerce/storefront/releases/',
   },
   integrations: [
     tailwind({
@@ -121,40 +126,63 @@ export default defineConfig({
       },
       sidebar: [{
         label: 'Get Started',
-        autogenerate: {
-          directory: '/get-started/'
-        }
+        items: [
+          {
+            label: 'Create your storefront',
+            link: '/get-started/'
+          },
+          {
+            label: 'Explore the boilerplate',
+            link: '/get-started/storefront-structure/'
+          },
+          {
+            label: 'Run Lighthouse audits',
+            link: '/get-started/run-lighthouse/'
+          },
+        ]
       },
       {
-        label: 'Discovery',
-        collapsed: true,
-        autogenerate: {
-          directory: '/discovery/'
-        },
+        label: 'Set up Storefront',
+        items: [
+          {
+            label: 'Discovery',
+            collapsed: true,
+            autogenerate: {
+              directory: '/discovery/'
+            },
+          },
+          {
+            label: 'Configuration',
+            collapsed: true,
+            autogenerate: {
+              directory: '/config/'
+            },
+          },
+          {
+            label: 'Analytics',
+            collapsed: true,
+            autogenerate: {
+              directory: '/analytics/'
+            },
+          },
+          {
+            label: 'SEO',
+            collapsed: true,
+            autogenerate: {
+              directory: '/seo/'
+            },
+          },
+          {
+            label: 'Launch',
+            collapsed: true,
+            autogenerate: {
+              directory: '/launch/'
+            },
+          },
+        ]
       },
       {
-        label: 'Setup',
-        collapsed: true,
-        autogenerate: {
-          directory: '/setup/'
-        },
-      },
-      {
-        label: 'Analytics',
-        collapsed: true,
-        autogenerate: {
-          directory: '/analytics/'
-        },
-      },
-      {
-        label: 'SEO',
-        collapsed: true,
-        autogenerate: {
-          directory: '/seo/'
-        },
-      },
-      {
-        label: 'Drop-in components',
+        label: 'Customize Drop-ins',
         collapsed: true,
         items: [
           {
@@ -280,11 +308,11 @@ export default defineConfig({
                 label: 'Containers',
                 collapsed: true,
                 items: [
+                  { label: 'Overview', link: '/dropins/checkout/containers/overview/' },
                   { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                   { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                   { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
                   { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
-                  { label: 'OrderConfirmationHeader', link: '/dropins/checkout/containers/order-confirmation-header/' },
                   { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
                   { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
                   { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
@@ -342,6 +370,21 @@ export default defineConfig({
             ]
           },
           {
+            label: 'Payment Services',
+            collapsed: true,
+            items: [
+              { label: 'Overview', link: '/dropins/payment-services/' },
+              { label: 'Installation', link: '/dropins/payment-services/installation/' },
+              {
+                label: 'Containers', collapsed: true,
+                items: [
+                  { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                ]
+              },
+              { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
+            ]
+          },
+          {
             label: 'User auth',
             collapsed: true,
             items: [
@@ -359,6 +402,7 @@ export default defineConfig({
                   { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                 ]
               },
+              { label: 'Slots', link: '/dropins/user-auth/slots/' },
               { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
               { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
             ],
@@ -417,6 +461,13 @@ export default defineConfig({
         collapsed: true,
         autogenerate: {
           directory: '/resources/'
+        },
+      },
+      {
+        label: 'Releases',
+        collapsed: true,
+        autogenerate: {
+          directory: '/releases/'
         },
       },
       ],
