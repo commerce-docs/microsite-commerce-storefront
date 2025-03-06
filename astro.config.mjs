@@ -34,13 +34,13 @@ export default defineConfig({
   outDir: './dist',
 
   redirects: {
-    '/customize/design-tokens': '/developer/commerce/storefront/dropins/branding',
-    '/customize/enrich': '/developer/commerce/storefront/dropins/enriching',
-    '/customize/localize': '/developer/commerce/storefront/dropins/localizing',
-    '/customize/slots': '/developer/commerce/storefront/dropins/extending',
-    '/customize/style': '/developer/commerce/storefront/dropins/styling',
-    '/customize': '/developer/commerce/storefront/dropins/introduction',
-    '/dropins': '/developer/commerce/storefront/dropins/introduction',
+    '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
+    '/customize/enrich': '/developer/commerce/storefront/dropins/all/enriching',
+    '/customize/localize': '/developer/commerce/storefront/dropins/all/localizing',
+    '/customize/slots': '/developer/commerce/storefront/dropins/all/extending',
+    '/customize/style': '/developer/commerce/storefront/dropins/all/styling',
+    '/customize': '/developer/commerce/storefront/dropins/all/introduction',
+    '/dropins': '/developer/commerce/storefront/dropins/all/introduction',
     '/dropins/cart/cart-introduction': '/developer/commerce/storefront/dropins/cart',
     '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/',
     '/dropins/checkout/checkout-introduction': '/developer/commerce/storefront/dropins/checkout',
@@ -429,23 +429,27 @@ export default defineConfig({
           },
           {
             label: 'Merchants',
-            link: '/merchants/tutorials/',
+            link: '/merchants/tutorials/summit-lab-320/',
             icon: 'seti:svg',
             items: [
               {
-                label: 'Tutorials',
+                label: 'Summit Lab 320',
                 items: [
                   {
-                    label: 'Create product page',
-                    link: '/merchants/tutorials/'
+                    label: 'Introduction',
+                    link: '/merchants/tutorials/summit-lab-320/'
                   },
                   {
-                    label: 'Create product campaign',
-                    link: '/merchants/tutorials/create-product-campaign/'
+                    label: 'Lesson 1: Create product page',
+                    link: '/merchants/tutorials/summit-lab-320/create-product-page/'
                   },
                   {
-                    label: 'Create an experiment',
-                    link: '/merchants/tutorials/create-experiment/'
+                    label: 'Lesson 2: Create campaign',
+                    link: '/merchants/tutorials/summit-lab-320/create-product-campaign/'
+                  },
+                  {
+                    label: 'Lesson 3: Create experiment',
+                    link: '/merchants/tutorials/summit-lab-320/create-experiment/'
                   },
                 ],
               },
