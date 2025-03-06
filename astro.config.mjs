@@ -206,6 +206,10 @@ export default defineConfig({
             link: '/dropins/all/labeling/'
           },
           {
+            label: 'Linking',
+            link: '/dropins/all/linking/'
+          },
+          {
             label: 'Styling',
             link: '/dropins/all/styling/'
           },
@@ -429,7 +433,23 @@ export default defineConfig({
             ]
           }]
       },
-     
+      {
+        label: 'Merchant',
+        collapsed: true,
+        items: [
+          {
+            label: 'Multi-store setup',
+            link: '/merchant/multistore/',
+          },
+        ],
+      },
+      {
+        label: 'Launch',
+        collapsed: true,
+        autogenerate: {
+          directory: '/launch/'
+        },
+      },
       {
         label: 'Troubleshooting',
         collapsed: true,
