@@ -421,6 +421,13 @@ export default defineConfig({
                 autogenerate: { directory: 'troubleshooting' }
               },
               {
+                label: 'Resources',
+                collapsed: true,
+                autogenerate: {
+                  directory: '/resources/'
+                },
+              },
+              {
                 label: 'Releases',
                 collapsed: true,
                 autogenerate: { directory: 'releases' }
