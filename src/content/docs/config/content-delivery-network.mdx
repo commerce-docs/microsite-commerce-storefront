@@ -324,6 +324,51 @@ As an example, consider one possible case where this applies with login referrer
 The exact cases where this needs to be performed, and the steps required, depend on the implementation of the Luma Bridge as well as customizations of Adobe Commerce.
 :::
 
+### GeoIP
+
+The following example redirects users to a country-specific path based on their IP address. It uses the `country_to_store` table, which is a built-in Fastly table that maps country codes to store codes. You must install the Fastly CDN [extension](https://commercemarketplace.adobe.com/fastly-magento2.html) or [module](https://github.com/fastly/fastly-magento2) to use this example.
+
+Add the following to the `recv` snippet:
+
+```txt
+# Enable the GeoIP feature, allowing the VCL to use GeoIP data for various purposes, such as redirecting users based on their geographic location.
+
+pragma optional_param geoip_opt_in true;
+
+# Snippet GeoIpRedirect
+ declare local var.countryCode STRING;
+ 
+# Only apply redirection if the URL has no country-specific path  
+
+# This snippet performs a GeoIP-based redirection. It checks if the request is made to the
+# "example.com" domain and if the URL path is either the root ("/") or empty. If these conditions are met, it
+# retrieves the user's country code based on their IP address using the `client.geo.country_code` variable.
+# It then looks up the corresponding store code from the `country_to_store` table. The user is redirected
+# to the appropriate country-specific URL.
+
+if ((req.http.host ~ "example.com") && ((req.url.path == "/") || (req.url.path == "")))  {
+      # Retrieve the user's country based on IP address
+      set var.countryCode = table.lookup(country_to_store, client.geo.country_code,"us");
+      set req.http.X-Redirect-Url = "https://" + req.http.host + "/" + var.countryCode;
+      if (req.url.qs != "") {
+                   set req.http.X-Redirect-Url = req.http.X-Redirect-Url + "?" + req.url.qs;
+      }
+        error 701;
+   }
+# End of Snippet GeoIpRedirect
+
+# This table maps country codes to store codes. It is used in the GeoIP redirect logic to determine
+# the appropriate store URL based on the user's geographic location.
+
+table country_to_store {
+    "FR": "fr",
+    "AU": "au",
+    "NZ": "nz",
+    "CA": "ca",
+    ...
+}
+```
+
 ### Proxy RUM through the origin to avoid a TLS handshake
 
 Add a new backend called `hlx_rum` that points to `rum.hlx.page`. Also, change the [Real Use Monitoring (RUM)](https://www.aem.live/docs/rum) implementation in `aem.js` to use a relative path to the origin instead of `rum.hlx.page`.
