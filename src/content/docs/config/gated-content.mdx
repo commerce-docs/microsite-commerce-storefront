@@ -8,6 +8,7 @@ import OptionsTable from '@components/OptionsTable.astro';
 import Callouts from '@components/Callouts.astro';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
+import Aside from '@components/Aside.astro';
 
 You might want to restrict access to certain content, such as videos, images, or pages on your site that is not managed by Adobe Commerce. This content resides on the edge and cannot be controlled using customer segments or other Commerce functionality. You can restrict access to these non-Commerce assets using gated content. 
 
@@ -15,72 +16,36 @@ You might want to restrict access to certain content, such as videos, images, or
 
 There several key concepts to know to implement this feature.
 
-* **Authentication**: The customer must be logged in.
+* **Authentication**: The customer must be logged in. Gated content cannot be accessed by anonymous users.
 
-* **Define gated content**: In most cases, you will define the path to the gated content in the `header` or `header.xlsx` file. This file contains a list of URLs that are gated and defines a key/value pair for your custom code to evaluate.You can also hardcode URLs in your custom code, but this information is easier to maintain in the spreadsheet. The spreadsheet contains three columns:
+* **Define the gated content**: In most cases, you will define the path to the gated content in the `header` or `header.xlsx` file. This file contains a list of URLs that are gated and defines a key/value pair for your custom code to evaluate. (You can also hardcode URLs in your custom code, but this information is easier to maintain in the spreadsheet.) The spreadsheet contains three columns:
 
   * `url` - The path to the gated content. Wildcards are supported.
-  * `key` - Any key that you want to use to evaluate the value. This key is passed to your custom code.
+  * `key` - Any key that you want to use to evaluate whether the content is gated.
   * `value` - `True` or other value to be evaluated.
 
-* **Create custom code**. CDNs typically do not contain code that allows you to evaluate whether a customer is authenticated. As a result, you must use an auxiliary service, such as Fastly Compute, Amazon Lambda, or Cloudflare workers to perform the evaluation. This code must be able to send a GraphQL request to Adobe Commerce to determine if the customer is authenticated. The request can be any query or mutation that requires a customer token.
-
-Gated content will be displayed only if it is defined as such in the spreadsheet and the customer is authenticated. Gated content is never displayed for guest shoppers or if the customer token is invalid or expired
-
-
-When a request is made to one of these URLs, the system checks if the customer is authenticated. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a login page.
-Update the `header` or `header.xlsx` file to specify the path to the gated content. 
-
-
-  You can [download a sample solution](https://www.example.com) that provides an outline of how to implement this using Fastly Compute. This sample solution is not supported by Adobe.
+* **Create custom code**. CDNs typically do not provide the ability to evaluate whether a user is authenticated. As a result, you must implement an auxiliary service, such as Fastly Compute, Amazon Lambda, or Cloudflare workers to perform the evaluation. This code must be able to send an authentication request to Adobe Commerce and process the result. The request is typically a simple GraphQL query, such as the `customer` query, but you can use any query or mutation that checks if the customer is authenticated.
 
 ## Workflow
 
-The following diagram illustrates the workflow for gated content when the request passes authentication.
+The following diagram illustrates the workflow when gated content is enabled.
 
-<Diagram caption="Authorized gated content">
-![Authorized gated content](@images/authorized-gated-content.png)
+<Diagram caption="Gated content workflow">
+![Gated content workflow](@images/gated-content.svg)
 </Diagram>
 
-The shopper requests any page on the storefront. The storefront forwards the request to the CDN (Fastly, in this case), which in turn 
+The shopper requests any page on the storefront. The storefront sends the request to the CDN (Fastly, in this case), which in turn routes the request to Edge Delivery Service. EDS inserts the header defined in the key column of the `header` or `header.xlsx` file. The Fastly Compute code checks if the requested URL is in the list of gated content. If the URL is not in the list, the request is processed normally. 
 
+If the requested page is gated, the Fastly Compute code uses the customer token to construct an authorization request to Adobe Commerce. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a fallback page, such as a login page.
 
 The system checks if the requested URL is in the list of gated content. If the URL is not in the list, the request is processed normally. If the URL is in the list, the system checks if the customer is authenticated. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a login page.
 
-The following diagram illustrates the workflow for gated content when the request fails authentication.
+## Example implementation
 
-<Diagram caption="Unauthorized gated content">
-![Unauthorized gated content](@images/unauthorized-gated-content.png)
-</Diagram>
+You can [download a sample solution](/config/fastly-compute-sample.zip) that provides an outline of how to implement gated content using Fastly Compute. This sample is based on Fastly's [Default starter kit for JavaScript](https://www.fastly.com/documentation/solutions/starters/compute-starter-kit-javascript-default/)
 
+<Aside type="note" title="Important">
+  Adobe does not support this example implementation. It is provided as a reference only.
+</Aside>
 
-
-
-
-The index.js file contains a Fastly Compute@Edge script that handles incoming HTTP requests and performs user authentication for specific protected URLs. Here's a breakdown of its contents:
-
-Imports:
-
-env from fastly:env for environment variables.
-pass and fetch from fastly:experimental for request handling and making HTTP requests.
-Event Listener:
-
-An event listener for the fetch event that calls the handleRequest function to process the request.
-handleRequest Function:
-
-Asynchronously handles incoming requests.
-Checks if the request URL path is in a predefined list of protected URLs.
-If the URL is protected, it calls the validateUser function to validate the user's authentication.
-If the user is validated, it allows the request to pass through.
-If validation fails, it redirects the user to a login page.
-If the URL is not protected, it processes the request normally.
-validateUser Function:
-
-Asynchronously validates the user by making an external API call to a specified validation URL.
-Sends a POST request with the original request's URL and authorization headers.
-Returns the response from the validation API.
-If the validation request fails, it logs the error and redirects the user to the login page.
-Overall, the script ensures that only authenticated users can access certain protected URLs by validating their authentication status through an external API.
-
-When a request is made to one of these URLs, the system checks if the customer is authenticated. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a login page.
-Update the `header` or `header.xlsx` file to specify the path to the gated content. 
+The README provides an overview of the solution and how to install the starter kit. The `index.js` file contains a Fastly Compute@Edge script that handles incoming HTTP requests and performs user authentication for specific protected URLs.
