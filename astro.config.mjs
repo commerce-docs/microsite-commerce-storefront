@@ -441,6 +441,10 @@ export default defineConfig({
             label: 'Multi-store setup',
             link: '/merchant/multistore/',
           },
+          {
+            label: 'Terms & Conditions setup',
+            link: '/merchant/terms-and-conditions/',
+          },
         ],
       },
       {

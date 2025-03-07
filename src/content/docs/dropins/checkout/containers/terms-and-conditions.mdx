@@ -4,21 +4,20 @@ description: Configure the TermsAndConditions container to manage and display th
 ---
 
 import Aside from '@components/Aside.astro';
-import Callouts from '@components/Callouts.astro';
 import OptionsTable from '@components/OptionsTable.astro';
-import { Steps } from '@astrojs/starlight/components';
-import Tasks from '@components/Tasks.astro';
-import Task from '@components/Task.astro';
 
 The `TermsAndConditions` container is designed to handle and display a checkbox for the users to agree to the terms and conditions of the sale before the purchase is finalized. The user must check all the agreements to place the order during a guest checkout process, otherwise a validation error will appear when the user clicks on the Place Order button.
 
-<Aside type="tip" title="TermsAndConditions configurable on a per store-view basis">
-  Merchants can add as many agreements as they want for a specific store-view; this allows them to provide different documents for each language and other needs.
+<Aside type="note" title="TermsAndConditions not displayed for any reason?">
+  <li>The `TermsAndConditions` container won't be displayed in case the user is logged into their account, because the customer accepted those agreements previously during the registration process.</li>
+  <li>The `TermsAndConditions` container requires a store configuration to be enabled; so it won't be displayed if the component is not properly configured.</li>
+
+  Please visit [Terms & Conditions setup](/merchant/terms-and-conditions/) to know exactly how to enable and configure the Terms and Conditions feature.
 </Aside>
 
-<Aside type="note" title="TermsAndConditions not displayed for any reason?">
-  <li>The `TermsAndConditions` container won't be displayed in case the user has signed-in, because the customer accepted those agreements previously during the registration process.</li>
-  <li>As we will see below, the `TermsAndConditions` container requires a store configuration to be enabled; so it won't be displayed if the component is not properly configured.</li>
+<Aside type="caution" title="TermsAndConditions requirements">
+  In order to use the `TermsAndConditions` container, the **Storefront Compatibility Package (SCP) 4.7.1-beta8** (or higher) module must be installed.
+  The **SCP 4.7.1-beta8** added support for retrieving Terms and Conditions configuration setting via the _StoreConfig_ GraphQL query. This setting is required by `TermsAndConditions` container to allow frontend applications to dynamically enable and configure agreements by store-view in checkout page.
 </Aside>
 
 ## TermsAndConditions configurations
@@ -92,127 +91,13 @@ export enum AgreementMode {
   - **`name`**
     The agreement identifier
   - **`mode`**
-    Specifies how the checkbox should appear:
+    Specifies the mode how the checkbox should appear:
     - 'manual': the user should manually check the terms
     - 'auto': the checkbox will appear checked by default
   - **`text`**
     Optional attribute that contains directly the text to show, and it accepts HTML with links to a specific page in EDS. In case this attribute is not provided, the `translationId` must to. Finally, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
   - **`translationId`**
-    Optional attribute that it a reference to the translation label which contains the text to show on the checkbox. First of all the component tries to find this label identifier into the **`placeholders.json`** file, otherwise it tries to find it as a dictionary entry (i.e.: **`en_US.json`** file). In case this attribute is not provided, the `text` must to. As reminder, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
-
-## How to enable and configure the Terms and Conditions
-
-This checkout component is configurable on a per store-view basis on EDS, but a merchant can also rely on the Admin Panel's configuration.
-
-<Tasks>
-
-<Task>
-
-### Enable the component
-
-The merchant has to enable the Terms and Conditions component using the Admin Panel as following:
-
-<Steps>
-
-1. Log in to the Admin Panel dashboard.
-1. Go to the _"Stores"_ menu and click on the _"SETTINGS" > "Configuration"_ option.
-1. Navigate to the _"SALES"_ section and click on the _"Checkout"_ option.
-1. Finally, into the _"Checkout Options"_ enable the _"Enable Terms and Conditions"_ configuration selecting the _**Yes**_ value for the store-view desired.
-
-</Steps>
-
-See [Terms and conditions for checkout](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/terms-and-conditions) documentation to enable the terms and conditions using the Admin Panel for more details.
-
-</Task>
-
-<Task>
-
-### Create the agreement document
-
-The agreements pages will be created **ONLY** using _document-based authoring (DBA)_ within EDS instead of using the Admin Panel, allowing the merchant to create and manage as many agreements pages and content as required for each store-view and language.
-
-</Task>
-
-<Task>
-
-### Configure the agreement checkbox label
-
-Since the agreements pages will be created using _DBA_ within EDS, the agreements checkbox label should support different links for each store-view, directing them to the appropriate agreements pages.
-
-The merchant has two options in order to configure the label to display next to the checkbox:
-
-<Callouts columnCount="1">
-
-1. **Using EDS**
-
-    For each agreement, the merchant has to configure into the **`placeholders.xlsx`** EDS file the following information:
-    - An **_identifier_**:
-      It's the reference that identifies the label translated. This data will be used in the **`translationId`** attribute mentioned above
-    - A **_label_**:
-      It's the text to display next to the checkbox, and will be directly retrieved from the Boilerplate translations for a specific store-view and language. This data accepts HTML with links to a specific page in EDS and it could be used in the same way as the **`text`** attribute mentioned above
-
-    Similarly, the merchant can configure the translation for the validation error that appears when the user clicks the `Place Order` button and an agreement is not checked, using the **"Checkout.TermsAndConditions.error"** identifier.
-
-    Sample of **placeholders.xlsx** file:
-    ```xlsx
-    "Checkout.TermsAndConditions.label", "I have read, understand, and accept the <a href='/privacy-policy' target='_blank'>Terms of Use, Terms of Sales, Privacy Policy, and Return Policy</a>."
-    "Checkout.TermsAndConditions.terms_label", "By placing an order, you are agreeing to be bound by our <a href="/en/terms-and-conditions" target="_blank">Terms And Conditions</a>."
-    "Checkout.TermsAndConditions.privacy_label", "By placing an order, you acknowledge our <a href="/en/privacy-policy" target="_blank">Privacy Policy</a>."
-    "Checkout.TermsAndConditions.error", "Please accept the Terms and Conditions to continue."
-    ```
-
-    These labels will be used in order to render the `TermsAndConditions` container inside of the **commerce-checkout.js** block file. Some examples will be provided below.
-
-</Callouts>
-
-<Callouts columnCount="1">
-
-2. **Using Admin Panel**
-
-    The merchant has to configure the checkbox label for each agreement using the Admin Panel. As mentioned before, the Admin Panel allows to create configurations per store-view level as following:
-
-</Callouts>
-
-<Steps>
-
-1. Log in to the Admin Panel dashboard.
-1. Go to the _"Stores"_ menu and click on the _"SETTINGS" > "Terms and Conditions"_ option.
-1. Click the "Add New Condition" button providing the next Terms and Conditions information:
-
-    - **`Condition Name`**
-      It's the agreement identifier
-    - **`Status`**
-      Attribute to indicate if it's available or not:
-      - 'Enabled'; the agreement will be retrieved by the GraphQL API
-      - 'Disabled'; the agreement won't be retrieved by the GraphQL API
-    - **`Applied`**
-      It defines the mode how the checkbox should be shown:
-      - 'Manually': the user should manually check the terms
-      - 'Automatically': the checkbox will appear checked by default
-    - **`Store View`**
-      It defines the scope at store level for this agreement
-    - **`Checkbox Text`**
-      It contains directly the text to show; it accepts HTML with links to a specific page in EDS
-
-    <Aside type="note" title="Some attributes not utilized">
-      Although the following attributes are provided by the Admin Panel, they are not going to be utilized in the current solution because they will be handled in EDS. Merchants are able to work on their own solution if they want to use them:
-
-      - **`Content`**
-        As described above, the content for the agreements pages will be created **ONLY** using EDS
-      - **`Show Content as`** (Text, HTML)
-        Not really needed because EDS pages accepts HTML code
-      - **`Content Height (css)`**
-    </Aside>
-
-    These entries will be used in order to render the `TermsAndConditions` container inside of the **commerce-checkout.js** block file. Some examples will be provided below.
-
-</Steps>
-
-See [Terms and conditions for checkout](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/terms-and-conditions) documentation to configure the terms and conditions using the Admin Panel for more details.
-
-</Task>
-
-</Tasks>
+    Optional attribute that is a reference to the translation label which contains the text to show on the checkbox. First of all the component tries to find this label identifier into the **`placeholders.json`** file, otherwise it tries to find it as a dictionary entry (i.e.: **`en_US.json`** file). In case this attribute is not provided, the `text` must to. As reminder, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
 
 ## Example 1: Render a custom agreement
 
@@ -233,7 +118,7 @@ CheckoutProvider.render(TermsAndConditions, {
       ctx.appendAgreement(() => ({
         name: 'custom',
         mode: 'auto',
-        text: 'Custom terms and conditions <a href="/terms-and-conditions" target="_blank">Terms & Conditions</a>.',
+        text: 'Custom terms and conditions <a href="/en/terms-and-conditions" target="_blank">Terms & Conditions</a>.',
       }));
     },
   },
@@ -242,7 +127,7 @@ CheckoutProvider.render(TermsAndConditions, {
 
 ## Example 2: Render the available agreements using the translations configured in EDS
 
-The following example renders the `TermsAndConditions` container on the checkout page, displaying the configured agreements and taking the label from the translations in the **`placeholders.xlsx`** EDS file, within the element with the class `.checkout__terms-and-conditions`:
+The following example renders the `TermsAndConditions` container on the checkout page, displaying the configured agreements and taking the labels from the translations in the **`placeholders.xlsx`** EDS file, within the element with the class `.checkout__terms-and-conditions`:
 
 ```ts
 // Checkout Dropin
@@ -278,7 +163,7 @@ CheckoutProvider.render(TermsAndConditions, {
 
 ## Example 3: Render the available agreements configured in the Admin Panel
 
-The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured in the Admin Panel and retrieved using the function API `getCheckoutAgreements()`, in the element with the class `.checkout__terms-and-conditions`:
+The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured in the Admin Panel retrieved using the `getCheckoutAgreements()` API function, in the element with the class `.checkout__terms-and-conditions`:
 
 ```ts
 // Checkout Dropin
