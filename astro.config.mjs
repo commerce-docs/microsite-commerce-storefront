@@ -318,6 +318,7 @@ export default defineConfig({
                   { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
                   { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
                   { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                  { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
                 ]
               },
               { label: 'Slots', link: '/dropins/checkout/slots/' },
@@ -439,6 +440,10 @@ export default defineConfig({
           {
             label: 'Multi-store setup',
             link: '/merchant/multistore/',
+          },
+          {
+            label: 'Terms & Conditions setup',
+            link: '/merchant/terms-and-conditions/',
           },
         ],
       },
