@@ -276,6 +276,7 @@ export default defineConfig({
                   { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
                   { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
                   { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
+                  { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
                   { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
                   { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
                   { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
