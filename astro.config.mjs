@@ -488,7 +488,7 @@ export default defineConfig({
         Icon: './src/components/overrides/Icon.astro',
         Header: './src/components/overrides/Header.astro',
         Hero: './src/components/overrides/Hero.astro',
-        PageTitle: './src/components/overrides/PageTitle.astro',
+        // PageTitle: './src/components/overrides/PageTitle.astro',
         SiteTitle: './src/components/overrides/SiteTitle.astro',
         SocialIcons: './src/components/overrides/SocialIcons.astro',
         LinkCard: './src/components/LinkCard.astro',
