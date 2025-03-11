@@ -492,6 +492,7 @@ export default defineConfig({
         SiteTitle: './src/components/overrides/SiteTitle.astro',
         SocialIcons: './src/components/overrides/SocialIcons.astro',
         LinkCard: './src/components/LinkCard.astro',
+        ContentPanel: './src/components/overrides/ContentPanel.astro',
         // PageSidebar: './src/components/overrides/PageSidebar.astro',
         // PageFrame: './src/components/overrides/PageFrame.astro',
         // TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
@@ -506,7 +507,7 @@ export default defineConfig({
         './src/styles/custom.css',
         './src/styles/asides.css',
         './src/styles/layout.css',
-        // './src/styles/text.css',
+        './src/styles/text.css',
       ],
       logo: {
         src: './src/assets/sitelogo.svg',
