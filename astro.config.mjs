@@ -460,15 +460,6 @@ export default defineConfig({
                   },
                 ],
               },
-              {
-                label: 'Reference',
-                items: [
-                  {
-                    label: 'Multistore Setup',
-                    link: '/merchants/reference/multistore/'
-                  },
-                ],
-              },
             ],
           },
         ]),
