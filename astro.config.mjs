@@ -83,7 +83,8 @@ export default defineConfig({
         attrs: {
           src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js'
         }
-      }, {
+      },
+      {
         tag: 'meta',
         attrs: {
           name: 'google-site-verification',
