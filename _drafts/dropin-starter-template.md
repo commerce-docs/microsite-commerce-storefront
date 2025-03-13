@@ -14,7 +14,7 @@ For more information on GitHub Templates, you can refer to the following resourc
 1. **Navigate to the Template Repository**: Go to https://github.com/adobe-commerce/dropin-template.
 2. **Create a New Repository**: Click on the "Use this template" button to create a new repository based on the template. This will generate a new repository with the same directory structure and files as the template.
 3. **Clone Your New Repository**: You can now clone the newly created repository to your local machine using `git clone`.
-4. **Install, Configure, and Launch**: Follow the instructions in your new repo's `README` file to install, configure, and launch your development environment.
+4. **Install, Configure, and Launch**: Follow the instructions in your new repo's `README` file to install the dependencies, generate a configuration file, update your Mesh endpoint, and launch your development environment.
 
 That's it! You now have a drop-in application with the same consistency and best practices that Adobe's drop-ins have, built in.
 
@@ -28,17 +28,24 @@ To add a shared component from the Adobe Commerce Storefront SDK to your new pro
 
 1. **Install the `@adobe-commerce/elsie ` Package**: Run the following command to install the Storefront SDK package:
    ```bash
-   npm install @dropins/tools
+   npm install @adobe-commerce/elsie
    ```
 
-2. **Import the Component**: In your project, import the desired component from the `@dropins/tools` package. For example, to import the `Button` component, add the following line to your code:
-   ```javascript
-   import { Button } from '@dropins/tools';
+2. **Generate a Container**: Run the following command to generate a Container component:
+   ```bash
+   npx elsie generate container --pathname <MyContainer>
    ```
 
-3. **Use the Component**: Now you can use the imported component in your project. For example:
+3. **Generate a UI Component**: Run the following command to generate a UI component:
+   ```bash
+   npx elsie generate component --pathname <myUIComponent>
+   ```
+
+4. **Use a Component from the SDK**: In your generated UI component, import a shared component from the Storefront SDK package and render it. For example, the `Button` component:
    ```javascript
-   function App() {
+   import { Button } from '@adobe-commerce/elsie';
+   
+   function MyUiComponent() {
      return (
        <div>
          <Button label="Click Me" />
@@ -46,6 +53,10 @@ To add a shared component from the Adobe Commerce Storefront SDK to your new pro
      );
    }
    ```
+
+5. **Add your Component to your Container**: Add your component to the container created in step 2.
+
+6. **Render the Container**: Update your sandbox environment to render your container in `examples/html-host/index.html`.
 
 ## Conclusion
 
