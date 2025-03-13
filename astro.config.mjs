@@ -463,6 +463,42 @@ export default defineConfig({
               },
             ],
           },
+          {
+            label: 'Videos',
+            link: '/videos/',
+            icon: 'seti:video',
+            items: [
+              {
+                label: 'Storefront Videos',
+                items: [
+                  {
+                    label: 'Introduction',
+                    link: '/videos/'
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            label: 'Playgrounds',
+            link: '/playgrounds/',
+            icon: 'laptop',
+            items: [
+              {
+                label: 'Storefront Playgrounds',
+                items: [
+                  {
+                    label: 'Introduction',
+                    link: '/playgrounds/'
+                  },
+                  {
+                    label: 'Commerce API Playground',
+                    link: '/playgrounds/commerce-services/'
+                  },
+                ],
+              },
+            ],
+          },
         ]),
         starlightHeadingBadges(),
         starlightLinksValidator({
