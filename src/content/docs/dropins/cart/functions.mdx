@@ -522,7 +522,9 @@ resetCart();
 ## updateProductsFromCart
 
 
-The `updateProductsFromCart` function updates the quantity of a product in the cart. The specified quantity replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the [`updateCartItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutation.
+The `updateProductsFromCart` function updates cart items by either changing the quantity or removing and adding an item in one step. When passing a specified quantity, the function replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the [`updateCartItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutation.
+
+When an `optionsUIDs` array is sent along with the cart item’s UID and quantity, the function adds the item with the specified options. It removes any pre-existing item with the same UID that lacks the newly provided `optionsUIDs`. In this process, the function invokes first the [addProductsToCart](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/), and later the [updateCartItems](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutations.
 
 ```ts
 export const updateProductsFromCart = async (
@@ -546,6 +548,7 @@ The `UpdateProductsFromCart` object has the following parameters:
     ['Parameter', 'Type', 'Req?', 'Description'],
     ['uid', 'string', 'Yes', 'The unique ID of an item in the cart.'],
     ['quantity', 'number', 'Yes', 'The new quantity of the item.'],
+    ['optionsUIDs', 'string[]', 'No', 'The selected options for the product, such as color or size, using the unique ID for an object.']
   ]}
 />
 
@@ -568,7 +571,7 @@ import { updateProductsFromCart } from '@/cart/api/updateProductsFromCart';
 
 updateProductsFromCart([
   {
-    uid: ''VA19-GO-NA,
+    uid: 'VA19-GO-NA',
     quantity: 3,
   },
 ]);
@@ -583,6 +586,24 @@ updateProductsFromCart([
   {
     uid: 'VA19-GO-NA',
     quantity: 0,
+  },
+]);
+```
+
+To update the item from the cart by replacing the cart item. By passing `optionsUIDs`, this function adds the product associated with the new `optionsUIDs` and removes the previous item with the same UID.
+
+```js
+import { updateProductsFromCart } from '@/cart/api/updateProductsFromCart';
+
+updateProductsFromCart([
+  {
+    sku: 'VT02-PE-M',
+    uid: 'NTE1NDY=',
+    quantity: 2,
+    optionsUIDs: [
+                'Y29uZmlndXJhYmxlLzE4MC8zMg==',
+                'Y29uZmlndXJhYmxlLzE5MS80Mw==',
+              ]
   },
 ]);
 ```
