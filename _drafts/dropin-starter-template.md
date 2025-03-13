@@ -26,7 +26,7 @@ If you've been following the steps in this guide, your new drop-in doesn't actua
 
 To add a shared component from the Adobe Commerce Storefront SDK to your new project, follow these steps:
 
-1. **Install the `@dropins/tools` Package**: Run the following command to install the Storefront SDK package:
+1. **Install the `@adobe-commerce/elsie ` Package**: Run the following command to install the Storefront SDK package:
    ```bash
    npm install @dropins/tools
    ```
