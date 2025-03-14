@@ -57,7 +57,3 @@ To add a shared component from the Adobe Commerce Storefront SDK to your new pro
 5. **Add your Component to your Container**: Add your component to the container created in step 2.
 
 6. **Render the Container**: Update your sandbox environment to render your container in `examples/html-host/index.html`.
-
-## Conclusion
-
-By following this guide, you should be able to quickly set up a new project using the Adobe Commerce Drop-in Template and add shared components from the Storefront SDK package. If you have any questions or need further assistance, please feel free to reach out.
