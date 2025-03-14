@@ -1,9 +1,9 @@
 ---
 title: Cart functions
 description: Learn about the API functions provided by the cart drop-in component.
-sidebar:
-  # label: API
-  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
 ---
 
 import OptionsTable from '@components/OptionsTable.astro';
@@ -182,6 +182,41 @@ type CartModel = {
   hasFullyOutOfStockItems?: boolean;
   appliedCoupons?: Coupon[];
 };
+```
+## applyGiftCardToCart
+
+The applyGiftCardToCart function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card.
+
+```ts
+export const applyGiftCardToCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['giftCardCode', 'string', 'Yes', 'The code assigned to a gift card.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+This function emits the `cart/updated` and `cart/data` events. It also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Usage
+
+```ts
+import { applyGiftCardToCart } from '@/cart/api/applyGiftCardToCart';
+
+applyGiftCardToCart(giftCardCode: string);
 ```
 
 ## createEmptyCart
@@ -494,6 +529,43 @@ import { refreshCart } from '@/cart/api/refreshCart';
 
 refreshCart();
 ```
+## removeGiftCardFromCart
+
+This function removes a single gift card from the cart. It function calls the [`removeGiftCardFromCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/remove-giftcard/) mutation.
+
+```ts
+export const removeGiftCardFromCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['giftCardCode', 'String', 'Yes', 'Defines the gift card code to remove.',],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+The event bus emits the `cart/updated` and `cart/data` events.
+
+### Usage
+
+To remove a gift card from the cart:
+
+```ts
+import { removeGiftCardFromCart } from '@/cart/api/removeGiftCardFromCart';
+
+removeGiftCardFromCart(giftCardCode: string);
+```
 
 ## resetCart
 
@@ -519,8 +591,84 @@ import { resetCart } from '@/cart/api/resetCart';
 resetCart();
 ```
 
-## updateProductsFromCart
+## setGiftOptionsOnCart
 
+
+[`setGiftOptionsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-gift-options/) is a function that sets gift options on the cart. It takes a `giftOptions` parameter.
+
+```ts
+export const setGiftOptionsOnCart = async (
+  giftForm: GiftFormDataType
+): Promise<CartModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['giftForm', 'GiftFormDataType', 'Yes', 'Defines the gift options to set.',],
+  ]}
+/>
+
+The `GiftFormDataType` object has the following parameters:
+ 
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['giftReceiptIncluded', 'boolean', 'No', 'Indicates if a gift receipt is included.'],
+    ['printedCardIncluded', 'boolean', 'No', 'Indicates if a printed card is included.'],
+    ['isGiftWrappingSelected', 'boolean', 'No', 'Indicates if gift wrapping is selected.'],
+    ['recipientName', 'string', 'No', 'The name of the gift recipient.'],
+    ['senderName', 'string', 'No', 'The name of the gift sender.'],
+    ['message', 'string', 'No', 'A message to include with the gift.'],
+    ['giftWrappingId', 'string', 'No', 'The ID of the selected gift wrapping option.'],
+    ['itemId', 'string', 'No', 'The ID of the item being gifted.'],
+    ['giftWrappingOptions', 'GiftWrappingConfigProps[]', 'No', 'Available gift wrapping options.'],
+  ]}
+/>
+
+The `GiftWrappingConfigProps` object has the following parameters:
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['uid', 'string', 'No', 'The unique ID of the gift wrapping option.'],
+    ['design', 'string', 'No', 'Describes the pattern or design of the gift wrapping.'],
+    ['selected', 'boolean', 'No', 'Indicates whether the option is selected.'],
+    ['image', 'WrappingImage', 'No', 'An image of the gift wrapping option.'],
+    ['price', 'Price', 'No', 'The price'],  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `CartModel` object or null. The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} title="CartModel object" lang="ts" frame="none" />
+
+### Events
+
+The event bus emits the `cart/updated` and `cart/data` events.
+
+### Usage
+
+```ts
+import { setGiftOptionsOnCart } from '@/cart/api/setGiftOptionsOnCart';
+
+setGiftOptionsOnCart(
+  giftMessage: {
+    from: string;
+    to: string;
+    message: string;
+  };
+  giftWrappingId: string;
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+);
+```
+
+## updateProductsFromCart
 
 The `updateProductsFromCart` function updates cart items by either changing the quantity or removing and adding an item in one step. When passing a specified quantity, the function replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the [`updateCartItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutation.
 
@@ -548,6 +696,12 @@ The `UpdateProductsFromCart` object has the following parameters:
     ['Parameter', 'Type', 'Req?', 'Description'],
     ['uid', 'string', 'Yes', 'The unique ID of an item in the cart.'],
     ['quantity', 'number', 'Yes', 'The new quantity of the item.'],
+    ['giftOptions', 'object', 'No', 'Contains gift wrapping and gift message options.'],
+    ['giftOptions.gift_wrapping_id', 'string' | null, 'No', 'The ID of the selected gift wrapping option.'],
+    ['giftOptions.gift_message', 'object', 'No', 'Contains the gift message details.'],
+    ['giftOptions.gift_message.from', 'string', 'No', 'The name of the gift sender.'],
+    ['giftOptions.gift_message.to', 'string', 'No', 'The name of the gift recipient.'],
+    ['giftOptions.gift_message.message', 'string', 'No', 'The message to include with the gift.'],
     ['optionsUIDs', 'string[]', 'No', 'The selected options for the product, such as color or size, using the unique ID for an object.']
   ]}
 />
