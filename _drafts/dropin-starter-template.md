@@ -11,6 +11,8 @@ For more information on GitHub Templates, you can refer to the following resourc
 
 ## How to Use the Adobe Commerce Drop-in Template
 
+Note: Supported Node versions are: Maintenance (v20) and Active (v22).
+
 1. **Navigate to the Template Repository**: Go to https://github.com/adobe-commerce/dropin-template.
 2. **Create a New Repository**: Click on the "Use this template" button to create a new repository based on the template. This will generate a new repository with the same directory structure and files as the template.
 3. **Clone Your New Repository**: You can now clone the newly created repository to your local machine using `git clone`.
