@@ -1,4 +1,4 @@
-# Using the Adobe Commerce Drop-in Template Repository
+# Getting started with drop-in templates
 
 This guide helps developers and partner agencies quickly create their own drop-in applications by leveraging Adobe Commerce's Drop-in Template repository.
 
