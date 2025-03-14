@@ -1,0 +1,200 @@
+---
+title: Add overlay messages to mini cart
+description: Learn how to add overlay feedback messages when products are added or updated in the mini cart.
+sidebar:
+  order: 5
+---
+
+import Aside from '@components/Aside.astro';
+
+This tutorial shows you how to add overlay feedback messages that appear in the mini cart when products are added or updated to the cart. These messages provide visual feedback to users about their cart actions.
+
+## Overview
+
+The mini cart can display temporary overlay messages when products are added or updated to the cart. These messages appear at the top center of the mini cart with a semi-transparent background for a brief period (3 seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
+
+## Implementation
+
+To add overlay messages to your mini cart, follow these steps:
+
+1. First, create constants for your message texts:
+
+```javascript
+const MESSAGES = {
+  ADDED: 'Product(s) added to your cart',
+  UPDATED: 'Your cart has been updated',
+};
+```
+
+2. Create the overlay and message containers:
+
+```javascript
+// Create overlay container
+const overlay = document.createElement('div');
+overlay.className = 'cart-overlay';
+overlay.style.cssText = `
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  border-radius: 5px;
+`;
+
+// Create message container
+const messageContainer = document.createElement('div');
+messageContainer.className = 'cart-message';
+messageContainer.style.cssText = `
+  background-color: #EFF5EF;
+  border-radius: 5px;
+  padding: 16px;
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  line-height: 2rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+`;
+
+overlay.appendChild(messageContainer);
+```
+
+3. Create a function to show and hide messages:
+
+```javascript
+const showMessage = (message) => {
+  messageContainer.textContent = message;
+  overlay.style.display = 'block';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 3000);
+};
+```
+
+4. Add event listeners for cart updates:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('cart/product/added', () => showMessage(MESSAGES.ADDED), {
+  eager: true,
+});
+events.on('cart/product/updated', () => showMessage(MESSAGES.UPDATED), {
+  eager: true,
+});
+```
+
+5. Add the overlay to your mini cart block:
+
+```javascript
+block.appendChild(overlay);
+```
+
+## Customization
+
+You can customize the appearance and behavior of the overlay messages by modifying the following:
+
+- Message text: Update the `MESSAGES` object to change the text displayed for different actions
+- Overlay styling: Modify the `cssText` of the overlay container to change the background color and opacity
+- Message styling: Modify the `cssText` of the message container to change its appearance
+- Display duration: Change the timeout value in the `showMessage` function (default is 3000ms)
+
+## Events
+
+The overlay messages respond to two cart events:
+
+- `cart/product/added`: Triggered when products are added to the cart
+- `cart/product/updated`: Triggered when products in the cart are updated
+
+## Complete Example
+
+Here's a complete example of implementing overlay messages in your mini cart block:
+
+```javascript
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import MiniCart from '@dropins/storefront-cart/containers/MiniCart.js';
+import { events } from '@dropins/tools/event-bus.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+import { rootLink } from '../../scripts/scripts.js';
+
+const MESSAGES = {
+  ADDED: 'Product(s) added to your cart',
+  UPDATED: 'Your cart has been updated',
+};
+
+export default async function decorate(block) {
+  const {
+    'start-shopping-url': startShoppingURL = '',
+    'cart-url': cartURL = '',
+    'checkout-url': checkoutURL = '',
+  } = readBlockConfig(block);
+
+  block.innerHTML = '';
+
+  // Render MiniCart first
+  await provider.render(MiniCart, {
+    routeEmptyCartCTA: startShoppingURL ? () => rootLink(startShoppingURL) : undefined,
+    routeCart: cartURL ? () => rootLink(cartURL) : undefined,
+    routeCheckout: checkoutURL ? () => rootLink(checkoutURL) : undefined,
+    routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+  })(block);
+
+  // Create overlay container
+  const overlay = document.createElement('div');
+  overlay.className = 'cart-overlay';
+  overlay.style.cssText = `
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    border-radius: 5px;
+  `;
+
+  // Create message container
+  const messageContainer = document.createElement('div');
+  messageContainer.className = 'cart-message';
+  messageContainer.style.cssText = `
+    background-color: #EFF5EF;
+    border-radius: 5px;
+    padding: 16px;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.4rem;
+    line-height: 2rem;
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  `;
+
+  overlay.appendChild(messageContainer);
+  block.appendChild(overlay);
+
+  const showMessage = (message) => {
+    messageContainer.textContent = message;
+    overlay.style.display = 'block';
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 3000);
+  };
+
+  // Add event listeners for cart updates
+  events.on('cart/product/added', () => showMessage(MESSAGES.ADDED), {
+    eager: true,
+  });
+  events.on('cart/product/updated', () => showMessage(MESSAGES.UPDATED), {
+    eager: true,
+  });
+
+  return block;
+}
+```
