@@ -2,7 +2,7 @@
 
 This guide helps developers and partner agencies quickly create their own drop-in applications by leveraging Adobe Commerce's Drop-in Template repository.
 
-## What are GitHub Templates?
+## What are drop-in component templates?
 
 The Drop-in Template repository is a GitHub Template repository. GitHub Templates allow you to create new repositories with the same directory structure, branches, and files as an existing repository. This feature is particularly useful for setting up new projects quickly and consistently.
 
