@@ -11,7 +11,7 @@ This tutorial shows you how to add inline feedback messages that appear in the m
 
 ## Overview
 
-The mini cart can display temporary inline messages when products are added or updated to the cart. These messages appear below the cart header for a brief period (3 seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
+The mini cart can display temporary inline messages when products are added or updated to the cart. These messages appear at the top of the mini cart for a brief period (3 seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
 
 ## Implementation
 
@@ -26,7 +26,7 @@ const MESSAGES = {
 };
 ```
 
-2. Create the message containers:
+2. Create the message container and shadow wrapper:
 
 ```javascript
 // Create a container for the update message
@@ -43,6 +43,7 @@ shadowWrapper.style.backgroundColor = '#EFF5EF';
 shadowWrapper.style.borderRadius = '5px';
 shadowWrapper.style.padding = '8px';
 shadowWrapper.style.display = 'none';
+shadowWrapper.style.marginBottom = '16px';
 shadowWrapper.appendChild(updateMessage);
 ```
 
@@ -73,15 +74,15 @@ events.on('cart/product/updated', () => showMessage(MESSAGES.UPDATED), {
 });
 ```
 
-5. Insert the message container after the cart header:
+5. Add the message container to your mini cart block:
 
 ```javascript
-// Find the header and add the message div after it
-const header = block.querySelector('.cart-cart-summary-list__heading-text');
-if (header) {
-  header.parentNode.insertBefore(shadowWrapper, header.nextSibling);
+// Find the products container and add the message div at the top
+const productsContainer = block.querySelector('.cart-mini-cart__products');
+if (productsContainer) {
+  productsContainer.insertBefore(shadowWrapper, productsContainer.firstChild);
 } else {
-  console.info('Header not found, appending message to block');
+  console.info('Products container not found, appending message to block');
   block.appendChild(shadowWrapper);
 }
 ```
@@ -91,9 +92,10 @@ if (header) {
 You can customize the appearance and behavior of the inline messages by modifying the following:
 
 - Message text: Update the `MESSAGES` object to change the text displayed for different actions
-- Styling: Modify the styles of the `updateMessage` and `shadowWrapper` elements
+- Message styling: Modify the `style` properties of the `updateMessage` element to change its appearance
+- Shadow wrapper styling: Modify the `style` properties of the `shadowWrapper` element to change its appearance
+- Message position: Change where the message appears in the mini cart by modifying the insertion point in the DOM
 - Display duration: Change the timeout value in the `showMessage` function (default is 3000ms)
-- Position: Modify where the message appears by changing the insertion point in the DOM
 
 ## Events
 
@@ -110,6 +112,10 @@ Here's a complete example of implementing inline messages in your mini cart bloc
 import { render as provider } from '@dropins/storefront-cart/render.js';
 import MiniCart from '@dropins/storefront-cart/containers/MiniCart.js';
 import { events } from '@dropins/tools/event-bus.js';
+
+// Initializers
+import '../../scripts/initializers/cart.js';
+
 import { readBlockConfig } from '../../scripts/aem.js';
 import { rootLink } from '../../scripts/scripts.js';
 
@@ -139,6 +145,7 @@ export default async function decorate(block) {
   shadowWrapper.style.borderRadius = '5px';
   shadowWrapper.style.padding = '8px';
   shadowWrapper.style.display = 'none';
+  shadowWrapper.style.marginBottom = '16px';
   shadowWrapper.appendChild(updateMessage);
 
   const showMessage = (message) => {
@@ -169,12 +176,12 @@ export default async function decorate(block) {
     routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
   })(block);
 
-  // Find the header and add the message div after it
-  const header = block.querySelector('.cart-cart-summary-list__heading-text');
-  if (header) {
-    header.parentNode.insertBefore(shadowWrapper, header.nextSibling);
+  // Find the products container and add the message div at the top
+  const productsContainer = block.querySelector('.cart-mini-cart__products');
+  if (productsContainer) {
+    productsContainer.insertBefore(shadowWrapper, productsContainer.firstChild);
   } else {
-    console.info('Header not found, appending message to block');
+    console.info('Products container not found, appending message to block');
     block.appendChild(shadowWrapper);
   }
 
