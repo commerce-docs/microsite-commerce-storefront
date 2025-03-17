@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import tailwind from '@astrojs/tailwind';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightImageZoom from 'starlight-image-zoom';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
@@ -80,9 +79,6 @@ async function config() {
       '/get-started/release': '/developer/commerce/storefront/releases/',
     },
     integrations: [
-      tailwind({
-        nesting: true
-      }),
       starlight({
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/develop/'
@@ -128,7 +124,7 @@ async function config() {
                   ]
                 },
                 {
-                  label: 'Storefront Setup',
+                  label: 'Setup',
                   collapsed: true,
                   items: [
                     {
@@ -173,7 +169,7 @@ async function config() {
                   ]
                 },
                 {
-                  label: 'Storefront Drop-ins',
+                  label: 'Drop-ins',
                   collapsed: true,
                   items: [
                     {
@@ -464,21 +460,21 @@ async function config() {
                       link: '/merchants/tutorials/getting-started/'
                     },
                     {
-                      label: 'Lesson 1: Create product page',
+                      label: 'Part 1: Create product page',
                       link: '/merchants/tutorials/getting-started/create-product-page/'
                     },
                     {
-                      label: 'Lesson 2: Create campaign',
+                      label: 'Part 2: Create campaign',
                       link: '/merchants/tutorials/getting-started/create-product-campaign/'
                     },
                     {
-                      label: 'Lesson 3: Create experiment',
+                      label: 'Part 3: Create experiment',
                       link: '/merchants/tutorials/getting-started/create-experiment/'
                     },
                   ],
                 },
                 {
-                  label: 'Multistore',
+                  label: 'Multi-store',
                   items: [
                     {
                       label: 'Introduction',
@@ -550,6 +546,7 @@ async function config() {
           SocialIcons: './src/components/overrides/SocialIcons.astro',
           LinkCard: './src/components/LinkCard.astro',
           ContentPanel: './src/components/overrides/ContentPanel.astro',
+          CardGrid: './src/components/CardGrid.astro',
           // PageSidebar: './src/components/overrides/PageSidebar.astro',
           // PageFrame: './src/components/overrides/PageFrame.astro',
           // TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
@@ -557,14 +554,13 @@ async function config() {
         },
         customCss: [
           './src/styles/reset.css',
-          './src/styles/tailwind.css',
           './src/fonts/font-face.css',
           './src/styles/colors.css',
           './src/styles/badge.css',
-          './src/styles/custom.css',
           './src/styles/asides.css',
           './src/styles/layout.css',
           './src/styles/text.css',
+          './src/styles/custom.css',
         ],
         logo: {
           src: './src/assets/sitelogo.svg',
