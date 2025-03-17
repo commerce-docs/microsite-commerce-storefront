@@ -449,7 +449,7 @@ async function config() {
             },
             {
               label: 'Merchants',
-              link: '/merchants/tutorials/getting-started/',
+              link: '/merchants/tutorials/summit-lab-320/',
               icon: 'seti:svg',
               items: [
                 {
@@ -457,19 +457,19 @@ async function config() {
                   items: [
                     {
                       label: 'Introduction',
-                      link: '/merchants/tutorials/getting-started/'
+                      link: '/merchants/tutorials/summit-lab-320/'
                     },
                     {
                       label: 'Part 1: Create product page',
-                      link: '/merchants/tutorials/getting-started/create-product-page/'
+                      link: '/merchants/tutorials/summit-lab-320/create-product-page/'
                     },
                     {
                       label: 'Part 2: Create campaign',
-                      link: '/merchants/tutorials/getting-started/create-product-campaign/'
+                      link: '/merchants/tutorials/summit-lab-320/create-product-campaign/'
                     },
                     {
                       label: 'Part 3: Create experiment',
-                      link: '/merchants/tutorials/getting-started/create-experiment/'
+                      link: '/merchants/tutorials/summit-lab-320/create-experiment/'
                     },
                   ],
                 },
@@ -497,19 +497,19 @@ async function config() {
                   label: 'Storefront Videos',
                   items: [
                     { label: 'Overview', link: '/videos/' },
-                    {
-                      label: 'Add custom product lines to cart summary',
-                      link: '/videos/add-product-lines-to-cart-summary/',
-                    },
-                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
-                    {
-                      label: 'Customize address form layout and address lookup',
-                      link: '/videos/customize-address-form-layout/',
-                    },
-                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
-                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
-                    { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
-                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
+                    // {
+                    //   label: 'Add custom product lines to cart summary',
+                    //   link: '/videos/add-product-lines-to-cart-summary/',
+                    // },
+                    // { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
+                    // {
+                    //   label: 'Customize address form layout and address lookup',
+                    //   link: '/videos/customize-address-form-layout/',
+                    // },
+                    // { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
+                    // { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
+                    // { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
+                    // { label: 'Shopper experience', link: '/videos/shopper-experience/' },
                   ],
                 },
               ],
