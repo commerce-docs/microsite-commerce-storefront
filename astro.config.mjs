@@ -496,10 +496,20 @@ async function config() {
                 {
                   label: 'Storefront Videos',
                   items: [
+                    { label: 'Overview', link: '/videos/' },
                     {
-                      label: 'Introduction',
-                      link: '/videos/'
+                      label: 'Add custom product lines to cart summary',
+                      link: '/videos/add-product-lines-to-cart-summary/',
                     },
+                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
+                    {
+                      label: 'Customize address form layout and address lookup',
+                      link: '/videos/customize-address-form-layout/',
+                    },
+                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
+                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
+                    { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
+                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
                   ],
                 },
               ],
