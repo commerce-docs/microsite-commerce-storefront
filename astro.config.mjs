@@ -460,15 +460,15 @@ async function config() {
                       link: '/merchants/tutorials/summit-lab-320/'
                     },
                     {
-                      label: 'Part 1: Create product page',
+                      label: 'Lesson 1: Create product page',
                       link: '/merchants/tutorials/summit-lab-320/create-product-page/'
                     },
                     {
-                      label: 'Part 2: Create campaign',
+                      label: 'Lesson 2: Create campaign',
                       link: '/merchants/tutorials/summit-lab-320/create-product-campaign/'
                     },
                     {
-                      label: 'Part 3: Create experiment',
+                      label: 'Lesson 3: Create experiment',
                       link: '/merchants/tutorials/summit-lab-320/create-experiment/'
                     },
                   ],
