@@ -1,0 +1,194 @@
+---
+title: TermsAndConditions container
+description: Configure the TermsAndConditions container to manage and display the terms and conditions form during checkout.
+---
+
+import Aside from '@components/Aside.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `TermsAndConditions` container displays a checkbox that users must select to agree to the terms and conditions of the sale before confirming their purchase.
+During a guest checkout process, users must check all required agreements before placing an order. If an agreement is unchecked, a validation error appears when the user clicks the **Place Order** button.
+
+<Aside type="note" title="TermsAndConditions not displayed for any reason?">
+  <li>The `TermsAndConditions` container won't be displayed in case the user is logged into their account, because the customer accepted those agreements previously during the registration process.</li>
+  <li>The `TermsAndConditions` container requires a store configuration to be enabled; so it won't be displayed if the component is not properly configured.</li>
+
+Visit the [Terms & Conditions setup](/merchants/terms-and-conditions/) documentation for more information on how to enable the Terms and Conditions feature.
+</Aside>
+
+<Aside type="caution" title="TermsAndConditions requirements">
+  In order to use the `TermsAndConditions` container, the **Storefront Compatibility Package (SCP) 4.7.1-beta8** (or higher) module must be installed.
+  The **SCP 4.7.1-beta8** added support for retrieving Terms and Conditions configuration setting via the _StoreConfig_ GraphQL query. This setting is required by `TermsAndConditions` container to allow frontend applications to dynamically enable and configure agreements by store-view in checkout page.
+</Aside>
+
+## TermsAndConditions configurations
+
+The `TermsAndConditions` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['slots', 'object', 'No', 'Object with a list of agreements to be accepted by the guest user.'],
+  ]}
+/>
+
+These configuration options implement the `TermsAndConditionsProps` interface:
+
+### TermsAndConditionsProps interface
+
+The `TermsAndConditions` container receives an object as a parameter which implements the `TermsAndConditionsProps` interface with the following properties:
+
+```ts
+export interface TermsAndConditionsProps {
+  slots?: {
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        name: string;
+        mode: AgreementMode;
+        text?: string;
+        translationId?: string;
+      }>;
+    }>;
+  };
+}
+```
+
+<li>The `slots` property is an object containing the following properties:</li>
+
+#### Agreements property
+
+The `Agreements` property is a handler used to render and configure the list of agreements. It provides a context by including the method `appendAgreement()` to add a new agreement:
+
+```ts
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+
+export type SlotMethod<P = any> = (
+  callback: (next: unknown, state: State) => P
+) => void;
+
+export enum AgreementMode {
+  MANUAL = 'manual',
+  AUTO = 'auto',
+}
+
+. . .
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        name: string;
+        mode: AgreementMode;
+        text?: string;
+        translationId?: string;
+      }>;
+    }>;
+. . .
+```
+
+<li>The `appendAgreement` configuration is a callback function which accepts the following attributes to configure an agreement:</li>
+
+  - **`name`**
+    The agreement identifier
+  - **`mode`**
+    Specifies the mode how the checkbox should appear:
+    - 'manual': the user is required to manually check and accept the conditions to place an order
+    - 'auto': the checkbox will appear checked by default, conditions are automatically accepted upon checkout
+  - **`text`**
+    Optional attribute that contains directly the text to show, and it accepts HTML with links to a specific page in EDS. In case this attribute is not provided, the `translationId` must to. Finally, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
+  - **`translationId`**
+    Optional attribute that is a reference to the translation label which contains the text to show on the checkbox. First of all the component tries to find this label identifier into the **`placeholders.json`** file, otherwise it tries to find it as a dictionary entry (i.e.: **`en_US.json`** file). In case this attribute is not provided, the `text` must to. As reminder, if both `text` and `translationId` are provided, the `text` has more preference and its content will be shown
+
+## Example 1: Render a custom agreement
+
+The following example renders the `TermsAndConditions` container on the checkout page, displaying a custom agreement that directly includes the label to show along with the link to the EDS page, within the element having the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'custom',
+        mode: 'auto',
+        text: 'Custom terms and conditions <a href="/en/terms-and-conditions" target="_blank">Terms & Conditions</a>.',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 2: Render three different agreements using the translations configured in EDS
+
+The following example renders the `TermsAndConditions` container on the checkout page, displaying three different agreements and taking the labels from the translations in the **`placeholders.xlsx`** EDS file, within the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'default',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'terms',
+        mode: 'manual',
+        translationId: 'Checkout.TermsAndConditions.terms_label',
+      }));
+      ctx.appendAgreement(() => ({
+        name: 'privacy',
+        mode: 'auto',
+        translationId: 'Checkout.TermsAndConditions.privacy_label',
+      }));
+    },
+  },
+})($termsAndConditions),
+```
+
+## Example 3: Render the available agreements configured in the Admin Panel
+
+The following example renders the `TermsAndConditions` container on a checkout page, displaying the available agreements configured in the Admin Panel retrieved using the `getCheckoutAgreements()` API function, in the element with the class `.checkout__terms-and-conditions`:
+
+```ts
+// Checkout Dropin
+import * as checkoutApi from '@dropins/storefront-checkout/api.js';
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $termsAndConditions = checkoutFragment.querySelector(
+  '.checkout__terms-and-conditions',
+);
+
+CheckoutProvider.render(TermsAndConditions, {
+  slots: {
+    Agreements: async (ctx) => {
+      const agreements = await checkoutApi.getCheckoutAgreements();
+
+      agreements.forEach((agreement) => {
+        ctx.appendAgreement(() => ({
+          name: agreement.name,
+          mode: agreement.mode,
+          text: agreement.text,
+        }));
+      });
+    },
+  },
+})($termsAndConditions),
+```

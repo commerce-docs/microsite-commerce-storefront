@@ -1,0 +1,49 @@
+---
+title: Gated content
+description: Learn how to implement gated content for assets that are not managed by Adobe Commerce.
+---
+
+import Diagram from '@components/Diagram.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Callouts from '@components/Callouts.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Aside from '@components/Aside.astro';
+
+You might want to restrict access to certain content, such as videos, images, or pages on your site that is not managed by Adobe Commerce. This content resides on the edge and cannot be controlled using customer segments or other Commerce functionality. You can restrict access to these non-Commerce assets using gated content. 
+
+## Big picture 
+
+There are several things to know to implement this feature.
+
+* Gated content is displayed only if the customer is logged in and their authentication token is valid. Anonymous users cannot access gated content.
+
+* You must define the gated content. In most cases, you will define the path to the gated content in the `header` or `header.xlsx` file. This file contains a list of URLs that are gated and defines a key/value pair for your custom code to evaluate. (You can also hardcode URLs in your custom code, but this information is easier to maintain in the spreadsheet.) The spreadsheet contains three columns:
+
+  * `url` - The path to the gated content. Wildcards are supported.
+  * `key` - Any key that you want to use to evaluate whether the content is gated.
+  * `value` - `True` or other value to be evaluated.
+
+* You must create custom code that evaluates whether the content wants access is gated. CDNs typically do not provide the ability to evaluate whether a user is authenticated. As a result, you must implement an auxiliary service, such as Fastly Compute, Amazon Lambda, or Cloudflare workers to perform the evaluation. This code must be able to send an authentication request to Adobe Commerce and process the result. The request is typically a simple GraphQL query, such as the `customer` query, but you can use any query or mutation that checks if the customer is authenticated.
+
+## Workflow
+
+The following diagram illustrates the workflow when gated content is enabled.
+
+<Diagram caption="Gated content workflow">
+![Gated content workflow](@images/gated-content.svg)
+</Diagram>
+
+The shopper requests a page on the storefront. The request is sent to the CDN (Fastly in this case), which then routes it to Edge Delivery Services. Edge Delivery Services returns the requested document with headers defined in the `header` or `header.xlsx` file. Fastly Compute checks whether the requested page is considered gated content based on the headers returned by Edge Delivery Services or by comparing it with a hardcoded list of gated content. If the header defined in the `header` or `header.xlsx` file is not present, or if the requested URL is not in the hardcoded gated content list, the request is processed normally.
+
+If the requested page is gated, the Fastly Compute code uses the customer token to construct an authorization request to Adobe Commerce. If the customer is authenticated, the request is allowed to pass through. If the customer is not authenticated, the request is redirected to a fallback page, such as a login page.
+
+## Example implementation
+
+You can [download a sample solution](/samples/fastly-compute-sample.zip) that provides an outline of how to implement gated content using Fastly Compute. This sample is based on Fastly's [Default starter kit for JavaScript](https://www.fastly.com/documentation/solutions/starters/compute-starter-kit-javascript-default/).
+
+<Aside type="note" title="Important">
+  Adobe does not support this example implementation. It is provided as a reference only.
+</Aside>
+
+The README provides an overview of the solution and how to install the starter kit. The `index.js` file contains a Fastly Compute@Edge script that handles incoming HTTP requests and performs user authentication for specific protected URLs.
