@@ -181,6 +181,10 @@ async function config() {
                       collapsed: true,
                       items: [
                         {
+                          label: 'Creating',
+                          link: '/dropins/all/creating/'
+                        },
+                        {
                           label: 'Installing',
                           link: '/dropins/all/installing/'
                         },
