@@ -13,16 +13,33 @@ This tutorial shows you how to add inline feedback messages that appear in the m
 
 The mini cart can display temporary inline messages when products are added or updated to the cart. These messages appear at the top of the mini cart for a brief period (3 seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
 
+## Prerequisites
+
+Before implementing inline messages, ensure you have:
+
+- Access to SharePoint or Google Docs for managing message translations through placeholders
+- Understanding of the design system tokens used in the Commerce boilerplate template
+- The `commerce-mini-cart.css` file in your `blocks/commerce-mini-cart/` directory
+
+<Aside type="note">
+  The CSS styles use design tokens (prefixed with `--`) to maintain consistency with the design
+  system. These tokens are defined in the boilerplate's design system.
+</Aside>
+
 ## Implementation
 
 To add inline messages to your mini cart, follow these steps:
 
-1. First, create constants for your message texts:
+1. First, get translations for message texts using placeholders:
 
 ```javascript
+// Get translations for custom messages from SharePoint or Google Docs
+const placeholders = await fetchPlaceholders();
+
+// Access the message texts from the Cart.MiniCart.Message namespace
 const MESSAGES = {
-  ADDED: 'Product(s) added to your cart',
-  UPDATED: 'Your cart has been updated',
+  ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
+  UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
 };
 ```
 
@@ -31,19 +48,11 @@ const MESSAGES = {
 ```javascript
 // Create a container for the update message
 const updateMessage = document.createElement('div');
-updateMessage.className = 'cart-update-message';
-updateMessage.style.display = 'none';
-updateMessage.style.fontSize = '1.4rem';
-updateMessage.style.lineHeight = '2rem';
-updateMessage.style.letterSpacing = '0.04em';
+updateMessage.className = 'commerce-mini-cart__update-message';
 
 // Create shadow wrapper
 const shadowWrapper = document.createElement('div');
-shadowWrapper.style.backgroundColor = '#EFF5EF';
-shadowWrapper.style.borderRadius = '5px';
-shadowWrapper.style.padding = '8px';
-shadowWrapper.style.display = 'none';
-shadowWrapper.style.marginBottom = '16px';
+shadowWrapper.className = 'commerce-mini-cart__message-wrapper';
 shadowWrapper.appendChild(updateMessage);
 ```
 
@@ -52,11 +61,11 @@ shadowWrapper.appendChild(updateMessage);
 ```javascript
 const showMessage = (message) => {
   updateMessage.textContent = message;
-  updateMessage.style.display = 'block';
-  shadowWrapper.style.display = 'block';
+  updateMessage.classList.add('commerce-mini-cart__update-message--visible');
+  shadowWrapper.classList.add('commerce-mini-cart__message-wrapper--visible');
   setTimeout(() => {
-    updateMessage.style.display = 'none';
-    shadowWrapper.style.display = 'none';
+    updateMessage.classList.remove('commerce-mini-cart__update-message--visible');
+    shadowWrapper.classList.remove('commerce-mini-cart__message-wrapper--visible');
   }, 3000);
 };
 ```
@@ -87,13 +96,35 @@ if (productsContainer) {
 }
 ```
 
+6. Add the following styles to your `commerce-mini-cart.css` file:
+
+```css
+.commerce-mini-cart__update-message {
+  display: none;
+  font: var(--type-body-2-default-font);
+  letter-spacing: var(--type-body-2-default-letter-spacing);
+}
+
+.commerce-mini-cart__message-wrapper {
+  background-color: var(--color-positive-200);
+  border-radius: var(--shape-border-radius-1);
+  padding: var(--spacing-xsmall);
+  display: none;
+  margin-bottom: var(--spacing-small);
+}
+
+.commerce-mini-cart__message-wrapper--visible,
+.commerce-mini-cart__update-message--visible {
+  display: block;
+}
+```
+
 ## Customization
 
 You can customize the appearance and behavior of the inline messages by modifying the following:
 
-- Message text: Update the `MESSAGES` object to change the text displayed for different actions
-- Message styling: Modify the `style` properties of the `updateMessage` element to change its appearance
-- Shadow wrapper styling: Modify the `style` properties of the `shadowWrapper` element to change its appearance
+- Message text: Update the translations in the SharePoint or Google Docs placeholders under the `Cart.MiniCart.Message` namespace
+- Message styling: Modify the CSS classes in `commerce-mini-cart.css`. The styles use design tokens (prefixed with `--`) to maintain consistency with the design system
 - Message position: Change where the message appears in the mini cart by modifying the insertion point in the DOM
 - Display duration: Change the timeout value in the `showMessage` function (default is 3000ms)
 
@@ -106,7 +137,7 @@ The inline messages respond to two cart events:
 
 ## Complete Example
 
-Here's a complete example of implementing inline messages in your mini cart block:
+Here's a complete example of implementing inline messages in your `commerce-mini-cart.js` block file:
 
 ```javascript
 import { render as provider } from '@dropins/storefront-cart/render.js';
@@ -116,13 +147,8 @@ import { events } from '@dropins/tools/event-bus.js';
 // Initializers
 import '../../scripts/initializers/cart.js';
 
-import { readBlockConfig } from '../../scripts/aem.js';
+import { readBlockConfig, fetchPlaceholders } from '../../scripts/aem.js';
 import { rootLink } from '../../scripts/scripts.js';
-
-const MESSAGES = {
-  ADDED: 'Product(s) added to your cart',
-  UPDATED: 'Your cart has been updated',
-};
 
 export default async function decorate(block) {
   const {
@@ -131,30 +157,30 @@ export default async function decorate(block) {
     'checkout-url': checkoutURL = '',
   } = readBlockConfig(block);
 
+  // Get translations for custom messages
+  const placeholders = await fetchPlaceholders();
+
+  const MESSAGES = {
+    ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
+    UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
+  };
+
   // Create a container for the update message
   const updateMessage = document.createElement('div');
-  updateMessage.className = 'cart-update-message';
-  updateMessage.style.display = 'none';
-  updateMessage.style.fontSize = '1.4rem';
-  updateMessage.style.lineHeight = '2rem';
-  updateMessage.style.letterSpacing = '0.04em';
+  updateMessage.className = 'commerce-mini-cart__update-message';
 
   // Create shadow wrapper
   const shadowWrapper = document.createElement('div');
-  shadowWrapper.style.backgroundColor = '#EFF5EF';
-  shadowWrapper.style.borderRadius = '5px';
-  shadowWrapper.style.padding = '8px';
-  shadowWrapper.style.display = 'none';
-  shadowWrapper.style.marginBottom = '16px';
+  shadowWrapper.className = 'commerce-mini-cart__message-wrapper';
   shadowWrapper.appendChild(updateMessage);
 
   const showMessage = (message) => {
     updateMessage.textContent = message;
-    updateMessage.style.display = 'block';
-    shadowWrapper.style.display = 'block';
+    updateMessage.classList.add('commerce-mini-cart__update-message--visible');
+    shadowWrapper.classList.add('commerce-mini-cart__message-wrapper--visible');
     setTimeout(() => {
-      updateMessage.style.display = 'none';
-      shadowWrapper.style.display = 'none';
+      updateMessage.classList.remove('commerce-mini-cart__update-message--visible');
+      shadowWrapper.classList.remove('commerce-mini-cart__message-wrapper--visible');
     }, 3000);
   };
 
@@ -186,5 +212,28 @@ export default async function decorate(block) {
   }
 
   return block;
+}
+```
+
+And here's the accompanying CSS file (`commerce-mini-cart.css`):
+
+```css
+.commerce-mini-cart__update-message {
+  display: none;
+  font: var(--type-body-2-default-font);
+  letter-spacing: var(--type-body-2-default-letter-spacing);
+}
+
+.commerce-mini-cart__message-wrapper {
+  background-color: var(--color-positive-200);
+  border-radius: var(--shape-border-radius-1);
+  padding: var(--spacing-xsmall);
+  display: none;
+  margin-bottom: var(--spacing-small);
+}
+
+.commerce-mini-cart__message-wrapper--visible,
+.commerce-mini-cart__update-message--visible {
+  display: block;
 }
 ```
