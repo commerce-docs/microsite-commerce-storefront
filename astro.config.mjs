@@ -189,10 +189,6 @@ export default defineConfig({
             label: 'Overview',
             link: '/dropins/all/introduction/'
           },
-          // {
-          //   label: 'Anatomy',
-          //   link: '/dropins/all/anatomy/'
-          // },
           {
             label: 'Installing',
             link: '/dropins/all/installing/'
@@ -232,6 +228,10 @@ export default defineConfig({
           {
             label: 'Experimenting',
             link: '/dropins/all/experimenting/'
+          },
+          {
+            label: 'Creating',
+            link: '/dropins/all/creating/'
           },
           {
             label: 'Product details page',
