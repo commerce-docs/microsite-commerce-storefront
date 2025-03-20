@@ -258,6 +258,12 @@ export default defineConfig({
               { label: 'Slots', link: '/dropins/product-details/slots/' },
               { label: 'Functions', link: '/dropins/product-details/functions/' },
               { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
+              {
+                label: 'Tutorials', collapsed: true,
+                items: [
+                  { label: 'Add gift options', link: '/dropins/product-details/tutorials/gift-options/' },
+                ]
+              },
             ]
           },
           {
