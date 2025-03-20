@@ -13,16 +13,33 @@ This tutorial shows you how to add overlay feedback messages that appear in the 
 
 The mini cart can display temporary overlay messages when products are added or updated to the cart. These messages appear at the top center of the mini cart with a semi-transparent background for a brief period (3 seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
 
+## Prerequisites
+
+Before implementing overlay messages, ensure you have:
+
+- Access to SharePoint or Google Docs for managing message translations through placeholders
+- Understanding of the design system tokens used in the Commerce boilerplate template (see [Design Tokens](/dropins/all/branding))
+- The `commerce-mini-cart.css` file in your `blocks/commerce-mini-cart/` directory
+
+<Aside type="note">
+  The CSS styles use design tokens (prefixed with `--`) to maintain consistency with the design
+  system. These tokens are defined in the boilerplate's design system.
+</Aside>
+
 ## Implementation
 
 To add overlay messages to your mini cart, follow these steps:
 
-1. First, create constants for your message texts:
+1. First, get translations for message texts using placeholders:
 
 ```javascript
+// Get translations for custom messages from SharePoint or Google Docs
+const placeholders = await fetchPlaceholders();
+
+// Access the message texts from the Cart.MiniCart.Message namespace
 const MESSAGES = {
-  ADDED: 'Product(s) added to your cart',
-  UPDATED: 'Your cart has been updated',
+  ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
+  UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
 };
 ```
 
@@ -31,35 +48,11 @@ const MESSAGES = {
 ```javascript
 // Create overlay container
 const overlay = document.createElement('div');
-overlay.className = 'cart-overlay';
-overlay.style.cssText = `
-  background-color: rgba(0, 0, 0, 0.5);
-  display: none;
-  position: absolute;
-  inset: 0;
-  z-index: 1000;
-  border-radius: 5px;
-`;
+overlay.className = 'commerce-mini-cart__overlay';
 
 // Create message container
 const messageContainer = document.createElement('div');
-messageContainer.className = 'cart-message';
-messageContainer.style.cssText = `
-  background-color: #EFF5EF;
-  border-radius: 5px;
-  padding: 16px;
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.4rem;
-  line-height: 2rem;
-  letter-spacing: 0.04em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-`;
+messageContainer.className = 'commerce-mini-cart__message';
 
 overlay.appendChild(messageContainer);
 ```
@@ -69,9 +62,9 @@ overlay.appendChild(messageContainer);
 ```javascript
 const showMessage = (message) => {
   messageContainer.textContent = message;
-  overlay.style.display = 'block';
+  overlay.classList.add('commerce-mini-cart__overlay--visible');
   setTimeout(() => {
-    overlay.style.display = 'none';
+    overlay.classList.remove('commerce-mini-cart__overlay--visible');
   }, 3000);
 };
 ```
@@ -95,14 +88,48 @@ events.on('cart/product/updated', () => showMessage(MESSAGES.UPDATED), {
 block.appendChild(overlay);
 ```
 
+6. Add the following styles to your `commerce-mini-cart.css` file:
+
+```css
+.commerce-mini-cart__overlay {
+  background-color: rgb(0 0 0 / 50%);
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  border-radius: var(--shape-border-radius-1);
+}
+
+.commerce-mini-cart__message {
+  background-color: var(--color-positive-200);
+  border-radius: var(--shape-border-radius-1);
+  padding: var(--spacing-small);
+  position: absolute;
+  top: var(--spacing-medium);
+  left: 50%;
+  transform: translateX(-50%);
+  font: var(--type-body-2-default-font);
+  letter-spacing: var(--type-body-2-default-letter-spacing);
+  box-shadow: var(--shape-shadow-3);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.commerce-mini-cart__overlay--visible {
+  display: block;
+}
+```
+
 ## Customization
 
 You can customize the appearance and behavior of the overlay messages by modifying the following:
 
-- Message text: Update the `MESSAGES` object to change the text displayed for different actions
-- Overlay styling: Modify the `cssText` of the overlay container to change the background color and opacity
-- Message styling: Modify the `cssText` of the message container to change its appearance
-- Message position: Adjust the `top`, `left`, and `transform` properties of the message container to change its position within the overlay
+- Message text: Update the translations in SharePoint or Google Docs under the `Cart.MiniCart.Message` namespace
+- Message styling: Modify the CSS classes in `commerce-mini-cart.css`. The styles use design tokens (prefixed with `--`) to maintain consistency with the design system. You can customize:
+  - Background opacity using the alpha value in the overlay's `background-color` (default is 50%)
+  - Message position using the `top`, `left`, and `transform` properties
+  - Colors, spacing, shadows, and other visual properties using design tokens
 - Display duration: Change the timeout value in the `showMessage` function (default is 3000ms)
 
 ## Events
@@ -114,7 +141,7 @@ The overlay messages respond to two cart events:
 
 ## Complete Example
 
-Here's a complete example of implementing overlay messages in your mini cart block:
+Here's a complete example of implementing overlay messages in your `commerce-mini-cart.js` block file:
 
 ```javascript
 import { render as provider } from '@dropins/storefront-cart/render.js';
@@ -124,13 +151,8 @@ import { events } from '@dropins/tools/event-bus.js';
 // Initializers
 import '../../scripts/initializers/cart.js';
 
-import { readBlockConfig } from '../../scripts/aem.js';
+import { readBlockConfig, fetchPlaceholders } from '../../scripts/aem.js';
 import { rootLink } from '../../scripts/scripts.js';
-
-const MESSAGES = {
-  ADDED: 'Product(s) added to your cart',
-  UPDATED: 'Your cart has been updated',
-};
 
 export default async function decorate(block) {
   const {
@@ -138,6 +160,14 @@ export default async function decorate(block) {
     'cart-url': cartURL = '',
     'checkout-url': checkoutURL = '',
   } = readBlockConfig(block);
+
+  // Get translations for custom messages
+  const placeholders = await fetchPlaceholders();
+
+  const MESSAGES = {
+    ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
+    UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
+  };
 
   block.innerHTML = '';
 
@@ -151,44 +181,20 @@ export default async function decorate(block) {
 
   // Create overlay container
   const overlay = document.createElement('div');
-  overlay.className = 'cart-overlay';
-  overlay.style.cssText = `
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    position: absolute;
-    inset: 0;
-    z-index: 1000;
-    border-radius: 5px;
-  `;
+  overlay.className = 'commerce-mini-cart__overlay';
 
   // Create message container
   const messageContainer = document.createElement('div');
-  messageContainer.className = 'cart-message';
-  messageContainer.style.cssText = `
-    background-color: #EFF5EF;
-    border-radius: 5px;
-    padding: 16px;
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.4rem;
-    line-height: 2rem;
-    letter-spacing: 0.04em;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-  `;
+  messageContainer.className = 'commerce-mini-cart__message';
 
   overlay.appendChild(messageContainer);
   block.appendChild(overlay);
 
   const showMessage = (message) => {
     messageContainer.textContent = message;
-    overlay.style.display = 'block';
+    overlay.classList.add('commerce-mini-cart__overlay--visible');
     setTimeout(() => {
-      overlay.style.display = 'none';
+      overlay.classList.remove('commerce-mini-cart__overlay--visible');
     }, 3000);
   };
 
@@ -201,5 +207,38 @@ export default async function decorate(block) {
   });
 
   return block;
+}
+```
+
+And here's the accompanying CSS file (`commerce-mini-cart.css`):
+
+```css
+.commerce-mini-cart__overlay {
+  background-color: rgb(0 0 0 / 50%);
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  border-radius: var(--shape-border-radius-1);
+}
+
+.commerce-mini-cart__message {
+  background-color: var(--color-positive-200);
+  border-radius: var(--shape-border-radius-1);
+  padding: var(--spacing-small);
+  position: absolute;
+  top: var(--spacing-medium);
+  left: 50%;
+  transform: translateX(-50%);
+  font: var(--type-body-2-default-font);
+  letter-spacing: var(--type-body-2-default-letter-spacing);
+  box-shadow: var(--shape-shadow-3);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.commerce-mini-cart__overlay--visible {
+  display: block;
 }
 ```
