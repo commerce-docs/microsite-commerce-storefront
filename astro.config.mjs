@@ -258,12 +258,6 @@ export default defineConfig({
               { label: 'Slots', link: '/dropins/product-details/slots/' },
               { label: 'Functions', link: '/dropins/product-details/functions/' },
               { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
-              {
-                label: 'Tutorials', collapsed: true,
-                items: [
-                  { label: 'Add gift options', link: '/dropins/product-details/tutorials/gift-options/' },
-                ]
-              },
             ]
           },
           {
@@ -300,6 +294,7 @@ export default defineConfig({
                   { label: 'Configure the cart summary block', link: '/dropins/cart/tutorials/configure-cart-summary/' },
                   { label: 'Add custom product lines to the cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
                   { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                  { label: 'Add gift options to a PDP', link: '/dropins/cart/tutorials/gift-options/' },
                 ]
               },
             ]
