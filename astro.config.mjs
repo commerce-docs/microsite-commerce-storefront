@@ -19,6 +19,7 @@ const basePath = isProduction
     ? process.env.VITE_GITHUB_BASE_PATH
     : '/microsite-commerce-storefront';
 
+// https://astro.build/config
 async function config() {
   const compress = (await import("@playform/compress")).default({
     CSS: false,
