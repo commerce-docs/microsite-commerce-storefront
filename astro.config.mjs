@@ -454,32 +454,20 @@ async function config() {
             },
             {
               label: 'Merchants',
-              link: '/merchants/tutorials/summit-lab-320/',
+              link: 'merchants/get-started/',
               icon: 'seti:svg',
               items: [
                 {
                   label: 'Getting started',
                   items: [
                     {
-                      label: 'Storefront Builder Lab',
-                      link: '/merchants/tutorials/summit-lab-320/'
-                    },
-                    {
-                      label: 'Lesson 1: Create product page',
-                      link: '/merchants/tutorials/summit-lab-320/create-product-page/'
-                    },
-                    {
-                      label: 'Lesson 2: Create campaign',
-                      link: '/merchants/tutorials/summit-lab-320/create-product-campaign/'
-                    },
-                    {
-                      label: 'Lesson 3: Create experiment',
-                      link: '/merchants/tutorials/summit-lab-320/create-experiment/'
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
                     },
                   ],
                 },
                 {
-                  label: 'Multi-store',
+                  label: 'Multi-store setup',
                   items: [
                     {
                       label: 'Introduction',
@@ -562,9 +550,6 @@ async function config() {
           LinkCard: './src/components/LinkCard.astro',
           ContentPanel: './src/components/overrides/ContentPanel.astro',
           CardGrid: './src/components/CardGrid.astro',
-          // PageSidebar: './src/components/overrides/PageSidebar.astro',
-          // PageFrame: './src/components/overrides/PageFrame.astro',
-          // TwoColumnContent: './src/components/overrides/TwoColumnContent.astro',
           Pagination: './src/components/overrides/Pagination.astro',
         },
         customCss: [
