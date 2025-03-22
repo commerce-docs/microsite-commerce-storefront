@@ -461,7 +461,7 @@ async function config() {
                   label: 'Getting started',
                   items: [
                     {
-                      label: 'Introduction',
+                      label: 'Storefront Builder Lab',
                       link: '/merchants/tutorials/summit-lab-320/'
                     },
                     {
