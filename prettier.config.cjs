@@ -15,7 +15,6 @@ const prettierConfig = {
   ],
   plugins: [
     require.resolve('prettier-plugin-astro'),
-    require.resolve('prettier-plugin-tailwindcss'),
   ],
 };
 
