@@ -116,7 +116,7 @@ async function config() {
                     },
                     {
                       label: 'Explore the boilerplate',
-                      link: '/get-started/storefront-structure/'
+                      link: '/get-started/boilerplate-project/'
                     },
                     {
                       label: 'Run Lighthouse audits',
@@ -216,14 +216,6 @@ async function config() {
                         {
                           label: 'Extending',
                           link: '/dropins/all/extending/'
-                        },
-                        {
-                          label: 'Enriching',
-                          link: '/dropins/all/enriching/'
-                        },
-                        {
-                          label: 'Experimenting',
-                          link: '/dropins/all/experimenting/'
                         },
                       ],
                     },
@@ -464,21 +456,24 @@ async function config() {
                       label: 'Introduction',
                       link: 'merchants/get-started/'
                     },
-                  ],
-                },
-                {
-                  label: 'Multi-store setup',
-                  items: [
                     {
-                      label: 'Introduction',
-                      link: 'merchants/multistore/'
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Multistore setup',
+                      link: 'merchants/get-started/multistore/'
                     },
                     {
                       label: 'Terms and conditions',
-                      link: 'merchants/terms-and-conditions/'
+                      link: 'merchants/get-started/terms-and-conditions/'
                     },
                   ],
-                }
+                },
               ],
             },
             {
