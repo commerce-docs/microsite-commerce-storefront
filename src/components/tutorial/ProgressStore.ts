@@ -6,8 +6,8 @@ type ProgressState = Record<string, PageState>;
 /**
  * This class is basically just a plain object used as a singleton, but written as a
  * class to allow APIs to be marked as private/public. It is used to manage data on
- * a user’s progress through the Build a Blog tutorial, which gets saved to the
- * browser’s localstorage.
+ * a user's progress through the Build a Blog tutorial, which gets saved to the
+ * browser's localstorage.
  *
  * The data stored looks something like this:
  *
@@ -27,13 +27,13 @@ type ProgressState = Record<string, PageState>;
  * Each key is the slug for a specific page and stores whether the page is `done`
  * (all checklists on the page are complete) as well as a record of all the `lists`
  * found on that page. These entries are populated as a user visits each page,
- * so the store doesn’t know about _all_ pages that might exist, only all lists
+ * so the store doesn't know about _all_ pages that might exist, only all lists
  * on pages that have been visited. This avoids the need for a central definition
  * of all checklists. Instead, each checklist registers itself with `ProgressStore`
  * when it is loaded.
  *
  * Each list can have both `primary` and `secondary` sublists. This provides
- * support for checklists that offer an alternate “OR” set of options to check off.
+ * support for checklists that offer an alternate "OR" set of options to check off.
  * A list is `done` when either of these sublists is complete. These sublists are
  * just arrays of boolean values with an entry for each item in the sublist.
  *
@@ -41,9 +41,9 @@ type ProgressState = Record<string, PageState>;
  *
  * 1. Page load:
  *
- *    - `ProgressStore` initializes, parsing the current page’s key from the URL,
+ *    - `ProgressStore` initializes, parsing the current page's key from the URL,
  *      loading previously stored data from localstorage, and initializing this
- *      page’s data object if not already in localstorage.
+ *      page's data object if not already in localstorage.
  *
  *    - Any `<Checklist>` components on the page will initialise list, sublist,
  *      and sublist items, adding them to the store if not yet present.
@@ -60,22 +60,22 @@ type ProgressState = Record<string, PageState>;
  *    - A user clicks on a `<Checklist>` item marking it as checked/unchecked.
  *
  *    - This triggers a call to `setSubListItem`, which will update the boolean
- *      value in the appropriate sublist, update the page’s `done` value if
+ *      value in the appropriate sublist, update the page's `done` value if
  *      appropriate, and then store the updated state to localstorage.
  *
  *    - As part of storing state, we always `notifySubscribers` so that any components
  *      listening for changes in state will find out that state changed. This allows,
- *      e.g. `<Progress>` to update to “checked” when the page completes, even though
+ *      e.g. `<Progress>` to update to "checked" when the page completes, even though
  *      the checkbox is elsewhere on the page.
  *
  * ## Migration Scenarios
  *
- * The data stored in a user’s localstorage could become out of date if we change up
+ * The data stored in a user's localstorage could become out of date if we change up
  * the tutorial structure in the following ways:
  *
  * 1. We change the number of items in a checklist.
  *
- *    If a user checked off a two-item list and we later add a third, it’ll stay “done”
+ *    If a user checked off a two-item list and we later add a third, it'll stay "done"
  *    until the user re-visits that page, at which point the list will re-initialise
  *    and their checks will be wiped.
  *
@@ -84,30 +84,30 @@ type ProgressState = Record<string, PageState>;
  *
  * 2. We add a checklist to a page.
  *
- *    Similar to above, the page may stay “done” until the user re-visits the page at
+ *    Similar to above, the page may stay "done" until the user re-visits the page at
  *    which point the new checklist will register and state will be updated.
  *
  * 3. We _remove_ a checklist (or alternate sublist) from a page.
  *
- *    If a user visited a page previously and we later remove a checklist, this list’s
+ *    If a user visited a page previously and we later remove a checklist, this list's
  *    state will remain in localstorage and not be updated. This could result in a page
- *    incorrectly NOT being marked as “done” because the ghost list wasn’t complete.
+ *    incorrectly NOT being marked as "done" because the ghost list wasn't complete.
  *
  *    We should try to AVOID this. If the scenario arises, we will need to add migration
  *    logic to `ProgressStore` that maps slugs to list keys that need removing.
  *
- * 4. We _rename_ a checklist’s `key`.
+ * 4. We _rename_ a checklist's `key`.
  *
  *    This triggers the same scenario as #3 above and should be avoided.
  *
  * 5. We rename a page, moving its contents.
  *
  *    This is also liable to trigger the same scenario as #3 & #4, and is the more
- *    likely scenario. As long as the checklists weren’t using a custom `key`,
- *    this should work itself out. Perhaps some items will be marked as “done” even
- *    though the done items were for the old items on that page, but that’s probably
+ *    likely scenario. As long as the checklists weren't using a custom `key`,
+ *    this should work itself out. Perhaps some items will be marked as "done" even
+ *    though the done items were for the old items on that page, but that's probably
  *    OK. The more serious situation would be if the moved checklist had a custom `key`
- *    in which case it would continue to be stored in the user’s localstorage and would
+ *    in which case it would continue to be stored in the user's localstorage and would
  *    need the same migration strategy as for #3 above.
  *
  */
@@ -133,6 +133,10 @@ export class ProgressStore {
 
 	public static getSubListItem(listKey: string, type: SubListType, index: number): boolean {
 		return ProgressStore.pageState.lists[listKey][type][index];
+	}
+
+	public static getListState(listKey: string, type: SubListType): boolean[] {
+		return ProgressStore.pageState.lists[listKey]?.[type] || [];
 	}
 
 	public static setSubListItem(
@@ -194,12 +198,12 @@ export class ProgressStore {
 		return ProgressStore.state[ProgressStore.pageKey];
 	}
 
-	/** Work out if all of this page’s lists is complete. */
+	/** Work out if all of this page's lists is complete. */
 	private static get isPageDone(): boolean {
 		return Object.values(ProgressStore.pageState.lists).every(ProgressStore.isListDone);
 	}
 
-	/** Work out if either of a checklist’s sub-lists is complete. */
+	/** Work out if either of a checklist's sub-lists is complete. */
 	private static isListDone(list: ListState): boolean {
 		return (['primary', 'secondary'] as const)
 			.map((type) => !!list[type].length && list[type].every((i) => i))
