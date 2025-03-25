@@ -1,12 +1,12 @@
 ---
 export interface Props {
-  key?: string;
+  checklistKey?: string;
 }
-
-const { key } = Astro.props as Props;
+export let checklistKey: string = "default-key";
+console.log('checklistKey', checklistKey);
 ---
 
-<check-list data-key={key}>
+<check-list data-checklist-key={checklistKey}>
   <div class="checklist">
     <slot />
   </div>
@@ -18,7 +18,7 @@ const { key } = Astro.props as Props;
   }
 
   .checklist > :global(ul) {
-    list-style: none;
+    list-style: square;
     padding-inline-start: 2.125rem;
   }
 
@@ -93,11 +93,14 @@ const { key } = Astro.props as Props;
   import { ProgressStore, type SubListType } from './tutorial/ProgressStore';
 
   class CheckList extends HTMLElement {
-    private readonly key: string;
+    private key!: string;
 
     constructor() {
       super();
-      this.key = this.dataset['key']!;
+    }
+
+    connectedCallback() {
+      this.key = this.dataset['checklistKey']!;
       ProgressStore.initialiseList(this.key);
       this.upgradeSubList(this.querySelector('.checklist ul'), 'primary');
       this.upgradeSubList(this.querySelector('.checklist.alternative ul'), 'secondary');
@@ -113,7 +116,6 @@ const { key } = Astro.props as Props;
 
     /** Upgrade an item in a GitHub-Flavoured Markdown task list. */
     upgradeTaskItem(li: Element, type: SubListType, index: number) {
-      // Re-enable checkboxes, hydrate state & listen for changes.
       const checkbox = li.querySelector('input[type="checkbox"]') as HTMLInputElement;
       checkbox.removeAttribute('disabled');
       checkbox.checked = ProgressStore.getSubListItem(this.key, type, index);
