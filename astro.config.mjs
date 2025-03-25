@@ -471,7 +471,7 @@ async function config() {
                       link: 'merchants/get-started/experiments/'
                     },
                     {
-                      label: 'Multistore setup',
+                      label: 'Multi-store setup',
                       link: 'merchants/get-started/multistore/'
                     },
                     {
