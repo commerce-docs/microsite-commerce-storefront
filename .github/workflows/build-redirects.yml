@@ -1,0 +1,40 @@
+name: Build Redirects
+
+on:
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  generate-redirects:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out develop branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          path: develop
+      - name: Check out PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: pr-branch
+      - name: Compare file paths and create redirect file
+        run: |
+          cd navigation
+          # Compare vs develop using "git diff"
+          git --git-dir=.git --work-tree=. diff --name-status --find-renames=50% ../develop...HEAD > ../changes.txt
+          # Now parse changes.txt for Renames (marked with "R") and build a redirect file
+          echo "OldPath -> NewPath" > ../redirects.txt
+          while read line
+          do
+            status=$(echo "$line" | awk '{ print $1 }')
+            if [ "$status" = "R100" ] || [ "$status" = "R" ]; then
+              oldFile=$(echo "$line" | awk '{ print $2 }')
+              newFile=$(echo "$line" | awk '{ print $3 }')
+              echo "$oldFile -> $newFile" >> ../redirects.txt
+            fi
+          done < ../changes.txt
+
+      - name: Show Redirect File
+        run: |
+          cat redirects.txt
