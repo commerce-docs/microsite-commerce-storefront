@@ -1,5 +1,5 @@
 // import 'regenerator-runtime/runtime';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GraphiQL, GraphiQLInterface } from 'graphiql';
 import {
   GraphiQLProvider,
