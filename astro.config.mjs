@@ -56,16 +56,16 @@ async function config() {
       '/dropins/user-auth/userauth-introduction': '/developer/commerce/storefront/dropins/user-auth',
       '/faq': '/developer/commerce/storefront/troublshooting/faq',
       '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
-      '/get-started/requirements': '/developer/commerce/storefront/storefront-setup/discovery/architecture',
-      '/get-started/configurations': '/developer/commerce/storefront/storefront-setup/configuration/commerce-configuration',
+      '/get-started/requirements': '/developer/commerce/storefront/setup/discovery/architecture',
+      '/get-started/configurations': '/developer/commerce/storefront/setup/configuration/commerce-configuration',
       '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
       '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
       '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
       '/product-details/pdp-introduction': '/developer/commerce/storefront/dropins/product-details/',
       '/product-details/pdp-slots': '/developer/commerce/storefront/dropins/product-details/slots',
       '/product-details/pdp-styles': '/developer/commerce/storefront/dropins/product-details/styles',
-      '/references/configurations': '/developer/commerce/storefront/storefront-setup/configuration/commerce-configuration',
-      '/references/requirements': '/developer/commerce/storefront/storefront-setup/discovery/architecture',
+      '/references/configurations': '/developer/commerce/storefront/setup/configuration/commerce-configuration',
+      '/references/requirements': '/developer/commerce/storefront/setup/discovery/architecture',
       '/dropins/cart/cart-installation': '/developer/commerce/storefront/dropins/cart/installation',
       '/dropins/cart/cart-styles': '/developer/commerce/storefront/dropins/cart/styles',
       '/dropins/cart/cart-containers': '/developer/commerce/storefront/dropins/cart/containers',
@@ -78,12 +78,26 @@ async function config() {
       '/setup/content-delivery-network': '/developer/commerce/storefront/config/content-delivery-network',
       '/setup/storefront-compatibility': '/developer/commerce/storefront/config/storefront-compatibility',
       '/get-started/release': '/developer/commerce/storefront/releases/',
-      '/seo': '/developer/commerce/storefront/storefront-setup/seo/',
-      '/seo/metadata': '/developer/commerce/storefront/storefront-setup/seo/metadata',
+      '/seo': '/developer/commerce/storefront/setup/seo/',
+      '/seo/metadata': '/developer/commerce/storefront/setup/seo/metadata',
       '/merchants/multistore': '/developer/commerce/storefront/merchants/get-started/multistore',
       '/merchants/terms-and-conditions': '/developer/commerce/storefront/merchants/get-started/terms-and-conditions',
       '/dropins/all/enriching': '/developer/commerce/storefront/merchants/get-started/enrichment',
       '/dropins/all/experimenting': '/developer/commerce/storefront/merchants/get-started/experiments',
+      '/storefront-setup/': '/developer/commerce/storefront/setup/',
+      '/storefront-setup/discovery/': '/developer/commerce/storefront/setup/discovery/',
+      '/storefront-setup/discovery/architecture/': '/developer/commerce/storefront/setup/discovery/architecture/',
+      '/storefront-setup/discovery/data-export-validation/': '/developer/commerce/storefront/setup/discovery/data-export-validation/',
+      '/storefront-setup/discovery/luma-bridge/': '/developer/commerce/storefront/setup/discovery/luma-bridge/',
+      '/storefront-setup/configuration/': '/developer/commerce/storefront/setup/configuration/',
+      '/storefront-setup/configuration/commerce-configuration/': '/developer/commerce/storefront/setup/configuration/commerce-configuration/',
+      '/storefront-setup/configuration/content-delivery-network/': '/developer/commerce/storefront/setup/configuration/content-delivery-network/',
+      '/storefront-setup/configuration/storefront-compatibility/': '/developer/commerce/storefront/setup/configuration/storefront-compatibility/',
+      '/storefront-setup/analytics/': '/developer/commerce/storefront/setup/analytics/',
+      '/storefront-setup/seo/': '/developer/commerce/storefront/setup/seo/',
+      '/storefront-setup/seo/metadata/': '/developer/commerce/storefront/setup/seo/metadata/',
+      '/storefront-setup/seo/indexing/': '/developer/commerce/storefront/setup/seo/indexing/',
+      '/storefront-setup/launch/': '/developer/commerce/storefront/setup/launch/',
     },
     integrations: [
       starlight({
@@ -136,41 +150,41 @@ async function config() {
                   items: [
                     {
                       label: 'Overview',
-                      link: '/storefront-setup/'
+                      link: '/setup/'
                     },
                     {
                       label: 'Discovery',
                       collapsed: true,
                       autogenerate: {
-                        directory: '/storefront-setup/discovery/'
+                        directory: '/setup/discovery/'
                       },
                     },
                     {
                       label: 'Configuration',
                       collapsed: true,
                       autogenerate: {
-                        directory: '/storefront-setup/configuration/'
+                        directory: '/setup/configuration/'
                       },
                     },
                     {
                       label: 'Analytics',
                       collapsed: true,
                       autogenerate: {
-                        directory: '/storefront-setup/analytics/'
+                        directory: '/setup/analytics/'
                       },
                     },
                     {
                       label: 'SEO',
                       collapsed: true,
                       autogenerate: {
-                        directory: '/storefront-setup/seo/'
+                        directory: '/setup/seo/'
                       },
                     },
                     {
                       label: 'Launch',
                       collapsed: true,
                       autogenerate: {
-                        directory: '/storefront-setup/launch/'
+                        directory: '/setup/launch/'
                       },
                     },
                   ]
