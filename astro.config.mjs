@@ -58,7 +58,7 @@ async function config() {
       '/get-started/launch-checklist': '/developer/commerce/storefront/launch',
       '/get-started/requirements': '/developer/commerce/storefront/setup/discovery/architecture',
       '/get-started/configurations': '/developer/commerce/storefront/setup/configuration/commerce-configuration',
-      '/get-started/storefront-structure': '/developer/commerce/storefront/get-started/storefront-structure',
+      '/get-started/storefront-structure': '/developer/commerce/storefront/get-started/boilerplate-project',
       '/product-details/pdp-containers': '/developer/commerce/storefront/dropins/product-details/containers',
       '/product-details/pdp-functions': '/developer/commerce/storefront/dropins/product-details/functions',
       '/product-details/pdp-installation': '/developer/commerce/storefront/dropins/product-details/installation',
