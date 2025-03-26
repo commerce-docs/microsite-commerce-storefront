@@ -78,6 +78,12 @@ async function config() {
       '/setup/content-delivery-network': '/developer/commerce/storefront/config/content-delivery-network',
       '/setup/storefront-compatibility': '/developer/commerce/storefront/config/storefront-compatibility',
       '/get-started/release': '/developer/commerce/storefront/releases/',
+      '/seo': '/developer/commerce/storefront/storefront-setup/seo/',
+      '/seo/metadata': '/developer/commerce/storefront/storefront-setup/seo/metadata',
+      '/merchants/multistore': '/developer/commerce/storefront/merchants/get-started/multistore',
+      '/merchants/terms-and-conditions': '/developer/commerce/storefront/merchants/get-started/terms-and-conditions',
+      '/dropins/all/enriching': '/developer/commerce/storefront/merchants/get-started/enrichment',
+      '/dropins/all/experimenting': '/developer/commerce/storefront/merchants/get-started/experiments',
     },
     integrations: [
       starlight({
@@ -465,7 +471,7 @@ async function config() {
                       link: 'merchants/get-started/experiments/'
                     },
                     {
-                      label: 'Multistore setup',
+                      label: 'Multi-store setup',
                       link: 'merchants/get-started/multistore/'
                     },
                     {
