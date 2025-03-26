@@ -1,5 +1,5 @@
 ---
-const { caption, width } = Astro.props;
+const { caption, width, maxHeight = "500px" } = Astro.props;
 ---
 
 <div class="diagram">
@@ -7,13 +7,14 @@ const { caption, width } = Astro.props;
   <div class="caption">{caption}</div>
 </div>
 
-<style define:vars={{ imageWidth: width }} is:global>
+<style define:vars={{ imageWidth: width, maxHeight: maxHeight }} is:global>
   .diagram {
     margin: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-radius: 0.5rem;
     border: 1px solid var(--sl-color-gray-4);
     box-shadow: var(--sl-shadow-sm);
@@ -21,6 +22,24 @@ const { caption, width } = Astro.props;
     background-color: #fff;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    max-height: var(--maxHeight);
+    /* For Firefox: */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  }
+
+  /* For WebKit browsers */
+  .diagram::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .diagram::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .diagram::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
   }
 
   .ac-steps .ac-step .diagram.diagram {
@@ -39,10 +58,8 @@ const { caption, width } = Astro.props;
     width: var(--imageWidth);
     height: auto;
     padding: 0;
-    margin: 0 0 0 0;
-    /* border: 1px solid var(--sl-color-gray-5);
-    border-bottom: none;
-    border-radius: 0.5rem 0.5rem 0 0; */
+    margin: 0;
+    object-position: top;
   }
 
   .caption.caption {
@@ -50,7 +67,7 @@ const { caption, width } = Astro.props;
     font-style: italic;
     line-height: normal;
     padding: 0.75rem;
-    margin: 0 0 0 0;
+    margin: 0;
     color: var(--sl-color-gray-2);
     background-color: var(--sl-color-gray-6);
   }
@@ -58,6 +75,14 @@ const { caption, width } = Astro.props;
   @media screen and (max-width: 600px) {
     .caption.caption {
       padding: 0.15rem 0.5rem;
+    }
+  }
+  @media print {
+    .diagram.diagram {
+      border: none;
+      box-shadow: none;
+      background-color: #fff;
+      max-height: var(--maxHeight);
     }
   }
 </style>

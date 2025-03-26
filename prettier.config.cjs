@@ -1,4 +1,4 @@
-const baseConfig = require('./config/prettier.cjs');
+const baseConfig = require('./configuration/prettier.cjs');
 
 /**
  * @type {import('prettier').Config}
@@ -15,7 +15,6 @@ const prettierConfig = {
   ],
   plugins: [
     require.resolve('prettier-plugin-astro'),
-    require.resolve('prettier-plugin-tailwindcss'),
   ],
 };
 
