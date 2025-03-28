@@ -2,30 +2,29 @@
 interface Props {
   src: string;
 }
-
-const { src } = Astro.props;
+const { src } = Astro.props as Props;
+const iframeSrc = `/storybook-static/iframe.html?id=${src}`;
 ---
 
 <iframe
-  id="story"
+  id='story'
   title={src}
-  src={'/storybook-static/iframe.html?id=' + src}
-  allow="clipboard-read; clipboard-write"
-  width="100%"
-  style="border: none; overflow: hidden; height: 100vh;"></iframe>
+  src={iframeSrc}
+  allow='clipboard-read; clipboard-write'
+  width='100%'
+  style='border: none; overflow: hidden; height: 100vh;'>
+</iframe>
 
 <script>
-  window.addEventListener(
-    'message',
-    function (event) {
-      if (event.data.height) {
-        let iframe = document.getElementById('story') as HTMLIFrameElement;
-        let iframeDocument =
+  window.addEventListener('message', (event) => {
+    if (event.data.height) {
+      const iframe = document.getElementById('story');
+      if (iframe) {
+        const iframeDocument =
           iframe.contentDocument || iframe.contentWindow.document;
         iframeDocument.documentElement.style.overflow = 'hidden';
         iframe.style.height = event.data.height + 'px';
       }
-    },
-    true
-  );
+    }
+  });
 </script>

@@ -8,6 +8,8 @@ import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import react from "@astrojs/react";
 import starlightHeadingBadges from 'starlight-heading-badges';
 import starlightSidebarTopics from 'starlight-sidebar-topics';
+import fs from 'fs';
+import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
@@ -18,6 +20,18 @@ const basePath = isProduction
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
     : '/microsite-commerce-storefront';
+
+const sdkComponentsDir = path.resolve('./sdk/components');
+const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
+  ? fs.readdirSync(sdkComponentsDir).filter(file => file.endsWith('.mdx'))
+  : [];
+
+const sdkComponentEntries = sdkComponentFiles.map(file => {
+  const componentName = path.basename(file, '.mdx');
+  // Capitalize the first letter (just like the Button entry)
+  const label = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+  return { label, link: `/sdk/components/${componentName}/` };
+});
 
 // https://astro.build/config
 async function config() {
@@ -532,6 +546,26 @@ async function config() {
                     {
                       label: 'Commerce API Playground',
                       link: '/playgrounds/commerce-services/'
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'SDK',
+              link: '/sdk/',
+              icon: 'puzzle',
+              items: [
+                {
+                  label: 'Storefront SDK',
+                  items: [
+                    {
+                      label: 'Shared components',
+                      link: '/sdk/components/'
+                    },
+                    {
+                      label: 'Button',
+                      link: '/sdk/components/button/'
                     },
                   ],
                 },
