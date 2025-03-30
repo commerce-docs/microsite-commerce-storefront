@@ -561,7 +561,7 @@ async function config() {
                   items: [
                     {
                       label: 'Shared components',
-                      link: '/sdk/components/'
+                      link: '/sdk/components/button/'
                     },
                     {
                       label: 'Button',
