@@ -552,13 +552,26 @@ async function config() {
               ],
             },
             {
-              label: 'SDK',
-              link: '/sdk/',
+              label: 'Drop-in SDK',
               icon: 'puzzle',
+              link: '/sdk/',
               items: [
                 {
                   label: 'Getting started',
-                  link: '/sdk/get-started/'
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: '/sdk/'
+                    },
+                    {
+                      label: 'Create a drop-in component',
+                      link: '/sdk/get-started/create-a-dropin/'
+                    },
+                    {
+                      label: 'CLI usage',
+                      link: '/sdk/get-started/cli/'
+                    },
+                  ],
                 },
                 {
                   label: 'Components',
@@ -569,12 +582,24 @@ async function config() {
                       link: '/sdk/components/overview/'
                     },
                     {
+                      label: 'Accordion',
+                      link: '/sdk/components/accordion/'
+                    },
+                    {
                       label: 'ActionButton',
                       link: '/sdk/components/actionbutton/'
                     },
                     {
                       label: 'ActionButtonGroup',
                       link: '/sdk/components/actionbuttongroup/'
+                    },
+                    {
+                      label: 'AlertBanner',
+                      link: '/sdk/components/alertbanner/'
+                    },
+                    {
+                      label: 'Breadcrumbs',
+                      link: '/sdk/components/breadcrumbs/'
                     },
                     {
                       label: 'Button',
@@ -670,7 +695,7 @@ async function config() {
                     },
                     {
                       label: 'PriceRange',
-                      link: '/sdk/components/price-range/'
+                      link: '/sdk/components/pricerange/'
                     },
                     {
                       label: 'ProgressSpinner',
@@ -705,6 +730,77 @@ async function config() {
                       link: '/sdk/components/togglebutton/'
                     },
                   ],
+                },
+                {
+                  label: 'Base Design',
+                  collapsed: true,
+                  items: [{
+                    label: 'Overview',
+                    link: '/sdk/design/'
+                  }, {
+                    label: 'Design tokens',
+                    link: '/sdk/design/base/'
+                  }, {
+                    label: 'Colors',
+                    link: '/sdk/design/colors/'
+                  }, {
+                    label: 'Typography',
+                    link: '/sdk/design/typography/'
+                  }, {
+                    label: 'Spacing',
+                    link: '/sdk/design/spacing/'
+                  }, {
+                    label: 'Shapes',
+                    link: '/sdk/design/shapes/'
+                  }, {
+                    label: 'Grids',
+                    link: '/sdk/design/grid/'
+                  }]
+                }, {
+                  label: 'Reference',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/sdk/reference/'
+                    },
+                    {
+                      label: 'Events',
+                      link: '/sdk/reference/events/'
+                    }, {
+                      label: 'Initialize',
+                      link: '/sdk/reference/initialize/'
+                    }, {
+                      label: 'Render',
+                      link: '/sdk/reference/render/'
+                    }, {
+                      label: 'reCAPTCHA',
+                      link: '/sdk/reference/recaptcha/'
+                    }]
+                }, {
+                  label: 'Utilities',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/sdk/utilities/'
+                    },
+                    {
+                      label: 'classList',
+                      link: '/sdk/utilities/classlist/'
+                    }, {
+                      label: 'debounce',
+                      link: '/sdk/utilities/debounce/'
+                    }, {
+                      label: 'deepmerge',
+                      link: '/sdk/utilities/deepmerge/'
+                    }, {
+                      label: 'getFormErrors',
+                      link: '/sdk/utilities/getformerrors/'
+                    }, {
+                      label: 'getFormValues',
+                      link: '/sdk/utilities/getformvalues/'
+                    }]
                 },
               ],
             },
