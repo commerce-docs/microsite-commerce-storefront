@@ -557,15 +557,152 @@ async function config() {
               icon: 'puzzle',
               items: [
                 {
-                  label: 'Storefront SDK',
+                  label: 'Getting started',
+                  link: '/sdk/get-started/'
+                },
+                {
+                  label: 'Components',
+                  collapsed: true,
                   items: [
                     {
-                      label: 'Shared components',
-                      link: '/sdk/components/button/'
+                      label: 'Overview',
+                      link: '/sdk/components/overview/'
+                    },
+                    {
+                      label: 'ActionButton',
+                      link: '/sdk/components/actionbutton/'
+                    },
+                    {
+                      label: 'ActionButtonGroup',
+                      link: '/sdk/components/actionbuttongroup/'
                     },
                     {
                       label: 'Button',
                       link: '/sdk/components/button/'
+                    },
+                    {
+                      label: 'Card',
+                      link: '/sdk/components/card/'
+                    },
+                    {
+                      label: 'CartItem',
+                      link: '/sdk/components/cartitem/'
+                    },
+                    {
+                      label: 'CartList',
+                      link: '/sdk/components/cartlist/'
+                    },
+                    {
+                      label: 'Checkbox',
+                      link: '/sdk/components/checkbox/'
+                    },
+                    {
+                      label: 'ColorSwatch',
+                      link: '/sdk/components/colorswatch/'
+                    },
+                    {
+                      label: 'ContentGrid',
+                      link: '/sdk/components/contentgrid/'
+                    },
+                    {
+                      label: 'Divider',
+                      link: '/sdk/components/divider/'
+                    },
+                    {
+                      label: 'Field',
+                      link: '/sdk/components/field/'
+                    },
+                    {
+                      label: 'Header',
+                      link: '/sdk/components/header/'
+                    },
+                    {
+                      label: 'Icon',
+                      link: '/sdk/components/icon/'
+                    },
+                    {
+                      label: 'IllustratedMessage',
+                      link: '/sdk/components/illustratedmessage/'
+                    },
+                    {
+                      label: 'Image',
+                      link: '/sdk/components/image/'
+                    },
+                    {
+                      label: 'ImageSwatch',
+                      link: '/sdk/components/imageswatch/'
+                    },
+                    {
+                      label: 'InlineAlert',
+                      link: '/sdk/components/inlinealert/'
+                    },
+                    {
+                      label: 'Incrementer',
+                      link: '/sdk/components/incrementer/'
+                    },
+                    {
+                      label: 'Input',
+                      link: '/sdk/components/input/'
+                    },
+                    {
+                      label: 'InputDate',
+                      link: '/sdk/components/inputdate/'
+                    },
+                    {
+                      label: 'InputPassword',
+                      link: '/sdk/components/inputpassword/'
+                    },
+                    {
+                      label: 'Modal',
+                      link: '/sdk/components/modal/'
+                    },
+                    {
+                      label: 'Pagination',
+                      link: '/sdk/components/pagination/'
+                    },
+                    {
+                      label: 'Picker',
+                      link: '/sdk/components/picker/'
+                    },
+                    {
+                      label: 'Price',
+                      link: '/sdk/components/price/'
+                    },
+                    {
+                      label: 'PriceRange',
+                      link: '/sdk/components/price-range/'
+                    },
+                    {
+                      label: 'ProgressSpinner',
+                      link: '/sdk/components/progressspinner/'
+                    },
+                    {
+                      label: 'RadioButton',
+                      link: '/sdk/components/radiobutton/'
+                    },
+                    {
+                      label: 'Skeleton',
+                      link: '/sdk/components/skeleton/'
+                    },
+                    {
+                      label: 'TextField',
+                      link: '/sdk/components/textfield/'
+                    },
+                    {
+                      label: 'Tag',
+                      link: '/sdk/components/tag/'
+                    },
+                    {
+                      label: 'TextArea',
+                      link: '/sdk/components/textarea/'
+                    },
+                    {
+                      label: 'TextSwatch',
+                      link: '/sdk/components/textswatch/'
+                    },
+                    {
+                      label: 'ToggleButton',
+                      link: '/sdk/components/togglebutton/'
                     },
                   ],
                 },

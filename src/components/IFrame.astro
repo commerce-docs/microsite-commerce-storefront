@@ -1,29 +1,68 @@
 ---
 interface Props {
-  src: string;
+  src?: string;
 }
-const { src } = Astro.props as Props;
-const iframeSrc = `/storybook-static/iframe.html?id=${src}`;
+const { src } = Astro.props;
+
+if (!src) {
+  console.warn("No iframe src provided");
+}
+
+const iframeSrc = src ? `/storybook-static/iframe.html?id=${src}` : "#";
 ---
 
-<iframe
-  id='story'
-  title={src}
-  src={iframeSrc}
-  allow='clipboard-read; clipboard-write'
-  width='100%'
-  style='border: none; overflow: hidden; height: 100vh;'>
-</iframe>
+<div class="iframe-container">
+  <iframe
+    id="story"
+    title={src}
+    src={iframeSrc}
+    allow="clipboard-read; clipboard-write"
+    width="100%"
+    style="border: none; overflow: hidden; height: 100vh;"
+  >
+  </iframe>
+  {
+    !src && (
+      <div class="error-message">
+        Storybook component not found. Please ensure Storybook is built and the
+        iframe.html file exists in the public/storybook-static directory.
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .iframe-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+  }
+  .error-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f8f8f8;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-align: center;
+    max-width: 80%;
+  }
+</style>
 
 <script>
-  window.addEventListener('message', (event) => {
+  window.addEventListener("message", (event) => {
     if (event.data.height) {
-      const iframe = document.getElementById('story');
+      const iframe = document.getElementById("story");
       if (iframe) {
         const iframeDocument =
-          iframe.contentDocument || iframe.contentWindow.document;
-        iframeDocument.documentElement.style.overflow = 'hidden';
-        iframe.style.height = event.data.height + 'px';
+          (iframe as HTMLIFrameElement).contentDocument ||
+          (iframe as HTMLIFrameElement).contentWindow?.document;
+        if (iframeDocument) {
+          iframeDocument.documentElement.style.overflow = "hidden";
+        }
+        iframe.style.height = event.data.height + "px";
       }
     }
   });

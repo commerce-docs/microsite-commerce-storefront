@@ -4,6 +4,7 @@ import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
 import { docsLoader, i18nLoader } from "@astrojs/starlight/loaders";
 import { topicSchema } from 'starlight-sidebar-topics/schema'
 
+
 const prerequisiteSchema = zod
   .object({
     html: zod.boolean().default(false).optional(),
@@ -35,11 +36,13 @@ const heroSchema = zod
   })
   .optional();
 
-const iframeSchema = zod.boolean().default(false).optional();
+const iframe = zod.object({
+  src: zod.string(),
+}).optional();
 
-const i18n = defineCollection({ 
-    loader: i18nLoader(), 
-    schema: i18nSchema() 
+const i18n = defineCollection({
+  loader: i18nLoader(),
+  schema: i18nSchema()
 });
 const docs = defineCollection({
   loader: docsLoader(),
@@ -47,7 +50,7 @@ const docs = defineCollection({
     {
       extend: zod.object(
         {
-          iframe: iframeSchema,
+          iframe: iframe,
           hero: heroSchema,
           prerequisites: prerequisiteSchema.optional(),
           time: zod.string().optional(),
