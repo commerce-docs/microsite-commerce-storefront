@@ -1,54 +1,269 @@
 import dedent from 'dedent';
 
 export const QUERIES = {
-  Cart: dedent`query GUEST_CART_QUERY($cartId: String!) {
-  cart(cart_id: $cartId) {
-    id
-    total_quantity
-    is_virtual
-    prices {
-      subtotal_with_discount_excluding_tax {
-        currency
-        value
+  Cart: dedent`query GUEST_CART_QUERY(
+      $cartId: String!
+      $pageSize: Int! = 100
+      $currentPage: Int! = 1
+      $itemsSortInput: QuoteItemsSortInput! = { field: CREATED_AT, order: DESC }
+    ) {
+      cart(cart_id: $cartId) {
+        ...CART_FRAGMENT
       }
-      subtotal_including_tax {
-        currency
-        value
+    }
+
+    fragment CART_FRAGMENT on Cart {
+      id
+      total_quantity
+      is_virtual
+      prices {
+        subtotal_with_discount_excluding_tax {
+          currency
+          value
+        }
+        subtotal_including_tax {
+          currency
+          value
+        }
+        subtotal_excluding_tax {
+          currency
+          value
+        }
+        grand_total {
+          currency
+          value
+        }
+        grand_total_excluding_tax {
+          currency
+          value
+        }
+        applied_taxes {
+          label
+          amount {
+            value
+            currency
+          }
+        }
+        discounts {
+          amount {
+            value
+            currency
+          }
+          label
+          coupon {
+            code
+          }
+          applied_to
+        }
       }
-      subtotal_excluding_tax {
-        currency
-        value
+      applied_coupons {
+        code
       }
-      grand_total {
-        currency
-        value
+      itemsV2(
+        pageSize: $pageSize
+        currentPage: $currentPage
+        sort: $itemsSortInput
+      ) {
+        items {
+          ...CART_ITEM_FRAGMENT
+        }
       }
-      applied_taxes {
-        label
-        amount {
+      shipping_addresses {
+        country {
+          code
+        }
+        region {
+          code
+        }
+        postcode
+      }
+    }
+    fragment CART_ITEM_FRAGMENT on CartItemInterface {
+      __typename
+      uid
+      quantity
+      is_available
+      not_available_message
+      errors {
+        code
+        message
+      }
+      prices {
+        price {
+          value
+          currency
+        }
+        discounts {
+          amount {
+            value
+            currency
+          }
+          label
+        }
+        total_item_discount {
+          value
+          currency
+        }
+        row_total {
+          value
+          currency
+        }
+        row_total_including_tax {
+          value
+          currency
+        }
+        price_including_tax {
+          value
+          currency
+        }
+        fixed_product_taxes {
+          amount {
+            value
+            currency
+          }
+          label
+        }
+        original_item_price {
+          value
+          currency
+        }
+        original_row_total {
           value
           currency
         }
       }
-      discounts {
+      product {
+        name
+        sku
+        thumbnail {
+          url
+          label
+        }
+        url_key
+        canonical_url
+        categories {
+          url_path
+          url_key
+          name
+        }
+        custom_attributesV2(filters: { is_visible_on_front: true }) {
+          items {
+            code
+            ... on AttributeValue {
+              value
+            }
+            ... on AttributeSelectedOptions {
+              selected_options {
+                value
+                label
+              }
+            }
+          }
+        }
+        only_x_left_in_stock
+        stock_status
+        price_range {
+          ...PRICE_RANGE_FRAGMENT
+        }
+      }
+      ... on SimpleCartItem {
+        customizable_options {
+          ...CUSTOMIZABLE_OPTIONS_FRAGMENT
+        }
+      }
+      ... on ConfigurableCartItem {
+        configurable_options {
+          configurable_product_option_uid
+          option_label
+          value_label
+        }
+        configured_variant {
+          uid
+          sku
+          only_x_left_in_stock
+          stock_status
+          thumbnail {
+            label
+            url
+          }
+          price_range {
+            ...PRICE_RANGE_FRAGMENT
+          }
+        }
+        customizable_options {
+          ...CUSTOMIZABLE_OPTIONS_FRAGMENT
+        }
+      }
+      ... on BundleCartItem {
+        bundle_options {
+          uid
+          label
+          values {
+            uid
+            label
+          }
+        }
+      }
+      ... on GiftCardCartItem {
+        message
+        recipient_email
+        recipient_name
+        sender_email
+        sender_name
         amount {
+          currency
+          value
+        }
+        is_available
+      }
+    }
+
+    fragment PRICE_RANGE_FRAGMENT on PriceRange {
+      minimum_price {
+        regular_price {
           value
           currency
         }
+        final_price {
+          value
+          currency
+        }
+        discount {
+          percent_off
+          amount_off
+        }
+      }
+      maximum_price {
+        regular_price {
+          value
+          currency
+        }
+        final_price {
+          value
+          currency
+        }
+        discount {
+          percent_off
+          amount_off
+        }
+      }
+    }
+
+    fragment CUSTOMIZABLE_OPTIONS_FRAGMENT on SelectedCustomizableOption {
+      type
+      customizable_option_uid
+      label
+      is_required
+      values {
         label
+        value
+        price {
+          type
+          units
+          value
+        }
       }
     }
-    shipping_addresses {
-      country {
-        code
-      }
-      region {
-        code
-      }
-      postcode
-    }
-  }
-  }
   `,
   Products: dedent`query ProductQuery($sku: String!) {
   products(skus: [$sku]) {

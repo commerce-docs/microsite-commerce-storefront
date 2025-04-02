@@ -1,2 +1,2 @@
 export const ENDPOINT =
-  'https://edge-sandbox-graph.adobe.io/api/18205ff7-6701-451b-916e-36372101e2fc/graphql';
+  'https://edge-graph.adobe.io/api/489c8449-21a0-4155-9f95-7608d36970d6/graphql';
