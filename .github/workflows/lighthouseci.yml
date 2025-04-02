@@ -1,30 +1,22 @@
 name: Audit Web Vitals
 on:
-  push:
-    branches:
-      - develop
   workflow_dispatch:
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   lhci:
     name: Run Lighthouse
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-      - name: Use Node.js
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install
       - name: Build
@@ -35,8 +27,6 @@ jobs:
 
       - name: Run Lighthouse CLI
         run: lhci autorun
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
       - name: Post Lighthouse Scores (per page)
         uses: actions/github-script@v7
@@ -44,5 +34,3 @@ jobs:
           script: |
             const lighthouseScript = require('.github/workflows/lighthouseScores.cjs')
             console.log(lighthouseScript({github, context}))
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
