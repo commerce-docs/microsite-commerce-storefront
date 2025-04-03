@@ -474,85 +474,7 @@ async function config() {
               ],
             },
             {
-              label: 'Merchants',
-              link: 'merchants/get-started/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Getting started',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Multi-store setup',
-                      link: 'merchants/get-started/multistore/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Videos',
-              link: '/videos/',
-              icon: 'seti:video',
-              items: [
-                {
-                  label: 'Storefront Videos',
-                  items: [
-                    { label: 'Overview', link: '/videos/' },
-                    {
-                      label: 'Add custom product lines to cart summary',
-                      link: '/videos/add-product-lines-to-cart-summary/',
-                    },
-                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
-                    {
-                      label: 'Customize address form layout and address lookup',
-                      link: '/videos/customize-address-form-layout/',
-                    },
-                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
-                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
-                    { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
-                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Playgrounds',
-              link: '/playgrounds/',
-              icon: 'laptop',
-              items: [
-                {
-                  label: 'Storefront Playgrounds',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: '/playgrounds/'
-                    },
-                    {
-                      label: 'Commerce API Playground',
-                      link: '/playgrounds/commerce-services/'
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Drop-in SDK',
+              label: 'SDK',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
@@ -801,6 +723,84 @@ async function config() {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
                     }]
+                },
+              ],
+            },
+            {
+              label: 'Merchants',
+              link: 'merchants/get-started/',
+              icon: 'seti:svg',
+              items: [
+                {
+                  label: 'Getting started',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
+                    },
+                    {
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Multi-store setup',
+                      link: 'merchants/get-started/multistore/'
+                    },
+                    {
+                      label: 'Terms and conditions',
+                      link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Videos',
+              link: '/videos/',
+              icon: 'seti:video',
+              items: [
+                {
+                  label: 'Storefront Videos',
+                  items: [
+                    { label: 'Overview', link: '/videos/' },
+                    {
+                      label: 'Add custom product lines to cart summary',
+                      link: '/videos/add-product-lines-to-cart-summary/',
+                    },
+                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
+                    {
+                      label: 'Customize address form layout and address lookup',
+                      link: '/videos/customize-address-form-layout/',
+                    },
+                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
+                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
+                    { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
+                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Playgrounds',
+              link: '/playgrounds/',
+              icon: 'laptop',
+              items: [
+                {
+                  label: 'Storefront Playgrounds',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: '/playgrounds/'
+                    },
+                    {
+                      label: 'Commerce API Playground',
+                      link: '/playgrounds/commerce-services/'
+                    },
+                  ],
                 },
               ],
             },
