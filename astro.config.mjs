@@ -690,15 +690,19 @@ async function config() {
                       label: 'Events',
                       link: '/sdk/reference/events/'
                     }, {
-                      label: 'Initialize',
-                      link: '/sdk/reference/initialize/'
+                      label: 'GraphQL',
+                      link: '/sdk/reference/graphql/'
+                    }, {
+                      label: 'Initializer',
+                      link: '/sdk/reference/initializer/'
                     }, {
                       label: 'Render',
                       link: '/sdk/reference/render/'
                     }, {
                       label: 'reCAPTCHA',
                       link: '/sdk/reference/recaptcha/'
-                    }]
+                    },
+                  ]
                 }, {
                   label: 'Utilities',
                   collapsed: true,
