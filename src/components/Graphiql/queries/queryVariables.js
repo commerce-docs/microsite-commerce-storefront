@@ -1,14 +1,14 @@
 export const VARIABLES = {
-  Cart: JSON.stringify({ cartId: 'cdKuDrc2cd9AnyWycSuMPIYN4UqWlK85' }, null, 2),
-  Products: JSON.stringify({ sku: '24-WG080' }, null, 2),
+  Cart: JSON.stringify({ cartId: 'z7QmctP3Hs3qg3TCPwKPgWAnsrhdfHIU' }, null, 2),
+  Products: JSON.stringify({ sku: 'ADB256' }, null, 2),
   Recommendations: JSON.stringify(
     {
       pageType: 'Product',
-      currentSku: '24-WG03',
+      currentSku: 'ADB256',
       userViewHistory: [
-        { date: '2024-06-05T18:19:52.730Z', sku: '24-WB06' },
-        { date: '2024-06-05T18:23:22.712Z', sku: '24-UG07' },
-        { date: '2024-06-06T15:05:31.836Z', sku: '24-WG03' },
+        { date: '2025-03-05T18:19:52.730Z', sku: 'ADB256' },
+        { date: '2025-03-05T18:23:22.712Z', sku: 'ADB385' },
+        { date: '2025-03-06T15:05:31.836Z', sku: 'ADB386' },
       ],
       userPurchaseHistory: [],
     },
