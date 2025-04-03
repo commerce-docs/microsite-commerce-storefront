@@ -474,7 +474,7 @@ async function config() {
               ],
             },
             {
-              label: 'SDK',
+              label: 'Drop-in SDK',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
