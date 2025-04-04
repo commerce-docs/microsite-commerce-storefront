@@ -1,0 +1,222 @@
+### Tutorial: Implementing Mini Cart Functionality
+
+#### Introduction
+In this tutorial, we will walk through implementing mini-cart functionality using CSS and JavaScript. This will allow users to view and manage their cart items directly from a mini-cart panel.
+
+#### Step 1: CSS Styling for Mini Cart
+
+Create or update `commerce-mini-cart.css` with the following styles:
+
+```css
+/* commerce-mini-cart.css */
+
+.cart-mini-cart {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--spacing-small) var(--spacing-small) var(--spacing-medium);
+    box-sizing: border-box;
+}
+
+.cart-mini-cart__empty-cart {
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-self: center;
+}
+
+.cart-mini-cart__heading {
+    display: grid;
+    row-gap: var(--spacing-xsmall);
+    font: var(--type-headline-2-default-font);
+    letter-spacing: var(--type-headline-2-default-letter-spacing);
+}
+
+.cart-mini-cart__heading-divider {
+    width: 100%;
+    margin: var(--spacing-xxsmall) 0 0 0;
+}
+
+.cart-mini-cart__products {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 100%;
+    padding-bottom: var(--spacing-medium);
+}
+
+.cart-mini-cart__products .cart-cart-summary-list__heading {
+    padding: 0;
+}
+
+.cart-mini-cart__products .dropin-cart-item__configurations li {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cart-mini-cart__footer {
+    display: grid;
+    grid-auto-flow: row;
+    gap: var(--spacing-small);
+    padding-top: var(--spacing-small);
+    row-gap: var(--spacing-xsmall);
+}
+
+.cart-mini-cart__footer__estimated-total {
+    font: var(--type-body-1-emphasized-font);
+    letter-spacing: var(--type-body-1-emphasized-letter-spacing);
+    display: grid;
+    grid-template: max-content / 1fr auto;
+    gap: var(--spacing-xsmall);
+}
+
+.cart-mini-cart__footer__estimated-total-excluding-taxes {
+    font: var(--type-body-2-default-font);
+    letter-spacing: var(--type-body-2-default-letter-spacing);
+    display: grid;
+    grid-template: max-content / 1fr auto;
+    gap: var(--spacing-xsmall);
+    color: var(--color-neutral-700);
+}
+
+.cart-mini-cart__productListFooter,
+.cart-mini-cart__preCheckoutSection {
+    font: var(--type-body-2-default-font);
+    letter-spacing: var(--type-body-2-default-letter-spacing);
+    color: var(--color-neutral-800);
+}
+
+.cart-mini-cart__footer__ctas {
+    display: grid;
+    grid-auto-flow: row;
+    gap: var(--spacing-xsmall);
+    padding-top: var(--spacing-small);
+}
+```
+
+#### Step 2: JavaScript Logic for Mini Cart
+
+Create or update `commerce-mini-cart.js` with logic to initialize and manage mini cart functionality:
+
+```javascript
+/* commerce-mini-cart.js */
+
+try {
+    const config = readBlockConfig(block);
+
+    const startShoppingURL = config['start-shopping-url'] || '/';
+    const cartURL = config['cart-url'] || '/cart';
+    const checkoutURL = config['checkout-url'] || '/checkout';
+
+    const routes = {
+        routeEmptyCartCTA: () => rootLink(startShoppingURL),
+        routeCart: () => rootLink(cartURL),
+        routeCheckout: () => rootLink(checkoutURL),
+        routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+        isOpen: false,
+    };
+
+    const cart = await initializeCart();
+    await provider.render(MiniCart, routes)(block);
+
+    if (cart) {
+        events.emit('cart/data', cart);
+        events.emit('cart/initialized', cart);
+    }
+
+    events.on('cart/updated', (cartData) => cartData && events.emit('cart/data', cartData), { eager: true });
+
+} catch (error) {
+    console.error('Error initializing cart:', error);
+    events.emit('cart/data', null);
+}
+```
+
+#### Step 3: Integrating Mini Cart with Header
+
+Update `header.css` to integrate the mini cart panel with the header navigation:
+
+```css
+/* header.css */
+
+header nav .nav-tools-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Mini Cart Panel */
+header nav .nav-tools .minicart-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    background-color: var(--background-color);
+    z-index: 999;
+    box-sizing: border-box;
+    transition: right 0.3s ease-in-out;
+    overflow-y: auto;
+    box-shadow: var(--shape-shadow-2);
+}
+
+header nav .nav-tools .nav-tools-panel--show {
+    right: 0;
+}
+
+/* Hide navigation sections when mini cart is open */
+header nav .nav-tools .minicart-panel.nav-tools-panel--show ~ .nav-sections [aria-expanded="true"] {
+    display: none;
+}
+
+/* Hide overlay when mini cart is open */
+header nav .nav-tools .minicart-panel.nav-tools-panel--show ~ .overlay.show {
+    display: none;
+}
+
+/* Responsive adjustments */
+@media (width < 900px) {
+    header nav .nav-tools .minicart-panel {
+        width: 100%;
+        max-width: none;
+    }
+}
+```
+
+#### Step 4: JavaScript Logic for Header Integration
+
+Update `header.js` to handle mini cart interactions:
+
+```javascript
+/* header.js */
+
+if (stateChanged && show) {
+    publishShoppingCartViewEvent();
+    toggleAllNavSections(navSections);
+    overlay.classList.remove('show');
+}
+
+cartButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMiniCart();
+});
+
+function updateCartCounter(data) {
+    if (data?.totalQuantity) {
+        cartButton.setAttribute('data-count', data.totalQuantity);
+        cartButton.setAttribute('aria-label', `Cart with ${data.totalQuantity} items`);
+    } else {
+        cartButton.removeAttribute('data-count');
+        cartButton.setAttribute('aria-label', 'Cart');
+    }
+}
+
+events.on('cart/data', updateCartCounter, { eager: true });
+events.on('cart/updated', updateCartCounter, { eager: true });
+events.on('cart/initialized', updateCartCounter, { eager: true });
+```
