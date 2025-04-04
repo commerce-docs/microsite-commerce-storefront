@@ -1,0 +1,241 @@
+---
+title: GraphQL Extensibility API
+description: The GraphQL Extensibility API allows developers to extend existing GraphQL operations used by a Drop-in to meet additional data requirements without increasing code complexity or negatively impacting performance. This API provides a flexible and efficient way to customize GraphQL Fragments by integrating build-time modifications into the storefront's development pipeline.
+---
+
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The GraphQL Extensibility API allows developers to extend existing GraphQL operations used by a Drop-in to meet additional data requirements without increasing code complexity or negatively impacting performance. 
+This API provides a flexible and efficient way to customize GraphQL Fragments by integrating build-time modifications into the storefront's development pipeline.
+
+## Extend your Drop-in GraphQL Fragments
+
+To enable GraphQL Fragments to be extensible in your Drop-in, follow these steps:
+
+<Tasks>
+
+<Task>
+### Define Your Fragments
+
+Create the content for the fragments you are exporting.
+
+```ts
+// ./src/api/fragments/MyFragment.ts
+
+export const MY_FRAGMENT = `
+  fragment MY_FRAGMENT on FragmentInterface {
+    firstname
+    lastname
+    
+    favorites {
+      uid
+      name
+    }
+  }
+`;
+```
+
+</Task>
+
+<Task>
+### Create Fragments Manifest File
+
+Next, create a new file for your project to list all the fragments you want to expose.
+
+```ts
+// ./src/api/fragments.ts
+
+export { MY_FRAGMENT } from '@/my-dropin/api/graphql/MyFragment';
+```
+
+</Task>
+
+<Task>
+### Update the API Configuration
+
+Finally, add the new file reference to the API configuration in `./.elsie.js`.
+
+```js
+// ./.elsie.js
+
+module.exports = {
+  name: 'MyDropin',
+  api: {
+    root: './src/api',
+    importAliasRoot: '@/my-dropin/api',
+    fragments: './fragments.ts', // 👈 add this line
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components',
+      importAliasRoot: '@/my-dropin/components',
+      cssPrefix: 'my-dropin',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers',
+    importAliasRoot: '@/my-dropin/containers',
+  },
+  schema: {
+    endpoint: process.env.ENDPOINT,
+    headers: {}
+  }
+};
+```
+
+</Task>
+
+</Tasks>
+
+## Extend the Data module
+
+Now that we have made our fragments extensible, we must extend the data model used in our Drop-ins.
+
+<Tasks>
+
+<Task>
+### Define Typing to the Initializer API
+
+First, add the typing to your initializer API in `./src/api/initialize/initialize.ts`.
+
+```ts
+// ./src/api/initialize/initialize.ts
+
+import { Initializer, Model } from '@adobe-commerce/elsie/lib';
+import { Lang } from '@adobe-commerce/elsie/i18n';
+import { MyModel } from '@/my-dropin/data/models';
+
+type ConfigProps = {
+  langDefinitions?: Lang;
+
+  // 👇 add your models configuration
+  models?: {
+    MyModel?: Model<MyModel>;
+  },
+};
+
+export const initialize = new Initializer<ConfigProps>({
+  init: async (config) => {
+    const defaultConfig = {};
+    initialize.config.setConfig({ ...defaultConfig, ...config });
+  },
+
+  listeners: () => [],
+});
+
+export const config = initialize.config;
+```
+
+</Task>
+
+<Task>
+### Extend the Data Transformer
+
+Then, use the configuration to extend the data transformer the model uses by deep merging the existing data transformation with the new configuration.
+
+```ts
+// ./src/data/transforms/transform-my-model.ts
+import { merge } from '@adobe-commerce/elsie/lib';
+import { MyModel } from '@/my-dropin/data/models';
+
+export function transformMyModel(data: any): MyModel {
+  const model = {
+    name: `${data.firstname} ${data.lastname}`,
+    favorites: data.favorites,
+  };
+
+  // Merge custom transformer, if provided
+  return merge(
+    model, // default transformer
+    config.getConfig().models?.MyModel?.transformer?.(data) // custom transformer
+  );
+}
+```
+
+</Task>
+
+</Tasks>
+
+## Using the GraphQL Extensibility Feature in Your Storefront
+
+By extending the GraphQL Fragments and Models of drop-ins, you can leverage the drop-in's existing GraphQL operations and add extra fields needed to meet your specific business requirements. 
+This approach enhances the user experience while maintaining code simplicity and performance efficiency since all modifications are integrated into the storefront's development build-time pipeline.
+
+## Extend Drop-in's Fragments and Models
+
+Follow these steps to extend the GraphQL Fragment and Model in your Drop-in:
+
+<Tasks>
+
+<Task>
+### Extend the GraphQL Fragment
+
+Use the `overrideGQLOperations` function to extend the existing GraphQL Fragment, allowing you to add fields to the fragment as needed.
+
+The `overrideGQLOperations` functions accept an array of configuration objects where you must specify:
+
+#### npm: string
+
+The node module name of the drop-in. i.e. "@dropins/my-dropin".
+
+#### operations: string[] 
+
+An array of string or template literal with operations. 
+
+- Only one definition can be provided in the operation.
+- These must match the operation name as provided by the drop-in. i.e. `MY_FRAGMENT`.
+- The operations must be valid GraphQL operations, such as Fragment. i.e. `fragment MY_FRAGMENT on FragmentInterface { ... }`.
+- In the case of a Fragment, the fragment name must match the same interface as the drop-in. i.e. `FragmentInterface`.
+- If an existing field that has variables is used:
+    - If not variables are provided, the existing variables will be used. i.e. `favorites(page: 1) { ... }`.
+    - If new variables are provided, the new variable will be added. i.e. `favorites(page: 1, offset: 5) { ... }`.
+    - If the existing variables are changed, the new variables will be used. i.e. `favorites(page: 2) { ... }`.
+
+
+```js
+import overrideGQLOperations from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/my-dropin',
+    operations: [`
+      fragment MY_FRAGMENT on FragmentInterface {
+        age
+        
+        favorites {
+          quantity
+        }
+      }
+    `],
+  },
+]);
+```
+</Task>
+
+<Task>
+### Extend the Data Model
+
+Next, update the data models to include the new fields added to the fragment, ensuring that the additional data is correctly processed and available for use in the drop-in. i.e., Slots, Event Bus, etc.
+
+```js
+import * as api from '@dropins/storefront-cart/api.js';
+
+initializers.register(api.initialize, {
+  models: {
+    MyModel: {
+      transformer: (data) => ({
+        age: data?.age,
+        favorites: data.favorites.map((favorite) => ({ 
+          quantity: favorite.quantity,
+        })),
+      }),
+    },
+  },
+});
+```
+</Task>
+
+</Tasks>

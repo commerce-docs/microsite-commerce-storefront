@@ -1,31 +1,130 @@
 ---
 interface Props {
-  src: string;
+  src?: string;
+}
+const { src } = Astro.props;
+
+if (!src) {
+  console.warn("No iframe src provided");
 }
 
-const { src } = Astro.props;
+const basePath =
+  import.meta.env.VITE_PROD_BASE_PATH ||
+  import.meta.env.VITE_GITHUB_BASE_PATH ||
+  "";
+const iframeSrc = src
+  ? `${basePath}/storybook-static/iframe.html?id=${src}`
+  : "#";
 ---
 
-<iframe
-  id="story"
-  title={src}
-  src={'/storybook-static/iframe.html?id=' + src}
-  allow="clipboard-read; clipboard-write"
-  width="100%"
-  style="border: none; overflow: hidden; height: 100vh;"></iframe>
+<div class="iframe-container">
+  <iframe
+    id="story"
+    title={src}
+    src={iframeSrc}
+    allow="clipboard-read; clipboard-write"
+    width="100%"
+    style="border: none; overflow: hidden; height: 100vh;"
+  >
+  </iframe>
+  {
+    !src && (
+      <div class="error-message">
+        Storybook component not found. Please ensure Storybook is built and the
+        iframe.html file exists in the public/storybook-static directory.
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .iframe-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .error-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f8f8f8;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    text-align: center;
+    max-width: 80%;
+  }
+</style>
 
 <script>
-  window.addEventListener(
-    'message',
-    function (event) {
-      if (event.data.height) {
-        let iframe = document.getElementById('story') as HTMLIFrameElement;
-        let iframeDocument =
-          iframe.contentDocument || iframe.contentWindow.document;
-        iframeDocument.documentElement.style.overflow = 'hidden';
-        iframe.style.height = event.data.height + 'px';
+  window.addEventListener("message", (event) => {
+    if (event.data.height) {
+      const iframe = document.getElementById("story");
+      if (iframe) {
+        const iframeDocument =
+          (iframe as HTMLIFrameElement).contentDocument ||
+          (iframe as HTMLIFrameElement).contentWindow?.document;
+        if (iframeDocument) {
+          iframeDocument.documentElement.style.overflow = "hidden";
+        }
+        iframe.style.height = event.data.height + "px";
       }
-    },
-    true
-  );
+    }
+  });
+
+  // Function to inject styles into the iframe
+  function injectStyles(iframe) {
+    if (!iframe) return;
+
+    const iframeDocument =
+      iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDocument) return;
+
+    // Create a style element
+    const style = iframeDocument.createElement("style");
+    style.textContent = `
+      .sbdocs.sbdocs-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      h1.sbdocs-title.sb-unstyled {
+        display: none;
+      }
+      .sbdocs.sbdocs-content p:first-child {
+        font-size: clamp(1.1rem, calc(1.1rem + 1vw), 1.5rem);
+        line-height: clamp(1.75rem, calc(1.75rem + 1vw), 2.1rem);
+        margin-bottom: 1.5rem;
+        color: gray;
+        text-wrap: pretty;
+        padding-top: 0;
+        margin-top: 0;
+      }
+      .sbdocs.sbdocs-content .sb-unstyled h1 {
+        display: none;
+      }
+      .sbdocs.sbdocs-content .sb-unstyled h1 + p {
+        font-size: clamp(1.1rem, calc(1.1rem + 1vw), 1.5rem);
+        line-height: clamp(1.75rem, calc(1.75rem + 1vw), 2.1rem);
+        margin-bottom: 1.5rem;
+        color: gray;
+        text-wrap: pretty;
+        padding-top: 0;
+        margin-top: 0;
+      }
+    `;
+
+    // Append the style to the iframe's head
+    iframeDocument.head.appendChild(style);
+  }
+
+  // Wait for iframe to load before injecting styles
+  const iframe = document.getElementById("story");
+  if (iframe) {
+    iframe.addEventListener("load", () => {
+      injectStyles(iframe);
+    });
+  }
 </script>

@@ -8,6 +8,8 @@ import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import react from "@astrojs/react";
 import starlightHeadingBadges from 'starlight-heading-badges';
 import starlightSidebarTopics from 'starlight-sidebar-topics';
+import fs from 'fs';
+import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
@@ -18,6 +20,18 @@ const basePath = isProduction
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
     : '/microsite-commerce-storefront';
+
+const sdkComponentsDir = path.resolve('./sdk/components');
+const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
+  ? fs.readdirSync(sdkComponentsDir).filter(file => file.endsWith('.mdx'))
+  : [];
+
+const sdkComponentEntries = sdkComponentFiles.map(file => {
+  const componentName = path.basename(file, '.mdx');
+  // Capitalize the first letter (just like the Button entry)
+  const label = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+  return { label, link: `/sdk/components/${componentName}/` };
+});
 
 // https://astro.build/config
 async function config() {
@@ -456,6 +470,264 @@ async function config() {
                   autogenerate: {
                     directory: '/releases/'
                   },
+                },
+              ],
+            },
+            {
+              label: 'Drop-in SDK',
+              badge: 'Beta',
+              icon: 'puzzle',
+              link: '/sdk/',
+              items: [
+                {
+                  label: 'Getting started',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: '/sdk/'
+                    },
+                    {
+                      label: 'Create a drop-in component',
+                      link: '/sdk/get-started/create-a-dropin/'
+                    },
+                    {
+                      label: 'CLI usage',
+                      link: '/sdk/get-started/cli/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Components',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/sdk/components/overview/'
+                    },
+                    {
+                      label: 'Accordion',
+                      link: '/sdk/components/accordion/'
+                    },
+                    {
+                      label: 'ActionButton',
+                      link: '/sdk/components/actionbutton/'
+                    },
+                    {
+                      label: 'ActionButtonGroup',
+                      link: '/sdk/components/actionbuttongroup/'
+                    },
+                    {
+                      label: 'AlertBanner',
+                      link: '/sdk/components/alertbanner/'
+                    },
+                    {
+                      label: 'Breadcrumbs',
+                      link: '/sdk/components/breadcrumbs/'
+                    },
+                    {
+                      label: 'Button',
+                      link: '/sdk/components/button/'
+                    },
+                    {
+                      label: 'Card',
+                      link: '/sdk/components/card/'
+                    },
+                    {
+                      label: 'CartItem',
+                      link: '/sdk/components/cartitem/'
+                    },
+                    {
+                      label: 'CartList',
+                      link: '/sdk/components/cartlist/'
+                    },
+                    {
+                      label: 'Checkbox',
+                      link: '/sdk/components/checkbox/'
+                    },
+                    {
+                      label: 'ColorSwatch',
+                      link: '/sdk/components/colorswatch/'
+                    },
+                    {
+                      label: 'ContentGrid',
+                      link: '/sdk/components/contentgrid/'
+                    },
+                    {
+                      label: 'Divider',
+                      link: '/sdk/components/divider/'
+                    },
+                    {
+                      label: 'Field',
+                      link: '/sdk/components/field/'
+                    },
+                    {
+                      label: 'Header',
+                      link: '/sdk/components/header/'
+                    },
+                    {
+                      label: 'Icon',
+                      link: '/sdk/components/icon/'
+                    },
+                    {
+                      label: 'IllustratedMessage',
+                      link: '/sdk/components/illustratedmessage/'
+                    },
+                    {
+                      label: 'Image',
+                      link: '/sdk/components/image/'
+                    },
+                    {
+                      label: 'ImageSwatch',
+                      link: '/sdk/components/imageswatch/'
+                    },
+                    {
+                      label: 'InlineAlert',
+                      link: '/sdk/components/inlinealert/'
+                    },
+                    {
+                      label: 'Incrementer',
+                      link: '/sdk/components/incrementer/'
+                    },
+                    {
+                      label: 'Input',
+                      link: '/sdk/components/input/'
+                    },
+                    {
+                      label: 'InputDate',
+                      link: '/sdk/components/inputdate/'
+                    },
+                    {
+                      label: 'InputPassword',
+                      link: '/sdk/components/inputpassword/'
+                    },
+                    {
+                      label: 'Modal',
+                      link: '/sdk/components/modal/'
+                    },
+                    {
+                      label: 'Pagination',
+                      link: '/sdk/components/pagination/'
+                    },
+                    {
+                      label: 'Picker',
+                      link: '/sdk/components/picker/'
+                    },
+                    {
+                      label: 'Price',
+                      link: '/sdk/components/price/'
+                    },
+                    {
+                      label: 'PriceRange',
+                      link: '/sdk/components/pricerange/'
+                    },
+                    {
+                      label: 'ProgressSpinner',
+                      link: '/sdk/components/progressspinner/'
+                    },
+                    {
+                      label: 'RadioButton',
+                      link: '/sdk/components/radiobutton/'
+                    },
+                    {
+                      label: 'Skeleton',
+                      link: '/sdk/components/skeleton/'
+                    },
+                    {
+                      label: 'TextField',
+                      link: '/sdk/components/textfield/'
+                    },
+                    {
+                      label: 'Tag',
+                      link: '/sdk/components/tag/'
+                    },
+                    {
+                      label: 'TextArea',
+                      link: '/sdk/components/textarea/'
+                    },
+                    {
+                      label: 'TextSwatch',
+                      link: '/sdk/components/textswatch/'
+                    },
+                    {
+                      label: 'ToggleButton',
+                      link: '/sdk/components/togglebutton/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Base Design',
+                  collapsed: true,
+                  items: [{
+                    label: 'Overview',
+                    link: '/sdk/design/'
+                  }, {
+                    label: 'Design tokens',
+                    link: '/sdk/design/base/'
+                  }, {
+                    label: 'Colors',
+                    link: '/sdk/design/colors/'
+                  }, {
+                    label: 'Typography',
+                    link: '/sdk/design/typography/'
+                  }, {
+                    label: 'Spacing',
+                    link: '/sdk/design/spacing/'
+                  }, {
+                    label: 'Shapes',
+                    link: '/sdk/design/shapes/'
+                  }, {
+                    label: 'Grids',
+                    link: '/sdk/design/grid/'
+                  }]
+                }, {
+                  label: 'Reference',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/sdk/reference/'
+                    },
+                    {
+                      label: 'Events',
+                      link: '/sdk/reference/events/'
+                    }, {
+                      label: 'GraphQL',
+                      link: '/sdk/reference/graphql/'
+                    }, {
+                      label: 'Initializer',
+                      link: '/sdk/reference/initializer/'
+                    }, {
+                      label: 'Render',
+                      link: '/sdk/reference/render/'
+                    }, {
+                      label: 'reCAPTCHA',
+                      link: '/sdk/reference/recaptcha/'
+                    },
+                  ]
+                }, {
+                  label: 'Utilities',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/sdk/utilities/'
+                    },
+                    {
+                      label: 'classList',
+                      link: '/sdk/utilities/classlist/'
+                    }, {
+                      label: 'debounce',
+                      link: '/sdk/utilities/debounce/'
+                    }, {
+                      label: 'deepmerge',
+                      link: '/sdk/utilities/deepmerge/'
+                    }, {
+                      label: 'getFormErrors',
+                      link: '/sdk/utilities/getformerrors/'
+                    }, {
+                      label: 'getFormValues',
+                      link: '/sdk/utilities/getformvalues/'
+                    }]
                 },
               ],
             },
