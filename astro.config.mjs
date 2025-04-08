@@ -329,6 +329,7 @@ async function config() {
                             { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                             { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
                             { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                            { label: 'Newsletter', link: '/dropins/checkout/containers/newsletter/' },
                             { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
                             { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
                             { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },

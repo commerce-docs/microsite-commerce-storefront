@@ -17,12 +17,17 @@ The `LoginForm` container provides the following configuration options:
     ['Option', 'Type', 'Req?', 'Description'],
     ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
     ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
+    ['displayTitle (**)', 'boolean', 'No', 'Displays the container title (default value is true).'],
+    ['displayHeadingContent', 'boolean', 'No', 'Displays the container heading content (default value is true).'],
     ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
     ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+    ['slots', 'object', 'No', 'Object with the content to be displayed on the LoginForm container. This slot allows setting the heading content dynamically based on the user authentication status.'],
   ]}
 />
 
 (*) Properties inherited from `ConditionalContainer`
+
+(**) Properties inherited from `TitleProps`
 
 These configuration options are implementing the `LoginFormProps` interface:
 
@@ -31,17 +36,35 @@ These configuration options are implementing the `LoginFormProps` interface:
 The `LoginForm` container receives an object as a parameter which implements the `LoginFormProps` interface with the following properties:
 
 ```ts
-export interface LoginFormProps extends HTMLAttributes<HTMLFormElement> {
+export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitleProps {
+  displayHeadingContent?: boolean;
   onSignInClick?: (email: string) => void;
   onSignOutClick?: () => void;
+  slots?: {
+    Heading?: SlotProps<{
+      authenticated: boolean;
+    }>;
+  } & TitleProps['slots'];
 }
 ```
+
+<li>The `displayHeadingContent` property set to _true_ displays the heading content with the sign-in/sign-out button.</li>
 
 <li>The `onSignInClick` property is a handler used to perform actions called when the sign-in button is clicked. It accepts an email as an input parameter.</li>
 
 <li>The `onSignOutClick` property is a handler used to perform actions called when the sign-out button is clicked.</li>
 
-## Example
+<li>The `slots` property is an object containing the following properties:</li>
+
+#### Title property (**)
+
+The `Title` property is inherited as a result of merging the `slots` from `LoginFormProps` and `TitleProps`; this is a handler used to render a customized title content.
+
+#### Heading property
+
+The `Heading` property is a handler used to render a customized heading content based on the authentication status provided by context.
+
+## Example 1: Render with title and heading content by default
 
 The following example renders the `LoginForm` container on a checkout page, which includes rendering the [`AuthCombine`](/dropins/user-auth/containers/auth-combine/) container from the user auth drop-in component in a modal for authentication:
 
@@ -100,6 +123,59 @@ CheckoutProvider.render(LoginForm, {
   },
   onSignOutClick: () => {
     authApi.revokeCustomerToken();
+  },
+})($login),
+```
+
+## Example 2: Render without title and heading content
+
+The following example renders the `LoginForm` container on a checkout page but without displaying both title and heading content:
+
+```ts
+import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  displayTitle: false,
+  displayHeadingContent: false,
+})($login),
+```
+
+## Example 3: Render with customized title and heading content
+
+The following example renders the `LoginForm` container on a checkout page providing customized title and heading content:
+
+```ts
+import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => { . . . },
+  onSignOutClick: () => { . . . },
+  slots: {
+    Title: (ctx) => {
+      const content = document.createElement('div');
+      content.innerText = 'Custom title';
+      ctx.replaceWith(content);
+    },
+    Heading: (ctx) => {
+      const content = document.createElement('div');
+      if (ctx.authenticated) {
+        // Put here a customized content when the user has signed-in
+      } else {
+        // Put here a customized content when the user still has not signed-in
+      }
+      ctx.replaceWith(content);
+    },
   },
 })($login),
 ```

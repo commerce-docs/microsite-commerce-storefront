@@ -17,12 +17,16 @@ The `PaymentMethods` container provides the following configuration options:
     ['Option', 'Type', 'Req?', 'Description'],
     ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
     ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
+    ['displayTitle (**)', 'boolean', 'No', 'Displays the container title (default value is true).'],
     ['setOnChange', 'object', 'No', '@deprecated Object with a list of "[key: string]: boolean". Only if a payment method is specifically set to false, the container will not automatically set the payment method to the cart when selected. By default, the container takes an empty object. Please note this property is deprecated and will be removed in future versions.'],
     ['slots', 'object', 'No', 'Object with a list of configurations for existing payment methods.'],
+    ['UIComponentType', 'string', 'No', 'String with the UI component type to be used as selector (default value is \'ToggleButton\').'],
   ]}
 />
 
 (*) Properties inherited from `ConditionalContainer`
+
+(**) Properties inherited from `TitleProps`
 
 These configuration options are implementing the `PaymentMethodsProps` interface:
 
@@ -31,7 +35,9 @@ These configuration options are implementing the `PaymentMethodsProps` interface
 The `PaymentMethods` container receives an object as parameter which implements the `PaymentMethodsProps` interface with the following properties:
 
 ```ts
-export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+export type UIComponentType = 'ToggleButton' | 'RadioButton';
+
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
   /**
    * @deprecated This property is deprecated and will be removed in future versions.
    * Please use the "slots.Methods" property instead to provide this information.
@@ -44,13 +50,20 @@ export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
      */
     Handlers?: PaymentMethodsHandlerSlot;
     Methods?: PaymentMethodsSlot;
-  };
+  } & TitleProps['slots'];
+  UIComponentType?: UIComponentType;
 }
 ```
 
 <li>The `setOnChange` property has been _deprecated_ and will be removed in future versions. It has been replaced by the following one: `slots.Methods.<payment-method-code>.setOnChange`.</li>
 
+<li>The `UIComponentType` property is a string containing the name of the UI component type to be used as selector for each payment method. By now, the UI components available are: 'ToggleButton' or 'RadioButton'.</li>
+
 <li>The `slots` property is an object containing the following properties:</li>
+
+#### Title property (**)
+
+The `Title` property is inherited as a result of merging the `slots` from `PaymentMethodsProps` and `TitleProps`; this is a handler used to render a customized title content.
 
 #### Handlers property (_@deprecated_)
 
@@ -254,4 +267,31 @@ CheckoutProvider.render(PaymentMethods, {
     },
   },
 })($paymentMethods),
+```
+
+## Example 5: Render with customized title and radio button as selector
+
+The following example renders the `PaymentMethods` container on a checkout page, displaying a customized title and showing radio buttons instead of toggle buttons as selector for each payment option:
+
+```ts
+// Checkout Dropin
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $paymentMethods = checkoutFragment.querySelector(
+  '.checkout__payment-methods',
+);
+
+CheckoutProvider.render(PaymentMethods, {
+  UIComponentType: 'RadioButton',
+  displayTitle: true,
+  slots: {
+    Title: (ctx) => {
+      const content = document.createElement('div');
+      content.innerText = 'Custom title';
+      ctx.replaceWith(content);
+    },
+  },
+})($paymentMethods),
+
 ```
