@@ -70,15 +70,39 @@ const iframeSrc = src
         if (iframeDocument) {
           iframeDocument.documentElement.style.overflow = "hidden";
 
-          // Get the actual content height including margins
-          const contentHeight = Math.max(
-            iframeDocument.documentElement.scrollHeight,
-            iframeDocument.body.scrollHeight,
-            event.data.height
-          );
+          // Function to update height
+          const updateHeight = () => {
+            const contentHeight = Math.max(
+              iframeDocument.documentElement.scrollHeight,
+              iframeDocument.body.scrollHeight,
+              event.data.height
+            );
+            iframe.style.height = contentHeight + "px";
+          };
 
-          // Set the iframe height to the maximum content height
-          iframe.style.height = contentHeight + "px";
+          // Initial height update
+          updateHeight();
+
+          // Set up an interval to check height while content is loading
+          const heightCheckInterval: NodeJS.Timer = setInterval(() => {
+            const newHeight = Math.max(
+              iframeDocument.documentElement.scrollHeight,
+              iframeDocument.body.scrollHeight,
+              event.data.height
+            );
+
+            // Only update if height has changed
+            if (newHeight !== parseInt(iframe.style.height)) {
+              updateHeight();
+            }
+          }, 100);
+
+          // Clean up interval after 5 seconds (assuming content should be loaded by then)
+          setTimeout(() => {
+            clearInterval(heightCheckInterval);
+            // Final height update
+            updateHeight();
+          }, 5000);
         }
       }
     }
