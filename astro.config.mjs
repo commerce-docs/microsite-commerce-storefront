@@ -266,7 +266,7 @@ async function config() {
                             { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                             { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
                           ]
                         },
                         { label: 'Slots', link: '/dropins/product-details/slots/' },
