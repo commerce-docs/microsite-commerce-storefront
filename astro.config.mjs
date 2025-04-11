@@ -848,10 +848,10 @@ async function config() {
           src: './src/assets/sitelogo.svg',
           replacesTitle: false
         },
-        social: {
-          discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
-          github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop'
-        },
+        social: [
+          { icon: 'github', label: 'GitHub', href: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop' },
+          { icon: 'discord', label: 'Discord', href: 'https://discord.com/channels/1131492224371277874/1220042081209421945' },
+        ],
       }),
       compress,
       react()
