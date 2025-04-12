@@ -633,10 +633,6 @@ async function config() {
                       link: '/sdk/components/skeleton/'
                     },
                     {
-                      label: 'TextField',
-                      link: '/sdk/components/textfield/'
-                    },
-                    {
                       label: 'Tag',
                       link: '/sdk/components/tag/'
                     },
