@@ -1,29 +1,33 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Icon from './Icon.astro';
-import type { Props } from '@astrojs/starlight/props';
 import { setBasePath } from '@utils/basePath';
 
-type Platform = keyof NonNullable<typeof config.social>;
-type SocialConfig = NonNullable<NonNullable<typeof config.social>[Platform]>;
-const links = Object.entries(config.social || {}) as [Platform, SocialConfig][];
+type SocialLink = {
+  label: string;
+  href: string;
+  icon: string;
+};
 
-links.push([
-  'commerce' as Platform,
-  {
+const links = (config.social || []) as SocialLink[];
+
+// Add Commerce link only if it doesn't already exist
+if (!links.some(link => link.label === 'Commerce')) {
+  links.push({
     label: 'Commerce',
-    url: 'https://experienceleague.adobe.com/en/docs/commerce-admin/start/guide-overview',
-  },
-]);
+    href: 'https://experienceleague.adobe.com/en/docs/commerce-admin/start/guide-overview',
+    icon: 'commerce'
+  });
+}
 ---
 
 {
   links.length > 0 && (
     <>
-      {links.map(([platform, { label, url }]) => (
-        <a href={url.startsWith('https://') ? url : setBasePath(url)} rel="me" class="sl-flex">
+      {links.map(({ label, href, icon }) => (
+        <a href={href.startsWith('https://') ? href : setBasePath(href)} rel="me" class="sl-flex">
           <span class="sr-only">{label}</span>
-          <Icon name={platform} size="1.25rem" />
+          <Icon name={icon} size="1.25rem" />
         </a>
       ))}
     </>
