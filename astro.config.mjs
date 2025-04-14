@@ -266,7 +266,7 @@ async function config() {
                             { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                             { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
                           ]
                         },
                         { label: 'Slots', link: '/dropins/product-details/slots/' },
@@ -634,10 +634,6 @@ async function config() {
                       link: '/sdk/components/skeleton/'
                     },
                     {
-                      label: 'TextField',
-                      link: '/sdk/components/textfield/'
-                    },
-                    {
                       label: 'Tag',
                       link: '/sdk/components/tag/'
                     },
@@ -849,10 +845,10 @@ async function config() {
           src: './src/assets/sitelogo.svg',
           replacesTitle: false
         },
-        social: {
-          discord: 'https://discord.com/channels/1131492224371277874/1220042081209421945',
-          github: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop'
-        },
+        social: [
+          { icon: 'github', label: 'GitHub', href: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop' },
+          { icon: 'discord', label: 'Discord', href: 'https://discord.com/channels/1131492224371277874/1220042081209421945' },
+        ],
       }),
       compress,
       react()

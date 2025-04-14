@@ -11,7 +11,7 @@ import {
     SIZE_GUIDE_ATTRIBUTES_IDS, INGREDIENTS_ATTRIBUTE_IDS,
     NUTRITION_ATTRIBUTE_IDS
 } from './attributes-mapper.js';
-import { fetchPlaceholders, sampleRUM } from '../../scripts/aem.js';
+import { fetchPlaceholders, sampleRUM } from '../../scripts/commerce.js';
 
 // Slots
 import Title from './slots/Title.js';
@@ -99,7 +99,7 @@ export default async function decorate(block) {
     const urlKeyFromUrl = getUrlKeyFromUrl();
     const storeCode = getStoreCode();
     const storePath = storeCode ? `${storeCode}/` : '';
-    if(product && product.urlKey !== urlKeyFromUrl){
+    if (product && product.urlKey !== urlKeyFromUrl) {
         window.location.href = `/${storePath}products/${product.urlKey}/${product.sku.toLowerCase()}${window.location.search}`;
     }
 
@@ -142,7 +142,7 @@ export default async function decorate(block) {
                 Nutrition: { label: placeholders.pdpNutrition },
                 Faqs: { label: placeholders.pdpFaqs },
                 HowItsMade: { label: placeholders.pdpHowItsMade },
-                ProductTitleSticker : {label: placeholders.pdpProductTitleSticker},
+                ProductTitleSticker: { label: placeholders.pdpProductTitleSticker },
                 Purpose: { label: placeholders.pdpPurpose },
                 Benefits: { label: placeholders.pdpBenefits },
                 RelatedProducts: { label: placeholders.pdpRelatedProducts },
@@ -381,8 +381,8 @@ export default async function decorate(block) {
         };
 
         window.adobeDataLayer.push((dl) => {
-            dl.push({ productContext: productContext});
-            dl.push({ shoppingCartContext: shoppingCartContext});
+            dl.push({ productContext: productContext });
+            dl.push({ shoppingCartContext: shoppingCartContext });
             dl.push({ event: 'product-page-view', eventInfo: { ...dl.getState() } });
         });
     }, { eager: true });
@@ -606,7 +606,7 @@ function setOffersJson(product) {
                 url: getVariantUrl(product, variant)
             }
         });
-        setHtmlProductJsonLd({offers: data});
+        setHtmlProductJsonLd({ offers: data });
     });
 }
 
@@ -622,7 +622,7 @@ function setRatingsJson(product, yotpoApiKey) {
                 }
             });
 
-            events.emit('eds/pdp/ratings', {average: average_score, total: total_reviews});
+            events.emit('eds/pdp/ratings', { average: average_score, total: total_reviews });
         });
     } catch (error) {
         console.log(`Error fetching product ratings: ${error}`);
@@ -634,7 +634,7 @@ function setRatingsJson(product, yotpoApiKey) {
             }
         });
 
-        events.emit('eds/pdp/ratings', {average: 0, total: 0});
+        events.emit('eds/pdp/ratings', { average: 0, total: 0 });
     }
 }
 
@@ -646,11 +646,11 @@ function getVariantUrl(product, variant) {
         return option;
     });
 
-    return window.location.origin + window.location.pathname+'?o=' + btoa(mappedOptions.join(','));
+    return window.location.origin + window.location.pathname + '?o=' + btoa(mappedOptions.join(','));
 }
 
-function getPriceSpecification(specialPrice,regularPrice,priceCurrency){
-    if (specialPrice){
+function getPriceSpecification(specialPrice, regularPrice, priceCurrency) {
+    if (specialPrice) {
         return [
             {
                 '@type': 'UnitPriceSpecification',
