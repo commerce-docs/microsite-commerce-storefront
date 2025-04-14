@@ -9,9 +9,9 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 
-In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from the `configs` spreadsheet in the root of your SharePoint content directory.
+In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either your site's public config](https://www.aem.live/docs/admin.html#schema/PublicConfig) or a [config.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json) file in your code repo.
 
-In the [Create your storefront tutorial](/get-started/), the sample content archive provided you a `configs` spreadsheet file in the root folder. This file contains the environment values for your Commerce backend including GraphQl endpoints and headers.
+In the [Create your storefront tutorial](/get-started/), the template repo provided you a `demo-config.json` file in the root folder. This file contains the environment values for a Commerce backend including GraphQl endpoints and headers.
 
 When implementing your own project, you must update the configuration values with:
 - The header values specific to your Adobe Commerce Catalog Services environment.
@@ -22,39 +22,55 @@ When implementing your own project, you must update the configuration values wit
 <Vocabulary>
 ### Storefront configuration
 
-The `configs` spreadsheet contains the connection settings for your Commerce blocks. Each row in the sheet contains a `key` and a `value` that corresponds to a specific setting or usage in your Commerce backend. The `key` is used to retrieve the `value` from the `configs` spreadsheet and is used to connect your Commerce blocks to your Commerce backend.
+A JSON object which maps properties and values used by the Commerce boilerplate.
+
+The storefront configuration is a JSON object which lives in either [config-service](https://www.aem.live/docs/config-service-setup) and contains the connection settings for your Commerce blocks. The boilerplate repo also contains a `demo-config.json` file which can be renamed to `config.json` in lieu of using the config service.
+
+At the root, there is a `public` property which should not be changed, and a nested `default` object. This `default` object is the root level config that is used for your storefront. The config object contains properties and values which correspond to a specific setting or usage in your Commerce backend.
+
+If you use aem.live's config service, your config will live at `https://admin.hlx.page/config/{{ORG}}/sites/{{SITE}}/public.json` but can be overwritten with a local `/config.json` file in your code repo.
 
 ### default values
 
-By default, the values in the `configs` spreadsheet are from the boilerplate's sample backend to ensure everything works out of the box. But when it comes time to connect your own backend, you need to know what each key means so you can update it with the correct value from your own Commerce instance.
+By default, the values in the `demo-config.json` file are from the boilerplate's sample backend to ensure everything works out of the box. But when it comes time to connect your own backend, you need to know what each key means so you can update it with the correct value from your own Commerce instance.
 
 ### getConfigValue function
 
-The `getConfigValue` function is a helper function that retrieves the `value` from the `configs` file using the `key` as an argument. The `getConfigValue` function is used to connect your Commerce blocks to your Commerce backend.
+The `getConfigValue` function is a helper function that retrieves the `value` from the `configs` file using the dot-notation path as an argument. For example, `getConfigValue('headers.cs.x-api-key')` returns the value of `[root config].headers.cs.x-api-key`.
 
 ### getHeaders function
 
-The `getHeaders` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `header` keys and returns an object map of those rows. For example, if you have rows in config like `"commerce.headers.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
+The `getHeaders` function is a helper function which takes a storefront scope (like `cs`, `cart`, etc) and reads values from the configs file with the corresponding `header` keys and returns an object map of those rows. For example, if you have properties in config like `headers.cs.Magento-Environment-Id": "abc-123"`, then `getHeaders('cs')` will return an object like `{ "Magento-Environment-Id": "abc-123"}`.
 
 </Vocabulary>
 
 ## Examples
 
-You can find the `configs` file in your content drive by clicking on the mountpoint link in your project's `fstab.yaml` file. You should see the `configs` file at the root of the SharePoint directory. Open the file to view the connection **keys** and **values** of the sample backend. They should look similar (but not exact) to the following:
+You can find the `config` file in your code repo at either `/config.json` if you created it, or `demo-config.json`. Open the file to view the connection **keys** and **values** of the sample backend. They should look similar (but not exact) to the following:
 
-<OptionsTable
-  options={[
-    ['#', 'Key', 'Value'],
-    ['1', 'commerce-endpoint', 'https://catalog-service.adobe.io/graphql'],
-    ['2', 'commerce-core-endpoint', 'https://mystorefront.com/graphql'],
-    ['4', 'commerce.headers.cs.Magento-Environment-Id', '7cb935fd-d3bc-487b-9a2f-e5965c30f2a1'],
-    ['5', 'commerce.headers.cs.Magento-Website-Code', 'base'],
-    ['6', 'commerce.headers.cs.Magento-Store-Code', 'main_website_store'],
-    ['7', 'commerce.headers.cs.Magento-Store-View-Code', 'default'],
-    ['8', 'commerce.headers.cs.Magento-Customer-group', 'd0b8ea36fca097dc92c02b1d104e6f41099184cb'],
-    ['9', 'commerce.headers.cs.x-api-key', 'a6b4e2f69a4a4267a8f423c8caaf6a47'],
-  ]}
-/>
+```js
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://www.aemshop.net/graphql",
+      "commerce-endpoint": "https://www.aemshop.net/cs-graphql",
+      "headers": {
+        "all": {
+          "Store": "{{YOUR_STOREVIEW_CODE}}"
+        },
+        "cs": {
+          "Magento-Customer-Group": "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c",
+          "Magento-Store-Code": "{{YOUR_STORE_CODE}}",
+          "Magento-Store-View-Code": "{{YOUR_STOREVIEW_CODE}}",
+          "Magento-Website-Code": "{{YOUR_WEBSITE_CODE}}",
+          "x-api-key": "{{YOUR_API_KEY}}",
+          "Magento-Environment-Id": "{{YOUR_ENVIRONMENT_ID}}"
+        }
+      }
+    }
+  }
+}
+```
 
 :::note
 The default values listed above are all required.
@@ -68,17 +84,19 @@ Each `key` is described below with links to more details. The `value` for each k
 
 1. **commerce-core-endpoint:** (read/write) Core GraphQL endpoint for a variety of queries and mutations. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
 
-1. **commerce.headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
+1. **headers.all.Store:** Determines the store view to connect to, for Core requests. See [Core GraphQL Headers documentation](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
 
-1. **commerce.headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+1. **headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
 
-1. **commerce.headers.cs.Magento-Store-Code:** Determines the store to connect to. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+1. **headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
 
-1. **commerce.headers.cs.Magento-Store-View-Code:** Determines the store view to connect to. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
+1. **headers.cs.Magento-Store-Code:** Determines the store to connect to. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
 
-1. **commerce.headers.cs.Magento-Customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
+1. **headers.cs.Magento-Store-View-Code:** Determines the store view to connect to, for Catalog Service requests. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
 
-1. **commerce.headers.cs.x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details.
+1. **headers.cs.Magento-Customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
+
+1. **headers.cs.x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details.
 
 </Callouts>
 
