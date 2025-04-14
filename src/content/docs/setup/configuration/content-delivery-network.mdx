@@ -64,10 +64,10 @@ Only the homepage is delivered by Edge Delivery Services. All Commerce functiona
   :::note
   A common pattern is to move all Edge Delivery Services code into a subfolder called `aem`, and then route any path starting with `aem` to Edge Delivery Services.
   :::
-
+  
 For general information on setting up Fastly for Adobe Commerce and accessing the Adobe Commerce Admin, see [Fastly services overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/fastly).
 
-## Backend configuration
+## Backend configuration 
 
 The first step is to configure a backend for each origin/service that Fastly needs to route to, which includes the following:
 
@@ -184,17 +184,17 @@ The following `recv` snippet has the following purpose:
 
 ```txt
 unset req.http.x-commerce;
-
+ 
 # Catalog Service
 if (req.url.path ~ "^/cs-graphql$") {
     # Disable Commerce WAF as it can interfere with some queries
     set req.http.bypasswaf = "true";
-
-    # Forward to Catalog Service GraphQL
+ 
+    # Forward to Catalog Service GraphQL 
     set req.backend = F_catalog_service;
     set req.http.host = "catalog-service.adobe.io";
     set req.url = regsub(req.url, "^/cs-graphql", "/graphql");
-
+     
     # Remove cookies
     unset req.http.Cookie;
 }
@@ -209,7 +209,7 @@ else
     if (req.url ~ "^/configs-(stage|dev)\.json$") {
         error 404 "Not Found";
     }
-
+ 
     # Everything else is considered Edge Delivery Services
     set req.backend = F_edge_delivery;
     # Restore accepted encoding
@@ -217,12 +217,12 @@ else
     if (req.url.path !~ "/media_[0-9a-f]{40,}[/a-zA-Z0-9_-]*\.[0-9a-z]+$"
         && req.url.ext !~ "(?i)^(gif|png|jpe?g|webp)$"
         && req.url.ext != "json"
-        && req.url.path != "/.auth") {
+        && req.url.path != "/.auth") {        
         # trim the query string to improve caching
         set req.url = req.url.path;
         # replace some special characters with a dash because Edge doesn't support them
         set req.url = regsuball(req.url, "[()]", "-");
-
+ 
     }
 }
 ```
@@ -230,8 +230,6 @@ else
 ### pass
 
 In the `pass` snippet, we set the correct host URL to fetch from depending on the backend that was selected in the `recv` snippet.
-
-We also re-apply non-normalized `Accept-Encoding` headers. For details on why, see `miss` and `pass` snippets [here](https://www.aem.live/docs/byo-cdn-fastly-setup#create-vcl-snippets).
 
 If it's not a request to Adobe Commerce, we skip (return `pass` will invoke `fetch`) the rest of the default `pass` VCL.
 
@@ -244,14 +242,11 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.Host = "main--aem-boilerplate-commerce--hlxsites.hlx.live";
     set bereq.http.X-BYO-CDN-Type = "fastly";
     set bereq.http.X-Push-Invalidation = "enabled";
-    if (bereq.http.Fastly-Orig-Accept-Encoding) {
-      set bereq.http.Accept-Encoding = bereq.http.Fastly-Orig-Accept-Encoding;
-    }
 }
-
+ 
 if (!req.http.x-commerce) {
     return(pass);
-}
+}  
 ```
 
 :::note
@@ -271,11 +266,8 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.Host = "main--aem-boilerplate-commerce--hlxsites.hlx.live";
     set bereq.http.X-BYO-CDN-Type = "fastly";
     set bereq.http.X-Push-Invalidation = "enabled";
-    if (bereq.http.Fastly-Orig-Accept-Encoding) {
-      set bereq.http.Accept-Encoding = bereq.http.Fastly-Orig-Accept-Encoding;
-    }
 }
-
+ 
 if (!req.http.x-commerce) {
     return(fetch);
 }
@@ -311,7 +303,7 @@ This comes from the Edge Delivery Services [Fastly setup](https://www.aem.live/d
 ```txt
 if (req.backend == F_edge_delivery) {
     unset resp.http.Age;
-
+ 
     if (req.url.path !~ "\.plain\.html$") {
         unset resp.http.X-Robots-Tag;
     }
@@ -345,8 +337,8 @@ pragma optional_param geoip_opt_in true;
 
 # Snippet GeoIpRedirect
  declare local var.countryCode STRING;
-
-# Only apply redirection if the URL has no country-specific path
+ 
+# Only apply redirection if the URL has no country-specific path  
 
 # This snippet performs a GeoIP-based redirection. It checks if the request is made to the
 # "example.com" domain and if the URL path is either the root ("/") or empty. If these conditions are met, it
@@ -586,7 +578,7 @@ x-cache-hits: 0, 37, 1, 0
 ```
 
 * `content-encoding`: Should be `gzip` or `br` for things like JS assets and HTML files, which should be encoded from origin.
-* `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths.
+* `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths. 
 
    The reason for this validation step is that the [default Commerce Fastly VCL](https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl#L113) sets this. This overwrites the Edge Delivery Services surrogate key, which is required for cache invalidation to work correctly when a page is re-published.
 
