@@ -15,8 +15,10 @@ Adobe Commerce uses a [hierarchical structure](https://experienceleague.adobe.co
 To maintain storefronts that implement Edge Delivery Services, you must be familiar with its building blocks. The following topics describe the EDS features.
 
 * [Authoring and Publishing Content](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/document-authoring/authoring)
-* [Bulk Metadata](https://www.aem.live/docs/bulk-metadata)
 * [Placeholders](https://www.aem.live/docs/placeholders)
+* [Adobe Commerce Configuration Scope](https://experienceleague.adobe.com/en/docs/commerce-admin/config/scope-change)
+* [Storefront Configuration](/setup/configuration/commerce-configuration/)
+* [Folder Mapping](https://www.aem.live/developer/folder-mapping)
 
 ## Big Picture
 
@@ -27,65 +29,70 @@ Content is organized primarily by language. US English files should be placed in
 The Sharepoint file structure of a multi-store is shown below. Remove the `.docx` and `.xlsx` extensions for Google Drive files.
 
 <FileTree>
-- **en/** _-- English store (Default root language)_
-  - placeholders.xlsx _-- Stores reusable tokens for text and UI components._
+- **/en/** _-- English store (Default root language)_
+  - placeholders.xlsx _-- Stores tokens for text and UI components for the English US store._
   - index.docx _-- The home page of the English US store._
-  - store-switcher.docx _-- Manages the list of stores and their URL to render in the UI_
-  - analytics-config.xlsx _-- Adobe Commerce environment variables for the English US store._
-- **en_ca/** _-- English Canadian Store_
-  - placeholders_overrides.xlsx _-- Entries that override the English store._
+  - store-switcher.docx _-- Manages the list of stores and their URL for the English US store._
+- **/en_ca/** _-- English Canadian Store_
+  - placeholders.xlsx _-- Defines tokens for text and UI components for the Canadian store._
   - index.docx _-- The home page of the English Canadian store._
-  - store-switcher.docx _-- Manages the list of stores and their URL to render in the UI_
-  - analytics-config.xlsx _-- Adobe Commerce environment variables for the English Canadian store._
-- fstab.yaml _-- Sets mountpoints and folder mappings._
-- metadata.xlsx _-- URL, root path, and placeholder mappings for multi-store_
+  - store-switcher.docx _-- Manages the list of stores and their URL for the Canadian store._
 </FileTree>
 
 Default files are provided in the sample content. These files can be customized to suit your needs.
 
-## Global files
 
-These files reside in the root of the project and are shared across all stores.
+## Store-specific files
 
-### Metadata
-
-Metadata entries are managed as bulk (https://www.aem.live/docs/bulk-metadata) in `metadata.xlsx`.
-This file overrides Commerce endpoint config files and placeholders based on the `root` page metadata provided. Otherwise, it defaults to the base `/`.
-
-From the root of your project, create a `metadata.xlsx` file with contents similar to the following:
-
-| URL | root | placeholders | commerce-website | commerce-store | commerce-storeview |
-|---|---|---|---|---|---|
-| /en/** | /en/ |  | website_us | store_us | default |
-| /en_ca/** | /en_ca/ | /en/placeholders.json<br/>/en_ca/placeholders-overrides.json | website_ca | store_ca | en_ca |
-
-- **URL**: Defines the URL pattern for pages where metadata should be applied. Wildcards can match groups of pages to which the metadata is applied. For example, `/en/**` matches all pages in the `/en/` (English) directory.
-- **root**: Specifies the root folder from which all internal document links are resolved. Paths in the content will be considered relative to this directory.
-- **placeholders**: *(Optional)* Specifies the path to a `placeholders.json` file that provides key-value mappings for dynamic content replacement. By default, the storefront loads `placeholders.xlsx` from the directory defined by the **`root`** metadata. To override this behavior, you can specify multiple files—each on a new line. When multiple files are listed, the second and subsequent files act as overrides, with their values taking precedence over the previously listed files.
-- **commerce-website**: Defines the website code configured in Adobe Commerce. A website is the top-level container in the Commerce hierarchy that can hold multiple stores. Each website has its own base configuration, including currency, customer accounts, and order processing.
-- **commerce-store**: Sets the store code within the selected website. A store typically represents a logical grouping of product categories and shares catalog structure and settings with other stores under the same website.
-- **commerce-storeview**: Indicates the store view code within a specific store. Store views are used to provide localized versions of the store (e.g., different languages), allowing customers to switch between translations or regional content.
+The content, placeholders, and store switcher files help define the experience in each store view as described here.
 
 ### Store Switcher
 
-Each store view has its own `store-switcher` file to add the list of stores displayed in the store-switcher component in their corresponding language. This component renders a button in the footer that opens a modal containing the stores within the `store-switcher` file.
+Each store view has its own `store-switcher` document file called a fragment. This fragment provides the list of stores to select from by language. The store-switcher component renders a button in the footer that opens a modal containing the stores listed in this document.
 
-After creating the `metadata.xlsx` file in the root of your project with the URL, root, and placeholder values, you must create a `store-switcher.docx` file containing a bulleted list inside each store view root folder. Each line must define the display name of your store with an active link to the store, as shown below:
+Start by creating a `store-switcher.docx` file containing a bulleted list inside each store view root folder. Each line must define the display name of your store with an active link to the store, as shown below:
 
 ```text
 **Select a store:**
 
-- United States (USD) 
-  - [United States (USD)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/drafts/multistore/en/)  
-- Canada (CAD) 
-  - [Canada (EN)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/drafts/multistore/en_ca/) 
+- United States (USD)
+  - [United States (USD)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/drafts/multistore/en/)
+- Canada (CAD)
+  - [Canada (EN)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/drafts/multistore/en_ca/)
 ```
 
-### Folder mapping
 
-Add folder mapping to the product detail pages (PDP) in the project's `fstab.yaml` file. This is the only code change required, but it must be merged into the `main` branch to take effect.
+### Content files
 
-To add folder mapping, open the `fstab.yaml` file in your project's root as shown in the `folders:` section:
+The content files provide the structure of the pages served to your shoppers. They are located in the store view directories and contain the content for each store view. These files are typically SharePoint `.docx` or Google document files used to generate the store view pages. These files should be localized or translated into the desired language.
+
+
+### Placeholders
+
+The `placeholders.xlsx` file stores reusable variables for text and UI components. This file is used to define the text that is displayed on your storefront. The `placeholders.json` file is generated from this file and is used to replace the variables in your content files.
+
+If you want to reuse placeholders.xlsx files from another store view, use bulk metadata (https://www.aem.live/docs/bulk-metadata). You can also create a `placeholders-overrides.xlsx` file to override the default text values in the original document, then add a metadata block to the page to apply the overrides file, as shown here:
+
+To override the default behavior of loading `placeholders.xlsx` from the store view directory, create a `metadata.xlsx` file with contents similar to the following:
+
+| URL | placeholders |
+|---|---|
+| /en/** | |
+| /en_ca/** | /en/placeholders.json<br/>/en_ca/placeholders-overrides.json |
+
+- **URL**: Defines the URL pattern for pages where metadata should be applied. Wildcards can match groups of pages to which the metadata is applied. For example, `/en/**` matches all pages in the `/en/` (English) directory.
+- **placeholders**: Specifies the path to a `placeholders.json` file that provides key-value mappings for dynamic content replacement. You can specify a second file to act as an override, with its values taking precedence over the previously listed files.
+
+## Storefront Configuration
+
+### Folder Mapping
+
+Product Detail Pages (PDP) are mapped to a single document at `products/default`.
+When adding a new store view, you'll need to add a corresponding folder mapping for the new URLs.
+
+#### fstab.yaml
+
+If your project uses a `fstab.yaml` file, add the new store view mapping under the `folders:` section, like this:
 
 ```yaml
 mountpoints:
@@ -93,25 +100,48 @@ mountpoints:
 
 folders:
   /en/products/: /en/products/default
-  /en_ca/products/: /en_ca/products/default`;
+  /en_ca/products/: /en_ca/products/default
 ```
 
-## Store-specific files
+#### Config Service
 
-The content, placeholders, and analytics files help define the experience in each store view as described here.
+If your project uses the Config Service, you must update the configuration to add the new store view mapping under the `folders:` section, like this:
 
-### Content files
+```json
+{
+  "folders": {
+    "/en/products/": "/en/products/default",
+    "/en_ca/products/": "/en_ca/products/default"
+  }
+}
+```
 
-The content files provide the structure of the pages served to your shoppers. They are located in the store view directories and contain the content for each store view. These files are typically SharePoint `.docx` or Google document files used to generate the store view pages.
+To learn more about the Config Service, please see [aem.live's documentation](https://www.aem.live/docs/config-service-setup) or read the [api documentation](https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite) to learn how to publish your updates to the Config Service for your site.
 
+### Site Config
 
-### Placeholders
+You must update your [storefront config](/setup/configuration/commerce-configuration/) to include configuration overrides for the new store view. In this file, you'll define store-view specific settings, such as service headers and analytics values. The `key` of each overridden object must match the root folder path of the corresponding store view. These values will be merged into the default configuration.
 
-The `placeholders.xlsx` file stores reusable tokens for text and UI components. This file is used to define the text that is displayed on your storefront. The `placeholders.json` file is generated from this file and is used to replace the tokens in your content files. Optionally, you can create a `placeholders-overrides.json` file to define text values that supersede those specified in the `en` store view. For more information, see [Placeholders](/resources/placeholders).
+The `analytics` section contains the Adobe Commerce environment variables for the store view. These variables are used by the Analytics API. For more details, see [Analytics](/setup/analytics/instrumentation).
 
-### Analytics
-
-The `analytics-config` spreadsheet stores the Adobe Commerce environment variables for the store view used by the Analytics API. For more information, see [Analytics](/setup/analytics/instrumentation).
+```json
+{
+  "public": {
+    "default": {
+      // default configuration
+    },
+    "/drafts/multistore/en/": {}, // inherits the default
+    "/drafts/multistore/en_ca/": {
+      "headers": {
+        // overrides values from the default headers
+      },
+      "analytics": {
+        // overrides values from the default analytics configuration
+      }
+    }
+  }
+}
+```
 
 ## Step-by-Step
 
@@ -125,8 +155,9 @@ These steps show you how to add a new English Canadian store view (`en_ca`) simi
 Create an `en_ca` store view in the Commerce Admin and perform the following steps in your project.
 
 <Steps>
-1. Create the `en_ca` folder under the project root in Sharepoint or Google Docs.
-1. Copy the configuration files, placeholders file, analytics file, and document pages from the `en` directory to the `en_ca` directory.
+1. Create the `/en_ca/` folder under the project root in SharePoint or Google Drive. You can name this folder anything you want, as long as it's unique and can be used in a web address. For example, instead of `Canada (English)`, you can use `ca_en`.
+
+1. Copy the store switcher, placeholders, and document files from the `/en/` directory to the /en_ca/` directory.
 </Steps>
 
 </Task>
@@ -138,53 +169,27 @@ Next, localize or translate the files in your project.
 
 <Steps>
 1. Translate or localize content files in the `/en_ca/` folders.
+
 1. Ensure all labels in `placeholders` file (SharePoint `.xlsx` or Google sheet) are accurately translated into the desired language.
-1. Update the `analytics-config` file (SharePoint `.xlsx` or Google sheet) with the new store view's environment variables.
 </Steps>
-
 </Task>
 
 <Task>
-### Set metadata to the chosen market's path
-
-Create a metadata file and configure settings for the new store view.
-
-<Steps>
-1. Create a `metadata` file (SharePoint `.xlsx` or Google sheet) in the root of your project.
-
-1. Set the **URL** to the new store view. For example: `/en_ca/**`.
-
-1. Set the **root** values to the directory where the `configs` files are located. The default is `/`.
-
-1. Set the **placeholders** to the `placeholders.json` file to use. The default is `/placeholders.json`.
-
-1. Set the **website** to the new store view. For example: `website_ca`.
-
-1. Set the **store** to the new store view. For example: `store_ca`.
-
-1. Set the **storeview** to the new store view. For example: `en_ca`.
-
-1. Create a `store-switcher` file (SharePoint `.docx` Google sheet) and include a link to the new store view. If you do not want to display a store switcher, publish an empty `store-switcher` file.
-
-1. (Optional) Create a `placeholders_overrides.json` file if you have overrides that apply to the Canadian store.
-
-   | Key | Value |
-   |---|---|
-   | `Cart.Cart.heading` | `Shopping Cart ({count})` |
-   | `Cart.Cart.editCart` | `Edit` |
-</Steps>
-
-</Task>
-
-<Task>
-### Map folders
-
-Update the project's `fstab.yaml` file to add folder mapping to the PDP page.
+### Update Storefront Configuration
 
 :::note[Code Change Required]
-This is the only code change required and must be merged into the `main` branch to take effect.
+This step requires updating configuration files in your project to support the new store view.
 :::
 
+<Steps>
+1. Update the `fstab.yaml` file — or the `fstab` section of your [site config](https://www.aem.live/docs/admin.html#tag/siteConfig) — to include the new folder mapping for the `/en_ca/` store view. This should map to the appropriate content path. For example, `/en_ca/products/` should map to `/en_ca/products/default`.
+
+1. Update the `config.json` file - or the `public` section of your [site config](https://www.aem.live/docs/admin.html#tag/siteConfig) - to include a new entry under in the `public` object for `/en_ca/`. Use this section to define store-specific values such as headers, analytics, and more, if they differ from the default. Make sure the `key` matches the folder path of your store view.  For example,  the `/en_ca/` key for your Canadian store). Values in this object will override those in the default configuration.
+
+
+1. If you are using the Config Service, read the [api documentation](https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite) to learn how to publish your updates to the Config Service for your site.
+
+</Steps>
 </Task>
 
 <Task>
@@ -193,7 +198,7 @@ This is the only code change required and must be merged into the `main` branch 
 Finally, preview and publish the new store view.
 
 <Steps>
-1. Preview the updated folder `/en_ca/` with [AEM Sidekick](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/resources/sidekick/sidekick).
+1. Preview all files in the updated folder `/en_ca/` with [AEM Sidekick](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/resources/sidekick/sidekick).
 
 1. Validate the storefront experience by accessing the new language/region and testing the rendering, navigation, and data accuracy.
 
