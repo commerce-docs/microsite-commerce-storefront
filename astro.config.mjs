@@ -447,7 +447,21 @@ async function config() {
                         { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
                         { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
                       ]
-                    }
+                    },
+                    {
+                      label: 'Other',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Live Search',
+                          link: '/dropins/other/search/'
+                        },
+                        {
+                          label: 'Product Recommendations',
+                          link: '/dropins/other/recommendations/'
+                        },
+                      ],
+                    },
                   ]
                 },
                 {
