@@ -8,15 +8,7 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Screenshot from '@components/Screenshot.astro';
 
-The reCAPTCHA module is implemented as a standalone SDK package. It enables reCAPTCHA protection, which is natively supported by Adobe Commerce. It also provides an API allowing merchants to integrate reCAPTCHA protection into custom implementations. The current version of the module supports only reCAPTCHA v3 Invisible.
-
-## Installation
-
-To install this functionality, run the following command:
-
-```bash
-npm i @adobe/reCAPTCHA
-```
+The reCAPTCHA module is implemented in the [Commerce Boilerplate](https://experienceleague.adobe.com/developer/commerce/storefront/get-started/boilerplate-project/). It enables reCAPTCHA protection, which is natively supported by Adobe Commerce. It also provides an API allowing merchants to integrate reCAPTCHA protection into custom implementations. The current version of the module supports only reCAPTCHA v3 Invisible.
 
 [Google reCAPTCHA](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/security/captcha/security-google-recaptcha) in the _Admin Systems Guide_ describes how to configure Adobe Commerce.
 
@@ -30,7 +22,7 @@ To integrate ReCaptcha, follow these steps:
 
 1. Load the app.
 
-   - Call the `setConfig` method to fetch and set reCAPTCHA configuration.
+   - Call the `setConfig` method to fetch and set reCAPTCHA configuration. This method is already implemented in the `/scripts/initializers/index.js` file of the Commerce Boilerplate.
    - (Optional) Extend the configuration with custom forms if a custom integration not natively supported by Adobe Commerce is planned.
 
 1. Load the page with a protected form.
@@ -92,7 +84,7 @@ It is essential to call this method before the `initreCAPTCHA` and `verifyreCAPT
 The `setConfig` method is intended to be called without parameters, in which case the backend configuration will be used.
 
 ```javascript
-import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 
 reCAPTCHA.setConfig();
 ```
@@ -100,7 +92,7 @@ reCAPTCHA.setConfig();
 However, you can pass a configuration object as a parameter to override the backend configurations.
 
 ```javascript
-import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 
 reCAPTCHA.setConfig({ is_enabled: true });
 ```
@@ -114,7 +106,7 @@ The `setEndpoint` method sets the endpoint that the reCAPTCHA module uses to fet
 The following example sets the endpoint:
 
 ```javascript
-import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 
 reCAPTCHA.setEndpoint('https://www.example.com/graphql');
 ```
@@ -132,7 +124,7 @@ Additionally, you must call `initreCAPTCHA` for each form render to ensure the s
 The following example initializes reCAPTCHA:
 
 ```javascript
-import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 
 reCAPTCHA.initreCAPTCHA();
 ```
@@ -150,11 +142,11 @@ For custom implementations, token validation should be implemented on either the
 The following example retrieves the reCAPTCHA token:
 
 ```javascript
-import { verifyreCAPTCHA } from '@adobe/reCAPTCHA';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 import { setFetchGraphQlHeader } from '../api';
 
 export const setreCAPTCHAToken = async () => {
-  const token = await verifyreCAPTCHA();
+  const token = await reCAPTCHA.verifyreCAPTCHA();
 
   if (token) {
     setFetchGraphQlHeader('X-reCAPTCHA', token);
@@ -171,7 +163,7 @@ The `enableLogger` method enables extensive logging to the console for each step
 The following example enables the logger:
 
 ```javascript
-import * as reCAPTCHA from '@dropins/tools/reCAPTCHA.js';
+import * as reCAPTCHA from '@dropins/tools/recaptcha.js';
 
 reCAPTCHA.enableLogger(true);
 ```
