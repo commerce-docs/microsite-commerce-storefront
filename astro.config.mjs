@@ -308,6 +308,7 @@ async function config() {
                             { label: 'Add custom product lines to the cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
                             { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                             { label: 'Add gift options to a PDP', link: '/dropins/cart/tutorials/gift-options/' },
+                            { label: 'Add messages to the mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
                           ]
                         },
                       ]
