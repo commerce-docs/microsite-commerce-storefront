@@ -5,7 +5,9 @@ description: Configure the BillToShippingAddress container to manage and display
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `BillToShippingAddress` is a _conditional_ container. It includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
+The `BillToShippingAddress` container includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
+
+This container contains internal functionality to hide itself in case the cart is empty or virtual.
 
 ## BillToShippingAddress configurations
 
@@ -15,13 +17,9 @@ The `BillToShippingAddress` container provides the following configuration optio
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['hideOnEmptyCart (*)', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
-    ['hideOnVirtualCart (*)', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
     ['onChange', 'function', 'No', 'Callback function that is called when the checkbox state changes.'],
   ]}
 />
-
-(*) Properties inherited from `ConditionalContainer`
 
 These configuration options implement the `BillToShippingAddressProps` interface:
 
@@ -39,7 +37,7 @@ export interface BillToShippingAddressProps {
 
 ## Example
 
-The following example renders the `BillToShippingAddress` container on a checkout page. It includes functionality to hide the empty and/or virtual cart component and handle changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart.
+The following example renders the `BillToShippingAddress` container on a checkout page. It includes functionality to handle changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart.
 
 ```ts
 import * as checkoutApi from '@dropins/storefront-checkout/api.js';
@@ -58,7 +56,6 @@ const $billingForm = checkoutFragment.querySelector(
 const billingFormRef = { current: null };
 
 CheckoutProvider.render(BillToShippingAddress, {
-  hideOnVirtualCart: true,
   onChange: (checked) => {
     $billingForm.style.display = checked ? 'none' : 'block';
     if (!checked && billingFormRef?.current) {
