@@ -12,12 +12,77 @@ Learn about the slots provided in the checkout drop-in component.
 
 [Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
 
+## Title slots
+
+The `TitleProps` interface defines slots for the [`Title`](/dropins/checkout/containers/overview/#title-and-heading-customization) component. These slots enable you to customize the title content displayed in specific containers.
+
+```ts
+export interface TitleProps {
+  displayTitle?: boolean;
+  slots?: {
+    Title?: SlotProps;
+  };
+}
+```
+
+### Title
+
+The `Title` property is a callback function that renders custom title content. It receives the default context implementing the `DefaultSlotContext` interface:
+
+```ts
+interface DefaultSlotContext<T> extends PrivateContext<T> {
+  dictionary: Lang;
+  getSlotElement: (key: string) => SlotElement;
+  replaceWith: MutateElement;
+  appendChild: MutateElement;
+  prependChild: MutateElement;
+  appendSibling: MutateElement;
+  prependSibling: MutateElement;
+  onRender: (cb: (next: T & DefaultSlotContext<T>) => void) => void;
+  onChange: (cb: (next: T & DefaultSlotContext<T>) => void) => void;
+}
+
+export type SlotProps<T = any> = (
+  ctx: T & DefaultSlotContext<T>,
+  element: HTMLDivElement | null
+) => Promise<void> | void;
+```
+
+<Aside type="note">
+Some containers extend their props interface to use the `TitleProps` slot to customize the title content. You will find some examples on those specific containers.
+</Aside>
+
+## LoginForm slots
+
+The LoginFormProps interface defines the available slots for the [`LoginForm`](/dropins/checkout/containers/login-form/) container. The slots allow setting the heading content dynamically based on the user authentication status.
+
+```ts
+export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitleProps {
+  displayHeadingContent?: boolean;
+  onSignInClick?: (email: string) => void;
+  onSignOutClick?: () => void;
+  slots?: {
+    Heading?: SlotProps<{
+      authenticated: boolean;
+    }>;
+  } & TitleProps['slots'];
+}
+```
+
+### Heading
+
+The `Heading` property is a callback function that renders custom heading content based on the authentication status provided by the context. The `Heading` slot receives a boolean as a context indicating whether the user is authenticated.
+
+<Aside type="note">
+See the [`LoginForm`](/dropins/checkout/containers/login-form/) container to learn more about the properties and how to override the slots to configure and customize the login form.
+</Aside>
+
 ## PaymentMethods slots
 
 The slots for the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container are defined in the `PaymentMethodsProps` interface shown below. The slots allow you to customize the list of payment methods to show during the checkout process.
 
 ```ts
-export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
+export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
   /**
    * @deprecated This property is deprecated and will be removed in future versions.
    * Please use the "slots.Methods" property instead to provide this information.
@@ -30,7 +95,8 @@ export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement> {
      */
     Handlers?: PaymentMethodsHandlerSlot;
     Methods?: PaymentMethodsSlot;
-  };
+  } & TitleProps['slots'];
+  UIComponentType?: UIComponentType;
 }
 ```
 
@@ -114,4 +180,44 @@ The context object passed to the `Content` slot includes the _code_ got from the
 
 <Aside type="note">
 Please visit the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container page to learn more about of the properties, and how to override the slots to configure and customize the place order button described on different examples.
+</Aside>
+
+## TermsAndConditions slots
+
+The `TermsAndConditionsProps` interface defines the available slots for the [`TermsAndConditions`](/dropins/checkout/containers/terms-and-conditions/) container. These slots enable you to specify terms and conditions that customers must accept before completing their order.
+
+```ts
+export interface TermsAndConditionsProps {
+  slots?: {
+    Agreements?: SlotProps<{
+      appendAgreement: SlotMethod<{
+        name: string;
+        mode: AgreementMode;
+        text?: string;
+        translationId?: string;
+      }>;
+    }>;
+  };
+}
+```
+
+### Agreements
+
+The `Agreements` property is a callback function that configures and renders a list of agreements. It provides context by including the `appendAgreement()` method to add a new agreement based on the `SlotMethod` type:
+
+```ts
+export type SlotMethod<P = any> = (
+  callback: (next: unknown, state: State) => P
+) => void;
+
+export enum AgreementMode {
+  MANUAL = 'manual',
+  AUTO = 'auto',
+}
+```
+
+The context object passed to the `appendAgreement` slot method includes the required information to configure an agreement.
+
+<Aside type="note">
+See the [`TermsAndConditions`](/dropins/checkout/containers/terms-and-conditions/) container to learn more about the properties and how to override the slots to configure and customize a list of agreements.
 </Aside>
