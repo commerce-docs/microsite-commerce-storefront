@@ -403,6 +403,14 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Recommendations',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/recommendations/' },
+                        { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
