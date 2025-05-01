@@ -408,6 +408,8 @@ async function config() {
                       items: [
                         { label: 'Overview', link: '/dropins/recommendations/' },
                         { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        { label: 'Styles', link: '/dropins/recommendations/styles/' },
+                        { label: 'Functions', link: '/dropins/recommendations/functions/' },
                       ]
                     },
                     {
