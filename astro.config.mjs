@@ -410,6 +410,7 @@ async function config() {
                         { label: 'Installation', link: '/dropins/recommendations/installation/' },
                         { label: 'Styles', link: '/dropins/recommendations/styles/' },
                         { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Slots', link: '/dropins/recommendations/slots/' },
                       ]
                     },
                     {
