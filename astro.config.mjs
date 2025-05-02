@@ -403,6 +403,17 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Recommendations',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/recommendations/' },
+                        { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        { label: 'Styles', link: '/dropins/recommendations/styles/' },
+                        { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Slots', link: '/dropins/recommendations/slots/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
