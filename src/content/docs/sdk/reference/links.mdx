@@ -1,0 +1,56 @@
+---
+title: Links
+description: Use the route pattern to provide composable and accessible navigation.
+---
+
+## Adding Links using the route pattern
+
+Whenever possible, avoid placing `onClick` handlers directly on anchor elements (`<a>`) in drop-in components, such as product or category pages, as this results in accessibility issues and broken browser behavior. Problems include:
+
+- Right-click > Open in New Tab results in blank pages.
+- Middle-click (open in background tab) won't work as expected.
+- Keyboard navigation and screen readers may not trigger the link correctly.
+
+Instead, follow the route pattern to provide composable and accessible navigation.
+
+## How it works
+
+Components accept a `routeX` function as a prop. The function receives a data model (a product, for example) and returns a URL. Internally, it's used like this:
+
+```tsx
+<a href={routeProduct?.(product) ?? '#'}>...</a>
+```
+
+This lets developers customize routing logic per storefront while preserving link semantics.
+
+## Example — Component-Side
+
+In your component (a PLP item, for example):
+
+The `routeProduct` prop must be optional and default to a # or an non-functional element like a `div` if not provided.
+
+```tsx
+type Props = {
+  routeProduct?: (product: ProductModel) => string;
+};
+
+function ProductCard({ product, routeProduct }: Props) {
+  return (
+    <a href={routeProduct?.(product) ?? '#'}>
+      <div>{product.name}</div>
+    </a>
+  );
+}
+```
+
+## Example — Storefront-Side
+
+In the storefront integration (`commerce-cart.js` or `commerce-plp.js`, for example):
+
+```js
+import { rootLink } from '@adobe/commerce-url-utils';
+
+provider.render(ProductList, {
+  routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+});
+```
