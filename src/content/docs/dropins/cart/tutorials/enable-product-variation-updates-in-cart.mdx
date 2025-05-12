@@ -1,6 +1,6 @@
 ---
-title: Conditionally Enable Product Variation Updates in the Cart
-description: Learn how to use block configuration and JavaScript logic to conditionally enable or disable the editing of product variations from the cart and mini cart.
+title: Configuring Product Variation Updates in the Cart
+description: Learn how to enable or disable the product variation update feature in the cart and mini cart through AEM block configuration.
 ---
 
 import Aside from '@components/Aside.astro';
@@ -9,177 +9,145 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-This tutorial shows you how to:
+This tutorial shows you how to configure the 'Edit' feature for product variations in both the cart and mini cart. The 'Edit' button allows shoppers to update product variations (like size or color) directly from the cart pages.
 
-1.  Use a configuration flag (`enable-updating-product`) in the `commerce-cart` and `commerce-mini-cart` blocks to control whether product variations can be edited.
-2.  Implement the JavaScript logic in the respective block files (`commerce-cart.js` and `commerce-mini-cart.js`) to read this flag and conditionally display an 'Edit' button.
+The implementation is already available in the codebase. This tutorial focuses on how to **enable or disable** this feature through the AEM block configuration.
 
-This tutorial assumes that the underlying UI for the 'Edit' button and the logic for handling the actual variation update *when the button is clicked* have already been implemented separately within each block. This guide focuses specifically on controlling the *visibility* of that button based on the AEM block configuration.
-
-## Prerequisites
-
-Before implementing this conditional logic, ensure you have:
-
-- Access to your AEM environment to configure the `commerce-cart` and `commerce-mini-cart` blocks.
-- An existing implementation **within your respective block files** (`commerce-cart.js`, `commerce-mini-cart.js`) that defines the 'Edit' button element and its associated logic for that context.
-- Familiarity with the `@dropins/storefront-cart` components, specifically `CartSummaryList` (for `commerce-cart.js`) and `MiniCart` (for `commerce-mini-cart.js`), and their `slots` feature.
+<Aside type="note">
+  This feature works for configurable products in the cart. When enabled, an 'Edit' button appears for each applicable item, allowing shoppers to modify their selected options without having to navigate away from the cart.
+</Aside>
 
 ## How it Works
 
-The feature is toggled using the `enable-updating-product` property set on the `commerce-cart` or `commerce-mini-cart` block in AEM. The corresponding JavaScript file (`commerce-cart.js` or `commerce-mini-cart.js`) reads this property. Based on its value (`true` or `false`), the script decides whether to inject the pre-existing 'Edit' button UI into the appropriate slot (assuming `Footer` for `CartSummaryList`, `Thumbnail` for `MiniCart`).
+The 'Edit' button feature is controlled by a configuration flag (`enable-updating-product`) that can be set on both the `commerce-cart` and `commerce-mini-cart` blocks in AEM. 
 
-## Implementation
+<Tabs>
+<TabItem label="Cart">
+In the `commerce-cart.js` implementation, the code checks for this flag and conditionally renders an 'Edit' button in the `Footer` slot for configurable products:
 
-Follow these steps to implement the conditional display logic and configure the feature flag:
+```javascript
+// First, the configuration is read from the block with a default of 'false'
+const {
+  'hide-heading': hideHeading = 'false',
+  'max-items': maxItems,
+  // ... other config properties ...
+  'checkout-url': checkoutURL = '',
+  'enable-updating-product': enableUpdatingProduct = 'false',
+} = readBlockConfig(block);
+
+// Later in the code, inside the Footer slot
+if (ctx.item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
+  // Code that creates and adds the Edit button to the Footer slot
+  // ...
+}
+```
+
+When a shopper clicks the 'Edit' button, they're redirected to the product page with their current selections pre-populated, allowing them to modify their options.
+</TabItem>
+
+<TabItem label="Mini Cart">
+Similarly, in the `commerce-mini-cart.js` implementation, the code uses the same configuration flag to determine whether to display an 'Edit' button for each configurable product in the mini cart, but implements it in the `Thumbnail` slot:
+
+```javascript
+// First, the configuration is read from the block with a default of 'false'
+const {
+  'start-shopping-url': startShoppingURL = '',
+  'cart-url': cartURL = '',
+  'checkout-url': checkoutURL = '',
+  'enable-updating-product': enableUpdatingProduct = 'false',
+} = readBlockConfig(block);
+
+// Later in the code, inside the Thumbnail slot
+if (ctx.item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
+  // Code that creates and adds the Edit button to the Thumbnail slot
+  // ...
+}
+```
+
+When enabled, this provides a convenient way for shoppers to update their product options by redirecting them to the product detail page with their current selections pre-populated.
+</TabItem>
+</Tabs>
+
+## Configuration Steps
+
+To modify this feature's configuration, follow these steps:
 
 <Tasks>
 <Task>
-### Implement the Conditional Logic in Block JavaScript
+### Configure the Cart Summary Block
 
-Modify your block JavaScript files (`commerce-cart.js` and `commerce-mini-cart.js`) to read the configuration flag and conditionally render the 'Edit' button.
+The `enable-updating-product` property is **already set to `true` by default** in the cart block. If you want to disable it:
 
-<Tabs>
-<TabItem label="commerce-cart.js">
-Modify your `commerce-cart.js` file by following these steps:
+1. In your AEM authoring environment, navigate to the page containing your `commerce-cart` block.
+2. Select the `commerce-cart` block and open its properties dialog.
+3. Locate the existing property with **Key** `Enable Updating Product`.
+4. Change its **Value** to `false` to disable the feature.
+5. Save the changes.
+6. Preview the changes by clicking the "Preview" button.
+7. Publish the changes by clicking the "Publish" button.
 
-1.  **Read the Configuration Flag:** Inside the `decorate` function, use `readBlockConfig` to read the `enable-updating-product` property into a variable (e.g., `enableUpdatingProduct`). Make sure to provide a default value of `false`.
-2.  **Locate Existing Implementation:** Find the section within the `CartSummaryList` provider's `slots.Footer` definition where your code creates and appends the 'Edit' button element.
-3.  **Wrap with Conditional Logic:** Wrap this entire block of existing 'Edit' button implementation code within an `if` statement that checks if the `enableUpdatingProduct` variable is equal to `'true'`. Ensure the entire logic for the button (creation, event handling, appending) is inside this `if` block.
-
-The structure should resemble the following:
-
-```javascript
-// src/blocks/commerce-cart/commerce-cart.js
-import { render as provider } from '@dropins/storefront-cart/render.js';
-import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
-import { readBlockConfig } from '../../scripts/aem.js';
-// ... other imports ...
-
-export default async function decorate(block) {
-  // 1. Read the configuration flag
-  const {
-    // ... other config properties ...
-    'enable-updating-product': enableUpdatingProduct = 'false',
-  } = readBlockConfig(block);
-
-  // ... other setup code ...
-  const $list = /* ... get cart list element ... */;
-
-  // Render Cart List
-  await provider.render(CartSummaryList, {
-    // ... other CartSummaryList options ...
-    slots: {
-      Footer: (ctx) => {
-        // ... any other elements potentially added to the footer slot ...
-
-        // 2. Conditionally execute your *existing* button logic
-        if (enableUpdatingProduct === 'true') {
-          // --- Your Pre-existing Implementation Goes Here ---
-          // (The code that creates/handles/appends the 'Edit' button)
-          // ---
-        }
-
-        // ... potentially return ctx or handle other elements ...
-      },
-    },
-  })($list);
-
-  // ... rest of the script ...
-}
-```
-
-<Aside type="caution" title="Placement is Key (Cart)">
-  Ensure that the entire code block responsible for creating the 'Edit' button element, setting its properties and click handler, and appending it to the `ctx` is moved *inside* the `if (enableUpdatingProduct === 'true') { ... }` block in your `commerce-cart.js`.
+<Aside type="tip">
+  The configuration is already provided in the content block, so you don't need to add a new property - just modify the existing one as needed.
 </Aside>
-</TabItem>
-
-<TabItem label="commerce-mini-cart.js">
-Modify your `commerce-mini-cart.js` file by following these steps:
-
-1.  **Read the Configuration Flag:** Inside the `decorate` function, use `readBlockConfig` to read the `enable-updating-product` property into a variable (e.g., `enableUpdatingProduct`).  Make sure to provide a default value of `false`.
-2.  **Locate Existing Button Implementation:** Identify where your code currently creates and appends the 'Edit' button element for the mini cart.
-3.  **Wrap with Conditional Logic:** Wrap your existing 'Edit' button implementation code within an `if` statement that checks if the `enableUpdatingProduct` variable is equal to `true`.
-
-The relevant parts of your `commerce-mini-cart.js` should resemble this structure:
-
-```javascript
-// src/blocks/commerce-mini-cart/commerce-mini-cart.js
-import { render as provider } from '@dropins/storefront-cart/render.js';
-import MiniCart from '@dropins/storefront-cart/containers/MiniCart.js';
-import { readBlockConfig } from '../../scripts/aem.js';
-// ... other necessary imports like events, fetchPlaceholders, rootLink ...
-
-export default async function decorate(block) {
-  // 1. Read the configuration flag
-  const {
-    'start-shopping-url': startShoppingURL = '',
-    'cart-url': cartURL = '',
-    'checkout-url': checkoutURL = '',
-    'enable-updating-product': enableUpdatingProduct = 'false', // Default to false
-  } = readBlockConfig(block);
-
-  // ... other setup code from your mini-cart.js (e.g., message handling) ...
-
-  // Render MiniCart
-  await provider.render(MiniCart, {
-    routeEmptyCartCTA: startShoppingURL ? () => rootLink(startShoppingURL) : undefined,
-    routeCart: cartURL ? () => rootLink(cartURL) : undefined,
-    routeCheckout: checkoutURL ? () => rootLink(checkoutURL) : undefined,
-    routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
-    slots: {
-      Thumbnail: (ctx) => {
-        // ... any other elements potentially added to the thumbnail slot ...
-
-        // 2. Conditionally execute your *existing* Edit button logic
-        if (enableUpdatingProduct === 'true') {
-          // --- Your Pre-existing Mini Cart Edit Button Implementation Goes Here ---
-          // (The code that creates, styles, handles clicks for, 
-          //  and appends the 'Edit' button for the mini cart item)
-          // ---
-        }
-      },
-    },
-  })(block);
-
-  // ... rest of your mini-cart.js script (e.g., appending message wrappers if any) ...
-  return block;
-}
-```
-
-<Aside type="caution" title="Placement and Styling (Mini Cart)">
-  The `Thumbnail` slot in the `MiniCart` is typically a compact space. Ensure your 'Edit' button is styled and positioned appropriately so it doesn't break the layout. You might need to add specific CSS classes and style them in `commerce-mini-cart.css`. 
-</Aside>
-</TabItem>
-</Tabs>
 </Task>
 
 <Task>
-### Configure the Feature Flag in AEM
+### Configure the Mini Cart Block
 
-Now, you can control whether the 'Edit' button appears by configuring the respective block (`commerce-cart` or `commerce-mini-cart`) in your AEM authoring environment:
+The `enable-updating-product` property is **already set to `false` by default** in the mini cart block. If you want to enable it:
 
-1.  Navigate to the page containing your `commerce-cart` block or the page with the `commerce-mini-cart` block.
-2.  Open the block's properties dialog.
-3.  **To Enable** the 'Edit' button for that block: Add a property with the **Key** `Enable Updating Product` and set its **Value** to `true`.
-4.  **To Disable** the 'Edit' button for that block: Set the **Value** of `Enable Updating Product` to `false`, or simply remove the property (since the code defaults the flag to `false` if the property is missing).
+1. In your AEM authoring environment, navigate to the page or header that contains your `commerce-mini-cart` block.
+2. Select the `commerce-mini-cart` block and open its properties dialog.
+3. Locate the existing property with **Key** `Enable Updating Product`.
+4. Change its **Value** to `true` to enable the feature.
+5. Save the changes.
+6. Preview the changes by clicking the "Preview" button.
+7. Publish the changes by clicking the "Publish" button.
+</Task>
 
-**Example Block Configuration (Enabled for `commerce-cart` or `commerce-mini-cart`):**
+<Task>
+### Example Block Configurations
+
+Here's how your block configuration should look like:
+
+**Cart Block (Enabled by Default):**
 
 | Key                       | Value |
 | :------------------------ | :---- |
 | `Enable Updating Product` | `true`|
 | `Checkout URL`            | `/checkout` |  *(Example of another common property)*
-| ...                       | ...   |
 
-**Example Block Configuration (Disabled for `commerce-cart` or `commerce-mini-cart`):**
+**Mini Cart Block (Disabled by Default):**
 
 | Key                       | Value |
 | :------------------------ | :---- |
 | `Enable Updating Product` | `false`|
 | `Checkout URL`            | `/checkout` | *(Example of another common property)*
-| ...                       | ...   |
 
+<Aside type="caution">
+  The property appears as `Enable Updating Product` (with spaces) in the AEM properties dialog, but is converted to kebab-case (`enable-updating-product`) when processed by the code.
+</Aside>
 </Task>
 </Tasks>
 
-With the conditional logic added to your block JavaScript files and the ability to configure the `enable-updating-product` property in AEM, you now have full control over the visibility of the cart item edit feature in both the cart summary and mini cart. 
+## Testing the Configuration
+
+After configuring the feature, you should test it to ensure it's working as expected:
+
+1. Add a configurable product to your cart.
+2. View your cart page:
+   - If enabled, you should see an 'Edit' button for each configurable product.
+   - If disabled, no 'Edit' button should appear.
+3. Open the mini cart:
+   - If enabled, you should see an 'Edit' option for configurable products.
+   - If disabled, no 'Edit' option should be visible.
+
+## Feature Behavior
+
+When the 'Edit' button is clicked, the shopper is redirected to the product page with:
+- Their previously selected options pre-selected
+- The current quantity maintained
+
+This allows them to modify their selection and update the existing cart item rather than adding a new one.
+
+With this simple configuration, you can provide your shoppers with a more convenient shopping experience by allowing them to modify product variations directly from the cart. 
