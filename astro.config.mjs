@@ -708,6 +708,9 @@ async function config() {
                       label: 'Initializer',
                       link: '/sdk/reference/initializer/'
                     }, {
+                      label: 'Links',
+                      link: '/sdk/reference/links/'
+                    }, {
                       label: 'Render',
                       link: '/sdk/reference/render/'
                     }, {
