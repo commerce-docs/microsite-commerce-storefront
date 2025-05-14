@@ -19,17 +19,38 @@ The checkout component initializer accepts the following configuration options:
   ]}
 />
 
+These configuration options are implementing the `ConfigProps` type:
+
+### ConfigProps type
+
+The `Initializer` receives an object as a parameter which implements the `ConfigProps` type with the following properties:
+
+```ts
+export type ConfigProps = {
+  langDefinitions?: Lang;
+  models?: {
+    CartModel?: Model<CartModel>;
+    CustomerModel?: Model<CustomerModel>;
+  };
+};
+```
+
 ### Example
 
 The following code shows an example implementation of the checkout initializer configuration:
 
 ```ts
-// Initialize checkout 
-initializeDropin(async () => {
-  await initializers.mountImmediately(initialize, {
-    langDefinitions,
-    models,
-  });
+await initializeDropin(async () => {
+  setFetchGraphQlHeaders(await getHeaders('checkout'));
+
+  const labels = await fetchPlaceholders();
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  return initializers.mountImmediately(initialize, { langDefinitions });
 })();
 ```
 
