@@ -59,21 +59,24 @@ await initializeDropin(async () => {
 The `langDefinitions` property is used to fetch and register dictionary files for the checkout component. This allows you to provide localized text for different languages in your application.
 
 ```ts
-// Fetch the dictionary files for your application
-const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
-const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+// Initialize checkout
+await initializeDropin(async () => {
+  // Fetch the dictionary files for your application
+  const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+  const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
 
-// Register the checkout component with language definitions
-const langDefinitions = {
-  default: en_US,
-  en_US,
-  fr_FR,
-};
+  // Register the checkout component with language definitions
+  const langDefinitions = {
+    default: en_US,
+    en_US,
+    fr_FR,
+  };
 
-// Register initializers
-initializers.mountImmediately(initialize, {
-  langDefinitions,
-});
+  // Register initializers
+  return initializers.mountImmediately(initialize, {
+    langDefinitions,
+  });
+})();
 ```
 
 ### Set models
@@ -89,34 +92,37 @@ The following example shows how to extend the default models with new fields and
 
 ```ts
 // Initialize checkout
-initializeDropin(async () => {
-  await initializers.mountImmediately(initialize, {
-    langDefinitions,
-    models: {
-      CustomerModel: {
-        transformer: (data) => ({
-          gender: ((gender) => {
-            switch (gender) {
-              case 1:
-                return "Male";
-              case 2:
-                return "Female";
-              case 3:
-                return "Not Specified";
-              default:
-                return "";
-            }
-          })(data?.gender),
-          dateOfBirth: data?.date_of_birth,
-        }),
-      },
-      CartModel: {
-        transformer: (data) => ({
-          printedCardIncluded: data?.printed_card_included,
-          giftReceiptIncluded: data?.gift_receipt_included,
-        }),
-      },
+await initializeDropin(async () => {
+  // Register the checkout component with models extensibility
+  const models = {
+    CustomerModel: {
+      transformer: (data) => ({
+        gender: ((gender) => {
+          switch (gender) {
+            case 1:
+              return "Male";
+            case 2:
+              return "Female";
+            case 3:
+              return "Not Specified";
+            default:
+              return "";
+          }
+        })(data?.gender),
+        dateOfBirth: data?.date_of_birth,
+      }),
     },
+    CartModel: {
+      transformer: (data) => ({
+        printedCardIncluded: data?.printed_card_included,
+        giftReceiptIncluded: data?.gift_receipt_included,
+      }),
+    },
+  };
+
+  // Register initializers
+  return initializers.mountImmediately(initialize, {
+    models
   });
 })();
 ```
