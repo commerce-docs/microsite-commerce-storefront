@@ -1,0 +1,22 @@
+---
+title: Error Handling
+description: Learn about on how Checkout drop-in handles errors.
+---
+
+Errors ocurred during the checkout process should be caught and logged providing clear context for quick resolution to prevent unnecessary propagation and have a better user experience and debugging. Checkout drop-in must implement an error handling mechanism to improve observability and debugging capabilities.
+
+It's critical to resolve the errors to avoid incongruent situations and clearly inform the user of what happened to avoid data inconsistencies between the local application and the backend, which may in turn resulted in an incorrect order.
+
+## Generic strategy
+
+In general, most issues will be due to errors caused by API calls. Therefore, it is needed to focus on how these errors propagate upward from dispatching the API calls to the user interface and how they are presented to the user in a friendly manner in different scenarios. To do this, each container needs a centralized error handling system, capturing the errors as they occur so we can have control on them, and decide what are the next actions to perform.
+
+## "Optimistic" UI updates with rollback pattern
+
+The system should work using "Optimistic" UI updates with rollback concept. It’s a technique used to improve the user experience by making the application feel like its more responsive.
+
+In an optimistic update the UI behaves as though a change was successfully completed before receiving confirmation from the backend that it actually was - it is being optimistic that it will eventually get the confirmation rather than an error. This allows for a more responsive user experience.
+
+In this scenario, when the user performs an action that changes the state, that action sends information to the backend and the UI is optimistically updated to reflect the change in state. We say “optimistically” because we are creating this UI change with hope and optimism that the change in state will be accepted by the backend (if we wait for the backend to tell us that the user action was successful before conducting a UI change, it would take an unacceptably long time and the user experience would not be great).
+
+And in case an error is returned from the backend, the solution consists on doing a rollback reverting to the previous state (in most cases is possible) and displaying any kind of error message like an inline alert. In turn, the containers provide callback functions for merchants to use in the integration layer to display error messages in any format they desire.

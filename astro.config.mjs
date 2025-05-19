@@ -321,6 +321,7 @@ async function config() {
                         { label: 'Initialization', link: '/dropins/checkout/initialization/' },
                         { label: 'Styles', link: '/dropins/checkout/styles/' },
                         { label: 'Extending', link: '/dropins/checkout/extending/' },
+                        { label: 'Error Handling', link: '/dropins/checkout/error-handling/' },
                         {
                           label: 'Containers',
                           collapsed: true,
