@@ -320,6 +320,7 @@ async function config() {
                         { label: 'Installation', link: '/dropins/checkout/installation/' },
                         { label: 'Initialization', link: '/dropins/checkout/initialization/' },
                         { label: 'Styles', link: '/dropins/checkout/styles/' },
+                        { label: 'Extending', link: '/dropins/checkout/extending/' },
                         {
                           label: 'Containers',
                           collapsed: true,
