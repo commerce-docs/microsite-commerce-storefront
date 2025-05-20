@@ -170,9 +170,32 @@ async function config() {
                     {
                       label: 'Configuration',
                       collapsed: true,
-                      autogenerate: {
-                        directory: '/setup/configuration/'
-                      },
+                      items: [
+                        {
+                          label: 'Overview',
+                          link: '/setup/configuration/'
+                        },
+                        {
+                          label: 'Storefront configuration',
+                          link: '/setup/configuration/commerce-configuration/'
+                        },
+                        {
+                          label: 'Content delivery network',
+                          link: '/setup/configuration/content-delivery-network/'
+                        },
+                        {
+                          label: 'Gated content',
+                          link: '/setup/configuration/gated-content/'
+                        },
+                        {
+                          label: 'Storefront Compatibility Package',
+                          collapsed: true,
+                          autogenerate:
+                          {
+                            directory: '/setup/configuration/storefront-compatibility/',
+                          },
+                        },
+                      ]
                     },
                     {
                       label: 'Analytics',
