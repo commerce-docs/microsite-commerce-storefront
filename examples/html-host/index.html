@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>HTML Example</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+    <script
+      async
+      src="https://ga.jspm.io/npm:es-module-shims@1.7.2/dist/es-module-shims.js"
+    ></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools/",
+          "@dropins/storefront-recommendations/": "http://localhost:3002/"
+        }
+      }
+    </script>
+
+    <style>
+      /* Base Design System Tokens */
+      /* .dropin-design { } */
+    </style>
+  </head>
+
+  <body>
+    <script type="module">
+      import { events } from '@dropins/tools/event-bus.js';
+      import * as mesh from '@dropins/tools/fetch-graphql.js';
+      import { initializers } from '@dropins/tools/initializer.js';
+    
+      import * as pkg from '@dropins/storefront-recommendations/api.js';
+      import { render as provider } from '@dropins/storefront-recommendations/render.js';
+      import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+    
+      // Set GraphQL Endpoint and Headers
+      mesh.setEndpoint('https://catalog-service-qa.adobe.io/graphql');
+      mesh.setFetchGraphQlHeaders({
+        'AC-Channel-ID': 'bcd4cbb5-4fdd-46f2-8e9b-98490104364c',
+        'AC-Policy-Trigger1': 'austin',
+        'AC-Scope-Locale': 'tx',
+        'Ac-Environment-Id': 'c7176a8f-8f84-4d3b-a428-a44a2f1a23f6',
+        'Ac-Store-Code': 'STORE_CODE',
+        'Ac-Store-View-Code': 'tx',
+        'Ac-Website-Code': 'WEBSITE_CODE',
+        'X-api-key': 'storefront-catalog-apollo',
+        'Content-Type': 'application/json',
+      });
+    
+      // Wait for DOM to be ready before rendering
+      document.addEventListener('DOMContentLoaded', () => {
+        // Register and mount Drop-in initializers
+        initializers.register(pkg.initialize);
+        initializers.mount();
+    
+        
+    
+        // Render the ProductList Drop-in into the container
+        const target = document.getElementById('recommendation-products');
+        if (target) {
+          //provider.render(ProductList, props)(target);
+          provider.render(ProductList, {
+            routeProduct: (item) => {
+              return `${item.urlKey}`;
+            },
+            currentSku: 'CTEAPB',
+            pageType: 'Product',
+          })(target);
+
+          //provider.render(<Container>)(document.getElementById('my-pkg'));
+        } else {
+          console.warn('Element #recommendation-products not found.');
+        }
+      });
+    </script>
+    
+
+    <div id="app">
+      <div class="cards">
+       <div class="containers">
+          <h2 class="heading">Recommendation Product List Containers</h2>
+          <div id="recommendation-products" class=""></div>
+        </div>
+      </div>
+    </div>
+
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="example.css" />
+  </body
