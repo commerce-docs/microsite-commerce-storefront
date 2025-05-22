@@ -7,7 +7,9 @@ import OptionsTable from '@components/OptionsTable.astro';
 
 The `ShippingMethods` container is designed to manage and display the selection of available shipping methods during the checkout process. You can configure it to handle the selection of shipping methods, display the available shipping methods, and manage the main slot for the shipping methods.
 
-This container includes internal functions to hide itself if the cart is empty or virtual.
+This container includes internal business logic to hide itself if the cart is empty or virtual.
+
+Finally, if an error is thrown selecting a shipping method, a callback function is provided in order to handle that error in the integration layer; a rollback will be performed to the last valid shipping method selected by the user.
 
 ## ShippingMethods configurations
 
@@ -18,8 +20,10 @@ The `ShippingMethods` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['displayTitle (*)', 'boolean', 'No', 'Displays the container title (default value is true).'],
-    ['onShippingMethodSelect', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
-    ['preSelectedMethod', 'object', 'No', 'Object containing carrierCode and methodCode strings. It represents the pre-selected shipping method.'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onSelectionChange', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
+    ['onSelectionError', 'function', 'No', 'A function that takes a ShippingMethod object and an error as arguments. It is called when the setShippingMethodsOnCart() API throws an error when a shipping method is selected and stored to the backend.'],
     ['slots (*)', 'object', 'No', 'Object with the title to be displayed on the ShippingMethods container.'],
     ['UIComponentType', 'string', 'No', 'String with the UI component type to be used as selector (default value is \'RadioButton\').'],
   ]}
@@ -35,17 +39,23 @@ The `ShippingMethods` container receives an object as a parameter which implemen
 
 ```ts
 export interface ShippingMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
-  onShippingMethodSelect?: (method: ShippingMethod) => void;
-  preSelectedMethod?: { carrierCode: string; methodCode: string };
+  active?: boolean;
+  autoSync?: boolean;
+  onSelectionChange?: (method: ShippingMethod) => void;
+  onSelectionError?: (error: unknown, method: ShippingMethod) => void;
   UIComponentType?: UIComponentType;
 }
 ```
 
 <li>The `displayTitle (*)` property is inherited from the `TitleProps` interface. It is used to determine whether to display the title.</li>
 
-<li>The `onShippingMethodSelect` property is a handler used to perform actions called when a shipping method is selected.</li>
+<li>Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).</li>
 
-<li>The `preSelectedMethod` property is an object containing the pair of _carrierCode_ and _methodCode_ values which defines the pre-selected shipping method to show.</li>
+<li>Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.</li>
+
+<li>The `onSelectionChange` property is a handler used to perform actions called when a shipping method is selected.</li>
+
+<li>The `onSelectionError` property is a handler used to perform actions called when a shipping method is selected and the setShippingMethodsOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.</li>
 
 <li>The `UIComponentType` property is a string containing the name of the UI component type to be used as a selector for each shipping method. The available UI components are: `ToggleButton` or `RadioButton`.</li>
 
@@ -57,7 +67,7 @@ The `Title` property is a handler used to render a custom title content.
 
 ## Example
 
-The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the title, pre-select the free shipping option if no shipping method is selected, and show a message if the chosen shipping method is `Best Way` (Table Rate).
+The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the title, show a message if the chosen shipping method is `Best Way` (Table Rate), and show an error message in case there was an issue saving the selected shipping method to the backend.
 
 ```ts
 import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
@@ -67,13 +77,18 @@ const $delivery = checkoutFragment.querySelector('.checkout__delivery');
 
 CheckoutProvider.render(ShippingMethods, {
   displayTitle: false,
-  preSelectedMethod: { carrierCode: 'freeshipping', methodCode: 'freeshipping' },
-  onShippingMethodSelect: (method) => {
+  onSelectionChange: (method) => {
     if (method.carrier.code === 'tablerate' && method.code === 'bestway') {
       const shippingMsg = document.createElement('div');
       shippingMsg.innerText = 'Shipping method not available for Canary Islands';
       $delivery.appendChild(shippingMsg);
     }
+  },
+  onSelectionError: (error, method) => {
+    const shippingMsg = document.createElement('div');
+    shippingMsg.style.color = 'red';
+    shippingMsg.innerText = `Error selecting the Shipping Method ${method.code} for the carrier ${method.carrier.title}: ${error.message}`;
+    $delivery.appendChild(shippingMsg);
   },
 })($delivery),
 ```

@@ -46,3 +46,91 @@ The `Title` property is a handler used to render a customized title content.
 :::note[Checkout containers]
 In the pages that follow, you will learn how to customize the `Title` and how to use it.
 :::
+
+## Active property
+
+The `active` property indicates whether the container is active. When set to _false_, the container becomes non-reactive, meaning it will not respond to system events, will not subscribe to them, and will not be displayed in the user interface.
+
+### `active` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+  ]}
+/>
+
+```ts
+active?: boolean;
+```
+
+#### Behavior:
+
+- When `active` is _true_:
+  - The container subscribes to system events
+  - It renders in the user interface and it is visible (shows a skeleton or renders the component in the UI)
+  - It executes its normal operations
+- When `active` is _false_:
+  - The container does not subscribe to system events
+  - It does not render in the user interface and its visibility is set to false
+  - Side effects and state updates are not executed
+
+### Example of `active` prop definition
+
+In the following example, the `ShippingMethods` container will be deactivated; this means it will not be rendered to the UI and will not listen to system events.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  active: false,
+})($deliveryMethods),
+```
+
+## AutoSync property
+
+The `autoSync` property determines whether the container automatically synchronizes its state changes with the backend via API calls. When set to _false_, the container does not automatically synchronize its state, but still maintains local updates.
+
+### `autoSync` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+  ]}
+/>
+
+```ts
+autoSync?: boolean;
+```
+
+#### Behavior:
+
+- When `autoSync` is _true_:
+  - Local changes are synchronized with the backend
+  - GraphQL mutations are executed when selection or local state changes
+  - The remote cart is automatically updated
+- When `autoSync` is _false_:
+  - Changes are only maintained locally
+  - No automatic GraphQL mutations are performed on the backend
+  - Control of mutations is passed to parent or external components
+
+#### Use cases:
+
+- In multi-step checkout flows where you want to control when data is sent to the backend
+- For nested containers where a parent container handles synchronization
+- In implementations that need additional validation before sending data
+
+### Example of `autoSync` prop definition
+
+In the following example, the `ShippingMethods` container will not automatically synchronize its state changes with the backend; this means it will not automatically set the shipping method selected on the cart.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  autoSync: false,
+})($deliveryMethods),
+```

@@ -67,84 +67,144 @@ These release notes summarize changes for drop-in component releases.
 
 ### Checkout
 
-#### v1.4.0
+#### v2.0.0
 
-_May ??, 2025_
+_June 10, 2025_
 
-New `TitleProps` interface added to customize the title of some containers.
+- New **`active` property added** for all containers: This property activates/deactivates the container.
 
-Visit the [Title and heading customization](/dropins/checkout/containers/overview/#title-and-heading-customization) documentation for more information.
+  Visit the [Active property](/dropins/checkout/containers/overview/#active-property) documentation for more information.
 
-The `LoginForm` container configuration structure has been modified. New properties are added to the `LoginFormProps` interface:
+- New **`autoSync` property added** for some containers: This property allows the container automatically synchronizing its state changes with the backend.
 
-- **`LoginFormProps.displayHeadingContent` property added**: This property allows displaying the container heading content.
-- **`LoginFormProps.slots.Heading` property added**: This property allows customizing the container heading content based on the user authentication status.
+  Visit the [AutoSync property](/dropins/checkout/containers/overview/#autosync-property) documentation for more information.
 
-And `LoginFormProps` interface is extending from `TitleProps` interface inheriting the following properties:
+- New `TitleProps` interface added to customize the title of some containers.
 
-- **`LoginFormProps.displayTitle` property inherited**: This property allows displaying the container title.
-- **`LoginFormProps.slots.Title` property inherited**: This property allows customizing the container title.
+  Visit the [Title and heading customization](/dropins/checkout/containers/overview/#title-and-heading-customization) documentation for more information.
 
-Visit the [LoginForm](/dropins/checkout/containers/login-form) documentation for more information.
+- The `BillToShippingAddress` container configuration structure has been modified. New properties are added to the `BillToShippingAddressProps` interface:
 
-The `PaymentMethods` container configuration structure has been modified. New properties are added to the `PaymentMethodsProps` interface:
+  - **`BillToShippingAddressProps.onError` property added**: This property allows performing some actions in case of an error is thrown when the is bill to shipping checkbox is checked.
 
-- **`PaymentMethodsProps.UIComponentType` property added**: This property allows using a different UI component type as a selector for each payment method. UI components available are: 'ToggleButton' and 'RadioButton'.
+  Implemented an error handling mechanism for the `BillToShippingAddress` container based on the _"Optimistic" UI updates with rollback pattern_ consisting on the following:
 
-And `PaymentMethodsProps` interface is extending from `TitleProps` interface inheriting the following properties:
+    - It provides a callback function **`onError()`** to be used in the integration layer in case the merchant wanted to perform some actions like showing an error message etc.
+    - Rollback reverting to the previous valid checkbox state.
 
-- **`PaymentMethodsProps.displayTitle` property inherited**: This property allows displaying the container title.
-- **`PaymentMethodsProps.slots.Title` property inherited**: This property allows customizing the container title.
+  Visit the [BillToShippingAddress](/dropins/checkout/containers/bill-to-shipping-address) documentation for more information.
 
-Visit the [PaymentMethods](/dropins/checkout/containers/payment-methods) documentation for more information.
+- The `LoginForm` container configuration structure has been modified. New properties are added to the `LoginFormProps` interface:
 
-The configuration structure of the `ShippingMethods` container has changed and a new property was added to the `ShippingMethodsProps` interface:
+  - **`LoginFormProps.displayHeadingContent` property added**: This property allows displaying the container heading content.
+  - **`LoginFormProps.slots.Heading` property added**: This property allows customizing the container heading content based on the user authentication status.
 
-- **`ShippingMethodsProps.UIComponentType` property added**: This property allows using a different UI component type as a selector for each shipping method. The available UI components are: `ToggleButton` and `RadioButton`.
+  And `LoginFormProps` interface is extending from `TitleProps` interface inheriting the following properties:
 
-The `ShippingMethodsProps` interface extends the `TitleProps` interface and inherits the following properties:
+  - **`LoginFormProps.displayTitle` property inherited**: This property allows displaying the container title.
+  - **`LoginFormProps.slots.Title` property inherited**: This property allows customizing the container title.
 
-- **`ShippingMethodsProps.displayTitle` property inherited**: This property displays or hides the container title.
-- **`ShippingMethodsProps.slots.Title` property inherited**: This property allows customizing the container title.
+  Visit the [LoginForm](/dropins/checkout/containers/login-form) documentation for more information.
 
-Visit the [ShippingMethods](/dropins/checkout/containers/shipping-methods) documentation for more information.
+- The `PaymentMethods` container configuration structure has been modified. The `PaymentMethodsProps` interface has been changed:
 
-The `TermsAndConditions` container is now visible for both the anonymous and authenticated checkout processes.
+  - **`PaymentMethodsProps.setOnChange` _deprecated_ property removed**.
+  - **`PaymentMethodsProps.slots.Handlers` _deprecated_ property removed**.
+  - **`PaymentMethodsProps.slots.Methods[code].setOnChange` property renamed** to **`PaymentMethodsProps.slots.Methods[code].autoSync`**.
+  - **`PaymentMethodsProps.onSelectionChange` property added**: This property allows performing some actions when a payment method is selected.
+  - **`PaymentMethodsProps.onSelectionError` property added**: This property allows performing some actions in case of an error is thrown during the payment method selection.
+  - **`PaymentMethodsProps.UIComponentType` property added**: This property allows using a different UI component type as a selector for each payment method. UI components available are: 'ToggleButton' and 'RadioButton'.
 
-Visit the [Terms And Conditions](/dropins/checkout/containers/terms-and-conditions) documentation for more information.
+  The `PaymentMethodsProps` interface is extending from `TitleProps` interface inheriting the following properties:
+
+  - **`PaymentMethodsProps.displayTitle` property inherited**: This property allows displaying the container title.
+  - **`PaymentMethodsProps.slots.Title` property inherited**: This property allows customizing the container title.
+
+  Implemented an error handling mechanism for the `PaymentMethods` container based on the _"Optimistic" UI updates with rollback pattern_ consisting on the following:
+
+    - It provides a callback function **`onSelectionError()`** to be used in the integration layer in case the merchant wanted to perform some actions like showing an error message etc.
+    - Rollback reverting to the previous valid payment method selected.
+
+  Visit the [PaymentMethods](/dropins/checkout/containers/payment-methods) documentation for more information.
+
+- The `ShippingMethods` container configuration structure has been modified. The `ShippingMethodsProps` interface has been changed:
+
+  - **`ShippingMethodsProps.preSelectedMethod` property removed**: This was an unused property without business logic behind.
+  - **`ShippingMethodsProps.onShippingMethodSelect` property renamed** to **`ShippingMethodsProps.onSelectionChange`**.
+  - **`ShippingMethodsProps.onSelectionError` property added**: This property allows performing some actions in case of an error is thrown during the shipping method selection.
+  - **`ShippingMethodsProps.UIComponentType` property added**: This property allows using a different UI component type as a selector for each shipping method. The available UI components are: `ToggleButton` and `RadioButton`.
+
+  The `ShippingMethodsProps` interface extends the `TitleProps` interface and inherits the following properties:
+
+  - **`ShippingMethodsProps.displayTitle` property inherited**: This property displays or hides the container title.
+  - **`ShippingMethodsProps.slots.Title` property inherited**: This property allows customizing the container title.
+
+  Implemented an error handling mechanism for the `ShippingMethods` container based on the _"Optimistic" UI updates with rollback pattern_ consisting on the following:
+
+    - It provides a callback function **`onSelectionError()`** to be used in the integration layer in case the merchant wanted to perform some actions like showing an error message etc.
+    - Rollback reverting to the previous valid shipping method selected.
+
+  Visit the [ShippingMethods](/dropins/checkout/containers/shipping-methods) documentation for more information.
+
+- The `TermsAndConditions` container is now visible for both the anonymous and authenticated checkout processes.
+
+  Visit the [Terms And Conditions](/dropins/checkout/containers/terms-and-conditions) documentation for more information.
+
+- Event handling documented within the list of events emitted and subscribed by the Checkout drop-in containers.
+
+  Visit the [Event Handling](/dropins/checkout/event-handling/) documentation for more information.
+
+- Extended the Checkout GraphQL API exposing new fragments:
+
+  - **`BILLING_CART_ADDRESS_FRAGMENT`**
+  - **`SHIPPING_CART_ADDRESS_FRAGMENT`**
+  - **`AVAILABLE_PAYMENT_METHOD_FRAGMENT`**
+  - **`SELECTED_PAYMENT_METHOD_FRAGMENT`**
+
+  Visit the [Extending Checkout drop-in component](/dropins/checkout/extending/) documentation for more information.
+
+- Started implementing error handling in some containers (still work in progress):
+
+  - **`BillToShippingAddress`**
+  - **`PaymentMethods`**
+  - **`ShippingMethods`**
+
+  Visit the [Error Handling](/dropins/checkout/error-handling/) documentation for more information.
+
+- First draft of Multi-step checkout flow implementation (still work in progress).
 
 #### v1.3.0
 
 _March 06, 2025_
 
-New `TermsAndConditions` container added.
+- New `TermsAndConditions` container added.
 
-Visit the [Terms And Conditions](/dropins/checkout/containers/terms-and-conditions) documentation for more information.
+  Visit the [Terms And Conditions](/dropins/checkout/containers/terms-and-conditions) documentation for more information.
 
 #### v1.2.0
 
 _February 11, 2025_
 
-The `PlaceOrder` container configuration structure has been modified. A new property is added to the `PlaceOrderProps` interface:
+- The `PlaceOrder` container configuration structure has been modified. A new property is added to the `PlaceOrderProps` interface:
 
-- **`PlaceOrderProps.slots.Content` property added**: This property allows setting the container content based on the selected payment method. This solves the way how to set the container content dynamically based on the selected payment method, instead of having to modify the text of the container manipulating directly the DOM and detecting payment method selection by handling the PaymentMethods slot, which is not ideal for maintainability.
+  - **`PlaceOrderProps.slots.Content` property added**: This property allows setting the container content based on the selected payment method. This solves the way how to set the container content dynamically based on the selected payment method, instead of having to modify the text of the container manipulating directly the DOM and detecting payment method selection by handling the PaymentMethods slot, which is not ideal for maintainability.
 
-Visit the [Place Order](/dropins/checkout/containers/place-order) documentation for more information.
+  Visit the [Place Order](/dropins/checkout/containers/place-order) documentation for more information.
 
 #### v1.1.0
 
 _February 03, 2025_
 
-The `PaymentMethods` container configuration structure has been modified. The `PaymentMethodsProps` interface has been changed and some properties have been _deprecated_ and replaced:
+- The `PaymentMethods` container configuration structure has been modified. The `PaymentMethodsProps` interface has been changed and some properties have been _deprecated_ and replaced:
 
-- **`PaymentMethodsProps.setOnChange` property _@deprecated_**: This property is _deprecated_ and will be removed in future versions. It has been replaced by the following: `PaymentMethodsProps.slots.Methods.<payment-method-code>.setOnChange`.
-- **`PaymentMethodsProps.slots.Handlers` property _@deprecated_**: This property is _deprecated_ and will be removed in future versions. It has been replaced by the following: `PaymentMethodsProps.slots.Methods.<payment-method-code>.render`.
-- **`PaymentMethodsProps.slots.Methods` property added**: This property is an object that consists of a list of payment method codes that provide a set of configurations to customize each payment method individually.
-- **Configurations accepted by payment methods:**
-  - The `displayLabel` configuration hides the payment method label (for example, if you only want to display the icon).
-  - The `enabled` configuration allows merchants to individually hide payment methods filtering them from the available payment methods list (for example, it is useful when a payment provider has enabled a payment method in the backend, which is configured with more than one payment option and you don't want to display one of them).
-  - The `icon` configuration specifies the name of the icon to be shown beside of the label. The icon name must exist within the list of available icons defined in the drop-ins SDK.
-  - The `setOnChange` configuration sets the payment method automatically when it is selected. Only if a payment method is specifically set to _false_, the container will not automatically set the payment method to the cart when selected (for example, if a payment method needs to obtain more information during the place order action).
-  - The `render` configuration is a handler used to render and configure the payment method.
+  - **`PaymentMethodsProps.setOnChange` property _@deprecated_**: This property is _deprecated_ and will be removed in future versions. It has been replaced by the following: `PaymentMethodsProps.slots.Methods.<payment-method-code>.setOnChange`.
+  - **`PaymentMethodsProps.slots.Handlers` property _@deprecated_**: This property is _deprecated_ and will be removed in future versions. It has been replaced by the following: `PaymentMethodsProps.slots.Methods.<payment-method-code>.render`.
+  - **`PaymentMethodsProps.slots.Methods` property added**: This property is an object that consists of a list of payment method codes that provide a set of configurations to customize each payment method individually.
+  - **Configurations accepted by payment methods:**
+    - The `displayLabel` configuration hides the payment method label (for example, if you only want to display the icon).
+    - The `enabled` configuration allows merchants to individually hide payment methods filtering them from the available payment methods list (for example, it is useful when a payment provider has enabled a payment method in the backend, which is configured with more than one payment option and you don't want to display one of them).
+    - The `icon` configuration specifies the name of the icon to be shown beside of the label. The icon name must exist within the list of available icons defined in the drop-ins SDK.
+    - The `setOnChange` configuration sets the payment method automatically when it is selected. Only if a payment method is specifically set to _false_, the container will not automatically set the payment method to the cart when selected (for example, if a payment method needs to obtain more information during the place order action).
+    - The `render` configuration is a handler used to render and configure the payment method.
 
-Visit the [Payment Methods](/dropins/checkout/containers/payment-methods) documentation for more information.
+  Visit the [Payment Methods](/dropins/checkout/containers/payment-methods) documentation for more information.

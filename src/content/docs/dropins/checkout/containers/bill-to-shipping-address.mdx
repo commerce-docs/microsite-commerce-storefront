@@ -7,7 +7,7 @@ import OptionsTable from '@components/OptionsTable.astro';
 
 The `BillToShippingAddress` container includes a checkbox that allows users to indicate if the billing address is the same as the shipping address. If unchecked, the billing address form will be displayed.
 
-This container provides internal functions to hide itself in case the cart is empty or virtual.
+This container provides internal business logic to hide itself in case the cart is empty or virtual.
 
 ## BillToShippingAddress configurations
 
@@ -17,7 +17,10 @@ The `BillToShippingAddress` container provides the following configuration optio
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
     ['onChange', 'function', 'No', 'Callback function that is called when the checkbox state changes.'],
+    ['onError', 'function', 'No', 'A function that takes an error as arguments. It is called when the setBillingAddressOnCart() API throws an error when bill to shipping address checkbox is clicked and stored to the backend.'],
   ]}
 />
 
@@ -29,15 +32,24 @@ The `BillToShippingAddress` container receives an object as a parameter which im
 
 ```ts
 export interface BillToShippingAddressProps {
+  active?: boolean;
+  autoSync?: boolean;
   onChange?: (checked: boolean) => void;
+  onError?: (error: unknown) => void;
 }
 ```
 
+<li>Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).</li>
+
+<li>Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.</li>
+
 <li>The `onChange` property is a handler used to perform actions called when the checkbox is checked/unchecked.</li>
+
+<li>The `onError` property is a handler used to perform actions called when bill to shipping address checkbox is clicked and the setBillingAddressOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.</li>
 
 ## Example
 
-The following example renders the `BillToShippingAddress` container on a checkout page. It handles changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart.
+The following example renders the `BillToShippingAddress` container on a checkout page. It handles changes to the billing address form visibility and validation. If the billing address form is shown, it validates the form data and updates the billing address on the cart. Finally, an error message is shown in case there is an issue saving the billing address to the backend.
 
 ```ts
 import * as checkoutApi from '@dropins/storefront-checkout/api.js';
@@ -67,6 +79,12 @@ CheckoutProvider.render(BillToShippingAddress, {
         placeOrderBtn: placeOrder,
       })({ data: formData, isDataValid });
     }
+  },
+  onError: (error) => {
+    const billToShippingMsg = document.createElement('div');
+    billToShippingMsg.style.color = 'red';
+    billToShippingMsg.innerText = `Error saving the Billing address with the Shipping address information: ${error.message}`;
+    $billToShipping.appendChild(billToShippingMsg);
   },
 })($billToShipping),
 ```
