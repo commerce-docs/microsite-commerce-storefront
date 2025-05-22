@@ -55,41 +55,28 @@ For [multi-store setups](/merchants/get-started/multistore) or stores supporting
   This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
   :::
 
-#### Cache-busting query parameter
+### Cache-busting Query Parameter
 
-The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main) provides a reference implementation that you can use to add a cache-busting query parameter to the Catalog Service endpoint:
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main) implements a dynamic cache-busting mechanism for the Catalog Service endpoint. This ensures that when configuration headers change, the browser will fetch fresh data instead of using cached responses.
 
-<Tabs>
-  <TabItem label="scripts/commerce.js">
+The cache-busting mechanism is handled internally by the boilerplate code:
 
-  This function sets the Catalog Service endpoint with a cache-busting query parameter based on the `Magento-Store-Code` header value. The PDP drop-in component uses this function at initialization.
+1. The headers are collected from your [storefront configuration](/setup/configuration/commerce-configuration/) i.e. `public.headers.cs.*`
+2. A short hash (8 characters by default) is generated from these headers
+3. The hash is automatically appended to the Catalog Service endpoint URL as `?cache-buster=<hash>`
+4. The hash updates automatically whenever the headers change
 
-  ```javascript
-  ...
-  export async function commerceEndpointWithQueryParams() {
-    const urlWithQueryParams = new URL(getConfigValue('commerce-endpoint'));
-    // Set some query parameters for use as a cache-buster. No other purpose.
-    urlWithQueryParams.searchParams.append('ac-storecode', getConfigValue('headers.cs.Magento-Store-Code'));
-    return urlWithQueryParams;
-  } 
-  ...
-  ```
+This ensures that any changes to your Catalog Service configuration (like store code, store view code, or other headers) will automatically trigger fresh data fetches.
 
-  </TabItem>
-  <TabItem label="scripts/initializers/pdp.js">
+#### Usage
 
-  This function calls the `commerceEndpointWithQueryParams` function at PDP drop-in component initialization.
+You don't need to implement anything special to use this feature. The cache-busting is automatically applied when:
 
-  ```javascript
-  ...
-  await initializeDropin(async () => {
-    // Set Fetch Endpoint (Service)
-    setEndpoint(await commerceEndpointWithQueryParams());
-  });
-  ...
-  ```
-  </TabItem>
-</Tabs>
+- The PDP drop-in component initializes
+- Any component makes requests to the Catalog Service endpoint
+- The configuration headers change
+
+The system will automatically handle generating and updating the cache-buster parameter as needed.
 
 ### Redirects
 
