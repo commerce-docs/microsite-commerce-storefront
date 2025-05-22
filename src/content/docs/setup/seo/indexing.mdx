@@ -57,24 +57,26 @@ For [multi-store setups](/merchants/get-started/multistore) or stores supporting
 
 ### Cache-busting Query Parameter
 
-The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main) implements a dynamic cache-busting mechanism for the Catalog Service endpoint. This ensures that when configuration headers change, the browser will fetch fresh data instead of using cached responses.
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main) includes a built-in way to prevent stale data from being served. It does this by adding a dynamic cache-busting parameter to Catalog Service requests.
 
-The cache-busting mechanism is handled internally by the boilerplate code:
+When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
 
-1. The headers are collected from your [storefront configuration](/setup/configuration/commerce-configuration/) i.e. `public.headers.all.*` and `public.headers.cs.*`
-2. A short hash (5 characters by default) is generated from these headers
-3. The hash is automatically appended to the Catalog Service endpoint URL as `?cb=<hash>`
-4. The hash updates automatically whenever the headers change
+Here’s how the boilerplate handles it:
 
-This ensures that any changes to headers (like store code or store view code) will trigger a fresh data fetch—essential for avoiding stale responses from CDN-cached GET queries such as those hitting the Catalog Service.
+1. It collects headers from your [storefront configuration](/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
+1. It creates a short hash (5 characters by default) based on those headers.
+1. It adds the hash to the Catalog Service URL using the format `?cb=<hash>`.
+1. When the headers change, it generates a new hash automatically.
 
-You don't need to implement anything special to use this feature. The cache-busting is automatically applied when:
+This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
 
-- The PDP drop-in component initializes
-- Any component makes requests to the Catalog Service endpoint
-- The configuration headers change
+You don’t need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
 
-The system will automatically handle generating and updating the `cb` parameter as needed.
+- The PDP drop-in component initializes.
+- Any component sends a request to the Catalog Service.
+- Your configuration headers update.
+
+The boilerplate always manages the `cb` parameter for you.
 
 ### Redirects
 
