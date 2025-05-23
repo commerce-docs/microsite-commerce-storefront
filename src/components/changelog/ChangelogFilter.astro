@@ -1,0 +1,100 @@
+---
+const allComponents = [
+  'Cart',
+  'MiniCart',
+  'Checkout',
+  'PaymentMethods',
+  'ProductDetails',
+  'ProductGallery',
+  'UserAuth',
+  'UserAccount',
+  'Order',
+  'Search'
+];
+
+const allTypes = ['feature', 'update', 'fix', 'deprecation'];
+---
+
+<div class="changelog-filter">
+  <div class="filter-group">
+    <label for="component-filter">Filter by Component:</label>
+    <select id="component-filter" class="filter-select">
+      <option value="">All Components</option>
+      {allComponents.map(component => (
+        <option value={component}>{component}</option>
+      ))}
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <label for="type-filter">Filter by Type:</label>
+    <select id="type-filter" class="filter-select">
+      <option value="">All Types</option>
+      {allTypes.map(type => (
+        <option value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+      ))}
+    </select>
+  </div>
+</div>
+
+<script>
+  const componentFilter = document.getElementById('component-filter') as HTMLSelectElement | null;
+  const typeFilter = document.getElementById('type-filter') as HTMLSelectElement | null;
+  const entries = document.querySelectorAll<HTMLElement>('.changelog-entry');
+
+  function filterEntries() {
+    if (!componentFilter || !typeFilter) return;
+
+    const selectedComponent = componentFilter.value;
+    const selectedType = typeFilter.value;
+
+    entries.forEach(entry => {
+      const components = entry.getAttribute('data-components')?.split(',') || [];
+      const type = entry.getAttribute('data-type');
+      
+      const componentMatch = !selectedComponent || components.includes(selectedComponent);
+      const typeMatch = !selectedType || type === selectedType;
+
+      if (entry instanceof HTMLElement) {
+        entry.style.display = componentMatch && typeMatch ? 'block' : 'none';
+      }
+    });
+  }
+
+  if (componentFilter) {
+    componentFilter.addEventListener('change', filterEntries);
+  }
+  if (typeFilter) {
+    typeFilter.addEventListener('change', filterEntries);
+  }
+</script>
+
+<style>
+  .changelog-filter {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: var(--sl-color-gray-1);
+    border-radius: var(--sl-border-radius-medium);
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-select {
+    padding: 0.5rem;
+    border: 1px solid var(--sl-color-gray-3);
+    border-radius: var(--sl-border-radius-small);
+    background: var(--sl-color-white);
+    min-width: 200px;
+  }
+
+  label {
+    font-weight: 500;
+    color: var(--sl-color-gray-7);
+  }
+</style> 
