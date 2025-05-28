@@ -13,9 +13,9 @@ const allComponents = [
 
 <div class="changelog-filter">
   <div class="filter-group">
-    <label for="component-filter">Filter by Component:</label>
+    <label for="component-filter">Filter by component:</label>
     <select id="component-filter" class="filter-select">
-      <option value="">All Components</option>
+      <option value="">All components</option>
       {allComponents.map(component => (
         <option value={component}>{component}</option>
       ))}
@@ -23,14 +23,20 @@ const allComponents = [
   </div>
 </div>
 
+<div id="no-entries-message" class="no-entries-message" style="display: none;">
+  A changelog for that component does not exist.
+</div>
+
 <script>
   const componentFilter = document.getElementById('component-filter') as HTMLSelectElement | null;
   const entries = document.querySelectorAll<HTMLElement>('.changelog-entry');
+  const noEntriesMessage = document.getElementById('no-entries-message');
 
   function filterEntries() {
-    if (!componentFilter) return;
+    if (!componentFilter || !noEntriesMessage) return;
 
     const selectedComponent = componentFilter.value;
+    let visibleEntries = 0;
 
     entries.forEach(entry => {
       const components = entry.getAttribute('data-components')?.split(',') || [];
@@ -38,8 +44,12 @@ const allComponents = [
 
       if (entry instanceof HTMLElement) {
         entry.style.display = componentMatch ? 'block' : 'none';
+        if (componentMatch) visibleEntries++;
       }
     });
+
+    // Show/hide the no entries message
+    noEntriesMessage.style.display = selectedComponent && visibleEntries === 0 ? 'block' : 'none';
   }
 
   if (componentFilter) {
