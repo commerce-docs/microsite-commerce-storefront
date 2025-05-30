@@ -1,0 +1,133 @@
+---
+title: CartSummaryTable container
+description: Learn about the CartSummaryTable container.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+import cartModel from '../_includes/cartModel.ts?raw';
+import Diagram from '@components/Diagram.astro';
+
+The `CartSummaryTable` container displays a summary of the items in the shopping cart by rendering a table of cart items. Each row represents an individual item in the cart, with columns for the item details, price, quantity, subtotal, and actions.
+
+<Diagram caption="CartSummaryTable container">
+  ![CartSummaryGrid container](@images/dropins/cart/cart-summary-table.png)
+</Diagram>
+
+## Features
+
+The `CartSummaryTable` container includes the following features:
+
+- Automatic loading state with skeleton UI
+- Support for out-of-stock items with visual indicators
+- Quantity update functionality with error handling
+- Item removal capability
+- Tax price display (including/excluding)
+- Product image display with lazy loading
+- Configurable product routing
+- Customizable slots for all major components
+- Support for product configurations
+- Warning and alert message display
+- Discount and savings display
+
+## Configurations
+
+The `CartSummaryTable` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Required', 'Description'],
+    ['initialData', 'CartModel | null', 'No', 'Initial data for the cart. Defaults to null.'],
+    ['className', 'string', 'No', 'Optional CSS class name for custom styling.'],
+    ['routeProduct', 'function', 'No', 'Function for getting the product page route.'],
+    ['allowQuantityUpdates', 'boolean', 'No', 'Whether to allow quantity updates. Defaults to true.'],
+    ['allowRemoveItems', 'boolean', 'No', 'Whether to allow removing items. Defaults to true.'],
+    ['onQuantityUpdate', 'function', 'No', 'Callback function when quantity is updated.'],
+    ['onItemRemove', 'function', 'No', 'Callback function when an item is removed.']
+  ]}
+/>
+
+The `CartModel` object has the following shape:
+
+<CodeInclude code={cartModel} lang="ts" frame="none" />
+
+## Supported slots
+
+The `CartSummaryTable` container supports the following slots for customization:
+
+* **Item**: Customize the item cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Price**: Customize the price cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Quantity**: Customize the quantity cell content
+  * Context: `{ 
+      item: CartModel['items'][number],
+      isUpdating: boolean,
+      quantityInputValue: number,
+      handleInputChange: (e: Event) => void,
+      itemUpdateErrors: Map<string, string>
+    }`
+
+* **Subtotal**: Customize the subtotal cell content
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Thumbnail**: Customize the thumbnail image on an item
+  * Context: `{ 
+      item: CartModel['items'][number],
+      defaultImageProps: ImageProps,
+      index: number
+    }`
+
+* **ProductTitle**: Customize the product title on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Sku**: Customize the product SKU on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Configurations**: Customize the product configurations on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **ItemAlert**: Customize the product alert on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **ItemWarning**: Customize the product warning on an item
+  * Context: `{ item: CartModel['items'][number] }`
+
+* **Actions**: Customize the actions on an item
+  * Context: `{ 
+      item: CartModel['items'][number],
+      itemsUpdating: Map<string, { isUpdating: boolean, updatedValue: number }>,
+      setItemUpdating: (uid: string, state: boolean) => void,
+      setItemUpdateError: (uid: string, error: string) => void
+    }`
+
+## Example configuration
+
+The following example demonstrates how to render the `CartSummaryTable` container with the some of the configuration options and slots:
+
+```js
+provider.render(CartSummaryTable, {
+  initialData: cartData,
+  allowQuantityUpdates: true,
+  allowRemoveItems: true,
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  onQuantityUpdate: (item, quantity) => {
+    // Handler after quantity update
+  },
+  onItemRemove: (item) => {
+    // Handler after item removal
+  },
+  slots: {
+    Item: (ctx) => {
+      // Custom item cell content
+    },
+    Price: (ctx) => {
+      // Custom price cell content
+    },
+    // ... other slot customizations
+  }
+});
+```
