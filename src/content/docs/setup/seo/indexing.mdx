@@ -3,6 +3,8 @@ title: Indexing
 description: Boost your Adobe Commerce SEO on Edge Delivery Services! Follow our guidelines on data layers, canonical URLs, redirects, and sitemaps.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Optimizing Adobe Commerce storefronts on Edge Delivery Services for search engines requires guidance. The general recommendations provided here are inspired by customers and partners who have built storefront projects on Edge Delivery Services.
 
 The following best practices are designed to help you ensure that your site is indexed correctly by search engines.
@@ -43,15 +45,38 @@ Be aware that Edge Delivery Services does not handle URLs with uppercase letters
 
 ### Multi-store setups
 
-For multi-store setups or stores supporting multiple locales:
+For [multi-store setups](/merchants/get-started/multistore) or stores supporting multiple locales:
 
 - Verify a [correct hreflang setup](https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually). You can validate using the [hreflang Tags Testing Tool](https://technicalseo.com/tools/hreflang/)
 
-- Verify that the store code is part of the URL for every Catalog Service or Live Search request. This is required because Google caches Catalog Service responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data.
+- Verify that the `Magento-Store-Code` header value defined in your [storefront configuration](/setup/configuration/commerce-configuration/) is part of the URL for every Catalog Service or Live Search request.
 
-  :::tip
-  You can ensure this by [proxying the Catalog Service endpoint](/setup/configuration/content-delivery-network/) through Fastly. Alternatively, you can add a query parameter, but this method is incompatible with drop-in components.
+  :::note
+  This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
   :::
+
+### Cache-busting Query Parameter
+
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main) includes a built-in way to prevent stale data from being served. It does this by adding a dynamic cache-busting parameter to Catalog Service requests.
+
+When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
+
+Here’s how the boilerplate handles it:
+
+1. It collects headers from your [storefront configuration](/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
+1. It creates a short hash (5 characters by default) based on those headers.
+1. It adds the hash to the Catalog Service URL using the format `?cb=<hash>`.
+1. When the headers change, it generates a new hash automatically.
+
+This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
+
+You don’t need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
+
+- The PDP drop-in component initializes.
+- Any component sends a request to the Catalog Service.
+- Your configuration headers update.
+
+The boilerplate always manages the `cb` parameter for you.
 
 ### Redirects
 
