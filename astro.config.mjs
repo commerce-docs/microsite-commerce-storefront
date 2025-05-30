@@ -333,6 +333,7 @@ async function config() {
                             { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                             { label: 'Add gift options to a PDP', link: '/dropins/cart/tutorials/gift-options/' },
                             { label: 'Add messages to the mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+                            { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
                           ]
                         },
                       ]
