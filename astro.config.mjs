@@ -408,6 +408,14 @@ async function config() {
                       items: [
                         { label: 'Overview', link: '/dropins/recommendations/' },
                         { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
+                          ]
+                        },
+
                         { label: 'Styles', link: '/dropins/recommendations/styles/' },
                         { label: 'Functions', link: '/dropins/recommendations/functions/' },
                         { label: 'Slots', link: '/dropins/recommendations/slots/' },
