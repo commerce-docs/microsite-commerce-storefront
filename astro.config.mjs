@@ -310,6 +310,7 @@ async function config() {
                           items: [
                             { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                             { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
+                            { label: 'CartSummaryTable', link: '/dropins/cart/containers/cart-summary-table/' },
                             { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
                             { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
                             { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
