@@ -170,9 +170,32 @@ async function config() {
                     {
                       label: 'Configuration',
                       collapsed: true,
-                      autogenerate: {
-                        directory: '/setup/configuration/'
-                      },
+                      items: [
+                        {
+                          label: 'Overview',
+                          link: '/setup/configuration/'
+                        },
+                        {
+                          label: 'Storefront configuration',
+                          link: '/setup/configuration/commerce-configuration/'
+                        },
+                        {
+                          label: 'Content delivery network',
+                          link: '/setup/configuration/content-delivery-network/'
+                        },
+                        {
+                          label: 'Gated content',
+                          link: '/setup/configuration/gated-content/'
+                        },
+                        {
+                          label: 'Storefront Compatibility Package',
+                          collapsed: true,
+                          autogenerate:
+                          {
+                            directory: '/setup/configuration/storefront-compatibility/',
+                          },
+                        },
+                      ]
                     },
                     {
                       label: 'Analytics',
@@ -287,6 +310,7 @@ async function config() {
                           items: [
                             { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                             { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
+                            { label: 'CartSummaryTable', link: '/dropins/cart/containers/cart-summary-table/' },
                             { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
                             { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
                             { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
@@ -309,6 +333,7 @@ async function config() {
                             { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
                             { label: 'Add gift options to a PDP', link: '/dropins/cart/tutorials/gift-options/' },
                             { label: 'Add messages to the mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+                            { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
                           ]
                         },
                       ]
@@ -707,6 +732,9 @@ async function config() {
                     }, {
                       label: 'Initializer',
                       link: '/sdk/reference/initializer/'
+                    }, {
+                      label: 'Links',
+                      link: '/sdk/reference/links/'
                     }, {
                       label: 'Render',
                       link: '/sdk/reference/render/'
