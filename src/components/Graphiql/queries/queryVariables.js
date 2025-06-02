@@ -1,5 +1,5 @@
 export const VARIABLES = {
-  Cart: JSON.stringify({ cartId: 'z7QmctP3Hs3qg3TCPwKPgWAnsrhdfHIU' }, null, 2),
+  Cart: JSON.stringify({ cartId: 'xEd9DiX2zdJV7yo1K7AUb1q9CYw4jijj' }, null, 2),
   Products: JSON.stringify({ sku: 'ADB256' }, null, 2),
   Recommendations: JSON.stringify(
     {
