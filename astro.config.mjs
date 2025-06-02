@@ -800,6 +800,27 @@ async function config() {
                     },
                   ],
                 },
+                {
+                  label: 'Storefront Builder tutorial',
+                  items: [
+                    {
+                      label: 'Tutorial introduction',
+                      link: 'merchants/tutorials/'
+                    },
+                    {
+                      label: '1. Create product page',
+                      link: 'merchants/tutorials/create-product-page/'
+                    },
+                    {
+                      label: '2. Create product campaign',
+                      link: 'merchants/tutorials/create-product-campaign/'
+                    },
+                    {
+                      label: '3. Create experiment',
+                      link: 'merchants/tutorials/create-experiment/'
+                    },
+                  ],
+                },
               ],
             },
             {
