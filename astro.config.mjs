@@ -56,9 +56,9 @@ async function config() {
     outDir: './dist',
 
     redirects: {
-      '/customize/design-tokens': '/developer/commerce/storefront/dropins/all/branding',
-      '/customize/enrich': '/developer/commerce/storefront/dropins/all/enriching',
-      '/customize/localize': '/developer/commerce/storefront/dropins/all/localizing',
+      '/customize/design-tokens': '/dropins/all/branding',
+      '/customize/enrich': '/dropins/all/enriching',
+      '/customize/localize': '/dropins/all/localizing',
       '/customize/slots': '/developer/commerce/storefront/dropins/all/extending',
       '/customize/style': '/developer/commerce/storefront/dropins/all/styling',
       '/customize': '/developer/commerce/storefront/dropins/all/introduction',
@@ -100,7 +100,7 @@ async function config() {
       '/merchants/terms-and-conditions': '/developer/commerce/storefront/merchants/get-started/terms-and-conditions',
       '/dropins/all/enriching': '/developer/commerce/storefront/merchants/get-started/enrichment',
       '/dropins/all/experimenting': '/developer/commerce/storefront/merchants/get-started/experiments',
-      '/analytics/instrumentation': '/developer/commerce/storefront/setup/analytics/instrumentation',
+      '/analytics/instrumentation': '/setup/analytics/instrumentation',
       '/launch': '/developer/commerce/storefront/setup/launch',
       '/discovery': '/developer/commerce/storefront/setup',
       '/discovery/architecture': '/developer/commerce/storefront/setup/discovery/architecture',
