@@ -19,7 +19,8 @@ const basePath = isProduction
   ? '/developer/commerce/storefront'
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
-    : '/microsite-commerce-storefront';
+    : '/';
+
 
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
