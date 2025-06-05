@@ -1,0 +1,637 @@
+---
+title: Visual Editor Instrumentation
+description: Learn how to instrument pages with content and commerce blocks for Visual Editor authoring.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import Vocabulary from '@components/Vocabulary.astro';
+import Aside from '@components/Aside.astro';
+import { Code } from '@astrojs/starlight/components';
+
+This guide provides step-by-step instructions on how to instrument pages so that merchants can edit them in the Visual Editor.
+
+## Vocabulary
+
+<Vocabulary>
+
+### Visual Editor
+
+A visual authoring tool that allows content authors to edit content directly in the context of their website, providing a WYSIWYG editing experience for both content and commerce components.
+
+### Instrumentation
+
+The process of adding special data attributes and metadata to HTML elements to make them editable and manageable through Visual Editor.
+
+### Content Blocks
+
+Edge Delivery Services components that provide content and layout for non-commerce pages, such as Cards, Columns, Headers, and Footers.
+
+### Commerce Blocks
+
+Edge Delivery Services blocks that contain drop-in components and provide commerce functionality like product details, cart, checkout, and account management.
+
+### Data Attributes
+
+Special HTML attributes that provide metadata to the Visual Editor about how elements can be edited, what content they represent, and how they should be handled.
+
+</Vocabulary>
+
+## Big Picture
+
+Visual Editor instrumentation involves adding specific data attributes to your HTML elements that configure the Visual Editor:
+
+1. **What content is editable** - Which elements can be modified
+2. **How to edit content** - What type of editing interface to show
+3. **Where to save changes** - How to persist edits back to the content source
+4. **Content relationships** - How different elements relate to each other
+
+<Diagram caption="Instrumentation for the Visual Editor.">
+  ![Instrumentation for the Visual Editor.](@images/placeholder.webp)
+</Diagram>
+
+## Prerequisites
+
+Before implementing Visual Editor instrumentation, ensure you have:
+
+- An Adobe Commerce on Edge Delivery Services project set up
+- Access to Visual Editor (requires appropriate Adobe licenses)
+- Understanding of Edge Delivery Services block architecture
+- Basic knowledge of HTML data attributes and JavaScript
+
+## Core Instrumentation Attributes
+
+Visual Editor uses specific data attributes to identify and manage editable content:
+
+| Attribute | Purpose | Example Value |
+|-----------|---------|---------------|
+| `data-aue-resource` | Identifies the content resource | `urn:aem:/content/path/to/document` |
+| `data-aue-type` | Specifies the content type | `text`, `richtext`, `media`, `component` |
+| `data-aue-prop` | Property name for the content | `title`, `description`, `image` |
+| `data-aue-filter` | Content filtering rules | `heading`, `paragraph` |
+| `data-aue-label` | Human-readable label for editors | `Page Title`, `Product Description` |
+
+## Step-by-Step Implementation
+
+<Tasks>
+
+<Task>
+### Instrument Content Blocks
+
+Content blocks are the foundation of your page structure. Here's how to make them editable:
+
+#### Basic Text Content
+
+```javascript
+// In your content block (e.g., blocks/hero/hero.js)
+export default async function decorate(block) {
+  const contentPath = block.closest('[data-aue-resource]')?.getAttribute('data-aue-resource') || 
+                     window.location.pathname;
+  
+  // Create the hero structure
+  const heroContent = document.createElement('div');
+  heroContent.className = 'hero-content';
+  
+  // Editable title
+  const title = document.createElement('h1');
+  title.className = 'hero-title';
+  title.setAttribute('data-aue-resource', contentPath);
+  title.setAttribute('data-aue-type', 'text');
+  title.setAttribute('data-aue-prop', 'heroTitle');
+  title.setAttribute('data-aue-label', 'Hero Title');
+  title.textContent = block.querySelector('h1')?.textContent || 'Default Title';
+  
+  // Editable description
+  const description = document.createElement('p');
+  description.className = 'hero-description';
+  description.setAttribute('data-aue-resource', contentPath);
+  description.setAttribute('data-aue-type', 'richtext');
+  description.setAttribute('data-aue-prop', 'heroDescription');
+  description.setAttribute('data-aue-label', 'Hero Description');
+  description.innerHTML = block.querySelector('p')?.innerHTML || 'Default description';
+  
+  // Editable image
+  const imageContainer = document.createElement('div');
+  imageContainer.className = 'hero-image';
+  imageContainer.setAttribute('data-aue-resource', contentPath);
+  imageContainer.setAttribute('data-aue-type', 'media');
+  imageContainer.setAttribute('data-aue-prop', 'heroImage');
+  imageContainer.setAttribute('data-aue-label', 'Hero Image');
+  
+  const existingImage = block.querySelector('img');
+  if (existingImage) {
+    imageContainer.appendChild(existingImage);
+  }
+  
+  heroContent.append(title, description, imageContainer);
+  block.textContent = '';
+  block.appendChild(heroContent);
+}
+```
+
+#### Rich Text with Filtering
+
+```javascript
+// For rich text content with specific allowed elements
+const richTextElement = document.createElement('div');
+richTextElement.setAttribute('data-aue-resource', contentPath);
+richTextElement.setAttribute('data-aue-type', 'richtext');
+richTextElement.setAttribute('data-aue-prop', 'content');
+richTextElement.setAttribute('data-aue-filter', 'heading,paragraph,list');
+richTextElement.setAttribute('data-aue-label', 'Article Content');
+```
+</Task>
+
+<Task>
+### Instrument Commerce Blocks
+
+Commerce blocks require special handling because they integrate with drop-in components:
+
+#### Product Details Block
+
+```javascript
+// In blocks/product-details/product-details.js
+import { fetchPlaceholders } from '../../scripts/commerce.js';
+import { productRenderer, ProductDetails } from '../../scripts/__dropins__/storefront-pdp/containers/ProductDetails.js';
+
+export default async function decorate(block) {
+  const labels = await fetchPlaceholders();
+  const contentPath = getContentPath();
+  
+  // Create the main wrapper with UE instrumentation
+  const wrapper = document.createElement('div');
+  wrapper.className = 'product-details-wrapper';
+  wrapper.setAttribute('data-aue-resource', contentPath);
+  wrapper.setAttribute('data-aue-type', 'component');
+  wrapper.setAttribute('data-aue-prop', 'productDetails');
+  wrapper.setAttribute('data-aue-label', 'Product Details');
+  
+  // Layout with instrumented sections
+  const fragment = document.createRange().createContextualFragment(`
+    <div class="product-details__wrapper">
+      <div class="product-details__alert"></div>
+      <div class="product-details__left-column">
+        <div class="product-details__gallery" 
+             data-aue-resource="${contentPath}"
+             data-aue-type="component"
+             data-aue-prop="productGallery"
+             data-aue-label="Product Gallery"></div>
+        <div class="product-details__enrichment" 
+             data-aue-resource="${contentPath}"
+             data-aue-type="container"
+             data-aue-prop="enrichmentContent"
+             data-aue-label="Product Enrichment"></div>
+      </div>
+      <div class="product-details__right-column">
+        <div class="product-details__header"
+             data-aue-resource="${contentPath}"
+             data-aue-type="component"
+             data-aue-prop="productHeader"
+             data-aue-label="Product Header"></div>
+        <div class="product-details__price"></div>
+        <div class="product-details__configuration"></div>
+      </div>
+    </div>
+  `);
+  
+  // Add enrichment area for content blocks
+  const enrichmentArea = fragment.querySelector('.product-details__enrichment');
+  await loadEnrichmentContent(enrichmentArea, contentPath);
+  
+  wrapper.appendChild(fragment);
+  block.appendChild(wrapper);
+  
+  // Initialize the product details drop-in
+  await productRenderer.render(ProductDetails, {
+    sku: getSkuFromUrl(),
+    slots: {
+      // Instrument slots for UE
+      Title: (ctx) => instrumentSlot(ctx, 'productTitle', 'Product Title'),
+      Description: (ctx) => instrumentSlot(ctx, 'productDescription', 'Product Description'),
+    },
+  })(wrapper.querySelector('.product-details__header'));
+}
+
+function instrumentSlot(ctx, prop, label) {
+  const element = ctx.getSlotElement();
+  const contentPath = getContentPath();
+  
+  element.setAttribute('data-aue-resource', contentPath);
+  element.setAttribute('data-aue-type', 'text');
+  element.setAttribute('data-aue-prop', prop);
+  element.setAttribute('data-aue-label', label);
+}
+```
+
+#### Cart Block with Configuration
+
+```javascript
+// In blocks/commerce-cart/commerce-cart.js
+import { cartRenderer, Cart } from '../../scripts/__dropins__/storefront-cart/containers/Cart.js';
+
+export default async function decorate(block) {
+  const contentPath = getContentPath();
+  
+  // Read block configuration with UE instrumentation
+  const config = readBlockConfig(block);
+  const configElement = createConfigElement(config, contentPath);
+  
+  // Main cart wrapper
+  const wrapper = document.createElement('div');
+  wrapper.className = 'cart-wrapper';
+  wrapper.setAttribute('data-aue-resource', contentPath);
+  wrapper.setAttribute('data-aue-type', 'component');
+  wrapper.setAttribute('data-aue-prop', 'cartComponent');
+  wrapper.setAttribute('data-aue-label', 'Shopping Cart');
+  
+  // Configuration area (editable by merchants)
+  wrapper.appendChild(configElement);
+  
+  // Cart container
+  const cartContainer = document.createElement('div');
+  cartContainer.className = 'cart-container';
+  wrapper.appendChild(cartContainer);
+  
+  block.appendChild(wrapper);
+  
+  // Render cart with instrumented slots
+  await cartRenderer.render(Cart, {
+    routeEmptyCartCTA: () => config['start-shopping-url'] || '/',
+    routeProduct: (sku) => `/products/${sku}`,
+    slots: {
+      OrderSummary: (ctx) => {
+        const element = ctx.getSlotElement();
+        element.setAttribute('data-aue-resource', contentPath);
+        element.setAttribute('data-aue-type', 'component');
+        element.setAttribute('data-aue-prop', 'orderSummary');
+        element.setAttribute('data-aue-label', 'Order Summary');
+      }
+    }
+  })(cartContainer);
+}
+
+function createConfigElement(config, contentPath) {
+  const configDiv = document.createElement('div');
+  configDiv.className = 'cart-config';
+  configDiv.setAttribute('data-aue-resource', contentPath);
+  configDiv.setAttribute('data-aue-type', 'container');
+  configDiv.setAttribute('data-aue-prop', 'cartConfiguration');
+  configDiv.setAttribute('data-aue-label', 'Cart Configuration');
+  
+  // Create editable configuration fields
+  Object.entries(config).forEach(([key, value]) => {
+    const configItem = document.createElement('div');
+    configItem.className = 'config-item';
+    configItem.setAttribute('data-aue-resource', contentPath);
+    configItem.setAttribute('data-aue-type', 'text');
+    configItem.setAttribute('data-aue-prop', `config.${key}`);
+    configItem.setAttribute('data-aue-label', `${key.replace('-', ' ')}`);
+    configItem.setAttribute('data-config-key', key);
+    configItem.textContent = value;
+    configDiv.appendChild(configItem);
+  });
+  
+  return configDiv;
+}
+```
+</Task>
+
+<Task>
+### Implement Container Instrumentation
+
+For blocks that contain other blocks or dynamic content:
+
+```javascript
+// In blocks/container/container.js
+export default async function decorate(block) {
+  const contentPath = getContentPath();
+  
+  // Main container with UE instrumentation
+  const container = document.createElement('div');
+  container.className = 'content-container';
+  container.setAttribute('data-aue-resource', contentPath);
+  container.setAttribute('data-aue-type', 'container');
+  container.setAttribute('data-aue-prop', 'containerContent');
+  container.setAttribute('data-aue-label', 'Content Container');
+  
+  // Add drop zones for content
+  const sections = ['header', 'main', 'sidebar', 'footer'];
+  
+  sections.forEach(section => {
+    const sectionDiv = document.createElement('div');
+    sectionDiv.className = `container-${section}`;
+    sectionDiv.setAttribute('data-aue-resource', contentPath);
+    sectionDiv.setAttribute('data-aue-type', 'container');
+    sectionDiv.setAttribute('data-aue-prop', `${section}Content`);
+    sectionDiv.setAttribute('data-aue-label', `${section.charAt(0).toUpperCase() + section.slice(1)} Content`);
+    sectionDiv.setAttribute('data-aue-filter', 'block');
+    
+    // Add placeholder for empty sections
+    if (!sectionDiv.hasChildNodes()) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'ue-placeholder';
+      placeholder.textContent = `Drop content here for ${section}`;
+      sectionDiv.appendChild(placeholder);
+    }
+    
+    container.appendChild(sectionDiv);
+  });
+  
+  block.appendChild(container);
+}
+```
+</Task>
+
+<Task>
+### Add Metadata and Page-Level Instrumentation
+
+Add page-level metadata that Visual Editor needs:
+
+```javascript
+// In scripts/scripts.js or head.html
+function addUniversalEditorMetadata() {
+  // Page resource identifier
+  const pageResource = document.createElement('meta');
+  pageResource.setAttribute('property', 'urn:adobe:aue:resource');
+  pageResource.setAttribute('content', window.location.pathname);
+  document.head.appendChild(pageResource);
+  
+  // System identifier
+  const systemId = document.createElement('meta');
+  systemId.setAttribute('property', 'urn:adobe:aue:system');
+  systemId.setAttribute('content', 'aem');
+  document.head.appendChild(systemId);
+  
+  // Configuration endpoint
+  const configEndpoint = document.createElement('meta');
+  configEndpoint.setAttribute('property', 'urn:adobe:aue:config');
+  configEndpoint.setAttribute('content', '/tools/universal-editor/config');
+  document.head.appendChild(configEndpoint);
+}
+
+// Add Visual Editor scripts in development
+if (window.location.hostname === 'localhost' || window.location.search.includes('universaleditor=true')) {
+  const ueScript = document.createElement('script');
+  ueScript.src = 'https://universal-editor-service.adobe.io/cors.js';
+  ueScript.async = true;
+  document.head.appendChild(ueScript);
+  
+  addUniversalEditorMetadata();
+}
+```
+
+Add to your `head.html`:
+
+```html
+<!-- Visual Editor Detection -->
+<script>
+  if (window.location.search.includes('universaleditor=true')) {
+    document.documentElement.setAttribute('data-aue-enabled', 'true');
+  }
+</script>
+
+<!-- Visual Editor Styles -->
+<style>
+  [data-aue-enabled="true"] .ue-placeholder {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  [data-aue-enabled="true"] [data-aue-type] {
+    position: relative;
+  }
+  
+  [data-aue-enabled="true"] [data-aue-type]:hover::before {
+    content: attr(data-aue-label);
+    position: absolute;
+    top: -25px;
+    left: 0;
+    background: #0066cc;
+    color: white;
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+    z-index: 1000;
+    white-space: nowrap;
+  }
+</style>
+```
+</Task>
+
+<Task>
+### Implement Content Path Resolution
+
+Create utilities for content path management:
+
+```javascript
+// In scripts/universal-editor.js
+export function getContentPath() {
+  // Try to get from meta tag first
+  const resourceMeta = document.querySelector('meta[property="urn:adobe:aue:resource"]');
+  if (resourceMeta) {
+    return resourceMeta.getAttribute('content');
+  }
+  
+  // Fallback to current path
+  return window.location.pathname;
+}
+
+export function getContentResource(path) {
+  // Convert path to AEM resource URN
+  return `urn:aem:${path}`;
+}
+
+export function instrumentElement(element, options = {}) {
+  const {
+    resource = getContentPath(),
+    type = 'text',
+    prop = 'content',
+    label = 'Content',
+    filter = null
+  } = options;
+  
+  element.setAttribute('data-aue-resource', getContentResource(resource));
+  element.setAttribute('data-aue-type', type);
+  element.setAttribute('data-aue-prop', prop);
+  element.setAttribute('data-aue-label', label);
+  
+  if (filter) {
+    element.setAttribute('data-aue-filter', filter);
+  }
+  
+  return element;
+}
+
+export function createEditableContainer(className, options = {}) {
+  const container = document.createElement('div');
+  container.className = className;
+  
+  return instrumentElement(container, {
+    type: 'container',
+    ...options
+  });
+}
+```
+</Task>
+
+<Task>
+### Handle Dynamic Content and Enrichment
+
+For content that loads dynamically or changes based on product data:
+
+```javascript
+// In scripts/enrichment.js
+export async function loadEnrichmentContent(container, contentPath) {
+  // Mark container as editable
+  instrumentElement(container, {
+    type: 'container',
+    prop: 'enrichmentBlocks',
+    label: 'Product Enrichment Blocks'
+  });
+  
+  // Load enrichment configuration
+  const enrichmentConfig = await fetchEnrichmentConfig(contentPath);
+  
+  enrichmentConfig.blocks.forEach((blockConfig, index) => {
+    const blockElement = document.createElement('div');
+    blockElement.className = `enrichment-block enrichment-${blockConfig.type}`;
+    
+    // Instrument each enrichment block
+    instrumentElement(blockElement, {
+      type: 'component',
+      prop: `enrichment.${blockConfig.type}.${index}`,
+      label: `${blockConfig.type} Block`,
+      resource: blockConfig.source || contentPath
+    });
+    
+    // Add configuration data
+    blockElement.setAttribute('data-block-type', blockConfig.type);
+    blockElement.setAttribute('data-block-config', JSON.stringify(blockConfig));
+    
+    container.appendChild(blockElement);
+  });
+}
+
+async function fetchEnrichmentConfig(contentPath) {
+  // Implementation depends on your content structure
+  try {
+    const response = await fetch(`${contentPath}/enrichment.json`);
+    return await response.json();
+  } catch (error) {
+    console.warn('No enrichment config found:', error);
+    return { blocks: [] };
+  }
+}
+```
+
+</Task>
+
+</Tasks>
+
+## Advanced Patterns
+
+### Conditional Instrumentation
+
+Only instrument content when Visual Editor is active:
+
+```javascript
+function shouldInstrument() {
+  return window.location.search.includes('universaleditor=true') ||
+         document.documentElement.hasAttribute('data-aue-enabled');
+}
+
+export function conditionallyInstrument(element, options) {
+  if (shouldInstrument()) {
+    return instrumentElement(element, options);
+  }
+  return element;
+}
+```
+
+### Commerce-Specific Instrumentation
+
+For commerce blocks that need special handling:
+
+```javascript
+// Commerce block instrumentation helper
+export function instrumentCommerceBlock(block, blockType, options = {}) {
+  if (!shouldInstrument()) return block;
+  
+  const contentPath = getContentPath();
+  
+  // Add commerce-specific attributes
+  block.setAttribute('data-aue-resource', contentPath);
+  block.setAttribute('data-aue-type', 'component');
+  block.setAttribute('data-aue-prop', `commerce.${blockType}`);
+  block.setAttribute('data-aue-label', options.label || `${blockType} Block`);
+  block.setAttribute('data-commerce-block', blockType);
+  
+  // Add commerce configuration if available
+  const config = readBlockConfig(block);
+  if (Object.keys(config).length > 0) {
+    block.setAttribute('data-commerce-config', JSON.stringify(config));
+  }
+  
+  return block;
+}
+```
+
+## Testing Your Implementation
+
+<Steps>
+1. **Local Development**: Test with `?universaleditor=true` query parameter
+2. **Validate Attributes**: Use browser developer tools to check data attributes
+3. **Test Editing**: Verify Visual Editor can detect and edit your content
+4. **Check Persistence**: Ensure changes save back to your content source
+</Steps>
+
+## Best Practices
+
+- **Performance**: Only add instrumentation when Visual Editor is active
+- **Accessibility**: Ensure instrumentation doesn't interfere with screen readers
+- **Consistency**: Use consistent labeling and property naming conventions
+- **Fallbacks**: Always provide fallback content for empty or missing sections
+- **Validation**: Validate that all required attributes are present
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Content Not Editable**: Check that all required data attributes are present
+2. **Changes Not Saving**: Verify the `data-aue-resource` points to the correct content
+3. **Performance Issues**: Ensure instrumentation only runs when needed
+4. **Block Conflicts**: Make sure instrumentation doesn't interfere with block functionality
+
+### Debugging Tools
+
+```javascript
+// Debug helper for Visual Editor
+window.debugUE = {
+  findEditableElements: () => document.querySelectorAll('[data-aue-type]'),
+  validateElement: (element) => {
+    const required = ['data-aue-resource', 'data-aue-type', 'data-aue-prop'];
+    const missing = required.filter(attr => !element.hasAttribute(attr));
+    console.log('Missing attributes:', missing);
+    return missing.length === 0;
+  },
+  listResources: () => {
+    const resources = new Set();
+    document.querySelectorAll('[data-aue-resource]').forEach(el => {
+      resources.add(el.getAttribute('data-aue-resource'));
+    });
+    return Array.from(resources);
+  }
+};
+```
+
+This instrumentation approach provides a comprehensive foundation for making your Adobe Commerce on Edge Delivery Services pages fully editable through Visual Editor while maintaining the performance and flexibility of the platform. 

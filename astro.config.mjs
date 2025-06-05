@@ -180,6 +180,10 @@ async function config() {
                           link: '/setup/configuration/commerce-configuration/'
                         },
                         {
+                          label: 'Instrumentation for Visual Editor ',
+                          link: '/setup/configuration/visual-editor-instrumentation/'
+                        },
+                        {
                           label: 'Content delivery network',
                           link: '/setup/configuration/content-delivery-network/'
                         },
