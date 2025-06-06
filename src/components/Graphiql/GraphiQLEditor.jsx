@@ -11,11 +11,10 @@ import {
 import { explorerPlugin } from '@graphiql/plugin-explorer';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
 
-import { ENDPOINT } from './queries/endpoint';
-import { QUERIES } from './queries/queries';
-import { VARIABLES } from './queries/queryVariables';
-
-import queryHeaders from './queries/queryHeaders.json';
+import { getEndpoint } from './queries/endpoint';
+import { getQueries } from './queries/queries';
+import { getVariables } from './queries/queryVariables';
+import { getQueryHeaders } from './queries/queryHeaders';
 
 import 'graphiql/graphiql.min.css';
 import './graphiql-overrides.css';
@@ -55,7 +54,12 @@ const useTimedFetcher = (endpoint, queryHeaders) => {
   return { timedFetcher, responseTime, responseSize, error, setError };
 };
 
-const GraphiQLEditor = () => {
+const GraphiQLEditor = ({ service }) => {
+  const ENDPOINT = getEndpoint(service);
+  const QUERY_HEADERS = getQueryHeaders(service);
+  const QUERIES = getQueries(service);
+  const VARIABLES = getVariables(service);
+
   const [selectedQuery, setSelectedQuery] = useState(``);
   const [selectedVariables, setSelectedVariables] = useState(VARIABLES.Default);
   const [queryResult, setQueryResult] = useState(null);
@@ -68,7 +72,7 @@ const GraphiQLEditor = () => {
 
   const { timedFetcher, responseTime, responseSize, error, setError } = useTimedFetcher(
     ENDPOINT,
-    queryHeaders
+    QUERY_HEADERS
   );
   const pluginContext = usePluginContext();
   const PluginContent = pluginContext?.visiblePlugin?.content;
@@ -115,7 +119,7 @@ const GraphiQLEditor = () => {
           defaultEditorToolsVisibility={true}
           defaultVariables={selectedVariables}
           variables={selectedVariables}
-          headers={JSON.stringify(queryHeaders, null, 2)}
+          headers={JSON.stringify(QUERY_HEADERS, null, 2)}
         >
           <GraphiQLInterface>
             <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
