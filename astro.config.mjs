@@ -19,7 +19,7 @@ const basePath = isProduction
   ? '/developer/commerce/storefront'
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
-    : '/';
+    : '';
 
 
 const sdkComponentsDir = path.resolve('./sdk/components');
