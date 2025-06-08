@@ -99,6 +99,66 @@ The available scripts for running the project are defined in the `package.json` 
    import Vocabulary from '@components/Vocabulary.astro';
    import Aside from '@components/Aside.astro';
    import Callouts from '@components/Callouts.astro';
-
-   ;
    ```
+
+## How to create and use content fragments
+
+Content fragments allow you to write reusable content once and include it across multiple pages. This is perfect for maintaining consistency and reducing duplication.
+
+### Step 1: Create a content fragment
+
+1. Create a new `.mdx` file in the `src/content/fragments/` directory
+2. Add any imports you need (like Starlight components)
+3. Write your reusable content using standard MDX/Markdown syntax
+
+**Example fragment file** (`src/content/fragments/my-note.mdx`):
+
+```mdx
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="tip" title="Pro Tip">
+This content will appear exactly the same on every page where it's imported.
+You can use **markdown formatting**, lists, and Starlight components.
+</Aside>
+```
+
+### Step 2: Use the fragment in your pages
+
+Import and use the fragment in any MDX page:
+
+```mdx
+---
+title: My Documentation Page
+description: Example page using a content fragment
+---
+
+import MyNote from 'src/content/fragments/my-note.mdx';
+
+# Page Title
+
+Regular page content before the fragment...
+
+<MyNote />
+
+More content after the fragment...
+```
+
+The name `MyNote` is an example name/variable specific to the page to which you are importing the fragment. You can use any name you want. For example, `AcoVersionNote`.
+
+### Best Practices
+
+- **Naming**: Use descriptive names like `prerequisites.mdx` or `api-warning.mdx`
+- **Organization**: Keep fragments in `src/content/fragments/` for easy discovery
+- **Import paths**: Use the same path `src/content/fragments/<your-file.mdx> so you don't have to worry about deciphering relative paths from your file's location in the project.
+- **Content scope**: Use fragments for content that appears on 2+ pages (obviously).
+- **Updates**: Edit the fragment file once to update all instances.
+
+### Common Use Cases
+
+- Prerequisites and requirements
+- Warning messages and cautions
+- Legal disclaimers
+- Contact information
+- Version compatibility notes
+- Troubleshooting tips
+
