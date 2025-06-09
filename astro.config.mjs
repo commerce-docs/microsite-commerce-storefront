@@ -106,6 +106,7 @@ async function config() {
       '/discovery/architecture': '/developer/commerce/storefront/setup/discovery/architecture',
       '/discovery/data-export-validation': '/developer/commerce/storefront/setup/discovery/data-export-validation',
       '/discovery/luma-bridge': '/developer/commerce/storefront/setup/discovery/luma-bridge',
+      '/dropins/all/eventbus': `${basePath}/sdk/reference/events`
     },
     integrations: [
       starlight({
