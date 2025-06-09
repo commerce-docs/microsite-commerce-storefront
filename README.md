@@ -149,8 +149,8 @@ The name `MyNote` is an example name/variable specific to the page to which you 
 
 - **Naming**: Use descriptive names like `prerequisites.mdx` or `api-warning.mdx`
 - **Organization**: Keep fragments in `src/content/fragments/` for easy discovery
-- **Import paths**: Use the same path `src/content/fragments/<your-file.mdx> so you don't have to worry about deciphering relative paths from your file's location in the project.
-- **Content scope**: Use fragments for content that appears on 2+ pages (obviously).
+- **Import paths**: Use the same path `src/content/fragments/<your-file.mdx>` so you don't have to worry about deciphering relative paths from your file's location in the project.
+- **Content scope**: Use fragments for content that appears on multiple pages (obviously).
 - **Updates**: Edit the fragment file once to update all instances.
 
 ### Common Use Cases
