@@ -800,6 +800,15 @@ async function config() {
                     },
                   ],
                 },
+                {
+                  label: 'Storefront Builder',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/storefront-builder/'
+                    },
+                  ],
+                },
               ],
             },
             {
