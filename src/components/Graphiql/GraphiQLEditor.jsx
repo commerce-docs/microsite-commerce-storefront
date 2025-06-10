@@ -7,6 +7,7 @@ import {
   ResponseEditor,
   ExecuteButton,
   usePluginContext,
+  useExecutionContext,
 } from '@graphiql/react';
 import { explorerPlugin } from '@graphiql/plugin-explorer';
 import { createGraphiQLFetcher } from '@graphiql/toolkit';
@@ -65,6 +66,7 @@ const GraphiQLEditor = ({ service }) => {
   const [queryResult, setQueryResult] = useState(null);
   const [defaultVariables, setDefaultVariables] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [shouldExecute, setShouldExecute] = useState(false);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -78,25 +80,23 @@ const GraphiQLEditor = ({ service }) => {
   const PluginContent = pluginContext?.visiblePlugin?.content;
 
   const handleQuerySelection = useCallback(
-    async (query) => {
+    (query) => {
       console.log('handleQuerySelection', query);
       setError(null);
-
-      try {
-        setSelectedQuery(QUERIES[query]);
-        setSelectedVariables(VARIABLES[query]);
-        const response = await timedFetcher({
-          query: selectedQuery,
-          variables: selectedVariables,
-        });
-
-        setQueryResult(response);
-      } catch (err) {
-        setError(err.message);
-      }
+      
+      // Set the query and variables in GraphiQL's state
+      setSelectedQuery(QUERIES[query]);
+      setSelectedVariables(VARIABLES[query]);
+      
+      // Trigger execution after state updates
+      setShouldExecute(true);
     },
-    [timedFetcher, setError]
+    [setError, QUERIES, VARIABLES]
   );
+
+  const handleExecutionComplete = useCallback(() => {
+    setShouldExecute(false);
+  }, []);
 
   return (
     <div className={`graphiql-editor`}>
@@ -121,6 +121,10 @@ const GraphiQLEditor = ({ service }) => {
           variables={selectedVariables}
           headers={JSON.stringify(QUERY_HEADERS, null, 2)}
         >
+          <QueryExecutor 
+            shouldExecute={shouldExecute} 
+            onExecutionComplete={handleExecutionComplete}
+          />
           <GraphiQLInterface>
             <div className="graphiql-sidebar-section">{PluginContent && <PluginContent />}</div>
 
@@ -159,6 +163,26 @@ function QueryButton({ query, handleQuerySelection }) {
       {query}
     </button>
   );
+}
+
+// Component to trigger GraphiQL execution programmatically
+function QueryExecutor({ shouldExecute, onExecutionComplete }) {
+  const executionContext = useExecutionContext();
+  
+  React.useEffect(() => {
+    if (shouldExecute && executionContext?.run) {
+      // Give GraphiQL a bit more time to process the prop changes
+      const timer = setTimeout(() => {
+        console.log('Executing query through GraphiQL context');
+        executionContext.run();
+        onExecutionComplete();
+      }, 300); // Increased delay to 300ms
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldExecute, executionContext, onExecutionComplete]);
+  
+  return null; // This component doesn't render anything
 }
 
 function ResponseTime({ responseTime }) {
