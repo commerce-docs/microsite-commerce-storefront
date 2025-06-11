@@ -1,99 +1,183 @@
 import fs from 'fs';
 import path from 'path';
-import { glob } from 'glob';
+import { execSync } from 'child_process';
+import { createInterface } from 'readline';
 
-const CONTENT_DIR = 'src/content/docs';
-const PAGES_DIR = 'src/pages';
-const REDIRECTS_CACHE = '.astro/redirects-cache.json';
+// Configuration
+const CONTENT_DIRS = ['src/content/docs', 'src/pages'];
 const CONFIG_FILE = 'astro.config.mjs';
 
 /**
- * Generate URL from file path
+ * Convert file path to URL path
  */
 function filePathToUrl(filePath) {
-  return filePath
-    .replace(/\.(astro|md|mdx)$/, '')
-    .replace(/\/index$/, '')
-    .replace(/\\/g, '/');
+  // Remove file extension and convert to URL format
+  return '/' + filePath
+    .replace(/^src\/(content\/docs|pages)\//, '')
+    .replace(/\.(mdx?|astro)$/, '')
+    .replace(/\/index$/, '');
 }
 
 /**
- * Get all content files and their URLs
+ * Get moved/renamed files from Git
  */
-async function getCurrentStructure() {
-  const files = await glob('**/*.{astro,md,mdx}', {
-    cwd: CONTENT_DIR,
-    ignore: ['**/node_modules/**']
-  });
-
-  const structure = {};
-  for (const file of files) {
-    const url = '/' + filePathToUrl(file);
-    structure[url] = file;
-  }
-
-  return structure;
-}
-
-/**
- * Load previously cached structure
- */
-function loadCachedStructure() {
-  if (!fs.existsSync(REDIRECTS_CACHE)) {
-    return {};
-  }
-  
+function getMovedFilesFromGit() {
   try {
-    return JSON.parse(fs.readFileSync(REDIRECTS_CACHE, 'utf8'));
+    // Check if we're in a Git repository
+    execSync('git rev-parse --git-dir', { stdio: 'ignore' });
+    
+    // Get staged changes (for pre-commit hook)
+    let gitCommand = 'git diff --cached --name-status --diff-filter=R';
+    let output;
+    
+    try {
+      output = execSync(gitCommand, { encoding: 'utf8', stdio: 'pipe' });
+    } catch (error) {
+      // If no staged changes, check working directory changes
+      gitCommand = 'git diff --name-status --diff-filter=R';
+      try {
+        output = execSync(gitCommand, { encoding: 'utf8', stdio: 'pipe' });
+      } catch (error2) {
+        // If still no changes, check recent commits
+        gitCommand = 'git diff HEAD~1 --name-status --diff-filter=R';
+        try {
+          output = execSync(gitCommand, { encoding: 'utf8', stdio: 'pipe' });
+        } catch (error3) {
+          return [];
+        }
+      }
+    }
+    
+    const moves = [];
+    const lines = output.trim().split('\n').filter(line => line);
+    
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length >= 3 && parts[0].startsWith('R')) {
+        const oldPath = parts[1];
+        const newPath = parts[2];
+        
+        // Only process content files
+        const isContentFile = CONTENT_DIRS.some(dir => 
+          oldPath.startsWith(dir) && newPath.startsWith(dir)
+        );
+        
+        if (isContentFile) {
+          moves.push({
+            oldPath,
+            newPath,
+            oldUrl: filePathToUrl(oldPath),
+            newUrl: filePathToUrl(newPath)
+          });
+        }
+      }
+    }
+    
+    return moves;
   } catch (error) {
-    console.warn('Failed to load cached structure:', error.message);
-    return {};
+    console.log('Not in a Git repository or no Git changes detected.');
+    return [];
   }
 }
 
 /**
- * Save current structure to cache
+ * Get deleted files that might need redirects
  */
-function saveCachedStructure(structure) {
-  const cacheDir = path.dirname(REDIRECTS_CACHE);
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
-  }
-  
-  fs.writeFileSync(REDIRECTS_CACHE, JSON.stringify(structure, null, 2));
-}
-
-/**
- * Detect potential redirects by comparing structures
- */
-function detectRedirects(oldStructure, newStructure) {
-  const redirects = {};
-  const oldUrls = Object.keys(oldStructure);
-  const newUrls = Object.keys(newStructure);
-  
-  // Find URLs that no longer exist
-  const removedUrls = oldUrls.filter(url => !newUrls.includes(url));
-  
-  for (const removedUrl of removedUrls) {
-    const oldFile = oldStructure[removedUrl];
+function getDeletedFilesFromGit() {
+  try {
+    // Check staged deletions first
+    let gitCommand = 'git diff --cached --name-status --diff-filter=D';
+    let output;
     
-    // Try to find similar files in new structure
-    const potentialMatches = newUrls.filter(newUrl => {
-      const newFile = newStructure[newUrl];
-      const oldBasename = path.basename(oldFile, path.extname(oldFile));
-      const newBasename = path.basename(newFile, path.extname(newFile));
+    try {
+      output = execSync(gitCommand, { encoding: 'utf8', stdio: 'pipe' });
+    } catch (error) {
+      // Check working directory deletions
+      gitCommand = 'git diff --name-status --diff-filter=D';
+      try {
+        output = execSync(gitCommand, { encoding: 'utf8', stdio: 'pipe' });
+      } catch (error2) {
+        return [];
+      }
+    }
+    
+    const deletions = [];
+    const lines = output.trim().split('\n').filter(line => line);
+    
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length >= 2 && parts[0] === 'D') {
+        const deletedPath = parts[1];
+        
+        // Only process content files
+        const isContentFile = CONTENT_DIRS.some(dir => deletedPath.startsWith(dir));
+        
+        if (isContentFile) {
+          deletions.push({
+            deletedPath,
+            deletedUrl: filePathToUrl(deletedPath)
+          });
+        }
+      }
+    }
+    
+    return deletions;
+  } catch (error) {
+    return [];
+  }
+}
+
+/**
+ * Find current content files
+ */
+function getCurrentFiles() {
+  const files = [];
+  
+  for (const dir of CONTENT_DIRS) {
+    if (fs.existsSync(dir)) {
+      const findFiles = (currentDir) => {
+        const items = fs.readdirSync(currentDir);
+        for (const item of items) {
+          const fullPath = path.join(currentDir, item);
+          const stat = fs.statSync(fullPath);
+          
+          if (stat.isDirectory()) {
+            findFiles(fullPath);
+          } else if (item.match(/\.(mdx?|astro)$/)) {
+            files.push({
+              path: fullPath.replace(/\\/g, '/'),
+              url: filePathToUrl(fullPath.replace(/\\/g, '/'))
+            });
+          }
+        }
+      };
       
-      // Check if it's likely the same content moved
-      return oldBasename === newBasename || 
-             newFile.includes(oldBasename) ||
-             oldFile.includes(newBasename);
-    });
-    
-    if (potentialMatches.length === 1) {
-      redirects[removedUrl] = potentialMatches[0];
-    } else if (potentialMatches.length > 1) {
-      console.warn(`Multiple potential matches for ${removedUrl}:`, potentialMatches);
-      console.warn('Manual review required.');
+      findFiles(dir);
+    }
+  }
+  
+  return files;
+}
+
+/**
+ * Generate redirects from Git changes
+ */
+function generateRedirectsFromGit() {
+  const redirects = {};
+  
+  // Get moved/renamed files
+  const moves = getMovedFilesFromGit();
+  for (const move of moves) {
+    redirects[move.oldUrl] = `\${basePath}${move.newUrl}`;
+    console.log(`📝 Detected move: ${move.oldUrl} → ${move.newUrl}`);
+  }
+  
+  // Get deleted files (these might need manual attention)
+  const deletions = getDeletedFilesFromGit();
+  if (deletions.length > 0) {
+    console.log('\n⚠️  Deleted files detected (may need manual redirect setup):');
+    for (const deletion of deletions) {
+      console.log(`   ${deletion.deletedUrl} (was: ${deletion.deletedPath})`);
     }
   }
   
@@ -101,123 +185,150 @@ function detectRedirects(oldStructure, newStructure) {
 }
 
 /**
- * Update astro.config.mjs with new redirects
+ * Read existing redirects from astro.config.mjs
  */
-function updateAstroConfig(newRedirects) {
-  if (Object.keys(newRedirects).length === 0) {
-    console.log('No new redirects to add.');
-    return;
-  }
-
-  let configContent = fs.readFileSync(CONFIG_FILE, 'utf8');
-  
-  // Find the redirects section
-  const redirectsRegex = /redirects:\s*{([^}]*)}/s;
-  const match = configContent.match(redirectsRegex);
-  
-  if (match) {
-    // Parse existing redirects
-    const existingRedirectsStr = match[1];
-    const existingRedirects = {};
+function getExistingRedirects() {
+  try {
+    const configContent = fs.readFileSync(CONFIG_FILE, 'utf8');
+    const redirectsMatch = configContent.match(/redirects:\s*{([^}]+)}/s);
     
-    // Simple parsing - in production, you might want to use a proper AST parser
-    const lines = existingRedirectsStr.split('\n').map(line => line.trim()).filter(Boolean);
-    for (const line of lines) {
-      const redirectMatch = line.match(/['"`]([^'"`]+)['"`]\s*:\s*['"`]([^'"`]+)['"`]/);
-      if (redirectMatch) {
-        existingRedirects[redirectMatch[1]] = redirectMatch[2];
+    if (!redirectsMatch) {
+      return {};
+    }
+    
+    const redirectsSection = redirectsMatch[1];
+    const redirects = {};
+    
+    // Parse existing redirects (simple regex approach)
+    const redirectLines = redirectsSection.match(/'[^']+'\s*:\s*`[^`]+`/g) || [];
+    
+    for (const line of redirectLines) {
+      const match = line.match(/'([^']+)'\s*:\s*`([^`]+)`/);
+      if (match) {
+        redirects[match[1]] = match[2];
       }
     }
     
-    // Merge with new redirects
+    return redirects;
+  } catch (error) {
+    console.error('Error reading existing redirects:', error.message);
+    return {};
+  }
+}
+
+/**
+ * Update astro.config.mjs with new redirects
+ */
+function updateAstroConfig(newRedirects) {
+  try {
+    let configContent = fs.readFileSync(CONFIG_FILE, 'utf8');
+    const existingRedirects = getExistingRedirects();
+    
+    // Merge redirects
     const allRedirects = { ...existingRedirects, ...newRedirects };
     
-    // Generate new redirects string
+    // Build redirects section
     const redirectEntries = Object.entries(allRedirects)
-      .map(([from, to]) => `      '${from}': '${to}'`)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([from, to]) => `      '${from}': ${to}`)
       .join(',\n');
     
-    const newRedirectsBlock = `redirects: {\n${redirectEntries}\n    }`;
-    configContent = configContent.replace(redirectsRegex, newRedirectsBlock);
-  } else {
-    // Add redirects section if it doesn't exist
-    console.warn('Redirects section not found in astro.config.mjs');
-    console.log('New redirects to add:', newRedirects);
-    return;
+    const redirectsSection = `    redirects: {\n${redirectEntries}\n    }`;
+    
+    // Replace the redirects section
+    const redirectsRegex = /redirects:\s*{[^}]*}/s;
+    
+    if (redirectsRegex.test(configContent)) {
+      configContent = configContent.replace(redirectsRegex, redirectsSection.replace(/^\s{4}/, ''));
+    } else {
+      // If no redirects section exists, add it
+      const insertPoint = configContent.indexOf('integrations:');
+      if (insertPoint !== -1) {
+        const beforeIntegrations = configContent.substring(0, insertPoint);
+        const afterIntegrations = configContent.substring(insertPoint);
+        configContent = beforeIntegrations + redirectsSection + ',\n    ' + afterIntegrations;
+      }
+    }
+    
+    fs.writeFileSync(CONFIG_FILE, configContent);
+    console.log(`✅ Updated ${CONFIG_FILE} with ${Object.keys(newRedirects).length} new redirects`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating astro.config.mjs:', error.message);
+    return false;
   }
-  
-  fs.writeFileSync(CONFIG_FILE, configContent);
-  console.log(`Added ${Object.keys(newRedirects).length} new redirects to astro.config.mjs`);
-  
-  // Log the new redirects for review
-  console.log('New redirects:');
-  Object.entries(newRedirects).forEach(([from, to]) => {
-    console.log(`  ${from} → ${to}`);
-  });
 }
 
 /**
  * Main function
  */
-async function generateRedirects() {
-  console.log('Analyzing file structure for redirect generation...');
+function main() {
+  console.log('🔍 Analyzing Git changes for redirect generation...');
   
-  const oldStructure = loadCachedStructure();
-  const newStructure = await getCurrentStructure();
+  const newRedirects = generateRedirectsFromGit();
   
-  if (Object.keys(oldStructure).length === 0) {
-    console.log('No cached structure found. Saving current structure as baseline.');
-    saveCachedStructure(newStructure);
+  if (Object.keys(newRedirects).length === 0) {
+    console.log('No file moves detected. No redirects needed.');
     return;
   }
   
-  const detectedRedirects = detectRedirects(oldStructure, newStructure);
+  console.log(`\n📋 Generated ${Object.keys(newRedirects).length} redirects:`);
+  Object.entries(newRedirects).forEach(([from, to]) => {
+    console.log(`   ${from} → ${to.replace('${basePath}', '[basePath]')}`);
+  });
   
-  if (Object.keys(detectedRedirects).length > 0) {
-    console.log('Detected potential redirects:');
-    Object.entries(detectedRedirects).forEach(([from, to]) => {
-      console.log(`  ${from} → ${to}`);
-    });
-    
-    // In Git hook mode (non-interactive), auto-apply redirects
-    if (!process.stdout.isTTY || process.env.GIT_HOOK_MODE) {
-      console.log('🔄 Auto-applying redirects (Git hook mode)...');
-      updateAstroConfig(detectedRedirects);
-    } else {
-      // Ask for confirmation in interactive mode
-      const readline = await import('readline');
-      const rl = readline.createInterface({
+  // In Git hook mode, automatically apply
+  if (process.env.GIT_HOOK_MODE === '1') {
+    console.log('\n🔄 Applying redirects automatically (Git hook mode)...');
+    if (updateAstroConfig(newRedirects)) {
+      console.log('✅ Redirects applied successfully!');
+      
+      // Stage the updated config file
+      try {
+        execSync('git add astro.config.mjs', { stdio: 'ignore' });
+        console.log('✅ astro.config.mjs staged for commit');
+      } catch (error) {
+        console.log('⚠️  Could not stage astro.config.mjs (not in Git hook?)');
+      }
+    }
+  } else {
+    // Interactive mode - ask for confirmation
+    if (process.stdout.isTTY) {
+      const rl = createInterface({
         input: process.stdin,
         output: process.stdout
       });
       
-      const answer = await new Promise(resolve => {
-        rl.question('Apply these redirects? (y/n): ', resolve);
+      rl.question('\nApply these redirects? (y/n): ', (answer) => {
+        rl.close();
+        
+        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+          if (updateAstroConfig(newRedirects)) {
+            console.log('✅ Redirects applied successfully!');
+          }
+        } else {
+          console.log('Redirects not applied.');
+        }
       });
-      
-      rl.close();
-      
-      if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
-        updateAstroConfig(detectedRedirects);
-      } else {
-        console.log('Redirects not applied.');
-        console.log('💡 Tip: You can add them manually to astro.config.mjs:');
-        Object.entries(detectedRedirects).forEach(([from, to]) => {
-          console.log(`  '${from}': \`\${basePath}${to}\`,`);
-        });
-      }
+    } else {
+      // Non-interactive mode - just show suggestions
+      console.log('\nSuggested redirects (review and apply manually):');
+      Object.entries(newRedirects).forEach(([from, to]) => {
+        console.log(`'${from}': ${to},`);
+      });
     }
-  } else {
-    console.log('No redirects detected.');
   }
-  
-  // Update cache with current structure
-  saveCachedStructure(newStructure);
 }
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  generateRedirects().catch(console.error);
+  main();
 }
 
-export { generateRedirects }; 
+export { 
+  generateRedirectsFromGit,
+  updateAstroConfig,
+  getMovedFilesFromGit,
+  getDeletedFilesFromGit
+}; 
