@@ -168,7 +168,7 @@ function generateRedirectsFromGit() {
   // Get moved/renamed files
   const moves = getMovedFilesFromGit();
   for (const move of moves) {
-    redirects[move.oldUrl] = `\${basePath}${move.newUrl}`;
+    redirects[move.oldUrl] = `\`\${basePath}${move.newUrl}\``;
     console.log(`📝 Detected move: ${move.oldUrl} → ${move.newUrl}`);
   }
   
