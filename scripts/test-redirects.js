@@ -29,8 +29,8 @@ const redirectsToTest = [
   ['/merchants/multistore', `${basePath}/merchants/get-started/multistore`]
 ];
 
-// Try common development ports (4323 first as it's often the dev server when 4321/4322 are taken)
-const PORTS_TO_TRY = [4321, 4323, 4324, 4322];
+// Try common development ports (include more ports and prioritize recently used ones)
+const PORTS_TO_TRY = [4325, 4324, 4323, 4321, 4322, 4326, 4327];
 
 // Function to find active dev server (not production preview)
 async function findActiveServer() {
@@ -39,26 +39,30 @@ async function findActiveServer() {
       const testUrl = `http://localhost:${port}`;
       const { stdout } = await execAsync(`curl -s -I ${testUrl} --max-time 2`);
       
-      // Check if this is a dev server by testing a redirect
-      // Dev servers have redirects, production preview might not
-      try {
-        const redirectTest = await execAsync(`curl -s -I ${testUrl}/customize --max-time 2`);
-        if (redirectTest.stdout.includes('308') || redirectTest.stdout.includes('301')) {
-          return testUrl; // This server has redirects, likely the dev server
+      // Check if server is responding
+      if (stdout.includes('200') || stdout.includes('404')) {
+        // Test if this server has redirects configured
+        try {
+          const redirectTest = await execAsync(`curl -s -I ${testUrl}/customize --max-time 2`);
+          if (redirectTest.stdout.includes('308') || redirectTest.stdout.includes('301')) {
+            return testUrl; // This server has redirects working
+          }
+        } catch (redirectError) {
+          // If redirect test fails, continue to next port
         }
-      } catch (redirectError) {
-        // If redirect test fails, try next port
-        continue;
+        
+        // If no redirects found but server is responding, still consider it
+        // (might be a server without redirects configured)
+        if (!stdout.includes('404')) {
+          return testUrl;
+        }
       }
-      
-      // If no redirects found, still return this server as fallback
-      return testUrl;
     } catch (error) {
       // Port not available, try next
       continue;
     }
   }
-  throw new Error('No development server found on common ports (4321-4324). Please start your dev server with: pnpm dev');
+  throw new Error(`No development server found on ports: ${PORTS_TO_TRY.join(', ')}. Please start your dev server with: pnpm dev`);
 }
 
 async function testRedirects() {

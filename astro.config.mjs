@@ -58,7 +58,7 @@ async function config() {
 
     // Dynamic redirects that work in both dev and production
     redirects: {
-      '/playgrounds/commerce-services-playground': `${basePath}/playgrounds/commerce-services`
+      '/playgrounds/commerce-optimizer': `${basePath}/playgrounds/commerce-optimizer-playground`
     },
     integrations: [
       redirectValidator({
@@ -804,7 +804,7 @@ async function config() {
                     },
                     {
                       label: 'Commerce Optimizer Playground',
-                      link: '/playgrounds/commerce-optimizer/'
+                      link: '/playgrounds/commerce-optimizer-playground/'
                     },
                   ],
                 },
