@@ -58,7 +58,8 @@ async function config() {
 
     // Dynamic redirects that work in both dev and production
     redirects: {
-      '/customize/design-tokens': `${basePath}/dropins/all/branding`,
+      '/test-syntax': `${basePath}/test-syntax-renamed`
+    }/dropins/all/branding`,
       '/playgrounds/commerce-services': `${basePath}/playgrounds/commerce-services-playground`,
       '/customize/enrich': `${basePath}/merchants/get-started/enrichment`,
       '/customize/localize': `${basePath}/dropins/all/labeling`,
