@@ -27,9 +27,6 @@ if [ -n "$content_changes" ] || [ -n "$renamed_files" ] || [ -n "$any_content_ch
   echo ""
   echo "🔄 Running automatic redirect generation..."
   
-  # Store the current state of astro.config.mjs
-  config_before=$(git show HEAD:astro.config.mjs 2>/dev/null || echo "")
-  
   # Run the redirect generation script in Git hook mode
   export GIT_HOOK_MODE=1
   if command -v pnpm >/dev/null 2>&1; then
@@ -38,73 +35,51 @@ if [ -n "$content_changes" ] || [ -n "$renamed_files" ] || [ -n "$any_content_ch
     npm run redirects:generate
   fi
   
-  # Check if any changes were made to astro.config.mjs
-  if git diff --name-only | grep -q "astro.config.mjs"; then
+  redirect_exit_code=$?
+  
+  if [ $redirect_exit_code -eq 0 ]; then
     echo ""
     echo "✅ NEW REDIRECTS GENERATED!"
     echo "📋 The following redirects were added to astro.config.mjs:"
     echo ""
     
-    # Show the new redirect lines
-    git diff astro.config.mjs | grep -E "^\+.*:" | sed 's/^+/  /' || echo "  (Unable to show diff - please check astro.config.mjs manually)"
+    # Show what redirects were added (if any)
+    if git diff --cached astro.config.mjs | grep -q "^+.*:"; then
+      git diff --cached astro.config.mjs | grep "^+.*:" | sed 's/^+/        /'
+    else
+      echo "        (No new redirects detected in this commit)"
+    fi
     
     echo ""
     echo "🎯 These redirects ensure old URLs continue to work after your changes."
-    
-    # Add the updated config to staging
-    git add astro.config.mjs
-    
     echo "✅ astro.config.mjs has been staged with your commit."
-    echo ""
     
+    echo ""
+    echo "🧪 Testing redirects..."
+    if command -v pnpm >/dev/null 2>&1; then
+      pnpm redirects:test >/dev/null 2>&1 && echo "✅ All redirects are working correctly!" || echo "⚠️  Some redirects may need attention"
+    else
+      npm run redirects:test >/dev/null 2>&1 && echo "✅ All redirects are working correctly!" || echo "⚠️  Some redirects may need attention"
+    fi
+    
+    echo ""
+    echo "✅ Pre-commit redirect check completed!"
   else
     echo ""
-    echo "ℹ️  No new redirects were generated."
-    
-    # If we detected changes but no redirects were generated, warn the user
-    if [ -n "$content_changes" ] || [ -n "$renamed_files" ]; then
-      echo ""
-      echo "⚠️  WARNING: Content changes detected but no redirects generated."
-      echo "   This might happen if:"
-      echo "   • Files were renamed with very different names"
-      echo "   • The redirect cache is out of sync"
-      echo "   • Files were moved outside of Git workflow"
-      echo ""
-      echo "   Consider running manually: pnpm redirects:generate"
-      echo "   Or add redirects manually to astro.config.mjs if needed."
-      echo ""
-      echo "   To skip this check: git commit --no-verify"
-      echo ""
-      
-      # Give user a chance to abort
-      printf "Continue with commit? [y/N]: "
-      read -r response
-      case "$response" in
-        [yY][eE][sS]|[yY]) 
-          echo "Continuing with commit..."
-          ;;
-        *)
-          echo "Commit aborted. Please review and try again."
-          exit 1
-          ;;
-      esac
+    echo "⚠️  Redirect generation encountered an issue."
+    echo "   You can continue with the commit, but you may want to:"
+    echo "   • Check the redirect generation manually: pnpm redirects:generate"
+    echo "   • Test existing redirects: pnpm redirects:test"
+    echo ""
+    echo "Continue with commit anyway? [y/N]: "
+    read -r response
+    if [ "$response" != "y" ] && [ "$response" != "Y" ] && [ "$response" != "yes" ]; then
+      echo "Commit aborted. Please review and try again."
+      exit 1
     fi
   fi
-  
-  # Test the redirects to make sure they work
-  echo "🧪 Testing redirects..."
-  if command -v pnpm >/dev/null 2>&1; then
-    if pnpm redirects:test >/dev/null 2>&1; then
-      echo "✅ All redirects are working correctly!"
-    else
-      echo "⚠️  Some redirects may have issues. Run 'pnpm redirects:test' to check."
-    fi
-  fi
-  
 else
-  echo "ℹ️  No content structure changes detected."
+  echo "No content structure changes detected."
 fi
 
-echo ""
-echo "✅ Pre-commit redirect check completed!"
 echo "" 
