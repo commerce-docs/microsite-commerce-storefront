@@ -45,8 +45,8 @@ This project includes a fully automated redirect management system that eliminat
 
 ### How It Works
 
-The system uses a **Git pre-commit hook** that automatically:
-1. **Detects** when you move, rename, or delete content files
+The system uses **Git-based detection** with a pre-commit hook that automatically:
+1. **Detects** file moves/renames using Git's built-in rename detection
 2. **Generates** appropriate redirects in `astro.config.mjs`
 3. **Updates** the configuration file as part of your commit
 4. **Ensures** no broken links occur
@@ -68,10 +68,11 @@ git push
 ```
 
 **That's it!** The Git hook automatically:
-- Detects the file was moved from `old-name.mdx` to `new-name.mdx`
+- Detects the file was moved from `old-name.mdx` to `new-name.mdx` using Git's rename detection
 - Adds redirect: `'/old-name': '${basePath}/new-name'` to `astro.config.mjs`
 - Includes the updated config in your commit
 - Shows you what redirects were added
+- Tests all redirects to ensure they work
 
 ### Environment-Aware Redirects
 
@@ -85,8 +86,10 @@ All redirects work correctly across environments:
 - ✅ **File moves**: `old-path/file.mdx` → `new-path/file.mdx`
 - ✅ **File renames**: `old-name.mdx` → `new-name.mdx`
 - ✅ **Directory restructuring**: Entire folder moves
+- ✅ **Git-based detection**: Uses Git's built-in rename tracking
 - ✅ **Redirect validation**: Ensures no broken targets or loops
 - ✅ **Environment compatibility**: Works in dev, production, and GitHub
+- ✅ **No cache issues**: Works regardless of when files were renamed
 
 ### Manual Override Available
 
@@ -167,11 +170,11 @@ The available scripts for running the project are defined in the `package.json` 
 
 ### 🔄 Redirect Management Scripts
 
-- **`redirects:generate`**: Automatically generates redirects based on file structure changes.
+- **`redirects:generate`**: Automatically generates redirects based on Git changes.
   ```bash
   pnpm redirects:generate
   ```
-  Detects moved/renamed files and creates appropriate redirects in `astro.config.mjs`.
+  Uses Git's rename detection to find moved/renamed files and creates appropriate redirects in `astro.config.mjs`.
 
 - **`redirects:test`**: Tests all redirects to ensure they're working correctly.
   ```bash

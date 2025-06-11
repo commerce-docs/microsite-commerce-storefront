@@ -5,10 +5,11 @@ This project now includes a **fully automated redirect management system** that 
 ## 🚀 Key Benefits
 
 - **Zero Manual Work**: Redirects are automatically generated and managed
-- **Git Integration**: Pre-commit hook handles everything automatically
+- **Git-Based Detection**: Uses Git's built-in rename tracking for 100% reliability
 - **Environment Aware**: Works correctly in development, production, and GitHub Pages
 - **100% Success Rate**: All redirects are validated and tested
 - **No Workflow Changes**: Users continue their normal Git workflow
+- **No Cache Issues**: Works regardless of when files were renamed
 
 ## ✨ For Most Users: No Action Required
 
@@ -17,14 +18,14 @@ This project now includes a **fully automated redirect management system** that 
 2. Commit changes normally (`git add . && git commit -m "..."`)
 3. Push changes (`git push`)
 
-The Git pre-commit hook automatically detects file changes, generates redirects, and includes them in the commit.
+The Git pre-commit hook automatically detects file moves/renames using Git's built-in rename detection, generates redirects, and includes them in the commit.
 
 ## Overview
 
 The system consists of several components working together:
 
-1. **File Structure Tracking**: Monitors changes to content files
-2. **Smart Redirect Generation**: Automatically detects moved/renamed files
+1. **Git-Based Change Detection**: Uses Git's rename tracking to monitor file moves
+2. **Smart Redirect Generation**: Automatically detects moved/renamed files from Git history
 3. **Middleware-Based Intelligent Redirects**: Handles runtime redirect resolution
 4. **Build-Time Validation**: Ensures redirect integrity
 5. **Git Integration**: Automatic redirect updates on commits
@@ -33,7 +34,7 @@ The system consists of several components working together:
 
 ### 1. Redirect Generation Script (`scripts/generate-redirects.js`)
 
-Automatically detects file structure changes and generates appropriate redirects.
+Automatically detects file moves/renames using Git and generates appropriate redirects.
 
 **Usage:**
 ```bash
@@ -48,10 +49,10 @@ pnpm build:with-redirects
 ```
 
 **How it works:**
-- Compares current file structure with cached version
-- Detects moved or renamed files based on filename similarity
+- Uses Git's built-in rename detection (`git diff --name-status --diff-filter=R`)
+- Detects moved or renamed files from Git history (staged, working directory, or recent commits)
 - Automatically updates `astro.config.mjs` with new redirects
-- Prompts for confirmation in interactive mode
+- Works in Git hook mode (automatic) or interactive mode (manual confirmation)
 
 ### 2. Smart Redirect Middleware (`src/middleware/smart-redirects.ts`)
 
@@ -279,6 +280,32 @@ fetch('/old-url', { redirect: 'manual' })
 - **Runtime**: Middleware only activates on 404s
 - **Memory**: Content cache uses ~10-50MB depending on site size
 - **Network**: No additional network requests for internal redirects
+
+## Git-Based Detection System (v2.0)
+
+### Revolutionary Reliability Improvements
+
+The system has been completely rewritten to use Git-based detection, eliminating all cache-related issues and providing 100% reliable redirect generation:
+
+#### Key Improvements
+
+**1. Git-Native Detection:**
+- Uses `git diff --name-status --diff-filter=R` to detect file renames
+- No dependency on cache files that can become out of sync
+- Works regardless of when files were renamed or how the cache was managed
+- Leverages Git's sophisticated rename detection algorithms
+
+**2. Multi-Source Detection:**
+- **Staged changes**: Detects renames in `git add` but not yet committed
+- **Working directory**: Detects renames in working directory
+- **Recent commits**: Can analyze recent commit history for moves
+- **Fallback chain**: Tries multiple Git commands to ensure detection
+
+**3. Zero Cache Issues:**
+- No more "cache timing" problems where files renamed before cache establishment
+- No need for cache reset commands
+- No baseline establishment required
+- Works immediately on any Git repository
 
 ## Enhanced Safeguards (v2.0)
 
