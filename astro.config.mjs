@@ -58,7 +58,8 @@ async function config() {
 
     // Dynamic redirects that work in both dev and production
     redirects: {
-      '/customize/design-tokens': `${basePath}/dropins/all/branding`,
+      '/playgrounds/commerce-services': ${basePath}/playgrounds/commerce-services-playground
+    }/dropins/all/branding`,
       '/customize/enrich': `${basePath}/merchants/get-started/enrichment`,
       '/customize/localize': `${basePath}/dropins/all/labeling`,
       '/customize/slots': `${basePath}/dropins/all/extending`,
@@ -850,8 +851,8 @@ async function config() {
                       link: '/playgrounds/'
                     },
                     {
-                      label: 'Commerce API Playground',
-                      link: '/playgrounds/commerce-services/'
+                      label: 'Commerce Services Playground',
+                      link: '/playgrounds/commerce-services-playground/'
                     },
                     {
                       label: 'Commerce Optimizer API Playground',
