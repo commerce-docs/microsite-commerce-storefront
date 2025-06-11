@@ -112,6 +112,65 @@ The following example demonstrates how to render the `ProductList` container wit
 
 ```js
 
+// Event Bus
+import { events } from '@dropins/tools/event-bus.js';
+
+// Initializer
+import { initializers } from '@dropins/tools/initializer.js';
+
+import * as pkg from '@dropins/recommendations/api.js';
+
+// For adding a language translations
+
+// Language Packs
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const es_ES = await fetch('/i18n/es_ES.json').then((res) => res.json());
+
+pkg.setEndpoint(<setEndpoint>);
+pkg.setFetchGraphQlHeaders({<setFetchGraphQlHeader>});
+
+const langDefinitions = {
+    en_US,
+    es_ES,
+};
+
+initializers.register(pkg.initialize, { langDefinitions });
+
+// Mount Initializers
+if (document.readyState === 'complete') {
+    initializers.mount();
+} else {
+    window.addEventListener('load', initializers.mount);
+}
+
+// Toggle Locale Button
+const $locales = document.querySelectorAll('[data-locale]');
+  $locales.forEach(($locale) => {
+    $locale.addEventListener('click', () => {
+      const data = {
+        Spanish: {
+          label: 'Spanish',
+          locale: 'es_ES',
+          storeCode: 'sp',
+        },
+        English: {
+          label: 'English',
+          locale: 'en_US',
+          storeCode: 'default',
+        },
+      };
+      const selection = data[$locale.dataset.label];
+      
+      if (!selection) throw new Error('Invalid locale');
+
+      const { locale, storeCode } = selection;
+
+      pkg.setFetchGraphQlHeader('store', storeCode);
+      events.emit('locale', locale);
+      events.emit('i18n:update', { locale });
+    });
+});
+
 const $list = document.getElementById('@dropins/ProductList');
 
 // Render Container
