@@ -10,7 +10,7 @@ import Aside from '@components/Aside.astro';
 import { Steps } from '@astrojs/starlight/components';
 import CodeInclude from '@components/CodeInclude.astro';
 
-The `ProductList` container manages and displays a list of recommended products based on the current product or category context. Its behavior is driven by configuration options such as `currentSku`, pageType and routing via routeProduct callbacks.
+The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentSku`, pageType and routing via routeProduct callbacks.
 
 <Diagram caption="ProductList container">
   ![ProductList container](@images/dropins/recommendations/product-list.png)
@@ -26,12 +26,11 @@ The `ProductList` container provides the following configuration options:
     ['Option', 'Type', 'Req?', 'Description'],
     ['currentSku', 'string', 'Yes', 'Current SKU for recommendation context.'],
     ['cartSkus', 'string', 'array', 'Cart SKUs for recommendation context.'],
-    ['category', 'string', 'No', 'Category for recommendation context.'],
     ['userPurchaseHistory', 'array', 'No', 'User Purchase History for recommendation context.'],
     ['userViewHistory', 'array', 'No', 'User View History for recommendation context.'],
     ['routeProduct', 'function', 'No', 'Callback function that returns a product URL.'],
     ['pageType', 'function', 'No', 'Page type where recommendations are rendered (e.g., Product, Cateogy, Cart)'],
-    ['className', 'function', 'No', 'Custom CSS class for styling.'],
+    ['hideHeading', 'function', 'No', 'Hide recommendations heading text'],
   ]}
 />
 
@@ -39,15 +38,80 @@ The `ProductList` container provides the following configuration options:
 
 ## Example configuration
 
-The following example demonstrates how to render the `ProductList` container with the `currentSku`,`pageType` and `routeProduct` callbacks:
+The following example demonstrates how to render the `ProductList` container with the `currentSku`,`pageType` and `routeProduct` callbacks with different slots like default heading, thumbnail, price and footer:
 
 ```js
 
+const $list = document.getElementById('@dropins/ProductList');
+
+// Render Container
 provider.render(ProductList, {
-  routeProduct: (item) => {
-    return `${item.urlKey}`;
-  },
-  currentSku: 'CTEAPB',
-  pageType: 'Product'
-})(document.getElementById('@dropins/ProductList'));
+  routeProduct: (item) => `${item.urlKey}`,
+  currentSku: 'ADB150',
+  pageType: 'Product',
+  slots: {
+      // Example of how to prepend or append to the default Heading
+      // Heading: (ctx) => {
+      //   const heading = document.createElement('div');
+      //   heading.innerText = 'Slot: Content before default heading';
+      //   ctx.prependChild(heading);
+      //   const footer = document.createElement('div');
+      //   footer.innerText = 'Slot: Content after default heading';
+      //   ctx.appendChild(footer);
+      // },
+
+      // Example of how to prepend or append to the default Thumbnail
+      // Thumbnail: (ctx) => {
+      //   const thumbnail = document.createElement('div');
+      //   thumbnail.innerText = 'Slot: Content before default thumbnail';
+      //   ctx.prependChild(thumbnail);
+      //   const footer = document.createElement('div');
+      //   footer.innerText = 'Slot: Content after default thumbnail';
+      //   ctx.appendChild(footer);
+      // },
+
+      // Example of how to prepend or append to the default Price
+      // Price: (ctx) => {
+      //   const price = document.createElement('div');
+      //   price.innerText = 'Slot: Content before default price';
+      //   ctx.prependChild(price);
+      //   const footer = document.createElement('div');
+      //   footer.innerText = 'Slot: Content after default price';
+      //   ctx.appendChild(footer);
+      // },
+
+      // Example of how to replace default Footer with a custom footer based on product type
+      // Footer: (ctx) => {
+      //   const wrapper = document.createElement('div');
+      //   wrapper.className = 'footer__wrapper';
+      //   const addToCart = document.createElement('div');
+      //   addToCart.className = 'footer__button--add-to-cart';
+      //   wrapper.appendChild(addToCart);
+
+      //   if (ctx.product.itemType === 'SimpleProductView') {
+      //     // Add to Cart Button
+      //     UI.render(Button, {
+      //       children: 'Add to Cart',
+      //       onClick: () => {
+      //         // Call add to cart function from cart/api
+      //         console.log('Add to Cart');
+      //       },
+      //       variant: 'primary',
+      //     })(addToCart);
+      //   } else {
+      //     // View Product Button
+      //     UI.render(Button, {
+      //       children: 'Select Options',
+      //       onClick: () => {
+      //         console.log('Select Options');
+      //         window.location.href = ctx.product.urlKey;
+      //       },
+      //       variant: 'tertiary',
+      //     })(addToCart);
+      //   }
+      //   ctx.replaceWith(wrapper);
+      // },
+    },
+})($list);
+
 ```
