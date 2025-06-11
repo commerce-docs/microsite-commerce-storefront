@@ -233,15 +233,15 @@ function updateAstroConfig(newRedirects) {
       .map(([from, to]) => `      '${from}': ${to}`)
       .join(',\n');
     
-    const redirectsSection = `    redirects: {\n${redirectEntries}\n    }`;
+    const redirectsSection = `redirects: {\n${redirectEntries}\n    }`;
     
-    // Replace the redirects section
-    const redirectsRegex = /redirects:\s*{[^}]*}/s;
+    // More robust regex to match the entire redirects block including nested braces
+    const redirectsRegex = /redirects:\s*\{[\s\S]*?\n\s{4}\}/;
     
     if (redirectsRegex.test(configContent)) {
-      configContent = configContent.replace(redirectsRegex, redirectsSection.replace(/^\s{4}/, ''));
+      configContent = configContent.replace(redirectsRegex, redirectsSection);
     } else {
-      // If no redirects section exists, add it
+      // If no redirects section exists, add it before integrations
       const insertPoint = configContent.indexOf('integrations:');
       if (insertPoint !== -1) {
         const beforeIntegrations = configContent.substring(0, insertPoint);
