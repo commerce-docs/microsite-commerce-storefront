@@ -15,8 +15,14 @@
     "lint": "prettier --write  \"**/*.{js,jsx,ts,tsx,md,mdx,astro}\" && eslint --fix \"src/**/*.{js,ts,jsx,tsx,astro}\"",
     "clean": "rm -rf dist && rm -rf .astro && rm -rf node_modules && pnpm install",
     "scrub": "rm -rf dist && rm -rf .astro && rm -rf node_modules && rm -rf pnpm-lock.yaml && rm -rf ~./.pnpm-store && pnpm install",
+    "redirects:generate": "node scripts/generate-redirects.js",
+    "redirects:test": "node scripts/test-redirects.js",
+    "redirects:reset-cache": "rm -f .astro/redirects-cache.json && echo 'Redirect cache reset. Next run of redirects:generate will create a fresh baseline.'",
+    "build:with-redirects": "pnpm run redirects:generate && pnpm run build:prod",
+    "dev:clean": "rm -rf .astro && pnpm run dev",
+    "build:clean": "rm -rf .astro && rm -rf dist && pnpm run build:prod",
     "pdf": "npx starlight-to-pdf https://commerce-docs.github.io/microsite-commerce-storefront/merchants/tutorials/summit-lab-320/ --filename 'lab-320-workbook' --contents-name 'Lab Contents' --header ./pdf-header.html --footer ./pdf-footer.html --print-bg --styles ./pdf-styles.css --timeout '400000' --contents-links 'internal' --no-starlight-print-css --format Letter ",
-    "pdf-local": "npm run build:prod && (npm run preview:prod > /dev/null & sleep 4); lsof -ti:4321 > preview.pid; npx starlight-to-pdf http://localhost:4321/developer/commerce/storefront/merchants/tutorials/summit-lab-320/ -p ./public/_pdf --filename 'lab-320-workbook' --no-starlight-print-css --contents-name 'Lab Contents' --header ./pdf-header.html --footer ./pdf-footer.html --print-bg --styles ./pdf-styles.css --timeout '400000' --contents-links 'internal' --no-starlight-print-css --format Letter;kill $(cat preview.pid) && echo 'PDF script finished'",
+    "pdf-local": "pnpm run build:prod && (pnpm run preview:prod > /dev/null & sleep 4); lsof -ti:4321 > preview.pid; npx starlight-to-pdf http://localhost:4321/developer/commerce/storefront/merchants/tutorials/summit-lab-320/ -p ./public/_pdf --filename 'lab-320-workbook' --no-starlight-print-css --contents-name 'Lab Contents' --header ./pdf-header.html --footer ./pdf-footer.html --print-bg --styles ./pdf-styles.css --timeout '400000' --contents-links 'internal' --no-starlight-print-css --format Letter;kill $(cat preview.pid) && echo 'PDF script finished'",
     "pdf-single-page": "npx starlight-to-pdf https://commerce-docs.github.io/microsite-commerce-storefront/merchants/tutorials/summit-lab-320/create-experiment/ --filename lab-320-workbook-single --header ./pdf-header.html --footer ./pdf-footer.html --print-bg --format Letter --styles ./pdf-styles.css --timeout '400000' -l /create-experiment --no-contents --no-starlight-print-css"
   },
   "dependencies": {
@@ -52,6 +58,7 @@
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-mdx": "^3.4.0",
     "eslint-plugin-storybook": "^0.12.0",
+    "glob": "^10.4.5",
     "graphiql": "3.8.3",
     "graphql": "16.10.0",
     "hast-util-from-html": "^2.0.3",

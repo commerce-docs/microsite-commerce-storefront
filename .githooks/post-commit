@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# Post-commit hook to verify redirects were properly handled
+
+echo ""
+echo "🔍 Post-commit redirect verification..."
+
+# Check if the last commit included astro.config.mjs changes
+if git diff --name-only HEAD~1 HEAD | grep -q "astro.config.mjs"; then
+  echo "✅ astro.config.mjs was updated in this commit"
+  
+  # Show what redirects were added
+  echo "📋 Redirect changes in this commit:"
+  git diff HEAD~1 HEAD astro.config.mjs | grep -E "^\+.*:" | sed 's/^+/  Added: /' || echo "  (No new redirects detected in diff)"
+  
+  echo ""
+  echo "🎯 Your redirects are now active! Old URLs will automatically redirect to new locations."
+  
+else
+  # Check if there were content changes but no config changes
+  content_changes=$(git diff --name-only HEAD~1 HEAD | grep -E "src/content/docs/|src/pages/")
+  
+  if [ -n "$content_changes" ]; then
+    echo "ℹ️  Content files were changed but no redirects were added."
+    echo "   This is normal if:"
+    echo "   • You only edited existing files (no moves/renames)"
+    echo "   • You added new files (no redirects needed)"
+    echo "   • Files were renamed with very similar names"
+    echo ""
+    echo "   If you moved/renamed files and expected redirects, you can:"
+    echo "   • Run: pnpm redirects:generate"
+    echo "   • Check: pnpm redirects:test"
+    echo "   • Add manually to astro.config.mjs if needed"
+  fi
+fi
+
+echo ""
+echo "💡 Quick redirect commands:"
+echo "   • Test all redirects: pnpm redirects:test"
+echo "   • Generate missing redirects: pnpm redirects:generate"
+echo "   • View current redirects: grep -A 20 'redirects:' astro.config.mjs"
+echo "" 

@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# Pre-commit hook to generate redirects automatically
+
+echo "🔍 Checking for content structure changes..."
+
+# Check if any content files were moved, renamed, or deleted
+content_changes=$(git diff --cached --name-status --diff-filter=DR -- 'src/content/docs/**' 'src/pages/**')
+
+# Also check for renamed files (which might not show up in DR filter)
+renamed_files=$(git diff --cached --name-status --diff-filter=R -- 'src/content/docs/**' 'src/pages/**')
+
+# Check for any content files in the commit at all
+any_content_changes=$(git diff --cached --name-status -- 'src/content/docs/**' 'src/pages/**')
+
+if [ -n "$content_changes" ] || [ -n "$renamed_files" ] || [ -n "$any_content_changes" ]; then
+  if [ -n "$content_changes" ]; then
+    echo "📝 Content deletions/moves detected:"
+    echo "$content_changes"
+  fi
+  
+  if [ -n "$renamed_files" ]; then
+    echo "📝 Content renames detected:"
+    echo "$renamed_files"
+  fi
+  
+  echo ""
+  echo "🔄 Running automatic redirect generation..."
+  
+  # Store the current state of astro.config.mjs
+  config_before=$(git show HEAD:astro.config.mjs 2>/dev/null || echo "")
+  
+  # Run the redirect generation script in Git hook mode
+  export GIT_HOOK_MODE=1
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm redirects:generate
+  else
+    npm run redirects:generate
+  fi
+  
+  # Check if any changes were made to astro.config.mjs
+  if git diff --name-only | grep -q "astro.config.mjs"; then
+    echo ""
+    echo "✅ NEW REDIRECTS GENERATED!"
+    echo "📋 The following redirects were added to astro.config.mjs:"
+    echo ""
+    
+    # Show the new redirect lines
+    git diff astro.config.mjs | grep -E "^\+.*:" | sed 's/^+/  /' || echo "  (Unable to show diff - please check astro.config.mjs manually)"
+    
+    echo ""
+    echo "🎯 These redirects ensure old URLs continue to work after your changes."
+    
+    # Add the updated config to staging
+    git add astro.config.mjs
+    
+    echo "✅ astro.config.mjs has been staged with your commit."
+    echo ""
+    
+  else
+    echo ""
+    echo "ℹ️  No new redirects were generated."
+    
+    # If we detected changes but no redirects were generated, warn the user
+    if [ -n "$content_changes" ] || [ -n "$renamed_files" ]; then
+      echo ""
+      echo "⚠️  WARNING: Content changes detected but no redirects generated."
+      echo "   This might happen if:"
+      echo "   • Files were renamed with very different names"
+      echo "   • The redirect cache is out of sync"
+      echo "   • Files were moved outside of Git workflow"
+      echo ""
+      echo "   Consider running manually: pnpm redirects:generate"
+      echo "   Or add redirects manually to astro.config.mjs if needed."
+      echo ""
+      echo "   To skip this check: git commit --no-verify"
+      echo ""
+      
+      # Give user a chance to abort
+      printf "Continue with commit? [y/N]: "
+      read -r response
+      case "$response" in
+        [yY][eE][sS]|[yY]) 
+          echo "Continuing with commit..."
+          ;;
+        *)
+          echo "Commit aborted. Please review and try again."
+          exit 1
+          ;;
+      esac
+    fi
+  fi
+  
+  # Test the redirects to make sure they work
+  echo "🧪 Testing redirects..."
+  if command -v pnpm >/dev/null 2>&1; then
+    if pnpm redirects:test >/dev/null 2>&1; then
+      echo "✅ All redirects are working correctly!"
+    else
+      echo "⚠️  Some redirects may have issues. Run 'pnpm redirects:test' to check."
+    fi
+  fi
+  
+else
+  echo "ℹ️  No content structure changes detected."
+fi
+
+echo ""
+echo "✅ Pre-commit redirect check completed!"
+echo "" 
