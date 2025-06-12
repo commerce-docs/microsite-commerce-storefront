@@ -853,7 +853,7 @@ async function config() {
                     },
                     {
                       label: 'Commerce Services Playground',
-                      link: '/playgrounds/commerce-services/'
+                      link: '/playgrounds/commerce-services-playground/'
                     },
                     {
                       label: 'Commerce Optimizer Playground',
