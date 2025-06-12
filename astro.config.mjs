@@ -846,6 +846,10 @@ async function config() {
                       label: 'Commerce API Playground',
                       link: '/playgrounds/commerce-services/'
                     },
+                    {
+                      label: 'Commerce Optimizer API Playground',
+                      link: '/playgrounds/commerce-optimizer/'
+                    },
                   ],
                 },
               ],
