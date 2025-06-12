@@ -104,6 +104,7 @@ async function config() {
       '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
       '/playgrounds/commerce-optimizer': `${basePath}/playgrounds/commerce-optimizer-playground`,
       '/playgrounds/commerce-services': `${basePath}/playgrounds/commerce-services-playground`,
+      '/preservation-test': `${basePath}/preservation-test-moved`,
       '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers/product-details`,
       '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
       '/product-details/pdp-installation': `${basePath}/dropins/product-details/installation`,
