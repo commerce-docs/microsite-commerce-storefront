@@ -14,7 +14,7 @@ In this section, you'll learn how Commerce blocks in your storefront connect to 
 In the [Create your storefront tutorial](/get-started/), the template repo provided you a `demo-config.json` file in the root folder. This file contains the environment values for a Commerce backend including GraphQl endpoints and headers.
 
 When implementing your own project, you must update the configuration values with:
-- The header values specific to your Adobe Commerce Catalog Services environment.
+- The header and analytics values specific to your Adobe Commerce and Adobe Commerce Catalog Services environment.
 - The Adobe Commerce and Catalog Service GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](/setup/configuration/content-delivery-network/).
 
 ## Vocabulary
@@ -68,14 +68,18 @@ You can find the config file in your code repo at either /config.json or /demo-c
         }
       },
       "analytics": {
-        "base-currency-code": "USD",
-        "environment": "Production",
-        "store-id": 1,
+        "base-currency-code": "{{YOUR_BASE_CURRENCY_CODE}}",
+        "environment": "{{PRODUCTION_OR_TESTING}}",
+        "environment-id": "{{YOUR_ENVIRONMENT_ID}}",
+        "store-code": "{{YOUR_STORE_CODE}}",
+        "store-id": "{{YOUR_STORE_ID}}",
         "store-name": "Main Website Store",
         "store-url": "{{YOUR_STORE_URL}}",
-        "store-view-id": 1,
+        "store-view-code": "{{YOUR_STOREVIEW_CODE}}",
+        "store-view-id": "{{YOUR_STORE_VIEW_ID}}",
         "store-view-name": "Default Store View",
-        "website-id": 1,
+        "website-code": "{{YOUR_WEBSITE_CODE}}",
+        "website-id": "{{YOUR_WEBSITE_ID}}",
         "website-name": "Main Website"
       }
     }
@@ -94,7 +98,7 @@ Each `key` is described below with links to more details. The `value` for each k
 
 1. **commerce-core-endpoint:** (read/write) Core GraphQL endpoint for a variety of queries and mutations. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
 
-1. **headers.all.Store:** Determines the store view to connect to, for Core requests. See [Core GraphQL Headers documentation](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
+1. **headers.all.Store:** Determines the store view to connect to, sent with all GraphQL requests. See [Core GraphQL Headers documentation](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
 
 1. **headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
 
@@ -109,8 +113,41 @@ Each `key` is described below with links to more details. The `value` for each k
 1. **headers.cs.x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas) for details.
 
 </Callouts>
-
 All of the initializer blocks now automatically use any headers for the corresponding block if they are in the config. For example `commerce.headers.cart.Foo` will add a `Foo` header to graphql requests made by the cart dropin. This can be useful if you need to append certain headers for specific requests.
+
+Each `analytics` key, used to instantiate Storefront Instance Context, is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
+
+For type definitions of the analytics configuration properties, see the [storefrontInstance.ts](https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/types/schemas/storefrontInstance.ts) file in the commerce-events repository.
+
+<Callouts>
+1. **analytics.base-currency-code:** The base currency code for the store. See [Currency Setup](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/currency/currency-setup) for details.
+
+1. **analytics.environment:** The environment type (e.g., "Production", "Testing"). See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
+
+1. **analytics.environment-id:** The unique identifier for your Commerce Cloud environment. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
+
+1. **analytics.store-code:** The code that identifies your store. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+
+1. **analytics.store-id:** The unique identifier for your store. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+
+1. **analytics.store-name:** The display name of your store. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+
+1. **analytics.store-url:** The base URL for your store. See [Store URLs](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-urls) for details.
+
+1. **analytics.store-view-code:** The code that identifies your store view. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) for details.
+
+1. **analytics.store-view-id:** The unique identifier for your store view. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) for details.
+
+1. **analytics.store-view-name:** The display name of your store view. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) for details.
+
+1. **analytics.website-code:** The code that identifies your website. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+
+1. **analytics.website-id:** The unique identifier for your website. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+
+1. **analytics.website-name:** The display name of your website. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+
+</Callouts>
+
 
 ## Step-by-step
 
