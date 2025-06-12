@@ -59,6 +59,7 @@ async function config() {
     // Dynamic redirects that work in both dev and production
     redirects: {
       '/analytics/instrumentation': `${basePath}/setup/analytics/instrumentation`,
+      '/basic-test': `${basePath}/basic-test-renamed`,
       '/config': `${basePath}/setup/configuration`,
       '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
       '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
