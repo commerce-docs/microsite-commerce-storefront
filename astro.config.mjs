@@ -111,7 +111,8 @@ async function config() {
       '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/references/requirements': `${basePath}/setup/discovery/architecture`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
-      '/seo/metadata': `${basePath}/setup/seo/metadata`
+      '/seo/metadata': `${basePath}/setup/seo/metadata`,
+      '/test-redirect-basic': `${basePath}/test-redirect-basic-renamed`
     },
     integrations: [
       redirectValidator({
