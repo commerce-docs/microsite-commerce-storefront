@@ -190,7 +190,9 @@ function generateRedirectsFromGit() {
 function getExistingRedirects() {
   try {
     const configContent = fs.readFileSync(CONFIG_FILE, 'utf8');
-    const redirectsMatch = configContent.match(/redirects:\s*{([^}]+)}/s);
+    
+    // More robust regex to capture the entire redirects block
+    const redirectsMatch = configContent.match(/redirects:\s*\{([\s\S]*?)\n\s{4}\}/);
     
     if (!redirectsMatch) {
       return {};
@@ -199,13 +201,13 @@ function getExistingRedirects() {
     const redirectsSection = redirectsMatch[1];
     const redirects = {};
     
-    // Parse existing redirects (simple regex approach)
-    const redirectLines = redirectsSection.match(/'[^']+'\s*:\s*`[^`]+`/g) || [];
+    // Parse existing redirects with better regex that handles multiline
+    const redirectLines = redirectsSection.match(/'[^']+'\s*:\s*`[^`]*`/g) || [];
     
     for (const line of redirectLines) {
-      const match = line.match(/'([^']+)'\s*:\s*`([^`]+)`/);
+      const match = line.match(/'([^']+)'\s*:\s*`([^`]*)`/);
       if (match) {
-        redirects[match[1]] = match[2];
+        redirects[match[1]] = `\`${match[2]}\``;
       }
     }
     

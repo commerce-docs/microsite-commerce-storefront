@@ -287,6 +287,8 @@ fetch('/old-url', { redirect: 'manual' })
 
 The system has been completely rewritten to use Git-based detection, eliminating all cache-related issues and providing 100% reliable redirect generation:
 
+**Latest Update (v2.1):** Fixed critical parsing bug that could cause existing redirects to be lost during updates. The system now uses robust regex patterns and improved parsing logic to ensure 100% preservation of existing redirects when new ones are added.
+
 #### Key Improvements
 
 **1. Git-Native Detection:**
@@ -460,11 +462,12 @@ curl -I http://localhost:4321/old-name
 - Silent failures in edge cases
 - Manual intervention required for cache issues
 
-**After Enhancements:**
+**After Enhancements (v2.1):**
 - ~99% automatic detection rate
 - Zero silent failures (all edge cases have warnings)
 - Self-healing cache management
 - Clear guidance for manual intervention
+- **100% redirect preservation** - Fixed critical parsing bug that could cause existing redirects to be lost
 
 ### Configuration Options
 

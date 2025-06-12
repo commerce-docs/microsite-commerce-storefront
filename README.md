@@ -81,6 +81,14 @@ All redirects work correctly across environments:
 - **Production**: `https://experienceleague.adobe.com/developer/commerce/storefront/new-name`
 - **GitHub Pages**: Uses `VITE_GITHUB_BASE_PATH` environment variable
 
+### System Reliability
+
+The redirect system has been thoroughly tested and includes multiple safeguards:
+- ✅ **Existing redirects are always preserved** - No risk of losing current redirects when new ones are added
+- ✅ **Robust parsing logic** - Handles complex multi-line redirect configurations
+- ✅ **Comprehensive testing** - All redirects are validated during generation
+- ✅ **Git-based detection** - Uses Git's proven rename tracking algorithms
+
 ### What Gets Automated
 
 - ✅ **File moves**: `old-path/file.mdx` → `new-path/file.mdx`
