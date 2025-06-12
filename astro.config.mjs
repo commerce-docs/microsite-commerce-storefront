@@ -112,6 +112,7 @@ async function config() {
       '/references/requirements': `${basePath}/setup/discovery/architecture`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
+      '/test-preservation': `${basePath}/test-preservation-moved`,
       '/test-redirect-basic': `${basePath}/test-redirect-basic-renamed`
     },
     integrations: [
