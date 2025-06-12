@@ -98,6 +98,7 @@ async function config() {
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/run-lighthouse': `${basePath}/get-started/lighthouse-audits`,
       '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-anatomy`,
+      '/hook-integration-test': `${basePath}/hook-integration-test-moved`,
       '/hook-test': `${basePath}/hook-test-moved`,
       '/launch': `${basePath}/setup/launch`,
       '/merchants/multistore': `${basePath}/merchants/get-started/multistore`,
