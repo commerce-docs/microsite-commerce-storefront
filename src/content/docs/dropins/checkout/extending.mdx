@@ -1,0 +1,115 @@
+---
+title: Extending Checkout drop-in component
+description: Learn about different methods to extend the drop-in component.
+---
+
+import Aside from '@components/Aside.astro';
+
+Based on the Adobe Commerce OOPE (Out Of Process Extensibility) pattern, the drop-in components must be designed to be flexible and extensible. In this sense and referring to the extensibility concept, if the checkout drop-in does not provide a specific feature, it should have a mechanism to be easily expandable and customizable.
+
+## Extend Checkout drop-in GraphQL API
+
+To extend the data payload of the drop-in, it needs to be used the GraphQL Extensibility API which allows developers to extend existing GraphQL operations to meet additional data requirements without increasing code complexity or negatively impacting performance. This API provides a flexible and efficient way to customize GraphQL fragments by integrating build-time modifications into the storefront’s development pipeline.
+
+The GraphQL fragments are reusable pieces of GraphQL which can be used to extend or customize the API for a drop-in. To do this, the drop-in must expose the list of fragments to be extended into the `fragments.ts` file; otherwise, when you install the application, the build process will fail because it cannot find the fragment you want to extend.
+
+The Checkout drop-in is exposing the following fragments:
+
+```js title='fragments.ts'
+export {
+  BILLING_CART_ADDRESS_FRAGMENT,
+  SHIPPING_CART_ADDRESS_FRAGMENT,
+} from '@/checkout/api/graphql/CartAddressFragment.graphql';
+export {
+  AVAILABLE_PAYMENT_METHOD_FRAGMENT,
+  SELECTED_PAYMENT_METHOD_FRAGMENT,
+} from '@/checkout/api/graphql/CartPaymentMethodFragment.graphql';
+export { CHECKOUT_DATA_FRAGMENT } from '@/checkout/api/graphql/CheckoutDataFragment.graphql';
+export { CUSTOMER_FRAGMENT } from '@/checkout/api/graphql/CustomerFragment.graphql';
+```
+
+### How to extend or customize a fragment
+
+To enable GraphQL fragments to be extensible in the drop-in, first you need to update the GraphQL fragment used by the drop-in to request the additional field. This is done by modifying the `build.mjs` script at the root of your storefront project. 
+When you run the install command, the `build.mjs` script generates a new GraphQL query for the Checkout drop-in that includes the additional data.
+
+#### Example 1: Adding new information
+
+The merchant wants to extend the customer information by adding the gender and date of birth data.
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    operations: [
+      `
+      fragment CUSTOMER_FRAGMENT on Customer {
+        gender
+        date_of_birth
+      }
+      `,
+    ],
+  },
+]);
+```
+
+Once the API is extended, now it's time to extend the models and transformers (if it is really needed a transformation) during the initialization phase. This is done by modifying the `/scripts/initializers/checkout.js` script.
+
+```js title='/scripts/initializers/checkout.js'
+// Initialize checkout
+await initializeDropin(async () => {
+  // Register the checkout component with models extensibility
+  const models = {
+    CustomerModel: {
+      transformer: (data) => ({
+        gender: ((gender) => {
+          switch (gender) {
+            case 1:
+              return "Male";
+            case 2:
+              return "Female";
+            case 3:
+              return "Not Specified";
+            default:
+              return "";
+          }
+        })(data?.gender),
+        dateOfBirth: data?.date_of_birth,
+      }),
+    },
+  };
+
+  // Register initializers
+  return initializers.mountImmediately(initialize, {
+    models
+  });
+})();
+```
+
+#### Example 2: Removing information
+
+The merchant wants to remove the selected payment method data. 
+
+```js title='build.mjs'
+/* eslint-disable import/no-extraneous-dependencies */
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    skipFragments: ['SELECTED_PAYMENT_METHOD_FRAGMENT'],
+    operations: [],
+  },
+]);
+```
+
+<Aside type="caution" title="Extending fragments">
+Please note if `build.mjs` script makes reference to a fragment that is not exposed by the drop-in, the application build process will fail.
+</Aside>
+
+<Aside type="note" title="Extending drop-in components">
+Visit the [GraphQL Extensibility API](/sdk/reference/graphql/) and [Extending drop-in components](/dropins/all/extending/) documentation to learn more about on how to extend the API for a drop-in component by following an easy step-by-step guidelines.
+</Aside>
