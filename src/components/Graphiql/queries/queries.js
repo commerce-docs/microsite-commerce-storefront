@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-export const QUERIES = {
+export const ACCS_QUERIES = {
   Cart: dedent`query GUEST_CART_QUERY(
       $cartId: String!
       $pageSize: Int! = 100
@@ -492,4 +492,258 @@ export const QUERIES = {
   __typename
   }`,
 */
+};
+
+export const ACO_QUERIES = {
+  AttributeMetadata: dedent`query attributeMetadata {
+  attributeMetadata {
+    filterableInSearch {
+      label
+      attribute
+    }
+    sortable {
+      label
+      attribute
+    }
+  }
+  }`,
+  ProductSearch: dedent`query ProductSearch(
+  $currentPage: Int = 1
+  $pageSize: Int = 20
+  $phrase: String = ""
+  $sort: [ProductSearchSortInput!] = []
+  $filter: [SearchClauseInput!] = []
+  $categoryId: String!
+) {
+  categories(ids: [$categoryId]) {
+    name
+    urlKey
+    urlPath
+  }
+  productSearch(
+    current_page: $currentPage
+    page_size: $pageSize
+    phrase: $phrase
+    sort: $sort
+    filter: $filter
+  ) {
+    facets {
+      title
+      type
+      attribute
+      buckets {
+        title
+        __typename
+        ... on RangeBucket {
+          count
+          from
+          to
+        }
+        ... on ScalarBucket {
+          count
+          id
+        }
+        ... on StatsBucket {
+          max
+          min
+        }
+      }
+    }
+    items {
+      productView {
+        id
+        name
+        sku
+        urlKey
+        images(roles: "thumbnail") {
+          url
+        }
+        __typename
+        ... on SimpleProductView {
+          price {
+            ...priceFields
+          }
+        }
+        ... on ComplexProductView {
+          priceRange {
+            minimum {
+              ...priceFields
+            }
+            maximum {
+              ...priceFields
+            }
+          }
+        }
+      }
+    }
+    page_info {
+      current_page
+      total_pages
+      page_size
+    }
+    total_count
+  }
+}
+fragment priceFields on ProductViewPrice {
+  roles
+  regular {
+    amount {
+      currency
+      value
+    }
+  }
+  final {
+    amount {
+      currency
+      value
+    }
+  }
+}
+  `,
+  Products: dedent`
+    query GET_PRODUCT_DATA($skus: [String]) {
+      products(skus: $skus) {
+        ...PRODUCT_FRAGMENT
+      }
+    }
+    fragment PRODUCT_FRAGMENT on ProductView {
+      __typename
+      id
+      sku
+      name
+      shortDescription
+      metaDescription
+      metaKeyword
+      metaTitle
+      description
+      inStock
+      addToCartAllowed
+      url
+      urlKey
+      externalId
+      images(roles: []) {
+        url
+        label
+        roles
+      }
+      attributes(roles: []) {
+        name
+        label
+        value
+        roles
+      }
+      ... on SimpleProductView {
+        price {
+          roles
+          regular {
+            amount {
+              value
+              currency
+            }
+          }
+          final {
+            amount {
+              value
+              currency
+            }
+          }
+        }
+      }
+      ... on ComplexProductView {
+        options {
+          ...PRODUCT_OPTION_FRAGMENT
+        }
+        ...PRICE_RANGE_FRAGMENT
+      }
+    }
+    fragment PRODUCT_OPTION_FRAGMENT on ProductViewOption {
+      id
+      title
+      required
+      multi
+      values {
+        id
+        title
+        inStock
+        __typename
+        ... on ProductViewOptionValueProduct {
+          title
+          quantity
+          isDefault
+          __typename
+          product {
+            sku
+            shortDescription
+            metaDescription
+            metaKeyword
+            metaTitle
+            name
+            price {
+              final {
+                amount {
+                  value
+                  currency
+                }
+              }
+              regular {
+                amount {
+                  value
+                  currency
+                }
+              }
+              roles
+            }
+          }
+        }
+        ... on ProductViewOptionValueSwatch {
+          id
+          title
+          type
+          value
+          inStock
+        }
+      }
+    }
+    fragment PRICE_RANGE_FRAGMENT on ComplexProductView {
+      priceRange {
+        maximum {
+          final {
+            amount {
+              value
+              currency
+            }
+          }
+          regular {
+            amount {
+              value
+              currency
+            }
+          }
+          roles
+        }
+        minimum {
+          final {
+            amount {
+              value
+              currency
+            }
+          }
+          regular {
+            amount {
+              value
+              currency
+            }
+          }
+          roles
+        }
+      }
+    }
+  `
+};
+
+export const getQueries = (service) => {
+  if (service === 'ACO') {
+    return ACO_QUERIES;
+  }
+  return ACCS_QUERIES;
 };

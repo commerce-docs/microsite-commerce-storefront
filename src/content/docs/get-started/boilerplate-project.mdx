@@ -73,11 +73,13 @@ The file structure of the storefront boilerplate is shown here. Detailed descrip
     - storefront-checkout/ _-- minified/optimized drop-in code_
     - storefront-order-confirmation/ _-- minified/optimized drop-in code_
     - storefront-pdp/ _-- minified/optimized drop-in code_
+    - storefront-.../ _-- other dropin bundles_
   - widgets/ _-- Imported widgets_
     - LiveSearchAutocomplete.js _-- For site search field in nav bar_
     - search.js _-- For Product List Page_
   - aem.js _-- AEM site functions_
   - commerce.js _-- Commerce backend GraphQL queries_
+  - configs.js _-- Functions for retrieving and interacting with the site config_
   - dropins.js _-- Drop-in endpoints and initializers/loaders_
   - scripts.js _-- Loads blocks, fonts, and lazy-styles_
   - others...
@@ -90,7 +92,11 @@ The file structure of the storefront boilerplate is shown here. Detailed descrip
     - project-files... _-- Contains Catalog Services GraphQL queries for categories and products_
   - sidekick/ _-- Sidekick configuration_
     - config.json _-- Configuration settings for Commerce Picker, including Picker button title_
-- fstab.yaml _-- Connects the code to the content using the URL and ID to your Google Drive or SharePoint folder_
+- default-fstab.yaml _-- Template fstab for connecting to your content source (Sharepoint, Google drive, da.live, etc)_
+- default-query.yaml _-- Template query index to push to your site config_
+- default-site.yaml _-- Template site config to initialize your site in the aem.live config service_
+- default-sitemap.yaml _-- Template sitemap to push to your site config_
+- demo-config.json _-- A starter config which can be used to get started with local development_
 - head.html _-- Includes @dropin importmap, aem.js, scripts.js, and styles.css_
 - helix-query.yaml _-- Defines the path and properties for your enrichment blocks_
 - package.json _-- Includes aem-cli, @dropins/tools, and the currently integrated drop-in components_
@@ -130,14 +136,15 @@ Search](https://experienceleague.adobe.com/en/docs/commerce-merchant-services/li
 
 ### Relationship between the Commerce blocks and drop-in components
 
-In the following table, the first column of **links won't resolve unless you have your storefront running locally on port 3000**. The second column links to the Commerce block code in the boilerplate repository, and the third column links to the drop-in/widget code that powers the block.
+The first column links to the Commerce block code in the boilerplate repository. The second column links to the drop-in/widget code that powers the block.
+
+
 
 <OptionsTable
   compact
   options={[
-    ['From the page →', 'to the Commerce block →', 'to the drop-in/widget that powers it'],
+    ['From the Commerce block →', 'to the drop-in/widget that powers it'],
     [
-      ' 🔎 Search box',
       {
         text: 'blocks/header/searchbar.js',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/header/searchbar.js',
@@ -148,7 +155,6 @@ In the following table, the first column of **links won't resolve unless you hav
       },
     ],
     [
-      { text: 'Catalog > Gear', link: 'http://localhost:3000/gear' },
       {
         text: 'blocks/product-list-page',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-list-page',
@@ -160,10 +166,6 @@ In the following table, the first column of **links won't resolve unless you hav
     ],
     [
       {
-        text: 'Catalog > Crown Summit Backpack',
-        link: 'http://localhost:3000/products/crown-summit-backpack/24-MB03',
-      },
-      {
         text: 'blocks/product-details',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details',
       },
@@ -174,10 +176,6 @@ In the following table, the first column of **links won't resolve unless you hav
     ],
     [
       {
-        text: 'Catalog > Hollister Backyard Shirt',
-        link: 'http://localhost:3000/products/hollister-backyard-sweatshirt/MH05',
-      },
-      {
         text: 'blocks/product-details',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details',
       },
@@ -187,7 +185,6 @@ In the following table, the first column of **links won't resolve unless you hav
       },
     ],
     [
-      { text: 'Checkout Experience > Cart', link: 'http://localhost:3000/cart' },
       {
         text: 'blocks/commerce-cart',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart',
@@ -198,7 +195,6 @@ In the following table, the first column of **links won't resolve unless you hav
       },
     ],
     [
-      { text: 'Checkout Experience > Checkout', link: 'http://localhost:3000/checkout' },
       {
         text: 'blocks/commerce-checkout',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-checkout',
@@ -209,7 +205,6 @@ In the following table, the first column of **links won't resolve unless you hav
       },
     ],
     [
-      { text: 'Account > Login (NA)', link: 'http://localhost:3000/customer/login' },
       {
         text: 'blocks/commerce-login',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-login',
@@ -220,7 +215,6 @@ In the following table, the first column of **links won't resolve unless you hav
       },
     ],
     [
-      { text: 'Account > Account (NA)', link: 'http://localhost:3000/customer/account' },
       {
         text: 'blocks/commerce-customer-information',
         link: 'https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/commerce-customer-information',
