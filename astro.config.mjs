@@ -793,6 +793,10 @@ async function config() {
                       link: 'merchants/get-started/experiments/'
                     },
                     {
+                      label: 'Localization',
+                      link: 'merchants/get-started/localization/'
+                    },
+                    {
                       label: 'Multi-store setup',
                       link: 'merchants/get-started/multistore/'
                     },
