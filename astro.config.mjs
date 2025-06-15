@@ -167,8 +167,12 @@ async function config() {
                       link: 'merchants/multistore/'
                     },
                     {
-                      label: 'Localization',
-                      link: 'merchants/multistore/localization/'
+                      label: 'Content localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                    {
+                      label: 'Commerce localization',
+                      link: 'merchants/multistore/commerce-localization/'
                     },
                   ],
                 },
