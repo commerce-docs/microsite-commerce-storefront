@@ -97,6 +97,7 @@ async function config() {
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
+      '/merchant/multistore': `${basePath}/merchants/get-started/multistore`,
       '/merchants/multistore': `${basePath}/merchants/get-started/multistore`,
       '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
       '/dropins/all/enriching': `${basePath}/merchants/get-started/enrichment`,
