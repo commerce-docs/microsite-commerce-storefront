@@ -797,6 +797,10 @@ async function config() {
                       link: 'merchants/get-started/multistore/'
                     },
                     {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
                     },
