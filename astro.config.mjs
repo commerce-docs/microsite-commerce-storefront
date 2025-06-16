@@ -255,6 +255,10 @@ async function config() {
                           link: '/dropins/all/linking/'
                         },
                         {
+                          label: 'Social logins',
+                          link: '/dropins/all/social-login/'
+                        },
+                        {
                           label: 'Styling',
                           link: '/dropins/all/styling/'
                         },
@@ -266,10 +270,7 @@ async function config() {
                           label: 'Layouts',
                           link: '/dropins/all/layouts/'
                         },
-                        {
-                          label: 'Extending',
-                          link: '/dropins/all/extending/'
-                        },
+
                       ],
                     },
                     {
