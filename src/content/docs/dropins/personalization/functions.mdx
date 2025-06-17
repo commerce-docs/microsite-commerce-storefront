@@ -1,0 +1,153 @@
+---
+title: Personalization functions
+description: Learn about the API functions provided by the Personalization drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import Aside from '@components/Aside.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+
+The Personalization drop-in component provides the following API endpoints:
+
+## fetchPersonalizationData
+
+The `fetchPersonalizationData` can be used to request the customer group, applied segments and cart rules from Adobe Commerce based on the cart id,
+
+```ts
+export const fetchPersonalizationData = async (
+    cartId: string
+): Promise<PersonalizationData | null>
+```
+
+### Parameters
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['cartId', 'string', 'Yes', 'The ID of the shopping cart.']
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to the PersonalizationData object containing the ids of groups, segments and cart price rules.
+
+```ts
+export interface PersonalizationData {
+    segments: string[],
+    groups: string[],
+    cartRules: string[]
+}
+```
+
+### Usage
+
+```ts
+const {
+  groups,
+  segments,
+  cartRules
+} = await fetchPersonalizationData(cartId);
+```
+
+## savePersonalizationData
+
+The `savePersonalizationData` function saves the personalization data to a cookie and emits the `personalization/updated` event.
+
+```ts
+export const savePersonalizationData = async (
+    data: PersonalizationData
+): Promise<void>
+```
+
+### Parameters
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'PersonalizationData', 'Yes', 'Personalization data containing groups, segment and cart price rules.']
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a void.
+
+### Usage
+
+```js
+savePersonalizationData({
+    segments: ['MQ==', 'Mg=='],
+    groups: ['Mw=='],
+    cartRules: ['NA==', 'NQ==']
+});
+```
+
+## getPersonalizationData
+
+The `getPersonalizationData` function retrieves the saved personalization data from a cookie.
+
+```ts
+export const getPersonalizationData = (): PersonalizationData
+```
+
+### Returns
+
+Returns a `PersonalizationData` object.
+
+```ts
+export interface PersonalizationData {
+    segments: string[],
+    groups: string[],
+    cartRules: string[]
+}
+```
+
+### Usage
+
+```ts
+const {
+  groups,
+  segments,
+  cartRules
+} = getPersonalizationData();
+```
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about the store configuration related to personalization.
+
+```ts
+export const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `StoreConfigModel` object or null.
+
+```ts
+export interface StoreConfigModel {
+  shareActiveSegments: boolean;
+  shareCustomerGroup: boolean;
+  shareAppliedCartRule: boolean;
+  customerAccessTokenLifetime: number;
+}
+```
+
+### Usage
+
+The following example demonstrates how to retrieve the store configuration:
+
+```ts
+const {
+  shareActiveSegments,
+  shareCustomerGroup,
+  shareAppliedCartRule,
+  customerAccessTokenLifetime
+} = await getStoreConfig();
+```
