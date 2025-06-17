@@ -22,8 +22,8 @@ The `ShippingMethods` container provides the following configuration options:
     ['displayTitle (*)', 'boolean', 'No', 'Displays the container title (default value is true).'],
     ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
     ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes a ShippingMethod object and an error as arguments. It is called when the setShippingMethodsOnCart() API throws an error when a shipping method is selected to be stored to the backend.'],
     ['onSelectionChange', 'function', 'No', 'A function that takes a ShippingMethod object as an argument. It is called when a shipping method is selected.'],
-    ['onSelectionError', 'function', 'No', 'A function that takes a ShippingMethod object and an error as arguments. It is called when the setShippingMethodsOnCart() API throws an error when a shipping method is selected and stored to the backend.'],
     ['slots (*)', 'object', 'No', 'Object with the title to be displayed on the ShippingMethods container.'],
     ['UIComponentType', 'string', 'No', 'String with the UI component type to be used as selector (default value is \'RadioButton\').'],
   ]}
@@ -38,32 +38,28 @@ These configuration options are implementing the `ShippingMethodsProps` interfac
 The `ShippingMethods` container receives an object as a parameter which implements the `ShippingMethodsProps` interface with the following properties:
 
 ```ts
+interface CartSyncError {
+  method: ShippingMethod;
+  error: Error;
+}
+
 export interface ShippingMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
   active?: boolean;
   autoSync?: boolean;
+  onCartSyncError?: (error: CartSyncError) => void;
   onSelectionChange?: (method: ShippingMethod) => void;
-  onSelectionError?: (error: unknown, method: ShippingMethod) => void;
   UIComponentType?: UIComponentType;
 }
 ```
 
-<li>The `displayTitle (*)` property is inherited from the `TitleProps` interface. It is used to determine whether to display the title.</li>
-
-<li>Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).</li>
-
-<li>Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.</li>
-
-<li>The `onSelectionChange` property is a handler used to perform actions called when a shipping method is selected.</li>
-
-<li>The `onSelectionError` property is a handler used to perform actions called when a shipping method is selected and the setShippingMethodsOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.</li>
-
-<li>The `UIComponentType` property is a string containing the name of the UI component type to be used as a selector for each shipping method. The available UI components are: `ToggleButton` or `RadioButton`.</li>
-
-<li>The `slots (*)` property is inherited from the `TitleProps` interface. It is an object that containing the following properties:</li>
-
-#### Title property (*)
-
-The `Title` property is a handler used to render a custom title content.
+- The `displayTitle (*)` property is inherited from the `TitleProps` interface. It is used to determine whether to display the title.
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- The `onCartSyncError` property is a handler used to perform actions called when a shipping method is selected and the setShippingMethodsOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.
+-The `onSelectionChange` property is a handler used to perform actions called when a shipping method is selected.
+- The `UIComponentType` property is a string containing the name of the UI component type to be used as a selector for each shipping method. The available UI components are: `ToggleButton` or `RadioButton`.
+- The `slots (*)` property is inherited from the `TitleProps` interface. It is an object that contains the following properties:
+  - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
 
 ## Example
 
@@ -77,18 +73,18 @@ const $delivery = checkoutFragment.querySelector('.checkout__delivery');
 
 CheckoutProvider.render(ShippingMethods, {
   displayTitle: false,
+  onCartSyncError: ({ method, error }) => {
+    const shippingMsg = document.createElement('div');
+    shippingMsg.style.color = 'red';
+    shippingMsg.innerText = `Error selecting the Shipping Method ${method.code} for the carrier ${method.carrier.title}: ${error.message}`;
+    $delivery.appendChild(shippingMsg);
+  },
   onSelectionChange: (method) => {
     if (method.carrier.code === 'tablerate' && method.code === 'bestway') {
       const shippingMsg = document.createElement('div');
       shippingMsg.innerText = 'Shipping method not available for Canary Islands';
       $delivery.appendChild(shippingMsg);
     }
-  },
-  onSelectionError: (error, method) => {
-    const shippingMsg = document.createElement('div');
-    shippingMsg.style.color = 'red';
-    shippingMsg.innerText = `Error selecting the Shipping Method ${method.code} for the carrier ${method.carrier.title}: ${error.message}`;
-    $delivery.appendChild(shippingMsg);
   },
 })($delivery),
 ```
