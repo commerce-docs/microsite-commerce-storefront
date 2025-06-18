@@ -478,6 +478,24 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Wishlist',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/wishlist/' },
+                        { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
+                        {
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'ProductAttributes', link: '/dropins/wishlist/containers/container-name/' },
+                          ]
+                        },
+                        { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Slots', link: '/dropins/wishlist/slots/' },
+                        { label: 'Styles', link: '/dropins/wishlist/styles/' },
+                      ]
+                    },
+                    {
                       label: 'Other',
                       collapsed: true,
                       items: [
