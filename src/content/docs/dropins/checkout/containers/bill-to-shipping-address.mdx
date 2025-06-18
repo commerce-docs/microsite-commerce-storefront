@@ -19,8 +19,8 @@ The `BillToShippingAddress` container provides the following configuration optio
     ['Option', 'Type', 'Req?', 'Description'],
     ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
     ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes an error as argument. It is called when the setBillingAddressOnCart() API throws an error when bill to shipping address checkbox is clicked to be stored to the backend.'],
     ['onChange', 'function', 'No', 'Callback function that is called when the checkbox state changes.'],
-    ['onError', 'function', 'No', 'A function that takes an error as arguments. It is called when the setBillingAddressOnCart() API throws an error when bill to shipping address checkbox is clicked and stored to the backend.'],
   ]}
 />
 
@@ -31,21 +31,22 @@ These configuration options implement the `BillToShippingAddressProps` interface
 The `BillToShippingAddress` container receives an object as a parameter which implements the `BillToShippingAddressProps` interface with the following properties:
 
 ```ts
-export interface BillToShippingAddressProps {
+interface CartSyncError {
+  error: Error;
+}
+
+export interface BillToShippingAddressProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   active?: boolean;
   autoSync?: boolean;
+  onCartSyncError?: (error: CartSyncError) => void;
   onChange?: (checked: boolean) => void;
-  onError?: (error: unknown) => void;
 }
 ```
 
-<li>Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).</li>
-
-<li>Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.</li>
-
-<li>The `onChange` property is a handler used to perform actions called when the checkbox is checked/unchecked.</li>
-
-<li>The `onError` property is a handler used to perform actions called when bill to shipping address checkbox is clicked and the setBillingAddressOnCart() API throws an error. It could be used in the integration layer by the merchant to show errors.</li>
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- The `onCartSyncError` property is a handler used to perform actions called when bill to shipping address checkbox is clicked and the setBillingAddressOnCart() API throws an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `onChange` property is a handler used to perform actions called when the checkbox is checked/unchecked.
 
 ## Example
 
@@ -68,6 +69,12 @@ const $billingForm = checkoutFragment.querySelector(
 const billingFormRef = { current: null };
 
 CheckoutProvider.render(BillToShippingAddress, {
+  onCartSyncError: (error) => {
+    const billToShippingMsg = document.createElement('div');
+    billToShippingMsg.style.color = 'red';
+    billToShippingMsg.innerText = `Error saving the Billing address with the Shipping address information: ${error.message}`;
+    $billToShipping.appendChild(billToShippingMsg);
+  },
   onChange: (checked) => {
     $billingForm.style.display = checked ? 'none' : 'block';
     if (!checked && billingFormRef?.current) {
@@ -79,12 +86,6 @@ CheckoutProvider.render(BillToShippingAddress, {
         placeOrderBtn: placeOrder,
       })({ data: formData, isDataValid });
     }
-  },
-  onError: (error) => {
-    const billToShippingMsg = document.createElement('div');
-    billToShippingMsg.style.color = 'red';
-    billToShippingMsg.innerText = `Error saving the Billing address with the Shipping address information: ${error.message}`;
-    $billToShipping.appendChild(billToShippingMsg);
   },
 })($billToShipping),
 ```

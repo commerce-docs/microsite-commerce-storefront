@@ -21,6 +21,8 @@ The `LoginForm` container provides the following configuration options:
     ['displayHeadingContent', 'boolean', 'No', 'Displays the container heading content (default value is true).'],
     ['onSignInClick', 'function', 'No', 'A function that handles the sign-in button click. It takes the email (string or null) as an argument.'],
     ['onSignOutClick', 'function', 'No', 'A function that handles the sign-out button click. It takes no arguments.'],
+    ['onCartSyncError', 'function', 'No', 'A function that takes an error and the email address as arguments. It is called when the setGuestEmailOnCart() API throws an error when filling in the email address to be stored to the backend.'],
+    ['onValidationError', 'function', 'No', 'A function that takes the email validated with the type of error and its message as arguments. It is called when the email form field is validated with an error (due to it\'s missing or has an invalid format).'],
     ['slots', 'object', 'No', 'Object with the content to be displayed on the LoginForm container. This slot allows setting the heading content dynamically based on the user authentication status.'],
   ]}
 />
@@ -34,12 +36,25 @@ These configuration options are implementing the `LoginFormProps` interface:
 The `LoginForm` container receives an object as a parameter which implements the `LoginFormProps` interface with the following properties:
 
 ```ts
+interface ValidationError {
+  email: string;
+  message: string;
+  type: 'missing' | 'invalid';
+}
+
+interface CartSyncError {
+  email: string;
+  error: Error;
+}
+
 export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitleProps {
   active?: boolean;
   autoSync?: boolean;
   displayHeadingContent?: boolean;
   onSignInClick?: (email: string) => void;
   onSignOutClick?: () => void;
+  onCartSyncError?: (error: CartSyncError) => void;
+  onValidationError?: (error: ValidationError) => void;
   slots?: {
     Heading?: SlotProps<{
       authenticated: boolean;
@@ -48,27 +63,17 @@ export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitlePr
 }
 ```
 
-<li>The `displayTitle (*)` property inherits from the `TitleProps` interface to display or hide the title.</li>
-
-<li>Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).</li>
-
-<li>Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.</li>
-
-<li>Set the `displayHeadingContent` property to _true_ to display the heading content with the sign-in/sign-out button.</li>
-
-<li>The `onSignInClick` property is a handler used to perform actions called when the sign-in button is clicked. It accepts an email as an input parameter.</li>
-
-<li>The `onSignOutClick` property is a handler used to perform actions called when the sign-out button is clicked.</li>
-
-<li>The `slots` property is an object containing the following properties:</li>
-
-#### Title property (*)
-
-Use the `Title` property to render a custom title. This property inherits from `LoginFormProps` and `TitleProps`.
-
-#### Heading property
-
-The `Heading` property is a handler used to render a customized heading content based on the authentication status provided by the context.
+- The `displayTitle (*)` property inherits from the `TitleProps` interface to display or hide the title.
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- Set the `autoSync` property to _true_ to automatically synchronize the container state changes with the backend via API calls. If it is set to _false_ the container does not automatically synchronize its state, but still maintains local updates.
+- Set the `displayHeadingContent` property to _true_ to display the heading content with the sign-in/sign-out button.
+- The `onSignInClick` property is a handler used to perform actions called when the sign-in button is clicked. It accepts an email as an input parameter.
+- The `onSignOutClick` property is a handler used to perform actions called when the sign-out button is clicked.
+- The `onCartSyncError` property is a handler used to perform actions called when filling in the email address and the setGuestEmailOnCart() API throws an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `onValidationError` property is a handler used to perform actions called when the email address form field is validated with an error. It could be used as a callback in the integration layer by the merchant to show errors or perform other actions.
+- The `slots` property is an object containing the following properties:
+  - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
+  - The `Heading` property is a handler used to render a customized heading content based on the authenticated status provided by the context.
 
 ## Example 1: Render with title and heading content by default
 
@@ -182,6 +187,37 @@ CheckoutProvider.render(LoginForm, {
       }
       ctx.replaceWith(content);
     },
+  },
+})($login),
+```
+
+## Example 4: Render with callbacks for error handling
+
+The following example renders the `LoginForm` container on a checkout page providing handlers for validation and API errors:
+
+```ts
+import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const LOGIN_FORM_NAME = 'login-form';
+
+const $login = checkoutFragment.querySelector('.checkout__login');
+
+CheckoutProvider.render(LoginForm, {
+  name: LOGIN_FORM_NAME,
+  onSignInClick: async (initialEmailValue) => { . . . },
+  onSignOutClick: () => { . . . },
+  onCartSyncError: ({ email, error }) => {
+    const loginFormMsg = document.createElement('div');
+    loginFormMsg.style.color = 'red';
+    loginFormMsg.innerText = `Error saving the email address ${email}: ${error.message}`;
+    $login.appendChild(loginFormMsg);
+  },
+  onValidationError: ({ email, message, type }) => {
+    const loginFormMsg = document.createElement('div');
+    loginFormMsg.style.color = 'red';
+    loginFormMsg.innerText = `Validation error (${type}) introducing the email address ${email}: ${message}`;
+    $login.appendChild(loginFormMsg);
   },
 })($login),
 ```
