@@ -46,22 +46,20 @@ Returns a promise that resolves to a `RecommendationUnitModel` object or null. T
 The `RecommendationUnitModel` object has the following shape:
 
 ```ts
-type PageType = 'CMS' | 'Cart' | 'Checkout' | 'Product';
+export type PageType = 'Product'; // Always hardcoded to 'Product' per requirements
 
-interface RecommendationUnitModel {
+export interface RecommendationUnitModel {
   displayOrder: number;
-  id: string;
-  type: PageType;
+  pageType: PageType;
   title: string;
   items: Item[];
-  totalItems: number;
   totalProducts: number;
   typeId: string;
   unitId: string;
   unitName: string;
 }
 
-interface Item {
+export interface Item {
   uid: string;
   sku: string;
   name: string;
@@ -74,7 +72,7 @@ interface Item {
   };
   visibility: string;
   queryType: string;
-  __typename: string;
+  itemType: string;
 }
 
 interface ItemImage {
@@ -83,14 +81,26 @@ interface ItemImage {
   url: string;
 }
 
-interface Price {
-  value: number;
-  currency: string;
+export interface Price {
+  value: number | null;
+  currency: string | null;
 }
 
-interface FinalPrice {
+export interface FinalPrice {
   final?: {
     amount?: Price;
+  };
+}
+
+export interface RecommendationsResponse {
+  results: RecommendationUnitModel[];
+  totalResults: number;
+}
+
+export interface GraphQLResponse {
+  errors?: Array<{ message: string }>;
+  data?: {
+    recommendations: RecommendationsResponse;
   };
 }
 ```
@@ -107,7 +117,7 @@ To get recommendations for a product page:
 import { getRecommendations } from '@/recommendations/api/getRecommendations';
 
 getRecommendations({
-  pageType: 'product',
+  pageType: 'Product',
   currentSku: 'VA19-GO-NA',
   cartSkus: ['VT02-PE-M', 'VA19-GO-NA'],
   userPurchaseHistory: [],
@@ -121,7 +131,7 @@ To get recommendations with user history:
 import { getRecommendations } from '@/recommendations/api/getRecommendations';
 
 getRecommendations({
-  pageType: 'product',
+  pageType: 'Product',
   currentSku: 'VA19-GO-NA',
   userPurchaseHistory: [
     { sku: 'VT02-PE-M', timestamp: '2024-03-20T10:00:00Z' }
