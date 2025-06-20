@@ -5,3 +5,104 @@ tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 3
 ---
+Learn about the slots provided in the product recommendations drop-in component.
+
+## ProductList slots
+
+```js
+interface ProductListProps
+
+slots?: {
+  Heading?: SlotProps;
+  Price?: SlotProps;
+  Thumbnail?: SlotProps;
+  Footer?: SlotProps;
+};
+```
+
+### Heading slot
+
+The `Heading` slot allows you to add content to the top of the `ProductList` container.
+
+```js
+ provider.render(ProductList, {
+  slots: {
+    Heading: (ctx) => {
+      // Runs on mount
+      const heading = document.createElement('h2');
+      heading.innerText = 'Recommendations Product List';
+      ctx.appendChild(heading);
+    },
+  },
+})($list),
+```
+
+### Price slot
+
+The `Price` slot allows you to prepend or append to the default Price.
+
+```js
+
+Price: (ctx) => {
+  const price = document.createElement('div');
+  price.innerText = 'Slot: Content before default price';
+  ctx.prependChild(price);
+  const footer = document.createElement('div');
+  footer.innerText = 'Slot: Content after default price';
+  ctx.appendChild(footer);
+},
+```
+
+### Thumbnail slot
+
+The `Thumbnail` slot allows you to prepend or append to the default thumbnail.
+
+```js
+Thumbnail: (ctx) => {
+  const thumbnail = document.createElement('div');
+  thumbnail.innerText = 'Slot: Content before default thumbnail';
+  ctx.prependChild(thumbnail);
+  const footer = document.createElement('div');
+  footer.innerText = 'Slot: Content after default thumbnail';
+  ctx.appendChild(footer);
+},
+```
+
+### Footer slot
+
+The `Footer` slot allows you to add content to the bottom of the `ProductList` container.
+
+The following example shows how to replace the default Footer with a custom footer based on product type.
+
+```js
+Footer: (ctx) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'footer__wrapper';
+  const addToCart = document.createElement('div');
+  addToCart.className = 'footer__button--add-to-cart';
+  wrapper.appendChild(addToCart);
+
+  if (ctx.product.itemType === 'SimpleProductView') {
+      // Add to Cart Button
+      UI.render(Button, {
+        children: 'Add to Cart',
+        onClick: () => {
+            // Call add to cart function from cart/api
+            console.log('Add to Cart');
+          },
+          variant: 'primary',
+        })(addToCart);
+      } else {
+      // View Product Button
+      UI.render(Button, {
+        children: 'Select Options',
+          onClick: () => {
+            console.log('Select Options');
+            window.location.href = ctx.product.urlKey;
+          },
+          variant: 'tertiary',
+          })(addToCart);
+      }
+    ctx.replaceWith(wrapper);
+},
+```
