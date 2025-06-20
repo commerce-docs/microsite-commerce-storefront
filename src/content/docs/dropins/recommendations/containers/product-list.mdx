@@ -37,6 +37,7 @@ The `ProductListProps` interface has the following shape:
 ```ts
 export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
   recId: string;
+  currentSku: string;
   initialData?: {
     recommendations?: {
       results: RecommendationUnitModel[];
@@ -45,7 +46,6 @@ export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
   };
   hideHeading?: boolean;
   routeProduct?: (item: Item) => string;
-  currentSku: string;
   cartSkus?: string[];
   userPurchaseHistory?: any[];
   userViewHistory?: any[];
@@ -151,137 +151,76 @@ The following example demonstrates how to render the `ProductList` container wit
 
 ```js
 
-// Event Bus
-import { events } from '@dropins/tools/event-bus.js';
-
-// Initializer
-import { initializers } from '@dropins/tools/initializer.js';
-
-import * as pkg from '@dropins/recommendations/api.js';
-
-// For adding a language translations
-
-// Language Packs
-const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
-const es_ES = await fetch('/i18n/es_ES.json').then((res) => res.json());
-
-pkg.setEndpoint(<setEndpoint>);
-pkg.setFetchGraphQlHeaders({<setFetchGraphQlHeader>});
-
-const langDefinitions = {
-    en_US,
-    es_ES,
-};
-
-initializers.register(pkg.initialize, { langDefinitions });
-
-// Mount Initializers
-if (document.readyState === 'complete') {
-    initializers.mount();
-} else {
-    window.addEventListener('load', initializers.mount);
-}
-
-// Toggle Locale Button
-const $locales = document.querySelectorAll('[data-locale]');
-  $locales.forEach(($locale) => {
-    $locale.addEventListener('click', () => {
-      const data = {
-        Spanish: {
-          label: 'Spanish',
-          locale: 'es_ES',
-          storeCode: 'sp',
-        },
-        English: {
-          label: 'English',
-          locale: 'en_US',
-          storeCode: 'default',
-        },
-      };
-      const selection = data[$locale.dataset.label];
-      
-      if (!selection) throw new Error('Invalid locale');
-
-      const { locale, storeCode } = selection;
-
-      pkg.setFetchGraphQlHeader('store', storeCode);
-      events.emit('locale', locale);
-      events.emit('i18n:update', { locale });
-    });
-});
-
-const $list = document.getElementById('@dropins/ProductList');
-
 // Render Container
 provider.render(ProductList, {
   recId: 'recommendation-unit-1',
-  routeProduct: (item) => `${item.urlKey}`,
+  routeProduct: (item) => `/products/${item.urlKey}`,
   currentSku: 'ADB150',
   hideHeading: false,
   slots: {
       // Example of how to prepend or append to the default Heading
-      // Heading: (ctx) => {
-      //   const heading = document.createElement('div');
-      //   heading.innerText = 'Slot: Content before default heading';
-      //   ctx.prependChild(heading);
-      //   const footer = document.createElement('div');
-      //   footer.innerText = 'Slot: Content after default heading';
-      //   ctx.appendChild(footer);
-      // },
+      Heading: (ctx) => {
+        const heading = document.createElement('div');
+        heading.innerText = 'Slot: Content before default heading';
+        ctx.prependChild(heading);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default heading';
+        ctx.appendChild(footer);
+      },
 
       // Example of how to prepend or append to the default Thumbnail
-      // Thumbnail: (ctx) => {
-      //   const thumbnail = document.createElement('div');
-      //   thumbnail.innerText = 'Slot: Content before default thumbnail';
-      //   ctx.prependChild(thumbnail);
-      //   const footer = document.createElement('div');
-      //   footer.innerText = 'Slot: Content after default thumbnail';
-      //   ctx.appendChild(footer);
-      // },
+      Thumbnail: (ctx) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.innerText = 'Slot: Content before default thumbnail';
+        ctx.prependChild(thumbnail);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default thumbnail';
+        ctx.appendChild(footer);
+      },
 
       // Example of how to prepend or append to the default Price
-      // Price: (ctx) => {
-      //   const price = document.createElement('div');
-      //   price.innerText = 'Slot: Content before default price';
-      //   ctx.prependChild(price);
-      //   const footer = document.createElement('div');
-      //   footer.innerText = 'Slot: Content after default price';
-      //   ctx.appendChild(footer);
-      // },
+      Price: (ctx) => {
+        const price = document.createElement('div');
+        price.innerText = 'Slot: Content before default price';
+        ctx.prependChild(price);
+        const footer = document.createElement('div');
+        footer.innerText = 'Slot: Content after default price';
+        ctx.appendChild(footer);
+      },
 
       // Example of how to replace default Footer with a custom footer based on product type
-      // Footer: (ctx) => {
-      //   const wrapper = document.createElement('div');
-      //   wrapper.className = 'footer__wrapper';
-      //   const addToCart = document.createElement('div');
-      //   addToCart.className = 'footer__button--add-to-cart';
-      //   wrapper.appendChild(addToCart);
+      Footer: (ctx) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'footer__wrapper';
+        const addToCart = document.createElement('div');
+        addToCart.className = 'footer__button--add-to-cart';
+        wrapper.appendChild(addToCart);
 
-      //   if (ctx.product.itemType === 'SimpleProductView') {
-      //     // Add to Cart Button
-      //     UI.render(Button, {
-      //       children: 'Add to Cart',
-      //       onClick: () => {
-      //         // Call add to cart function from cart/api
-      //         console.log('Add to Cart');
-      //       },
-      //       variant: 'primary',
-      //     })(addToCart);
-      //   } else {
-      //     // View Product Button
-      //     UI.render(Button, {
-      //       children: 'Select Options',
-      //       onClick: () => {
-      //         console.log('Select Options');
-      //         window.location.href = ctx.product.urlKey;
-      //       },
-      //       variant: 'tertiary',
-      //     })(addToCart);
-      //   }
-      //   ctx.replaceWith(wrapper);
-      // },
+        if (ctx.product.itemType === 'SimpleProductView') {
+          // Add to Cart Button
+          UI.render(Button, {
+            children: 'Add to Cart',
+            onClick: () => {
+              // Call add to cart function from cart/api
+              console.log('Add to Cart');
+            },
+            variant: 'primary',
+          })(addToCart);
+        } else {
+          // View Product Button
+          UI.render(Button, {
+            children: 'Select Options',
+            onClick: () => {
+              console.log('Select Options');
+              window.location.href = ctx.product.urlKey;
+            },
+            variant: 'tertiary',
+          })(addToCart);
+        }
+        ctx.replaceWith(wrapper);
+      },
     },
-})($list);
+}));
 
 ```
 
