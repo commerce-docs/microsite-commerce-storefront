@@ -6,7 +6,7 @@ description: Learn about the ProductList container.
 import Diagram from '@components/Diagram.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentSku`, `pageType`, and `routing` through `routeProduct` callbacks.
+The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentSku`, `recId`, and `routing` through `routeProduct` callbacks.
 
 <Diagram caption="ProductList container">
   ![ProductList container](@images/dropins/recommendations/product-list.png)
@@ -20,20 +20,59 @@ The `ProductList` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
+    ['recId', 'string', 'Yes', 'Unique identifier for the recommendation unit.'],
     ['currentSku', 'string', 'Yes', 'Current SKU for recommendation context.'],
-    ['cartSkus', 'string', 'array', 'Cart SKUs for recommendation context.'],
-    ['userPurchaseHistory', 'array', 'No', 'User Purchase History for recommendation context.'],
-    ['userViewHistory', 'array', 'No', 'User View History for recommendation context.'],
+    ['cartSkus', 'string[]', 'No', 'Cart SKUs for recommendation context.'],
+    ['userPurchaseHistory', 'any[]', 'No', 'User Purchase History for recommendation context.'],
+    ['userViewHistory', 'any[]', 'No', 'User View History for recommendation context.'],
     ['routeProduct', 'function', 'No', 'Callback function that returns a product URL.'],
-    ['pageType', 'function', 'No', 'Page type where recommendations are rendered (e.g., Product, Cateogy, Cart)'],
-    ['hideHeading', 'function', 'No', 'Hide recommendations heading text.'],
-    ['slots', 'function', 'No', 'Slots for default heading, thumbnail, price, and footer.'],
+    ['hideHeading', 'boolean', 'No', 'Hide recommendations heading text.'],
+    ['initialData', 'object', 'No', 'Pre-loaded recommendation data to avoid initial fetch.'],
+    ['slots', 'object', 'No', 'Slots for customizing heading, thumbnail, price, title, SKU, and footer.'],
   ]}
 />
 
+The `ProductListProps` interface has the following shape:
+
+```ts
+export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
+  recId: string;
+  initialData?: {
+    recommendations?: {
+      results: RecommendationUnitModel[];
+      totalProducts: number;
+    };
+  };
+  hideHeading?: boolean;
+  routeProduct?: (item: Item) => string;
+  currentSku: string;
+  cartSkus?: string[];
+  userPurchaseHistory?: any[];
+  userViewHistory?: any[];
+  slots?: {
+    Heading?: SlotProps;
+    Footer?: SlotProps;
+    Title?: SlotProps<{
+      item: Item;
+      productUrl: string;
+    }>;
+    Sku?: SlotProps<{
+      item: Item;
+    }>;
+    Price?: SlotProps<{
+      item: Item;
+    }>;
+    Thumbnail?: SlotProps<{
+      item: any;
+      defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
 The `RecommendationUnitModel` object has the following shape:
 
-```js
+```ts
 export interface RecommendationUnitModel {
   displayOrder: number;
   pageType: PageType;
@@ -45,7 +84,7 @@ export interface RecommendationUnitModel {
   unitName: string;
 }
 
-export type PageType = 'CMS' | 'Cart' | 'Checkout' | 'Product';
+export type PageType = 'Product'; // Always hardcoded to 'Product' per requirements
 
 export interface Item {
   uid: string;
@@ -91,24 +130,24 @@ export interface GraphQLResponse {
     recommendations: RecommendationsResponse;
   };
 }
-
 ```
+
 ## Supported Slots
 
-The `Recommendations` container supports the following slots:
+The `ProductList` container supports the following slots:
 
-* Heading
-* Footer
-* Title
-* SKU
-* Price
-* Thumbnail
-* Action Button (Add To Cart / View Product)
+* **Heading** - Customize the recommendations heading
+* **Footer** - Customize the action button area (Add to Cart / View Product)
+* **Title** - Customize the product title display
+* **Sku** - Customize the SKU display
+* **Price** - Customize the price display
+* **Thumbnail** - Customize the product image display
 
+Each slot receives context data relevant to its purpose, allowing for highly customizable product displays.
 
 ## Example configuration
 
-The following example demonstrates how to render the `ProductList` container with the `currentSku`, `pageType`, and `routeProduct` callbacks with different slots like default heading, thumbnail, price, and footer:
+The following example demonstrates how to render the `ProductList` container with the `recId`, `currentSku`, and `routeProduct` callbacks with different slots:
 
 ```js
 
@@ -175,9 +214,10 @@ const $list = document.getElementById('@dropins/ProductList');
 
 // Render Container
 provider.render(ProductList, {
+  recId: 'recommendation-unit-1',
   routeProduct: (item) => `${item.urlKey}`,
   currentSku: 'ADB150',
-  pageType: 'Product',
+  hideHeading: false,
   slots: {
       // Example of how to prepend or append to the default Heading
       // Heading: (ctx) => {
@@ -244,3 +284,13 @@ provider.render(ProductList, {
 })($list);
 
 ```
+
+## Key Features
+
+- **Automatic Data Fetching**: Fetches recommendations based on `currentSku` and other context
+- **Intersection Observer**: Automatically tracks when recommendations are viewed
+- **Event Publishing**: Publishes render and view events for analytics
+- **Loading States**: Handles loading states during data fetching
+- **Empty States**: Gracefully handles empty recommendation results
+- **Internationalization**: Supports multiple languages through i18n
+- **Customizable Slots**: Extensive customization options for all UI elements
