@@ -487,9 +487,9 @@ async function config() {
                           label: 'Containers', collapsed: true,
                           items: [
                             { label: 'Wishlist', link: '/dropins/wishlist/containers/wishlist/' },
-                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlistAlert/' },
-                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlistItem/' },
-                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlistToggle/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
                           ]
                         },
                         { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
