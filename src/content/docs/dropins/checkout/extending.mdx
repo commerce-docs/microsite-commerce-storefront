@@ -1,19 +1,19 @@
 ---
-title: Extending Checkout drop-in component
-description: Learn about different methods to extend the drop-in component.
+title: Extending the checkout drop-in component
+description: Learn about different methods to extend the checkout drop-in component.
 ---
 
 import Aside from '@components/Aside.astro';
 
-Based on the Adobe Commerce OOPE (Out Of Process Extensibility) pattern, the drop-in components must be designed to be flexible and extensible. In this sense and referring to the extensibility concept, if the checkout drop-in does not provide a specific feature, it should have a mechanism to be easily expandable and customizable.
+The checkout drop-in component follows the Adobe Commerce out-of-process extensibility (OOPE) pattern, which requires components to be flexible and extensible. When the checkout drop-in component lacks a specific feature, it provides mechanisms that allow developers to easily expand and customize its functionality.
 
-## Extend Checkout drop-in GraphQL API
+## GraphQL API
 
-To extend the data payload of the drop-in, it needs to be used the GraphQL Extensibility API which allows developers to extend existing GraphQL operations to meet additional data requirements without increasing code complexity or negatively impacting performance. This API provides a flexible and efficient way to customize GraphQL fragments by integrating build-time modifications into the storefront’s development pipeline.
+To extend the data payload of the drop-in, developers must use the GraphQL Extensibility API. This API allows developers to extend existing GraphQL operations to meet additional data requirements without increasing code complexity or negatively impacting performance. The API provides a flexible and efficient way to customize GraphQL fragments by integrating build-time modifications into the storefront's development pipeline.
 
-The GraphQL fragments are reusable pieces of GraphQL which can be used to extend or customize the API for a drop-in. To do this, the drop-in must expose the list of fragments to be extended into the `fragments.ts` file; otherwise, when you install the application, the build process will fail because it cannot find the fragment you want to extend.
+GraphQL fragments are reusable pieces of GraphQL that developers can use to extend or customize the API for a drop-in component. Drop-in components expose the list of fragments that can be extended in the `fragments.ts` file. If the drop-in component does not expose these fragments, the build process fails when you install the application because it cannot locate the fragment you want to extend.
 
-The Checkout drop-in is exposing the following fragments:
+The checkout drop-in component exposes the following fragments:
 
 ```js title='fragments.ts'
 export {
@@ -28,10 +28,11 @@ export { CHECKOUT_DATA_FRAGMENT } from '@/checkout/api/graphql/CheckoutDataFragm
 export { CUSTOMER_FRAGMENT } from '@/checkout/api/graphql/CustomerFragment.graphql';
 ```
 
-### How to extend or customize a fragment
+### Extend or customize a fragment
 
-To enable GraphQL fragments to be extensible in the drop-in, first you need to update the GraphQL fragment used by the drop-in to request the additional field. This is done by modifying the `build.mjs` script at the root of your storefront project. 
-When you run the install command, the `build.mjs` script generates a new GraphQL query for the Checkout drop-in that includes the additional data.
+To make GraphQL fragments extensible in the drop-in component, you must first update the GraphQL fragment that the drop-in uses to request the additional field. You accomplish this by modifying the `build.mjs` script located at the root of your storefront project.
+
+The `build.mjs` script automatically generates a new GraphQL query for the checkout drop-in component when you run the install command. This generated query includes the additional data that you specified in your fragment extensions.
 
 #### Example 1: Adding new information
 
@@ -56,7 +57,7 @@ overrideGQLOperations([
 ]);
 ```
 
-Once the API is extended, now it's time to extend the models and transformers (if it is really needed a transformation) during the initialization phase. This is done by modifying the `/scripts/initializers/checkout.js` script.
+After extending the API, you must extend the models and transformers during the initialization phase if data transformation is required. You accomplish this by modifying the `/scripts/initializers/checkout.js` script.
 
 ```js title='/scripts/initializers/checkout.js'
 // Initialize checkout
@@ -107,9 +108,9 @@ overrideGQLOperations([
 ```
 
 <Aside type="caution" title="Extending fragments">
-Please note if `build.mjs` script makes reference to a fragment that is not exposed by the drop-in, the application build process will fail.
+If the `build.mjs` script references a fragment that the drop-in component does not expose, the application build process fails.
 </Aside>
 
 <Aside type="note" title="Extending drop-in components">
-Visit the [GraphQL Extensibility API](/sdk/reference/graphql/) and [Extending drop-in components](/dropins/all/extending/) documentation to learn more about on how to extend the API for a drop-in component by following an easy step-by-step guidelines.
+See the [GraphQL Extensibility API](/sdk/reference/graphql/) and [Extending drop-in components](/dropins/all/extending/) documentation to learn more about on how to extend the API for a drop-in component.
 </Aside>
