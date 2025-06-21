@@ -1,0 +1,238 @@
+---
+title: Wishlist installation
+description: Learn how to install the wishlist drop-in component into your site.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Callouts from '@components/Callouts.astro';
+
+Our drop-in components are designed for the browser's JavaScript run-time without the need for a bundler. But they can also be installed and executed in a build-time environment with bundlers like Webpack and Vite. The installation steps for both run-time and build-time environments are the same after the initial drop-in component package imports.
+
+
+
+## Step-by-step
+
+The following steps show how to install the wishlist component into your site.
+
+<Tasks>
+
+    <Task>
+
+        ### Install the packages
+
+        Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and wishlist (`@dropins/storefront-wishlist`) packages.
+
+        <Tabs>
+            <TabItem label="NPM" icon="seti:npm">
+
+                ```bash frame="none"
+                npm install @dropins/tools @dropins/storefront-wishlist
+                ```
+
+            </TabItem>
+            <TabItem label="CDN" icon="external">
+
+                ```html title="index.html" del={"Replace with actual URLs":5-7}
+                <head>
+                    <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Your Storefront</title>
+
+                            <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
+                            <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-wishlistp@latest"></script>
+                </head>
+                ```
+
+            </TabItem>
+        </Tabs>
+
+        :::note[Install @dropins/tools]
+        All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+        :::
+
+    </Task>
+
+    <Task>
+        ### Map the packages
+
+        In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
+
+        <Tabs>
+            <TabItem label="node_modules" icon="seti:npm">
+                This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the Wishlist drop-in component (@dropins/storefront-wishlist):
+
+                ```html title="head.html"
+                <script type="importmap">
+                    {
+                        "imports": {
+                        "@dropins/tools/": "/node_modules/@dropins/tools/",
+                        "@dropins/storefront-wishlistp/": "/node_modules/@dropins/storefront-wishlist/",
+                    }
+                    }
+                </script>
+                <script src="/scripts/scripts.js" type="module"></script>
+                ```
+            </TabItem>
+            <TabItem label="custom" icon="seti:folder">
+                This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the wishlist component (@dropins/storefront-wishlist):
+
+                ```html title="head.html"
+                <script type="importmap">
+                    {
+                        "imports": {
+                        "@dropins/tools/": "/scripts/__dropins__/tools/",
+                        "@dropins/storefront-wishlist/": "/scripts/__dropins__/storefront-wishlist/",
+                    }
+                    }
+                </script>
+                <script src="/scripts/scripts.js" type="module"></script>
+                ```
+
+            </TabItem>
+            <TabItem label="CDN" icon="external">
+                This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the wishlist component (@dropins/storefront-wishlist):
+
+                ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
+                <head>
+                    <script type="importmap">
+                        {
+                            "imports": {
+
+                            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
+                            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-wishlist@latest",
+                        }
+                        }
+                    </script>
+                </head>
+                ```
+
+            </TabItem>
+
+        </Tabs>
+
+        With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your PDP drop-in component JavaScript file as described in the next step.
+
+    </Task>
+
+    <Task>
+        ### Import the required files
+
+        Import the required files from the drop-in components tools (`@dropin/tools/initializers.js`) and the wishlist component (`@dropins/storefront-wishlist`) into a JavaScript file for your wishlist drop-in. In this example, we'll call this file `wishlist.js`. See the [boilerplate code](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-wishlist/commerce-wishlist.js) for a list of the default imports.
+
+    </Task>
+
+    <Task>
+        ### Connect to the endpoint
+
+        Connect your product details component to the Catalog Service GraphQL endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
+
+        ```js title="product-details.js"
+        // Set endpoint configuration
+        product.setEndpoint('https://<catalog-service-endpoint>/graphql');
+
+        product.setFetchGraphQlHeaders({
+            // Environment required headers
+            'Magento-Environment-Id': 'your-environment-id',
+            'Magento-Store-View-Code': 'your-store-view-code',
+            'Magento-Website-Code': 'your-website-code',
+            'x-api-key': 'your-api-key',
+            'Magento-Store-Code': 'main_website_store',
+            'Magento-Customer-Group': 'your-customer-group',
+            'Content-Type': 'application/json',
+        });
+        ```
+
+    </Task>
+
+    <Task>
+        ### Register and load the drop-in
+
+        The code below shows how to register the wishlist component, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your product details HTML page as shown here:
+
+        ```html title="index.html" ins={"1":5} ins={"2":8}
+        <script type="module">
+            // more code above...
+
+            // Register and load the product details component
+            initializers.mountImmediately(pdp.initialize);
+
+            // Mount Initializers (must be called after all initializers are registered)
+            window.addEventListener('load', initializers.mount);
+        </script>
+        ```
+
+        <Callouts square color="var(--sl-color-green)">
+
+            1. This function registers the product details component to be loaded on the page by the `initializers.mount` function.
+            1. This event handler triggers the initializers.mount function to load the product details component after the page has loaded.
+
+        </Callouts>
+
+    </Task>
+
+    <Task>
+        ### Create templates and render the drop-in
+
+        Render the wishlist components on the page. The example below provides the minimal configuration options required to render the default wishlist components:
+
+        ```js title="commerce-wishlist.js"
+        const showAuthModal = (event) => {
+            if (event) {
+                event.preventDefault();
+            }
+
+            const signInModal = document.createElement('div');
+            signInModal.setAttribute('id', 'signin-modal');
+
+            const signInForm = document.createElement('div');
+            signInForm.setAttribute('id', 'signin-form');
+
+            signInModal.onclick = (clickEvent) => {
+                if (clickEvent.target === signInModal) {
+                    signInModal.remove();
+                }
+            };
+
+            signInModal.appendChild(signInForm);
+            document.body.appendChild(signInModal);
+
+            // Render auth form
+            authRenderer.render(AuthCombine, {
+                signInFormConfig: { renderSignUpLink: true },
+                signUpFormConfig: {},
+                resetPasswordFormConfig: {},
+            })(signInForm);
+
+            const authListener = events.on('authenticated', (authenticated) => {
+                if (authenticated) {
+                    signInModal.remove();
+                    authListener.off();
+                }
+            });
+        };
+
+        export default async function decorate(block) {
+            const {
+                'start-shopping-url': startShoppingURL = '',
+            } = readBlockConfig(block);
+
+            await wishlistRenderer.render(Wishlist, {
+                routeEmptyWishlistCTA: startShoppingURL ? () => rootLink(startShoppingURL) : undefined,
+                moveProdToCart: cartApi.addProductsToCart,
+                routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+                onLoginClick: showAuthModal,
+            })(block);
+        }
+        ```
+
+        Test the `Wishlist` component by viewing your wishlist page in a browser, or running your local dev or build server. If you see the `Wishlist` component rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
+
+    </Task>
+
+</Tasks>
+
+## Summary
+
+The installation of all drop-in components follows the same pattern demonstrated by installing the PDP drop-in: Install, Map, Import, Connect, Register, and Render. 

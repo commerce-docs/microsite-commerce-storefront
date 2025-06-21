@@ -482,16 +482,18 @@ async function config() {
                       collapsed: true,
                       items: [
                         { label: 'Overview', link: '/dropins/wishlist/' },
-                        { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
+                        { label: 'Installation', link: '/dropins/wishlist/installation/' },
                         {
                           label: 'Containers', collapsed: true,
                           items: [
-                            { label: 'ProductAttributes', link: '/dropins/wishlist/containers/container-name/' },
+                            { label: 'Wishlist', link: '/dropins/wishlist/containers/wishlist/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
                           ]
                         },
                         { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
                         { label: 'Functions', link: '/dropins/wishlist/functions/' },
-                        { label: 'Slots', link: '/dropins/wishlist/slots/' },
                         { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
                     },
