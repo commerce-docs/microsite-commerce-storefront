@@ -5,6 +5,11 @@ tableOfContents:
   maxHeadingLevel: 2
 ---
 
+import Aside from '@components/Aside.astro';
+import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
 ## Where can I find technical documentation?
 
 - [Storefront drop-in components](https://experienceleague.adobe.com/developer/commerce/storefront/)
@@ -74,3 +79,60 @@ Use Preact/HTM or other libraries only when necessary.
 ## How do I deploy custom VCLs to Fastly?
 
 See [Getting started with custom VCL](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets) in the _Commerce on Cloud Infrastucture Guide_.
+
+## What should I do if my email template links are broken after migrating to Edge Delivery Services or Helix?
+
+By default, Adobe Commerce [email templates](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/communications/email-templates) (such as "Forgot Password" and "Create Password") use camelCase in their route URLs (for example, `/customer/account/forgotPassword`). However, Helix 5 and Edge Delivery Services only support lowercase routes (for example, `/customer/account/forgotpassword`). This incompatibility means that links in default email templates will not work correctly on Commerce Storefronts powered by Edge Delivery Services.
+
+<Aside type="note">
+For full Edge Delivery Services migrations, all template paths must be lowercase. In Luma Bridge scenarios, camelCase can be used only if those routes are served from Luma; otherwise, they must be converted to lowercase.
+</Aside>
+
+To fix this issue, you can [customize email](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/communications/email-template-custom) templates to use the following workaround:
+
+<Tasks>
+
+<Task>
+
+### Create a custom email template for the "Forgot Password" and "Create Password" pages
+
+<Steps>
+1. Log in to the Commerce Admin.
+1. On the Admin sidebar, go to **Marketing** > _Communications_ > **Email Templates**.
+1. Click **Add New Template**.
+1. In the **Load default template** section, click the **Template** selector and choose `Magento_Customer > Forgot Password`.
+1. Click **Load Template**.
+
+   The HTML code and variables from the template appear in the form.
+
+1. Enter the **Template Name**. For example, "Forgot Passsword - Edge Delivery Services".
+1. In the **Template Content** field, change any camelCase or capitalized route URLs to all lowercase. See the following screenshot for an example.
+
+   ![Forgot Password template](@images/troubleshoot/forgot-password-template.png)
+
+1. Click **Save Template**.
+
+</Steps>
+
+</Task>
+
+<Task>
+
+### Update the configuration
+
+<Steps>
+
+1. On the Admin sidebar, go to **Stores** > _Settings_ > **Configuration**.
+1. Click **Customers** > **Customer Configuration**.
+1. Expand the **Password Options** section.
+1. Set **Forgot Email Template** to the custom template that you created in Step 1. See the following screenshot for an example.
+
+   ![Forgot Password template](@images/troubleshoot/forgot-password-template-config.png)
+
+1. Click **Save Config**.
+
+</Steps>
+
+</Task>
+
+</Tasks>
