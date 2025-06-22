@@ -431,6 +431,22 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Personalization',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/personalization/' },
+                        { label: 'Initialization', link: '/dropins/personalization/initialization/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
+                        { label: 'Functions', link: '/dropins/personalization/functions/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
