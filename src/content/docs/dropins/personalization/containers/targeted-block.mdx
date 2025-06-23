@@ -1,0 +1,64 @@
+---
+title: TargetedBlock container
+description: Learn about the TargetedBlock container in the personalization drop-in component.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `TargetedBlock` container wraps the conditional content.
+
+## Configurations
+
+The `TargetedBlock` container provides the following configuration options:
+
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots', '{Content: SlotProps}', 'Yes', 'The slot that provides the content to be displayed conditionally.'],
+        ['personalizationData', 'PersonalizationData', 'Yes', 'The customer groups, segments, and cart rules that must be active for the block to render.'],
+        ['type', 'string', 'No', 'Specify this value when you want only the first Targeted Block of this type that matches the conditions to be displayed on the page.']
+    ]}
+/>
+
+## Example
+
+The following example demonstrates how to integrate the `TargetedBlock` container:
+
+```javascript
+export default async function decorate(block) {
+  const blockConfig = readBlockConfig(block);
+
+  const {
+    fragment,
+    type,
+    segments,
+    groups,
+    cartRules,
+  } = blockConfig;
+
+  const content = (blockConfig.fragment !== undefined)
+    ? await loadFragment(fragment)
+    : block.children[block.children.length - 1];
+
+  render.render(TargetedBlock, {
+    type,
+    personalizationData: {
+      segments,
+      groups,
+      cartRules,
+    },
+    slots: {
+      Content: (ctx) => {
+        const container = document.createElement('div');
+        container.append(content);
+        ctx.replaceWith(container);
+      },
+    },
+  })(block);
+}
+```
