@@ -836,6 +836,10 @@ async function config() {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
                     },
+                    {
+                      label: 'Product Recommendations setup',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
                   ],
                 },
               ],
