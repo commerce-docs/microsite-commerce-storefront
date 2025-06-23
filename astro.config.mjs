@@ -435,6 +435,22 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Personalization',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/personalization/' },
+                        { label: 'Initialization', link: '/dropins/personalization/initialization/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
+                        { label: 'Functions', link: '/dropins/personalization/functions/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
@@ -479,6 +495,26 @@ async function config() {
                         { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
                         { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
                         { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
+                      ]
+                    },
+                    {
+                      label: 'Wishlist',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/wishlist/' },
+                        { label: 'Installation', link: '/dropins/wishlist/installation/' },
+                        {
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'Wishlist', link: '/dropins/wishlist/containers/wishlist/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
+                          ]
+                        },
+                        { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
                     },
                     {
@@ -800,6 +836,10 @@ async function config() {
                     {
                       label: 'Multi-store setup',
                       link: 'merchants/get-started/multistore/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
                     },
                     {
                       label: 'Terms and conditions',
