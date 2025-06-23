@@ -106,6 +106,7 @@ async function config() {
       '/discovery/architecture': '/developer/commerce/storefront/setup/discovery/architecture',
       '/discovery/data-export-validation': '/developer/commerce/storefront/setup/discovery/data-export-validation',
       '/discovery/luma-bridge': '/developer/commerce/storefront/setup/discovery/luma-bridge',
+      '/dropins/other/recommendations': '/developer/commerce/storefront/dropins/other/recommendations',
     },
     integrations: [
       starlight({
@@ -501,10 +502,6 @@ async function config() {
                         {
                           label: 'Live Search',
                           link: '/dropins/other/search/'
-                        },
-                        {
-                          label: 'Product Recommendations',
-                          link: '/dropins/other/recommendations/'
                         },
                       ],
                     },
