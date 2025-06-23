@@ -152,13 +152,12 @@ module.exports = {
         emulatedUserAgent: userAgents.desktop,
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
       },
-      url: [
-        // 'http://localhost/microsite-commerce-storefront/index.html',
-      ],
+      // url: [
+      //   'http://localhost/microsite-commerce-storefront/index.html',
+      // ],
     },
     upload: {
       target: 'temporary-public-storage',
-      githubAppToken: process.env.LHCI_GITHUB_APP_TOKEN || '',
     },
   },
 };
