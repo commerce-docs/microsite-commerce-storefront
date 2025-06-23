@@ -183,6 +183,10 @@ async function config() {
                           link: '/setup/configuration/commerce-configuration/'
                         },
                         {
+                          label: 'Multistore setup',
+                          link: '/setup/configuration/multistore-setup/'
+                        },
+                        {
                           label: 'Content delivery network',
                           link: '/setup/configuration/content-delivery-network/'
                         },
