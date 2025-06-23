@@ -442,6 +442,8 @@ async function config() {
                           collapsed: true,
                           items: [
                             { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
                       ]
                     },
                     {
@@ -461,8 +463,6 @@ async function config() {
                         { label: 'Functions', link: '/dropins/recommendations/functions/' },
                         { label: 'Slots', link: '/dropins/recommendations/slots/' },
                         { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
-                          ]
-                        },
                       ]
                     },
                     {
