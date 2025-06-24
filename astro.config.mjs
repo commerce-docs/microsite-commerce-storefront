@@ -438,7 +438,8 @@ async function config() {
                         { label: 'Overview', link: '/dropins/personalization/' },
                         { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                         { label: 'Functions', link: '/dropins/personalization/functions/' },
-                        { label: 'Containers',
+                        {
+                          label: 'Containers',
                           collapsed: true,
                           items: [
                             { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
@@ -463,6 +464,29 @@ async function config() {
                         { label: 'Functions', link: '/dropins/recommendations/functions/' },
                         { label: 'Slots', link: '/dropins/recommendations/slots/' },
                         { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
+                      ]
+                    },
+                    {
+                      label: 'Product Discovery',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/product-discovery/' },
+                        // { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/product-discovery/containers/product-list/' },
+                            { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
+                            { label: 'ResultsInfo', link: '/dropins/product-discovery/containers/results-info/' },
+                            { label: 'SearchBarInput', link: '/dropins/product-discovery/containers/search-bar-input/' },
+                            { label: 'SearchBarResult', link: '/dropins/product-discovery/containers/search-bar-result/' },
+                          ]
+                        },
+                        // { label: 'Styles', link: '/dropins/recommendations/styles/' },
+                        // { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        // { label: 'Slots', link: '/dropins/recommendations/slots/' },
+                        // { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
                       ]
                     },
                     {
