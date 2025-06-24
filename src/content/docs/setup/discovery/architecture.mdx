@@ -22,7 +22,7 @@ The following diagram illustrates the composable architecture of a headless Adob
 
 <Diagram caption="Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.">
   ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery
-  Services.](@images/implementation/headless-architecture-v4.svg)
+  Services.](@images/implementation/Architecture.svg)
 </Diagram>
 
 :::note
@@ -153,7 +153,7 @@ The Catalog Service module provides fast read-only access to Commerce catalog da
 
 The Live Search service replaces the default Commerce catalog search and installs the Product Listing Page (PLP) widget in your storefront. Refer to the [Live Search Guide](https://experienceleague.adobe.com/en/docs/commerce/live-search/overview) for details and [installation](https://experienceleague.adobe.com/en/docs/commerce/live-search/install) instructions.
 
-Live Search uses events to power search algorithms such as “Most Viewed” and “Viewed This, Viewed That”. For headless implementations, learn how to [set up eventing](https://experienceleague.adobe.com/en/docs/commerce/live-search/events) for your storefront.
+Live Search uses events to power search algorithms such as "Most Viewed" and "Viewed This, Viewed That". For headless implementations, learn how to [set up eventing](https://experienceleague.adobe.com/en/docs/commerce/live-search/events) for your storefront.
 
 :::caution[Multiple stores in a single Adobe Commerce environment]
 When using a single Adobe Commerce environment for multiple stores and only a single store should be migrated to Edge Delivery Services, you may need to contact Adobe Commerce Support to ensure that Live Search is activated without disabling Elasticsearch, which should continue to drive the search of the other stores.
@@ -176,3 +176,23 @@ Similar to Live Search, Product Recommendations uses events for collecting data 
 ## Edge Delivery Services
 
 Edge Delivery Services is a cloud-based content delivery network (CDN) that provides a scalable, secure, and high-performance platform for delivering your Adobe Commerce storefront to customers around the world. It is designed to deliver dynamic content at the edge, close to the end user, to reduce latency and improve performance.
+
+## Commerce Boilerplate Architecture
+
+The Commerce Boilerplate follows a modular architecture that separates core AEM functionality from commerce-specific features. This separation ensures maintainability and alignment with the upstream AEM Boilerplate while providing robust commerce capabilities.
+
+### From Core Scripts to Commerce Blocks
+
+The [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) is organized into four main layers that build on each other to deliver a modular, maintainable storefront architecture:
+
+1. **scripts.js** – The foundation. Handles core AEM page loading, block decoration, font loading, and orchestration of eager, lazy, and delayed loading. This file aligns closely with the upstream [AEM Boilerplate](https://github.com/adobe/aem-boilerplate) and is designed for global, site-wide functionality. It also supports extensibility for developers who want to introduce global DOM decorators, integrate third-party plugins such as experimentation tools, or run eager code on page load.
+
+2. **commerce.js** – The commerce engine. Contains all Commerce Boilerplate-specific logic and tooling, including backend connections, template handling, page type detection, Adobe Data Layer initialization, and commerce utilities. This layer centralizes all commerce features and keeps them distinct from core AEM logic.
+
+3. **Initializers** – A directory of scripts that initialize commerce drop-in components (such as account, cart, order, personalization, etc.). Each script is responsible for bootstrapping its respective feature, wiring it to the storefront, and ensuring it integrates with the rest of the application.
+
+4. **Blocks**
+   - **AEM Blocks**: Authored in **DA.live**, Google Docs, or Microsoft Word using tables. Rendered server-side as basic HTML `<divs>` and decorated client-side. Developers can enrich these blocks with semantic HTML, accessibility attributes, and dynamic DOM transformations.
+   - **Commerce Blocks**: Extend the AEM Blocks with Commerce drop-in components. They use the same authoring model but dynamically render the client-side UI based on the configuration provided in the authored tables.
+
+For a detailed breakdown of the file structure and where to find specific files, see the [Explore the Boilerplate](/get-started/boilerplate-project) page.
