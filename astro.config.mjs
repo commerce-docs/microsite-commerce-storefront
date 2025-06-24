@@ -480,7 +480,7 @@ async function config() {
                             { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
                             { label: 'ResultsInfo', link: '/dropins/product-discovery/containers/results-info/' },
                             { label: 'SearchBarInput', link: '/dropins/product-discovery/containers/search-bar-input/' },
-                            { label: 'SearchBarResult', link: '/dropins/product-discovery/containers/search-bar-result/' },
+                            { label: 'SearchBarResults', link: '/dropins/product-discovery/containers/search-bar-results/' },
                           ]
                         },
                         // { label: 'Styles', link: '/dropins/recommendations/styles/' },
