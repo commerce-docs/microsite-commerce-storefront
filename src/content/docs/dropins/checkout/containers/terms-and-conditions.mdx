@@ -7,10 +7,9 @@ import Aside from '@components/Aside.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 
 The `TermsAndConditions` container displays a checkbox that users must select to agree to the terms and conditions of the sale before confirming their purchase.
-During a guest checkout process, users must check all required agreements before placing an order. If an agreement is unchecked, a validation error appears when the user clicks the **Place Order** button.
+During the checkout process, users must check all required agreements before placing an order. If an agreement is unchecked, a validation error appears when the user clicks the **Place Order** button.
 
 <Aside type="note" title="TermsAndConditions not displayed for any reason?">
-  <li>The `TermsAndConditions` container won't be displayed in case the user is logged into their account, because the customer accepted those agreements previously during the registration process.</li>
   <li>The `TermsAndConditions` container requires a store configuration to be enabled; so it won't be displayed if the component is not properly configured.</li>
 
 Visit the [Terms & Conditions setup](/merchants/get-started/terms-and-conditions/) documentation for more information on how to enable the Terms and Conditions feature.
@@ -29,7 +28,8 @@ The `TermsAndConditions` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['slots', 'object', 'No', 'Object with a list of agreements to be accepted by the guest user.'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+    ['slots', 'object', 'No', 'Object with a list of agreements to be accepted by the user.'],
   ]}
 />
 
@@ -41,6 +41,7 @@ The `TermsAndConditions` container receives an object as a parameter which imple
 
 ```ts
 export interface TermsAndConditionsProps {
+  active?: boolean;
   slots?: {
     Agreements?: SlotProps<{
       appendAgreement: SlotMethod<{
@@ -54,28 +55,26 @@ export interface TermsAndConditionsProps {
 }
 ```
 
-<li>The `slots` property is an object containing the following properties:</li>
+- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
+- The `slots` property is an object containing the following properties:
+  - The `Agreements` property is a handler used to render and configure the list of agreements. It provides a context by including the method `appendAgreement()` to add a new agreement:
 
-#### Agreements property
+  ```ts
+  export type SlotProps<T = any> = (
+    ctx: T & DefaultSlotContext<T>,
+    element: HTMLDivElement | null
+  ) => Promise<void> | void;
 
-The `Agreements` property is a handler used to render and configure the list of agreements. It provides a context by including the method `appendAgreement()` to add a new agreement:
+  export type SlotMethod<P = any> = (
+    callback: (next: unknown, state: State) => P
+  ) => void;
 
-```ts
-export type SlotProps<T = any> = (
-  ctx: T & DefaultSlotContext<T>,
-  element: HTMLDivElement | null
-) => Promise<void> | void;
+  export enum AgreementMode {
+    MANUAL = 'manual',
+    AUTO = 'auto',
+  }
 
-export type SlotMethod<P = any> = (
-  callback: (next: unknown, state: State) => P
-) => void;
-
-export enum AgreementMode {
-  MANUAL = 'manual',
-  AUTO = 'auto',
-}
-
-. . .
+  . . .
     Agreements?: SlotProps<{
       appendAgreement: SlotMethod<{
         name: string;
