@@ -155,6 +155,10 @@ async function config() {
                       link: 'merchants/get-started/experiments/'
                     },
                     {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
                       label: 'Product recommendations',
                       link: 'merchants/get-started/product-recommendations/'
                     },
