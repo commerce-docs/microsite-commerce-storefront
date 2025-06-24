@@ -5,7 +5,7 @@ description: Learn about the Facets container and configurations for the Product
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `Facets` container displays a list of `Facet` components, as well as the list of selected facets to render the filters applicable to the results of the search query.
+The `Facets` container displays a list of search filters (`facets`) that allow users to refine their product search results. It manages facet selections, displays selected filters with remove options, and provides a "Clear All" functionality to reset all filter selections.
 
 ## Configurations
 
@@ -15,12 +15,85 @@ The `Facets` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['slots', 'function', 'No', 'Allows passing a container or custom component.'],
+    ['slots', 'object', 'No', 'Allows passing custom components for Facet, SelectedFacets, and Facets slots.'],
   ]}
 />
 
-The `ProductList` container supports the following slots:
+## Slots
 
-* Facets
-* Facet
-* SelectedFacets
+The `Facets` container supports the following slots:
+
+* **Facets** - Customizes the entire facets list container
+* **Facet** - Customizes individual facet components
+* **SelectedFacets** - Customizes the selected filters display area
+
+Each slot receives a `context` object containing:
+- `data` - The relevant data for that slot (facet list, individual facet, or selected facets)
+
+{/* ## Events
+
+The `Facets` container listens to and emits the following events:
+
+### Listens to:
+* **search/result** - Listens for search results to update available facets and maintain selection state
+
+### Emits:
+* **search/request** - Emitted when facet selections change to trigger a new search with updated filters */}
+
+## Features
+
+### Multiple Facet Types
+The container supports different types of facets:
+
+- **Range Buckets** - For numeric ranges (e.g., price ranges) using radio buttons
+- **Scalar Buckets** - For discrete values (e.g., brands, colors) using checkboxes  
+- **Category View** - For category-based filtering using checkboxes
+
+### Selection Management
+- Maintains facet selection state across search requests
+- Automatically updates selections based on current search filters
+- Provides visual feedback for selected filters
+
+### Selected Filters Display
+- Shows all currently selected filters as removable buttons
+- Displays filter labels with appropriate formatting (including currency for price ranges)
+- Provides individual remove functionality for each selected filter
+
+### Clear All Functionality
+- "Clear All" button to remove all selected filters at once
+- Automatically triggers a new search with no filters applied
+
+## Facet Selection Behavior
+
+### Range Buckets (Radio Buttons)
+- Only one range can be selected at a time
+- Selecting a new range automatically deselects the previous one
+- Commonly used for price ranges, ratings, or other numeric ranges
+
+### Scalar Buckets (Checkboxes)
+- Multiple values can be selected simultaneously
+- Each selection is independent of others
+- Commonly used for brands, colors, sizes, or other discrete attributes
+
+## Example
+
+```jsx
+import { Facets } from '@adobe-commerce/storefront-search-dropin';
+
+function ProductFilters() {
+  return (
+    <Facets
+      slots={{
+        Facet: {
+          component: CustomFacetComponent
+        },
+        SelectedFacets: {
+          component: CustomSelectedFilters
+        },
+        Facets: {
+          component: CustomFacetsContainer
+        }
+      }}
+    />
+  );
+}

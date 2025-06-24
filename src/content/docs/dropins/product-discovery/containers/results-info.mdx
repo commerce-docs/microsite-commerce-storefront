@@ -5,7 +5,7 @@ description: Learn about the ResultsInfo container and configurations for the Pr
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ResultsInfo` container displays the search phrase or category path, and the count of matching products based on the results of the search query.
+The `ResultsInfo` container displays search information including the search phrase or category path and the total count of matching products. It listens for search results and automatically updates to show relevant information about the current search query or category view.
 
 ## Configurations
 
@@ -19,7 +19,57 @@ The `ResultsInfo` container provides the following configuration options:
   ]}
 />
 
-The `ProductList` container supports the following slots:
+## Slots
 
-* SearchPhrase
-* TotalCount
+The `ResultsInfo` container supports the following slots:
+
+* **SearchPhrase** - Customizes the display of the search phrase or category path
+* **TotalCount** - Customizes the display of the total product count
+
+Each slot receives a `context` object containing:
+- `searchResult` - The complete search result object including both result and request data
+
+{/* ## Events
+
+The `ResultsInfo` container listens to the following events:
+
+### Listens to:
+* **search/result** - Listens for search results to update the displayed search information */}
+
+## Features
+
+### Total Count Display
+- Shows the number of matching products
+- Automatically pluralizes using the "products" translation
+- Only displays when a total count is available
+- Example: `245 products`
+
+## Display Logic
+
+The container follows this priority order for displaying information:
+
+1. **Category Path** - If a category filter is present, displays the category path
+2. **Search Phrase** - If no category but a search phrase exists, displays search results text
+3. **No Display** - If neither category nor search phrase is present, the search phrase slot shows nothing
+
+The total count is displayed independently and shows whenever count data is available.
+
+## Example
+
+```jsx
+import { ResultsInfo } from '@adobe-commerce/storefront-search-dropin';
+
+function SearchResultsHeader() {
+  return (
+    <ResultsInfo
+      slots={{
+        SearchPhrase: {
+          component: CustomSearchPhraseDisplay
+        },
+        TotalCount: {
+          component: CustomCountDisplay
+        }
+      }}
+    />
+  );
+}

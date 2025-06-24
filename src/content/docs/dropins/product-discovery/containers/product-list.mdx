@@ -5,7 +5,7 @@ description: Learn about the ProductList container and configurations for the Pr
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ProductList` container displays a list of `ProductItemCard` components, as well as the sort dropdown and pagination to render the products matching the results of the search query.
+The `ProductList` container displays a list of `ProductItemCard` components with sorting, pagination, and filtering capabilities. It handles both search-based product listings and category-based product views, managing URL parameters, loading states, and error handling.
 
 ## Configurations
 
@@ -15,19 +15,83 @@ The `ProductList` container provides the following configuration options:
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['minQueryLength', 'number', 'No', 'Minumum length of characters for search phrase.'],
-    ['routeProduct', 'function', 'No', 'Callback function that returns a product url.'],
-    ['pageSize', 'number', 'No', 'Number of products per page returned by search query.'],
-    ['slots', 'function', 'No', 'Allows passing a container or custom component.'],
-    ['categoryPath', 'string', 'No', 'Used to display category view.  Will disable search by phrase.'],
+    ['minQueryLength', 'number', 'No', 'Minimum length of characters required for search phrase. Default: 3.'],
+    ['pageSize', 'number', 'No', 'Number of products per page returned by search query. Default: 12.'],
+    ['routeProduct', 'function', 'No', 'Callback function that returns a product URL. Receives a Product object as parameter.'],
+    ['categoryPath', 'string', 'No', 'Used to display category view. When provided, disables search by phrase and filters by category.'],
+    ['slots', 'object', 'No', 'Allows passing custom components for various product list sections.'],
   ]}
 />
 
+## Slots
+
 The `ProductList` container supports the following slots:
 
-* Header
-* ProductActions
-* ProductPrice
-* ProductImage
-* ProductName
-* Footer
+* **Header** - Customizes the header section (typically contains sort dropdown)
+* **ProductActions** - Customizes the action buttons for each product (e.g., "Add to Cart")
+* **ProductPrice** - Customizes the price display for each product
+* **ProductImage** - Customizes the product image display
+* **ProductName** - Customizes the product name display
+* **Footer** - Customizes the footer section (typically contains pagination)
+
+Each slot receives a `context` object containing relevant data:
+- `product` - Individual Product object (for product-specific slots)
+- `productList` - Complete product array (for Header/Footer slots)
+- `defaultImageProps` - Default image properties (for ProductImage slot)
+
+{/* ## Events
+
+The `ProductList` container listens to and emits the following events:
+
+### Listens to:
+* **search/request** - Listens for search requests to update the product listing
+
+### Emits:
+* **search/result** - Emitted when search results are received or when search fails */}
+
+## Features
+
+### Sorting Functionality
+- Dynamic sort options based on available product attributes
+- Category-specific and search-specific sort options
+- URL parameter synchronization for sort state
+- Default sort options with internationalization support
+
+### Pagination
+- Configurable page size
+- URL parameter synchronization for current page
+- Automatic reset to page 1 on new searches
+- Total pages calculation based on results
+
+### URL State Management
+- Synchronizes search phrase with `q` URL parameter
+- Manages sort order with `product_list_order` parameter
+- Handles filter parameters in URL
+- Maintains pagination state in URL
+- Supports browser back/forward navigation
+
+### Loading States
+- Skeleton loading with placeholder products
+- Initialization flags to control loading display
+- Graceful error handling with user-friendly messages
+
+
+## Examples
+
+### Basic Search Implementation
+```jsx
+import { ProductList } from '@adobe-commerce/storefront-search-dropin';
+
+function SearchResults() {
+  const handleProductRoute = (product) => {
+    return `/products/${product.sku}`;
+  };
+
+  return (
+    <ProductList
+      minQueryLength={2}
+      pageSize={24}
+      routeProduct={handleProductRoute}
+    />
+  );
+}
