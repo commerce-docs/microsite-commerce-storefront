@@ -485,7 +485,7 @@ async function config() {
                         },
                         { label: 'Styles', link: '/dropins/product-discovery/styles/' },
                         { label: 'Slots', link: '/dropins/product-discovery/slots/' },
-                        // { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
+                        { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                       ]
                     },
                     {
