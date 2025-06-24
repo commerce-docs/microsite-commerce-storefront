@@ -108,7 +108,8 @@ async function config() {
       '/discovery/architecture': `${basePath}/setup/discovery/architecture`,
       '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
-      '/dropins/all/eventbus': `${basePath}/sdk/reference/events`
+      '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
+      '/dropins/other/recommendations': `${basePath}/dropins/recommendations`
     },
     integrations: [
       starlight({
@@ -434,6 +435,40 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Personalization',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/personalization/' },
+                        { label: 'Initialization', link: '/dropins/personalization/initialization/' },
+                        { label: 'Functions', link: '/dropins/personalization/functions/' },
+                        { label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Recommendations',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/recommendations/' },
+                        { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
+                          ]
+                        },
+                        { label: 'Styles', link: '/dropins/recommendations/styles/' },
+                        { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Slots', link: '/dropins/recommendations/slots/' },
+                        { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
@@ -481,16 +516,32 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Wishlist',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/wishlist/' },
+                        { label: 'Installation', link: '/dropins/wishlist/installation/' },
+                        {
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'Wishlist', link: '/dropins/wishlist/containers/wishlist/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
+                          ]
+                        },
+                        { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Styles', link: '/dropins/wishlist/styles/' },
+                      ]
+                    },
+                    {
                       label: 'Other',
                       collapsed: true,
                       items: [
                         {
                           label: 'Live Search',
                           link: '/dropins/other/search/'
-                        },
-                        {
-                          label: 'Product Recommendations',
-                          link: '/dropins/other/recommendations/'
                         },
                       ],
                     },
@@ -801,8 +852,16 @@ async function config() {
                       link: 'merchants/get-started/multistore/'
                     },
                     {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                    {
+                      label: 'Product Recommendations setup',
+                      link: 'merchants/get-started/product-recommendations/'
                     },
                   ],
                 },
