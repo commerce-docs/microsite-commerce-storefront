@@ -483,8 +483,7 @@ async function config() {
                             { label: 'SearchBarResult', link: '/dropins/product-discovery/containers/search-bar-result/' },
                           ]
                         },
-                        // { label: 'Styles', link: '/dropins/recommendations/styles/' },
-                        // { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Styles', link: '/dropins/product-discovery/styles/' },
                         { label: 'Slots', link: '/dropins/product-discovery/slots/' },
                         // { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
                       ]
