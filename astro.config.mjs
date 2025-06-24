@@ -74,6 +74,7 @@ async function config() {
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-project`,
+      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
       '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
       '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
       '/product-details/pdp-installation': `${basePath}/dropins/product-details/installation`,
@@ -97,8 +98,7 @@ async function config() {
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
-      '/merchant/multistore': `${basePath}/merchants/get-started/multistore`,
-      '/merchants/multistore': `${basePath}/merchants/get-started/multistore`,
+      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
       '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
       '/dropins/all/enriching': `${basePath}/merchants/get-started/enrichment`,
       '/dropins/all/experimenting': `${basePath}/merchants/get-started/experiments`,
@@ -134,6 +134,55 @@ async function config() {
         lastUpdated: true,
         plugins: [
           starlightSidebarTopics([
+            {
+              label: 'Merchants',
+              link: 'merchants/get-started/',
+              icon: 'seti:svg',
+              items: [
+                {
+                  label: 'Getting started',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
+                    },
+                    {
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
+                      label: 'Product recommendations',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
+                    {
+                      label: 'Terms and conditions',
+                      link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Content localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                  ],
+                },
+              ],
+            },
             {
               label: 'Developers',
               link: '/get-started/',
@@ -441,7 +490,8 @@ async function config() {
                         { label: 'Overview', link: '/dropins/personalization/' },
                         { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                         { label: 'Functions', link: '/dropins/personalization/functions/' },
-                        { label: 'Containers',
+                        {
+                          label: 'Containers',
                           collapsed: true,
                           items: [
                             { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
@@ -824,46 +874,6 @@ async function config() {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
                     }]
-                },
-              ],
-            },
-            {
-              label: 'Merchants',
-              link: 'merchants/get-started/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Getting started',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Multi-store setup',
-                      link: 'merchants/get-started/multistore/'
-                    },
-                    {
-                      label: 'Personalization',
-                      link: 'merchants/get-started/personalization/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                    {
-                      label: 'Product Recommendations setup',
-                      link: 'merchants/get-started/product-recommendations/'
-                    },
-                  ],
                 },
               ],
             },
