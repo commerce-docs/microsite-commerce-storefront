@@ -1,0 +1,99 @@
+---
+title: SearchBarResults container
+description: Learn about the SearchBarResults container and configurations for the Product Discovery drop-in component.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `SearchBarResults` container displays a dropdown list of product search suggestions that appears when users type in the search input. It listens for search input events, manages the display state of results, and provides options to view individual products or execute a full search.
+
+## Configurations
+
+The `SearchBarResults` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['products', 'Product[]', 'No', 'Initial array of products to display as search suggestions. Default: empty array.'],
+    ['productRouteSearch', 'function', 'No', 'Callback function that returns a URL for a specific product. Receives a Product object as parameter.'],
+    ['routeSearch', 'function', 'No', 'Callback function called when "View All" is clicked. Receives the search query as a parameter.'],
+    ['slots', 'object', 'No', 'Allows passing custom components for ProductImage, ProductName, and ProductPrice slots.'],
+  ]}
+/>
+
+## Slots
+
+The `SearchBarResults` container supports the following slots:
+
+* **ProductImage** - Customizes the product image display in search suggestions
+* **ProductName** - Customizes the product name display in search suggestions
+* **ProductPrice** - Customizes the product price display in search suggestions
+
+Each slot receives a `context` object containing:
+- `productItem` - The Product object for the current item
+- `defaultImageProps` - Default image properties (for ProductImage slot only)
+
+{/* ## Events
+
+The `SearchBarResults` container listens to and emits the following events:
+
+### Listens to:
+* **search-input/result** - Listens for search suggestion results to update the displayed products
+
+### Emits:
+* **search-input/result** - Emitted when closing results to clear the suggestions
+* **search/request** - Emitted when "View All" button is clicked to trigger a full search */}
+
+## Features
+
+### Automatic results display
+
+The container automatically shows and hides search results based on:
+
+- Whether there are search results available
+- Whether a search query is present
+- The current display state
+
+### Event-driven updates
+
+The container listens for `search-input/result` events from the `SearchBarInput` container to update the displayed suggestions in real-time.
+
+### Product navigation
+
+Each product suggestion can be clicked to navigate to the product page using the `productRouteSearch` callback function.
+
+### View all functionality
+
+The **View All** button allows users to execute a full search query, typically navigating to a search results page.
+
+## Example
+
+```jsx
+import { SearchBarResults } from '@adobe-commerce/storefront-search-dropin';
+
+function SearchSuggestions() {
+  const handleProductRoute = (product) => {
+    return `/products/${product.sku}`;
+  };
+
+  const handleViewAllSearch = (query) => {
+    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+  };
+
+  return (
+    <SearchBarResults
+      products={[]}
+      productRouteSearch={handleProductRoute}
+      routeSearch={handleViewAllSearch}
+      slots={{
+        ProductImage: {
+          component: CustomProductImage
+        },
+        ProductPrice: {
+          component: CustomPriceDisplay
+        }
+      }}
+    />
+  );
+}
