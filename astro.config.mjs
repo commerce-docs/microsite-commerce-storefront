@@ -471,7 +471,7 @@ async function config() {
                       collapsed: true,
                       items: [
                         { label: 'Overview', link: '/dropins/product-discovery/' },
-                        // { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        { label: 'Installation', link: '/dropins/product-discovery/installation/' },
                         {
                           label: 'Containers',
                           collapsed: true,

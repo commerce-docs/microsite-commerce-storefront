@@ -1,0 +1,282 @@
+---
+title: Product Discovery Installation
+description: Learn how to install the product discovery drop-in component into your site.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Badge } from '@astrojs/starlight/components';
+import Callouts from '@components/Callouts.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This guide will help you install and configure the product discovery drop-in component in your storefront.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- Adobe Commerce instance with Product Discovery enabled
+- Access to your store's GraphQL endpoint
+- Required API keys and credentials
+- Node.js and npm installed on your development environment
+
+## Step-by-step
+
+Use the following steps to install the product disovery component:
+
+:::note[Edge Delivery Service]
+These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as a static HTML or React framework.  Scroll to bottom of the page for preferred installation via the Boilerplate template.
+:::
+
+<Tasks>
+
+<Task>
+
+### Install the packages
+
+Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and product discovery (`@dropins/storefront-product-discovery`) packages.
+
+<Tabs>
+  <TabItem label="NPM" icon="seti:npm">
+
+    ```bash frame="none"
+    npm install @dropins/tools @dropins/storefront-product-discovery
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+
+    ```html title="index.html" del={"Replace with actual URLs":5-7}
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Storefront</title>
+
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-product-discovery@latest"></script>
+    </head>
+    ```
+
+  </TabItem>
+</Tabs>
+
+:::note[Install @dropins/tools]
+All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+:::
+
+</Task>
+
+<Task>
+### Map the packages
+
+In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
+
+<Tabs>
+<TabItem label="node_modules" icon="seti:npm">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the product discovery (@dropins/storefront-product-discovery):
+
+  ```html title="head.html"
+  <script type="importmap">
+    {
+      "imports": {
+        "@dropins/tools/": "/node_modules/@dropins/tools/",
+        "@dropins/storefront-product-discovery/": "/node_modules/@dropins/storefront-product-discovery/",
+      }
+    }
+  </script>
+  <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+    <TabItem label="custom" icon="seti:folder">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the product discovery (@dropins/storefront-product-discovery):
+
+    ```html title="head.html"
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "/scripts/__dropins__/tools/",
+          "@dropins/storefront-product-discovery/": "/scripts/__dropins__/storefront-product-discovery/",
+        }
+      }
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+    This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the product discovery (@dropins/storefront-product-discovery):
+
+    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
+    <head>
+      <script type="importmap">
+        {
+          "imports": {
+
+            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
+            "@dropins/storefront-product-discovery/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-product-discovery@latest",
+          }
+        }
+      </script>
+    </head>
+    ```
+
+  </TabItem>
+
+</Tabs>
+
+With the `importmap` defined for both runtime and build-time environments, you can now **import the required files** from these packages into your product list page block as described in the next step.
+
+</Task>
+
+<Task>
+### Initalize the drop-in
+
+The code below shows how to register the product discovery component, configure place holders and translation files, as well as configuring GraphQL endpoint and header settings. You can add these functions as a script to your website and import the script on blocks where product discovery components are rendered.
+
+```js title="product-dicovery-initializer.js"
+
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize, setFetchGraphQlHeaders, setEndpoint } from '@dropins/storefront-product-discovery/api.js';
+import { getHeaders } from '@dropins/tools/lib/aem/configs.js';
+import { initializeDropin } from './index.js';
+import { fetchPlaceholders, commerceEndpointWithQueryParams } from '../commerce.js';
+
+await initializeDropin(async () => {
+    setEndpoint(await commerceEndpointWithQueryParams());
+    setFetchGraphQlHeaders((prev) => ({ ...prev, ...getHeaders('cs') }));
+
+    const labels = await fetchPlaceholders('placeholders/search.json');
+    const langDefinitions = {
+        default: {
+        ...labels,
+        },
+    };
+
+    return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+
+```
+
+
+</Task>
+
+<Task>
+### Import the required files
+
+Import the required files from the drop-in components tools (`@dropins/tools/fetch-graphql.js'`, `@dropin/tools/initializers.js`), the product discovery drop-in (`@dropins/storefront-product-discovery`), and the initialzer file created in previous step into a JavaScript file for your product list page block, and header block. The example here shows the imports added to a `product-list-page.js` file and to a `header.js` file. These imports constitute the minimum imports you need to create a fully functioning product discovery for your site:
+<Tabs>
+    <TabItem label="product-list-page.js">
+        ```js title="product-list-page.js"
+
+        // component tools
+        import { initializers } from '@dropins/tools/initializer.js';
+        import { events } from '@dropins/tools/event-bus.js';
+
+        // drop-in component functions
+        import * as pkg from '@dropins/storefront-product-discovery/api.js';
+
+        // Drop-in component provider
+        import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+
+        // Drop-in component containers
+        import ProductList from '@dropins/storefront-product-discovery/containers/ProductList.js';
+        import Facets from '@dropins/storefront-product-discovery/containers/Facets.js';
+        import ResultsInfo from '@dropins/storefront-product-discovery/containers/ResultsInfo.js';
+
+        // Initializers
+        import '../../scripts/initializers/product-discovery-initializer.js';
+
+        ```
+    </TabItem>
+    <TabItem label="header.js">
+        ```js title="header.js"
+        // component tools
+        import { initializers } from '@dropins/tools/initializer.js';
+        import { events } from '@dropins/tools/event-bus.js';
+
+        // drop-in component functions
+        import * as pkg from '@dropins/storefront-product-discovery/api.js';
+
+        // Drop-in component provider
+        import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+
+        // Drop-in component containers
+        import SearchBarInput from '@dropins/storefront-product-discovery/containers/SearchBarInput.js';
+        import SearchBarResult from '@dropins/storefront-product-discovery/containers/SearchBarResults.js';
+
+        // Initializers
+        import '../../scripts/initializers/product-discovery-initializer.js';
+        ```
+    </TabItem>
+</Tabs>
+</Task>
+
+<Task>
+### Configure and render the product discovery drop-in components
+
+Render the product dicovery drop-in components on the page.  The example below shows how to render the product discovery drop-in components in a `product-list-page.js` file. The example also shows how to render the search bar in a `header.js` file.
+
+<Tabs>
+    
+    <TabItem label="product-list-page.js">
+    ```js title="product-list-page.js"
+    // Create a fragment to hold the product discovery drop-in components
+    const fragment = document.createRange().createContextualFragment(`
+        <div class="search__input"></div>
+        <div class="search__wrapper">
+        <div class="search__left-column">
+            <div class="search__result-info"></div>
+            <div class="search__facets"></div>
+        </div>
+        <div class="search__right-column">
+            <div class="search__product-list"></div>
+        </div>
+        </div>
+    `);
+
+    const $resultInfo = fragment.querySelector('.search__result-info');
+    const $facets = fragment.querySelector('.search__facets');
+    const $productList = fragment.querySelector('.search__product-list');
+
+    // Render the product discovery drop-in components
+    provider.render(ResultsInfo, { })($resultInfo);
+    provider.render(Facets, { })($facets);
+    provider.render(ProductList, { })($productList);
+
+    block.appendChild(fragment);
+
+    ```
+    </TabItem>
+    <TabItem label="header.js">
+    ```js title="header.js"
+    // Create a fragment to hold the search bar
+    const search = document.createRange().createContextualFragment(`
+    <div class="search-wrapper nav-tools-wrapper">
+        <button type="button" class="nav-search-button">Search</button>
+        <div class="nav-search-input nav-search-panel nav-tools-panel">
+        <div id="search-bar-input"></div>
+        <div class="search-bar-result"></div>
+        </div>
+    </div>
+    `);
+
+    //Append fragment to page
+    block.append(search);
+
+    const searchPanel = navTools.querySelector('.nav-search-panel');
+    const searchButton = navTools.querySelector('.nav-search-button');
+    const searchInput = searchPanel.querySelector('#search-bar-input');
+    const searchResult = searchPanel.querySelector('.search-bar-result');
+
+    // Render the search bar
+    provider.render(SearchBarInput, { })(searchInput);
+    provider.render(SearchBarResult, { })(searchResult);
+
+    ```
+    </TabItem>
+</Tabs>
+</Task>
+</Tasks>
+
+The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) includes all of the necessary drop-in components and configurations to help you get started quickly, so Adobe recommends relying on the boilerplate instead of installing, configuring, and integrating the drop-in components individually.
+
