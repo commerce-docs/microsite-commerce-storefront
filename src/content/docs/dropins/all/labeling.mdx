@@ -24,21 +24,17 @@ In this topic, you will learn how to update drop-in component labels by using th
 
 <Vocabulary>
 
-### Placeholders file
+### Placeholders files
 
-A `placeholders` content sheet where you can manage labels for your storefront, which includes localization. See the [Placeholders file](/resources/placeholders/) for more information.
+Multiple JSON files to manage storefront labels, including localization. Each drop-in component has its own placeholders file (e.g., `cart.json`, `checkout.json`, `pdp.json`). See the [Placeholders files](/resources/placeholders/) for more information.
 
 ### Language objects
 
 A JavaScript object (named `langDefinitions` by convention) that contains key-value pairs for UI text labels in a specific language. The object is used to override the default dictionary with the placeholder file's keys and values.
 
-### Drop-in component dictionaries
-
-JSON files that define the shape, keys, and default values for labels and text within a drop-in component. Each drop-in component has a default dictionary file: `i18n/en_US.json`. But drop-in components can contain multiple dictionary files as the site is localized for other languages, including `fr_CA.json` for French, `de_DE.json` for German, and so on. The documentation for each drop-in component includes the default dictionary for that drop-in component. As an example, see the [dictionary](/dropins/product-details/dictionary) for the product details page drop-in component.
-
 ### Labeling
 
-Add or change UI text labels within Commerce drop-in components. Merchants can update storefront UI labels by editing the placeholders file in their content directory.
+To add or change UI text labels within Commerce drop-in components. Merchants use placeholer files to quickly change the default UI labels for drop-in components.
 
 ### Localizing
 
@@ -51,7 +47,7 @@ To adapt UI text labels and formatting for a specific language. This process inc
 Labeling drop-in components in the storefront involves two files:
 
 <Steps>
-1. The **placeholders file** that provides the default drop-in component UI labels that merchants can quickly update as needed.
+1. The **placeholders files** that provide the default drop-in component UI labels that merchants can quickly update as needed.
 2. The **drop-in block** (examples, `product-details.js`, `cart.js`) where you add code to fetch, map, and override the drop-in component dictionary at runtime.
 </Steps>
 
@@ -63,7 +59,7 @@ The following diagram shows the process for adding and overriding labels and tex
 
 <Callouts>
 
-1. **Placeholder files**. Merchants can quickly update the labels in their storefront from one file: `placeholders`, which is either a Google Sheet or Microsoft Excel file.
+1. **Placeholder files**. Merchants can change the storefront labels by changing the values in the placeholder JSON files, which are organized by drop-in components—`cart.json`, `checkout.json`, `pdp.json`, and so on.
 1. **Import function**. You need to import the `fetchPlaceholders` function from the boilerplate's `commerce.js` file.
 1. **Fetch placeholders.** Use the `fetchPlaceholders` function to retrieve the `placeholders` key-value pairs from the content folder.
 1. **Override default dictionary**. Override the `default` property from the `langDefinitions` object with the keys and values from the `placeholder` object.
@@ -73,7 +69,15 @@ The following diagram shows the process for adding and overriding labels and tex
 
 ## Step-by-step
 
-In the boilerplate code, the UI text labels in drop-in components come from the `placeholders` file. Using this file as the source for all storefront UI labels across drop-in components makes it easy for merchants to make label changes without developer involvement.
+In the boilerplate code, the UI text labels in drop-in components come from the placeholder files. By using these files as the source for all storefront UI labels, merchants can easily change labels without involving developers.
+
+There are two things to be aware of when using the `fetchPlaceholders()` function:
+
+1. **During initialization**:  
+   You must provide the path to the drop-in’s placeholders file. This file will be fetched and merged into the existing placeholders object. Subsequent calls to `fetchPlaceholders()` without a path will return the merged object containing all fetched labels.
+
+2. **After initialization**:  
+   You can call `fetchPlaceholders()` without a path to retrieve all initialized placeholders as a single object. This object can be accessed from a Block or anywhere else in the project.
 
 <Tasks>
 
@@ -88,9 +92,32 @@ import { fetchPlaceholders } from '../../scripts/commerce.js';
 </Task>
 
 <Task>
-### Fetch placeholders
+### Initialize placeholders with path
 
-Within the `decorate` function, use the `fetchPlaceholders` function to retrieve the `placeholders` language object from the content folder. The following diagram and code snippet shows how to fetch the placeholders.
+During initialization, you must use the `fetchPlaceholders()` function using an argument to the path to your drop-in's placeholders file. This fetches and merges the placeholders into the global object.
+
+```javascript
+// Initialize placeholders for this drop-in
+const placeholders = await fetchPlaceholders('placeholders/cart.json');
+
+const langDefinitions = {
+  default: {
+    ...placeholders,
+  },
+};
+
+// Register Initializers
+initializers.mountImmediately(initialize, {
+  langDefinitions,
+  //...
+});
+```
+</Task>
+
+<Task>
+### Fetch placeholders after initialization
+
+After initialization, you can use the `fetchPlaceholders` function without a path to retrieve all merged placeholders. The following diagram and code snippet shows how to fetch the placeholders.
 
 <Diagram caption="Using placeholder labels in your EDS commerce block">
   ![Using placeholder labels in your EDS commerce block](@images/LabelUsage.svg)
@@ -104,36 +131,6 @@ export default async function decorate(block) {
   const $elem = document.createElement('div');
   $elem.innerText = labels.Cart.PriceSummary.shipping.label;
 }
-```
-</Task>
-
-<Task>
-### Override default dictionary
-
-Within the `decorate` function, override the drop-in component's default dictionary with the placeholders object.
-
-```javascript
-// Get labels from placeholders sheet
-const langDefinitions = {
-  default: {
-    ...placeholders,
-  },
-};
-```
-</Task>
-
-<Task>
-### Register updated dictionary
-
-Use the `initializers.mountImmediately` API to register the new dictionary. The following code snippet shows how to register the new `langDefinitions` object.
-
-```javascript
-// Register Initializers
-initializers.mountImmediately(initialize, {
-  langDefinitions,
-  defaultLocale: locale,
-  models
-});
 ```
 </Task>
 
