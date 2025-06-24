@@ -1,0 +1,143 @@
+---
+title: Product Recommendations functions
+description: Learn about the API functions provided by the product recommendations drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+
+This topic provides the details and instructions you need to use the functions provided by the product recommendations drop-in component.
+
+## getRecommendations
+
+The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format.
+
+```ts
+export const getRecommendations = async (params: {
+  pageType: string;
+  currentSku: string;
+  cartSkus?: string[];
+  userPurchaseHistory?: any[];
+  userViewHistory?: any[];
+}): Promise<RecommendationUnitModel | null>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['pageType', 'string', 'Yes', 'The type of page where recommendations are being displayed.'],
+    ['currentSku', 'string', 'Yes', 'The SKU of the current product being viewed.'],
+    ['cartSkus', 'string[]', 'No', 'An array of SKUs currently in the user\'s cart.'],
+    ['userPurchaseHistory', 'any[]', 'No', 'An array containing the user\'s purchase history.'],
+    ['userViewHistory', 'any[]', 'No', 'An array containing the user\'s view history.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a `RecommendationUnitModel` object or null. The recommendations data is transformed into a standardized format before being returned.
+
+### RecommendationUnitModel
+
+The `RecommendationUnitModel` object has the following shape:
+
+```ts
+export type PageType = 'Product'; // Always hardcoded to 'Product' per requirements
+
+export interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+
+export interface Item {
+  uid: string;
+  sku: string;
+  name: string;
+  urlKey: string;
+  images: ItemImage[];
+  price: FinalPrice;
+  priceRange?: {
+    minimum?: FinalPrice;
+    maximum?: FinalPrice;
+  };
+  visibility: string;
+  queryType: string;
+  itemType: string;
+}
+
+interface ItemImage {
+  label: string;
+  roles: string[];
+  url: string;
+}
+
+export interface Price {
+  value: number | null;
+  currency: string | null;
+}
+
+export interface FinalPrice {
+  final?: {
+    amount?: Price;
+  };
+}
+
+export interface RecommendationsResponse {
+  results: RecommendationUnitModel[];
+  totalResults: number;
+}
+
+export interface GraphQLResponse {
+  errors?: Array<{ message: string }>;
+  data?: {
+    recommendations: RecommendationsResponse;
+  };
+}
+```
+
+### Events
+
+The event bus emits the `recommendations/data` event with the transformed recommendations data as the payload.
+
+### Usage
+
+To get recommendations for a product page:
+
+```js
+import { getRecommendations } from '@/recommendations/api/getRecommendations';
+
+getRecommendations({
+  pageType: 'Product',
+  currentSku: 'VA19-GO-NA',
+  cartSkus: ['VT02-PE-M', 'VA19-GO-NA'],
+  userPurchaseHistory: [],
+  userViewHistory: []
+});
+```
+
+To get recommendations with user history:
+
+```js
+import { getRecommendations } from '@/recommendations/api/getRecommendations';
+
+getRecommendations({
+  pageType: 'Product',
+  currentSku: 'VA19-GO-NA',
+  userPurchaseHistory: [
+    { sku: 'VT02-PE-M', timestamp: '2024-03-20T10:00:00Z' }
+  ],
+  userViewHistory: [
+    { sku: 'VA19-GO-NA', timestamp: '2024-03-20T09:00:00Z' }
+  ]
+});
+```
