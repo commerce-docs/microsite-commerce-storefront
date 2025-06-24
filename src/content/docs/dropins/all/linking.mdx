@@ -3,74 +3,42 @@ title: Localizing links
 description: Learn how to programmatically manage localized links.
 ---
 
-The best practice for localizing URL text is to store it within the content. Alternatively, you can use functions from `scripts/scripts.js` to localize links programmatically."
+The best practice for localizing URL text is to store it within the content. Alternatively, you can use functions from `scripts/commerce.js` to localize links programmatically."
 
 ## decorateLinks
 
-The `decorateLinks` function automatically prepends all your content links with the root path of each language.
+The `decorateLinks` function automatically prepends all content links with the root path for each language.
+
+This function is enabled by default in the Commerce Boilerplate via `scripts/script.js`.
 
 ```js
-/**
- * Decorates links.
- * @param {Element} main The main element
- */
-export function decorateLinks(main) {
-  const root = getRootPath();
-  if (root === '/') return;
-  const links = main.querySelectorAll('a');
+import { decorateLinks } from './commerce.js`
 
-  links.forEach((link) => {
-    const url = new URL(link.href, window.location.origin);
-    const { pathname } = url;
-
-    // If the link is already localized, do nothing
-    if (pathname.startsWith('//') || pathname.startsWith(root)) return;
-
-    if (
-      link.href.startsWith('/')
-      || link.href.startsWith(window.location.origin)
-    ) {
-      link.href = `${root}${url.pathname.substring(1)}${url.search}${url.hash}`;
-    }
-  });
-}
-```
-
-This function is disabled by default. To enable the function, add it to your main element. The boilerplate handles it within `scripts/scripts.js` as follows.
-
-
-```js
 /**
  * Decorates the main element.
  * @param {Element} main The main element
  */
-// eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
-  // hopefully forward compatible button decoration
+  decorateLinks(main); // enables localizationb of links
   decorateButtons(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
-  // decorateLinks(main); // author can decide when to localize links
 }
 ```
 
 ## rootLink
 
-The rootLink function prepends the appropriate language root path to a given link. Use it within a block to localize links from a drop-in for loading scripts, styles or links to other pages within a drop-in. This approach ensures consistency across languages and store views.
-
+The `rootLink` function prepends the appropriate language root path to a given link. Use it within a block to localize links from a drop-in for loading scripts, styles or links to other pages within a drop-in. This approach ensures consistency across languages and store views.
 
 ```js
-/**
- * Decorates links.
- * @param {string} [url] url to be localized
- */
-export function rootLink(link) {
-  const root = getRootPath().replace(/\/$/, '');
+import { rootLink } from '../../scripts/commerce.js';
 
-  // If the link is already localized, do nothing
-  if (link.startsWith(root)) return link;
-  return `${root}${link}`;
+export async function decorateMyBlock(block) {
+  const atag = document.createElement('a');
+  atag.innerText = 'My Link';
+  atag.href = rootLink('/my-path'); // returns the localized url for '/my-path'
+  // ...
 }
 ```
