@@ -1,0 +1,175 @@
+---
+title: Product Discovery slots
+description: Learn about the slots provided in the Product Discovery drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+Learn about the slots provided in the Product Discovery drop-in component.
+
+[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
+
+## ProductList slots
+
+The slots for the `ProductList` container allow you to customize the appearance of the product list.
+
+```js
+interface ProductListProps
+
+slots?: {
+    Header?: SlotProps;
+    ProductActions?: SlotProps;
+    ProductPrice?: SlotProps;
+    ProductName?: SlotProps;
+    ProductImage?: SlotProps;
+    Footer?: SlotProps;
+};
+```
+
+### Header and Footer slot
+
+The `Header` and `Footer` slot allow you to change content to the top and bottom of the `ProductList` container.
+
+The context object passed to the callback function includes a `productList` property that contains the product list data as an array of product objects.
+
+
+### Product slots
+
+The `Product<type>` slots allow you to add content to the `ProductListItem` component for each product in search query results.
+
+The context object passed to the callback function includes an `product` property that contains the product data with the following type:
+
+```typescript
+export interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  shortDescription: string;
+  url: string;
+  urlKey: string;
+  metaTitle: string;
+  metaKeywords: string;
+  metaDescription: string;
+  lowStock: boolean;
+  links: any[];
+  images: ProductImage[];
+  description: string;
+  externalId: string;
+  inputOptions: any[];
+  addToCartAllowed: boolean;
+  price?: ProductViewPrice;
+  priceRange?: {
+    minimum: ProductViewPrice;
+    maximum: ProductViewPrice;
+  };
+  inStock: boolean;
+  typename: string;
+  initialized?: boolean;
+}
+
+export interface ProductViewPrice {
+  final: ProductPrice;
+  regular: ProductPrice;
+  roles?: string[];
+}
+
+export interface ProductPrice {
+  amount: {
+    value: number;
+    currency: string;
+  };
+}
+
+export interface ProductImage {
+  label: string;
+  roles: string[];
+  url: string;
+}
+```
+
+#### Example implementation
+
+Here is an example of how to use the `ProductName` slot to prepend the SKU of each product in the list:
+
+```js
+provider.render(ProductList, {
+    slots: {
+          ProductName: (ctx) => {
+            const skuDiv = document.createElement('div');
+            skuDiv.innerHTML = ctx.product.sku;
+            ctx.prependSibling(skuDiv);
+          },
+        },
+})($productListContainer);
+```
+
+## Facets slots
+
+The slots for the `Facets` container allow you to customize the appearance of the facets.
+
+```js
+interface FacetsProps
+
+slots?: {
+    Facet?: SlotProps;
+    SelectedFacets?: SlotProps;
+    Facets?: SlotProps;
+  };
+```
+
+### Facet slot
+The `Facet` slot allows you to customize the appearance of each individual facet in the list of facets. 
+
+The context object passed to the callback function includes a `data` property that contains the facet data with the following types:
+
+```typescript
+export interface SearchFacet {
+  title: string;
+  attribute: string;
+  buckets: FacetBucket[];
+}
+
+export interface FacetBucket {
+  title: string;
+  count: number;
+  __typename: string;
+  from?: number;
+  to?: number;
+  selected?: boolean;
+}
+```
+
+### Facets slot
+The `Facets` slot allows you to customize the appearance of the entire list of facets.
+
+The context object passed to the callback function includes a `data` property that contains an array of `SearchFacet` objects, which represent the facets available for filtering.
+
+### SelectedFacets slot
+The `SelectedFacets` slot allows you to customize the appearance of the list of selected facets.
+
+The context object passed to the callback function includes a `data` property that contains an array of `SearchFacet` objects, which represent the facets that have been selected by the user in current search results.
+
+## ResultsInfo slots
+
+The slots for the `ResultsInfo` container allow you to customize the appearance of the search phrase and total count of products.
+
+```js
+interface ResultsInfoProps
+slots?: {
+    SearchPhrase?: SlotProps;
+    TotalCount?: SlotProps;
+};
+```
+
+### SearchPhrase slot
+
+The `SearchPhrase` slot allows you to customize the appearance of the search phrase or category path used in the current search results.
+
+The context object passed to the callback function includes a `searchResult` property that contains the info about the current search request and result.
+
+### TotalCount slot
+
+The `TotalCount` slot allows you to customize the appearance of the total count of products matching the current search results.
+
+The context object passed to the callback function includes a `searchResult` property that contains the info about the current search request and result.
