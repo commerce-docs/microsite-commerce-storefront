@@ -109,7 +109,8 @@ async function config() {
       '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
       '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
-      '/dropins/other/recommendations': `${basePath}/dropins/recommendations`
+      '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
+      '/dropins/other/search': `${basePath}/dropins/product-discovery`
     },
     integrations: [
       starlight({
@@ -520,6 +521,28 @@ async function config() {
                         { label: 'Functions', link: '/dropins/recommendations/functions/' },
                         { label: 'Slots', link: '/dropins/recommendations/slots/' },
                         { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
+                      ]
+                    },
+                    {
+                      label: 'Product Discovery',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/product-discovery/' },
+                        { label: 'Installation', link: '/dropins/product-discovery/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/product-discovery/containers/product-list/' },
+                            { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
+                            { label: 'ResultsInfo', link: '/dropins/product-discovery/containers/results-info/' },
+                            { label: 'SearchBarInput', link: '/dropins/product-discovery/containers/search-bar-input/' },
+                            { label: 'SearchBarResults', link: '/dropins/product-discovery/containers/search-bar-results/' },
+                          ]
+                        },
+                        { label: 'Styles', link: '/dropins/product-discovery/styles/' },
+                        { label: 'Slots', link: '/dropins/product-discovery/slots/' },
+                        { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                       ]
                     },
                     {
