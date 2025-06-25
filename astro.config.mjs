@@ -141,7 +141,16 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
-                  label: 'Getting started',
+                  label: 'Storefront Builder',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/storefront-builder/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Storefront Customization',
                   items: [
                     {
                       label: 'Introduction',
@@ -232,6 +241,10 @@ async function config() {
                         {
                           label: 'Storefront configuration',
                           link: '/setup/configuration/commerce-configuration/'
+                        },
+                        {
+                          label: 'Multistore setup',
+                          link: '/setup/configuration/multistore-setup/'
                         },
                         {
                           label: 'Multistore setup',
