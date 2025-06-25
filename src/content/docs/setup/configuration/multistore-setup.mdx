@@ -1,6 +1,6 @@
 ---
 title: Multi-Store Implementation Walkthrough
-description: A hands-on guide demonstrating the complete multi-store setup process from file structure creation to store switcher configuration.
+description: Learn how to set up a multi-store configuration from file structure creation to store switcher configuration.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
@@ -8,6 +8,7 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import { Code } from '@astrojs/starlight/components';
 import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
 
 This tutorial provides a comprehensive walkthrough of setting up multi-store functionality for an Adobe Commerce storefront using Edge Delivery Services. It demonstrates the complete process from initial planning to final validation, using a real-world scenario where the Acme brand expands from the United States to the Canadian market.
 
@@ -23,14 +24,14 @@ In this walkthrough, we'll demonstrate how to:
 ## Scenario
 
 The Acme brand is expanding its international presence and wants to target the Canadian market with two new locales:
-- **Canadian English** (en_ca)
-- **Canadian French** (fr_ca)
+- **Canadian English** (en-ca)
+- **Canadian French** (fr-ca)
 
 ## Prerequisites
 
 Before beginning this implementation, ensure:
 - Your storefront repository is linked to Document Authoring environment (da.live) via Edge Delivery Services
-- You have access to Adobe Commerce Admin for store view configuration
+- You have access to Adobe Commerce Admin for [store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views)
 - Your `fstab.yaml` file is properly configured
 - Your `config.json` file is linked to the Adobe Commerce instance
 
@@ -44,9 +45,10 @@ Before beginning this implementation, ensure:
 Before implementing multi-store functionality, confirm your environment is properly configured.
 
 <Steps>
-1. **Check the `fstab.yaml` file** in your repository to ensure it's linked to the Document Authoring environment at da.live.
+1. **Check the `fstab.yaml` file** in your repository to ensure it's linked to the Document Authoring environment at da.live, as described in <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/get-started/multistore/#folder-mapping" text="multistore/#folder-mapping" />
 
-2. **Verify the `config.json` file** is connected to your Adobe Commerce instance to enable content preview, publishing, and editing.
+2. **Verify the `config.json` file** is connected to your Adobe Commerce instance to enable content preview, publishing, and editing as described in <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/get-started/multistore/#site-config" text="multistore/#site-config" />
+
 </Steps>
 
 <Aside type="caution" title="Environment setup">
@@ -65,17 +67,17 @@ Set up the folder structure in your Document Authoring environment to support th
 
 2. **Create the Canadian English folder**:
    - Select "New folder"
-   - Name it `en_ca`
+   - Name it `en-ca`
 
 3. **Create the French folder**:
    - Select "New folder"  
-   - Name it `fr_ca`
+   - Name it `fr-ca`
 
 4. **Copy content from the main root folder** into each new store view folder:
    - Select all content from the main root folder
    - Copy the content
-   - Navigate to the `en_ca` folder and paste
-   - Repeat for the `fr_ca` folder
+   - Navigate to the `en-ca` folder and paste
+   - Repeat for the `fr-ca` folder
 </Steps>
 
 <Aside type="note" title="Copying content">
@@ -95,11 +97,11 @@ Create the corresponding store views in Adobe Commerce Admin to match your conte
 2. **Create the Canadian English store view**:
    - Follow the store view creation process
    - Configure as: one website, one store, one store view
-   - Set the store view code to match your folder name (`en_ca`)
+   - Set the store view code to match your folder name (`en-ca`)
 
 3. **Create the Canadian French store view**:
    - Repeat the process for the French locale
-   - Set the store view code to match your folder name (`fr_ca`)
+   - Set the store view code to match your folder name (`fr-ca`)
 </Steps>
 
 <Aside type="note" title="Store view codes">
@@ -121,9 +123,8 @@ Modify your project's configuration files to support the new store views.
     /: https://example.mountpoint.com/:f:/r/sites/myproject
 
     folders:
-    /en/products/: /en/products/default
-    /en_ca/products/: /en_ca/products/default
-    /fr_ca/products/: /fr_ca/products/default
+    /en-ca/products/: /en-ca/products/default
+    /fr-ca/products/: /fr-ca/products/default
     ```
 
 2. **Update the `config.json` file** to include new entries under the public object:
@@ -134,27 +135,30 @@ Modify your project's configuration files to support the new store views.
         "default": {
         // default configuration
         },
-        "/en/": {},
-        "/en_ca/": {
-          "headers": {
-              "magento-store-code": "en_ca",
-              "magento-website-code": "base",
-              "magento-store-view-code": "en_ca"
-          },
-          "analytics": {
-              // store-specific analytics configuration
-          }
-          },
-          "/fr_ca/": {
-          "headers": {
-              "magento-store-code": "fr_ca", 
-              "magento-website-code": "base",
-              "magento-store-view-code": "fr_ca"
-          },
-          "analytics": {
-              // store-specific analytics configuration
-          }
-        }
+        "/en-ca/": {
+            "headers": {
+               "all": {
+                  "Store": "en-ca"
+               },
+               "cs": {
+                  "Magento-Store-Code": "ca-store",
+                  "Magento-Website-Code": "base",
+                  "Magento-Store-View-Code": "fr-ca"
+               }
+            }
+         },
+          "/ca-en/": {
+            "headers": {
+               "all": {
+                  "Store": "ca-en"
+               },
+               "cs": {
+                  "Magento-Store-Code": "ca-store",
+                  "Magento-Website-Code": "base",
+                  "Magento-Store-View-Code": "en-ca"
+               }
+            }
+         }
       }
     }
     ```
@@ -172,10 +176,10 @@ Test your new store views to ensure proper functionality before publishing.
 <Steps>
 1. **Push configuration changes** to your storefront repository.
 
-2. **Return to the content files** in both `en_ca` and `fr_ca` folders in da.live.
+2. **Return to the content files** in both `en-ca` and `fr-ca` folders in da.live.
 
 3. **Preview content files**:
-   - Navigate to the `en_ca` folder
+   - Navigate to the `en-ca` folder
    - Open the `index` file
    - Click "Preview" to test the store view
 
@@ -201,7 +205,7 @@ The session storage verification confirms that your configuration is properly lo
 Update the store switcher to properly reflect the current store view for customers.
 
 <Steps>
-1. **Navigate to the store switcher file** in the `en_ca` content folder.
+1. **Navigate to the store switcher file** in the `en-ca` content folder.
 
 2. **Update the store switcher structure** to prioritize the current store view:
    - Move "Canada English" to the top of the list
@@ -209,8 +213,8 @@ Update the store switcher to properly reflect the current store view for custome
    - Example structure:
    ```
    - Canada (CAD)
-     - [Canada (EN)](https://your-site.com/en_ca/)
-     - [Canada (FR)](https://your-site.com/fr_ca/)
+     - [Canada (EN)](https://your-site.com/en-ca/)
+     - [Canada (FR)](https://your-site.com/fr-ca/)
    - United States (USD)
      - [United States (USD)](https://your-site.com/en/)
    ```
@@ -242,7 +246,7 @@ Complete the implementation with thorough testing and team coordination.
 2. **Prepare for localization**:
    - Inform the marketing team that content folders are ready for translation
    - Provide directory structure documentation
-   - Share access to the `fr_ca` folder for French translations
+   - Share access to the `fr-ca` folder for French translations
 
 3. **Document the implementation** for future reference and team knowledge sharing.
 </Steps>
@@ -267,7 +271,7 @@ The headers section in your `config.json` is critical for proper store view func
 
 ### Folder Structure Best Practices
 
-- Use clear, consistent naming conventions (e.g., `en_ca`, `fr_ca`)
+- Use clear, consistent naming conventions (e.g., `en-ca`, `fr-ca`)
 - Ensure folder names can be used in web URLs
 - Match folder names exactly with Adobe Commerce store view codes
 - Maintain the same content structure across all store views
@@ -284,7 +288,7 @@ The headers section in your `config.json` is critical for proper store view func
 After completing this implementation:
 
 1. **Marketing Team Handoff**: Share the content folders with your marketing team for localization and translation work
-2. **Content Translation**: Begin translating content in the `fr_ca` folder for the French Canadian market
+2. **Content Translation**: Begin translating content in the `fr-ca` folder for the French Canadian market
 3. **Testing**: Conduct thorough testing across all store views and customer scenarios
 4. **Launch Planning**: Coordinate the launch of new store views with marketing and business teams
 
