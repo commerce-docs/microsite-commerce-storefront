@@ -141,6 +141,15 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
+                  label: 'Storefront Builder',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/storefront-builder/'
+                    },
+                  ],
+                },
+                {
                   label: 'Getting started',
                   items: [
                     {
