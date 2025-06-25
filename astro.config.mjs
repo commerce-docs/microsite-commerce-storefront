@@ -150,7 +150,7 @@ async function config() {
                   ],
                 },
                 {
-                  label: 'Getting started',
+                  label: 'Storefront Customization',
                   items: [
                     {
                       label: 'Introduction',
@@ -914,55 +914,6 @@ async function config() {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
                     }]
-                },
-              ],
-            },
-            {
-              label: 'Merchants',
-              link: 'merchants/get-started/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Getting started',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Multi-store setup',
-                      link: 'merchants/get-started/multistore/'
-                    },
-                    {
-                      label: 'Personalization',
-                      link: 'merchants/get-started/personalization/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                    {
-                      label: 'Product Recommendations setup',
-                      link: 'merchants/get-started/product-recommendations/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Storefront Builder',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/storefront-builder/'
-                    },
-                  ],
                 },
               ],
             },
