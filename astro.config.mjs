@@ -163,6 +163,18 @@ async function config() {
                       label: 'Using Product Visuals',
                       link: 'merchants/storefront-builder/product-visuals/'
                     },
+                    {
+                      label: 'Create a product page',
+                      link: 'merchants/storefront-builder/create-product-page/'
+                    },
+                    {
+                      label: 'Create a product campaign',
+                      link: 'merchants/storefront-builder/create-product-campaign/'
+                    },
+                    {
+                      label: 'Create an experiment',
+                      link: 'merchants/storefront-builder/create-experiment/'
+                    },
                   ],
                 },
                 {
