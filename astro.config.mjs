@@ -610,6 +610,22 @@ async function config() {
                       label: 'Create your content',
                       link: 'merchants/storefront-builder/'
                     },
+                    {
+                      label: 'Authoring with Storefront Builder',
+                      link: 'merchants/storefront-builder/content-authoring/'
+                    },
+                    {
+                      label: 'Using Content and Commerce blocks',
+                      link: 'merchants/storefront-builder/content-commerce-blocks/'
+                    },
+                    {
+                      label: 'Using the Visual Editor',
+                      link: 'merchants/storefront-builder/visual-editor/'
+                    },
+                    {
+                      label: 'Using Product Visuals',
+                      link: 'merchants/storefront-builder/product-visuals/'
+                    },
                   ],
                 },
                 {
