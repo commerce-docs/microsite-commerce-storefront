@@ -136,65 +136,7 @@ async function config() {
         plugins: [
           starlightSidebarTopics([
             {
-              label: 'Merchants',
-              link: 'merchants/storefront-builder/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Storefront Builder',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/storefront-builder/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Storefront Customization',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Personalization',
-                      link: 'merchants/get-started/personalization/'
-                    },
-                    {
-                      label: 'Product recommendations',
-                      link: 'merchants/get-started/product-recommendations/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Multistore',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/multistore/'
-                    },
-                    {
-                      label: 'Content localization',
-                      link: 'merchants/multistore/content-localization/'
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Developers',
+              label: 'Storefront Developers',
               link: '/get-started/',
               icon: 'seti:json',
               items: [
@@ -653,6 +595,64 @@ async function config() {
                   autogenerate: {
                     directory: '/releases/'
                   },
+                },
+              ],
+            },
+            {
+              label: 'Storefront Authors',
+              link: 'merchants/storefront-builder/',
+              icon: 'seti:svg',
+              items: [
+                {
+                  label: 'Getting started',
+                  items: [
+                    {
+                      label: 'Create your content',
+                      link: 'merchants/storefront-builder/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Content customizations',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
+                    },
+                    {
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
+                      label: 'Product recommendations',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
+                    {
+                      label: 'Terms and conditions',
+                      link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                  ],
                 },
               ],
             },
