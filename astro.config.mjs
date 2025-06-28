@@ -137,7 +137,7 @@ async function config() {
           starlightSidebarTopics([
             {
               label: 'Merchants',
-              link: 'merchants/get-started/',
+              link: 'merchants/storefront-builder/',
               icon: 'seti:svg',
               items: [
                 {
