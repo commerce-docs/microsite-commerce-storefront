@@ -604,19 +604,15 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
-                  label: 'Getting started',
+                  label: 'Storefront Builder',
                   items: [
                     {
                       label: 'Create your content',
                       link: 'merchants/storefront-builder/'
                     },
                     {
-                      label: 'Authoring with Storefront Builder',
-                      link: 'merchants/storefront-builder/content-authoring/'
-                    },
-                    {
-                      label: 'Using Content and Commerce blocks',
-                      link: 'merchants/storefront-builder/content-commerce-blocks/'
+                      label: 'Using the Document Authoring tool',
+                      link: 'merchants/storefront-builder/document-authoring/'
                     },
                     {
                       label: 'Using the Visual Editor',
@@ -625,6 +621,10 @@ async function config() {
                     {
                       label: 'Using Product Visuals',
                       link: 'merchants/storefront-builder/product-visuals/'
+                    },
+                    {
+                      label: 'Using Content and Commerce blocks',
+                      link: 'merchants/storefront-builder/content-commerce-blocks/'
                     },
                   ],
                 },
