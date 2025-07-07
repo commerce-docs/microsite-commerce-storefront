@@ -632,16 +632,6 @@ async function config() {
                         { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
                     },
-                    {
-                      label: 'Other',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Live Search',
-                          link: '/dropins/other/search/'
-                        },
-                      ],
-                    },
                   ]
                 },
                 {
