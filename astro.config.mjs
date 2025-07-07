@@ -226,9 +226,20 @@ async function config() {
                     {
                       label: 'Discovery',
                       collapsed: true,
-                      autogenerate: {
-                        directory: '/setup/discovery/'
-                      },
+                      items: [
+                        {
+                          label: 'Storefront architecture',
+                          link: '/setup/discovery/architecture/'
+                        },
+                        {
+                          label: 'Luma Bridge',
+                          link: '/setup/discovery/luma-bridge/'
+                        },
+                        {
+                          label: 'Data export validation',
+                          link: '/setup/discovery/data-export-validation/'
+                        },
+                      ]
                     },
                     {
                       label: 'Configuration',
