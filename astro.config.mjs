@@ -226,9 +226,20 @@ async function config() {
                     {
                       label: 'Discovery',
                       collapsed: true,
-                      autogenerate: {
-                        directory: '/setup/discovery/'
-                      },
+                      items: [
+                        {
+                          label: 'Storefront architecture',
+                          link: '/setup/discovery/architecture/'
+                        },
+                        {
+                          label: 'Luma Bridge',
+                          link: '/setup/discovery/luma-bridge/'
+                        },
+                        {
+                          label: 'Data export validation',
+                          link: '/setup/discovery/data-export-validation/'
+                        },
+                      ]
                     },
                     {
                       label: 'Configuration',
@@ -620,16 +631,6 @@ async function config() {
                         { label: 'Functions', link: '/dropins/wishlist/functions/' },
                         { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
-                    },
-                    {
-                      label: 'Other',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Live Search',
-                          link: '/dropins/other/search/'
-                        },
-                      ],
                     },
                   ]
                 },
