@@ -76,10 +76,10 @@ Only the homepage is delivered by Edge Delivery Services. All Commerce functiona
   :::note
   A common pattern is to move all Edge Delivery Services code into a subfolder called `aem`, and then route any path starting with `aem` to Edge Delivery Services.
   :::
-  
+
 For general information on setting up Fastly for Adobe Commerce and accessing the Adobe Commerce Admin, see [Fastly services overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/fastly).
 
-## Backend configuration 
+## Backend configuration
 
 The first step is to configure a backend for each origin/service that Fastly needs to route to, which includes the following:
 
@@ -95,7 +95,7 @@ The Fastly configuration instructions on this page are based on the [`fastly-mag
 
 1. Log in to the Adobe Commerce Admin.
 
-1. Click **Stores** > _Settings__ > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration** > **Backend Settings** > **Create**.
+1. Click **Stores** > **Settings** > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration** > **Backend Settings** > **Create**.
 
 1. Enter a name for the Edge Delivery Services backend.
 
@@ -196,17 +196,17 @@ The following `recv` snippet has the following purpose:
 
 ```txt
 unset req.http.x-commerce;
- 
+
 # Catalog Service
 if (req.url.path ~ "^/cs-graphql$") {
     # Disable Commerce WAF as it can interfere with some queries
     set req.http.bypasswaf = "true";
- 
-    # Forward to Catalog Service GraphQL 
+
+    # Forward to Catalog Service GraphQL
     set req.backend = F_catalog_service;
     set req.http.host = "catalog-service.adobe.io";
     set req.url = regsub(req.url, "^/cs-graphql", "/graphql");
-     
+
     # Remove cookies
     unset req.http.Cookie;
 }
@@ -221,7 +221,7 @@ else
     if (req.url ~ "^/configs-(stage|dev)\.json$") {
         error 404 "Not Found";
     }
- 
+
     # Everything else is considered Edge Delivery Services
     set req.backend = F_edge_delivery;
     # Restore accepted encoding
@@ -229,12 +229,12 @@ else
     if (req.url.path !~ "/media_[0-9a-f]{40,}[/a-zA-Z0-9_-]*\.[0-9a-z]+$"
         && req.url.ext !~ "(?i)^(gif|png|jpe?g|webp)$"
         && req.url.ext != "json"
-        && req.url.path != "/.auth") {        
+        && req.url.path != "/.auth") {
         # trim the query string to improve caching
         set req.url = req.url.path;
         # replace some special characters with a dash because Edge doesn't support them
         set req.url = regsuball(req.url, "[()]", "-");
- 
+
     }
 }
 ```
@@ -255,10 +255,10 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.X-BYO-CDN-Type = "fastly";
     set bereq.http.X-Push-Invalidation = "enabled";
 }
- 
+
 if (!req.http.x-commerce) {
     return(pass);
-}  
+}
 ```
 
 :::note
@@ -279,7 +279,7 @@ if (req.backend == F_edge_delivery) {
     set bereq.http.X-BYO-CDN-Type = "fastly";
     set bereq.http.X-Push-Invalidation = "enabled";
 }
- 
+
 if (!req.http.x-commerce) {
     return(fetch);
 }
@@ -315,7 +315,7 @@ This comes from the Edge Delivery Services [Fastly setup](https://www.aem.live/d
 ```txt
 if (req.backend == F_edge_delivery) {
     unset resp.http.Age;
- 
+
     if (req.url.path !~ "\.plain\.html$") {
         unset resp.http.X-Robots-Tag;
     }
@@ -349,8 +349,8 @@ pragma optional_param geoip_opt_in true;
 
 # Snippet GeoIpRedirect
  declare local var.countryCode STRING;
- 
-# Only apply redirection if the URL has no country-specific path  
+
+# Only apply redirection if the URL has no country-specific path
 
 # This snippet performs a GeoIP-based redirection. It checks if the request is made to the
 # "example.com" domain and if the URL path is either the root ("/") or empty. If these conditions are met, it
@@ -590,7 +590,7 @@ x-cache-hits: 0, 37, 1, 0
 ```
 
 * `content-encoding`: Should be `gzip` or `br` for things like JS assets and HTML files, which should be encoded from origin.
-* `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths. 
+* `surrogate-key`: Should not be `text`. If the value is `text`, make sure you have correctly configured the `fetch` VCL snippet to return `deliver` for Edge Delivery Servicespaths.
 
    The reason for this validation step is that the [default Commerce Fastly VCL](https://github.com/fastly/fastly-magento2/blob/fdd616cd0f945530e02e92e594ca00fd7990f557/etc/vcl_snippets/fetch.vcl#L113) sets this. This overwrites the Edge Delivery Services surrogate key, which is required for cache invalidation to work correctly when a page is re-published.
 
@@ -679,6 +679,39 @@ Ensure that the base URL change is propagated to Catalog Service. You can do thi
 
 ![Commerce base URL](@images/implementation/commerce-base-url.png)
 
-## Debugging
+## Troubleshooting
 
-The full VCL script can be viewed to see which VCL snippet is applied and in which order. In the Commerce Admin, go to **Tools** (sibling of the VCL Snippets dropdown), select "List all Versions" and click the eye icon of the latest version to view the full generated VCL.
+<Aside type="note" title="It's confusing - we get it">
+Fastly VCL and CDN configuration can be a bit overwhelming at first. Here's a collection of troubleshooting steps that might help you if you have problems.
+</Aside>
+
+### Fastly API quick reference
+
+With your Fastly API Token you can make requests against the Fastly API for information or data that may be otherwise inaccessible. You can find your API Token in your Commerce Admin view under **Stores** > **Settings** > **Configuration** > **Advanced** > **System** > **Full Page Cache** > **Fastly Configuration**.
+
+Here's a quick reference of things you can do with your API Token. See [Fastly's API documentation](https://www.fastly.com/documentation/reference/api/) for more details.
+
+```bash
+# retrieve active version
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version"
+
+# retrieve full, generated VCL
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version/VERSION/generated_vcl"
+
+# retrieve all snippets
+curl -H "Fastly-Key: API_TOKEN" "https://api.fastly.com/service/SERVICE_ID/version/VERSION/snippet"
+```
+
+### Missing snippets
+
+Fastly maintains a "version" of your snippets remotely on their servers. These versions are never pulled "down" to your Commerce environment, but can be "pushed" from your environment to Fastly. Unintentional local changes can cause things to become out of sync.
+
+For example, renaming a snippet actually creates a new snippet with the new name, and does not delete the old one. You should not rename snippets unless you must. See [this issue](https://github.com/fastly/fastly-magento2/issues/708) for more information.
+
+Your environment stores custom VCL snippets in the `var/vcl_snippets_custom/` directory. If you delete that directory or its contents, you will not be able to view, edit, or modify the snippets, even though they remain active in Fastly."
+
+To resolve this, you should use the Fastly API to "pull" all snippets and then place them back in that folder (with permission **775**). The following table details how to construct the file correctly:
+
+| `var` directory filename | Admin Panel Field | Fastly Fields |
+|--------------------------------|----------------------------------------------|--------------------------------------------------------|
+| _recv_100_snippetrecv.vcl_ | Type: _recv_ <br/> Priority: _100_ <br/> Name: _snippetrecv_ | Type: _recv_ <br/> Priority: _100_ <br/> Name: _magentomodule_snippetrecv_ |
