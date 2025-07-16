@@ -605,7 +605,7 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
-                  label: 'Storefront Builder',
+                  label: 'Commerce Storefront',
                   items: [
                     {
                       label: 'Create your content',
