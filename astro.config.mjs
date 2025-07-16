@@ -110,7 +110,8 @@ async function config() {
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
       '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
-      '/dropins/other/search': `${basePath}/dropins/product-discovery`
+      '/dropins/other/search': `${basePath}/dropins/product-discovery`,
+      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`
     },
     integrations: [
       starlight({
