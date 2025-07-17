@@ -675,7 +675,7 @@ async function config() {
               ],
             },
             {
-              label: 'Drop-in SDK',
+              label: 'Drop-in SDK (1.4.0-beta-1)',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
@@ -813,12 +813,20 @@ async function config() {
                       link: '/sdk/components/picker/'
                     },
                     {
+                      label: 'Portal',
+                      link: '/sdk/components/portal/'
+                    },
+                    {
                       label: 'Price',
                       link: '/sdk/components/price/'
                     },
                     {
                       label: 'PriceRange',
                       link: '/sdk/components/pricerange/'
+                    },
+                    {
+                      label: 'ProductItemCard',
+                      link: '/sdk/components/productitemcard/'
                     },
                     {
                       label: 'ProgressSpinner',
@@ -901,6 +909,12 @@ async function config() {
                     }, {
                       label: 'reCAPTCHA',
                       link: '/sdk/reference/recaptcha/'
+                    }, {
+                      label: 'Slots',
+                      link: '/sdk/reference/slots/'
+                    }, {
+                      label: 'VComponent',
+                      link: '/sdk/reference/vcomponent/'
                     },
                   ]
                 }, {
@@ -921,12 +935,18 @@ async function config() {
                       label: 'deepmerge',
                       link: '/sdk/utilities/deepmerge/'
                     }, {
+                      label: 'getCookie',
+                      link: '/sdk/utilities/getcookie/'
+                    }, {
                       label: 'getFormErrors',
                       link: '/sdk/utilities/getformerrors/'
                     }, {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
-                    }]
+                    }, {
+                      label: 'getPathValue',
+                      link: '/sdk/utilities/getpathvalue/'
+                    },]
                 },
               ],
             },
