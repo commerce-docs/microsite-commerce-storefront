@@ -137,65 +137,7 @@ async function config() {
         plugins: [
           starlightSidebarTopics([
             {
-              label: 'Merchants',
-              link: 'merchants/storefront-builder/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Storefront Builder',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/storefront-builder/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Storefront Customization',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Personalization',
-                      link: 'merchants/get-started/personalization/'
-                    },
-                    {
-                      label: 'Product recommendations',
-                      link: 'merchants/get-started/product-recommendations/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Multistore',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/multistore/'
-                    },
-                    {
-                      label: 'Content localization',
-                      link: 'merchants/multistore/content-localization/'
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Developers',
+              label: 'Storefront Developers',
               link: '/get-started/',
               icon: 'seti:json',
               items: [
@@ -659,8 +601,81 @@ async function config() {
               ],
             },
             {
-              label: 'Drop-in SDK',
-              badge: 'Beta',
+              label: 'Storefront Authors',
+              link: 'merchants/storefront-builder/',
+              icon: 'seti:svg',
+              items: [
+                {
+                  label: 'Commerce Storefront',
+                  items: [
+                    {
+                      label: 'Create your content',
+                      link: 'merchants/storefront-builder/'
+                    },
+                    {
+                      label: 'Using the Document Authoring tool',
+                      link: 'merchants/storefront-builder/document-authoring/'
+                    },
+                    {
+                      label: 'Using the Visual Editor',
+                      link: 'merchants/storefront-builder/visual-editor/'
+                    },
+                    // {
+                    //   label: 'Using digital assets management',
+                    //   link: 'merchants/storefront-builder/digital-assets-management/'
+                    // },
+                    {
+                      label: 'Using Content and Commerce blocks',
+                      link: 'merchants/storefront-builder/content-commerce-blocks/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Content customizations',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
+                    },
+                    {
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
+                      label: 'Product recommendations',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
+                    {
+                      label: 'Terms and conditions',
+                      link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Drop-in SDK (1.4.0-beta-1)',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
@@ -798,12 +813,20 @@ async function config() {
                       link: '/sdk/components/picker/'
                     },
                     {
+                      label: 'Portal',
+                      link: '/sdk/components/portal/'
+                    },
+                    {
                       label: 'Price',
                       link: '/sdk/components/price/'
                     },
                     {
                       label: 'PriceRange',
                       link: '/sdk/components/pricerange/'
+                    },
+                    {
+                      label: 'ProductItemCard',
+                      link: '/sdk/components/productitemcard/'
                     },
                     {
                       label: 'ProgressSpinner',
@@ -886,6 +909,12 @@ async function config() {
                     }, {
                       label: 'reCAPTCHA',
                       link: '/sdk/reference/recaptcha/'
+                    }, {
+                      label: 'Slots',
+                      link: '/sdk/reference/slots/'
+                    }, {
+                      label: 'VComponent',
+                      link: '/sdk/reference/vcomponent/'
                     },
                   ]
                 }, {
@@ -906,12 +935,18 @@ async function config() {
                       label: 'deepmerge',
                       link: '/sdk/utilities/deepmerge/'
                     }, {
+                      label: 'getCookie',
+                      link: '/sdk/utilities/getcookie/'
+                    }, {
                       label: 'getFormErrors',
                       link: '/sdk/utilities/getformerrors/'
                     }, {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
-                    }]
+                    }, {
+                      label: 'getPathValue',
+                      link: '/sdk/utilities/getpathvalue/'
+                    },]
                 },
               ],
             },
