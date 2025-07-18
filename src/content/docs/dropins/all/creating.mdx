@@ -35,10 +35,10 @@ That's it! You now have a drop-in application with the same consistency and best
 ## Adding a shared component to your project
 After creating your drop-in component, let's add a shared component from the Storefront SDK. These components are designed to be reusable and customizable, making it easier to build consistent and high-quality user interfaces. Follow the steps below to add a shared component to your drop-in component project.
 
-<Tasks>
 
+<Tasks>
 <Task>
-### Install the `@adobe-commerce/elsie ` package
+### Install the `@adobe-commerce/elsie` package
 
 Run the following command to install the Storefront SDK package:
 
@@ -46,27 +46,6 @@ Run the following command to install the Storefront SDK package:
 npm install @adobe-commerce/elsie
 ```
 </Task>
-
-
-<Task>
-### Generate a container
-
-Run the following command to generate a Container component:
-
-```txt
-npx elsie generate container --pathname <MyContainer>
-```
-</Task>
-
-<Task>
-### Generate a UI component
-Run the following command to generate a UI component:
-
-```txt
-npx elsie generate component --pathname <myUIComponent>
-```
-</Task>
-
 <Task>
 ### Use a library component from the SDK
 
@@ -86,19 +65,164 @@ In your generated UI component, import a shared component from the Storefront SD
 
 </Task>
 
-<Task>
-### Add your component to your container
 
-Add your component to the container created in step 2.
+</Tasks>
+
+## Understanding the Dropin Sandbox Environment
+The following steps are to help you navigate previewing your dropin in the Sandbox Environment, `examples/html-host/index.html`.
+<Tasks>
+<Task>
+
+### Import Map Configuration
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools/",
+      "my-pkg/": "http://localhost:3002/"
+    }
+  }
+</script>
+```
+
+This tells the browser:
+
+- **Adobe Commerce tools**: `@dropins/tools/`  
+- **Your dropin code**: `my-pkg/` (served from `http://localhost:3002/`)
+
+> **Tip:** Replace `my-pkg/` with your dropin’s npm name, e.g. `@dropins/cart/`.  
+> Add other imports for your dropin as needed.
 
 </Task>
 
 <Task>
+### Core Imports
 
-### Render the Container
+```javascript
+// Import API functions to use with action buttons
+// Replace `my-pkg` with `@dropins/YourDropin`
+import * as pkg from 'my-pkg/api.js';
+// or more specifically:
+import { myFunction } from 'my-pkg/api.js';
+```
+```javascript
+// The event bus is a core communication tool for all dropins. 
+// They subscribe and publish to events to talk to each other without direct coupling.
+import { events } from '@dropins/tools/event-bus.js';
+```
+*For Mesh-based Dropins (e.g., Cart):*
+```javascript
 
-Update your sandbox environment to render your container in `examples/html-host/index.html`.
+// GraphQL Client - For data fetching
+import * as mesh from '@dropins/tools/fetch-graphql.js';
+
+// Initialize GraphQl Client (Mesh)
+// Mesh Endpoint
+mesh.setEndpoint(process.env.ENDPOINT);
+```
+
+*For Direct API-based Dropins (e.g., Recommendations):*
+```javascript
+
+
+// Configure API
+pkg.setEndpoint('https://www.aemshop.net/cs-graphql');
+
+```
+
+*Initializers*
+
+The initializer is a lifecycle management system that handles the setup, configuration, and coordination of components in the application.
+
+```javascript
+import { initializers } from '@dropins/tools/initializer.js';
+```
+</Task>
+
+<Task>
+
+### Dropin container Setup
+Uncomment and modify these lines to setup your container
+```javascript
+// import { render as provider } from 'my-pkg/render.js';
+// import <Container> from 'my-pkg/containers/<Container>.js';
+```
+For example:
+```javascript
+import { render as provider } from '@dropins/cart/render.js';
+import MiniCart from '@dropins/cart/containers/MiniCart.js';
+```
 
 </Task>
+
+### Sandbox Structure
+
+The sandbox environment is divided into three main sections:
+
+#### 1. Action Controls (Top)
+Controls for triggering functionality:
+```html
+<fieldset class="actions">
+  <legend>API Functions</legend>
+  <button id="action-1" disabled>Action</button>
+</fieldset>
+```
+
+Example usage:
+```javascript
+const $action_1 = document.getElementById('action-1');
+$action_1.addEventListener('click', () => {
+  console.log("action-1 has been clicked");
+  myFunction(); // or pkg.myFunction();
+});
+```
+
+#### 2. Data/Debug Display (Middle)
+Real-time data and response visualization:
+```html
+<code data-label="fetchGraphQl">
+  <pre id="data">⏳ Loading...</pre>
+</code>
+```
+
+Example usage:
+```javascript
+// Display event data
+const $data = document.getElementById('data');
+events.on('<eventName>', (data) => {
+  $data.innerText = JSON.stringify(data, null, 2);
+});
+
+// Update loading state
+$data.innerText = '⏳ Loading...';
+```
+
+#### 3. Container Display (Bottom)
+Where your drop-in components are rendered:
+```html
+<div class="containers">
+  <h2 class="heading">Frontend Containers</h2>
+  <div id="my-container" class="container"></div>
+</div>
+```
+
+Example usage:
+```javascript
+const $my_container = document.getElementById('my-container');
+provider.render(Container, {
+  // Your container props
+})($my_container);
+```
+
+:::tip[More Info]
+For more details on the usage of _event bus_, _initializers_, and _render_, visit the API section of the [SDK documentation](https://adobe-commerce.github.io/StorefrontSDK/storybook/).
+:::
+
+### Styling the Sandbox
+The Sanbox environment is style using two stylesheets:
+
+I. `style.css` which is the base styling file that handles root-level styles and variables as well as global element styles.  
+II. `example.css` which is specifically for styling sandbox UI components.
 
 </Tasks>
