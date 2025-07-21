@@ -3,6 +3,9 @@ title: Initializer
 description: Initializer is a class that helps you initialize your package.
 ---
 
+import Aside from '@components/Aside.astro';
+import Badge from '@components/overrides/Badge.astro';
+
 ```typescript
 // my-domain-package/initializer.ts
 
@@ -41,12 +44,34 @@ window.addEventListener('load', initializers.mount);
 
 ## `setImageParamKeys(params)`
 
-The `setImageParamKeys` method is part of the initializers module in the `@dropins/tools` package.
-It allows you to set image parameters globally for all drop-ins that use the Image component.
+The `setImageParamKeys` method is part of the initializers module in the `@dropins/tools` package. It allows you to set image parameters globally for all drop-in components that use the [Image](/sdk/components/image/) component. CDN-based image optimization services, such as Fastly and Cloudflare, rely on these parameters to optimize images.
 
-### Default Behavior
+### Default behavior
 
-By default, Fastly parameters are used if `setImageParamKeys` is not called or if no parameters are provided.
+Since Fastly is the default CDN for Adobe Commerce on Cloud, drop-in components add the following Fastly-style parameters to all image URLs by default:
+
+- `width`
+- `height`
+- `auto`
+- `quality`
+- `crop`
+- `fit`
+
+Example:
+
+```text
+/media/catalog/product/adobestoredata/ADB150.jpg?auto=webp&quality=80&crop=false&fit=cover&width=960&height=1191`
+```
+
+Technical details about CDN-based image optimization differ depending on your backend Adobe Commerce solution:
+
+- <Badge tooltip="Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only." text="PaaS only" variant="note" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" /> Fastly is the default CDN-based image optimization service for Adobe Commerce on Cloud projects. Fastly-style parameters are used by default unless overridden via `setImageParamKeys`.
+  
+- <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" /> Cloudflare is the default CDN-based image optimization service for Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects. Fastly-style parameters are used but are proxied through a [Cloudflare Worker](https://developers.cloudflare.com/images/transform-images/transform-via-workers) to transform the parameters to Cloudflare-style parameters. Overriding the default parameters using `setImageParamKeys` may interfere with the proxy transformation and lead to unexpected results.
+
+<Aside type="tip" title="Override defaults">
+If necessary, you can override these parameters with the `setImageParamKeys` method. For example, if you are using a CDN provider that requires different parameters or URL patterns.
+</Aside>
 
 ### Parameters
 

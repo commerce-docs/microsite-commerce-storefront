@@ -1,0 +1,630 @@
+---
+interface Props {
+    src: string;
+    width?: string;
+    height?: string;
+    scale?: number;
+    page?: number;
+    caption?: string;
+}
+
+const {
+    src,
+    width = "100%",
+    height = "auto",
+    scale = 1.0,
+    page = 1,
+    caption,
+} = Astro.props;
+const pdfPath = src.startsWith("http") ? src : `/${src.replace(/^\/+/, "")}`;
+const workerId = `pdf-${Math.random().toString(36).substr(2, 9)}`;
+const figureId = `pdf-figure-${Math.random().toString(36).substr(2, 9)}`;
+const captionId = caption
+    ? `pdf-caption-${Math.random().toString(36).substr(2, 9)}`
+    : undefined;
+---
+
+<figure class="pdf-figure" id={figureId}>
+    <div
+        class="pdf-container"
+        style={`width: ${width}; ${height !== "auto" ? `height: ${height};` : ""}`}
+    >
+        <pdf-viewer
+            data-pdf-path={pdfPath}
+            data-worker-path="https://unpkg.com/pdfjs-dist@4.0.269/build/pdf.worker.min.mjs"
+            data-scale={scale}
+            data-page={page}
+            data-maintain-aspect={height === "100%" ? "true" : "false"}
+            aria-describedby={captionId}
+            role="img"
+            aria-label={caption || "PDF document"}
+            id={workerId}
+        >
+            <div class="loading">Loading PDF...</div>
+        </pdf-viewer>
+        {
+            caption && (
+                <div class="pdf-caption" id={captionId}>
+                    {caption}
+                </div>
+            )
+        }
+    </div>
+</figure>
+
+<script
+    is:inline
+    src="https://unpkg.com/pdfjs-dist@4.0.269/build/pdf.min.mjs"
+    type="module"></script>
+
+<script>
+    class PDFViewer extends HTMLElement {
+        private pdfData: any;
+        private currentModal: HTMLElement | null = null;
+        private originalRect: DOMRect | null = null;
+        private originalCenterX: number | null = null;
+        private originalCenterY: number | null = null;
+        private resizeObserver: ResizeObserver | null = null;
+        private requestedScale: number = 1.0;
+        private isInitialLoad: boolean = true;
+
+        constructor() {
+            super();
+            this.attachShadow({ mode: "open" });
+
+            const style = document.createElement("style");
+            style.textContent = `
+        :host {
+          display: block;
+          width: 100%;
+        }
+        .pdf-wrapper {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        canvas {
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          display: block;
+          margin: 0 auto;
+          cursor: zoom-in;
+          transition: transform 0.2s ease;
+        }
+        canvas:hover {
+          transform: scale(1.02);
+        }
+        .loading {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 200px;
+          font-family: system-ui, sans-serif;
+          color: #666;
+        }
+        .error {
+          color: #e74c3c;
+          text-align: center;
+          padding: 2rem;
+          font-family: system-ui, sans-serif;
+        }
+        .modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 2rem;
+          box-sizing: border-box;
+        }
+        .modal-content {
+          position: relative;
+          max-width: 90vw;
+          max-height: 90vh;
+          background: white;
+          border-radius: 8px;
+          padding: 1rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          transform: scale(0.8);
+          opacity: 0;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          overflow: auto;
+        }
+        .modal-close {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: #fff;
+          border: 2px solid #ddd;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          font-weight: bold;
+          color: #666;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .modal-close:hover {
+          background: #f5f5f5;
+          color: #333;
+        }
+        .modal canvas {
+          border: none;
+          border-radius: 4px;
+          cursor: zoom-out;
+        }
+        .modal canvas:hover {
+          transform: none;
+        }
+      `;
+
+            if (this.shadowRoot) {
+                this.shadowRoot.appendChild(style);
+                this.shadowRoot.innerHTML += `<div class="loading">Loading PDF...</div>`;
+            }
+
+            // Set up resize observer to watch for container size changes
+            this.setupResizeObserver();
+        }
+
+        setupResizeObserver() {
+            if (typeof ResizeObserver !== "undefined") {
+                this.resizeObserver = new ResizeObserver(() => {
+                    // Only trigger resize re-render after initial load is complete
+                    if (this.pdfData && !this.isInitialLoad) {
+                        this.renderPDF();
+                    }
+                });
+            }
+        }
+
+        async connectedCallback() {
+            const pdfPath = this.getAttribute("data-pdf-path");
+            const workerPath = this.getAttribute("data-worker-path");
+            const scaleAttr = this.getAttribute("data-scale");
+            const pageAttr = this.getAttribute("data-page");
+
+            this.requestedScale = scaleAttr ? parseFloat(scaleAttr) : 1.0;
+            const pageNum = pageAttr ? parseInt(pageAttr) : 1;
+
+            if (!pdfPath || !workerPath) return;
+
+            try {
+                // Wait for pdfjsLib to be available
+                while (!(window as any).pdfjsLib) {
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+                }
+
+                (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc =
+                    workerPath;
+                const loadingTask = (window as any).pdfjsLib.getDocument(
+                    pdfPath,
+                );
+                const pdf = await loadingTask.promise;
+
+                const page = await pdf.getPage(pageNum);
+
+                // Store pdf and page for modal use and resizing
+                this.pdfData = { pdf, page, pageNum };
+
+                // Initial render
+                await this.renderPDF();
+
+                // Mark initial load as complete after a brief delay to prevent immediate resize triggers
+                setTimeout(() => {
+                    this.isInitialLoad = false;
+                }, 100);
+
+                // Start observing size changes
+                if (this.resizeObserver) {
+                    // Observe the content area that actually determines available width
+                    const pdfContainer = this.parentElement;
+                    const figure = pdfContainer?.parentElement;
+                    const contentArea = figure?.parentElement;
+
+                    const targetContainer =
+                        contentArea || figure || pdfContainer;
+                    if (targetContainer) {
+                        this.resizeObserver.observe(targetContainer);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading PDF:", error);
+                if (this.shadowRoot) {
+                    const errorMessage =
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error";
+                    this.shadowRoot.innerHTML = `<div class="error">Error loading PDF: ${errorMessage}</div>`;
+                }
+            }
+        }
+
+        async renderPDF() {
+            if (!this.pdfData || !this.shadowRoot) return;
+
+            const { page } = this.pdfData;
+
+            // Get the available width - check multiple container levels to find the actual content width
+            let maxWidth = 800; // Default fallback
+
+            // Try to find the actual content area width
+            const pdfContainer = this.parentElement; // pdf-container
+            const figure = pdfContainer?.parentElement; // pdf-figure
+            const contentArea = figure?.parentElement; // actual content area (article, section, etc.)
+
+            if (contentArea && contentArea.clientWidth > 0) {
+                maxWidth = contentArea.clientWidth - 64; // Account for margins and padding
+            } else if (figure && figure.clientWidth > 0) {
+                maxWidth = figure.clientWidth - 32;
+            } else if (pdfContainer && pdfContainer.clientWidth > 0) {
+                maxWidth = pdfContainer.clientWidth - 32;
+            }
+
+            // Get device pixel ratio for high-DPI displays
+            const devicePixelRatio = window.devicePixelRatio || 1;
+
+            // Get the PDF's natural dimensions at scale 1
+            const naturalViewport = page.getViewport({ scale: 1 });
+
+            // Calculate the scale that fits within container width (no height constraint)
+            const scaleToFitWidth = maxWidth / naturalViewport.width;
+
+            // Use the smaller of requested scale or scale-to-fit-width to prevent horizontal overflow
+            const finalScale = Math.min(this.requestedScale, scaleToFitWidth);
+
+            // First get viewport at final calculated scale
+            const baseViewport = page.getViewport({ scale: finalScale });
+
+            // Then scale up for high-DPI rendering (internal canvas resolution)
+            const renderViewport = page.getViewport({
+                scale: finalScale * devicePixelRatio,
+            });
+
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+
+            // Set canvas internal size for high-DPI (higher resolution)
+            canvas.height = renderViewport.height;
+            canvas.width = renderViewport.width;
+
+            // Set CSS display size to the calculated dimensions
+            canvas.style.height = baseViewport.height + "px";
+            canvas.style.width = baseViewport.width + "px";
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: renderViewport,
+            };
+
+            await page.render(renderContext).promise;
+
+            // Clear and update shadow DOM
+            this.shadowRoot.innerHTML = "";
+            const style = document.createElement("style");
+            style.textContent = `
+          .pdf-wrapper {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+          }
+          canvas:hover {
+            transform: scale(1.02);
+          }
+        `;
+            this.shadowRoot.appendChild(style);
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "pdf-wrapper";
+
+            // Add click event to canvas for modal
+            canvas.addEventListener("click", () => this.openModal());
+
+            wrapper.appendChild(canvas);
+            this.shadowRoot.appendChild(wrapper);
+
+            // Resize the host element to match the PDF size
+            this.style.height = baseViewport.height + "px";
+        }
+
+        disconnectedCallback() {
+            // Clean up resize observer
+            if (this.resizeObserver) {
+                this.resizeObserver.disconnect();
+            }
+        }
+
+        async openModal() {
+            if (!this.pdfData) return;
+
+            const { page } = this.pdfData;
+
+            // Get the original PDF canvas position and size for animation
+            const originalCanvas = this.shadowRoot?.querySelector("canvas");
+            if (!originalCanvas) return;
+
+            const originalRect = originalCanvas.getBoundingClientRect();
+            const originalCenterX = originalRect.left + originalRect.width / 2;
+            const originalCenterY = originalRect.top + originalRect.height / 2;
+
+            // Calculate scale for modal - use full viewport width
+            const viewportWidth = window.innerWidth * 0.95; // 95% of viewport width for full-screen feel
+
+            const naturalViewport = page.getViewport({ scale: 1 });
+            const modalScale = viewportWidth / naturalViewport.width;
+
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const modalBaseViewport = page.getViewport({ scale: modalScale });
+            const modalRenderViewport = page.getViewport({
+                scale: modalScale * devicePixelRatio,
+            });
+
+            // Create modal canvas
+            const modalCanvas = document.createElement("canvas");
+            const modalContext = modalCanvas.getContext("2d");
+
+            modalCanvas.height = modalRenderViewport.height;
+            modalCanvas.width = modalRenderViewport.width;
+            modalCanvas.style.height = modalBaseViewport.height + "px";
+            modalCanvas.style.width = modalBaseViewport.width + "px";
+
+            // Render PDF to modal canvas
+            const modalRenderContext = {
+                canvasContext: modalContext,
+                viewport: modalRenderViewport,
+            };
+
+            await page.render(modalRenderContext).promise;
+
+            // Calculate final modal position (center of screen)
+            const finalCenterX = window.innerWidth / 2;
+            const finalCenterY = window.innerHeight / 2;
+
+            // Create modal elements in document body (not shadow DOM)
+            const modal = document.createElement("div");
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(255, 255, 255, 0);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 2rem;
+                box-sizing: border-box;
+                overflow-y: auto;
+                transition: background-color 0.25s ease;
+            `;
+
+            const modalContent = document.createElement("div");
+            // Start from original position and size
+            modalContent.style.cssText = `
+                position: absolute;
+                width: ${originalRect.width}px;
+                height: ${originalRect.height}px;
+                left: ${originalCenterX - originalRect.width / 2}px;
+                top: ${originalCenterY - originalRect.height / 2}px;
+                background: white;
+                border-radius: 8px;
+                padding: 1rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                transform-origin: center center;
+                transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                overflow: hidden;
+            `;
+
+            const closeButton = document.createElement("div");
+            closeButton.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                right: 2rem;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #fff;
+                border: 2px solid #999;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                font-weight: bold;
+                line-height: 1;
+                text-align: center;
+                transform: translateY(-1px);
+                color: #4285f4;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transition: all 0.2s ease;
+                z-index: 10001;
+                opacity: 0;
+                transform: scale(0.8);
+            `;
+            closeButton.innerHTML = "×";
+            closeButton.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.closeModal();
+            });
+            closeButton.addEventListener("mouseenter", () => {
+                closeButton.style.background = "#f0f4ff";
+                closeButton.style.color = "#1a73e8";
+                closeButton.style.transform = "scale(1.1)";
+            });
+            closeButton.addEventListener("mouseleave", () => {
+                closeButton.style.background = "#fff";
+                closeButton.style.color = "#4285f4";
+                closeButton.style.transform = "scale(1)";
+            });
+
+            // Style the modal canvas to start at original size
+            modalCanvas.style.cssText = `
+                border: none;
+                border-radius: 4px;
+                cursor: zoom-out;
+                display: block;
+                margin: 0 auto;
+                width: ${originalRect.width - 32}px;
+                height: ${originalRect.height - 32}px;
+                transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            `;
+
+            // Close modal when clicking anywhere on the modal
+            modal.addEventListener("click", () => {
+                this.closeModal();
+            });
+
+            // Close modal with Escape key
+            const handleEscape = (e) => {
+                if (e.key === "Escape") {
+                    this.closeModal();
+                    document.removeEventListener("keydown", handleEscape);
+                }
+            };
+            document.addEventListener("keydown", handleEscape);
+
+            modalContent.appendChild(modalCanvas);
+            modal.appendChild(modalContent);
+            modal.appendChild(closeButton);
+
+            // Add modal to document body
+            document.body.appendChild(modal);
+            this.currentModal = modal;
+
+            // Store original dimensions for closing animation
+            this.originalRect = originalRect;
+            this.originalCenterX = originalCenterX;
+            this.originalCenterY = originalCenterY;
+
+            // Trigger animations after adding to DOM
+            requestAnimationFrame(() => {
+                // Fade in background
+                modal.style.backgroundColor = "rgba(255, 255, 255, 1)";
+
+                // Animate to center and enlarge
+                modalContent.style.width = `${modalBaseViewport.width + 32}px`;
+                modalContent.style.height = `${modalBaseViewport.height + 32}px`;
+                modalContent.style.left = `${finalCenterX - (modalBaseViewport.width + 32) / 2}px`;
+                modalContent.style.top = `${finalCenterY - (modalBaseViewport.height + 32) / 2}px`;
+                modalContent.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.3)";
+
+                // Animate canvas to final size
+                modalCanvas.style.width = `${modalBaseViewport.width}px`;
+                modalCanvas.style.height = `${modalBaseViewport.height}px`;
+
+                // Show close button after a delay
+                setTimeout(() => {
+                    closeButton.style.opacity = "1";
+                    closeButton.style.transform = "scale(1)";
+                }, 150);
+            });
+        }
+
+        closeModal() {
+            if (
+                this.currentModal &&
+                this.originalRect &&
+                this.originalCenterX !== null &&
+                this.originalCenterY !== null
+            ) {
+                const modal = this.currentModal;
+                const modalContent = modal.querySelector("div");
+                const modalCanvas = modal.querySelector("canvas");
+                const closeButton = modal.children[1] as HTMLElement; // Close button is now the second child of modal
+
+                // Hide close button immediately
+                if (closeButton) {
+                    closeButton.style.opacity = "0";
+                    closeButton.style.transform = "scale(0.8)";
+                }
+
+                // Animate back to original position and size
+                modal.style.backgroundColor = "rgba(255, 255, 255, 0)";
+
+                if (modalContent && modalCanvas) {
+                    modalContent.style.width = `${this.originalRect.width}px`;
+                    modalContent.style.height = `${this.originalRect.height}px`;
+                    modalContent.style.left = `${this.originalCenterX - this.originalRect.width / 2}px`;
+                    modalContent.style.top = `${this.originalCenterY - this.originalRect.height / 2}px`;
+                    modalContent.style.boxShadow =
+                        "0 2px 8px rgba(0, 0, 0, 0.1)";
+
+                    modalCanvas.style.width = `${this.originalRect.width - 32}px`;
+                    modalCanvas.style.height = `${this.originalRect.height - 32}px`;
+                }
+
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        document.body.removeChild(modal);
+                    }
+                }, 250);
+
+                this.currentModal = null;
+                this.originalRect = null;
+                this.originalCenterX = null;
+                this.originalCenterY = null;
+            }
+        }
+    }
+
+    if (!customElements.get("pdf-viewer")) {
+        customElements.define("pdf-viewer", PDFViewer);
+    }
+</script>
+
+<style>
+    .pdf-figure {
+        margin: 1rem 0;
+        padding: 0;
+        width: fit-content;
+        max-width: 100%;
+    }
+
+    .pdf-container {
+        border: 1px solid #e1e5e9;
+        border-radius: 6px;
+        padding: 1rem;
+        background: #f8f9fa;
+        width: fit-content;
+        max-width: 100%;
+    }
+
+    .pdf-caption {
+        margin-top: 0.75rem;
+        padding: 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #374151;
+        text-align: left;
+        font-style: italic;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+    }
+</style>
