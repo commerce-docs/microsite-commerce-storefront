@@ -19,7 +19,7 @@ The implementation is already available in the codebase. This tutorial focuses o
 
 ## How it Works
 
-The **Edit** button feature is controlled by a configuration flag (`enable-updating-product`) that can be set on both the `commerce-cart` and `commerce-mini-cart` blocks in AEM. 
+The **Edit** button feature is controlled by a configuration flag (`enable-updating-product`) that can be set on both the `commerce-cart` and `commerce-mini-cart` blocks in AEM. When activated, it opens a modal interface with a mini Product Detail Page (PDP) that allows shoppers to modify their selected options contextually.
 
 <Tabs>
 <TabItem label="Cart">
@@ -37,16 +37,26 @@ const {
 
 // Later in the code, inside the Footer slot
 if (ctx.item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
-  // Code that creates and adds the Edit button to the Footer slot
-  // ...
+  const editLink = document.createElement('div');
+  editLink.className = 'cart-item-edit-link';
+
+  UI.render(Button, {
+    children: placeholders?.Global?.CartEditButton,
+    variant: 'tertiary',
+    size: 'medium',
+    icon: h(Icon, { source: 'Edit' }),
+    onClick: () => handleEditButtonClick(ctx.item),
+  })(editLink);
+
+  ctx.appendChild(editLink);
 }
 ```
 
-When a shopper clicks the **Edit** button, they're redirected to the product page with their current selections pre-populated, allowing them to modify their options.
+When a shopper clicks the **Edit** button, a modal opens with a mini-PDP interface that allows them to modify their product options. Upon successful update, comprehensive success messaging appears with auto-dismissing notifications.
 </TabItem>
 
 <TabItem label="Mini Cart">
-Similarly, in the `commerce-mini-cart.js` implementation, the code uses the same configuration flag to determine whether to display an **Edit** button for each configurable product in the mini-cart, but implements it in the `Thumbnail` slot:
+Similarly, in the `commerce-mini-cart.js` implementation, the code uses the same configuration flag to determine whether to display an **Edit** button for each configurable product in the mini-cart, implementing it in the `Thumbnail` slot:
 
 ```javascript
 // First, the configuration is read from the block with a default of 'false'
@@ -58,13 +68,27 @@ const {
 } = readBlockConfig(block);
 
 // Later in the code, inside the Thumbnail slot
-if (ctx.item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
-  // Code that creates and adds the Edit button to the Thumbnail slot
-  // ...
+if (item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
+  const editLinkContainer = document.createElement('div');
+  editLinkContainer.className = 'cart-item-edit-container';
+
+  const editLink = document.createElement('div');
+  editLink.className = 'cart-item-edit-link';
+
+  UI.render(Button, {
+    children: placeholders?.Global?.CartEditButton,
+    variant: 'tertiary',
+    size: 'medium',
+    icon: h(Icon, { source: 'Edit' }),
+    onClick: () => handleEditButtonClick(item),
+  })(editLink);
+
+  editLinkContainer.appendChild(editLink);
+  ctx.appendChild(editLinkContainer);
 }
 ```
 
-When enabled, this provides a convenient way for shoppers to update their product options by redirecting them to the product detail page with their current selections pre-populated.
+When enabled, this provides a convenient modal-based editing experience. Success messages appear in both the mini-cart and main cart notification areas simultaneously, ensuring consistent user feedback across all cart interfaces.
 </TabItem>
 </Tabs>
 
@@ -76,7 +100,7 @@ To modify this feature's configuration, follow these steps:
 <Task>
 ### Configure the Cart Summary Block
 
-The `enable-updating-product` property is *already set to `true` by default* in the cart block. If you want to disable it:
+The cart block shows edit buttons *by default* when configurable products are present. If you want to disable it:
 
 1. In your AEM authoring environment, navigate to the page containing your `commerce-cart` block.
 2. Select the `commerce-cart` block and open its properties dialog.
@@ -103,6 +127,10 @@ The `enable-updating-product` property is *already set to `false` by default* in
 5. Save the changes.
 6. Preview the changes by clicking the **Preview** button.
 7. Publish the changes by clicking the **Publish** button.
+
+<Aside type="note">
+  The mini cart does not show edit buttons by default and requires explicit configuration to enable this feature.
+</Aside>
 </Task>
 
 <Task>
@@ -144,10 +172,19 @@ After configuring the feature, you should test it to ensure it's working as expe
 
 ## Feature Behavior
 
-When the **Edit** button is clicked, the shopper is redirected to the product page with:
-- Their previously selected options pre-selected
-- The current quantity maintained
+When the **Edit** button is clicked, the following happens:
 
-This allows them to modify their selection and update the existing cart item rather than adding a new one.
+1. **Modal Interface**: A mini-PDP modal opens directly over the current page, maintaining user context.
+2. **Pre-populated Options**: The modal displays the product with current selections already chosen.
+3. **In-place Updates**: Changes are applied to the existing cart item.
+4. **Comprehensive Messaging**: Success notifications appear in:
+   - The main cart notification area (if present)
+   - The mini-cart message system
+   - Both locations simultaneously for consistent feedback
+5. **Auto-dismissing Notifications**: Messages automatically disappear for better UX.
+
+<Aside type="tip">
+  The modal approach ensures users never lose their shopping context while making product modifications, leading to a more seamless shopping experience.
+</Aside>
 
 With this simple configuration, you can provide your shoppers with a more convenient shopping experience by allowing them to modify product variations directly from the cart. 
