@@ -1,0 +1,130 @@
+---
+title: Event handling
+description: Learn how the checkout drop-in component handles events.
+---
+
+The checkout drop-in component implements an event-driven architecture that uses the `@adobe-commerce/event-bus` package to facilitate communication between components. This event system enables containers to respond to application state changes, maintain loose coupling between components, and keep their state synchronized with the cart.
+
+## Event system architecture
+
+The system uses a publish-subscribe pattern where containers can:
+
+1. Subscribe to specific events using `events.on()`
+2. Emit events using `events.emit()`
+3. Unsubscribe using `subscription.off()`
+
+## Events declaration
+
+The following code snippet shows the contracts that define the relationship between each event and its payload:
+
+```js title='event-bus.d.ts'
+import {
+  Cart as CheckoutData,
+  ShippingEstimate,
+  ValuesModel,
+} from '@/checkout/data/models';
+
+import { CartModel } from '@/checkout/types/cart';
+
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'cart/initialized': CartModel | null;
+    'cart/updated': CartModel | null;
+    'cart/reset': void;
+    'cart/merged': { oldCartItems: any[] };
+    'checkout/initialized': CheckoutData | null;
+    'checkout/updated': CheckoutData | null;
+    'checkout/values': ValuesModel;
+    'shipping/estimate': ShippingEstimate;
+    authenticated: boolean;
+    error: { source: string; type: string; error: Error };
+  }
+
+  interface Cart extends CartModel {}
+}
+```
+
+## Event subscription
+
+If a component wants to listen for an event fired in another component, the component must subscribe to that event.
+
+### Subscription configuration
+
+To subscribe to an event, you must provide the following information:
+
+1. The name of the event.
+2. The event handler, which is a callback function to be executed when a new event is fired (the payload is passed as a parameter).
+3. Event subscriptions can include an additional configuration parameter:
+    - `eager: true`: The handler executes immediately if the event has been emitted previously.
+    - `eager: false`: The handler only responds to future emissions of the event.
+
+```js
+const subscription = events.on('event-name', handler, { eager: true/false });
+```
+
+### Events subscribed by containers
+
+The following list shows the events subscribed by the checkout drop-in component containers:
+
+#### (i) External
+
+When the event is fired by external components:
+
+- `authenticated`: Indicates that a user has authenticated.
+- `cart/initialized`: Indicates that a new cart has been created and initialized.
+- `cart/reset`: Indicates that the order has been placed and the cart is not active any more.
+- `cart/updated`: Indicates that the cart data has been added or updated.
+- `cart/merged`: Indicates that a guest cart (created during the anonymous checkout) has been merged with a customer cart (recovered from a previous checkout process).
+- `cart/data`: Provides cart data.
+- `locale`: Indicates that the locale has been changed.
+
+#### (ii) Internal
+
+When the event is fired by internal checkout drop-in components:
+
+- `checkout/initialized`: Indicates that the checkout drop-in has been initialized with cart data.
+- `checkout/updated`: Indicates that the checkout data has been added or updated.
+- `shipping/estimate`: Provides shipping estimate based on shipping method selected within a shipping address.
+
+### Example
+
+Listen to the checkout initialization event:
+
+```js
+events.on('checkout/initialized', (data) => {
+  // Handle checkout data
+});
+```
+
+## Event emission
+
+Each component can emit an event if it wants to share information with other components or drop-ins.
+
+### Emission configuration
+
+To emit an event, you must provide the following information:
+
+1. The name of the event
+2. The payload containing the data to be shared
+
+```js
+events.emit('event-name', payload);
+```
+
+### Events emitted by containers
+
+The following list shows the events emitted by the checkout drop-in component containers:
+
+- `checkout/initialized`: Indicates that the checkout drop-in has been initialized with cart data.
+- `checkout/updated`: Indicates that the checkout data has been added or updated.
+- `checkout/values`: Provides the local state values.
+- `shipping/estimate`: Provides shipping estimate based on shipping method selected within a shipping address.
+- `error`: Indicates that the system has received a network error type.
+
+### Example
+
+Emit the checkout values event:
+
+```js
+events.emit('checkout/values', data);
+```
