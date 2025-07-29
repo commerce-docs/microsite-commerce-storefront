@@ -1,0 +1,88 @@
+---
+title: VComponent
+description: A VNode wrapper for dynamic rendering
+---
+
+In modern Preact-based architectures, composability and flexibility are essential for building reusable UI components. `VComponent` is a utility provided by the SDK that enables rendering of virtual nodes (`VNode`) passed as props—empowering consumers to inject arbitrary content while maintaining a clean separation of concerns.
+
+## Why use VComponent?
+
+By default, Preact allows children to be passed as virtual nodes, enabling dynamic rendering:
+
+```tsx
+<MyComponent>
+  <h1>Hello</h1>
+</MyComponent>
+```
+However, flexibility increases when we extend this pattern to named props like `header`, `footer`, or `image`. Instead of hardcoding internal markup, we delegate the responsibility of rendering to the consumer.
+
+## Traditional approach (tightly coupled)
+
+The standard approach to rendering a component is to pass values as props directly to the component.
+
+**Implementation:**
+
+```tsx
+const Card = ({ imageProps }) => {
+  return <img {...imageProps} />;
+};
+```
+
+**Usage:**
+```tsx
+<Card imageProps={{ src: 'logo.png', alt: 'Logo' }} />
+```
+
+This implementation tightly couples the component to a specific HTML element (`<img>`), which limits its flexibility and reuse.
+
+## Composable approach with VComponent
+
+The composable approach with `VComponent` allows consumers to pass arbitrary DOM nodes through props.
+
+**Implementation:**
+
+```tsx
+import { VComponent } from '@adobe-commerce/elsie/lib';
+
+interface Props {
+  image: VNode;
+}
+
+const Card = ({ image }: Props) => {
+  return <VComponent node={image} className="dropin-header-image" />;
+};
+```
+
+**Usage:**
+
+```tsx
+<Card image={<img src="logo.png" alt="Logo" />} />
+// or with a custom slot/component
+<Card image={<Slot name="brand-image" />} />
+```
+
+This decouples the component from a specific element. Instead, it renders whatever VNode is passed in. Consumers now have full control over what gets displayed.
+
+## How it works
+
+`VComponent` is a thin wrapper around a virtual node (`VNode`). It renders the node it receives as-is, while optionally applying extra props like `className`.
+
+This makes it ideal for rendering content passed through slots or injected from a higher-order component.
+
+```tsx
+<VComponent node={header} className="my-header" />
+```
+
+## When to use it
+
+Use `VComponent` when:
+
+- You want to allow injected custom DOM nodes (icons, slots, rich content)
+- You're designing reusable components meant to be extended or implemented by different consumers (Containers, Slots, etc.)
+
+## Benefits
+
+- Promotes reusability and composability
+- Supports custom rendering logic with no assumptions
+- Reduces internal complexity by offloading rendering decisions
+- Ideal for BYO-UI and dynamic layout strategies

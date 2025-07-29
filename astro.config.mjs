@@ -74,6 +74,7 @@ async function config() {
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-project`,
+      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
       '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
       '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
       '/product-details/pdp-installation': `${basePath}/dropins/product-details/installation`,
@@ -97,8 +98,7 @@ async function config() {
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
-      '/merchant/multistore': `${basePath}/merchants/get-started/multistore`,
-      '/merchants/multistore': `${basePath}/merchants/get-started/multistore`,
+      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
       '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
       '/dropins/all/enriching': `${basePath}/merchants/get-started/enrichment`,
       '/dropins/all/experimenting': `${basePath}/merchants/get-started/experiments`,
@@ -108,7 +108,10 @@ async function config() {
       '/discovery/architecture': `${basePath}/setup/discovery/architecture`,
       '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
-      '/dropins/all/eventbus': `${basePath}/sdk/reference/events`
+      '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
+      '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
+      '/dropins/other/search': `${basePath}/dropins/product-discovery`,
+      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`
     },
     integrations: [
       starlight({
@@ -134,7 +137,7 @@ async function config() {
         plugins: [
           starlightSidebarTopics([
             {
-              label: 'Developers',
+              label: 'Storefront Developers',
               link: '/get-started/',
               icon: 'seti:json',
               items: [
@@ -166,9 +169,20 @@ async function config() {
                     {
                       label: 'Discovery',
                       collapsed: true,
-                      autogenerate: {
-                        directory: '/setup/discovery/'
-                      },
+                      items: [
+                        {
+                          label: 'Storefront architecture',
+                          link: '/setup/discovery/architecture/'
+                        },
+                        {
+                          label: 'Luma Bridge',
+                          link: '/setup/discovery/luma-bridge/'
+                        },
+                        {
+                          label: 'Data export validation',
+                          link: '/setup/discovery/data-export-validation/'
+                        },
+                      ]
                     },
                     {
                       label: 'Configuration',
@@ -181,6 +195,10 @@ async function config() {
                         {
                           label: 'Storefront configuration',
                           link: '/setup/configuration/commerce-configuration/'
+                        },
+                        {
+                          label: 'Multistore setup',
+                          link: '/setup/configuration/multistore-setup/'
                         },
                         {
                           label: 'Content delivery network',
@@ -349,6 +367,9 @@ async function config() {
                         { label: 'Installation', link: '/dropins/checkout/installation/' },
                         { label: 'Initialization', link: '/dropins/checkout/initialization/' },
                         { label: 'Styles', link: '/dropins/checkout/styles/' },
+                        { label: 'Extending', link: '/dropins/checkout/extending/' },
+                        { label: 'Error Handling', link: '/dropins/checkout/error-handling/' },
+                        { label: 'Event Handling', link: '/dropins/checkout/event-handling/' },
                         {
                           label: 'Containers',
                           collapsed: true,
@@ -431,6 +452,63 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Personalization',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/personalization/' },
+                        { label: 'Initialization', link: '/dropins/personalization/initialization/' },
+                        { label: 'Functions', link: '/dropins/personalization/functions/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Recommendations',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/recommendations/' },
+                        { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
+                          ]
+                        },
+                        { label: 'Styles', link: '/dropins/recommendations/styles/' },
+                        { label: 'Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Slots', link: '/dropins/recommendations/slots/' },
+                        { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
+                      ]
+                    },
+                    {
+                      label: 'Product Discovery',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/product-discovery/' },
+                        { label: 'Installation', link: '/dropins/product-discovery/installation/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/product-discovery/containers/product-list/' },
+                            { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
+                            { label: 'ResultsInfo', link: '/dropins/product-discovery/containers/results-info/' },
+                            { label: 'SearchBarInput', link: '/dropins/product-discovery/containers/search-bar-input/' },
+                            { label: 'SearchBarResults', link: '/dropins/product-discovery/containers/search-bar-results/' },
+                          ]
+                        },
+                        { label: 'Styles', link: '/dropins/product-discovery/styles/' },
+                        { label: 'Slots', link: '/dropins/product-discovery/slots/' },
+                        { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
+                      ]
+                    },
+                    {
                       label: 'User auth',
                       collapsed: true,
                       items: [
@@ -478,18 +556,24 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'Other',
+                      label: 'Wishlist',
                       collapsed: true,
                       items: [
+                        { label: 'Overview', link: '/dropins/wishlist/' },
+                        { label: 'Installation', link: '/dropins/wishlist/installation/' },
                         {
-                          label: 'Live Search',
-                          link: '/dropins/other/search/'
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'Wishlist', link: '/dropins/wishlist/containers/wishlist/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
+                          ]
                         },
-                        {
-                          label: 'Product Recommendations',
-                          link: '/dropins/other/recommendations/'
-                        },
-                      ],
+                        { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Styles', link: '/dropins/wishlist/styles/' },
+                      ]
                     },
                   ]
                 },
@@ -517,8 +601,81 @@ async function config() {
               ],
             },
             {
-              label: 'Drop-in SDK',
-              badge: 'Beta',
+              label: 'Storefront Authors',
+              link: 'merchants/storefront-builder/',
+              icon: 'seti:svg',
+              items: [
+                {
+                  label: 'Commerce Storefront',
+                  items: [
+                    {
+                      label: 'Create your content',
+                      link: 'merchants/storefront-builder/'
+                    },
+                    {
+                      label: 'Using the Document Authoring tool',
+                      link: 'merchants/storefront-builder/document-authoring/'
+                    },
+                    {
+                      label: 'Using the Visual Editor',
+                      link: 'merchants/storefront-builder/visual-editor/'
+                    },
+                    // {
+                    //   label: 'Using digital assets management',
+                    //   link: 'merchants/storefront-builder/digital-assets-management/'
+                    // },
+                    {
+                      label: 'Using Content and Commerce blocks',
+                      link: 'merchants/storefront-builder/content-commerce-blocks/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Content customizations',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/get-started/'
+                    },
+                    {
+                      label: 'Enrichment',
+                      link: 'merchants/get-started/enrichment/'
+                    },
+                    {
+                      label: 'Experiments',
+                      link: 'merchants/get-started/experiments/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
+                      label: 'Product recommendations',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
+                    {
+                      label: 'Terms and conditions',
+                      link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Drop-in SDK (1.4.0-beta-1)',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
@@ -656,12 +813,20 @@ async function config() {
                       link: '/sdk/components/picker/'
                     },
                     {
+                      label: 'Portal',
+                      link: '/sdk/components/portal/'
+                    },
+                    {
                       label: 'Price',
                       link: '/sdk/components/price/'
                     },
                     {
                       label: 'PriceRange',
                       link: '/sdk/components/pricerange/'
+                    },
+                    {
+                      label: 'ProductItemCard',
+                      link: '/sdk/components/productitemcard/'
                     },
                     {
                       label: 'ProgressSpinner',
@@ -744,6 +909,12 @@ async function config() {
                     }, {
                       label: 'reCAPTCHA',
                       link: '/sdk/reference/recaptcha/'
+                    }, {
+                      label: 'Slots',
+                      link: '/sdk/reference/slots/'
+                    }, {
+                      label: 'VComponent',
+                      link: '/sdk/reference/vcomponent/'
                     },
                   ]
                 }, {
@@ -764,44 +935,18 @@ async function config() {
                       label: 'deepmerge',
                       link: '/sdk/utilities/deepmerge/'
                     }, {
+                      label: 'getCookie',
+                      link: '/sdk/utilities/getcookie/'
+                    }, {
                       label: 'getFormErrors',
                       link: '/sdk/utilities/getformerrors/'
                     }, {
                       label: 'getFormValues',
                       link: '/sdk/utilities/getformvalues/'
-                    }]
-                },
-              ],
-            },
-            {
-              label: 'Merchants',
-              link: 'merchants/get-started/',
-              icon: 'seti:svg',
-              items: [
-                {
-                  label: 'Getting started',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: 'merchants/get-started/'
-                    },
-                    {
-                      label: 'Enrichment',
-                      link: 'merchants/get-started/enrichment/'
-                    },
-                    {
-                      label: 'Experiments',
-                      link: 'merchants/get-started/experiments/'
-                    },
-                    {
-                      label: 'Multi-store setup',
-                      link: 'merchants/get-started/multistore/'
-                    },
-                    {
-                      label: 'Terms and conditions',
-                      link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                  ],
+                    }, {
+                      label: 'getPathValue',
+                      link: '/sdk/utilities/getpathvalue/'
+                    },]
                 },
               ],
             },
