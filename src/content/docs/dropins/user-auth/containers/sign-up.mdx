@@ -141,6 +141,7 @@ The following example redirects the user to the account page if they are already
 ```javascript
 export default async function decorate(block) {
   const isAuthenticated = !!getCookie('auth_dropin_user_token');
+  let newsletterInput;
 
   if (isAuthenticated) {
     window.location.href = '/customer/account';
@@ -149,6 +150,18 @@ export default async function decorate(block) {
       hideCloseBtnOnEmailConfirmation: true,
       routeSignIn: () => '/customer/login',
       routeRedirectOnSignIn: () => '/customer/account',
+      slots: {
+        PrivacyPolicyConsent: async (ctx) => {
+          const wrapper = document.createElement('span');
+
+          newsletterInput = document.createElement('input');
+          newsletterInput.type = 'checkbox';
+          newsletterInput.name = 'newsletterSubscription';
+          newsletterInput.checked = true;
+
+          wrapper.appendChild(newsletterInput);
+        }
+      },
       onSuccessCallback: (data) => {
         // If newsletter checkbox is not checked, do not subscribe to newsletter
         // newsletterInput refers to a checkbox element in the sign-up form for newsletter subscription
