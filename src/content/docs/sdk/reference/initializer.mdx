@@ -141,9 +141,16 @@ In this example, the width parameter is mapped to imgWidth and the value of the 
 The `setGlobalLocale()` method is part of the initializers module in the `@dropins/tools` package.
 It allows you to set a global locale for all drop-ins that use locale-sensitive components like the Price component.
 
-### Default Behavior
+### Default behavior
 
-By default, components use the browser's locale or fallback to 'en-US' if no global locale is set.
+By default, locale-sensitive components use the browser's locale or fallback to 'en-US' if no global locale is set. Locale-sensitive components follow this fallback hierarchy:
+
+1. Component-specific `locale` prop (highest priority)
+2. Global locale set via `setGlobalLocale()` 
+3. Browser's locale (`navigator.language`)
+4. Default fallback locale (`'en-US'`) (lowest priority)
+
+This ensures that your storefront always displays properly formatted content, even when specific locales are not configured.
 
 ### Parameters
 
@@ -169,7 +176,9 @@ initializers.mountImmediately(pkg.initialize, {
 });
 ```
 
-Now, when a dropin uses the Price component without specifying a locale prop:
+#### Basic Example
+
+When a drop-in uses the Price component without specifying a locale prop:
 
 ```jsx
 <Price
@@ -186,7 +195,9 @@ It will render with the global locale (fr-FR) formatting:
 </span>
 ```
 
-If the same component is used with a specific locale prop, that will take precedence:
+#### Override Example
+
+If the same component is used with a specific locale prop, that will take precedence over the global setting:
 
 ```jsx
 <Price
