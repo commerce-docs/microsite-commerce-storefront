@@ -150,21 +150,23 @@ export default async function decorate(block) {
       routeSignIn: () => '/customer/login',
       routeRedirectOnSignIn: () => '/customer/account',
       onSuccessCallback: (data) => {
-          // If newsletter checkbox is not checked, do not subscribe to newsletter
-          if (!newsletterInput.checked) {
-            return;
-          }
+        // If newsletter checkbox is not checked, do not subscribe to newsletter
+        // newsletterInput refers to a checkbox element in the sign-up form for newsletter subscription
+        if (!newsletterInput.checked) {
+          return;
+        }
 
-          // Subscribe to newsletter
-          const query = `
-            mutation subscribeEmailToNewsletter($email: String!) {
-              subscribeEmailToNewsletter(email: $email) {
-                status
-              }
-            }`;
+        // Subscribe to newsletter
+        const query = `
+          mutation ($email: String!) {
+            subscribeEmailToNewsletter(email: $email) {
+              status
+            }
+          }`;
 
-          const { userEmail: email } = data;
-          mesh.fetchGraphQl(query, { method: 'POST', variables: { email }});
+        const { userEmail: email } = data;
+        mesh.fetchGraphQl(query, { method: 'POST', variables: { email }});
+      }
     })(block);
   }
 }
