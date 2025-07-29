@@ -3,6 +3,9 @@ title: Initializer
 description: Initializer is a class that helps you initialize your package.
 ---
 
+import Aside from '@components/Aside.astro';
+import Badge from '@components/overrides/Badge.astro';
+
 ```typescript
 // my-domain-package/initializer.ts
 
@@ -41,12 +44,34 @@ window.addEventListener('load', initializers.mount);
 
 ## `setImageParamKeys(params)`
 
-The `setImageParamKeys` method is part of the initializers module in the `@dropins/tools` package.
-It allows you to set image parameters globally for all drop-ins that use the Image component.
+The `setImageParamKeys` method is part of the initializers module in the `@dropins/tools` package. It allows you to set image parameters globally for all drop-in components that use the [Image](/sdk/components/image/) component. CDN-based image optimization services, such as Fastly and Cloudflare, rely on these parameters to optimize images.
 
-### Default Behavior
+### Default behavior
 
-By default, Fastly parameters are used if `setImageParamKeys` is not called or if no parameters are provided.
+Since Fastly is the default CDN for Adobe Commerce on Cloud, drop-in components add the following Fastly-style parameters to all image URLs by default:
+
+- `width`
+- `height`
+- `auto`
+- `quality`
+- `crop`
+- `fit`
+
+Example:
+
+```text
+/media/catalog/product/adobestoredata/ADB150.jpg?auto=webp&quality=80&crop=false&fit=cover&width=960&height=1191`
+```
+
+Technical details about CDN-based image optimization differ depending on your backend Adobe Commerce solution:
+
+- <Badge tooltip="Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only." text="PaaS only" variant="note" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" /> Fastly is the default CDN-based image optimization service for Adobe Commerce on Cloud projects. Fastly-style parameters are used by default unless overridden via `setImageParamKeys`.
+  
+- <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" /> Cloudflare is the default CDN-based image optimization service for Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects. Fastly-style parameters are used but are proxied through a [Cloudflare Worker](https://developers.cloudflare.com/images/transform-images/transform-via-workers) to transform the parameters to Cloudflare-style parameters. Overriding the default parameters using `setImageParamKeys` may interfere with the proxy transformation and lead to unexpected results.
+
+<Aside type="tip" title="Override defaults">
+If necessary, you can override these parameters with the `setImageParamKeys` method. For example, if you are using a CDN provider that requires different parameters or URL patterns.
+</Aside>
 
 ### Parameters
 
@@ -64,7 +89,7 @@ By default, Fastly parameters are used if `setImageParamKeys` is not called or i
 
 ### Usage
 
-Call the setImageParamKeys() function before the register() and mount() functions in the application layer.
+Call the `setImageParamKeys()` function before the `mountImmediately()` function in the application layer.
 
 ```javascript
 // Set global image parameters
@@ -77,13 +102,10 @@ initializers.setImageParamKeys({
   extraParam: () => ['extraParam', 'extraValue'],
 });
 
-// Register Initializers
-initializers.register(pkg.initialize, {
-  langDefinitions,
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
 });
-
-// Mount Initializers
-initializers.mount();
 ```
 
 Now, when a dropin uses the Image component to render an image with a width of 300 pixels and quality value of 0.8:
@@ -113,3 +135,82 @@ It renders the following image element:
 ```
 
 In this example, the width parameter is mapped to imgWidth and the value of the quality parameter is modified and mapped to imgQuality.
+
+## `setGlobalLocale(locale)`
+
+The `setGlobalLocale()` method is part of the initializers module in the `@dropins/tools` package.
+It allows you to set a global locale for all drop-ins that use locale-sensitive components like the Price component.
+
+### Default behavior
+
+By default, locale-sensitive components use the browser's locale or fallback to 'en-US' if no global locale is set. Locale-sensitive components follow this fallback hierarchy:
+
+1. Component-specific `locale` prop (highest priority)
+2. Global locale set via `setGlobalLocale()` 
+3. Browser's locale (`navigator.language`)
+4. Default fallback locale (`'en-US'`) (lowest priority)
+
+This ensures that your storefront always displays properly formatted content, even when specific locales are not configured.
+
+### Parameters
+
+- `locale` - `string` - The locale string (e.g., 'en-US', 'es-MX', 'fr-FR', 'de-DE').
+
+### Functionality
+
+- If a global locale is set via `setGlobalLocale()`, it will be used by components that support locale configuration.
+- Component-specific locale props will take precedence over the global locale.
+- If no global locale is set, components will fall back to the browser's locale or a default locale.
+
+### Usage
+
+Call the `setGlobalLocale()` function before the `mountImmediately()` function in the application layer.
+
+```javascript
+// Set global locale for consistent formatting across all drop-ins
+initializers.setGlobalLocale('fr-FR');
+
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
+});
+```
+
+#### Basic Example
+
+When a drop-in uses the Price component without specifying a locale prop:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+/>
+```
+
+It will render with the global locale (fr-FR) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  100,00 €
+</span>
+```
+
+#### Override Example
+
+If the same component is used with a specific locale prop, that will take precedence over the global setting:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+  locale="en-US"
+/>
+```
+
+It will render with the specified locale (en-US) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  €100.00
+</span>
+```

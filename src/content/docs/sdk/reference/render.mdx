@@ -3,38 +3,120 @@ title: Render
 description: Render your component to the DOM or as a string.
 ---
 
-```typescript
-render(Component: FunctionComponent, props?: any): (element: HTMLElement) => void;
-```
+## Implementing a new render in your dropin
 
-```typescript
-// my-domain-package/render.js
-import { Render } from '@adobe/elsie/lib';
+To implement a new render in your dropin, you must create an instance of the `Render` class from the `@adobe-commerce/elsie/lib` library, passing in a `Provider` component.
+
+This setup initializes the rendering context with the specified provider, which can manage state, context, or other dependencies required by your components.
+
+By exporting this `render` instance, you enable different parts of your application to render components within the defined context, ensuring consistent behavior and integration across your application.
+
+```ts
+// Dropin
+
+import { Render } from '@adobe-commerce/elsie/lib';
 import { Provider } from './Provider';
 
 export const render = new Render(<Provider />);
 ```
 
-```typescript
-// Host Site
+## Rendering a dropin's container in a storefront
+
+The render function mounts a drop-in container or component into the DOM and manages its lifecycle. 
+It returns a Promise that resolves to an object containing methods for updating and removing the component instance.
+
+```js
+// Storefront
 import { render as provider } from 'my-domain-pkg/render.js';
 import { MyContainer } from 'my-domain-pkg/containers/MyContainer.js';
 
-const $myContainer = document.getElementById('my-container-root');
+const wrapper = document.getElementById('my-container-root');
 
-provider.render(MyContainer, { ...props })($myContainer);
+provider.render(MyContainer, { ...props })(wrapper);
 ```
 
-## Render as String
+### Using VNode as a property
 
-```typescript
-toString(Component: FunctionComponent, props?: any): Promise<string>;
+Some components may require VNodes as properties. If you are using another component from the library, provide the VNode by executing the component as a function.
+
+```js
+// Storefront
+
+import { Button, Icon, provider } from '@dropins/tools/components.js';
+
+const wrapper = document.getElementById('my-container-root');
+
+provider.render(Button, { 
+    children: 'My Button', 
+    icon: Icon({ source: 'Heart' }), 
+})(wrapper);
 ```
 
-```typescript
-// Host Site
+You may also create your VNode using the `h` function from the Preact library. 
+
+```js
+// Storefront
+
+import { Button, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+const wrapper = document.getElementById('my-container-root');
+
+provider.render(Button, { icon: h('div', { id: 'my-vnode' }) })(wrapper);
+```
+
+### Update properties of a rendered component
+
+The `setProps` method is provided by the instance returned from the `render` function. 
+It allows for dynamic updates to the properties of a rendered component. 
+By accepting an updater function, `setProps` lets you modify the component's props based on its previous state. 
+This method is particularly useful for making incremental changes or responding to user interactions 
+without re-rendering the entire component. It ensures that the component's state remains consistent
+and up-to-date with the latest data or user inputs.
+
+#### Example
+
+```js
+// Storefront
+
 import { render as provider } from 'my-domain-pkg/render.js';
 import { MyContainer } from 'my-domain-pkg/containers/MyContainer.js';
 
-const html = await provider.toString(MyContainer, { ...props });
+const wrapper = document.getElementById('my-container-root');
+const myContainer = await provider.render(MyContainer, { ...props })(wrapper);
+
+const button = document.getElementById('my-button');
+
+button.addEventListener('click', () => {
+    // Update the component's props
+    myContainer.setProps((prevProps) => ({
+    ...prevProps,
+    newProp: 'new value',
+    }));
+});
+```
+
+### Remove a rendered component from the DOM
+
+The `remove` method is provided by the instance returned from the `render` function. 
+It allows for the complete removal of a rendered component from the DOM. 
+When invoked, `remove` ensures that the component and its associated resources are properly cleaned up, 
+preventing memory leaks and maintaining the application's overall performance. 
+This method is essential for managing the lifecycle of dynamic components, 
+especially in applications where components need to be frequently added and removed based 
+on user interactions or other events.
+
+```js
+import { render as provider } from 'my-domain-pkg/render.js';
+import { MyContainer } from 'my-domain-pkg/containers/MyContainer.js';
+
+const wrapper = document.getElementById('my-container-root');
+const myContainer = await provider.render(MyContainer, { ...props })(wrapper);
+
+const button = document.getElementById('my-button');
+
+button.addEventListener('click', () => {
+    // Remove the component from the DOM
+    myContainer.remove();
+});
 ```

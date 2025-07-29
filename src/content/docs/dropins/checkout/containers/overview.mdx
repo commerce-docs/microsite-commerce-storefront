@@ -5,49 +5,128 @@ description: Learn how to use the containers for the checkout drop-in component.
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-During the checkout process, some containers need to be rendered or not depending on the use of some conditions, in our case, data extracted from the cart state.
-This is based on the HOC (High Order Component) concept, where there is a component which provides us with a way to reuse behavior and state logic between components. 
+In this section, we describe the common properties of Checkout components that can be applied and used in the same way.
 
-A HOC is a Javascript function that receives at least one component as a parameter and returns a new component by injecting the logic that you want to reuse through props. In other words, a HOC is a function that receives a component and returns a new enriched component. The main benefit of HOCs is the reuse of logic.
+## Title and heading customization
 
-In our case, we have defined a function called `withConditionalRendering()` that receives a `Container` as a parameter and returns a `ConditionalContainer`. This `ConditionalContainer` accepts a couple of props (apart from the `Container`'s own) that will be used by the logic injected into it to decide whether the Checkout drop-in should render the container or not.
+Each container provides a title and a heading by default. If you want to hide the title or provide customized title, you can use the following interface.
 
-## ConditionalContainer configurations
+### TitleProps interface
 
-The `ConditionalContainer` container provides the following configuration options:
+The `TitleProps` interface provides the following configuration options:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['hideOnEmptyCart', 'boolean', 'No', 'Hides the container if the cart is empty (default value is true).'],
-    ['hideOnVirtualCart', 'boolean', 'No', 'Hides the container if the cart is virtual (default value is false).'],
+    ['displayTitle', 'boolean', 'No', 'Displays the title of the container.'],
+    ['slots', 'object', 'No', 'Object with the content to be displayed on the title.'],
   ]}
 />
 
-The structure of the `withConditionalRendering()` function is defined as following:
+The container receives an object that implements the `TitleProps` interface with the following properties:
 
 ```ts
-export interface ConditionalProps {
-  hideOnEmptyCart?: boolean;
-  hideOnVirtualCart?: boolean;
-}
-
-export const withConditionalRendering = <P extends object>(
-  WrappedContainer: Container<P>
-) => {
-  const ConditionalContainer = ({
-    hideOnEmptyCart = true,
-    hideOnVirtualCart = false,
-    ...props
-  }: ConditionalProps & P) => {
-    // Logic to hide the container goes here
+export interface TitleProps {
+  displayTitle?: boolean;
+  slots?: {
+    Title?: SlotProps;
   };
-
-  return ConditionalContainer;
-};
+}
 ```
 
+- The `displayTitle` property set to _true_ displays the title of the container; otherwise, the title will be hidden.
+- The `slots` property is an object containing the following properties:
+  - The `Title` property is a handler used to render a customized title content.
+
 :::note[Checkout containers]
-As mentioned, the Checkout drop-in consists of several containers rendered based on cart conditions. In the following pages, we will describe all the Checkout containers indicating whether they need to be rendered based on those conditions, by accepting both `hideOnEmptyCart` and `hideOnVirtualCart` props.
+In the pages that follow, you will learn how to customize the `Title` and how to use it.
 :::
+
+## Active property
+
+The `active` property indicates whether the container is active. When set to _false_, the container becomes non-reactive, meaning it will not respond to system events, will not subscribe to them, and will not be displayed in the user interface.
+
+### `active` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+  ]}
+/>
+
+```ts
+active?: boolean;
+```
+
+#### Behavior:
+
+- When `active` is _true_:
+  - The container subscribes to system events
+  - It renders in the user interface and it is visible (shows a skeleton or renders the component in the UI)
+  - It executes its normal operations
+- When `active` is _false_:
+  - The container does not subscribe to system events
+  - It does not render in the user interface and its visibility is set to false
+  - Side effects and state updates are not executed
+
+### Example of `active` prop definition
+
+In the following example, the `ShippingMethods` container will be deactivated; this means it will not be rendered to the UI and will not listen to system events.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  active: false,
+})($deliveryMethods),
+```
+
+## AutoSync property
+
+The `autoSync` property determines whether the container automatically synchronizes its state changes with the backend via API calls. When set to _false_, the container does not automatically synchronize its state, but still maintains local updates.
+
+### `autoSync` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+  ]}
+/>
+
+```ts
+autoSync?: boolean;
+```
+
+#### Behavior:
+
+- When `autoSync` is _true_:
+  - Local changes are synchronized with the backend
+  - GraphQL mutations are executed when selection or local state changes
+  - The remote cart is automatically updated
+- When `autoSync` is _false_:
+  - Changes are only maintained locally
+  - No automatic GraphQL mutations are performed on the backend
+  - Control of mutations is passed to parent or external components
+
+#### Use cases:
+
+- In multi-step checkout flows where you want to control when data is sent to the backend
+- For nested containers where a parent container handles synchronization
+- In implementations that need additional validation before sending data
+
+### Example of `autoSync` prop definition
+
+In the following example, the `ShippingMethods` container will not automatically synchronize its state changes with the backend; this means it will not automatically set the shipping method selected on the cart.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  autoSync: false,
+})($deliveryMethods),
+```
