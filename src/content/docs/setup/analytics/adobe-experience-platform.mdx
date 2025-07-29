@@ -1,56 +1,162 @@
 ---
 title: Adobe Experience Platform
-description: Learn how to integrate your Adobe Commerce on Edge Delivery Services storefront project to the Adobe Experience Platform.
+description: Learn how to integrate your Adobe Commerce on Edge Delivery Services storefront project with Adobe Experience Platform to collect and analyze customer data.
 ---
 
 import OptionsTable from '@components/OptionsTable.astro';
 import Diagram from '@components/Diagram.astro';
 import CodeExample from '@components/CodeExample.astro';
+import { Steps } from '@astrojs/starlight/components';
+import Task from '@components/Task.astro';
+import Tasks from '@components/Tasks.astro';
+import Link from '@components/Link.astro';
 
 ## Overview
 
-Adobe Experience Platform is a suite of services that allows you to collect, manage, and analyze data from your customers. Here's a diagram showcasing the full architecture of Adobe Experience Platform.
+Adobe Experience Platform (AEP) is a comprehensive suite of services that enables you to collect, unify, and analyze customer data from multiple touchpoints. By integrating your Adobe Commerce storefront with AEP, you can gain deeper insights into customer behavior and create more personalized experiences.
 
-<Diagram caption="Adobe Experience Platform architecture.">
+<Diagram caption="Adobe Experience Platform architecture showing data flow from various sources to unified customer profiles.">
   ![Adobe Experience Platform architecture.](./aep-architecture-1024.png)
 </Diagram>
 
-You can read more about Adobe Experience Platform in the [Adobe Experience Platform documentation](https://experienceleague.adobe.com/docs/experience-platform/landing/home.html).
+This integration allows your storefront to send commerce events (product views, purchases, cart actions) directly to the Experience Platform Edge Network, where they can be processed, stored, and used for real-time personalization and analytics.
 
-The documentation on this page will focus on the integration of the Adobe Commerce on Edge Delivery Services storefront project to Adobe Experience Platform.
+For more information about Adobe Experience Platform capabilities, see the <Link href="https://experienceleague.adobe.com/docs/experience-platform/landing/home.html" text="Adobe Experience Platform documentation" />.
 
 ## Prerequisites
 
-Before you can configure your integration to Adobe Experience Platform you need to have the following:
+Before configuring your integration with Adobe Experience Platform, ensure you have the following:
 
-* IMS Org Id (e.g. `########@AdobeOrg`)
-* Datastream ID (e.g. `########-####-####-####-########`)
+### Required Identifiers
 
-To find your IMS org ID refer to the documentation at[Organizations](https://experienceleague.adobe.com/docs/core-services/interface/administration/organizations.html).
+* **IMS Organization ID**: Your Adobe organization identifier (format: `1234567890ABCDEF7F000101@AdobeOrg`)
+* **Datastream ID**: A configured datastream for routing data (format: `12345678-1234-1234-1234-123456789012`)
 
-You can find more information about how to create a datastream in the [Adobe Experience Platform documentation](https://experienceleague.adobe.com/docs/experience-platform/datastreams/overview.html).
+### How to Find Your Identifiers
+
+**IMS Organization ID:**
+To locate your IMS Organization ID, refer to the <Link href="https://experienceleague.adobe.com/docs/core-services/interface/administration/organizations.html" text="Organizations documentation" />. You can typically find this in:
+
+- Adobe Admin Console
+- Developer Console
+- Any Adobe Experience Cloud application under Account Settings
+
+**Datastream ID:**
+Your datastream must be configured to route data to Adobe Experience Platform. For detailed instructions on creating and configuring a datastream, see the <Link href="https://experienceleague.adobe.com/docs/experience-platform/datastreams/overview.html" text="Datastreams documentation" />.
 
 ## Configuration
 
-In order for data to flow from your storefront to the Experience Platform Edge Network you just need to change a few lines of code in your storefront project.
+To enable data flow from your storefront to the Experience Platform Edge Network, you need to configure the Adobe Data Layer with your AEP credentials.
+
+<Tasks>
+
+<Task>
+### Locate your delayed script file
+
+Typically `scripts/delayed.js` in your project
+</Task>
+
+<Task>
+### Add the AEP configuration to your Adobe Data Layer initialization
 
 <CodeExample code={`
 window.adobeDataLayer.push({
-		aepContext: {
-				imsOrgId: '########@AdobeOrg',
-				datastreamId: '########-####-####-####-########'
-		},
-		{ eventForwardingContext: { commerce: true, aep: true } },
-	},
-});
+	aepContext: {
+		imsOrgId: '1234567890ABCDEF7F000101@AdobeOrg',
+		datastreamId: '12345678-1234-1234-1234-123456789012'
+	}
+	}, {
+	eventForwardingContext: {
+		commerce: true,
+		aep: true
+	}
+	});
 `} lang="js" title="scripts/delayed.js" />
 
-`aepContext` is the context object that contains the IMS Org Id and Datastream ID.
+</Task>
+</Tasks>
 
-`eventForwardingContext` with `aep: true` tells the Adobe Data Layer to forward the event to the Experience Platform Edge Network and configure it to send to the correct IMS Org and Datastream.
+### Configuration Parameters
 
-You can see an example of this [here](https://github.com/hlxsites/aem-boilerplate-commerce/commit/eb49d00bcebd21e48cd87c0efced17d2c6ccfd9d).
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `aepContext.imsOrgId` | Your Adobe IMS Organization ID | Yes |
+| `aepContext.datastreamId` | Your configured datastream ID for routing data to AEP | Yes |
+| `eventForwardingContext.commerce` | Enables commerce event tracking | Yes |
+| `eventForwardingContext.aep` | Enables forwarding events to Adobe Experience Platform | Yes |
+
+### What This Configuration Does
+
+- **`aepContext`**: Provides the necessary identifiers for routing data to your specific Adobe Experience Platform environment
+- **`eventForwardingContext.aep: true`**: Instructs the Adobe Data Layer to forward commerce events to the Experience Platform Edge Network
+- **`eventForwardingContext.commerce: true`**: Enables tracking of commerce-specific events like product views, cart additions, and purchases
+
+## Data Flow and Events
+
+Once configured, your storefront will automatically send the following types of events to Adobe Experience Platform:
+
+- **Product interactions**: Views, clicks, add-to-cart actions
+- **Shopping behavior**: Cart updates, checkout steps, purchases
+- **User engagement**: Page views, time on site, navigation patterns
+
+These events are processed in real-time and can be used for:
+- Customer journey analysis
+- Real-time personalization
+- Audience segmentation
+- Attribution modeling
 
 ## Validation
 
-To validate your integration, refer to the documentation at [Ingest batch data](https://experienceleague.adobe.com/docs/platform-learn/getting-started-for-data-architects-and-data-engineers/ingest-batch-data).
+You can see an example of this <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/commit/eb49d00bcebd21e48cd87c0efced17d2c6ccfd9d" text="in the Commerce Boilerplate" />.
+
+### Testing Your Integration
+
+<Tasks>
+
+<Task>
+### Check browser console
+
+After implementing the configuration, open your browser's developer tools and verify that:
+
+- No JavaScript errors appear
+- Adobe Data Layer events are being fired
+- Network requests to Adobe Experience Platform Edge Network are successful
+</Task>
+
+<Task>
+### Monitor data ingestion
+
+Use Adobe Experience Platform's monitoring tools to confirm data is being received:
+
+- Navigate to your AEP workspace
+- Check the **Monitoring** section for incoming data
+- Verify events appear in your configured datasets
+</Task>
+
+</Tasks>
+
+### Validate event structure
+
+Ensure events contain the expected commerce data fields and customer identifiers
+
+### Troubleshooting
+
+If data is not flowing as expected:
+
+- **Verify credentials**: Double-check your IMS Organization ID and Datastream ID
+- **Check datastream configuration**: Ensure your datastream is properly configured to route to Adobe Experience Platform
+- **Review browser network tab**: Look for failed requests to Adobe Experience Platform endpoints
+- **Validate Adobe Data Layer**: Confirm the Adobe Data Layer is properly initialized before your AEP configuration
+
+For detailed validation procedures, refer to the <Link href="https://experienceleague.adobe.com/docs/platform-learn/getting-started-for-data-architects-and-data-engineers/ingest-batch-data.html" text="Data Ingestion Monitoring documentation" />.
+
+## Next Steps
+
+After successful integration:
+
+1. **Configure schemas**: Set up XDM schemas in Adobe Experience Platform to structure your commerce data  
+2. **Create audiences**: Build customer segments based on commerce behavior
+3. **Set up Real-Time CDP**: Use collected data for personalization and marketing activation
+4. **Monitor performance**: Regularly review data quality and ingestion metrics
+
+For a complete implementation example, see the <Link href="https://experienceleague.adobe.com/docs/core-services/interface/administration/organizations.html" text="Organizations documentation" /> [AEM Commerce Boilerplate integration](https://github.com/hlxsites/aem-boilerplate-commerce).

@@ -1,63 +1,205 @@
 ---
 title: Instrumentation
-description: Learn how to instrument your Adobe Commerce on Edge Delivery Services storefront project.
+description: Learn how to instrument your Adobe Commerce on Edge Delivery Services storefront project to collect user interaction events for analytics and personalization.
 ---
 
 import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
+import CodeExample from '@components/CodeExample.astro';
+import { Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
 
-User interaction events power Adobe Sensei features, like intelligent merchandising for Live Search and to personalize product recommendations units. These events also populate performance dashboards for [Live Search](https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/admin/workspace#data-collection).
+## Overview
 
+Instrumentation is the process of adding code to your storefront to collect data about user interactions and behaviors. This data powers critical Adobe Commerce features and provides valuable insights into your customers' shopping journey.
 
-<Aside type="caution" title="Important">
-For Live Search and Product Recommendation APIs to work correctly, you must collect and send user interaction events to Commerce.
+### Why Instrumentation Matters
+
+User interaction events collected through instrumentation enable:
+
+- **Adobe Sensei features**: Intelligent merchandising and search result optimization in Live Search
+- **Product recommendations**: Personalized product suggestions based on user behavior  
+- **Performance analytics**: Detailed dashboards showing search performance, conversion rates, and user engagement
+- **Business intelligence**: Data-driven insights for inventory management and marketing strategies
+
+<Aside type="caution" title="Required for Core Features">
+For Live Search and Product Recommendations to function correctly, you must collect and send user interaction events to Adobe Commerce. Without proper instrumentation, these features will not work as expected.
 </Aside>
-
 
 ## Adobe Client Data Layer (ACDL)
 
-The [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer) reduces the effort to instrument websites by providing a standardized method to expose and access any kind of data for any script. It consists of a JavaScript client-side event-driven data store that can be used on web pages to:
+The [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer) is a standardized JavaScript framework that simplifies data collection on your storefront. It provides a unified approach to capturing, storing, and transmitting user interaction data.
 
-- Collect data about what visitors experience on the web page
-- Communicate this data to digital analytics and reporting servers
+### Key Capabilities
 
-The ACDL provides an API to:
+The ACDL enables your storefront to:
 
-- Register data that is to be merged into the data layer state.
-- Trigger events that relate to the data stored in the data layer.
-- Get the current data layer state of all merged data.
-- Register listeners that are called for specific events or data changes.
-- List the history of registered data and triggered events.
+- **Collect interaction data**: Track user behaviors like product views, searches, cart actions, and purchases
+- **Standardize data format**: Ensure consistent data structure across all events
+- **Manage event timing**: Control when and how data is sent to analytics services
+- **Support multiple integrations**: Work seamlessly with Adobe Experience Platform, Analytics, and other tools
 
-<Aside type="tip" title="Tip">
-The Commerce boilerplate includes the ACDL by default.
+### Core API Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `push()` | Add data or trigger events | Send product view, cart addition events |
+| `getState()` | Retrieve current data layer state | Access user session or cart information |
+| `addEventListener()` | Register event listeners | React to specific user actions |
+| `getHistory()` | View event history | Debug or audit data collection |
+
+<Aside type="tip" title="Built-in Support">
+The Adobe Commerce boilerplate includes ACDL by default, so you don't need to install it separately. Drop-in components automatically send events to the data layer.
 </Aside>
 
 ## Configuration
 
-To configure variables for your Commerce backend, update the `analytics` object located in either your site config or a `config.json` in your repository. It should resemble the `analytics` property on https://aemshop.net/config.json.
+### Store Configuration
 
-```json
-{
-  "base-currency-code": "USD",
-  "environment": "Production",
-  "store-id": 1,
-  "store-name": "Main Website Store",
-  "store-url": "https://www.aemshop.net",
-  "store-view-id": 1,
-  "store-view-name": "Default Store View",
-  "website-id": 1,
-  "website-name": "Main Website"
-}
-```
+To enable proper event collection, you need to configure your store's analytics settings. This configuration tells the instrumentation system about your store's identity and structure. Refer to the <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/" text="Commerce Configuration documentation" /> for more information.
 
+### Required Configuration Parameters
 
-## Validate storefront events
+<CodeExample code={`
+ ...
+  "analytics": {
+    "base-currency-code": "USD",
+    "environment": "Production",
+    "store-id": 1,
+    "store-name": "Main Website Store",
+    "store-url": "{{YOUR_STORE_URL}}",
+    "store-view-id": 1,
+    "store-view-name": "Default Store View",
+    "website-id": 1,
+    "website-name": "Main Website"
+  }
+  ...
+`} lang="json" title="config.json" />
 
-To validate events, you can use [this draft validator](https://github.com/adobe/adobe-client-data-layer/pull/156). Events written to ACDL must comply to a specific schema as defined by the [Storefront Event SDK](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-sdk).
+### Configuration Parameters Explained
 
-<Aside type="note" title="Note">
-For performance considerations, Adobe highly recommends writing events to the ACDL directly without using the Storefront Events SDK. Drop-in components will send events to ACDL out of the box, but you should double-check the correctness of all events.
+| Parameter | Description | Example | Required |
+|-----------|-------------|---------|----------|
+| `base-currency-code` | Default currency for your store | `"USD"`, `"EUR"` | Yes |
+| `environment` | Current environment | `"Production"`, `"Staging"` | Yes |
+| `store-id` | Unique identifier for your store | `1`, `2` | Yes |
+| `store-name` | Human-readable store name | `"Main Website Store"` | Yes |
+| `store-url` | Your store's primary URL | `"https://example.com"` | Yes |
+| `store-view-id` | Unique identifier for store view | `1`, `2` | Yes |
+| `store-view-name` | Human-readable store view name | `"Default Store View"` | Yes |
+| `website-id` | Unique identifier for website | `1`, `2` | Yes |
+| `website-name` | Human-readable website name | `"Main Website"` | Yes |
+
+### Data Services Configuration
+
+For the instrumentation to work with Adobe Commerce's data services, you'll need additional configuration parameters. The easiest way to obtain these is through the `magento/module-data-services-graphql` module, which exposes the necessary GraphQL endpoints.
+
+#### Required for Data Services
+
+- **Catalog Service credentials**: For product data synchronization
+- **SaaS environment ID**: Links your storefront to Adobe Commerce SaaS services
+- **API keys**: Authenticate with Adobe Commerce backend services
+
+## Event Collection and Validation
+
+### Automatic Event Collection
+
+The Commerce boilerplate includes the [Storefront Events Collector](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-collector), which automatically:
+
+<Steps>
+1. **Listens for ACDL events**: Monitors the data layer for new events
+1. **Validates event structure**: Ensures events conform to required schemas  
+1. **Batches and sends data**: Efficiently transmits events to Adobe Commerce
+1. **Handles errors**: Manages network issues and retry logic
+</Steps>
+
+### Event Types Collected
+
+Your instrumentation will automatically track:
+
+- **Product interactions**: Views, clicks, add-to-cart, remove-from-cart
+- **Search behavior**: Search queries, results clicked, filters applied
+- **Shopping flow**: Checkout initiation, payment method selection, purchase completion
+- **Page navigation**: Page views, time on page, bounce events
+
+### Event Schema Compliance
+
+All events must comply with the schema defined by the [Storefront Event SDK](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-sdk). This ensures compatibility with Adobe Commerce services and analytics tools.
+
+## Validation and Testing
+
+The following sections describe how to validate and test your event implementation.
+
+### Automated Validation
+
+You can validate your event implementation using the [ACDL Event Validator](https://github.com/adobe/adobe-client-data-layer/pull/156). This tool checks:
+
+- **Event structure**: Verifies required fields are present
+- **Data types**: Ensures values match expected formats
+- **Schema compliance**: Confirms events follow Storefront Event SDK specifications
+
+<Aside type="note" title="Performance Recommendation">
+For optimal performance, Adobe recommends writing events directly to ACDL rather than using the Storefront Events SDK wrapper. Drop-in components handle this automatically, but custom implementations should follow this practice.
 </Aside>
 
-The boilerplate loads the [Storefront Events Collector](https://github.com/adobe/commerce-events/tree/main/packages/storefront-events-collector) in the delayed phase to automatically send those events. For the collector to work, you must ensure that the configuration file is properly populated with all configuration parameters. The configuration parameters are a mix between those that are required for Catalog Service access and some specific to data services. The easiest way to retrieve them is using the `magento/module-data-services-graphql` module, which exposes additional GraphQL functionality.
+### Manual Testing Steps
+
+<Steps>
+1. **Open browser developer tools** and navigate to the Console tab
+1. **Check for ACDL**: Verify `window.adobeDataLayer` exists and contains events
+1. **Monitor network requests**: Look for successful data transmission to Adobe services
+1. **Validate event data**: Inspect event payloads for completeness and accuracy
+</Steps>
+
+### Common Validation Issues
+
+- **Missing configuration**: Ensure all required analytics parameters are set
+- **Incorrect store IDs**: Verify store and website IDs match your Adobe Commerce setup  
+- **Network connectivity**: Check that your storefront can reach Adobe Commerce endpoints
+- **Event timing**: Confirm events fire at the correct moments in the user journey
+
+## Troubleshooting Configuration Issues
+
+**Problem**: Events not being sent<br />
+**Solution**: 
+<Steps>
+1. Verify your `config.json` contains all required analytics parameters
+1. Check that store IDs match your Adobe Commerce backend configuration
+1. Ensure the Storefront Events Collector is loading properly
+</Steps>
+
+**Problem**: Invalid event data<br />
+**Solution**:
+<Steps>
+1. Use the ACDL validator to check event structure
+1. Verify custom events follow the Storefront Event SDK schema
+1. Check for JavaScript errors that might corrupt event data
+</Steps>
+
+## Troubleshooting Integration Issues
+
+**Problem**: Live Search not receiving data<br />
+**Solution**:
+<Steps>
+1. Confirm your SaaS environment ID is correctly configured
+1. Verify API credentials are valid and have necessary permissions
+1. Check that product catalog is properly synchronized
+</Steps>
+
+For additional troubleshooting, refer to the [Live Search Data Collection documentation](https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/admin/workspace#data-collection).
+
+## Best Practices
+
+### Implementation Guidelines
+
+- **Test thoroughly**: Validate events in development before deploying to production
+- **Monitor regularly**: Set up alerts for data collection failures
+- **Follow schemas**: Always comply with Storefront Event SDK specifications
+- **Optimize performance**: Batch events when possible to reduce network overhead
+
+### Data Quality
+
+- **Validate user inputs**: Sanitize data before adding to events
+- **Handle edge cases**: Account for scenarios like network failures or missing data
+- **Maintain consistency**: Use standardized naming and formatting across all events
+- **Respect privacy**: Ensure compliance with data protection regulations
