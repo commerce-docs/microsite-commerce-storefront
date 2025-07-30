@@ -89,7 +89,7 @@ If necessary, you can override these parameters with the `setImageParamKeys` met
 
 ### Usage
 
-Call the setImageParamKeys() function before the register() and mount() functions in the application layer.
+Call the `setImageParamKeys()` function before the `mountImmediately()` function in the application layer.
 
 ```javascript
 // Set global image parameters
@@ -102,13 +102,10 @@ initializers.setImageParamKeys({
   extraParam: () => ['extraParam', 'extraValue'],
 });
 
-// Register Initializers
-initializers.register(pkg.initialize, {
-  langDefinitions,
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
 });
-
-// Mount Initializers
-initializers.mount();
 ```
 
 Now, when a dropin uses the Image component to render an image with a width of 300 pixels and quality value of 0.8:
@@ -138,3 +135,82 @@ It renders the following image element:
 ```
 
 In this example, the width parameter is mapped to imgWidth and the value of the quality parameter is modified and mapped to imgQuality.
+
+## `setGlobalLocale(locale)`
+
+The `setGlobalLocale()` method is part of the initializers module in the `@dropins/tools` package.
+It allows you to set a global locale for all drop-ins that use locale-sensitive components like the Price component.
+
+### Default behavior
+
+By default, locale-sensitive components use the browser's locale or fallback to 'en-US' if no global locale is set. Locale-sensitive components follow this fallback hierarchy:
+
+1. Component-specific `locale` prop (highest priority)
+2. Global locale set via `setGlobalLocale()` 
+3. Browser's locale (`navigator.language`)
+4. Default fallback locale (`'en-US'`) (lowest priority)
+
+This ensures that your storefront always displays properly formatted content, even when specific locales are not configured.
+
+### Parameters
+
+- `locale` - `string` - The locale string (e.g., 'en-US', 'es-MX', 'fr-FR', 'de-DE').
+
+### Functionality
+
+- If a global locale is set via `setGlobalLocale()`, it will be used by components that support locale configuration.
+- Component-specific locale props will take precedence over the global locale.
+- If no global locale is set, components will fall back to the browser's locale or a default locale.
+
+### Usage
+
+Call the `setGlobalLocale()` function before the `mountImmediately()` function in the application layer.
+
+```javascript
+// Set global locale for consistent formatting across all drop-ins
+initializers.setGlobalLocale('fr-FR');
+
+// Register and Mount Initializers immediately
+initializers.mountImmediately(pkg.initialize, {
+  // other configurations...
+});
+```
+
+#### Basic Example
+
+When a drop-in uses the Price component without specifying a locale prop:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+/>
+```
+
+It will render with the global locale (fr-FR) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  100,00 €
+</span>
+```
+
+#### Override Example
+
+If the same component is used with a specific locale prop, that will take precedence over the global setting:
+
+```jsx
+<Price
+  amount={100}
+  currency="EUR"
+  locale="en-US"
+/>
+```
+
+It will render with the specified locale (en-US) formatting:
+
+```html
+<span class="dropin-price dropin-price--default dropin-price--small dropin-price--bold">
+  €100.00
+</span>
+```
