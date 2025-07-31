@@ -13,10 +13,15 @@ To integrate third-party payment providers, you can use the extensibility featur
 
 ## Step-by-step
 
-This tutorial provides a step-by-step guide for integrating the Braintree payment provider with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well.
+This tutorial provides a step-by-step guide for integrating the Braintree payment gateway provider, as an example, with the Commerce boilerplate template. You can use these steps as a reference to integrate other payment providers as well.
 
 <Aside type="note">
 Make sure that the payment provider you choose offers an SDK or API that you can use to integrate with the [slots](/dropins/checkout/slots/) provided by the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container in the checkout drop-in component.
+</Aside>
+
+<Aside type="note">
+The _**commerce-checkout.js**_ block is the only one that is fully functional and up-to-date with the latest Checkout Drop-in version.
+Use the following guidelines just as a reference when creating a new checkout experience.
 </Aside>
 
 <Tasks>
@@ -67,14 +72,14 @@ To integrate the Braintree payment provider with the Commerce boilerplate templa
    let braintreeInstance;
    ```
 
-1. Update the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container to include a custom handler for the Braintree payment method and set `setOnChange` to `false` to prevent automatic calls to the [`setPaymentMethod`](/dropins/checkout/functions/#setpaymentmethod) function on change.
+1. Update the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container to include a custom handler for the Braintree payment method and set `autoSync` to `false` to prevent automatic calls to the [`setPaymentMethod`](/dropins/checkout/functions/#setpaymentmethod) function on change.
 
    ```js
    CheckoutProvider.render(PaymentMethods, {
      slots: {
        Methods: {
          braintree: {
-           setOnChange: false,
+           autoSync: false,
            render: async (ctx) => {
              const container = document.createElement('div');
 
@@ -133,6 +138,7 @@ CheckoutProvider.render(PlaceOrder, {
         }
 
         default: {
+          // Place order
           await orderApi.placeOrder(cartId);
         }
       }
