@@ -687,7 +687,7 @@ async function config() {
               ],
             },
             {
-              label: 'Drop-in SDK (1.4.0-beta-1)',
+              label: 'Drop-in SDK',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
