@@ -118,6 +118,18 @@ async function config() {
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/develop/'
         },
+        expressiveCode: {
+          themes: ['github-light', 'github-dark'],
+          styleOverrides: {
+            frames: {
+              frameBoxShadowCssValue: 'none',
+            },
+          },
+          defaultProps: {
+            // Disable window frames for all code blocks
+            frame: 'none',
+          },
+        },
         head: [{
           tag: 'script',
           attrs: {
@@ -675,7 +687,7 @@ async function config() {
               ],
             },
             {
-              label: 'Drop-in SDK (1.4.0-beta-1)',
+              label: 'Drop-in SDK',
               icon: 'puzzle',
               link: '/sdk/',
               items: [
