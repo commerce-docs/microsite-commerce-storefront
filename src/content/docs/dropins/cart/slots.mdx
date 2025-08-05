@@ -305,21 +305,156 @@ The `UndoBanner` slot allows you to customize the undo banner that appears when 
 
 The `ItemTitle` slot allows you to customize the title display for each item in the `CartSummaryList` container.
 
+The following example demonstrates how to replace the default title with a custom title:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemTitle: (ctx) => {
+      // Create custom title element
+      const customTitle = document.createElement('div');
+      customTitle.className = 'cart-item-custom-title';
+      customTitle.textContent = 'Custom Title';
+
+      ctx.replaceWith(customTitle);
+    },
+  },
+})(cartSummaryList);
+```
+
 ### ItemPrice slot
 
 The `ItemPrice` slot allows you to customize the price display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to add a custom price label:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemPrice: (ctx) => {
+      const priceLabel = document.createElement('span');
+      priceLabel.className = 'cart-item-price-label';
+      priceLabel.textContent = 'Item Price';
+
+      ctx.prependChild(priceLabel);
+    },
+  },
+})(cartSummaryList);
+```
 
 ### ItemQuantity slot
 
 The `ItemQuantity` slot allows you to customize the quantity display and controls for each item in the `CartSummaryList` container.
 
+The following example demonstrates how to customize the quantity field by adding a "Qty:" label and using an input component from the SDK:
+
+```javascript
+import {
+  provider as UI,
+  Input,
+} from '@dropins/tools/components.js';
+
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemQuantity: (ctx) => {
+      const { item, handleItemQuantityUpdate } = ctx;
+
+      // Create container with label and input
+      const quantityContainer = document.createElement('div');
+      quantityContainer.className = 'cart-item-quantity-container';
+
+      // Add "Qty:" label
+      const quantityLabel = document.createElement('span');
+      quantityLabel.className = 'cart-item-quantity-label';
+      quantityLabel.textContent = 'Qty:';
+
+      // Create input wrapper for SDK Input component
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'cart-item-quantity-input';
+      inputWrapper.style.display = 'inline-block';
+      inputWrapper.style.width = '60px';
+
+      // Render SDK Input component
+      UI.render(Input, {
+        value: item.quantity.toString(),
+        min: 1,
+        size: 'small',
+        variant: 'primary',
+        onValue: (value) => {
+          const newQuantity = parseInt(value, 10);
+          if (
+            !Number.isNaN(newQuantity)
+            && newQuantity > 0
+            && newQuantity !== item.quantity
+          ) {
+            handleItemQuantityUpdate(item, newQuantity);
+          }
+        },
+      })(inputWrapper);
+
+      // Style the container for inline layout
+      quantityContainer.style.display = 'flex';
+      quantityContainer.style.alignItems = 'center';
+      quantityContainer.style.gap = 'var(--spacing-xsmall)';
+
+      quantityContainer.appendChild(quantityLabel);
+      quantityContainer.appendChild(inputWrapper);
+
+      ctx.replaceWith(quantityContainer);
+    },
+  },
+})(cartSummaryList);
+```
+
 ### ItemTotal slot
 
 The `ItemTotal` slot allows you to customize the total price display for each item in the `CartSummaryList` container.
 
+The following example demonstrates how to add a custom total label:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemTotal: (ctx) => {
+      const totalLabel = document.createElement('div');
+      totalLabel.className = 'cart-item-total-label';
+      totalLabel.textContent = 'Item Total';
+
+      ctx.prependChild(totalLabel);
+    },
+  },
+})(cartSummaryList);
+```
+
 ### ItemSku slot
 
 The `ItemSku` slot allows you to customize the SKU display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to replace the default SKU with a custom SKU:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemSku: (ctx) => {
+      const customSku = document.createElement('div');
+      customSku.className = 'cart-item-custom-sku';
+      customSku.textContent = 'custome-sku';
+
+      ctx.replaceWith(customSku);
+    },
+  },
+})(cartSummaryList);
+```
 
 ### ItemRemoveAction slot
 
@@ -469,108 +604,4 @@ The `ItemPrice` slot allows you to customize the price display for each item in 
 
 ### ItemQuantity slot
 
-The `ItemQuantity` slot allows you to customize the quantity display and controls for each item in the `MiniCart` container.
-
-### ItemTotal slot
-
-The `ItemTotal` slot allows you to customize the total price display for each item in the `MiniCart` container.
-
-### ItemSku slot
-
-The `ItemSku` slot allows you to customize the SKU display for each item in the `MiniCart` container.
-
-### ItemRemoveAction slot
-
-The `ItemRemoveAction` slot allows you to customize the remove action button for each item in the `MiniCart` container.
-
-### ProductListFooter slot
-
-The ProductListFooter slot allows you to add content after the product list and before the subtotal section of the `MiniCart` container.
-
-The following example demonstrates how to extend the `ProductListFooter` by adding the store return policy.
-
-```javascript
-  return provider.render(MiniCart, {
-    routeEmptyCartCTA: () => '#empty-cart',
-    routeCart: () => '#cart',
-    routeCheckout: () => '#checkout',
-    slots: {
-      ProductListFooter: (ctx) => {
-        const productListFooter = document.createElement('div');
-        ctx.appendChild(productListFooter);
-    
-        ctx.onChange((next) => {
-          // Clear the existing content
-          productListFooter.innerHTML = '';
-    
-          if (Object.keys(next.data.items).length === 0) {
-            return;
-          }
-    
-          const shadowWrapper = document.createElement('div');
-          shadowWrapper.style.backgroundColor = '#EFF5EF';
-          shadowWrapper.style.borderRadius = '5px';
-    
-          // Create the content div
-          const contentDiv = document.createElement('div');
-          contentDiv.innerHTML = "<p style='line-height: 1.5;'>Enjoy hassle-free shopping with our 30-day return policy!</p>";
-          contentDiv.style.display = 'flex';
-          contentDiv.style.flexDirection = 'column';
-          contentDiv.style.padding = '12px';
-    
-          // Append the content div to the shadow wrapper
-          shadowWrapper.appendChild(contentDiv);
-    
-          productListFooter.appendChild(shadowWrapper);
-        });
-      },
-    },
-  })(orderSummary);
-```
-
-### PreCheckoutSection slot
-
-The PreCheckoutSection slot allows you to add content after the the subtotal section and before the Call to Action buttons of the `MiniCart` container.
-
-The following example demonstrates how to extend the `PreCheckoutSection` by adding the loyalty program callouts.
-
-```javascript
-  return provider.render(MiniCart, {
-    routeEmptyCartCTA: () => '#empty-cart',
-    routeCart: () => '#cart',
-    routeCheckout: () => '#checkout',
-    slots: {
-      PreCheckoutSection: (ctx) => {
-        const preCheckoutSection = document.createElement('div');
-        ctx.appendChild(preCheckoutSection);
-    
-        ctx.onChange((next) => {
-          // Clear the existing content
-          preCheckoutSection.innerHTML = '';
-    
-          if (Object.keys(next.data.items).length === 0) {
-            return;
-          }
-    
-          // Create a wrapper div for the shadow background
-          const shadowWrapper = document.createElement('div');
-          shadowWrapper.style.backgroundColor = '#EEEFFB';
-          shadowWrapper.style.borderRadius = '5px';
-    
-          // Create the content div
-          const contentDiv = document.createElement('div');
-          contentDiv.innerHTML = "<p style='line-height: 1.5;'>Earn rewards every time you shop! Sign up for our free loyalty program today and start earning points on this purchase.</p>";
-          contentDiv.style.display = 'flex';
-          contentDiv.style.flexDirection = 'column';
-          contentDiv.style.padding = '12px';
-    
-          // Append the content div to the shadow wrapper
-          shadowWrapper.appendChild(contentDiv);
-    
-          // Append the shadow wrapper to the preCheckoutSection div
-          preCheckoutSection.appendChild(shadowWrapper);
-        });
-      },
-    },
-  })(orderSummary);
-```
+The `
