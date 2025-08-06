@@ -6,6 +6,9 @@ description: Learn how to create a drop-in component using the drop-in template.
 import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
+import FileTree from '@components/FileTree.astro';
+import Diagram from '@components/Diagram.astro';
+import ExternalLink from '@components/ExternalLink.astro';
 
 This topic describes how to use the `drop-template` repository to create drop-in components for Adobe Commerce Storefronts.
 
@@ -27,25 +30,214 @@ To create a new drop-in component using the Adobe Commerce drop-in template, fol
 1. **Navigate to the Template Repository**: Go to https://github.com/adobe-commerce/dropin-template.
 1. **Create a New Repository**: Click on the "Use this template" button to create a new repository based on the template. This will generate a new repository with the same directory structure and files as the template.
 1. **Clone Your New Repository**: You can now clone the newly created repository to your local machine using `git clone`.
-1. **Install, Configure, and Launch**: Follow the instructions in your new repo's `README` file to install the dependencies, generate a configuration file, update your Mesh endpoint, and launch your development environment.
+1. **Getting Started**: Follow the instructions below to install the dependencies, generate a configuration file, update your Mesh endpoint, generate your source files, and launch your development environment.
 </Steps>
 
-That's it! You now have a drop-in application with the same consistency and best practices that Adobe's drop-ins have, built in.
+**Troubleshooting:**  
+- If you don't see the **Use this template** button, make sure you are logged into GitHub.
+- If you get a "Permission denied" error, check your SSH keys or use HTTPS.
 
-## Adding a shared component to your project
-After creating your drop-in component, let's add a shared component from the Storefront SDK. These components are designed to be reusable and customizable, making it easier to build consistent and high-quality user interfaces. Follow the steps below to add a shared component to your drop-in component project.
-
+## Getting Started
 
 <Tasks>
 <Task>
+### Install Dependencies
+Before you begin, make sure you have all the necessary dependencies installed. Run the following command to install all required packages:
+```bash
+npm install
+```
+**Troubleshooting:**  
+If you see errors about missing Node.js, install it from <ExternalLink href="https://nodejs.org/">nodejs.org</ExternalLink>.
+</Task>
+
+<Task>
+### Generate New Config
+Before you can start developing, you need to generate the `.elsie.js` config file. The Elsie CLI uses this file to generate new components, containers, and API functions to specified directories within your projects.
+To create a new configuration file, run the following command. Replace `<DropInName>` with the name of your new drop-in.
+
+```bash
+npx elsie generate config --name <DropInName>
+```
+
+After generating the `.elsie.js` config, open it and take a look. Below is an annotated version describing the main properties:
+
+```javascript
+module.exports = {
+  name: 'Login', // The name of your frontend. This name can be changed at any time.
+  api: {
+    root: './src/api', // Directory where the CLI will add all your generated API functions.
+    importAliasRoot: '@/login/api',
+  },
+  components: [
+    {
+      id: 'Components',
+      root: './src/components', // Directory where the CLI will add all your generated components.
+      importAliasRoot: '@/login/components',
+      cssPrefix: 'elsie',
+      default: true,
+    },
+  ],
+  containers: {
+    root: './src/containers', // Directory where the CLI will add all your generated containers.
+    importAliasRoot: '@/login/containers',
+  },
+};
+```
+**Troubleshooting:**  
+If `npx` is not found, ensure Node.js and npm are installed.
+</Task>
+
+<Task>
+### Explore the project structure
+
+Understand where to find and place your code.
+
+<FileTree>
+  - .storybook/ *-- Best-practice Storybook configurations right out of the box*
+  - examples/
+    - html-host/ *-- Preconfigured HTML UI for testing your drop-in components*
+      - example.css
+      - favicon.ico
+      - index.html
+      - styles.css
+  - src/
+    - api/  *-- By default, the Elsie CLI adds your API functions here*
+    - data/ *-- TODO: Add a description*
+    - docs/ *-- Provides an MDX template to document your frontend*
+    - i18n/ *-- Internationalization setup with starter en_US.json file*
+    - render/ *-- TODO: Add a description*
+    - types/ *-- TODO: Add a description*
+  - tests/ *-- TODO: Add a description*
+  - elsie.js *-- Configuration file for creating components, containers and functions*
+  - .env.sample *-- Preconfigured settings for a development-only mesh endpoint*
+  - .eslintrc.js *-- Preconfigured linting*
+  - .gitignore
+  - .jest.config.js *-- Preconfigured unit testing*
+  - LICENSE *-- Adobe Drop-in Template License*
+  - package.json *-- Preconfigured dependencies*
+  - prettier.config.js *-- Preconfigured formatting*
+  - README.md *-- Quick instructional overview of frontend development tasks*
+  - storybook-stories.js *-- Additional storybook settings*
+  - tsconfig.js *-- Preconfigured for TypeScript*
+</FileTree>
+
+</Task>
+
+<Task>
+### Update Mesh/Backend Endpoint (for development only)
+For development purposes, you will need to rename your `.env.sample` file to `.env` and update the new `.env` file with the correct mesh/backend endpoint. This file is used to store environment-specific configurations.
+```env
+ENDPOINT="your-endpoint"
+```
+**Troubleshooting:**  
+If you see network errors when running the dev server, check your endpoint URL.
+</Task>
+
+<Task>
+### Let’s take it for a spin! Start the development server with the following command:
+```bash
+npm run dev
+```
+Congrats! You just launched your first composable frontend! Actually, what you're seeing is our frontend development environment. It's a preconfigured HTML page (examples > html-host > index.html) that loads your frontend components for testing during development:
+
+<Diagram caption="Frontend development environment">
+  ![Frontend Development Environment](src/content/docs/sdk/images/frontend.png)
+</Diagram>
+
+Now we're ready to start building a composable frontend. Stop the server with `ctrl + c` and let's get started.
+
+</Task>
+
+<Task>
+### Generate new UI Component:
+
+UI components in this codebase are primarily responsible for rendering the UI, handling presentation, and managing styling. To generate a new UI component, use the following command. Replace `<MyUIComponent>` with the name of your component.
+
+```bash
+npx elsie generate component --pathname <MyUIComponent>
+```
+**Make sure to use Pascal casing for the component name.**
+
+
+For a login form, you might choose, `npx elsie generate component --pathname LoginForm`.  
+Let’s take a quick look at the files that are generated for you:
+
+```console
+~/composable-login [main] » npx elsie generate component --pathname LoginForm
+🆕 src/components/LoginForm/LoginForm.css created
+🆕 src/components/LoginForm/LoginForm.stories.tsx created
+🆕 src/components/LoginForm/LoginForm.test.tsx created
+🆕 src/components/LoginForm/LoginForm.tsx created
+🆕 src/components/LoginForm/index.ts created
+🆕 src/components/index.ts created
+~/composable-login [main] »
+```
+
+These files were not only generated with the appropriate names, but they are completely preconfigured to work together as a unit. For example, the `LoginForm` component was automatically imported into `src/components/index.ts` to let you start referencing the component throughout your project.
+
+And if you run `npm run dev` again, you'll see your new component in the Storybook UI, configured with an example and best practices to help you get started with Storybook.
+
+</Task>
+
+<Task>
+### Generate new Frontend Container
+
+Containers handle business logic, state management, API calls, and data fetching using the components. They do not contain CSS or styling logic.
+To create a new frontend container, use this command. Replace ```<MyContainer>``` with the desired name of your frontend container. 
+
+**Make sure to use Pascal casing for the container name.**
+
+```bash
+npx elsie generate container --pathname <MyContainer>
+```
+For a login form, you might choose:
+
+```bash
+npx elsie generate container --pathname LoginContainer
+```
+</Task>
+
+<Task>
+### Generate new API Function
+The API layer provides core functionalities like fetching, handling events, and GraphQL operations. This API is primarily consumed by a container.
+
+If you need to add a new API function, run the following command. Replace ```<myApiFunction>``` with the desired name for your API function. 
+
+**Make sure to use Camel casing for the API name.**
+
+```bash
+npx elsie generate api --pathname <myApiFunction>
+```
+
+For a login form, you might want to add `login` and `logout` functions as follows:
+
+```bash
+npx elsie generate api --pathname login
+```
+```bash
+npx elsie generate api --pathname logout
+```
+</Task>
+> **Location:**  
+> Generated files will be placed in `src/components/`, `src/containers/`, and `src/api/` respectively
+
+</Tasks>
+
+## Adding a shared component to your project
+After creating your drop-in component, let’s add a shared component from the Storefront SDK. These components are designed to be reusable and customizable, making it easier to build consistent and high-quality user interfaces. Follow the steps below to add a shared component to your drop-in component project.
+
+<Tasks>
+<Task>
+
 ### Install the `@adobe-commerce/elsie` package
 
 Run the following command to install the Storefront SDK package:
 
-```txt
+```bash
 npm install @adobe-commerce/elsie
 ```
 </Task>
+
 <Task>
 ### Use a library component from the SDK
 
@@ -67,6 +259,45 @@ In your generated UI component, import a shared component from the Storefront SD
 
 
 </Tasks>
+
+## Development and Testing
+These development tools help you preview components during your development process and ensure that your code is properly tested.
+
+### I. Run Unit Tests
+The commands to generate a component, container or an API, also create a `.test.tsx` file in their respective directories. These files are useful for unit testing.
+
+To ensure your code is working as expected, you should run these unit tests to catch any issues early in the development process:
+
+```bash
+npm run test
+```
+
+This project is set up to use the jest testing framework. Here are some useful documentations:
+
+- [Jest Getting Started (official docs)](https://jestjs.io/docs/getting-started)
+- [Preact Testing Library Intro](https://testing-library.com/docs/preact-testing-library/intro)
+
+### II. Build Production Bundles
+Once you're ready to prepare your app for production, run the following command to build the production bundles:
+
+```bash
+npm run build
+```
+A dist/ directory with production-ready assets will be created.
+
+### III. Storybook
+Storybook is a tool used for developing and testing UI components in isolation. Once a container/component is created using one of the commands above, a `.stories.tsx` file is also created in the same directory as the component/container to preview the component/container.
+
+Use ```npm run storybook``` to spin up the Storybook environment at `http://localhost:6006/`.
+
+[Here](https://storybook.js.org/docs) is the official Storybook documentation.
+
+### IV. Sandbox Environment
+The Sandbox is an html file with minimal application setup to deploy your dropin. It is useful for testing and integration between different peices of your project.
+
+To render your container in the sandbox, Update the `examples/html-host/index.html` file.
+Use ```npm run serve``` to spin up the Sandbox environment at `http://127.0.0.1:3000`.
+
 
 ## Understanding the Dropin Sandbox Environment
 The following steps are to help you navigate previewing your dropin in the Sandbox Environment, `examples/html-host/index.html`.
@@ -217,7 +448,7 @@ provider.render(Container, {
 ```
 
 :::tip[More Info]
-For more details on the usage of _event bus_, _initializers_, and _render_, visit the API section of the [SDK documentation](https://adobe-commerce.github.io/StorefrontSDK/storybook/).
+For more details on the usage of _event bus_, _initializers_, and _render_, visit this documentation page: [SDK documentation](https://experienceleague.adobe.com/developer/commerce/storefront/sdk/reference/).
 :::
 
 ### Styling the Sandbox
@@ -227,3 +458,36 @@ I. `style.css` which is the base styling file that handles root-level styles and
 II. `example.css` which is specifically for styling sandbox UI components.
 
 </Tasks>
+
+## Best Practices & Accessibility
+
+- Use meaningful names for components and API functions.
+- Write tests for every component and function.
+- Keep components small and focused.
+- Document your code and update the MDX docs in `src/docs/`.
+- Use Storybook to visually test components.
+- Commit early and often; use branches for new features.
+- Use clear, simple language in UI and documentation.
+- Ensure all components are keyboard accessible.
+- Add ARIA labels where appropriate.
+- Test with screen readers.
+
+**Common Pitfalls:**
+- Forgetting to create and update `.env` with the correct endpoint.
+- Not running `npm install` after cloning.
+- Skipping tests before building for production.
+
+## Summary and Next Steps
+
+You've learned how to:
+
+- Set up a drop-in component project
+- Generate and configure components, API functions, and containers
+- Run and test your frontend locally
+- Build for production
+
+**Next Steps:**
+
+- Explore advanced component patterns
+- Integrate with real backend APIs
+- Contribute to the <ExternalLink href="https://github.com/adobe-commerce/dropin-template">dropin-template repo</ExternalLink>

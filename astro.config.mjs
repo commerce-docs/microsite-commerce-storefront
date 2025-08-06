@@ -699,10 +699,6 @@ async function config() {
                       link: '/sdk/'
                     },
                     {
-                      label: 'Create a drop-in component',
-                      link: '/sdk/get-started/create-a-dropin/'
-                    },
-                    {
                       label: 'CLI usage',
                       link: '/sdk/get-started/cli/'
                     },
