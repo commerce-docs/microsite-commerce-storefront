@@ -16,8 +16,10 @@ The Commerce boilerplate template does not include a BOPIS checkout flow by defa
 
 The following steps describe how to modify the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) block file in the boilerplate template to allow users to choose between delivery and in-store pickup during the checkout process.
 
-<Aside type="tip">
-A completed version of the code described in each of these steps is available [at the end](#example) of this tutorial.
+<Aside type="note">
+
+The _**commerce-checkout.js**_ block is the only one that is fully functional and up-to-date with the latest version of the checkout drop-in component.
+Use the following guidelines as a reference when creating a new checkout experience.
 </Aside>
 
 <Tasks>
@@ -38,22 +40,22 @@ Before you start, you must configure [in-store delivery](https://experienceleagu
 1. To create a new section for the delivery options, additional DOM elements are required. You can add these elements by modifying the content fragment.
 
    ```html
-   <div class="checkout__delivery-method">
-     <h2 class="checkout-delivery-method__title">Delivery Method</h2>
-     <div class="checkout-delivery-method__toogle-buttons">
-       <div class="checkout-delivery-method__delivery-button"></div>
-       <div class="checkout-delivery-method__in-store-pickup-button"></div>
+   <div class="checkout__block checkout__delivery-method">
+     <h2 class="checkout__block checkout-delivery-method__title">Delivery Method</h2>
+     <div class="checkout__block checkout-delivery-method__toggle-buttons">
+       <div class="checkout__block checkout-delivery-method__delivery-button"></div>
+       <div class="checkout__block checkout-delivery-method__in-store-pickup-button"></div>
      </div>
    </div>
-   <div class="checkout__in-store-pickup"></div>
+   <div class="checkout__block checkout__in-store-pickup"></div>
    ```
 
 1. You must also add new selectors to render the required components and content.
 
    ```javascript
-   export const $deliveryButton = fragment.querySelector('.checkout-delivery-method__delivery-button');
-   export const $inStorePickupButton = fragment.querySelector('.checkout-delivery-method__in-store-pickup-button');
-   export const $inStorePickup = fragment.querySelector('.checkout__in-store-pickup');
+   const $deliveryButton = checkoutFragment.querySelector('.checkout-delivery-method__delivery-button');
+   const $inStorePickupButton = checkoutFragment.querySelector('. checkout-delivery-method__in-store-pickup-button');
+   const $inStorePickup = checkoutFragment.querySelector('.checkout__in-store-pickup');
    ```
 
    ![Update content fragment](@images/dropins/checkout/bopis-content-fragment.png)
@@ -76,12 +78,12 @@ These buttons allow users to toggle between the two options.
 UI.render(ToggleButton, {
   label: 'Delivery',
   onChange: () => onToggle('delivery'),
-})($deliveryButton)
+})($deliveryButton),
 
 UI.render(ToggleButton, {
   label: 'In-store Pickup',
   onChange: () => onToggle('in-store-pickup'),
-})($inStorePickupButton)
+})($inStorePickupButton),
 ```
 
 ![Toggle buttons](@images/dropins/checkout/bopis-toggle-buttons.png)
@@ -100,13 +102,13 @@ async function onToggle(type) {
     deliveryButton.setProps((prev) => ({ ...prev, selected: true }));
     inStorePickupButton.setProps((prev) => ({ ...prev, selected: false }));
     $shippingForm.removeAttribute('hidden');
-    $shippingMethods.removeAttribute('hidden');
+    $delivery.removeAttribute('hidden');
     $inStorePickup.setAttribute('hidden', '');
   } else {
     inStorePickupButton.setProps((prev) => ({ ...prev, selected: true }));
     deliveryButton.setProps((prev) => ({ ...prev, selected: false }));
     $shippingForm.setAttribute('hidden', '');
-    $shippingMethods.setAttribute('hidden', '');
+    $delivery.setAttribute('hidden', '');
     $inStorePickup.removeAttribute('hidden');
   }
 }
@@ -156,6 +158,7 @@ pickupLocations.forEach((location) => {
 
   UI.render(RadioButton, {
     label: name,
+    name: 'pickup-location',
     value: name,
     onChange: () => {
       checkoutApi.setShippingAddress({
