@@ -1,6 +1,6 @@
 ---
-title: Multi-step guest checkout
-description: Learn how to implement a multi-step checkout using the Adobe's drop-in component.
+title: Multi-step Checkout Implementation
+description: This tutorial provides a customizable example to implement a comprehensive multi-step checkout in your Adobe Commerce storefront.
 ---
 
 import Aside from '@components/Aside.astro';
@@ -9,730 +9,748 @@ import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-Multi-step checkout is a common pattern used in e-commerce websites to guide users through the checkout process.
+This tutorial provides a customizable example to implement a comprehensive multi-step checkout in your Adobe Commerce storefront that supports **all user scenarios**: guest users, logged-in customers, and virtual products.
 
-Some of the benefits of using a multi-step checkout process include:
+## Overview
 
-- **Enhanced user experience:** Breaking down the checkout process into multiple steps can make it feel less overwhelming for customers. Each step focuses on a specific task, such as entering shipping information or payment details, which can simplify the process and reduce errors1.
+This implementation provides a **complete multi-step checkout** for the Adobe Commerce boilerplate that handles:
 
-- **Increased conversion rates:** A streamlined, step-by-step process can help reduce cart abandonment rates. Customers are more likely to complete their purchase if the process is clear and straightforward.
+- **Guest users** - Email capture and address entry
+- **Logged-in customers** - Saved address selection and account integration  
+- **Virtual products** - Automatic shipping step bypass
+- **Mixed carts** - Physical + virtual product combinations
+- **Modular architecture** - Event-driven step coordination
 
-- **Customization and flexibility:** Adobe Commerce allows for customization of each step in the checkout process. This means you can tailor the experience to meet the specific needs of your customers, such as offering different payment or shipping options.
+## Implementation Features
 
-The Commerce boilerplate template does not include a multi-step checkout flow by default, but you can easily implement one using Adobe's drop-in components.
+| Feature | Status |
+|---------|--------|
+| Guest users | ✅ |
+| Logged-in customers | ✅ |
+| Virtual products | ✅ |
+| Mixed carts (physical + virtual products) | ✅ |
+| Custom payment/shipping methods | 🔧 |
 
-## Step-by-step
+## Multi-step Customization
 
-The following steps describe how to modify the [commerce-checkout.js](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js) and [commerce-checkout.css](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.css) block files in the boilerplate template to implement a multi-step checkout flow.
+Key areas specific to multi-step checkout customization:
 
-This tutorial covers the guest checkout experience. If you want to implement a custom payment method, customer checkout, virtual cart, or any other feature, you'll need to adapt the code accordingly. The following table shows the features covered in this tutorial:
+- **Step progression logic** - Modify `steps.js` for custom user flows and step transitions
+- **Individual step modules** - Customize step behavior in `steps/` folder
+- **Step validation** - Control when users can advance between steps
+- **Fragment management** - Adapt step-specific HTML fragments in `fragments.js`
+- **Step visibility** - Customize CSS classes for active/inactive step states  
+- **Manual synchronization** - Control when data is saved to the cart
 
-| Feature               | Covered |
-| --------------------- | ------- |
-| Custom payment method | ❌      |
-| Customer checkout     | ❌      |
-| Empty cart            | ✅      |
-| Guest checkout        | ✅      |
-| Virtual cart          | ❌      |
-| Order confirmation    | ✅      |
+## Architecture
 
-<Aside type="tip">
-A completed version of the code described in each of these steps is available [at the end](#example) of this tutorial.
+### File Structure
+
+The multi-step checkout implementation follows a modular architecture:
+
+| File | Purpose | Key Features |
+|------|---------|--------------|
+| `commerce-checkout-multi-step.js` | Entry point and block decorator | Initializes the checkout system |
+| `commerce-checkout-multi-step.css` | Step styling and visibility controls | Step progression, visual states, responsive design |
+| `steps.js` | Main implementation | Step coordination and state management |
+| `steps/shipping.js` | Shipping/contact step logic | Login detection, address forms, email validation |
+| `steps/shipping-methods.js` | Delivery method selection | Shipping options, cost calculation |
+| `steps/payment-methods.js` | Payment method selection | Payment provider integration |
+| `steps/billing-address.js` | Billing address step | Conditional billing form rendering |
+| `fragments.js` | HTML fragment creation | Step-specific DOM structure generation |
+| `containers.js` | Container rendering functions | Drop-in container management |
+| `components.js` | UI component functions | Reusable UI elements |
+| `utils.js` | Utility functions and helpers | Virtual cart detection, validation |
+| `constants.js` | Shared constants and configuration | CSS classes, form names, storage keys |
+
+### Manual Synchronization Control
+
+In multi-step checkout, containers use **`autoSync: false`** to disable automatic backend synchronization, allowing manual control over when data is saved:
+
+```javascript
+// Containers with manual sync control
+const containers = [
+  'LoginForm',        // Manual email/authentication handling
+  'ShippingMethods',  // Manual shipping method selection  
+  'PaymentMethods',   // Manual payment method selection
+  'BillToShippingAddress' // Manual billing address control
+];
+
+// Example: ShippingMethods with manual sync
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton', 
+  autoSync: false,  // Disable automatic cart updates
+})(container);
+```
+
+**AutoSync behavior:**
+- **`autoSync: true` (default)** - Local changes automatically sync with backend via GraphQL mutations
+- **`autoSync: false`** - Changes maintained locally only, no automatic API calls
+
+**Why disable autoSync in multi-step:**
+- **Controlled timing** - Save data only when step is completed and validated
+- **Better UX** - Prevent partial/invalid data from being sent to cart
+- **Step coordination** - Parent step manager controls when to persist data
+- **Validation first** - Ensure all step requirements met before saving
+
+**Manual sync example:**
+```javascript
+// Step completion with manual sync (triggered by continue button)
+const continueFromStep = async () => {
+  if (!validateStepData()) return;
+  
+  // Manual API call with error handling
+  try {
+    await checkoutApi.setShippingMethodsOnCart([{
+      carrier_code: selectedMethod.carrier.code,
+      method_code: selectedMethod.code,
+    }]);
+  } catch (error) {
+    console.error('Failed to save step data:', error);
+    return; // Don't proceed if API call fails
+  }
+  
+  // Only continue if API call succeeded
+  await displayStepSummary(selectedMethod);
+  await continueToNextStep();
+  
+  events.emit('checkout/step/completed', null);
+};
+```
+
+**Key patterns:**
+- **Continue button trigger** - API calls happen when user clicks continue, not on selection
+- **Try-catch wrapping** - All API calls must be wrapped for error handling
+- **Early return on error** - If API fails, don't proceed to next step
+- **Success-only progression** - Only move forward if data successfully saved
+
+This approach ensures data integrity and provides smooth step transitions without premature backend updates.
+
+### API Reference
+
+Step modules rely on the checkout dropin's API functions for cart management. The complete API reference is available in the [Checkout functions](/dropins/checkout/functions/) documentation.
+
+**Key APIs for multi-step implementation:**
+
+| Function | Purpose | Used In Step |
+|----------|---------|--------------|
+| `setGuestEmailOnCart()` | Set guest user email | Shipping (email capture) |
+| `setShippingAddress()` | Set shipping address on cart | Shipping (address collection) |
+| `setShippingMethodsOnCart()` | Set shipping methods on cart | Shipping Methods |
+| `setPaymentMethod()` | Set payment method on cart | Payment Methods |
+| `setBillingAddress()` | Set billing address on cart | Payment Methods, Billing Address |
+| `isEmailAvailable()` | Check email availability | Order Header (account creation) |
+| `getStoreConfigCache()` | Get cached store configuration | Address forms (default country) |
+| `estimateShippingMethods()` | Estimate shipping costs | Address forms (cost calculation) |
+
+All step completion logic should use these APIs with proper error handling as shown in the manual sync examples above.
+
+**Note:** The implementation uses event-driven data (`events.lastPayload()`) instead of direct `getCart()` or `getCustomer()` calls for performance optimization and real-time state management.
+
+### Component Registry Pattern
+
+The `components.js` file implements a registry system specifically for **SDK components and external UI library components**:
+
+```javascript
+// components.js - Component registry (separate from containers)
+import { Button, Header, ProgressSpinner, provider as UI } from '@dropins/tools/components.js';
+
+const registry = new Map();
+
+// Component IDs for UI elements
+export const COMPONENT_IDS = {
+  CHECKOUT_HEADER: 'checkoutHeader',
+  SHIPPING_STEP_CONTINUE_BTN: 'shippingStepContinueBtn',
+  PAYMENT_STEP_TITLE: 'paymentStepTitle',
+  // ... more component IDs
+};
+
+// Core component methods
+export const hasComponent = (id) => registry.has(id);
+export const removeComponent = (id) => {
+  const component = registry.get(id);
+  if (component) {
+    component.remove();
+    registry.delete(id);
+  }
+};
+
+// Render SDK components
+export const renderCheckoutHeader = (container) => renderComponent(
+  COMPONENT_IDS.CHECKOUT_HEADER,
+  async () => UI.render(Header, {
+    className: 'checkout-header',
+    level: 1,
+    size: 'large',
+    title: 'Checkout',
+  })(container)
+);
+
+export const renderStepContinueBtn = async (container, stepId, onClick) => 
+  renderPrimaryButton(container, stepId, { children: 'Continue', onClick });
+```
+
+**Key distinction from containers:**
+
+- **`containers.js`** - Manages **dropin containers** (LoginForm, AddressForm, ShippingMethods, etc.)
+- **`components.js`** - Manages **SDK/UI library components** (Button, Header, ProgressSpinner, etc.)
+
+**Usage guidelines:**
+
+- **Use `components.js` for:** Headers, buttons, spinners, modals, and other UI elements from the SDK
+- **Use `containers.js` for:** Checkout dropins, account dropins, cart dropins, and other business logic containers
+- **Recommended approach:** Keep dropin containers and UI components in separate registries for better organization
+
+This ensures clean architecture where `components.js` handles pure UI elements while `containers.js` manages complex business logic containers.
+
+### Container Management
+
+The `containers.js` file provides a complete system for managing **dropin containers** (LoginForm, AddressForm, ShippingMethods, etc.) with registry-based lifecycle management.
+
+**Registry System:**
+
+```javascript
+// containers.js - Registry system for dropin containers
+const registry = new Map();
+
+// Core registry methods
+export const hasContainer = (id) => registry.has(id);
+export const getContainer = (id) => registry.get(id);
+export const unmountContainer = (id) => {
+  if (!registry.has(id)) return;
+  const containerApi = registry.get(id);
+  containerApi.remove();
+  registry.delete(id);
+};
+
+// Helper to render or get existing container
+const renderContainer = async (id, renderFn) => {
+  if (registry.has(id)) {
+    return registry.get(id); // Return existing
+  }
+  
+  const container = await renderFn(); // Render new
+  registry.set(id, container);
+  return container;
+};
+```
+
+**Container IDs and render functions:**
+
+Each container is identified by a unique string ID and has a corresponding render function that handles the registry logic:
+
+```javascript
+// Predefined container identifiers
+export const CONTAINERS = Object.freeze({
+  LOGIN_FORM: 'loginForm',
+  SHIPPING_ADDRESS_FORM: 'shippingAddressForm',
+  SHIPPING_METHODS: 'shippingMethods',
+  PAYMENT_METHODS: 'paymentMethods',
+  // ... more containers
+});
+
+// Usage in container functions
+export const renderLoginForm = async (container) => renderContainer(
+  CONTAINERS.LOGIN_FORM,
+  async () => CheckoutProvider.render(LoginForm, { /* config */ })(container)
+);
+```
+
+**Key benefits of the container system:**
+
+- **Centralized logic** - Complex container configuration in one place
+- **Prevents duplicates** - Registry ensures same container isn't rendered multiple times
+- **Memory management** - Automatic cleanup prevents memory leaks
+- **State preservation** - Containers maintain state across step transitions
+
+**Registry lifecycle:**
+1. **Check existing** - `hasContainer()` / `getContainer()` to find existing instances
+2. **Render once** - `renderContainer()` creates new containers only if needed
+3. **Cleanup** - `unmountContainer()` removes containers and clears references
+
+This comprehensive container management approach ensures efficient resource usage and prevents common issues like duplicate event listeners or memory leaks.
+
+### Step Modules
+
+The `steps/` folder contains individual step modules that handle specific checkout phases. Each step module implements a consistent interface and manages its own domain logic, UI rendering, and data validation.
+
+**Step module structure:**
+
+Each step file in the `steps/` folder follows the same architectural pattern:
+
+```javascript
+// steps/shipping.js - Example step module
+export const createShippingStep = ({ getElement, api, events, ui }) => {
+  return {
+    async display(data) {
+      // Render step UI using containers (LoginForm, AddressForm)
+      // Handle different user types (guest vs logged-in)
+      // Use manual sync patterns for form data
+    },
+    
+    async displaySummary(data) {
+      // Show completed step summary using fragment functions
+      // Create edit functionality for step modifications
+    },
+    
+    async continue() {
+      // Validate step data and make API calls
+      // Handle step progression logic
+      // Emit completion events
+    },
+    
+    isComplete(data) {
+      // Validate step completion based on cart data
+      // Handle virtual product logic
+    },
+    
+    isActive() {
+      // Check if step is currently active
+    }
+  };
+};
+```
+
+**Available step modules:**
+
+- **`shipping.js`** - Handles email capture (LoginForm) and shipping address collection (AddressForm)
+- **`shipping-methods.js`** - Manages delivery method selection and shipping cost calculation
+- **`payment-methods.js`** - Handles payment provider integration and method selection
+- **`billing-address.js`** - Manages conditional billing address form rendering
+
+**Step module responsibilities:**
+
+- **UI rendering** - Uses container functions to render dropins
+- **Data validation** - Validates step completion 
+- **API integration** - Makes manual API calls with error handling
+- **Event handling** - Responds to checkout events
+- **Summary creation** - Generates read-only summaries with edit functionality
+
+### Fragment Management
+
+The `fragments.js` file is responsible for creating all DOM structure in the multi-step checkout. It provides a centralized system for generating HTML fragments, managing selectors, and creating reusable summary components.
+
+**Core responsibilities:**
+
+- **DOM Structure Creation** - Generates HTML fragments for each step and the main checkout layout
+- **Selector Management** - Centralizes all CSS selectors in a frozen object for consistency
+- **Summary Components** - Provides reusable functions for creating step summaries with edit functionality
+- **Utility Functions** - Helper functions for fragment creation and DOM querying
+
+**Fragment Creation Pattern:**
+
+```javascript
+// Step-specific fragment creation
+function createShippingStepFragment() {
+  return createFragment(`
+    <div class="checkout__login ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT}"></div>
+    <div class="checkout__login-form-summary ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_SUMMARY}"></div>
+    <div class="checkout__shipping-form ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT}"></div>
+    <div class="checkout__shipping-form-summary ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_SUMMARY}"></div>
+    <div class="checkout__continue-to-shipping-methods ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT} ${CHECKOUT_STEP_BUTTON}"></div>
+  `);
+}
+
+// Main checkout structure
+export function createCheckoutFragment() {
+  const checkoutFragment = createFragment(`
+    <div class="checkout__wrapper">
+      <div class="checkout__loader"></div>
+      <div class="checkout__content">
+        <div class="checkout__main"></div>
+        <div class="checkout__aside"></div>
+      </div>
+    </div>
+  `);
+  // Append step fragments to main structure
+  return checkoutFragment;
+}
+```
+
+**Centralized Selector System:**
+
+```javascript
+// All selectors defined in one place
+export const selectors = Object.freeze({
+  checkout: {
+    loginForm: '.checkout__login',
+    shippingAddressForm: '.checkout__shipping-form',
+    shippingStepContinueBtn: '.checkout__continue-to-shipping-methods',
+    // ... more selectors
+  }
+});
+```
+
+**Summary Creation Functions:**
+
+```javascript
+// Reusable summary components with edit functionality
+export const createLoginFormSummary = (email, onEditClick) => {
+  const content = document.createElement('div');
+  content.textContent = email;
+  return createSummary(content, onEditClick);
+};
+
+export const createAddressSummary = (data, onEditClick) => {
+  // Format address data into summary display
+  return createSummary(formattedContent, onEditClick);
+};
+```
+
+**Key benefits of fragment management:**
+
+- **Consistent DOM structure** - All HTML is generated through standardized functions
+- **CSS class coordination** - Selectors and fragments use the same class names
+- **Reusable components** - Summary functions can be used across different steps
+- **Maintainable markup** - All HTML structure defined in one centralized location
+
+### Element Access Pattern
+
+Step modules access DOM elements using the centralized selector system from `fragments.js`. Here's how step modules import and use those selectors:
+
+```javascript
+// steps/shipping.js - Element access in step modules
+import { selectors } from '../fragments.js';
+
+const { checkout } = selectors;
+
+const elements = {
+  $loginForm: getElement(checkout.loginForm),
+  $loginFormSummary: getElement(checkout.loginFormSummary),
+  $shippingAddressForm: getElement(checkout.shippingAddressForm),
+  $shippingAddressFormSummary: getElement(checkout.shippingAddressFormSummary),
+  $shippingStep: getElement(checkout.shippingStep),
+  $shippingStepContinueBtn: getElement(checkout.shippingStepContinueBtn),
+};
+```
+
+**Key benefits of this pattern:**
+- **Centralized selectors** - All CSS classes defined in one location
+- **Type safety** - Object structure prevents typos and missing selectors
+- **Maintainability** - Easy to update selectors across the entire system
+- **Consistency** - All step modules follow the same element access pattern
+- **Fragment coordination** - Selectors match the structure created by fragments
+
+This ensures that fragments create the DOM structure and steps access it through a consistent, maintainable selector system.
+
+### Summary and Edit Pattern
+
+When users complete a step by clicking the continue button and validation succeeds, the step transitions to **summary mode**:
+
+```javascript
+// Step completion flow
+async function continueFromStep() {
+  // 1. Validate step data
+  if (!validateStep()) return;
+  
+  // 2. Save data to cart
+  await api.setStepData(formData);
+  
+  // 3. Hide step content, show summary
+  await displayStepSummary(data);
+  
+  // 4. Move to next step
+  await displayNextStep();
+}
+```
+
+**Summary features:**
+- **Read-only display** - Shows completed step information in condensed format
+- **Edit functionality** - "Edit" link allows users to return and modify data
+- **Visual state** - Different styling indicates step completion
+- **Persistent data** - Summary reflects the actual saved cart data
+
+**Edit flow:**
+```javascript
+// Edit button functionality
+const handleEdit = async () => {
+  await displayStep(true); // Reactivate step
+  // Previous data automatically pre-fills forms
+};
+```
+
+This pattern ensures users can review their choices and make changes at any point without losing progress.
+
+### Place Order Button Enablement
+
+The **Place Order** button is disabled by default and only becomes enabled when all required steps are completed:
+
+```javascript
+// Place order button management
+async function updatePlaceOrderButton(data) {
+  const allStepsComplete = steps.shipping.isComplete(data) &&
+    (!isVirtualCart(data) ? steps.shippingMethods.isComplete(data) : true) &&
+    steps.paymentMethods.isComplete(data) &&
+    steps.billingAddress.isComplete(data);
+
+  if (allStepsComplete) {
+    placeOrderButton.setProps({ disabled: false });
+  } else {
+    placeOrderButton.setProps({ disabled: true });
+  }
+}
+```
+
+**Progressive enablement features:**
+- **Disabled by default** - Prevents incomplete order submissions
+- **Step validation** - Checks each step's completion status
+- **Virtual product logic** - Skips shipping validation for virtual carts
+- **Real-time updates** - Button state updates as users complete steps
+- **Visual feedback** - Users can see their progress toward completion
+
+## Implementation Guide
+
+The following sections demonstrate how to build a **production-ready multi-step checkout** using Adobe's drop-in components. This implementation replaces the regular one-step checkout in the boilerplate template with a sophisticated, modular system.
+
+<Aside type="note">
+The _**commerce-checkout.js**_ block is the only one that is fully functional and up-to-date with the latest version of the checkout drop-in component.
+Use the following guidelines just as a reference when creating a new checkout experience.
 </Aside>
 
 <Tasks>
 
 <Task>
-### Define layout
+### Create the entry point and main structure
 
-Define the layout for the checkout using a contextual fragment and reference the DOM elements where the containers need to be rendered. Replace the block content with this fragment.
+Create the main block file `commerce-checkout.js` and set up the modular architecture:
 
-```diff
+```javascript
+// Initializers
+import '../../scripts/initializers/account.js';
+import '../../scripts/initializers/checkout.js';
+import '../../scripts/initializers/order.js';
+
+// Block-level utils
+import { setMetaTags } from './utils.js';
+
+// Fragments
+import { createCheckoutFragment } from './fragments.js';
+import createStepsManager from './steps.js';
+
 export default async function decorate(block) {
-  ...
-+  // Define the Layout for the Checkout
-+  const fragment = document.createRange().createContextualFragment(`
-+    <div class="checkout__wrapper">
-+      <div class="checkout__heading"></div>
-+      <div class="checkout__empty-cart"></div>
-+      <div class="checkout__content">
-+        <div class="checkout__main">
-+          <div class="checkout__shipping">
-+            <div class="checkout__shipping-title"></div>
-+            <div class="checkout__login"></div>
-+            <div class="checkout__shipping-form"></div>
-+            <div class="checkout__continue-to-delivery"></div>
-+          </div>
-+          <div class="checkout__delivery">
-+            <div class="checkout__delivery-title"></div>
-+            <div class="checkout__delivery-methods"></div>
-+            <div class="checkout__continue-to-payment"></div>
-+          </div>
-+          <div class="checkout__payment">
-+            <div class="checkout__payment-title"></div>
-+            <div class="checkout__bill-to-shipping"></div>
-+            <div class="checkout__billing-form"></div>
-+            <div class="checkout__payment-methods"></div>
-+            <div class="checkout__place-order"></div>
-+          </div>
-+        </div>
-+        <div class="checkout__aside">
-+          <div class="checkout__order-summary"></div>
-+          <div class="checkout__cart-summary"></div>
-+        </div>
-+      </div>
-+    </div>
-+  `);
-+
-+  const $heading = fragment.querySelector('.checkout__heading');
-+  const $emptyCart = fragment.querySelector('.checkout__empty-cart');
-+  const $content = fragment.querySelector('.checkout__content');
-+
-+  const $orderSummary = fragment.querySelector('.checkout__order-summary');
-+  const $cartSummary = fragment.querySelector('.checkout__cart-summary');
-+
-+  const $shippingTitle = fragment.querySelector('.checkout__shipping-title');
-+  const $login = fragment.querySelector('.checkout__login');
-+  const $shippingForm = fragment.querySelector('.checkout__shipping-form');
-+  const $continueToDeliveryBtn = fragment.querySelector(
-+    '.checkout__continue-to-delivery',
-+  );
-+
-+  const $deliveryTitle = fragment.querySelector('.checkout__delivery-title');
-+  const $deliveryMethods = fragment.querySelector(
-+    '.checkout__delivery-methods',
-+  );
-+  const $continueToPaymentBtn = fragment.querySelector(
-+    '.checkout__continue-to-payment',
-+  );
-+
-+  const $paymentTitle = fragment.querySelector('.checkout__payment-title');
-+  const $billToShipping = fragment.querySelector('.checkout__bill-to-shipping');
-+  const $billingForm = fragment.querySelector('.checkout__billing-form');
-+  const $paymentMethods = fragment.querySelector('.checkout__payment-methods');
-+  const $placeOrder = fragment.querySelector('.checkout__place-order');
-+
-+  block.replaceChildren(fragment);
-};
-```
-</Task>
+  setMetaTags('Checkout');
+  document.title = 'Checkout';
 
-<Task>
-### Render initial containers
+  block.replaceChildren(createCheckoutFragment());
 
-Render the initial containers in the corresponding DOM elements that you created in the previous step.
-
-```js
-export default async function decorate(block) {
-  ...
-  const [
-    heading,
-    _shippingInfoHeading,
-    __shippingMethodHeading,
-    _paymentHeading,
-    _loginForm,
-    shippingFormSkeleton,
-    continueToDeliveryBtn,
-    orderSummary,
-    _cartSummary,
-  ] = await Promise.all([
-    UI.render(Header, {
-      title: 'Guest Checkout',
-      size: 'large',
-      divider: false,
-    })($heading),
-
-    UI.render(Header, {
-      title: '1. SHIPPING INFORMATION',
-      size: 'medium',
-      divider: false,
-    })($shippingTitle),
-
-    UI.render(Header, {
-      title: '2. SHIPPING METHOD',
-      size: 'medium',
-      divider: false,
-    })($deliveryTitle),
-
-    UI.render(Header, {
-      title: '3. PAYMENT INFORMATION',
-      size: 'medium',
-      divider: false,
-    })($paymentTitle),
-
-    // render the initial containers
-    CheckoutProvider.render(LoginForm, {
-      name: LOGIN_FORM_NAME,
-    })($login),
-
-    AccountProvider.render(AddressForm, {
-      isOpen: true,
-      showFormLoader: true,
-    })($shippingForm),
-
-    UI.render(Button, {
-      children: 'CONTINUE TO SHIPPING METHOD',
-      disabled: true,
-      onClick: async () => {
-        await continueToDelivery();
-      },
-    })($continueToDeliveryBtn),
-
-    CartProvider.render(OrderSummary)($orderSummary),
-
-    CartProvider.render(CartSummaryList, {
-      variant: 'secondary',
-      slots: {
-        Heading: (headingCtx) => {
-          const title = 'Your Cart ({count})';
-
-          const cartSummaryListHeading = document.createElement('div');
-          cartSummaryListHeading.classList.add('cart-summary-list__heading');
-
-          const cartSummaryListHeadingText = document.createElement('div');
-          cartSummaryListHeadingText.classList.add(
-            'cart-summary-list__heading-text',
-          );
-
-          cartSummaryListHeadingText.innerText = title.replace(
-            '({count})',
-            headingCtx.count ? `(${headingCtx.count})` : '',
-          );
-          const editCartLink = document.createElement('a');
-          editCartLink.classList.add('cart-summary-list__edit');
-          editCartLink.href = '/cart';
-          editCartLink.rel = 'noreferrer';
-          editCartLink.innerText = 'Edit';
-
-          cartSummaryListHeading.appendChild(cartSummaryListHeadingText);
-          cartSummaryListHeading.appendChild(editCartLink);
-          headingCtx.appendChild(cartSummaryListHeading);
-
-          headingCtx.onChange((nextHeadingCtx) => {
-            cartSummaryListHeadingText.innerText = title.replace(
-              '({count})',
-              nextHeadingCtx.count ? `(${nextHeadingCtx.count})` : '',
-            );
-          });
-        },
-      },
-    })($cartSummary),
-  ]);
-};
-```
-
-At this point, if you access the page where you are using the block, you should see that all containers are being rendered. The layout still needs some work, so let's move on to the next step.
-
-<Diagram caption="Render initial containers without styles">
-![Render initial containers without styles](@images/dropins/checkout/render-containers-no-styles.png)
-</Diagram>
-</Task>
-
-<Task>
-### Add styles
-
-Add some styles to the layout and containers to make them look good. Open the `commerce-checkout.css` file and add the following styles:
-
-```css
-/* stylelint-disable selector-class-pattern */
-
-.checkout__wrapper {
-  padding-left: 3rem;
-  padding-right: 3rem;
-}
-
-.checkout__banners {
-  padding-top: 1.5rem;
-}
-
-.checkout__content {
-  display: grid;
-  align-items: start;
-  grid-template-columns: repeat(var(--grid-4-columns), 1fr);
-  gap: var(--spacing-big);
-  padding-top: 1.5rem;
-}
-
-.checkout__content--empty {
-  display: none;
-}
-
-.checkout__empty-cart {
-  padding-top: 1.5rem;
-}
-
-.checkout__main {
-  display: grid;
-  grid-column: 1 / span 7;
-  row-gap: var(--spacing-xbig);
-}
-
-.checkout__aside {
-  display: grid;
-  grid-column: 9 / span 4;
-  row-gap: var(--spacing-xbig);
-}
-
-.checkout__shipping {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-big);
-  padding: 0;
-}
-
-.checkout__shipping:has(> div:empty:not(.checkout__continue-to-delivery)) {
-  gap: 0;
-  padding-top: var(--spacing-small);
-  padding-bottom: var(--spacing-small);
-  border-top: var(--shape-border-width-3) solid var(--color-neutral-400);
-  border-bottom: var(--shape-border-width-3) solid var(--color-neutral-400);
-}
-
-.checkout__delivery {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-big);
-  padding: 0;
-}
-
-.checkout__delivery:has(> div:empty:not(.checkout__continue-to-payment)) {
-  gap: 0;
-  padding-top: var(--spacing-small);
-  padding-bottom: var(--spacing-small);
-  border-top: var(--shape-border-width-3) solid var(--color-neutral-400);
-  border-bottom: var(--shape-border-width-3) solid var(--color-neutral-400);
-}
-
-.checkout__payment {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-big);
-  padding: 0;
-}
-
-.checkout__payment:has(> div:empty) {
-  gap: 0;
-  padding-top: var(--spacing-small);
-  padding-bottom: var(--spacing-small);
-  border-top: var(--shape-border-width-3) solid var(--color-neutral-400);
-  border-bottom: var(--shape-border-width-3) solid var(--color-neutral-400);
-}
-
-/* temporary fix to hide the default cart heading */
-[data-testid='default-cart-heading'] {
-  display: none;
-}
-
-/* Responsive adjustments */
-@media only screen and (width <= 768px) {
-  .checkout__wrapper {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-
-  .checkout__content {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-big) 0;
-  }
-
-  .checkout__main,
-  .checkout__aside {
-    grid-column: auto;
-  }
-
-  .checkout__aside {
-    order: -1;
-  }
+  const stepsManager = createStepsManager(block);
+  await stepsManager.init();
 }
 ```
 
-<Diagram caption="Render containers with styles">
-![Render containers with styles](@images/dropins/checkout/render-containers-with-styles.png)
-</Diagram>
+Create `fragments.js` for the main HTML structure:
+
+```javascript
+export function createCheckoutFragment() {
+  return document.createRange().createContextualFragment(`
+    <div class="checkout__wrapper">
+      <div class="checkout__heading"></div>
+      <div class="checkout__empty-cart"></div>
+      <div class="checkout__content">
+        <div class="checkout__main"></div>
+        <div class="checkout__aside"></div>
+      </div>
+    </div>
+  `);
+}
+```
+
+This modular approach separates concerns: the entry point coordinates everything, fragments handle HTML creation, and the steps manager handles step logic.
 </Task>
 
 <Task>
-### Display/remove empty cart
+### Step fragments and HTML structure
 
-Check if the cart is empty and display a message to the user. To do this, create a new container called `EmptyCart`.
+Create the step-specific fragments in `fragments.js`. Each checkout step gets its own fragment with specific containers and CSS classes:
+
+```javascript
+import {
+  CHECKOUT_BLOCK,
+  CHECKOUT_STEP_BUTTON,
+  CHECKOUT_STEP_CONTENT,
+  CHECKOUT_STEP_SUMMARY,
+  CHECKOUT_STEP_TITLE,
+} from './constants.js';
+
+/**
+ * Creates the shipping address fragment for the checkout.
+ * Includes login form and address form containers.
+ */
+function createShippingStepFragment() {
+  return document.createRange().createContextualFragment(`
+    <div class="checkout__login ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT}"></div>
+    <div class="checkout__login-form-summary ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_SUMMARY}"></div>
+    <div class="checkout__shipping-form ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT}"></div>
+    <div class="checkout__shipping-form-summary ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_SUMMARY}"></div>
+    <div class="checkout__continue-to-shipping-methods ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT} ${CHECKOUT_STEP_BUTTON}"></div>
+  `);
+}
+
+/**
+ * Creates the shipping methods fragment for the checkout.
+ */
+function createShippingMethodsStepFragment() {
+  return document.createRange().createContextualFragment(`
+    <div class="checkout__shipping-methods-title ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_TITLE}"></div>
+    <div class="checkout__shipping-methods-list ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT}"></div>
+    <div class="checkout__shipping-methods-summary ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_SUMMARY}"></div>
+    <div class="checkout__continue-to-payment ${CHECKOUT_BLOCK} ${CHECKOUT_STEP_CONTENT} ${CHECKOUT_STEP_BUTTON}"></div>
+  `);
+}
+```
+
+**Key fragment concepts:**
+
+- **CHECKOUT_STEP_CONTENT** - Shows containers when step is active (editable mode)
+- **CHECKOUT_STEP_SUMMARY** - Shows completed step information (read-only mode)  
+- **CHECKOUT_STEP_BUTTON** - Continue buttons for step progression
+- **Multiple containers per step** - Each fragment can contain multiple containers with their own summary versions
+- **CSS-driven visibility** - No DOM manipulation, just class-based show/hide
+
+The shipping step includes **both login and address containers** because guests need both email capture (via LoginForm) and shipping address entry (via AddressForm).
+</Task>
+
+<Task>
+### Create step modules
+
+Create individual step modules that implement the universal step interface. Each step module follows the pattern described in the [Step Modules architecture section](#step-modules).
+
+**Required step files:**
+- **`steps/shipping.js`** - Email capture (LoginForm) and shipping address collection (AddressForm)
+- **`steps/shipping-methods.js`** - Delivery method selection and cost calculation
+- **`steps/payment-methods.js`** - Payment provider integration and method selection  
+- **`steps/billing-address.js`** - Conditional billing address form rendering
+
+**Implementation reference:**
+
+For complete implementations of these step modules, see the sample files in the [demo repository](https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/blocks/commerce-checkout-multi-step/steps). Each file demonstrates the full step interface implementation with proper error handling, user flow logic, and integration with containers and APIs.
+</Task>
+
+<Task>
+### Implement the steps manager
+
+Create `steps.js` to coordinate all step logic and manage the checkout flow. Build this step by step:
 
 <Steps>
-1. Create two utility functions to display or remove the `EmptyCart` container when needed:
+1. **Set up the basic structure** with imports and function signature:
 
-   ```js
-   let emptyCart;
-   const displayEmptyCart = async () => {
-     if (emptyCart) return;
+   ```javascript
+   import { createShippingStep } from './steps/shipping.js';
+   import { createShippingMethodsStep } from './steps/shipping-methods.js';
+   import { createPaymentMethodsStep } from './steps/payment-methods.js';
+   import { createBillingAddressStep } from './steps/billing-address.js';
 
-     heading.setProps((prev) => ({
-       ...prev,
-       title: 'Empty Cart',
-     }));
-
-     emptyCart = await CartProvider.render(EmptyCart, {
-       routeCTA: () => '/',
-     })($emptyCart);
-
-     $content.classList.add('checkout__content--empty');
-   };
-
-   const removeEmptyCart = () => {
-     if (!emptyCart) return;
-
-     emptyCart.remove();
-     emptyCart = null;
-     $emptyCart.innerHTML = '';
-
-     heading.setProps((prev) => ({
-       ...prev,
-       title: 'Guest Checkout',
-     }));
-
-     $content.classList.remove('checkout__content--empty');
-   };
-   ```
-
-   <Aside type="note">
-   The example above also changes the heading title and adds a new class to the content wrapper so it can be hidden.
-   </Aside>
-
-1. Add the following declarations at the end of the **decorate** function to start listening for the `checkout/initialized` and `checkout/updated` events to determine when to display the empty cart.
-
-   ```js
-   events.on('checkout/initialized', handleCheckoutInitialized, { eager: true });
-   events.on('checkout/updated', handleCheckoutUpdated);
-   ```
-
-1. Add the missing handlers for the previous events.
-
-   ```js
-   async function handleCheckoutInitialized(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
+   export default function createStepsManager(block) {
+     // Implementation will go here
    }
+   ```
 
+2. **Create step instances** by gathering dependencies and instantiating each step module:
+
+   ```javascript
+   export default function createStepsManager(block) {
+     const elements = getElements(block);
+     const dependencies = { elements, api, events, ui };
+     
+     const steps = {
+       shipping: createShippingStep(dependencies),
+       shippingMethods: createShippingMethodsStep(dependencies),
+       paymentMethods: createPaymentMethodsStep(dependencies),
+       billingAddress: createBillingAddressStep(dependencies)
+     };
+   }
+   ```
+
+3. **Implement step coordination logic** that determines which step to show based on completion status:
+
+   ```javascript
    async function handleCheckoutUpdated(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
+     // Step 1: Shipping - always required
+     if (!steps.shipping.isComplete(data)) {
+       await steps.shipping.display(data);
        return;
      }
-     removeEmptyCart();
+     await steps.shipping.displaySummary(data);
+
+     // Step 2: Shipping Methods (skip for virtual products)
+     if (!isVirtualCart(data)) {
+       if (!steps.shippingMethods.isComplete(data)) {
+         await steps.shippingMethods.display(data);
+         return;
+       }
+       await steps.shippingMethods.displaySummary(data);
+     }
+
+     // Step 3: Payment Methods
+     if (!steps.paymentMethods.isComplete(data)) {
+       await steps.paymentMethods.display(data);
+       return;
+     }
+     await steps.paymentMethods.displaySummary(data);
+
+     // Step 4: Billing Address (if needed)
+     if (!steps.billingAddress.isComplete(data)) {
+       await steps.billingAddress.display(data);
+       return;
+     }
+     await steps.billingAddress.displaySummary(data);
    }
    ```
 
-   At this point, if you access the checkout page without a cart, you should see the `EmptyCart` container displayed.
+4. **Wire up event handling** to respond to checkout state changes:
 
-   <Diagram caption="Empty cart">
-   ![Empty cart](@images/dropins/checkout/empty-cart.png)
-   </Diagram>
-</Steps>
-</Task>
-
-<Task>
-### Handle shipping method form
-
-<Steps>
-1. You've probably noticed that even after initializing the checkout the shipping address form still loads. To resolve this, create a new utility method called `continueToShipping` to remove the skeleton and render the shipping method form when the checkout is initialized.
-
-   ```js
-   let shippingForm;
-
-   const continueToShipping = async (initialData = null) => {
-     if (shippingForm) return;
-
-     // cleanup
-     shippingFormSkeleton.remove();
-     $shippingForm.innerHTML = '';
-
-     shippingForm = await AccountProvider.render(AddressForm, {
-       addressesFormTitle: 'Shipping address',
-       className: 'checkout-shipping-form__address-form',
-       formName: SHIPPING_FORM_NAME,
-       hideActionFormButtons: true,
-       inputsDefaultValueSet: initialData ?? {
-         countryCode: storeConfig.defaultCountry,
-       },
-       isOpen: true,
-       onChange: debounce((values) => {
-         setAddressOnCart(values, checkoutApi.setShippingAddress);
-       }, DEBOUNCE_TIME),
-       showBillingCheckBox: false,
-       showShippingCheckBox: false,
-     })($shippingForm);
+   ```javascript
+   return {
+     async init() {
+       events.on('checkout/initialized', handleCheckoutUpdated);
+       events.on('checkout/updated', handleCheckoutUpdated);
+     }
    };
    ```
-
-1. Update the handlers to use the new method.
-
-   ```diff
-   async function handleCheckoutInitialized(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
-
-   +  // continue to shipping
-   +  const cartShippingAddress = getCartAddress(data, 'shipping');
-   +  await continueToShipping(cartShippingAddress);
-   }
-
-   async function handleCheckoutUpdated(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
-
-     removeEmptyCart();
-
-   +  // continue to shipping
-   +  const cartShippingAddress = getCartAddress(data, 'shipping');
-   +  await continueToShipping(cartShippingAddress);
-   }
-   ```
-
-   <Aside type="note">
-   Pass the event data to ensure the form initializes with the selected shipping address from the cart, if necessary.
-   </Aside>
 </Steps>
+
+The steps manager uses the **early return pattern** - if a step is incomplete, it displays that step and exits. Only when all previous steps are complete does it move to the next step. This ensures proper linear progression through the checkout flow.
 </Task>
 
 <Task>
-### Enable shipping
+### Add CSS styling for step controls
 
-In the [render initial containers](#render-initial-containers) step, we added a call to a non-existing `continueToDelivery` method and disabled the **CONTINUE TO SHIPPING METHOD** button by default. Now we are going to enable the button when the user selects a shipping address and implement the missing method.
-
-<Steps>
-1. Update the `handleCheckoutUpdated` handler to enable the button when the received data contains a selected shipping address.
-
-   ```diff
-   async function handleCheckoutUpdated(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
-
-     removeEmptyCart();
-
-     // continue to shipping
-     const cartShippingAddress = getCartAddress(data, 'shipping');
-     await continueToShipping(cartShippingAddress);
-
-   +  if (!cartShippingAddress) return;
-   +
-   +  continueToDeliveryBtn.setProps((prev) => ({
-   +    ...prev,
-   +    disabled: false,
-   +  }));
-   }
-   ```
-
-1. Update the logic inside the `handleCheckoutInitialized` handler to automatically call the `continueToDelivery` method if the cart already contains the necessary data.
-
-   ```diff
-   async function handleCheckoutInitialized(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
-
-     // continue to shipping
-     const cartShippingAddress = getCartAddress(data, 'shipping');
-     await continueToShipping(cartShippingAddress);
-
-   +  // continue to delivery
-   +  if (!cartShippingAddress) return;
-   +  await continueToDelivery();
-   }
-   ```
-
-1. Create the `continueToDelivery` function to render all the containers that are relevant to the delivery step.
-
-   ```js
-   let deliveryMethods;
-   let continueToPaymentBtn;
-
-   const continueToDelivery = async () => {
-     if (deliveryMethods) return;
-
-     deliveryMethods = await CheckoutProvider.render(ShippingMethods, {
-       hideOnVirtualCart: true,
-       onCheckoutDataUpdate: () => {
-         cartApi.refreshCart().catch(console.error);
-       },
-     })($deliveryMethods);
-
-     orderSummary.setProps((prev) => ({
-       ...prev,
-       slots: {
-         EstimateShipping: (esCtx) => {
-           const estimateShippingForm = document.createElement('div');
-           CheckoutProvider.render(EstimateShipping)(estimateShippingForm);
-           esCtx.appendChild(estimateShippingForm);
-         },
-       },
-     }));
-
-     continueToDeliveryBtn.remove();
-     $continueToDeliveryBtn.remove();
-
-     continueToPaymentBtn = await UI.render(Button, {
-       children: 'CONTINUE TO PAYMENT INFORMATION',
-       disabled: true,
-       onClick: async () => {
-         await continueToPayment();
-       },
-     })($continueToPaymentBtn);
-   };
-   ```
-
-   <Diagram caption="Continue to shipping">
-   ![Continue to shipping](@images/dropins/checkout/continue-to-shipping.png)
-   </Diagram>
-</Steps>
-</Task>
-
-<Task>
-### Enable payment
-
-Similar to the [enable shipping](#enable-shipping) step, you now need to add the logic to enable the **CONTINUE TO PAYMENT INFORMATION** button and implement the missing `continueToPayment` method.
+Create the CSS that controls step visibility and progression. Add this to your `commerce-checkout-multi-step.css` file:
 
 <Steps>
-1. Update the logic inside the `handleCheckoutInitialized` handler to automatically call the `continueToPayment` method if the cart already contains the necessary data.
+1. **Step visibility controls** - Define the core classes that show/hide step content:
 
-   ```diff
-   async function handleCheckoutInitialized(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
+   ```css
+   /* Hide all step content by default */
+   .checkout-step-content {
+     display: none;
+   }
 
-     // continue to shipping
-     const cartShippingAddress = getCartAddress(data, 'shipping');
-     await continueToShipping(cartShippingAddress);
+   /* Show content when step is active */
+   .checkout-step-active .checkout-step-content {
+     display: block;
+   }
 
-     // continue to delivery
-     if (!cartShippingAddress) return;
-     await continueToDelivery();
+   /* Hide summaries by default */
+   .checkout-step-summary {
+     display: none;
+   }
 
-   +  // continue to payment
-   +  const deliveryMethod = getCartDeliveryMethod(data);
-   +  if (!deliveryMethod) return;
-   +  await continueToPayment();
+   /* Show summaries when step is completed (not active) */
+   .checkout-step:not(.checkout-step-active) .checkout-step-summary {
+     display: block;
+   }
+
+   /* Hide continue buttons when step is completed */
+   .checkout-step:not(.checkout-step-active) .checkout-step-button {
+     display: none;
    }
    ```
 
-   ```diff
-   async function handleCheckoutUpdated(data) {
-     if (isEmptyCart(data)) {
-       await displayEmptyCart();
-       return;
-     }
-
-     removeEmptyCart();
-
-     // continue to shipping
-     const cartShippingAddress = getCartAddress(data, 'shipping');
-     await continueToShipping(cartShippingAddress);
-
-     if (!cartShippingAddress) return;
-
-     continueToDeliveryBtn.setProps((prev) => ({
-       ...prev,
-       disabled: false,
-     }));
-
-   +  const deliveryMethod = getCartDeliveryMethod(data);
-   +  if (!deliveryMethod) return;
-   +
-   +  continueToPaymentBtn.setProps((prev) => ({
-   +    ...prev,
-   +    disabled: false,
-   +  }));
-   }
-   ```
-
-1. Create the `continueToPayment` function to render all the containers that are relevant to the payment step.
-
-   ```js
-   let billToShipping;
-   let billingForm;
-   let paymentMethods;
-   let placeOrder;
-
-   const continueToPayment = async () => {
-     if (!billToShipping) {
-       billToShipping = await CheckoutProvider.render(BillToShippingAddress, {
-         hideOnVirtualCart: true,
-         onChange: (checked) => {
-           $billingForm.style.display = checked ? 'none' : 'block';
-         },
-       })($billToShipping);
-     }
-
-     if (!billingForm) {
-       billingForm = await AccountProvider.render(AddressForm, {
-         addressesFormTitle: 'Billing address',
-         className: 'checkout-billing-form__address-form',
-         formName: BILLING_FORM_NAME,
-         hideActionFormButtons: true,
-         isOpen: true,
-         onChange: debounce((values) => {
-           setAddressOnCart(values, checkoutApi.setBillingAddress);
-         }, DEBOUNCE_TIME),
-         showBillingCheckBox: false,
-         showShippingCheckBox: false,
-       })($billingForm);
-     }
-
-     if (!paymentMethods) {
-       paymentMethods = await CheckoutProvider.render(PaymentMethods)($paymentMethods);
-     }
-
-     if (!placeOrder) {
-       placeOrder = await CheckoutProvider.render(PlaceOrder, {
-         handlePlaceOrder: async ({ cartId }) => {
-           orderApi.placeOrder(cartId).catch(console.error);
-         },
-       })($placeOrder);
-     }
-
-     continueToPaymentBtn.remove();
-     $continueToPaymentBtn.remove();
-   };
-   ```
-
-   <Diagram caption="Continue to payment">
-   ![Continue to payment](@images/dropins/checkout/continue-to-payment.png)
-   </Diagram>
+2. **Step progression styling** - For complete visual styling (borders, colors, animations, etc.), see [`commerce-checkout-multi-step.css`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/blocks/commerce-checkout-multi-step/commerce-checkout-multi-step.css) in the demo repository.
 </Steps>
 
-At this point, you should have a fully functional multi-step checkout, but there's still some work to do. Let's move on to the last step.
-</Task>
-
-<Task>
-### Create order confirmation
-
-The last step to complete the multi-step checkout process is to create an order confirmation page. To make things easy, you can reuse the code from the `commerce-checkout.js` block in the boilerplate template.
-
-<Steps>
-1. Copy the `displayOrderConfirmation` function.
-
-1. Copy the `handleCheckoutOrder` handler.
-
-1. Register the `checkout/order` event listener.
-
-   ```diff
-     events.on('checkout/initialized', handleCheckoutInitialized, { eager: true });
-   + events.on('checkout/order', handleCheckoutOrder);
-     events.on('checkout/updated', handleCheckoutUpdated);
-   ```
-
-   <Diagram caption="Order confirmation">
-   ![Order confirmation](@images/dropins/checkout/order-confirmation.png)
-   </Diagram>
-</Steps>
+These CSS rules create the core multi-step behavior: **content shows when active**, **summaries show when completed**, and **step progression controls** guide users through the checkout flow.
 </Task>
 
 </Tasks>
