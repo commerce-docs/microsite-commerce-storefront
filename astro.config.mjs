@@ -797,6 +797,10 @@ async function config() {
                       link: '/sdk/components/inputdate/'
                     },
                     {
+                      label: 'InputFile',
+                      link: '/sdk/components/inputfile/'
+                    },
+                    {
                       label: 'InputPassword',
                       link: '/sdk/components/inputpassword/'
                     },
