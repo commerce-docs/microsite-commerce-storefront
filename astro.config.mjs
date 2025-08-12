@@ -407,9 +407,9 @@ async function config() {
                           collapsed: true,
                           items: [
                             { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-                            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-                            { label: 'Multi-step guest checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                             { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                            { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                           ]
                         },
                       ],
@@ -805,6 +805,10 @@ async function config() {
                       link: '/sdk/components/inputdate/'
                     },
                     {
+                      label: 'InputFile',
+                      link: '/sdk/components/inputfile/'
+                    },
+                    {
                       label: 'InputPassword',
                       link: '/sdk/components/inputpassword/'
                     },
@@ -978,7 +982,7 @@ async function config() {
                     },
                     { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
                     { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
-                    { label: 'Multi-step guest checkout', link: '/videos/multi-step-checkout/' },
+                    { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
                     { label: 'Shopper experience', link: '/videos/shopper-experience/' },
                   ],
                 },
