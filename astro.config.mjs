@@ -496,15 +496,15 @@ async function config() {
                           label: 'Containers',
                           collapsed: true,
                           items: [
-                            { label: 'ProductList', link: '/dropins/product-discovery/containers/product-list/' },
+                            { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
                             { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
-                            { label: 'ResultsInfo', link: '/dropins/product-discovery/containers/results-info/' },
-                            { label: 'SearchBarInput', link: '/dropins/product-discovery/containers/search-bar-input/' },
-                            { label: 'SearchBarResults', link: '/dropins/product-discovery/containers/search-bar-results/' },
+                            { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
+                            { label: 'Pagination', link: '/dropins/product-discovery/containers/pagination/' },
                           ]
                         },
                         { label: 'Styles', link: '/dropins/product-discovery/styles/' },
                         { label: 'Slots', link: '/dropins/product-discovery/slots/' },
+                        { label: 'Functions', link: '/dropins/product-discovery/functions/' },
                         { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                       ]
                     },

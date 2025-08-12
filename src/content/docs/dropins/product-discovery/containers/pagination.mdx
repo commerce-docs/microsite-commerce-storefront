@@ -1,0 +1,102 @@
+---
+title: Pagination container
+description: Learn about the Pagination container and configurations for the Product Discovery drop-in component v2.0.0.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `Pagination` container manages pagination state and navigation for search results. It provides page navigation controls and automatically handles page state management based on search results.
+
+## Import
+
+```javascript
+import Pagination from '@dropins/storefront-product-discovery/containers/Pagination.js';
+```
+
+## Configurations
+
+The `Pagination` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['onPageChange', 'function', 'No', 'Callback when page changes. Receives new page number.'],
+  ]}
+/>
+
+## Basic Usage
+
+```javascript
+await provider.render(Pagination)($container);
+```
+
+## Features
+
+### Automatic Page Management
+
+- **Page State**: Automatically tracks current page and total pages from search results
+- **Page Info**: Extracts pagination data from `pageInfo.currentPage` and `pageInfo.totalPages`
+- **Conditional Rendering**: Only renders when pagination data is available
+- **Search Integration**: Page changes trigger new search calls with updated page parameters
+
+### Navigation Controls
+
+- **Page Numbers**: Direct navigation to specific pages
+- **Current Page Display**: Shows current page position
+- **Total Pages**: Displays total number of available pages
+- **Responsive Design**: Adapts to different screen sizes
+
+### Scope Support
+
+The Pagination container supports isolated instances through scope configuration:
+
+```javascript
+// Global scope (default) Listens to all search events
+await provider.render(Pagination)($container);
+
+// Only listens to events with scope: 'popover'
+await provider.render(Pagination, { scope: 'popover' })($container);
+```
+
+## Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Results**: Updates pagination based on `pageInfo` from results
+2. **Page Changes**: Automatically triggers new searches with updated page
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(Pagination, {
+  onPageChange: (page) => {
+    // scroll to the top of the page after changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+})($paginationContainer);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Page Callbacks**: Use `onPageChange` for custom page handling
+3. **Real-time Updates**: Let the container handle updates automatically
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Page Not Changing**: Verify search API is being called with correct page
+3. **Container Not Rendering**: Ensure search results include `pageInfo` data
+4. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+### Pagination Behavior
+
+- **Conditional Rendering**: Container only renders when `currentPage` and `totalPages` are available
+- **Search Integration**: Page changes automatically trigger new search calls
+- **State Management**: Page state is maintained through search variables 

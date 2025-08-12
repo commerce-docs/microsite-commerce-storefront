@@ -1,0 +1,117 @@
+---
+title: SortBy container
+description: Learn about the SortBy container and configurations for the Product Discovery drop-in component v2.0.0.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `SortBy` container provides sorting options and manages sort state for search results. It offers customizable sort criteria, automatic sort state management, and supports both default and custom sort options for different use cases.
+
+## Import
+
+```javascript
+import SortBy from '@dropins/storefront-product-discovery/containers/SortBy.js';
+```
+
+## Configurations
+
+The `SortBy` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['onSortChange', 'function', 'No', 'Callback when sort order changes. Receives new sort array.'],
+  ]}
+/>
+
+## Basic Usage
+
+```javascript
+// Basic sort by container
+await provider.render(SortBy)($container);
+
+// With sort change callback
+await provider.render(SortBy, {
+  onSortChange: (value) => {
+    console.log('Sort changed:', value);
+  }
+})($container);
+
+// With scope
+await provider.render(SortBy, {
+  scope: 'popover',
+  onSortChange: (value) => {
+    console.log('Sort changed:', value);
+  }
+})($container);
+```
+
+## Features
+
+### Sort Options
+
+The container's sort options are dynamically driven by Adobe Commerce rules and option labels:
+
+- **Dynamic Population**: Sort options are automatically populated from search metadata
+- **Commerce Rules**: Available sort attributes are determined by Adobe Commerce configuration
+- **Option Labels**: Display text comes from Commerce system labels and translations
+- **Context-Aware**: Sort options may vary based on category, product type, or search context
+
+### Sort State Management
+
+- **Automatic Updates**: Sort state updates automatically with search parameters
+- **Search Integration**: Sort changes trigger new search calls with updated parameters
+- **State Persistence**: Sort preferences maintained across search requests
+
+### Scope Support
+
+The SortBy container supports isolated instances through scope configuration:
+
+```javascript
+// Global scope (default) Listens to all search events
+await provider.render(SortBy)($container);
+
+// Only listens to events with scope: 'popover'
+await provider.render(SortBy, { scope: 'popover' })($container);
+```
+
+## Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Results**: Updates sort options based on available attributes
+2. **Sort Changes**: Automatically triggers new searches with updated sort
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(SortBy, {
+  onSortChange: (value) => {
+    console.log('Sort order changed:', value);
+  }
+})($sortByContainer);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Sort Callbacks**: Use `onSortChange` for custom sort handling
+3. **Real-time Updates**: Let the container handle updates automatically
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Sort Not Changing**: Verify search API is being called with correct sort
+3. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+
+### Sort Behavior
+
+- **Dynamic Options**: Sort options are automatically populated from search metadata
+- **State Persistence**: Sort state is maintained across search requests
+- **Search Integration**: Sort changes trigger new search calls with updated parameters 
