@@ -53,7 +53,6 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(`${id}-svg`, code);
         
         console.log('Mermaid diagram rendered successfully');
-        console.log('SVG content preview:', svg.substring(0, 200) + '...');
         
         // Parse and enhance the SVG for better zoom behavior
         const parser = new DOMParser();
@@ -65,13 +64,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           const originalViewBox = svgElement.getAttribute('viewBox');
           const originalWidth = svgElement.getAttribute('width');
           const originalHeight = svgElement.getAttribute('height');
-          
-          console.log('Original SVG attributes:', {
-            viewBox: originalViewBox,
-            width: originalWidth,
-            height: originalHeight
-          });
-          
+        
           // Set large fixed dimensions like the working SVG images
           // But preserve aspect ratio for sequence diagrams which can be very wide
           let targetWidth = 1920;
@@ -86,9 +79,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
               targetHeight = Math.round(targetWidth / aspectRatio);
             }
           }
-          
-          console.log('Setting target dimensions:', { targetWidth, targetHeight });
-          
+        
           svgElement.setAttribute('width', targetWidth.toString());
           svgElement.setAttribute('height', targetHeight.toString());
         }
@@ -134,16 +125,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Replace loading with the zoomable wrapper
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
-        
-        console.log('Zoom structure created:', {
-          hasZoomableWrapper: !!zoomableWrapper,
-          hasImg: !!img,
-          hasZoomButton: !!zoomButton,
-          imgSrc: img.src?.substring(0, 50) + '...',
-          imgWidth: img.getAttribute('width'),
-          imgHeight: img.getAttribute('height')
-        });
-        
+
         // Store the enhanced SVG content for modal use and manage blob URL lifecycle
         img.dataset.svgContent = enhancedSvg;
         
@@ -159,6 +141,12 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           document.addEventListener('astro:before-preparation', () => {
             URL.revokeObjectURL(svgUrl);
           });
+          
+          // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+          setTimeout(() => {
+            // Dispatch the same event the plugin listens to for re-scanning
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+          }, 100);
         };
         
       } catch (error) {
@@ -174,8 +162,10 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
       renderMermaidDiagram();
     }
     
-    // Also handle Astro page transitions
-    document.addEventListener('astro:page-load', renderMermaidDiagram);
+    // Handle Astro page transitions
+    document.addEventListener('astro:page-load', () => {
+      setTimeout(renderMermaidDiagram, 100);
+    });
   </script>
 )}
 
