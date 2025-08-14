@@ -8,14 +8,17 @@ import Callouts from '@components/Callouts.astro';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Vocabulary from '@components/Vocabulary.astro';
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either your site's [public config](https://www.aem.live/docs/admin.html#schema/PublicConfig) or a [config.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json) file in your code repo.
-
-In the [Create your storefront tutorial](/get-started/), the template repo provided you a `demo-config.json` file in the root folder. This file contains the environment values for a Commerce backend including GraphQl endpoints and headers.
 
 When implementing your own project, you must update the configuration values with:
 - The header values specific to your Adobe Commerce Catalog Services environment.
 - The Adobe Commerce and Catalog Service GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](/setup/configuration/content-delivery-network/).
+
+When you [set up your storefront](/get-started/) using the boilerplate code, the template repo provides you with a `demo-config.json` file in the root folder. This file contains the environment values for a Commerce backend including GraphQl endpoints and headers.
+
+If you set up your site using the [Site Creator Tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator) that automates the site creation process, the `config.json` file is created for you in the GitHub repository created for the boilerplate code. You can review and update the default values in the `config.json` file after the process completes.
 
 ## Vocabulary
 
@@ -46,9 +49,17 @@ The `getHeaders` function is a helper function which takes a storefront scope (l
 
 ## Examples
 
-You can find the config file in your code repo at either /config.json or /demo-config.json. You can view the sample backend's connection `keys` and `values` in the file. They should look similar to this:
+You can find the configuration file in your code repo at either `/config.json` or `/demo-config.json`. The file provides a template with the `keys` and `values` to configure the connection to the Commerce backend.
 
-```js
+The required configuration depends on the type of Commerce application that you are connecting to. Select the tabs below to review the available templates.
+
+<Tabs>
+
+<TabItem label="Adobe Commerce">
+
+This boilerplate `config.json` for Adobe Commerce requires correct values for your Commerce environment.
+
+```json title="config.json" showLineNumbers collapse={20-32} ins={"1":4} ins={"2":5} ins={"3":8} ins={"4":11} ins={"5":12} ins={"6":13} ins={"7":14} ins={"8":15} ins={"9":16}
 {
   "public": {
     "default": {
@@ -82,33 +93,169 @@ You can find the config file in your code repo at either /config.json or /demo-c
   }
 }
 ```
-:::note
-The properties listed above are all required, with correct values for your Commerce environment.
-:::
 
 Each `key` is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
 
 <Callouts>
 
-1. **commerce-endpoint:** (read-only) Services GraphQL endpoint optimized for Catalog Service, Live Search, and Product Recommendations. See [Catalog Service](https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#access-the-service) for details.
+1. **commerce-core-endpoint:** (read/write) Core GraphQL endpoint for queries and mutations. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
 
-1. **commerce-core-endpoint:** (read/write) Core GraphQL endpoint for a variety of queries and mutations. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
+1. **commerce-endpoint:** (read-only) Services GraphQL endpoint for Catalog Service, Live Search, and Product Recommendations. See [Catalog Service](https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#access-the-service) for details.
 
-1. **headers.all.Store:** Determines the store view to connect to, for Core requests. See [Core GraphQL Headers documentation](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
+1. **headers.all.Store:** Store view code for Core GraphQL requests. See [GraphQL Headers](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
 
-1. **headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
-
-1. **headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+1. **headers.cs.Magento-Customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
 
 1. **headers.cs.Magento-Store-Code:** Determines the store to connect to. See [Step 3: Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
 
 1. **headers.cs.Magento-Store-View-Code:** Determines the store view to connect to, for Catalog Service requests. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
 
-1. **headers.cs.Magento-Customer-group:** Determines product discounts and tax classes. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) and the [Create Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-learn/tutorials/customers/customer-groups) video for details.
+1. **headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
 
-1. **headers.cs.x-api-key:** Provides access to SaaS storefront services (Catalog Service, Live Search, and Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas) for details.
+1. **headers.cs.x-api-key:** API key to access SaaS services (Catalog Service, Live Search, Product Recommendations). See [Commerce Services Connector](https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas) for details.
+
+1. **headers.cs.Magento-Environment-Id:** Connects the storefront to the cloud instance that serves it. See [Cloud Environment overview](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/project/overview#environment-overview) for details.
 
 </Callouts>
+
+</TabItem>
+
+<TabItem label="Adobe Commerce as a Cloud Service">
+
+This boilerplate `config.json` for Adobe Commerce as a Cloud Service requires correct values for your Commerce environment.
+
+```json title="config.json" showLineNumbers collapse={18-36} ins={"1":4} ins={"2":5} ins={"3":8} ins={"4":11} ins={"5":12} ins={"6":13}  ins={"7":13} ins={"8":14}
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://na1-sandbox.api.commerce.adobe.com/{{tenantID}}/graphql",
+      "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/{{tenantID}}/graphql",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Customer-Group": "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c",
+          "Magento-Store-Code": "main_website_store",
+          "Magento-Store-View-Code": "default",
+          "Magento-Website-Code": "base"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "{{instanceID}}",
+        "store-code": "main_website_store",
+        "store-id": "main_website_store",
+        "store-name": "Default Store View",
+        "store-url": "https://coresaas-subgraph-external:8000/{{instanceID}}/",
+        "store-view-code": "default",
+        "store-view-id": "default",
+        "store-view-name": "Default Store View",
+        "website-code": "base",
+        "website-id": "base",
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "2"
+        }
+      }
+    }
+  }
+}
+```
+
+Each `key` is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
+
+<Callouts>
+
+1. **commerce-core-endpoint:** (read/write) GraphQL endpoint for your Cloud Service instance. Replace `{{instanceID}}` with the Instance ID from the Commerce Admin URL. See [Adobe Commerce GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/reference/) for details.
+
+1. **commerce-endpoint:** (read-only) Services GraphQL endpoint for Catalog Service, Live Search, and Product Recommendations. See [Catalog Service](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/) for details.
+
+1. **headers.all.Store:** Determines the store view to connect to, for Commerce requests. See [GraphQL Headers documentation](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/) for details.
+
+1. **headers.cs.Magento-Customer-Group:** Customer group for pricing and tax calculations. See [Customer groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups) for details.
+
+1. **headers.cs.Magento-Store-Code:** Store code identifier. See [Create stores](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-3-create-stores) for details.
+
+1. **headers.cs.Magento-Store-View-Code:** Determines the store view connection for Catalog Service requests. See [Step 4: Create store views](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-4-create-store-views) and [Store views](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) for details.
+
+1. **headers.cs.Magento-Website-Code:** Determines the website to connect to. See [Step 2: Create websites](https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites) for details.
+
+</Callouts>
+
+</TabItem>
+
+<TabItem label="Adobe Commerce Optimizer">
+
+This boilerplate `config.json` for Adobe Commerce Optimizer requires correct values for your Commerce environment.
+
+```json title="config.json" showLineNumbers collapse={17-38} ins={"1":4} ins={"2":5} ins={"3":8} ins={"4":11} ins={"5":12} ins={"6":13}
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://na1-sandbox.api.commerce.adobe.com/{{instanceID}}/graphql",
+      "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/{{instanceID}}/graphql",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "AC-View-ID": "{{catalogViewUUID}}",
+          "AC-Price-Book-ID": "{{priceBookID}}",            # Optional. Remove if not needed.
+          "AC-Policy-{{attributeTrigger}}": "{{attributeValue}}"  # Optional. Remove this header if not needed.
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "Fwus6kdpvYCmeEdcCX7PZg",
+        "store-code": "YOUR_STORE_CODE",
+        "store-id": "YOUR_STORE_ID",
+        "store-name": "YOUR_STORE_NAME",
+        "store-url": "YOUR_STORE_URL",
+        "store-view-code": "YOUR_STORE_VIEW_CODE",
+        "store-view-id": "YOUR_STORE_VIEW_ID",
+        "store-view-name": "YOUR_STORE_VIEW_NAME",
+        "website-code": "YOUR_WEBSITE_CODE",
+        "website-id": "YOUR_WEBSITE_ID",
+        "website-name": "YOUR_WEBSITE_NAME"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "2"
+        }
+      }
+    }
+  }
+}
+```
+
+Each `key` is described below with links to more details. The `value` for each key is specific to your Commerce instance and can be provided by your Commerce administrator.
+
+ <Callouts>
+1. **commerce-core-endpoint:** (read) Use the same GraphQL endpoint provided in `commerce-endpoint`.
+
+1. **commerce-endpoint:** (read-only) GraphQL endpoint for Merchandising Services powered by Catalog Views and Policies. This endpoint enables catalog data retrieval for product display, product discovery, and recommendations. Replace the `{{tenant ID}}` with the Instance ID from the Commerce Optimizer URL for your project. See [Merchandising Services Developer Guide](https://developer.adobe.com/commerce/services/optimizer/merchandising-services/) for details.
+
+1. **commerce-endpoint:** (read-only) GraphQL endpoint for Merchandising Services with Catalog Views and Policies. Replace `{{instanceID}}` with your Instance ID from the Optimizer admin URL. See [Merchandising Services](https://developer.adobe.com/commerce/services/optimizer/merchandising-services/) for details.
+
+1. **headers.all.Store:** Keep the default value `"default"` from the template.
+
+1. **headers.cs.AC-View-Id:** (Required) Unique identifier for the catalog view that filters storefront data. See [Catalog Views](https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers) for details.
+
+1. **headers.cs.AC-Price-Book-Id:** (Optional) Price book ID for custom pricing calculations. See [Price Books](https://developer.adobe.com/commerce/services/optimizer/data-ingestion/#price-books-and-prices) for details.
+
+1. **headers.cs.AC-Policy-*:** (Optional) Policy trigger for filtering products by attribute, for example, `AC-Policy-Brand:Cruz`. See [Policies](https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/policies) for details.
+
+</Callouts>
+
+</TabItem>
+
+</Tabs>
+
 
 All of the initializer blocks now automatically use any headers for the corresponding block if they are in the config. For example `commerce.headers.cart.Foo` will add a `Foo` header to graphql requests made by the cart dropin. This can be useful if you need to append certain headers for specific requests.
 
