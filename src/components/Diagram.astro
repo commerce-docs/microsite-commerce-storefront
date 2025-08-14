@@ -1,13 +1,185 @@
 ---
-const { caption, width } = Astro.props;
+const { caption, width, type = "image", code } = Astro.props;
+const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
 ---
 
-<div class="diagram">
+<div class="diagram" data-diagram-type={type}>
   <div class="diagram-content">
-    <slot />
+    {type === "mermaid" ? (
+      <div id={id} class="mermaid-diagram" data-mermaid-code={code}>
+        <div class="mermaid-loading">Loading diagram...</div>
+      </div>
+    ) : (
+      <slot />
+    )}
   </div>
   <div class="caption">{caption}</div>
 </div>
+
+{type === "mermaid" && (
+  <script define:vars={{ id, code }}>
+    // Mermaid rendering script
+    async function renderMermaidDiagram() {
+      const diagramElement = document.getElementById(id);
+      if (!diagramElement) {
+        console.error('Diagram element not found:', id);
+        return;
+      }
+      
+      if (!code) {
+        console.error('No mermaid code provided');
+        return;
+      }
+      
+      try {
+        console.log('Loading mermaid for diagram:', id);
+        
+        // Import mermaid dynamically - use latest version for newest syntax support
+        const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+        
+        console.log('Mermaid loaded, initializing...');
+        
+        // Initialize mermaid with explicit font to prevent text clipping
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'Arial, sans-serif'
+        });
+        
+        console.log('Rendering mermaid diagram...');
+        
+        // Generate SVG
+        const { svg } = await mermaid.render(`${id}-svg`, code);
+        
+        console.log('Mermaid diagram rendered successfully');
+        
+        // Parse and enhance the SVG for better zoom behavior
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+        const svgElement = svgDoc.querySelector('svg');
+        
+        if (svgElement) {
+          // Get original dimensions for aspect ratio calculation
+          const originalViewBox = svgElement.getAttribute('viewBox');
+          const originalWidth = svgElement.getAttribute('width');
+          const originalHeight = svgElement.getAttribute('height');
+        
+          // Set large fixed dimensions like the working SVG images
+          // But preserve aspect ratio for sequence diagrams which can be very wide
+          let targetWidth = 1920;
+          let targetHeight = 1080;
+          
+          if (originalViewBox) {
+            const [, , vbWidth, vbHeight] = originalViewBox.split(' ').map(Number);
+            const aspectRatio = vbWidth / vbHeight;
+            
+            // If it's a very wide diagram (like sequence diagrams), adjust dimensions
+            if (aspectRatio > 2) {
+              targetHeight = Math.round(targetWidth / aspectRatio);
+            }
+          }
+        
+          svgElement.setAttribute('width', targetWidth.toString());
+          svgElement.setAttribute('height', targetHeight.toString());
+          
+          // Add white background to the SVG
+          svgElement.style.backgroundColor = 'white';
+          
+          // Also add a white background rectangle as the first child
+          const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('width', '100%');
+          rect.setAttribute('height', '100%');
+          rect.setAttribute('fill', 'white');
+          svgElement.insertBefore(rect, svgElement.firstChild);
+        }
+        
+        // Convert enhanced SVG to blob URL
+        const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
+        const svgBlob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        
+        // Create the same structure as working images
+        const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
+        
+        const img = document.createElement('img');
+        img.src = svgUrl;
+        img.alt = 'Mermaid diagram';
+        
+        // Set the calculated dimensions on the img element
+        const finalWidth = svgElement?.getAttribute('width') || '1920';
+        const finalHeight = svgElement?.getAttribute('height') || '1080';
+        img.setAttribute('width', finalWidth);
+        img.setAttribute('height', finalHeight);
+        
+        img.style.cssText = `
+          max-width: 100%;
+          height: auto;
+          display: block;
+        `;
+        
+        // Create zoom button like the working images
+        const zoomButton = document.createElement('button');
+        zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
+        zoomButton.className = 'starlight-image-zoom-control';
+        zoomButton.innerHTML = `
+          <svg aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+            <use href="#starlight-image-zoom-icon-zoom"></use>
+          </svg>
+        `;
+        
+        // Assemble the structure
+        zoomableWrapper.appendChild(img);
+        zoomableWrapper.appendChild(zoomButton);
+        
+        // Replace loading with the zoomable wrapper
+        diagramElement.innerHTML = '';
+        diagramElement.appendChild(zoomableWrapper);
+
+        // Store the enhanced SVG content for modal use and manage blob URL lifecycle
+        img.dataset.svgContent = enhancedSvg;
+        
+        // Don't revoke the blob URL immediately - keep it for the zoom modal
+        img.onload = () => {
+          // The blob URL needs to stay alive for the zoom modal to work
+          // We'll clean it up when the page unloads or navigates
+          window.addEventListener('beforeunload', () => {
+            URL.revokeObjectURL(svgUrl);
+          });
+          
+          // Also clean up on Astro page navigation
+          document.addEventListener('astro:before-preparation', () => {
+            URL.revokeObjectURL(svgUrl);
+          });
+          
+
+          
+          // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+          setTimeout(() => {
+            // Dispatch the same event the plugin listens to for re-scanning
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+          }, 100);
+        };
+        
+      } catch (error) {
+        console.error('Error rendering mermaid diagram:', error);
+        diagramElement.innerHTML = `<div style="color: red; padding: 1rem; border: 1px solid red;">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderMermaidDiagram);
+    } else {
+      renderMermaidDiagram();
+    }
+    
+    // Handle Astro page transitions
+    document.addEventListener('astro:page-load', () => {
+      setTimeout(renderMermaidDiagram, 100);
+    });
+  </script>
+)}
 
 <style define:vars={{ imageWidth: width }} is:global>
   .diagram {
@@ -59,11 +231,37 @@ const { caption, width } = Astro.props;
     }
   }
 
+  /* Mermaid-specific styles */
+  .mermaid-diagram {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+  }
+  
+  .mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .mermaid-loading {
+    padding: 2rem;
+    color: var(--sl-color-gray-2);
+    font-style: italic;
+  }
+
   @media print {
     .diagram.diagram {
       border: none;
       box-shadow: none;
       background-color: #fff;
     }
+  }
+
+  /* Force white background for Mermaid diagrams in zoom modals */
+  :global(img[alt="Mermaid diagram"]) {
+    background-color: white !important;
   }
 </style>
