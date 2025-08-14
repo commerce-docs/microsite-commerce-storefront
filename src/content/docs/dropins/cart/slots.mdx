@@ -20,10 +20,49 @@ interface CartSummaryListProps
 slots?: {
   Heading?: SlotProps;
   EmptyCart?: SlotProps;
-  Thumbnail?: SlotProps;
   Footer?: SlotProps;
+  Thumbnail?: SlotProps<{
+    item: CartModel['items'][number];
+    defaultImageProps: ImageProps;
+  }>;
   ProductAttributes?: SlotProps;
   CartSummaryFooter?: SlotProps;
+  CartItem?: SlotProps;
+  UndoBanner?: SlotProps<{
+    item: CartModel['items'][0];
+    loading: boolean;
+    error?: string;
+    onUndo: () => void;
+    onDismiss: () => void;
+  }>;
+  ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemQuantity?: SlotProps<{
+    item: CartModel['items'][number];
+    enableUpdateItemQuantity: boolean;
+    handleItemQuantityUpdate: (
+      item: CartModel['items'][number],
+      quantity: number
+    ) => void;
+    itemsLoading: Set<string>;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+  }>;
+  ItemTotal?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemSku?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemRemoveAction?: SlotProps<{
+    item: CartModel['items'][number];
+    enableRemoveItem: boolean;
+    handleItemQuantityUpdate: (
+      item: CartModel['items'][number],
+      quantity: number
+    ) => void;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    itemsLoading: Set<string>;
+  }>;
 };
 ```
 
@@ -293,6 +332,203 @@ The `CartSummaryFooter` slot allows you to add content to the bottom of the `Car
 })($list),
 ```
 
+### ItemTitle slot
+
+The `ItemTitle` slot allows you to customize the title display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to replace the default title with a custom title:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemTitle: (ctx) => {
+      // Create custom title element
+      const customTitle = document.createElement('div');
+      customTitle.className = 'cart-item-custom-title';
+      customTitle.textContent = 'Custom Title';
+
+      ctx.replaceWith(customTitle);
+    },
+  },
+})(cartSummaryList);
+```
+
+### ItemPrice slot
+
+The `ItemPrice` slot allows you to customize the price display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to add a custom price label:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemPrice: (ctx) => {
+      const priceLabel = document.createElement('span');
+      priceLabel.className = 'cart-item-price-label';
+      priceLabel.textContent = 'Item Price';
+
+      ctx.prependChild(priceLabel);
+    },
+  },
+})(cartSummaryList);
+```
+
+### ItemQuantity slot
+
+The `ItemQuantity` slot allows you to customize the quantity display and controls for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to customize the quantity field by adding a "Qty:" label and using an input component from the SDK:
+
+```javascript
+import {
+  provider as UI,
+  Input,
+} from '@dropins/tools/components.js';
+
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemQuantity: (ctx) => {
+      const { item, handleItemQuantityUpdate } = ctx;
+
+      // Create container with label and input
+      const quantityContainer = document.createElement('div');
+      quantityContainer.className = 'cart-item-quantity-container';
+
+      // Add "Qty:" label
+      const quantityLabel = document.createElement('span');
+      quantityLabel.className = 'cart-item-quantity-label';
+      quantityLabel.textContent = 'Qty:';
+
+      // Create input wrapper for SDK Input component
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'cart-item-quantity-input';
+      inputWrapper.style.display = 'inline-block';
+      inputWrapper.style.width = '60px';
+
+      // Render SDK Input component
+      UI.render(Input, {
+        value: item.quantity.toString(),
+        min: 1,
+        size: 'small',
+        variant: 'primary',
+        onValue: (value) => {
+          const newQuantity = parseInt(value, 10);
+          if (
+            !Number.isNaN(newQuantity)
+            && newQuantity > 0
+            && newQuantity !== item.quantity
+          ) {
+            handleItemQuantityUpdate(item, newQuantity);
+          }
+        },
+      })(inputWrapper);
+
+      // Style the container for inline layout
+      quantityContainer.style.display = 'flex';
+      quantityContainer.style.alignItems = 'center';
+      quantityContainer.style.gap = 'var(--spacing-xsmall)';
+
+      quantityContainer.appendChild(quantityLabel);
+      quantityContainer.appendChild(inputWrapper);
+
+      ctx.replaceWith(quantityContainer);
+    },
+  },
+})(cartSummaryList);
+```
+
+### ItemTotal slot
+
+The `ItemTotal` slot allows you to customize the total price display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to add a custom total label:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemTotal: (ctx) => {
+      const totalLabel = document.createElement('div');
+      totalLabel.className = 'cart-item-total-label';
+      totalLabel.textContent = 'Item Total';
+
+      ctx.prependChild(totalLabel);
+    },
+  },
+})(cartSummaryList);
+```
+
+### ItemSku slot
+
+The `ItemSku` slot allows you to customize the SKU display for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to replace the default SKU with a custom SKU:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemSku: (ctx) => {
+      const customSku = document.createElement('div');
+      customSku.className = 'cart-item-custom-sku';
+      customSku.textContent = 'custome-sku';
+
+      ctx.replaceWith(customSku);
+    },
+  },
+})(cartSummaryList);
+```
+
+### ItemRemoveAction slot
+
+The `ItemRemoveAction` slot allows you to customize the remove action button for each item in the `CartSummaryList` container.
+
+The following example demonstrates how to replace the default remove button with a custom button:
+
+```javascript
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  slots: {
+    ItemRemoveAction: (ctx) => {
+      // Simple remove button with text
+      const removeButton = document.createElement('button');
+      removeButton.innerText = 'Remove';
+      // apply styling using design tokens where possible
+      removeButton.style.background = 'transparent';
+      removeButton.style.border = 'none';
+      removeButton.style.color = 'var(--color-neutral-600)';
+      removeButton.style.cursor = 'pointer';
+      removeButton.style.fontSize = 'var(--type-body-2-font-size)';
+      removeButton.style.padding = '0';
+      removeButton.style.paddingRight = 'var(--spacing-medium)';
+      removeButton.style.fontWeight = 'var(--type-body-2-font-weight, normal)';
+      removeButton.style.textDecoration = 'underline';
+      removeButton.style.float = 'right';
+      removeButton.style.marginLeft = 'auto';
+      removeButton.style.display = 'block';
+
+      // Remove functionality
+      removeButton.addEventListener('click', () => {
+        if (ctx.handleItemQuantityUpdate) {
+          ctx.handleItemQuantityUpdate(ctx.item, 0);
+        }
+      });
+
+      ctx.replaceWith(removeButton);
+    },
+  },
+})(cartSummaryList);
+```
+
 ## OrderSummary slots
 
 The `OrderSummaryProps` interface defines two slots for customizing the appearance of the order summary.
@@ -365,8 +601,57 @@ slots?: {
   ProductList?: SlotProps;
   ProductListFooter?: SlotProps;
   PreCheckoutSection?: SlotProps;
+  Thumbnail?: SlotProps<{
+    item: CartModel['items'][number];
+    defaultImageProps: ImageProps;
+  }>;
+  Heading?: SlotProps;
+  EmptyCart?: SlotProps;
+  Footer?: SlotProps;
+  ProductAttributes?: SlotProps;
+  CartSummaryFooter?: SlotProps;
+  CartItem?: SlotProps;
+  UndoBanner?: SlotProps<{
+    item: CartModel['items'][0];
+    loading: boolean;
+    error?: string;
+    onUndo: () => void;
+    onDismiss: () => void;
+  }>;
+  ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemQuantity?: SlotProps<{
+    item: CartModel['items'][number];
+    enableUpdateItemQuantity: boolean;
+    handleItemQuantityUpdate: (
+      item: CartModel['items'][number],
+      quantity: number
+    ) => void;
+    itemsLoading: Set<string>;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+  }>;
+  ItemTotal?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemSku?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemRemoveAction?: SlotProps<{
+    item: CartModel['items'][number];
+    enableRemoveItem: boolean;
+    handleItemQuantityUpdate: (
+      item: CartModel['items'][number],
+      quantity: number
+    ) => void;
+    handleItemsError: (uid: string, message?: string) => void;
+    handleItemsLoading: (uid: string, state: boolean) => void;
+    onItemUpdate?: ({ item }: { item: CartModel['items'][number] }) => void;
+    itemsLoading: Set<string>;
+  }>;
 };
 ```
+
+**Note:** Many slots are shared between MiniCart and CartSummaryList components. For implementation details of shared slots, refer to the corresponding examples in the [CartSummaryList slots section](#cartsummarylist-slots) above.
+
+The following slots are specific to the MiniCart component:
 
 ### ProductListFooter slot
 
