@@ -51,7 +51,8 @@ async function config() {
     site: 'https://experienceleague.adobe.com',
     base: basePath,
     markdown: {
-      remarkPlugins: [remarkBasePathLinks]
+      remarkPlugins: [remarkBasePathLinks],
+      syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
     },
     trailingSlash: 'ignore',
     outDir: './dist',
@@ -142,7 +143,8 @@ async function config() {
             name: 'google-site-verification',
             content: 'NwoVbL9MrtJAa4vdfMC0vJmKV3Hvuc4L_UHlv4Uzjgk'
           }
-        }],
+        },
+        ],
         title: 'Adobe Commerce Storefront',
         favicon: 'favicon.ico',
         lastUpdated: true,
