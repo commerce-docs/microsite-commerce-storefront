@@ -138,6 +138,13 @@ async function config() {
           }
         },
         {
+          tag: 'script',
+          attrs: {
+            src: `${basePath}/scripts/analytics.js`,
+            type: 'module'
+          }
+        },
+        {
           tag: 'meta',
           attrs: {
             name: 'google-site-verification',
