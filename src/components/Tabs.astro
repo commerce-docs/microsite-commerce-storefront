@@ -1,0 +1,286 @@
+---
+// Custom Tabs component with proper horizontal styling and JavaScript functionality
+// Designed to not interfere with expressive code processing while providing native tab behavior
+interface Props {
+    class?: string;
+}
+
+const { class: className, ...props } = Astro.props;
+---
+
+<div class={`starlight-tabs ${className || ""}`} data-tabs-container {...props}>
+    <ul role="tablist">
+        <!-- Tab buttons will be populated by JavaScript -->
+    </ul>
+    <div class="tab-panels">
+        <slot />
+    </div>
+</div>
+
+<style>
+    /* Ensure Starlight's tab styles are applied to our custom component */
+    [data-tabs-container] {
+        margin: 1rem 0;
+    }
+
+    /* Apply Starlight's styles by using their class selectors */
+    .starlight-tabs ul[role="tablist"] {
+        display: flex;
+        list-style: none;
+        border-bottom: 2px solid var(--sl-color-gray-5);
+        padding: 0;
+        margin: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .starlight-tabs ul[role="tablist"]::-webkit-scrollbar {
+        display: none;
+    }
+
+    .starlight-tabs .tab-panels {
+        margin-top: 1rem;
+    }
+
+    /* Tab styling to match Starlight exactly */
+    :global(.starlight-tabs .tab a[role="tab"]) {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 1.25rem;
+        text-decoration: none;
+        border-bottom: 2px solid var(--sl-color-gray-5);
+        color: var(--sl-color-gray-3);
+        outline-offset: var(--sl-outline-offset-inside);
+        overflow-wrap: initial;
+        cursor: pointer;
+        background: none;
+        border-left: none;
+        border-right: none;
+        border-top: none;
+        font: inherit;
+        margin: 0;
+        margin-bottom: -2px;
+        position: relative;
+        white-space: nowrap;
+        transition: color 0.2s ease;
+    }
+
+    :global(.starlight-tabs .tab a[role="tab"]:hover) {
+        color: var(--sl-color-gray-2);
+    }
+
+    :global(.starlight-tabs .tab a[role="tab"][aria-selected="true"]) {
+        color: var(--sl-color-white);
+        border-bottom-color: var(--sl-color-text-accent);
+        font-weight: 600;
+    }
+
+    :global(.starlight-tabs .tab a[role="tab"]:focus-visible) {
+        outline: 2px solid var(--sl-color-text-accent);
+        outline-offset: -2px;
+    }
+
+    /* Tab panel styling */
+    :global(.starlight-tabs .tab-panel) {
+        margin: 0;
+        padding: 0;
+    }
+
+    :global(.starlight-tabs .tab-panel[hidden]) {
+        display: none !important;
+    }
+
+    /* Responsive behavior */
+    @media (max-width: 50rem) {
+        .starlight-tabs ul[role="tablist"] {
+            overflow-x: auto;
+        }
+
+        :global(.starlight-tabs .tab a[role="tab"]) {
+            min-width: max-content;
+        }
+    }
+</style>
+
+<script>
+    class CustomTabsManager {
+        private tabList: HTMLElement;
+        private tabPanels: HTMLElement;
+        private tabs: HTMLButtonElement[] = [];
+        private panels: HTMLElement[] = [];
+
+        constructor(container: HTMLElement) {
+            this.tabList = container.querySelector(
+                "ul[role='tablist']",
+            ) as HTMLElement;
+            this.tabPanels = container.querySelector(
+                ".tab-panels",
+            ) as HTMLElement;
+
+            this.initialize();
+        }
+
+        private initialize() {
+            this.createTabsFromContent();
+            this.setupEventListeners();
+            this.activateFirstTab();
+        }
+
+        private createTabsFromContent() {
+            // Clear any existing tab buttons to prevent duplicates
+            this.tabList.innerHTML = "";
+            this.tabs = [];
+            this.panels = [];
+
+            // Find all TabItem components (they have data-label attributes)
+            const tabItems = Array.from(
+                this.tabPanels.children,
+            ) as HTMLElement[];
+
+            // Generate a single ID for this tabs container
+            const containerId = this.generateId();
+
+            tabItems.forEach((item, index) => {
+                const label = item.getAttribute("data-label");
+                if (!label) return;
+
+                // Use consistent IDs for the tab/panel relationship
+                const tabId = `tab-${containerId}-${index}`;
+                const panelId = `panel-${containerId}-${index}`;
+
+                // Create Starlight-compatible tab structure
+                const tabListItem = document.createElement("li");
+                tabListItem.setAttribute("role", "presentation");
+                tabListItem.className = "tab";
+
+                const tabLink = document.createElement("a");
+                tabLink.setAttribute("role", "tab");
+                tabLink.setAttribute("href", `#${panelId}`);
+                tabLink.setAttribute("id", tabId);
+                tabLink.setAttribute("aria-controls", panelId);
+                tabLink.setAttribute("tabindex", index === 0 ? "0" : "-1");
+                tabLink.setAttribute(
+                    "aria-selected",
+                    index === 0 ? "true" : "false",
+                );
+                tabLink.textContent = label;
+
+                tabListItem.appendChild(tabLink);
+
+                // Set up panel
+                item.setAttribute("role", "tabpanel");
+                item.setAttribute("id", panelId);
+                item.setAttribute("aria-labelledby", tabId);
+                item.className = `tab-panel ${item.className || ""}`.trim();
+
+                if (index !== 0) {
+                    item.setAttribute("hidden", "true");
+                }
+
+                // Add to arrays (store the link element for event handling)
+                this.tabs.push(tabLink as any);
+                this.panels.push(item);
+
+                // Add tab item to tab list
+                this.tabList.appendChild(tabListItem);
+            });
+        }
+
+        private setupEventListeners() {
+            this.tabs.forEach((tab, index) => {
+                tab.addEventListener("click", (e) => {
+                    e.preventDefault(); // Prevent default link behavior
+                    this.activateTab(index);
+                });
+                tab.addEventListener("keydown", (e) =>
+                    this.handleKeydown(e, index),
+                );
+            });
+        }
+
+        private activateTab(activeIndex: number) {
+            // Update tabs
+            this.tabs.forEach((tab, index) => {
+                const isActive = index === activeIndex;
+                tab.setAttribute("aria-selected", isActive ? "true" : "false");
+                tab.setAttribute("tabindex", isActive ? "0" : "-1");
+
+                if (isActive) {
+                    tab.focus();
+                }
+            });
+
+            // Update panels
+            this.panels.forEach((panel, index) => {
+                const isActive = index === activeIndex;
+                if (isActive) {
+                    panel.removeAttribute("hidden");
+                } else {
+                    panel.setAttribute("hidden", "true");
+                }
+            });
+        }
+
+        private handleKeydown(event: KeyboardEvent, currentIndex: number) {
+            let newIndex = currentIndex;
+
+            switch (event.key) {
+                case "ArrowLeft":
+                    newIndex =
+                        currentIndex > 0
+                            ? currentIndex - 1
+                            : this.tabs.length - 1;
+                    break;
+                case "ArrowRight":
+                    newIndex =
+                        currentIndex < this.tabs.length - 1
+                            ? currentIndex + 1
+                            : 0;
+                    break;
+                case "Home":
+                    newIndex = 0;
+                    break;
+                case "End":
+                    newIndex = this.tabs.length - 1;
+                    break;
+                default:
+                    return;
+            }
+
+            event.preventDefault();
+            this.activateTab(newIndex);
+        }
+
+        private activateFirstTab() {
+            if (this.tabs.length > 0) {
+                this.activateTab(0);
+            }
+        }
+
+        private generateId(): string {
+            return Math.random().toString(36).substr(2, 9);
+        }
+    }
+
+    // Initialize all custom tabs on the page (only once)
+    function initializeTabs() {
+        const tabsContainers = document.querySelectorAll(
+            "[data-tabs-container]:not([data-initialized])",
+        ) as NodeListOf<HTMLElement>;
+
+        tabsContainers.forEach((container) => {
+            // Mark as initialized to prevent duplicate initialization
+            container.setAttribute("data-initialized", "true");
+            new CustomTabsManager(container);
+        });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeTabs);
+    } else {
+        initializeTabs();
+    }
+</script>

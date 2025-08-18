@@ -13,6 +13,7 @@ import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
+const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
 // Determine the base path based on the environment
 const basePath = isProduction
@@ -38,10 +39,10 @@ const sdkComponentEntries = sdkComponentFiles.map(file => {
 async function config() {
   const compress = (await import("@playform/compress")).default({
     CSS: false,
-    HTML: true,
+    HTML: false,
     Image: true,
     JavaScript: true,
-    SVG: true
+    SVG: false,
   });
 
   return defineConfig({
@@ -119,18 +120,7 @@ async function config() {
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/develop/'
         },
-        expressiveCode: {
-          themes: ['github-light', 'github-dark'],
-          styleOverrides: {
-            frames: {
-              frameBoxShadowCssValue: 'none',
-            },
-          },
-          defaultProps: {
-            // Disable window frames for all code blocks
-            frame: 'none',
-          },
-        },
+
         head: [{
           tag: 'script',
           attrs: {
