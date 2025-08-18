@@ -39,10 +39,10 @@ const sdkComponentEntries = sdkComponentFiles.map(file => {
 async function config() {
   const compress = (await import("@playform/compress")).default({
     CSS: false,
-    HTML: !skipCompression,
-    Image: !skipCompression,
-    JavaScript: !skipCompression,
-    SVG: true
+    HTML: false,
+    Image: true,
+    JavaScript: true,
+    SVG: false,
   });
 
   return defineConfig({
