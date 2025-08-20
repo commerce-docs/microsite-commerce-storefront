@@ -9,8 +9,7 @@ export const ACCS_QUERY_HEADERS = {
 
 export const ACO_QUERY_HEADERS = {
   "Content-Type": "application/json",
-  "AC-Environment-Id": "LnjXjuam6uWmo5d2JLEgbA",
-  "AC-Scope-Locale": "tx"
+  "AC-View-ID": "cde0ab4c-1f7b-4e12-91f6-9c7840ab6523"  # View ID for the Global catalog
 }
 
 export const getQueryHeaders = (service) => {
