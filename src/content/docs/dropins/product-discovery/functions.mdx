@@ -1,0 +1,131 @@
+---
+title: Product Discovery functions
+description: Learn about the API functions provided by the Product Discovery drop-in component.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+
+The Product Discovery drop-in component provides API functions to perform searches, update results, and keep connected containers in sync.
+
+## search
+
+The `search` function performs a product search based on the parameters. It updates the search context and emits events consumed by containers such as `SearchResults`, `Facets`, `Pagination`, and `SortBy`.
+
+Passing `null` as the `variables` parameter clears the current search state and resets related containers.
+
+```ts
+export const search = async (
+  variables: {
+    phrase?: string;
+    pageSize?: number;
+    currentPage?: number;
+    filter?: Array<{
+      attribute: string;
+      eq?: string;
+      in?: string[];
+      range?: { from?: number; to?: number };
+    }>;
+    sort?: Array<{
+      attribute: string;
+      direction: 'ASC' | 'DESC';
+    }>;
+  } | null,
+  options?: {
+    scope?: string;
+  }
+): Promise<void>
+```
+
+### Variables
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['phrase', 'string', 'No', 'Search phrase. Use an empty string for category-only searches.'],
+    ['pageSize', 'number', 'No', 'Number of products to return per page.'],
+    ['currentPage', 'number', 'No', 'The current page of results.'],
+    ['filter', 'array', 'No', 'Array of filter objects. Each filter must specify an attribute and condition (`eq`, `in`, or `range`).'],
+    ['sort', 'array', 'No', 'Array of sort objects containing an attribute and direction (`ASC` or `DESC`).'],
+  ]}
+/>
+
+### Options
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Unique identifier for the search context. Only containers rendered with this scope will respond to search events.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves when the search completes and related events have been emitted.   No direct return payload; containers update automatically based on the emitted events.
+
+### Events
+
+The event bus emits the following events during the search lifecycle:
+
+| Event name            | Payload                       | Description |
+|-----------------------|--------------------------------|-------------|
+| `search/loading`      | `boolean`                      | Emitted when a search request starts (`true`) or ends (`false`). |
+| `search/result`       | `{ request, result }`          | Emitted with the search variables and the search results. |
+| `search/error`        | `Error`                        | Emitted if the search request fails. |
+
+Events are scoped when a `scope` option is provided. Scoped events only update containers registered with the same scope.
+
+### Usage
+
+Perform a basic search:
+
+```js
+import { search } from '@/plp/api.js';
+
+await search({
+  phrase: 'shirts',
+  pageSize: 12,
+  currentPage: 1,
+  filter: [],
+  sort: []
+});
+```
+
+Perform a scoped quick search:
+
+```js
+await search({
+  phrase: 'sneakers',
+  pageSize: 6,
+  currentPage: 1,
+  filter: [],
+  sort: []
+}, { scope: 'popover' });
+```
+
+Search with filters and sorting:
+
+```js
+await search({
+  phrase: '',
+  pageSize: 12,
+  currentPage: 1,
+  filter: [
+    { attribute: 'categories', in: ['apparel'] },
+    { attribute: 'price', range: { from: 25, to: 75 } }
+  ],
+  sort: [{ attribute: 'price', direction: 'ASC' }]
+});
+```
+
+Clear search results:
+
+```js
+await search(null);
+```
