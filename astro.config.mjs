@@ -97,6 +97,7 @@ async function config() {
       '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
       '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
       '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
+      '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
