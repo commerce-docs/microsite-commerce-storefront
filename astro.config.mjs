@@ -198,8 +198,18 @@ async function config() {
                         },
                         {
                           label: 'Storefront configuration',
-                          link: '/setup/configuration/commerce-configuration/'
-                        },
+                          collapsed: true,
+                          items: [
+                            {
+                              label: 'Commerce configuration',
+                              link: '/setup/configuration/commerce-configuration/'
+                            },
+                            {
+                              label: 'Setup the AEM Assets integration with storefront',
+                              link: '/setup/configuration/aem-assets-configuration/'
+                            }
+                          ]
+                          },
                         {
                           label: 'Multistore setup',
                           link: '/setup/configuration/multistore-setup/'
