@@ -446,9 +446,11 @@ async function config() {
                       items: [
                         { label: 'Overview', link: '/dropins/payment-services/' },
                         { label: 'Installation', link: '/dropins/payment-services/installation/' },
+                        { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                         {
                           label: 'Containers', collapsed: true,
                           items: [
+                            { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                             { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
                           ]
                         },

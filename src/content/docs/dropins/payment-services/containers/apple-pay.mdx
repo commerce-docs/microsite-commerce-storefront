@@ -1,0 +1,45 @@
+---
+title: ApplePay container
+description: Use the ApplePay container to render an Apple Pay button
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Link from '@components/Link.astro';
+
+The `ApplePay` container renders a button that macOS/iOS users can use to check out using <Link href="https://www.apple.com/apple-pay/" text="Apple Pay" />.
+
+## ApplePay configurations
+
+The `ApplePay` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['getCartId', 'function', 'Yes', 'Should return a promise that resolves to the shopper`s cart ID.'],
+    ['isVirtualCart', 'boolean', 'Yes', 'Whether the cart contains only virtual/downloadable products.'],
+    ['onButtonClick', 'function', 'No', 'Called when the user clicks the Apple Pay button. The callback receives a "showPaymentSheet" function as its only argument that must be called to begin the Apple Pay session and show the payment sheet. If no "onButtonClick" handler is provided, the Apple Pay session will begin and the payment sheet will show on click, always.'],
+    ['onSuccess', 'function', 'No', 'Called when the payment flow finishes successfully. If the function returns a promise, the promise will be awaited before marking the payment as "completed successfully" in the Apple Pay sheet. If the promise rejects, the payment will be marked as "failed" in the Apple Pay sheet and the error will be propagated to the "onError" callback, if provided.'],
+    ['onError', 'function', 'No', 'Called when the payment flow was aborted due to an error. The function receives a single argument, {message: string}, containing the reason of error.'],
+  ]}
+/>
+
+## Example
+
+```js
+import ApplePay from '@dropins/storefront-payment-services/containers/ApplePay.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+
+const cart = events.lastPayload('checkout/initialized');
+
+if (cart) {
+  const $content = document.createElement('div');
+  PaymentServices.render(ApplePay, {
+    getCartId: async () => cart.id,
+    isVirtualCart: cart.isVirtual,
+    onSuccess: () => orderApi.placeOrder(cart.id),
+    onError: (error) => { console.error(error) },
+  })($content);
+}
+```
