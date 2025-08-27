@@ -1,0 +1,139 @@
+---
+title: Validate shipping address
+description: Add a suggested vs. original address confirmation before placing the order using the AddressValidation container.
+---
+
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+
+Use the `AddressValidation` container to present a suggested address returned by your verification service alongside the original address, and let the shopper choose which one to use right before placing the order.
+
+This tutorial shows how to integrate the container in the `commerce-checkout` block.
+
+<Diagram caption="AddressValidation displayed in a modal">
+  ![Autocomplete shipping address](@images/dropins/checkout/address-validation.png)
+</Diagram>
+
+## Overview
+
+At a high level:
+
+- Call your address verification service before placing the order.
+- If it returns a suggestion, open a modal and render `AddressValidation`.
+- If the shopper selects the suggestion, persist it as the shipping address; otherwise, place the order with the original address.
+
+<Aside type="note">
+  Snippets reference boilerplate utilities like `showModal`, `removeModal`, and `renderAddressForm`. Adjust to your application structure.
+</Aside>
+
+## Integration
+
+```javascript
+// in commerce-checkout.js block
+import * as checkoutApi from '@dropins/storefront-checkout/api.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+import { events } from '@adobe-commerce/event-bus';
+import { showModal, validateAddress } from './utils.js';
+
+// Handler passed to the PlaceOrder container
+const handlePlaceOrder = async ({ cartId, code }) => {
+  await displayOverlaySpinner(loaderRef, $loader);
+  try {
+    // Payment Services credit card
+    if (code === PaymentMethodCode.CREDIT_CARD) {
+      if (!creditCardFormRef.current) {
+        console.error('Credit card form not rendered.');
+        return;
+      }
+      if (!creditCardFormRef.current.validate()) {
+        // Credit card form invalid; abort order placement
+        return;
+      }
+      // Submit Payment Services credit card form
+      await creditCardFormRef.current.submit();
+    }
+
+    // Address validation
+    const suggestion = await validateAddress();
+    if (suggestion) {
+      const container = document.createElement('div');
+      await showModal(container);
+      await renderAddressValidation(container, {
+        suggestedAddress: suggestion,
+        handleSelectedAddress: async ({ selection, address }) => {
+          if (selection === 'suggested') {
+            await checkoutApi.setShippingAddress({ address });
+            const latest = events.lastPayload('checkout/updated');
+            // Unmount shipping address form and render again with latest checkout data
+            unmountContainer(CONTAINERS.SHIPPING_ADDRESS_FORM);
+            await renderAddressForm($shippingForm, shippingFormRef, latest, placeOrder, 'shipping');
+          } else {
+            // Place order
+            await orderApi.placeOrder(cartId);
+          }
+          removeModal();
+        },
+      });
+    } else {
+      // Place order
+      await orderApi.placeOrder(cartId);
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  } finally {
+    removeOverlaySpinner(loaderRef, $loader);
+  }
+};
+```
+
+```javascript
+// in containers.js
+import AddressValidation from '@dropins/storefront-checkout/containers/AddressValidation.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+/**
+ * Renders the AddressValidation container in its own host element
+ * @param {HTMLElement} container - DOM element to render into
+ */
+export const renderAddressValidation = async (
+  container,
+  { suggestedAddress, handleSelectedAddress },
+) =>
+  CheckoutProvider.render(AddressValidation, {
+    suggestedAddress,
+    handleSelectedAddress,
+  })(container);
+```
+
+```javascript
+// in utils.js (example stub)
+export const validateAddress = async () => {
+  // Here’s where your API call goes
+
+  return {
+    city: 'Bainbridge Island',
+    countryCode: 'US',
+    postcode: '98110-2450',
+    region: 'CA',
+    street: ['123 Winslow Way E'],
+  };
+};
+```
+
+As a final touch—because modals deserve to look nice—add a bit of padding:
+
+```css
+/* commerce-checkout.css */
+.modal-content .checkout-address-validation {
+  padding: var(--spacing-big);
+}
+```
+
+## Next steps
+
+- Review the [`AddressValidation` container](/dropins/checkout/containers/address-validation/) for props and behaviors.
+- Ensure your suggestion matches the `CartAddressInput` shape expected by the container.
+
+
