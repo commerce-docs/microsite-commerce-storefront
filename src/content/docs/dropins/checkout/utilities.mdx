@@ -1,0 +1,728 @@
+---
+title: Checkout utility functions
+description: Learn about the utility functions available in the checkout drop-in component's lib folder.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import Aside from '@components/Aside.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+
+This topic provides details and instructions for using the utility functions available in the checkout drop-in component. These functions were moved from the integration layer and are now publicly accessible within the checkout block from `@dropins/storefront-checkout/lib/aem.js`.
+
+<Aside type="note">
+
+These utility functions are designed to be lightweight, performant, and easy to integrate into your checkout implementation. They handle common programming tasks including DOM manipulation, event handling, cart data processing, form validation, and address transformations.
+
+</Aside>
+
+### Quick imports
+
+```ts
+import {
+  setAddressOnCart,
+  estimateShippingCost,
+  isVirtualCart,
+  isEmptyCart,
+  getCartShippingMethod,
+  getCartAddress,
+  getCartPaymentMethod,
+  createFragment,
+  createScopedSelector,
+  validateForm,
+  createMetaTag,
+  setMetaTags,
+  scrollToElement,
+  transformAddressFormValuesToCartAddressInput,
+  transformCartAddressToFormValues,
+} from '@dropins/storefront-checkout/lib/aem.js';
+```
+
+## API Functions
+
+### setAddressOnCart
+
+The `setAddressOnCart` function creates a debounced handler for setting shipping or billing addresses on the cart. This utility prevents excessive API calls when address data is changing frequently.
+
+```ts
+export function setAddressOnCart({
+  type = 'shipping',
+  debounceMs = 0,
+  placeOrderBtn,
+}: {
+  type?: 'shipping' | 'billing';
+  debounceMs?: number;
+  placeOrderBtn?: RenderAPI;
+}): (change: AddressFormChange) => void;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['type', 'string', 'No', 'Address type: "shipping" or "billing". Defaults to "shipping".'],
+    ['debounceMs', 'number', 'No', 'Milliseconds to debounce API calls. Defaults to 0.'],
+    ['placeOrderBtn', 'RenderAPI', 'No', 'Place order button API to manage disabled state.'],
+  ]}
+/>
+
+### Returns
+
+Returns a function that accepts address form changes and updates the cart accordingly.
+
+<Aside type="note">
+
+- The place order button is disabled while debounced address updates are in-flight and re-enabled when the last pending call settles.
+
+</Aside>
+
+### Usage
+
+```ts
+import { setAddressOnCart } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Set up debounced shipping address handler
+const handleShippingChange = setAddressOnCart({
+  type: 'shipping',
+  debounceMs: 500,
+  placeOrderBtn: placeOrderButtonAPI
+});
+
+// Use with form change events
+shippingForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm(event.target.form);
+  
+  handleShippingChange({
+    data: formData,
+    isDataValid: isValid
+  });
+});
+```
+
+### estimateShippingCost
+
+The `estimateShippingCost` function creates a debounced handler for estimating shipping costs based on address information.
+
+```ts
+export function estimateShippingCost({ debounceMs = 0 }): (change: AddressFormChange) => void;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['debounceMs', 'number', 'No', 'Milliseconds to debounce API calls. Defaults to 0.'],
+  ]}
+/>
+
+### Returns
+
+Returns a function that estimates shipping costs when address data changes.
+
+<Aside type="note">
+
+- When the form becomes valid, the handler returns early and does not trigger estimation.
+- Estimation only fires when country, region (code/id), or postcode values change from the previous estimation.
+
+</Aside>
+
+### Usage
+
+```ts
+import { estimateShippingCost } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Set up shipping cost estimation
+const handleEstimateShipping = estimateShippingCost({ debounceMs: 300 });
+
+// Use with address form changes
+addressForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm(event.target.form);
+  
+  handleEstimateShipping({
+    data: formData,
+    isDataValid: isValid
+  });
+});
+```
+
+## Cart Data Functions
+
+### isVirtualCart
+
+The `isVirtualCart` function checks if a cart contains only virtual products (no shipping required).
+
+```ts
+export function isVirtualCart(data: Cart | null): boolean;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object to check.'],
+  ]}
+/>
+
+### Returns
+
+Returns `true` if the cart is virtual, `false` otherwise.
+
+### Usage
+
+```ts
+import { isVirtualCart } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Check if shipping is required
+const cartData = await getCart();
+const skipShipping = isVirtualCart(cartData);
+
+if (skipShipping) {
+  // Hide shipping-related UI
+  document.querySelector('.shipping-section').style.display = 'none';
+}
+```
+
+### isEmptyCart
+
+The `isEmptyCart` function checks if a cart is empty or null.
+
+```ts
+export function isEmptyCart(data: Cart | null): boolean;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object to check.'],
+  ]}
+/>
+
+### Returns
+
+Returns `true` if the cart is empty or null, `false` otherwise.
+
+### Usage
+
+```ts
+import { isEmptyCart } from '@dropins/storefront-checkout/lib/aem.js';
+
+const cartData = await getCart();
+
+if (isEmptyCart(cartData)) {
+  // Show empty cart message
+  showEmptyCartMessage();
+  return;
+}
+
+// Proceed with checkout
+proceedToCheckout(cartData);
+```
+
+### getCartShippingMethod
+
+The `getCartShippingMethod` function retrieves the selected shipping method from cart data.
+
+```ts
+export function getCartShippingMethod(data: Cart | null): ShippingMethod | null;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+  ]}
+/>
+
+### Returns
+
+Returns the selected shipping method object or `null` if none is selected.
+
+### Usage
+
+```ts
+import { getCartShippingMethod } from '@dropins/storefront-checkout/lib/aem.js';
+
+const cartData = await getCart();
+const shippingMethod = getCartShippingMethod(cartData);
+
+if (shippingMethod) {
+  console.log(`Shipping: ${shippingMethod.title} - $${shippingMethod.amount.value}`);
+}
+```
+
+### getCartAddress
+
+The `getCartAddress` function retrieves shipping or billing address from cart data.
+
+```ts
+export function getCartAddress(
+  data: Cart | null,
+  type: 'shipping' | 'billing' = 'shipping'
+): Record<string, any> | null;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+    ['type', 'string', 'No', 'Address type: "shipping" or "billing". Defaults to "shipping".'],
+  ]}
+/>
+
+### Returns
+
+Returns the address object or `null` if no address is set.
+
+### Usage
+
+```ts
+import { getCartAddress } from '@dropins/storefront-checkout/lib/aem.js';
+
+const cartData = await getCart();
+const shippingAddress = getCartAddress(cartData, 'shipping');
+const billingAddress = getCartAddress(cartData, 'billing');
+
+if (shippingAddress) {
+  populateAddressForm(shippingAddress);
+}
+```
+
+### getCartPaymentMethod
+
+The `getCartPaymentMethod` function retrieves the selected payment method from cart data.
+
+```ts
+export function getCartPaymentMethod(data: Cart | null): PaymentMethod | null;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Cart | null', 'Yes', 'The cart data object.'],
+  ]}
+/>
+
+### Returns
+
+Returns the selected payment method object or `null` if none is selected.
+
+### Usage
+
+```ts
+import { getCartPaymentMethod } from '@dropins/storefront-checkout/lib/aem.js';
+
+const cartData = await getCart();
+const paymentMethod = getCartPaymentMethod(cartData);
+
+if (paymentMethod) {
+  console.log(`Payment method: ${paymentMethod.code}`);
+}
+```
+
+## DOM and Fragment Functions
+
+### createFragment
+
+The `createFragment` function creates a DocumentFragment from an HTML string.
+
+```ts
+export function createFragment(html: string): DocumentFragment;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['html', 'string', 'Yes', 'The HTML string to convert to a DocumentFragment.'],
+  ]}
+/>
+
+### Returns
+
+Returns a DocumentFragment containing the parsed HTML.
+
+### Usage
+
+```ts
+import { createFragment } from '@dropins/storefront-checkout/lib/aem.js';
+
+const html = `
+  <div class="checkout-step">
+    <h2>Payment Information</h2>
+    <form class="payment-form">
+      <!-- form fields -->
+    </form>
+  </div>
+`;
+
+const fragment = createFragment(html);
+document.querySelector('.checkout-container').appendChild(fragment);
+```
+
+### createScopedSelector
+
+The `createScopedSelector` function creates a scoped querySelector function for a DocumentFragment.
+
+```ts
+export function createScopedSelector(
+  fragment: DocumentFragment
+): (selector: string) => HTMLElement | null;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['fragment', 'DocumentFragment', 'Yes', 'The DocumentFragment to scope the selector to.'],
+  ]}
+/>
+
+### Returns
+
+Returns a function that queries elements within the given fragment.
+
+### Usage
+
+```ts
+import { createFragment, createScopedSelector } from '@dropins/storefront-checkout/lib/aem.js';
+
+const html = `
+  <div class="checkout-step">
+    <button class="next-btn">Next</button>
+    <button class="prev-btn">Previous</button>
+  </div>
+`;
+
+const fragment = createFragment(html);
+const $ = createScopedSelector(fragment);
+
+// Query within the fragment only
+const nextButton = $('.next-btn');
+const prevButton = $('.prev-btn');
+
+nextButton?.addEventListener('click', handleNext);
+```
+
+## Form Functions
+
+### validateForm
+
+The `validateForm` function validates a form by name and handles validation through form references.
+
+```ts
+export function validateForm(
+  formName: string,
+  formRef: RefObject<FormRef>
+): boolean;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['formName', 'string', 'Yes', 'The name attribute of the form to validate.'],
+    ['formRef', 'RefObject<FormRef>', 'Yes', 'Reference object to the form component.'],
+  ]}
+/>
+
+### Returns
+
+Returns `true` if the form is valid, `false` otherwise.
+
+### Usage
+
+```ts
+import { validateForm } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Validate checkout form before submission
+const isShippingValid = validateForm('shipping-form', shippingFormRef);
+const isBillingValid = validateForm('billing-form', billingFormRef);
+
+if (isShippingValid && isBillingValid) {
+  proceedToPayment();
+} else {
+  showValidationErrors();
+}
+```
+
+## Meta Functions
+
+### createMetaTag
+
+The `createMetaTag` function creates or updates meta tags in the document head.
+
+```ts
+export function createMetaTag(property: string, content: string, type: string): void;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['property', 'string', 'Yes', 'The property/name of the meta tag.'],
+    ['content', 'string', 'Yes', 'The content value for the meta tag.'],
+    ['type', 'string', 'Yes', 'The type of meta tag: "name" or "property".'],
+  ]}
+/>
+
+### Returns
+
+The function does not return a value; it modifies the document head.
+
+### Usage
+
+```ts
+import { createMetaTag } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Set checkout-specific meta tags
+createMetaTag('description', 'Complete your purchase securely', 'name');
+createMetaTag('og:title', 'Checkout - Your Store', 'property');
+```
+
+### setMetaTags
+
+The `setMetaTags` function sets standard meta tags for a dropin component.
+
+```ts
+export function setMetaTags(dropin: string): void;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['dropin', 'string', 'Yes', 'The name of the dropin component.'],
+  ]}
+/>
+
+### Returns
+
+The function does not return a value; it sets multiple meta tags.
+
+### Usage
+
+```ts
+import { setMetaTags } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Set meta tags for checkout page
+setMetaTags('Checkout');
+```
+
+## Utility Functions
+
+### scrollToElement
+
+The `scrollToElement` function smoothly scrolls to and focuses on an HTML element.
+
+```ts
+export function scrollToElement(element: HTMLElement): void;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['element', 'HTMLElement', 'Yes', 'The element to scroll to and focus.'],
+  ]}
+/>
+
+### Returns
+
+The function does not return a value; it performs scrolling and focusing.
+
+### Usage
+
+```ts
+import { scrollToElement } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Scroll to error field
+const errorField = document.querySelector('.field-error');
+if (errorField) {
+  scrollToElement(errorField);
+}
+
+// Scroll to next checkout step
+const nextStep = document.querySelector('.checkout-step.active');
+scrollToElement(nextStep);
+```
+
+## Data Transformer Functions
+
+### transformAddressFormValuesToCartAddressInput
+
+The `transformAddressFormValuesToCartAddressInput` function converts form data to cart address input format.
+
+```ts
+export const transformAddressFormValuesToCartAddressInput = (
+  data: Record<string, any>
+): ShippingAddressInput | BillingAddressInput;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['data', 'Record<string, any>', 'Yes', 'Form data object containing address information.'],
+  ]}
+/>
+
+### Returns
+
+Returns a formatted address input object for cart API calls.
+
+### Usage
+
+```ts
+import { transformAddressFormValuesToCartAddressInput } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Transform form data for API
+const formData = getFormValues(addressForm);
+const addressInput = transformAddressFormValuesToCartAddressInput(formData);
+
+// Send to cart API
+await setShippingAddress(addressInput);
+```
+
+### transformCartAddressToFormValues
+
+The `transformCartAddressToFormValues` function converts cart address data to form values format.
+
+```ts
+export const transformCartAddressToFormValues = (
+  address: CartAddress
+): Record<string, any>;
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['address', 'CartAddress', 'Yes', 'Cart address object to transform.'],
+  ]}
+/>
+
+### Returns
+
+Returns a form-compatible object with address data.
+
+### Usage
+
+```ts
+import { transformCartAddressToFormValues, getCartAddress } from '@dropins/storefront-checkout/lib/aem.js';
+
+// Pre-populate form with existing address
+const cartData = await getCart();
+const shippingAddress = getCartAddress(cartData, 'shipping');
+
+if (shippingAddress) {
+  const formValues = transformCartAddressToFormValues(shippingAddress);
+  populateForm(shippingForm, formValues);
+}
+```
+
+## Common Usage Patterns
+
+These utility functions work together to create robust checkout experiences:
+
+### Complete Address Handling
+
+```ts
+import {
+  setAddressOnCart,
+  transformAddressFormValuesToCartAddressInput,
+  transformCartAddressToFormValues,
+  getCartAddress,
+  validateForm
+} from '@dropins/storefront-checkout/lib/aem.js';
+
+// Set up address form handling
+const handleAddressChange = setAddressOnCart({
+  type: 'shipping',
+  debounceMs: 500,
+  placeOrderBtn: placeOrderAPI
+});
+
+// Pre-populate form with existing data
+const cartData = await getCart();
+const existingAddress = getCartAddress(cartData, 'shipping');
+if (existingAddress) {
+  const formValues = transformCartAddressToFormValues(existingAddress);
+  populateAddressForm(formValues);
+}
+
+// Handle form changes
+addressForm.addEventListener('input', (event) => {
+  const formData = getFormValues(event.target.form);
+  const isValid = validateForm('shipping-address', formRef);
+  
+  handleAddressChange({ data: formData, isDataValid: isValid });
+});
+```
+
+### Cart State Management
+
+```ts
+import {
+  isVirtualCart,
+  isEmptyCart,
+  getCartShippingMethod,
+  getCartPaymentMethod
+} from '@dropins/storefront-checkout/lib/aem.js';
+
+function updateCheckoutUI(cartData) {
+  // Handle empty cart
+  if (isEmptyCart(cartData)) {
+    showEmptyCartMessage();
+    return;
+  }
+  
+  // Handle virtual cart (no shipping)
+  if (isVirtualCart(cartData)) {
+    hideShippingSection();
+  } else {
+    const shippingMethod = getCartShippingMethod(cartData);
+    updateShippingDisplay(shippingMethod);
+  }
+  
+  // Update payment display
+  const paymentMethod = getCartPaymentMethod(cartData);
+  updatePaymentDisplay(paymentMethod);
+}
+```
+
+### Dynamic Content Creation
+
+```ts
+import {
+  createFragment,
+  createScopedSelector,
+  scrollToElement
+} from '@dropins/storefront-checkout/lib/aem.js';
+
+function createCheckoutStep(stepHtml, stepName) {
+  const fragment = createFragment(stepHtml);
+  const $ = createScopedSelector(fragment);
+  
+  // Set up step-specific interactions
+  const nextButton = $('.next-step');
+  const prevButton = $('.prev-step');
+  
+  nextButton?.addEventListener('click', () => {
+    if (validateCurrentStep()) {
+      proceedToNextStep();
+    } else {
+      const errorField = $('.field-error');
+      if (errorField) scrollToElement(errorField);
+    }
+  });
+  
+  return fragment;
+}
+```
