@@ -1094,7 +1094,9 @@ async function config() {
                 },
               ],
             },
-          ]),
+          ], {
+            exclude: ['/sdk/**', '/videos/**']
+          }),
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
