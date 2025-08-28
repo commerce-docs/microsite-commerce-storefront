@@ -658,7 +658,10 @@ async function config() {
                 // TODO: Replace placeholder links with real B2B overview and IA once paths exist
                 {
                   label: 'B2B Essentials',
-                  link: '/b2b/essentials/'
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/b2b/essentials/' },
+                  ]
                 },
                 {
                   label: 'B2B Drop-ins',
