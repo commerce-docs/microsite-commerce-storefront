@@ -218,6 +218,7 @@ async function config() {
         title: 'Adobe Commerce Storefront',
         favicon: 'favicon.ico',
         lastUpdated: true,
+
         plugins: [
           starlightSidebarTopics([
             {
