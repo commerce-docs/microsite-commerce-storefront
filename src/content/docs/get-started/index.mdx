@@ -45,13 +45,17 @@ The following diagram shows the steps you'll take to create and configure your s
 1. **Link Repo to Content** using the `mountpoint` URL in the **`fstab.yaml`** in your GitHub repo. You can use [default-fstab.yaml](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/default-fstab.yaml) as a reference.
 1. **Add Code Sync App** to your newly created repo. This app automatically redeploys your storefront when you push changes to the main branch. It also provides the Edge Delivery system (Helix Admin) with access to your repo so it can coordinate code changes with content changes.
 1. **Link Repo to Data** using the values in the **`config.json`** in your GitHub repo.
-1. **Add Content** to the Document Author environment hosted at `https://da.live/` using the [import tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator). If you already have a site in Sharepoint or Google Drive, you can use the [site importer](https://da.live/docs/operations/import).
+1. **Add Content** to the Document Author environment hosted at `https://da.live/` using the [Site Creator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator).
 1. **Install Sidekick** and configure it to preview, publish, and edit content on your storefront.
 1. **Set up Local Environment** to enable the development of the boilerplate into your own storefront.
 
 </Callouts>
 
 <SecurityNotice />
+
+:::note[Import an existing EDS site]
+If you have an existing Edge Delivery Service site for your Commerce project, you can skip the store creation process, and import both the code and the content into the Document Author environment using the [Site importer tool](https://da.live/docs/operations/import).
+:::
 
 ## Vocabulary
 
@@ -129,6 +133,17 @@ Before you begin, take a moment to set up these required tools and accounts as n
   rel="noopener noreferrer"
   aria-label="Link (opens in a new tab)"
 />
+<LinkCard
+  noborder
+  icon="aemcli"
+  title="AEM Command Line Tool"
+  description="Install the AEM CLI tool."
+  link="https://www.aem.live/developer/cli-reference"
+  rightIcon="external"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Link (opens in a new tab)"
+/>
 </CardGrid>
 
 <Tasks>
@@ -172,14 +187,16 @@ Make sure you are signed into your GitHub account before you start. Otherwise, y
 
 Edge Delivery Services requires site configuration details to know what to render. These include at minimum a content reference and a code reference. The simplest approach is to create those references in the `fstab.yaml` configuration file.
 
-<Callouts>
+<Steps>
+
 1. Rename [default-fstab.yaml](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/default-fstab.yaml) to `fstab.yaml`.
 1. Replace `{org}` and `{site}` in `fstab.yaml` using the GitHub url to determine the correct values: `https://github.com/{org}/{site}`.
 1. Commit and push this change to the `main` branch of your repository.
-</Callouts>
+
+</Steps>
 
 <Aside type="note" title="Config Service Approach">
-  You can onboard instead by using the Config Service via the [Helix Admin API](https://www.aem.live/docs/admin.html). To do this, follow the steps in the [boilerplate readme](https://github.com/hlxsites/aem-boilerplate-commerce?tab=readme-ov-file#initial-setup). See the Configuration Service documentation for more information: https://www.aem.live/docs/config-service-setup
+After you have created your storefront, you can migrate the configuration to use the Configuration Service which supports advanced    use cases like repoless configuration and overlays. For more information, see the [Configuration Service]   (https://www.aem.live/docs/config-service-setup) documentation.
 </Aside>
 
 </Task>
@@ -224,13 +241,17 @@ The Code Sync app redeploys your storefront site whenever you push or merge chan
 
 ### Link repo to commerce data
 
-To link your storefront repo to your Commerce backend:
-- Duplicate the [demo-config.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json) from your storefront repo and rename it to `config.json`. The `demo-config.json` is only meant as a starting point for your site's configuration.
-- Alternatively, use the [config generator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator) to automatically generate a `config.json` file for your site.
+To link your storefront repo to your commerce backend, you can use the [config generator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator) to automatically generate a `config.json` file for your site based on your Commerce backend—Adobe Commerce, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer.
 
-Make sure to validate the configuration, then push the `config.json` file to your repo or to `publicConfig` if you are using [Config Service](https://www.aem.live/docs/config-service-setup).
+Update the storefront configuration for your project:
 
-Read more about Commerce configuration [here](/setup/configuration/commerce-configuration).
+<Steps>
+
+1. Get information about the values required for your project from the [Storefront configuration reference](/setup/configuration/commerce-configuration) to get information about the values required for your project.
+2. Update the `config.json` file with the values for your project.
+3. Commit and push the updated file to the repo.
+
+</Steps>
 
 </Task>
 
@@ -246,7 +267,7 @@ If you do not want demo content, you can create a file in https://da.live/#/{org
 </Aside>
 
 <Callouts>
-1. Open the [demo content clone tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator).
+1. Open the [Site Creator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator), and select **Use existing repository**.
 1. Copy the GitHub owner and site values to the input fields and click **Create site**.
 1. Follow the prompts, and by the end the content will have been copied to your content folder.
 1. You may have to manually preview or publish the content, depending on whether you followed the prerequisites.
@@ -260,21 +281,48 @@ If you do not want demo content, you can create a file in https://da.live/#/{org
 
 <Task>
 
-### Install Sidekick
+### Install and configure Sidekick
 
 {/* <Diagram caption="Set up Sidekick.">![Set up Sidekick.](images/setup-sidekick.webp)</Diagram> */}
 
+<Steps>
 
 1. Review documentation about using and installing [the AEM Sidekick](https://www.aem.live/docs/sidekick).
-1. Duplicate the [demo-sidekick.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-sidekick.json) file and rename it `config.json`, create a `sidekick` directory within the `tools` directory of your project: `tools/sidekick/config.json`. At a minimum, the sidekick config should contain the following values:
 
-  ```json
-  {
-    "project": "My Project",
-    "editUrlLabel": "Document Authoring",
-    "editUrlPattern": "https://da.live/edit#/{{org}}/{{site}}{{pathname}}"
-  }
-  ```
+1. In your GitHub repository, edit the sidekick configuration file `tools/sidekick/config.json`.
+
+   ```json
+   {
+     "project": "My Project",
+     "editUrlLabel": "Document Authoring",
+     "editUrlPattern": "https://da.live/edit#/{{org}}/{{site}}{{pathname}}"
+   }
+   ```
+
+1. In the `editUrlPattern` field, replace the key values with the values for your GitHub repository.
+
+   * Replace the `{{ORG}}` string with the organization or username for your repository.
+
+   * Replace the `{{SITE}}` string with the repository name.
+
+   * The `pathname` variable is populated by the system.
+
+   +++Example of updated configuration file
+
+   If your GitHub repository is named `aco-storefront` and your organization is `early-adopter`, the updated URL should look like this:
+
+   ```json
+   {
+     "project": "My Project",
+     "editUrlLabel": "Document Authoring",
+     "editUrlPattern": "https://da.live/edit#/aco-storefront/early-adopter{{pathname}}"
+   }
+   ```
+
+1. Save the file and commit the changes.
+
+
+</Steps>
 
 <Aside type="note" title="Detailed Sidekick information">
 Visit the [Sidekick documentation](https://www.aem.live/docs/sidekick) for more information on how to use Sidekick to manage your storefront content.
@@ -331,3 +379,5 @@ While your storefront is now functional, it's important to understand that **you
 </Aside>
 
 </Tasks>
+
+
