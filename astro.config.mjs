@@ -138,7 +138,80 @@ async function config() {
         {
           tag: 'script',
           content: `
-                        console.log("🔧 Cascading Expansion feature temporarily disabled to avoid navigation conflicts");
+                        console.log("🔧 Auto-select first topic feature loading...");
+            
+            const initializeAutoSelectFirstTopic = () => {
+              console.log("🔧 Initializing auto-select first topic...");
+              
+              const sidebar = document.querySelector("#starlight__sidebar");
+              console.log("🔧 Sidebar found:", !!sidebar);
+              
+              if (!sidebar) {
+                console.log("❌ No sidebar found, retrying in 100ms...");
+                setTimeout(initializeAutoSelectFirstTopic, 100);
+                return;
+              }
+
+              // Track which sections we've already processed to avoid duplicate navigation
+              const processedSections = new Set();
+              
+              const handleSectionToggle = (event) => {
+                // Only handle toggle events on details elements
+                if (event.target.tagName === "DETAILS") {
+                  const detailsElement = event.target;
+                  
+                  // Check if the section was just opened (not closed)
+                  setTimeout(() => {
+                    if (detailsElement.open) {
+                      const sectionId = detailsElement.outerHTML.substring(0, 100);
+                      
+                      // Skip if we've already processed this section recently
+                      if (processedSections.has(sectionId)) {
+                        console.log("⏭️ Section already processed, skipping auto-select");
+                        return;
+                      }
+                      
+                      console.log("✅ Section opened, looking for first topic...");
+                      const sectionName = detailsElement.querySelector("summary")?.textContent?.trim();
+                      console.log("📂 Section:", sectionName);
+                      
+                      // Find the first link within this section
+                      const firstLink = detailsElement.querySelector("ul a[href]");
+                      
+                      if (firstLink && firstLink.href) {
+                        console.log("🎯 Auto-selecting first topic:", firstLink.textContent?.trim());
+                        
+                        // Mark as processed
+                        processedSections.add(sectionId);
+                        
+                        // Clear the processed flag after a short time
+                        setTimeout(() => processedSections.delete(sectionId), 2000);
+                        
+                        // Navigate to the first link
+                        window.location.href = firstLink.href;
+                      } else {
+                        console.log("ℹ️ No links found in this section");
+                      }
+                    }
+                  }, 50); // Small delay to ensure the section has fully opened
+                }
+              };
+
+              // Add event listener for toggle events
+              sidebar.addEventListener("toggle", handleSectionToggle, true);
+              console.log("✅ Auto-select first topic event listeners attached!");
+            };
+
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", initializeAutoSelectFirstTopic);
+            } else {
+              initializeAutoSelectFirstTopic();
+            }
+            
+            window.addEventListener("load", () => {
+              console.log("🔧 Window loaded, trying auto-select initialization again...");
+              setTimeout(initializeAutoSelectFirstTopic, 100);
+            });
           `,
         },
         ],
@@ -152,103 +225,99 @@ async function config() {
               link: '/get-started/',
               icon: 'seti:json',
               items: [
+                // Flattened navigation - moved Getting Started subsections to top level
                 {
-                  label: 'Getting Started',
+                  label: 'Quick Start',
+                  collapsed: false,
                   items: [
                     {
-                      label: 'Quick Start',
-                      collapsed: false,
-                      items: [
-                        {
-                          label: 'Create your storefront',
-                          link: '/get-started/'
-                        },
-                        {
-                          label: 'Explore the boilerplate',
-                          link: '/get-started/boilerplate-project/'
-                        },
-                        {
-                          label: 'Run Lighthouse audits',
-                          link: '/get-started/run-lighthouse/'
-                        },
-                        {
-                          label: 'Setup Overview',
-                          link: '/setup/'
-                        },
-                      ]
+                      label: 'Create your storefront',
+                      link: '/get-started/'
                     },
                     {
-                      label: 'Core Concepts',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Storefront architecture',
-                          link: '/setup/discovery/architecture/'
-                        },
-                        {
-                          label: 'Data export validation',
-                          link: '/setup/discovery/data-export-validation/'
-                        },
-                        {
-                          label: 'Compatibility Package Installation',
-                          link: '/setup/configuration/storefront-compatibility/install/'
-                        },
-                        {
-                          label: 'Adobe Commerce 2.4.7',
-                          link: '/setup/configuration/storefront-compatibility/v247/'
-                        },
-                        {
-                          label: 'Adobe Commerce 2.4.8',
-                          link: '/setup/configuration/storefront-compatibility/v248/'
-                        },
-                      ]
+                      label: 'Explore the boilerplate',
+                      link: '/get-started/boilerplate-project/'
                     },
                     {
-                      label: 'Configuration',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Overview',
-                          link: '/setup/configuration/'
-                        },
-                        {
-                          label: 'Storefront configuration',
-                          link: '/setup/configuration/commerce-configuration/'
-                        },
-                        {
-                          label: 'Multistore setup',
-                          link: '/setup/configuration/multistore-setup/'
-                        },
-                        {
-                          label: 'Content delivery network',
-                          link: '/setup/configuration/content-delivery-network/'
-                        },
-                        {
-                          label: 'Gated content',
-                          link: '/setup/configuration/gated-content/'
-                        },
-                      ]
+                      label: 'Run Lighthouse audits',
+                      link: '/get-started/run-lighthouse/'
                     },
                     {
-                      label: 'Launch Preparation',
-                      collapsed: true,
-                      items: [
-                        { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
-                        { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-                        { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
-                        { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
-                        { label: 'Launch Checklist', link: '/setup/launch/' },
-                      ]
+                      label: 'Setup Overview',
+                      link: '/setup/'
+                    },
+                  ]
+                },
+                {
+                  label: 'Core Concepts',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Storefront architecture',
+                      link: '/setup/discovery/architecture/'
                     },
                     {
-                      label: 'Advanced Topics',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Luma Bridge Integration',
-                          link: '/setup/discovery/luma-bridge/'
-                        },
-                      ]
+                      label: 'Data export validation',
+                      link: '/setup/discovery/data-export-validation/'
+                    },
+                    {
+                      label: 'Compatibility Package Installation',
+                      link: '/setup/configuration/storefront-compatibility/install/'
+                    },
+                    {
+                      label: 'Adobe Commerce 2.4.7',
+                      link: '/setup/configuration/storefront-compatibility/v247/'
+                    },
+                    {
+                      label: 'Adobe Commerce 2.4.8',
+                      link: '/setup/configuration/storefront-compatibility/v248/'
+                    },
+                  ]
+                },
+                {
+                  label: 'Configuration',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/setup/configuration/'
+                    },
+                    {
+                      label: 'Storefront configuration',
+                      link: '/setup/configuration/commerce-configuration/'
+                    },
+                    {
+                      label: 'Multistore setup',
+                      link: '/setup/configuration/multistore-setup/'
+                    },
+                    {
+                      label: 'Content delivery network',
+                      link: '/setup/configuration/content-delivery-network/'
+                    },
+                    {
+                      label: 'Gated content',
+                      link: '/setup/configuration/gated-content/'
+                    },
+                  ]
+                },
+                {
+                  label: 'Launch Preparation',
+                  collapsed: true,
+                  items: [
+                    { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
+                    { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+                    { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
+                    { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+                    { label: 'Launch Checklist', link: '/setup/launch/' },
+                  ]
+                },
+                {
+                  label: 'Advanced Topics',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Luma Bridge Integration',
+                      link: '/setup/discovery/luma-bridge/'
                     },
                   ]
                 },
@@ -583,26 +652,44 @@ async function config() {
             // New top-level section for B2B content (placeholder, safe links)
             {
               label: 'Storefront B2B',
-              link: '/setup/',
-              icon: 'laptop',
+              link: '/b2b/',
+              icon: 'business',
               items: [
                 // TODO: Replace placeholder links with real B2B overview and IA once paths exist
                 {
-                  label: 'B2B overview (placeholder)',
-                  link: '/setup/'
+                  label: 'B2B Essentials',
+                  link: '/b2b/essentials/'
                 },
                 {
                   label: 'B2B Drop-ins',
                   collapsed: true,
                   items: [
-                    { label: 'Overview (placeholder)', link: '/dropins/all/introduction/' }
+                    { label: 'Overview', link: '/b2b/dropins/' },
+                    { label: 'Cart', link: '/b2b/dropins/cart' },
+                    { label: 'Checkout', link: '/b2b/dropins/checkout/' },
+                    { label: 'Order', link: '/b2b/dropins/order/' },
+                    { label: 'Payment Services', link: '/b2b/dropins/payment-services/' },
+                    { label: 'Personalization', link: '/b2b/dropins/personalization/' },
+                    { label: 'Product Details', link: '/b2b/dropins/product-details/' },
+                    { label: 'Product Discovery', link: '/b2b/dropins/product-discovery/' },
+                    { label: 'Recommendations', link: '/b2b/dropins/recommendations/' },
+                    { label: 'User Account', link: '/b2b/dropins/user-account/' },
+                    { label: 'User Authentication', link: '/b2b/dropins/user-authentication/' },
+                    { label: 'Wishlist', link: '/b2b/dropins/wishlist/' },
                   ]
                 },
                 {
-                  label: 'B2B Guides and How-tos',
+                  label: 'B2B Guides',
                   collapsed: true,
                   items: [
-                    { label: 'Integration guide (placeholder)', link: '/setup/' }
+                    { label: 'Overview', link: '/b2b/guides/' }
+                  ]
+                },
+                {
+                  label: 'B2B How-tos',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/b2b/how-tos/' }
                   ]
                 }
               ]
@@ -681,308 +768,308 @@ async function config() {
                 },
               ],
             },
-            {
-              label: 'Drop-in SDK',
-              icon: 'puzzle',
-              link: '/sdk/',
-              items: [
-                {
-                  label: 'Getting started',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: '/sdk/'
-                    },
-                    {
-                      label: 'CLI usage',
-                      link: '/sdk/get-started/cli/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Components',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: '/sdk/components/overview/'
-                    },
-                    {
-                      label: 'Accordion',
-                      link: '/sdk/components/accordion/'
-                    },
-                    {
-                      label: 'ActionButton',
-                      link: '/sdk/components/actionbutton/'
-                    },
-                    {
-                      label: 'ActionButtonGroup',
-                      link: '/sdk/components/actionbuttongroup/'
-                    },
-                    {
-                      label: 'AlertBanner',
-                      link: '/sdk/components/alertbanner/'
-                    },
-                    {
-                      label: 'Breadcrumbs',
-                      link: '/sdk/components/breadcrumbs/'
-                    },
-                    {
-                      label: 'Button',
-                      link: '/sdk/components/button/'
-                    },
-                    {
-                      label: 'Card',
-                      link: '/sdk/components/card/'
-                    },
-                    {
-                      label: 'CartItem',
-                      link: '/sdk/components/cartitem/'
-                    },
-                    {
-                      label: 'CartList',
-                      link: '/sdk/components/cartlist/'
-                    },
-                    {
-                      label: 'Checkbox',
-                      link: '/sdk/components/checkbox/'
-                    },
-                    {
-                      label: 'ColorSwatch',
-                      link: '/sdk/components/colorswatch/'
-                    },
-                    {
-                      label: 'ContentGrid',
-                      link: '/sdk/components/contentgrid/'
-                    },
-                    {
-                      label: 'Divider',
-                      link: '/sdk/components/divider/'
-                    },
-                    {
-                      label: 'Field',
-                      link: '/sdk/components/field/'
-                    },
-                    {
-                      label: 'Header',
-                      link: '/sdk/components/header/'
-                    },
-                    {
-                      label: 'Icon',
-                      link: '/sdk/components/icon/'
-                    },
-                    {
-                      label: 'IllustratedMessage',
-                      link: '/sdk/components/illustratedmessage/'
-                    },
-                    {
-                      label: 'Image',
-                      link: '/sdk/components/image/'
-                    },
-                    {
-                      label: 'ImageSwatch',
-                      link: '/sdk/components/imageswatch/'
-                    },
-                    {
-                      label: 'InlineAlert',
-                      link: '/sdk/components/inlinealert/'
-                    },
-                    {
-                      label: 'Incrementer',
-                      link: '/sdk/components/incrementer/'
-                    },
-                    {
-                      label: 'Input',
-                      link: '/sdk/components/input/'
-                    },
-                    {
-                      label: 'InputDate',
-                      link: '/sdk/components/inputdate/'
-                    },
-                    {
-                      label: 'InputFile',
-                      link: '/sdk/components/inputfile/'
-                    },
-                    {
-                      label: 'InputPassword',
-                      link: '/sdk/components/inputpassword/'
-                    },
-                    {
-                      label: 'Modal',
-                      link: '/sdk/components/modal/'
-                    },
-                    {
-                      label: 'Pagination',
-                      link: '/sdk/components/pagination/'
-                    },
-                    {
-                      label: 'Picker',
-                      link: '/sdk/components/picker/'
-                    },
-                    {
-                      label: 'Portal',
-                      link: '/sdk/components/portal/'
-                    },
-                    {
-                      label: 'Price',
-                      link: '/sdk/components/price/'
-                    },
-                    {
-                      label: 'PriceRange',
-                      link: '/sdk/components/pricerange/'
-                    },
-                    {
-                      label: 'ProductItemCard',
-                      link: '/sdk/components/productitemcard/'
-                    },
-                    {
-                      label: 'ProgressSpinner',
-                      link: '/sdk/components/progressspinner/'
-                    },
-                    {
-                      label: 'RadioButton',
-                      link: '/sdk/components/radiobutton/'
-                    },
-                    {
-                      label: 'Skeleton',
-                      link: '/sdk/components/skeleton/'
-                    },
-                    {
-                      label: 'Tag',
-                      link: '/sdk/components/tag/'
-                    },
-                    {
-                      label: 'TextArea',
-                      link: '/sdk/components/textarea/'
-                    },
-                    {
-                      label: 'TextSwatch',
-                      link: '/sdk/components/textswatch/'
-                    },
-                    {
-                      label: 'ToggleButton',
-                      link: '/sdk/components/togglebutton/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Base Design',
-                  collapsed: true,
-                  items: [{
-                    label: 'Overview',
-                    link: '/sdk/design/'
-                  }, {
-                    label: 'Design tokens',
-                    link: '/sdk/design/base/'
-                  }, {
-                    label: 'Colors',
-                    link: '/sdk/design/colors/'
-                  }, {
-                    label: 'Typography',
-                    link: '/sdk/design/typography/'
-                  }, {
-                    label: 'Spacing',
-                    link: '/sdk/design/spacing/'
-                  }, {
-                    label: 'Shapes',
-                    link: '/sdk/design/shapes/'
-                  }, {
-                    label: 'Grids',
-                    link: '/sdk/design/grid/'
-                  }]
-                }, {
-                  label: 'Reference',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: '/sdk/reference/'
-                    },
-                    {
-                      label: 'Events',
-                      link: '/sdk/reference/events/'
-                    }, {
-                      label: 'GraphQL',
-                      link: '/sdk/reference/graphql/'
-                    }, {
-                      label: 'Initializer',
-                      link: '/sdk/reference/initializer/'
-                    }, {
-                      label: 'Links',
-                      link: '/sdk/reference/links/'
-                    }, {
-                      label: 'Render',
-                      link: '/sdk/reference/render/'
-                    }, {
-                      label: 'reCAPTCHA',
-                      link: '/sdk/reference/recaptcha/'
-                    }, {
-                      label: 'Slots',
-                      link: '/sdk/reference/slots/'
-                    }, {
-                      label: 'VComponent',
-                      link: '/sdk/reference/vcomponent/'
-                    },
-                  ]
-                }, {
-                  label: 'Utilities',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: '/sdk/utilities/'
-                    },
-                    {
-                      label: 'classList',
-                      link: '/sdk/utilities/classlist/'
-                    }, {
-                      label: 'debounce',
-                      link: '/sdk/utilities/debounce/'
-                    }, {
-                      label: 'deepmerge',
-                      link: '/sdk/utilities/deepmerge/'
-                    }, {
-                      label: 'getCookie',
-                      link: '/sdk/utilities/getcookie/'
-                    }, {
-                      label: 'getFormErrors',
-                      link: '/sdk/utilities/getformerrors/'
-                    }, {
-                      label: 'getFormValues',
-                      link: '/sdk/utilities/getformvalues/'
-                    }, {
-                      label: 'getPathValue',
-                      link: '/sdk/utilities/getpathvalue/'
-                    },]
-                },
-              ],
-            },
-            {
-              label: 'Videos',
-              link: '/videos/',
-              icon: 'seti:video',
-              items: [
-                {
-                  label: 'Storefront Videos',
-                  items: [
-                    { label: 'Overview', link: '/videos/' },
-                    {
-                      label: 'Add custom product lines to cart summary',
-                      link: '/videos/add-product-lines-to-cart-summary/',
-                    },
-                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
-                    {
-                      label: 'Customize address form layout and address lookup',
-                      link: '/videos/customize-address-form-layout/',
-                    },
-                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
-                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
-                    { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
-                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
-                  ],
-                },
-              ],
-            },
+            // {
+            //   label: 'Drop-in SDK',
+            //   icon: 'puzzle',
+            //   link: '/sdk/',
+            //   items: [
+            //     {
+            //       label: 'Getting started',
+            //       items: [
+            //         {
+            //           label: 'Introduction',
+            //           link: '/sdk/'
+            //         },
+            //         {
+            //           label: 'CLI usage',
+            //           link: '/sdk/get-started/cli/'
+            //         },
+            //       ],
+            //     },
+            //     {
+            //       label: 'Components',
+            //       collapsed: true,
+            //       items: [
+            //         {
+            //           label: 'Overview',
+            //           link: '/sdk/components/overview/'
+            //         },
+            //         {
+            //           label: 'Accordion',
+            //           link: '/sdk/components/accordion/'
+            //         },
+            //         {
+            //           label: 'ActionButton',
+            //           link: '/sdk/components/actionbutton/'
+            //         },
+            //         {
+            //           label: 'ActionButtonGroup',
+            //           link: '/sdk/components/actionbuttongroup/'
+            //         },
+            //         {
+            //           label: 'AlertBanner',
+            //           link: '/sdk/components/alertbanner/'
+            //         },
+            //         {
+            //           label: 'Breadcrumbs',
+            //           link: '/sdk/components/breadcrumbs/'
+            //         },
+            //         {
+            //           label: 'Button',
+            //           link: '/sdk/components/button/'
+            //         },
+            //         {
+            //           label: 'Card',
+            //           link: '/sdk/components/card/'
+            //         },
+            //         {
+            //           label: 'CartItem',
+            //           link: '/sdk/components/cartitem/'
+            //         },
+            //         {
+            //           label: 'CartList',
+            //           link: '/sdk/components/cartlist/'
+            //         },
+            //         {
+            //           label: 'Checkbox',
+            //           link: '/sdk/components/checkbox/'
+            //         },
+            //         {
+            //           label: 'ColorSwatch',
+            //           link: '/sdk/components/colorswatch/'
+            //         },
+            //         {
+            //           label: 'ContentGrid',
+            //           link: '/sdk/components/contentgrid/'
+            //         },
+            //         {
+            //           label: 'Divider',
+            //           link: '/sdk/components/divider/'
+            //         },
+            //         {
+            //           label: 'Field',
+            //           link: '/sdk/components/field/'
+            //         },
+            //         {
+            //           label: 'Header',
+            //           link: '/sdk/components/header/'
+            //         },
+            //         {
+            //           label: 'Icon',
+            //           link: '/sdk/components/icon/'
+            //         },
+            //         {
+            //           label: 'IllustratedMessage',
+            //           link: '/sdk/components/illustratedmessage/'
+            //         },
+            //         {
+            //           label: 'Image',
+            //           link: '/sdk/components/image/'
+            //         },
+            //         {
+            //           label: 'ImageSwatch',
+            //           link: '/sdk/components/imageswatch/'
+            //         },
+            //         {
+            //           label: 'InlineAlert',
+            //           link: '/sdk/components/inlinealert/'
+            //         },
+            //         {
+            //           label: 'Incrementer',
+            //           link: '/sdk/components/incrementer/'
+            //         },
+            //         {
+            //           label: 'Input',
+            //           link: '/sdk/components/input/'
+            //         },
+            //         {
+            //           label: 'InputDate',
+            //           link: '/sdk/components/inputdate/'
+            //         },
+            //         {
+            //           label: 'InputFile',
+            //           link: '/sdk/components/inputfile/'
+            //         },
+            //         {
+            //           label: 'InputPassword',
+            //           link: '/sdk/components/inputpassword/'
+            //         },
+            //         {
+            //           label: 'Modal',
+            //           link: '/sdk/components/modal/'
+            //         },
+            //         {
+            //           label: 'Pagination',
+            //           link: '/sdk/components/pagination/'
+            //         },
+            //         {
+            //           label: 'Picker',
+            //           link: '/sdk/components/picker/'
+            //         },
+            //         {
+            //           label: 'Portal',
+            //           link: '/sdk/components/portal/'
+            //         },
+            //         {
+            //           label: 'Price',
+            //           link: '/sdk/components/price/'
+            //         },
+            //         {
+            //           label: 'PriceRange',
+            //           link: '/sdk/components/pricerange/'
+            //         },
+            //         {
+            //           label: 'ProductItemCard',
+            //           link: '/sdk/components/productitemcard/'
+            //         },
+            //         {
+            //           label: 'ProgressSpinner',
+            //           link: '/sdk/components/progressspinner/'
+            //         },
+            //         {
+            //           label: 'RadioButton',
+            //           link: '/sdk/components/radiobutton/'
+            //         },
+            //         {
+            //           label: 'Skeleton',
+            //           link: '/sdk/components/skeleton/'
+            //         },
+            //         {
+            //           label: 'Tag',
+            //           link: '/sdk/components/tag/'
+            //         },
+            //         {
+            //           label: 'TextArea',
+            //           link: '/sdk/components/textarea/'
+            //         },
+            //         {
+            //           label: 'TextSwatch',
+            //           link: '/sdk/components/textswatch/'
+            //         },
+            //         {
+            //           label: 'ToggleButton',
+            //           link: '/sdk/components/togglebutton/'
+            //         },
+            //       ],
+            //     },
+            //     {
+            //       label: 'Base Design',
+            //       collapsed: true,
+            //       items: [{
+            //         label: 'Overview',
+            //         link: '/sdk/design/'
+            //       }, {
+            //         label: 'Design tokens',
+            //         link: '/sdk/design/base/'
+            //       }, {
+            //         label: 'Colors',
+            //         link: '/sdk/design/colors/'
+            //       }, {
+            //         label: 'Typography',
+            //         link: '/sdk/design/typography/'
+            //       }, {
+            //         label: 'Spacing',
+            //         link: '/sdk/design/spacing/'
+            //       }, {
+            //         label: 'Shapes',
+            //         link: '/sdk/design/shapes/'
+            //       }, {
+            //         label: 'Grids',
+            //         link: '/sdk/design/grid/'
+            //       }]
+            //     }, {
+            //       label: 'Reference',
+            //       collapsed: true,
+            //       items: [
+            //         {
+            //           label: 'Overview',
+            //           link: '/sdk/reference/'
+            //         },
+            //         {
+            //           label: 'Events',
+            //           link: '/sdk/reference/events/'
+            //         }, {
+            //           label: 'GraphQL',
+            //           link: '/sdk/reference/graphql/'
+            //         }, {
+            //           label: 'Initializer',
+            //           link: '/sdk/reference/initializer/'
+            //         }, {
+            //           label: 'Links',
+            //           link: '/sdk/reference/links/'
+            //         }, {
+            //           label: 'Render',
+            //           link: '/sdk/reference/render/'
+            //         }, {
+            //           label: 'reCAPTCHA',
+            //           link: '/sdk/reference/recaptcha/'
+            //         }, {
+            //           label: 'Slots',
+            //           link: '/sdk/reference/slots/'
+            //         }, {
+            //           label: 'VComponent',
+            //           link: '/sdk/reference/vcomponent/'
+            //         },
+            //       ]
+            //     }, {
+            //       label: 'Utilities',
+            //       collapsed: true,
+            //       items: [
+            //         {
+            //           label: 'Overview',
+            //           link: '/sdk/utilities/'
+            //         },
+            //         {
+            //           label: 'classList',
+            //           link: '/sdk/utilities/classlist/'
+            //         }, {
+            //           label: 'debounce',
+            //           link: '/sdk/utilities/debounce/'
+            //         }, {
+            //           label: 'deepmerge',
+            //           link: '/sdk/utilities/deepmerge/'
+            //         }, {
+            //           label: 'getCookie',
+            //           link: '/sdk/utilities/getcookie/'
+            //         }, {
+            //           label: 'getFormErrors',
+            //           link: '/sdk/utilities/getformerrors/'
+            //         }, {
+            //           label: 'getFormValues',
+            //           link: '/sdk/utilities/getformvalues/'
+            //         }, {
+            //           label: 'getPathValue',
+            //           link: '/sdk/utilities/getpathvalue/'
+            //         },]
+            //     },
+            //   ],
+            // },
+            // {
+            //   label: 'Videos',
+            //   link: '/videos/',
+            //   icon: 'seti:video',
+            //   items: [
+            //     {
+            //       label: 'Storefront Videos',
+            //       items: [
+            //         { label: 'Overview', link: '/videos/' },
+            //         {
+            //           label: 'Add custom product lines to cart summary',
+            //           link: '/videos/add-product-lines-to-cart-summary/',
+            //         },
+            //         { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
+            //         {
+            //           label: 'Customize address form layout and address lookup',
+            //           link: '/videos/customize-address-form-layout/',
+            //         },
+            //         { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
+            //         { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
+            //         { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
+            //         { label: 'Shopper experience', link: '/videos/shopper-experience/' },
+            //       ],
+            //     },
+            //   ],
+            // },
             {
               label: 'Playgrounds',
               link: '/playgrounds/',
