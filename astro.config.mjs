@@ -98,6 +98,7 @@ async function config() {
       '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
       '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
       '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
+      '/config/storefront-compatibility-b2b': `${basePath}/setup/configuration/storefront-compatibility-b2b`,
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
@@ -213,6 +214,10 @@ async function config() {
                         {
                           label: 'Gated content',
                           link: '/setup/configuration/gated-content/'
+                        },
+                        {
+                          label: 'Storefront Compatibility B2B Package',
+                          link: '/setup/configuration/storefront-compatibility-b2b/'
                         },
                         {
                           label: 'Storefront Compatibility Package',
