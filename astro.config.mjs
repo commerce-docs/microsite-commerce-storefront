@@ -114,7 +114,8 @@ async function config() {
       '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
       '/dropins/other/search': `${basePath}/dropins/product-discovery`,
-      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`
+      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
+      '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`
     },
     integrations: [
       starlight({
@@ -232,8 +233,12 @@ async function config() {
                   collapsed: false,
                   items: [
                     {
-                      label: 'Create your storefront',
+                      label: 'Overview',
                       link: '/get-started/'
+                    },
+                    {
+                      label: 'Create your storefront',
+                      link: '/get-started/create-storefront/'
                     },
                     {
                       label: 'Explore the boilerplate',
@@ -675,11 +680,15 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
-                  label: 'Commerce Storefront',
+                  label: 'Quick Start',
                   items: [
                     {
-                      label: 'Create your content',
+                      label: 'Overview',
                       link: 'merchants/storefront-builder/'
+                    },
+                    {
+                      label: 'Create your content',
+                      link: 'merchants/storefront-builder/create-content/'
                     },
                     {
                       label: 'Using the Document Authoring tool',
@@ -700,10 +709,27 @@ async function config() {
                   ],
                 },
                 {
+                  label: 'Commerce Blocks',
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: 'merchants/storefront-builder/commerce-blocks/'
+                    },
+                    {
+                      label: 'Personalization',
+                      link: 'merchants/get-started/personalization/'
+                    },
+                    {
+                      label: 'Product recommendations',
+                      link: 'merchants/get-started/product-recommendations/'
+                    },
+                  ],
+                },
+                {
                   label: 'Content customizations',
                   items: [
                     {
-                      label: 'Introduction',
+                      label: 'Overview',
                       link: 'merchants/get-started/'
                     },
                     {
@@ -715,14 +741,6 @@ async function config() {
                       link: 'merchants/get-started/experiments/'
                     },
                     {
-                      label: 'Personalization',
-                      link: 'merchants/get-started/personalization/'
-                    },
-                    {
-                      label: 'Product recommendations',
-                      link: 'merchants/get-started/product-recommendations/'
-                    },
-                    {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
                     },
@@ -732,36 +750,12 @@ async function config() {
                   label: 'Multistore',
                   items: [
                     {
-                      label: 'Introduction',
+                      label: 'Setup',
                       link: 'merchants/multistore/'
                     },
                     {
                       label: 'Localization',
                       link: 'merchants/multistore/content-localization/'
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              label: 'Playgrounds',
-              link: '/playgrounds/',
-              icon: 'laptop',
-              items: [
-                {
-                  label: 'Storefront Playgrounds',
-                  items: [
-                    {
-                      label: 'Introduction',
-                      link: '/playgrounds/'
-                    },
-                    {
-                      label: 'Commerce API Playground',
-                      link: '/playgrounds/commerce-services/'
-                    },
-                    {
-                      label: 'Commerce Optimizer API Playground',
-                      link: '/playgrounds/commerce-optimizer/'
                     },
                   ],
                 },
@@ -789,6 +783,30 @@ async function config() {
                     { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
                     { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
                     { label: 'Shopper experience', link: '/videos/shopper-experience/' },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Playgrounds',
+              link: '/playgrounds/',
+              icon: 'laptop',
+              items: [
+                {
+                  label: 'Storefront Playgrounds',
+                  items: [
+                    {
+                      label: 'Introduction',
+                      link: '/playgrounds/'
+                    },
+                    {
+                      label: 'Commerce API Playground',
+                      link: '/playgrounds/commerce-services/'
+                    },
+                    {
+                      label: 'Commerce Optimizer API Playground',
+                      link: '/playgrounds/commerce-optimizer/'
+                    },
                   ],
                 },
               ],
