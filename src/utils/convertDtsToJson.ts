@@ -1,7 +1,6 @@
-
 export default function convertDtsToJson(inputCode: string) {
   try {
-    // Remove the TypeScript-specific syntax
+    // Remove the TypeScript-specific syntax and convert to JavaScript object notation
     const cleanedInput = inputCode
       .replace(/^declare\s+const\s+_default:\s*/, '') // Remove declare const _default:
       .replace(/;\s*export\s+default\s+_default;\s*$/, '') // Remove export default _default;
@@ -12,5 +11,6 @@ export default function convertDtsToJson(inputCode: string) {
     return cleanedInput;
   } catch (error) {
     console.error('Error converting DTS to JSON:', error);
+    return inputCode; // Return original content if processing fails
   }
 }
