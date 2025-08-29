@@ -115,7 +115,9 @@ async function config() {
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
       '/dropins/other/search': `${basePath}/dropins/product-discovery`,
       '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
-      '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`
+      '/get-started/overview/': `${basePath}/get-started/`,
+      '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
+      '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`
     },
     integrations: [
       starlight({
