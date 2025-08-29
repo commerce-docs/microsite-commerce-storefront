@@ -221,7 +221,7 @@ async function config() {
         plugins: [
           starlightSidebarTopics([
             {
-              label: 'Storefront B2C',
+              label: 'Storefront Developers',
               link: '/get-started/',
               icon: 'seti:json',
               items: [
@@ -243,89 +243,84 @@ async function config() {
                       link: '/get-started/run-lighthouse/'
                     },
                     {
-                      label: 'Setup Overview',
-                      link: '/setup/'
-                    },
-                  ]
-                },
-                {
-                  label: 'Core Concepts',
-                  collapsed: true,
-                  items: [
-                    {
                       label: 'Storefront architecture',
                       link: '/setup/discovery/architecture/'
                     },
-                    {
-                      label: 'Data export validation',
-                      link: '/setup/discovery/data-export-validation/'
-                    },
-                    {
-                      label: 'Compatibility Package Installation',
-                      link: '/setup/configuration/storefront-compatibility/install/'
-                    },
-                    {
-                      label: 'Adobe Commerce 2.4.7',
-                      link: '/setup/configuration/storefront-compatibility/v247/'
-                    },
-                    {
-                      label: 'Adobe Commerce 2.4.8',
-                      link: '/setup/configuration/storefront-compatibility/v248/'
-                    },
                   ]
                 },
                 {
-                  label: 'Configuration',
+                  label: 'Storefront setup',
                   collapsed: true,
                   items: [
                     {
-                      label: 'Overview',
-                      link: '/setup/configuration/'
+                      label: 'Setup Overview',
+                      link: '/setup/'
                     },
                     {
-                      label: 'Storefront configuration',
-                      link: '/setup/configuration/commerce-configuration/'
+                      label: 'Configuration',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Overview',
+                          link: '/setup/configuration/'
+                        },
+                        {
+                          label: 'Data export validation',
+                          link: '/setup/discovery/data-export-validation/'
+                        },
+                        {
+                          label: 'Compatibility Package Installation',
+                          link: '/setup/configuration/storefront-compatibility/install/'
+                        },
+                        {
+                          label: 'Adobe Commerce 2.4.7',
+                          link: '/setup/configuration/storefront-compatibility/v247/'
+                        },
+                        {
+                          label: 'Adobe Commerce 2.4.8',
+                          link: '/setup/configuration/storefront-compatibility/v248/'
+                        },
+                        {
+                          label: 'Storefront configuration',
+                          link: '/setup/configuration/commerce-configuration/'
+                        },
+                        {
+                          label: 'Multistore setup',
+                          link: '/setup/configuration/multistore-setup/'
+                        },
+                        {
+                          label: 'Content delivery network',
+                          link: '/setup/configuration/content-delivery-network/'
+                        },
+                        {
+                          label: 'Gated content',
+                          link: '/setup/configuration/gated-content/'
+                        },
+                        {
+                          label: 'Luma Bridge Integration',
+                          link: '/setup/discovery/luma-bridge/'
+                        },
+                      ]
                     },
                     {
-                      label: 'Multistore setup',
-                      link: '/setup/configuration/multistore-setup/'
-                    },
-                    {
-                      label: 'Content delivery network',
-                      link: '/setup/configuration/content-delivery-network/'
-                    },
-                    {
-                      label: 'Gated content',
-                      link: '/setup/configuration/gated-content/'
+                      label: 'Launch Preparation',
+                      collapsed: true,
+                      items: [
+                        { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
+                        { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+                        { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
+                        { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+                        { label: 'Launch Checklist', link: '/setup/launch/' },
+                      ]
                     },
                   ]
                 },
+                // Creating drop-ins - SDK and essentials for building drop-ins
                 {
-                  label: 'Launch Preparation',
+                  label: 'Drop-ins Overview',
                   collapsed: true,
                   items: [
-                    { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
-                    { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-                    { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
-                    { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
-                    { label: 'Launch Checklist', link: '/setup/launch/' },
-                  ]
-                },
-                {
-                  label: 'Advanced Topics',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Luma Bridge Integration',
-                      link: '/setup/discovery/luma-bridge/'
-                    },
-                  ]
-                },
-                // Reorganized B2C Drop-ins with flatter, workflow-based structure
-                {
-                  label: 'Drop-in Essentials',
-                  collapsed: true,
-                  items: [
+                    // Drop-in Essentials
                     { label: 'Overview', link: '/dropins/all/introduction/' },
                     { label: 'Creating', link: '/dropins/all/creating/' },
                     { label: 'Installing', link: '/dropins/all/installing/' },
@@ -336,293 +331,324 @@ async function config() {
                     { label: 'Slots & Extensions', link: '/dropins/all/slots/' },
                     { label: 'Layouts', link: '/dropins/all/layouts/' },
                     { label: 'Extending', link: '/dropins/all/extending/' },
-                  ]
+                  ],
                 },
-                // Shopping Experience Drop-ins (alphabetically ordered)
+                // Drop-in SDK - SDK and development tools for building drop-ins
                 {
-                  label: 'Cart',
+                  label: 'Drop-ins SDK',
                   collapsed: true,
                   items: [
-                    { label: 'Cart Overview', link: '/dropins/cart/' },
-                    { label: 'Cart Installation', link: '/dropins/cart/installation/' },
-                    { label: 'Cart Initialization', link: '/dropins/cart/initialization/' },
-                    { label: 'Cart Styling', link: '/dropins/cart/styles/' },
-                    { label: 'Cart Slots', link: '/dropins/cart/slots/' },
-                    { label: 'Cart Functions', link: '/dropins/cart/functions/' },
-                    { label: 'Cart Dictionary', link: '/dropins/cart/dictionary/' },
+                    { label: 'SDK Introduction', link: '/sdk/' },
+                    { label: 'SDK CLI usage', link: '/sdk/get-started/cli/' },
+                    { label: 'SDK Components Overview', link: '/sdk/components/overview/' },
+                    { label: 'SDK Design Overview', link: '/sdk/design/' },
+                    { label: 'SDK Reference Overview', link: '/sdk/reference/' },
+                    { label: 'SDK Utilities Overview', link: '/sdk/utilities/' },
+                  ],
+                },
+                // B2C Drop-ins - individual drop-in components
+                {
+                  label: 'Drop-ins - B2C',
+                  collapsed: true,
+                  items: [
+                    // Individual Drop-ins (alphabetically ordered)
                     {
-                      label: 'Cart Containers',
-                      collapsed: false,
+                      label: 'Cart',
+                      collapsed: true,
                       items: [
-                        { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
-                        { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
-                        { label: 'CartSummaryTable', link: '/dropins/cart/containers/cart-summary-table/' },
-                        { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
-                        { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
-                        { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
-                        { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
-                        { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
-                        { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
-                        { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
-                        { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
+                        { label: 'Cart Overview', link: '/dropins/cart/' },
+                        { label: 'Cart Installation', link: '/dropins/cart/installation/' },
+                        { label: 'Cart Initialization', link: '/dropins/cart/initialization/' },
+                        { label: 'Cart Styling', link: '/dropins/cart/styles/' },
+                        { label: 'Cart Slots', link: '/dropins/cart/slots/' },
+                        { label: 'Cart Functions', link: '/dropins/cart/functions/' },
+                        { label: 'Cart Dictionary', link: '/dropins/cart/dictionary/' },
+                        {
+                          label: 'Cart Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
+                            { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
+                            { label: 'CartSummaryTable', link: '/dropins/cart/containers/cart-summary-table/' },
+                            { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
+                            { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
+                            { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
+                            { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
+                            { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
+                            { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
+                            { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
+                            { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
+                          ]
+                        },
+                        {
+                          label: 'Cart Tutorials',
+                          collapsed: false,
+                          items: [
+                            { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                            { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
+                            { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                            { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
+                            { label: 'Mini cart messages', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+                            { label: 'Product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+                          ]
+                        },
                       ]
                     },
                     {
-                      label: 'Cart Tutorials',
-                      collapsed: false,
+                      label: 'Checkout',
+                      collapsed: true,
                       items: [
-                        { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
-                        { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
-                        { label: 'Order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
-                        { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
-                        { label: 'Mini cart messages', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
-                        { label: 'Product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+                        { label: 'Checkout Overview', link: '/dropins/checkout/' },
+                        { label: 'Checkout Installation', link: '/dropins/checkout/installation/' },
+                        { label: 'Checkout Initialization', link: '/dropins/checkout/initialization/' },
+                        { label: 'Checkout Styling', link: '/dropins/checkout/styles/' },
+                        { label: 'Checkout Extending', link: '/dropins/checkout/extending/' },
+                        { label: 'Checkout Error Handling', link: '/dropins/checkout/error-handling/' },
+                        { label: 'Checkout Event Handling', link: '/dropins/checkout/event-handling/' },
+                        { label: 'Checkout Slots', link: '/dropins/checkout/slots/' },
+                        { label: 'Checkout Functions', link: '/dropins/checkout/functions/' },
+                        { label: 'Checkout Dictionary', link: '/dropins/checkout/dictionary/' },
+                        {
+                          label: 'Checkout Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'Checkout Overview', link: '/dropins/checkout/containers/overview/' },
+                            { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
+                            { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
+                            { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
+                            { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
+                            { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
+                            { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                            { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                            { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
+                            { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
+                            { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
+                          ]
+                        },
+                        {
+                          label: 'Checkout Tutorials',
+                          collapsed: false,
+                          items: [
+                            { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
+                            { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                            { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Order Management',
+                      collapsed: true,
+                      items: [
+                        { label: 'Order Overview', link: '/dropins/order/' },
+                        { label: 'Order Initialization', link: '/dropins/order/initialization/' },
+                        { label: 'Order Styling', link: '/dropins/order/styles/' },
+                        { label: 'Order Slots', link: '/dropins/order/slots/' },
+                        { label: 'Order Functions', link: '/dropins/order/functions/' },
+                        { label: 'Order Dictionary', link: '/dropins/order/dictionary/' },
+                        {
+                          label: 'Order Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
+                            { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
+                            { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
+                            { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
+                            { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
+                            { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
+                            { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
+                            { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
+                            { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
+                          ]
+                        },
+                        {
+                          label: 'Order Tutorials',
+                          collapsed: false,
+                          items: [
+                            { label: 'Order cancellation tutorial', link: '/dropins/order/tutorials/order-cancellation/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Payment Services',
+                      collapsed: true,
+                      items: [
+                        { label: 'Payment Services Overview', link: '/dropins/payment-services/' },
+                        { label: 'Payment Services Installation', link: '/dropins/payment-services/installation/' },
+                        { label: 'Payment Services Dictionary', link: '/dropins/payment-services/dictionary/' },
+                        {
+                          label: 'Payment Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Personalization',
+                      collapsed: true,
+                      items: [
+                        { label: 'Personalization Overview', link: '/dropins/personalization/' },
+                        { label: 'Personalization Initialization', link: '/dropins/personalization/initialization/' },
+                        { label: 'Personalization Functions', link: '/dropins/personalization/functions/' },
+                        {
+                          label: 'Personalization Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Product Details',
+                      collapsed: true,
+                      items: [
+                        { label: 'Product Details Overview', link: '/dropins/product-details/' },
+                        { label: 'PDP Installation', link: '/dropins/product-details/installation/' },
+                        { label: 'PDP Initialization', link: '/dropins/product-details/initialization/' },
+                        { label: 'PDP Styling', link: '/dropins/product-details/styles/' },
+                        { label: 'PDP Slots', link: '/dropins/product-details/slots/' },
+                        { label: 'PDP Functions', link: '/dropins/product-details/functions/' },
+                        { label: 'PDP Dictionary', link: '/dropins/product-details/dictionary/' },
+                        {
+                          label: 'Product Detail Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                            { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                            { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
+                            { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
+                            { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
+                            { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
+                            { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
+                            { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
+                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Product Discovery',
+                      collapsed: true,
+                      items: [
+                        { label: 'Discovery Overview', link: '/dropins/product-discovery/' },
+                        { label: 'Discovery Installation', link: '/dropins/product-discovery/installation/' },
+                        { label: 'Discovery Styling', link: '/dropins/product-discovery/styles/' },
+                        { label: 'Discovery Functions', link: '/dropins/product-discovery/functions/' },
+                        { label: 'Discovery Dictionary', link: '/dropins/product-discovery/dictionary/' },
+                        { label: 'Discovery Slots', link: '/dropins/product-discovery/slots/' },
+                        {
+                          label: 'Product Discovery Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
+                            { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
+                            { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
+                            { label: 'Pagination', link: '/dropins/product-discovery/containers/pagination/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Recommendations',
+                      collapsed: true,
+                      items: [
+                        { label: 'Recommendations Overview', link: '/dropins/recommendations/' },
+                        { label: 'Recommendations Installation', link: '/dropins/recommendations/installation/' },
+                        { label: 'Recommendations Styling', link: '/dropins/recommendations/styles/' },
+                        { label: 'Recommendations Functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Recommendations Slots', link: '/dropins/recommendations/slots/' },
+                        { label: 'Recommendations Dictionary', link: '/dropins/recommendations/dictionary/' },
+                        {
+                          label: 'Recommendation Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'User Account',
+                      collapsed: true,
+                      items: [
+                        { label: 'User Account Overview', link: '/dropins/user-account/' },
+                        { label: 'Account Initialization', link: '/dropins/user-account/initialization/' },
+                        { label: 'Account Styling', link: '/dropins/user-account/styles/' },
+                        { label: 'Account Functions', link: '/dropins/user-account/functions/' },
+                        { label: 'Account Dictionary', link: '/dropins/user-account/dictionary/' },
+                        { label: 'Account Sidebar', link: '/dropins/user-account/sidebar/' },
+                        { label: 'Account Tutorial', link: '/dropins/user-account/tutorials/' },
+                        {
+                          label: 'Account Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
+                            { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                            { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
+                            { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'User Authentication',
+                      collapsed: true,
+                      items: [
+                        { label: 'User Auth Overview', link: '/dropins/user-auth/' },
+                        { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
+                        { label: 'Auth Slots', link: '/dropins/user-auth/slots/' },
+                        { label: 'Auth Functions', link: '/dropins/user-auth/auth-functions/' },
+                        { label: 'Auth Dictionary', link: '/dropins/user-auth/dictionary/' },
+                        {
+                          label: 'Authentication Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
+                            { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
+                            { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
+                            { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
+                            { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
+                            { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
+                          ]
+                        },
+                      ]
+                    },
+                    {
+                      label: 'Wishlist',
+                      collapsed: true,
+                      items: [
+                        { label: 'Wishlist Overview', link: '/dropins/wishlist/' },
+                        { label: 'Wishlist Installation', link: '/dropins/wishlist/installation/' },
+                        { label: 'Wishlist Dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Wishlist Functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Wishlist Styling', link: '/dropins/wishlist/styles/' },
+                        {
+                          label: 'Wishlist Containers',
+                          collapsed: false,
+                          items: [
+                            { label: 'Wishlist Container', link: '/dropins/wishlist/containers/wishlist/' },
+                            { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
+                            { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
+                            { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
+                          ]
+                        },
                       ]
                     },
                   ]
                 },
+                // B2B Drop-ins - B2B-specific drop-in components
                 {
-                  label: 'Checkout',
+                  label: 'Drop-ins - B2B',
                   collapsed: true,
                   items: [
-                    { label: 'Checkout Overview', link: '/dropins/checkout/' },
-                    { label: 'Checkout Installation', link: '/dropins/checkout/installation/' },
-                    { label: 'Checkout Initialization', link: '/dropins/checkout/initialization/' },
-                    { label: 'Checkout Styling', link: '/dropins/checkout/styles/' },
-                    { label: 'Checkout Extending', link: '/dropins/checkout/extending/' },
-                    { label: 'Checkout Error Handling', link: '/dropins/checkout/error-handling/' },
-                    { label: 'Checkout Event Handling', link: '/dropins/checkout/event-handling/' },
-                    { label: 'Checkout Slots', link: '/dropins/checkout/slots/' },
-                    { label: 'Checkout Functions', link: '/dropins/checkout/functions/' },
-                    { label: 'Checkout Dictionary', link: '/dropins/checkout/dictionary/' },
                     {
-                      label: 'Checkout Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'Checkout Overview', link: '/dropins/checkout/containers/overview/' },
-                        { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
-                        { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
-                        { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
-                        { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
-                        { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
-                        { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
-                        { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
-                        { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
-                        { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
-                        { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
-                      ]
-                    },
-                    {
-                      label: 'Checkout Tutorials',
-                      collapsed: false,
-                      items: [
-                        { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-                        { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
-                        { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-                        { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Order Management',
-                  collapsed: true,
-                  items: [
-                    { label: 'Order Overview', link: '/dropins/order/' },
-                    { label: 'Order Initialization', link: '/dropins/order/initialization/' },
-                    { label: 'Order Styling', link: '/dropins/order/styles/' },
-                    { label: 'Order Slots', link: '/dropins/order/slots/' },
-                    { label: 'Order Functions', link: '/dropins/order/functions/' },
-                    { label: 'Order Dictionary', link: '/dropins/order/dictionary/' },
-                    {
-                      label: 'Order Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
-                        { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
-                        { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
-                        { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
-                        { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
-                        { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
-                        { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
-                        { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
-                        { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
-                      ]
-                    },
-                    {
-                      label: 'Order Tutorials',
-                      collapsed: false,
-                      items: [
-                        { label: 'Order cancellation tutorial', link: '/dropins/order/tutorials/order-cancellation/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Payment Services',
-                  collapsed: true,
-                  items: [
-                    { label: 'Payment Services Overview', link: '/dropins/payment-services/' },
-                    { label: 'Payment Services Installation', link: '/dropins/payment-services/installation/' },
-                    { label: 'Payment Services Dictionary', link: '/dropins/payment-services/dictionary/' },
-                    {
-                      label: 'Payment Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Personalization',
-                  collapsed: true,
-                  items: [
-                    { label: 'Personalization Overview', link: '/dropins/personalization/' },
-                    { label: 'Personalization Initialization', link: '/dropins/personalization/initialization/' },
-                    { label: 'Personalization Functions', link: '/dropins/personalization/functions/' },
-                    {
-                      label: 'Personalization Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Product Details',
-                  collapsed: true,
-                  items: [
-                    { label: 'Product Details Overview', link: '/dropins/product-details/' },
-                    { label: 'PDP Installation', link: '/dropins/product-details/installation/' },
-                    { label: 'PDP Initialization', link: '/dropins/product-details/initialization/' },
-                    { label: 'PDP Styling', link: '/dropins/product-details/styles/' },
-                    { label: 'PDP Slots', link: '/dropins/product-details/slots/' },
-                    { label: 'PDP Functions', link: '/dropins/product-details/functions/' },
-                    { label: 'PDP Dictionary', link: '/dropins/product-details/dictionary/' },
-                    {
-                      label: 'Product Detail Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
-                        { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
-                        { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
-                        { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
-                        { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
-                        { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
-                        { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
-                        { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                        { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Product Discovery',
-                  collapsed: true,
-                  items: [
-                    { label: 'Discovery Overview', link: '/dropins/product-discovery/' },
-                    { label: 'Discovery Installation', link: '/dropins/product-discovery/installation/' },
-                    { label: 'Discovery Styling', link: '/dropins/product-discovery/styles/' },
-                    { label: 'Discovery Functions', link: '/dropins/product-discovery/functions/' },
-                    { label: 'Discovery Dictionary', link: '/dropins/product-discovery/dictionary/' },
-                    { label: 'Discovery Slots', link: '/dropins/product-discovery/slots/' },
-                    {
-                      label: 'Product Discovery Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
-                        { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
-                        { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
-                        { label: 'Pagination', link: '/dropins/product-discovery/containers/pagination/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Recommendations',
-                  collapsed: true,
-                  items: [
-                    { label: 'Recommendations Overview', link: '/dropins/recommendations/' },
-                    { label: 'Recommendations Installation', link: '/dropins/recommendations/installation/' },
-                    { label: 'Recommendations Styling', link: '/dropins/recommendations/styles/' },
-                    { label: 'Recommendations Functions', link: '/dropins/recommendations/functions/' },
-                    { label: 'Recommendations Slots', link: '/dropins/recommendations/slots/' },
-                    { label: 'Recommendations Dictionary', link: '/dropins/recommendations/dictionary/' },
-                    {
-                      label: 'Recommendation Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'User Account',
-                  collapsed: true,
-                  items: [
-                    { label: 'User Account Overview', link: '/dropins/user-account/' },
-                    { label: 'Account Initialization', link: '/dropins/user-account/initialization/' },
-                    { label: 'Account Styling', link: '/dropins/user-account/styles/' },
-                    { label: 'Account Functions', link: '/dropins/user-account/functions/' },
-                    { label: 'Account Dictionary', link: '/dropins/user-account/dictionary/' },
-                    { label: 'Account Sidebar', link: '/dropins/user-account/sidebar/' },
-                    { label: 'Account Tutorial', link: '/dropins/user-account/tutorials/' },
-                    {
-                      label: 'Account Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
-                        { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
-                        { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
-                        { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'User Authentication',
-                  collapsed: true,
-                  items: [
-                    { label: 'User Auth Overview', link: '/dropins/user-auth/' },
-                    { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
-                    { label: 'Auth Slots', link: '/dropins/user-auth/slots/' },
-                    { label: 'Auth Functions', link: '/dropins/user-auth/auth-functions/' },
-                    { label: 'Auth Dictionary', link: '/dropins/user-auth/dictionary/' },
-                    {
-                      label: 'Authentication Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
-                        { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
-                        { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
-                        { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
-                        { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
-                        { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
-                      ]
-                    },
-                  ]
-                },
-                {
-                  label: 'Wishlist',
-                  collapsed: true,
-                  items: [
-                    { label: 'Wishlist Overview', link: '/dropins/wishlist/' },
-                    { label: 'Wishlist Installation', link: '/dropins/wishlist/installation/' },
-                    { label: 'Wishlist Dictionary', link: '/dropins/wishlist/dictionary/' },
-                    { label: 'Wishlist Functions', link: '/dropins/wishlist/functions/' },
-                    { label: 'Wishlist Styling', link: '/dropins/wishlist/styles/' },
-                    {
-                      label: 'Wishlist Containers',
-                      collapsed: false,
-                      items: [
-                        { label: 'Wishlist Container', link: '/dropins/wishlist/containers/wishlist/' },
-                        { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
-                        { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
-                        { label: 'WishlistToggle', link: '/dropins/wishlist/containers/wishlist-toggle/' },
-                      ]
+                      label: 'B2B Overview',
+                      link: '/b2b/'
                     },
                   ]
                 },
@@ -640,62 +666,7 @@ async function config() {
                     directory: '/resources/'
                   },
                 },
-                {
-                  label: 'Releases',
-                  collapsed: true,
-                  autogenerate: {
-                    directory: '/releases/'
-                  },
-                },
               ],
-            },
-            // New top-level section for B2B content (placeholder, safe links)
-            {
-              label: 'Storefront B2B',
-              link: '/b2b/',
-              icon: 'business',
-              items: [
-                // TODO: Replace placeholder links with real B2B overview and IA once paths exist
-                {
-                  label: 'B2B Essentials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', link: '/b2b/essentials/' },
-                  ]
-                },
-                {
-                  label: 'B2B Drop-ins',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', link: '/b2b/dropins/' },
-                    { label: 'Cart', link: '/b2b/dropins/cart' },
-                    { label: 'Checkout', link: '/b2b/dropins/checkout/' },
-                    { label: 'Order', link: '/b2b/dropins/order/' },
-                    { label: 'Payment Services', link: '/b2b/dropins/payment-services/' },
-                    { label: 'Personalization', link: '/b2b/dropins/personalization/' },
-                    { label: 'Product Details', link: '/b2b/dropins/product-details/' },
-                    { label: 'Product Discovery', link: '/b2b/dropins/product-discovery/' },
-                    { label: 'Recommendations', link: '/b2b/dropins/recommendations/' },
-                    { label: 'User Account', link: '/b2b/dropins/user-account/' },
-                    { label: 'User Authentication', link: '/b2b/dropins/user-authentication/' },
-                    { label: 'Wishlist', link: '/b2b/dropins/wishlist/' },
-                  ]
-                },
-                {
-                  label: 'B2B Guides',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', link: '/b2b/guides/' }
-                  ]
-                },
-                {
-                  label: 'B2B How-tos',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', link: '/b2b/how-tos/' }
-                  ]
-                }
-              ]
             },
             {
               label: 'Storefront Authors',
@@ -771,308 +742,6 @@ async function config() {
                 },
               ],
             },
-            // {
-            //   label: 'Drop-in SDK',
-            //   icon: 'puzzle',
-            //   link: '/sdk/',
-            //   items: [
-            //     {
-            //       label: 'Getting started',
-            //       items: [
-            //         {
-            //           label: 'Introduction',
-            //           link: '/sdk/'
-            //         },
-            //         {
-            //           label: 'CLI usage',
-            //           link: '/sdk/get-started/cli/'
-            //         },
-            //       ],
-            //     },
-            //     {
-            //       label: 'Components',
-            //       collapsed: true,
-            //       items: [
-            //         {
-            //           label: 'Overview',
-            //           link: '/sdk/components/overview/'
-            //         },
-            //         {
-            //           label: 'Accordion',
-            //           link: '/sdk/components/accordion/'
-            //         },
-            //         {
-            //           label: 'ActionButton',
-            //           link: '/sdk/components/actionbutton/'
-            //         },
-            //         {
-            //           label: 'ActionButtonGroup',
-            //           link: '/sdk/components/actionbuttongroup/'
-            //         },
-            //         {
-            //           label: 'AlertBanner',
-            //           link: '/sdk/components/alertbanner/'
-            //         },
-            //         {
-            //           label: 'Breadcrumbs',
-            //           link: '/sdk/components/breadcrumbs/'
-            //         },
-            //         {
-            //           label: 'Button',
-            //           link: '/sdk/components/button/'
-            //         },
-            //         {
-            //           label: 'Card',
-            //           link: '/sdk/components/card/'
-            //         },
-            //         {
-            //           label: 'CartItem',
-            //           link: '/sdk/components/cartitem/'
-            //         },
-            //         {
-            //           label: 'CartList',
-            //           link: '/sdk/components/cartlist/'
-            //         },
-            //         {
-            //           label: 'Checkbox',
-            //           link: '/sdk/components/checkbox/'
-            //         },
-            //         {
-            //           label: 'ColorSwatch',
-            //           link: '/sdk/components/colorswatch/'
-            //         },
-            //         {
-            //           label: 'ContentGrid',
-            //           link: '/sdk/components/contentgrid/'
-            //         },
-            //         {
-            //           label: 'Divider',
-            //           link: '/sdk/components/divider/'
-            //         },
-            //         {
-            //           label: 'Field',
-            //           link: '/sdk/components/field/'
-            //         },
-            //         {
-            //           label: 'Header',
-            //           link: '/sdk/components/header/'
-            //         },
-            //         {
-            //           label: 'Icon',
-            //           link: '/sdk/components/icon/'
-            //         },
-            //         {
-            //           label: 'IllustratedMessage',
-            //           link: '/sdk/components/illustratedmessage/'
-            //         },
-            //         {
-            //           label: 'Image',
-            //           link: '/sdk/components/image/'
-            //         },
-            //         {
-            //           label: 'ImageSwatch',
-            //           link: '/sdk/components/imageswatch/'
-            //         },
-            //         {
-            //           label: 'InlineAlert',
-            //           link: '/sdk/components/inlinealert/'
-            //         },
-            //         {
-            //           label: 'Incrementer',
-            //           link: '/sdk/components/incrementer/'
-            //         },
-            //         {
-            //           label: 'Input',
-            //           link: '/sdk/components/input/'
-            //         },
-            //         {
-            //           label: 'InputDate',
-            //           link: '/sdk/components/inputdate/'
-            //         },
-            //         {
-            //           label: 'InputFile',
-            //           link: '/sdk/components/inputfile/'
-            //         },
-            //         {
-            //           label: 'InputPassword',
-            //           link: '/sdk/components/inputpassword/'
-            //         },
-            //         {
-            //           label: 'Modal',
-            //           link: '/sdk/components/modal/'
-            //         },
-            //         {
-            //           label: 'Pagination',
-            //           link: '/sdk/components/pagination/'
-            //         },
-            //         {
-            //           label: 'Picker',
-            //           link: '/sdk/components/picker/'
-            //         },
-            //         {
-            //           label: 'Portal',
-            //           link: '/sdk/components/portal/'
-            //         },
-            //         {
-            //           label: 'Price',
-            //           link: '/sdk/components/price/'
-            //         },
-            //         {
-            //           label: 'PriceRange',
-            //           link: '/sdk/components/pricerange/'
-            //         },
-            //         {
-            //           label: 'ProductItemCard',
-            //           link: '/sdk/components/productitemcard/'
-            //         },
-            //         {
-            //           label: 'ProgressSpinner',
-            //           link: '/sdk/components/progressspinner/'
-            //         },
-            //         {
-            //           label: 'RadioButton',
-            //           link: '/sdk/components/radiobutton/'
-            //         },
-            //         {
-            //           label: 'Skeleton',
-            //           link: '/sdk/components/skeleton/'
-            //         },
-            //         {
-            //           label: 'Tag',
-            //           link: '/sdk/components/tag/'
-            //         },
-            //         {
-            //           label: 'TextArea',
-            //           link: '/sdk/components/textarea/'
-            //         },
-            //         {
-            //           label: 'TextSwatch',
-            //           link: '/sdk/components/textswatch/'
-            //         },
-            //         {
-            //           label: 'ToggleButton',
-            //           link: '/sdk/components/togglebutton/'
-            //         },
-            //       ],
-            //     },
-            //     {
-            //       label: 'Base Design',
-            //       collapsed: true,
-            //       items: [{
-            //         label: 'Overview',
-            //         link: '/sdk/design/'
-            //       }, {
-            //         label: 'Design tokens',
-            //         link: '/sdk/design/base/'
-            //       }, {
-            //         label: 'Colors',
-            //         link: '/sdk/design/colors/'
-            //       }, {
-            //         label: 'Typography',
-            //         link: '/sdk/design/typography/'
-            //       }, {
-            //         label: 'Spacing',
-            //         link: '/sdk/design/spacing/'
-            //       }, {
-            //         label: 'Shapes',
-            //         link: '/sdk/design/shapes/'
-            //       }, {
-            //         label: 'Grids',
-            //         link: '/sdk/design/grid/'
-            //       }]
-            //     }, {
-            //       label: 'Reference',
-            //       collapsed: true,
-            //       items: [
-            //         {
-            //           label: 'Overview',
-            //           link: '/sdk/reference/'
-            //         },
-            //         {
-            //           label: 'Events',
-            //           link: '/sdk/reference/events/'
-            //         }, {
-            //           label: 'GraphQL',
-            //           link: '/sdk/reference/graphql/'
-            //         }, {
-            //           label: 'Initializer',
-            //           link: '/sdk/reference/initializer/'
-            //         }, {
-            //           label: 'Links',
-            //           link: '/sdk/reference/links/'
-            //         }, {
-            //           label: 'Render',
-            //           link: '/sdk/reference/render/'
-            //         }, {
-            //           label: 'reCAPTCHA',
-            //           link: '/sdk/reference/recaptcha/'
-            //         }, {
-            //           label: 'Slots',
-            //           link: '/sdk/reference/slots/'
-            //         }, {
-            //           label: 'VComponent',
-            //           link: '/sdk/reference/vcomponent/'
-            //         },
-            //       ]
-            //     }, {
-            //       label: 'Utilities',
-            //       collapsed: true,
-            //       items: [
-            //         {
-            //           label: 'Overview',
-            //           link: '/sdk/utilities/'
-            //         },
-            //         {
-            //           label: 'classList',
-            //           link: '/sdk/utilities/classlist/'
-            //         }, {
-            //           label: 'debounce',
-            //           link: '/sdk/utilities/debounce/'
-            //         }, {
-            //           label: 'deepmerge',
-            //           link: '/sdk/utilities/deepmerge/'
-            //         }, {
-            //           label: 'getCookie',
-            //           link: '/sdk/utilities/getcookie/'
-            //         }, {
-            //           label: 'getFormErrors',
-            //           link: '/sdk/utilities/getformerrors/'
-            //         }, {
-            //           label: 'getFormValues',
-            //           link: '/sdk/utilities/getformvalues/'
-            //         }, {
-            //           label: 'getPathValue',
-            //           link: '/sdk/utilities/getpathvalue/'
-            //         },]
-            //     },
-            //   ],
-            // },
-            // {
-            //   label: 'Videos',
-            //   link: '/videos/',
-            //   icon: 'seti:video',
-            //   items: [
-            //     {
-            //       label: 'Storefront Videos',
-            //       items: [
-            //         { label: 'Overview', link: '/videos/' },
-            //         {
-            //           label: 'Add custom product lines to cart summary',
-            //           link: '/videos/add-product-lines-to-cart-summary/',
-            //         },
-            //         { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
-            //         {
-            //           label: 'Customize address form layout and address lookup',
-            //           link: '/videos/customize-address-form-layout/',
-            //         },
-            //         { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
-            //         { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
-            //         { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
-            //         { label: 'Shopper experience', link: '/videos/shopper-experience/' },
-            //       ],
-            //     },
-            //   ],
-            // },
             {
               label: 'Playgrounds',
               link: '/playgrounds/',
@@ -1093,6 +762,47 @@ async function config() {
                       label: 'Commerce Optimizer API Playground',
                       link: '/playgrounds/commerce-optimizer/'
                     },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Videos',
+              link: '/videos/',
+              icon: 'seti:video',
+              items: [
+                {
+                  label: 'Storefront Videos',
+                  items: [
+                    { label: 'Overview', link: '/videos/' },
+                    {
+                      label: 'Add custom product lines to cart summary',
+                      link: '/videos/add-product-lines-to-cart-summary/',
+                    },
+                    { label: 'Buy online, pickup in store', link: '/videos/buy-online-pickup-in-store/' },
+                    {
+                      label: 'Customize address form layout and address lookup',
+                      link: '/videos/customize-address-form-layout/',
+                    },
+                    { label: 'Customize cart summary', link: '/videos/customize-cart-summary/' },
+                    { label: 'Customize order summary lines', link: '/videos/customize-order-summary-lines/' },
+                    { label: 'Multi-step checkout', link: '/videos/multi-step-checkout/' },
+                    { label: 'Shopper experience', link: '/videos/shopper-experience/' },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Releases',
+              link: '/releases/',
+              icon: 'rocket',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Release Notes',
+                  items: [
+                    { label: 'Overview', link: '/releases/' },
+                    { label: 'Changelog', link: '/releases/changelog/' },
                   ],
                 },
               ],
