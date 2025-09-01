@@ -1,0 +1,67 @@
+---
+title: AddressValidation container
+description: Configure the AddressValidation container to present suggested vs. original shipping addresses and act on the shopper's choice.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+
+The `AddressValidation` container displays a suggested shipping address (from a third-party verification service) alongside the entered address, allowing shoppers to choose between them.
+
+Typically invoked from a modal during checkout after calling your address verification service.
+
+## AddressValidation configurations
+
+The `AddressValidation` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['suggestedAddress', 'CartAddressInput | null', 'No', 'Address suggestion to present to the shopper.'],
+    ['handleSelectedAddress', 'function', 'No', 'Async callback fired when the shopper selects an address. Receives the selection and the chosen address.'],
+  ]}
+/>
+
+### AddressValidationProps interface
+
+The `AddressValidation` container receives an object that implements the following interface:
+
+```ts
+interface AddressValidationProps {
+  suggestedAddress: Partial<CartAddressInput> | null;
+  handleSelectedAddress?: (payload: {
+    selection: 'suggested' | 'original';
+    address: CartAddressInput | null | undefined;
+  }) => void;
+}
+```
+
+- `suggestedAddress` - The normalized address to propose to the shopper.
+- `handleSelectedAddress` - Called when the shopper selects an address. Use to persist the selection or continue checkout.
+
+## CartAddressInput type
+
+The `CartAddressInput` type has this shape:
+
+```ts
+interface CartAddressInput {
+  city: string;
+  countryCode: string;
+  postcode: string;
+  region: string;
+  street: string[];
+}
+```
+
+<Aside type="tip" title="Get the current address">
+The container listens to checkout events and automatically maps the current shipping address to `CartAddressInput`. Only pass `suggestedAddress` when available.
+</Aside>
+
+<Aside type="note" title="Normalization">
+Transform your address verification service output to `CartAddressInput` format (with fields like `street`, `city`, `region`, `countryCode`, `postcode`) before passing to the container. Missing properties default to the original address values.
+</Aside>
+
+## Example
+
+ For a complete walkthrough, see the [Validate shipping address](/dropins/checkout/tutorials/validate-shipping-address/) tutorial.
