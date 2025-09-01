@@ -381,6 +381,7 @@ async function config() {
                           collapsed: true,
                           items: [
                             { label: 'Overview', link: '/dropins/checkout/containers/overview/' },
+                            { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
                             { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                             { label: 'EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                             { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
@@ -402,6 +403,7 @@ async function config() {
                           items: [
                             { label: 'Add a payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
                             { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                            { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
                             { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                             { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                           ]
