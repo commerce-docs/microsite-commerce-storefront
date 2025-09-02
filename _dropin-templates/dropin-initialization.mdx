@@ -1,49 +1,78 @@
 ---
 title: DROPIN_NAME initialization
-description: Learn how to initialize the DROPIN_NAME drop-in component.
+description: Learn how to configure the initializer for the DROPIN_NAME drop-in component.
 ---
 
-import Diagram from '@components/Diagram.astro';
-import Callouts from '@components/Callouts.astro';
 import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import { Steps } from '@astrojs/starlight/components';
 
-This topic provides the details and instructions you need to initialize the DROPIN_NAME drop-in component.
+The DROPIN_NAME drop-in component initializer provides global options for the drop-in component, including configuring language definitions and extending the default models with new fields and transformers.
 
-## Big Picture
+## Configuration options
 
-{/* Replace `placeholder.webp` with a diagram of what needs to be initialized in the drop-in component */}
+The DROPIN_NAME component initializer accepts the following configuration options:
 
-<Diagram caption="[Initializing the DROPIN_NAME]">
-  ![Initializing the DROPIN_NAME](@images/placeholder.webp)
-</Diagram>
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['models', 'object', 'No', 'Extend the default model with new fields and transform them as needed.'],
+  ]}
+/>
 
-{/* Use `Callouts` control to identify the initializers for the drop-in. */}
+### Example
 
-<Callouts>
+The following code shows an example implementation of the DROPIN_NAME initializer configuration:
 
-1. **INITIALIZER_1**: Describe why this is required to initialize the drop-in component.
-1. **INITIALIZER_2**: Describe why this is required to initialize the drop-in component.
-
-</Callouts>
-
-## Example
-
-This example shows how to initialize the DROPIN_NAME drop-in component in your project.
-
-```typescript
-/* Insert initialization example here */
+```ts
+// Initialize DROPIN_NAME 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models,
+  });
+})();
 ```
 
-## Step-by-step
+### Set language definitions
 
-Follow these steps to initialize the DROPIN_NAME drop-in component in your project:
+The `langDefinitions` property registers the DROPIN_NAME component dictionary files, which are used for internationalization purposes. These files allow you to provide localized text for different languages in your application.
 
-<Steps>
+```ts
+// Fetch the dictionary files for your application
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
 
-1. Describe step.
-1. Describe step.
+// Register the component with language definitions
+const langDefinitions = {
+  default: fr_FR,
+};
 
-</Steps>
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
+});
+```
 
+### Set models
+
+You can extend the default models in the DROPIN_NAME component and provide transformers to process new fields.
+
+The `models` property is an object that contains the default models that you might want to extend and the transformers to use to transform the data.
+
+The following example shows how to extend the default models with new fields and transformers:
+
+```ts
+// Initialize DROPIN_NAME
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models: {
+      ModelName: {
+        transformer: (data) => ({
+          customField1: data?.custom_field_1,
+          customField2: data?.custom_field_2,
+        }),
+      },
+    },
+  });
+})();
+```
