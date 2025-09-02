@@ -29,31 +29,12 @@ These steps are specific for Edge Delivery Services projects, and may not necess
 
 ### Install the packages
 
-Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and DROPIN_NAME (`@dropins/storefront-DROPIN_PACKAGE`) packages.
+For NPM (recommended for performance), install the drop-in component tools (`@dropins/tools`) and the DROPIN_NAME package name (`@dropins/storefront-DROPIN_PACKAGE`).
 
-<Tabs>
-  <TabItem label="NPM" icon="seti:npm">
 
     ```bash frame="none"
     npm install @dropins/tools @dropins/storefront-DROPIN_PACKAGE
     ```
-
-  </TabItem>
-  <TabItem label="CDN" icon="external">
-
-    ```html title="index.html" del={"Replace with actual URLs":5-7}
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Your Storefront</title>
-
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-DROPIN_PACKAGE@latest"></script>
-    </head>
-    ```
-
-  </TabItem>
-</Tabs>
 
 :::note[Install @dropins/tools]
 All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
@@ -66,60 +47,30 @@ All drop-in components require the `@dropins/tools` package. This package contai
 
 In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
 
-<Tabs>
-<TabItem label="node_modules" icon="seti:npm">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the DROPIN_NAME (@dropins/storefront-DROPIN_PACKAGE):
+This example shows an `importmap` added to the `head.html` file.
 
-  ```html title="head.html"
-  <script type="importmap">
-    {
-      "imports": {
-        "@dropins/tools/": "/node_modules/@dropins/tools/",
-        "@dropins/storefront-DROPIN_PACKAGE/": "/node_modules/@dropins/storefront-DROPIN_PACKAGE/",
-      }
-    }
-  </script>
-  <script src="/scripts/scripts.js" type="module"></script>
-    ```
-  </TabItem>
-    <TabItem label="custom" icon="seti:folder">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the DROPIN_NAME (@dropins/storefront-DROPIN_PACKAGE):
+```json title="head.html"
+<script nonce="aem" type="importmap">
+{
+  "imports": {
+    "@dropins/storefront-account/": "/scripts/__dropins__/storefront-account/",
+    "@dropins/storefront-auth/": "/scripts/__dropins__/storefront-auth/",
+    "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
+    "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
+    "@dropins/storefront-order/": "/scripts/__dropins__/storefront-order/",
+    "@dropins/storefront-payment-services/": "/scripts/__dropins__/storefront-payment-services/",
+    "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
+    "@dropins/storefront-recommendations/": "/scripts/__dropins__/storefront-recommendations/",
+    "@dropins/storefront-wishlist/": "/scripts/__dropins__/storefront-wishlist/",
+    "@dropins/storefront-personalization/": "/scripts/__dropins__/storefront-personalization/",
+    "@dropins/storefront-product-discovery/": "/scripts/__dropins__/storefront-product-discovery/",
+    "@dropins/tools/": "/scripts/__dropins__/tools/"
+  }
+}
+</script>
+```
 
-    ```html title="head.html"
-    <script type="importmap">
-      {
-        "imports": {
-          "@dropins/tools/": "/scripts/__dropins__/tools/",
-          "@dropins/storefront-DROPIN_PACKAGE/": "/scripts/__dropins__/storefront-DROPIN_PACKAGE/",
-        }
-      }
-    </script>
-    <script src="/scripts/scripts.js" type="module"></script>
-    ```
-
-  </TabItem>
-  <TabItem label="CDN" icon="external">
-    This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the DROPIN_NAME (@dropins/storefront-DROPIN_PACKAGE):
-
-    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
-    <head>
-      <script type="importmap">
-        {
-          "imports": {
-
-            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
-            "@dropins/storefront-DROPIN_PACKAGE/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-DROPIN_PACKAGE@latest",
-          }
-        }
-      </script>
-    </head>
-    ```
-
-  </TabItem>
-
-</Tabs>
-
-With the `importmap` defined for both runtime and build-time environments, you can now **import the required files** from these packages into your DROPIN_NAME block as described in the next step.
+With the `importmap` defined, you can now **import the required files** from these packages into your DROPIN_NAME block as described in the next step.
 
 </Task>
 
@@ -212,7 +163,7 @@ The code below shows how to register the DROPIN_NAME, load it (mount), and enabl
   initializers.register(pkg.initialize);
 
   // Mount Initializers (must be called after all initializers are registered)
-  window.addEventListener('load', initializers.mount);
+  return initializers.mountImmediately(initialize, { langDefinitions });
 </script>
 ```
 
