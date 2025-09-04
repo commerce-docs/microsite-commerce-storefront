@@ -556,6 +556,7 @@ async function config() {
                             { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
                             { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                             { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                            { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                           ]
                         },
                         // { label: 'Slots', link: '/dropins/user-account/slots/' },
