@@ -563,7 +563,14 @@ async function config() {
                         { label: 'Functions', link: '/dropins/user-account/functions/' },
                         { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
                         { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
-                        { label: 'Tutorial', link: '/dropins/user-account/tutorials/' },
+                        {
+                          label: 'Tutorials',
+                          collapsed: true,
+                          items: [
+                            { label: 'Customize the layout of the AddressForm', link: '/dropins/user-account/tutorials/customize-layout/' },
+                            { label: 'Validate address in My Account', link: '/dropins/user-account/tutorials/validate-address/' },
+                          ]
+                        },
                       ]
                     },
                     {
