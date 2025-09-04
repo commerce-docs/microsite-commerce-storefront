@@ -118,7 +118,9 @@ async function config() {
       '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery/containers/search-results`,
       '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery/containers/search-results`,
       '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/search-results`,
-      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`
+      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-details/containers/product-details': `${basePath}/dropins/product-details/containers/product-attributes`,
+      '/dropins/product-details/slots': `${basePath}/dropins/product-details/containers/product-attributes`
     },
     integrations: [
       starlight({
@@ -302,7 +304,7 @@ async function config() {
                       ],
                     },
                     {
-                      label: 'Product details page',
+                      label: 'Product details (PDP)',
                       collapsed: true,
                       items: [
                         { label: 'Overview', link: '/dropins/product-details/' },
@@ -320,10 +322,8 @@ async function config() {
                             { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                             { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
                           ]
                         },
-                        { label: 'Slots', link: '/dropins/product-details/slots/' },
                         { label: 'Functions', link: '/dropins/product-details/functions/' },
                         { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
                       ]
