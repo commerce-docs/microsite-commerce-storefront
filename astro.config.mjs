@@ -114,7 +114,11 @@ async function config() {
       '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
       '/dropins/other/search': `${basePath}/dropins/product-discovery`,
-      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`
+      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
+      '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`
     },
     integrations: [
       starlight({
