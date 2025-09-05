@@ -67,7 +67,6 @@ async function config() {
       '/customize': `${basePath}/dropins/all/introduction`,
       '/dropins': `${basePath}/dropins/all/introduction`,
       '/dropins/cart/cart-introduction': `${basePath}/dropins/cart`,
-      '/dropins/cart/cart-containers': `${basePath}/dropins/cart/`,
       '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
       '/dropins/user-account/useraccount-introduction': `${basePath}/dropins/user-account`,
       '/dropins/user-auth/userauth-introduction': `${basePath}/dropins/user-auth`,
@@ -101,7 +100,6 @@ async function config() {
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
-      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
       '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
       '/dropins/all/enriching': `${basePath}/merchants/get-started/enrichment`,
       '/dropins/all/experimenting': `${basePath}/merchants/get-started/experiments`,
@@ -132,7 +130,7 @@ async function config() {
       '/dropins/all/anatomy': `${basePath}/dropins/all/introduction`,
       // Merchant/Storefront Builder redirects
       '/merchants/get-started/localization': `${basePath}/merchants/multistore/content-localization`,
-  
+
       '/merchants/multistore/commerce-localization': `${basePath}/merchants/multistore/content-localization`,
       '/merchants/multistore/localization': `${basePath}/merchants/multistore/content-localization`,
       // SDK redirects
@@ -142,12 +140,7 @@ async function config() {
       // Miscellaneous redirects
       '/activate': `${basePath}/setup`,
       '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
-      '/setup/aem-assets-integration': `${basePath}/merchants/storefront-builder/visual-editor`
-
-      '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery/containers/search-results`,
-      '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery/containers/search-results`,
-      '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/search-results`,
-      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/setup/aem-assets-integration': `${basePath}/merchants/storefront-builder/visual-editor`,
       '/dropins/product-details/containers/product-details': `${basePath}/dropins/product-details/containers/product-attributes`,
       '/dropins/product-details/slots': `${basePath}/dropins/product-details/containers/product-attributes`
     },
@@ -458,29 +451,6 @@ async function config() {
                         { label: 'reCAPTCHA', link: '/sdk/reference/recaptcha/' },
                         { label: 'Slots', link: '/sdk/reference/slots/' },
                         { label: 'VComponent', link: '/sdk/reference/vcomponent/' },
-                      label: 'Product details (PDP)',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins/product-details/' },
-                        { label: 'Installation', link: '/dropins/product-details/installation/' },
-                        { label: 'Initialization', link: '/dropins/product-details/initialization/' },
-                        { label: 'Styles', link: '/dropins/product-details/styles/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
-                            { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
-                            { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
-                            { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
-                            { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
-                            { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
-                            { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
-                            { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                          ]
-                        },
-                        { label: 'Functions', link: '/dropins/product-details/functions/' },
-                        { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
-
                       ]
                     },
                     {
