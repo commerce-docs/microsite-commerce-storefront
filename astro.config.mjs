@@ -239,7 +239,11 @@ async function config() {
                       link: '/get-started/'
                     },
                     {
-                      label: 'Create your storefront',
+                      label: 'Learn the architecture',
+                      link: '/setup/discovery/architecture/'
+                    },
+                    {
+                      label: 'Scaffold your storefront',
                       link: '/get-started/create-storefront/'
                     },
                     {
@@ -249,10 +253,6 @@ async function config() {
                     {
                       label: 'Run Lighthouse audits',
                       link: '/get-started/run-lighthouse/'
-                    },
-                    {
-                      label: 'Storefront architecture',
-                      link: '/setup/discovery/architecture/'
                     },
                   ]
                 },
