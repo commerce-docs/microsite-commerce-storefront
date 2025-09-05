@@ -96,7 +96,8 @@ async function config() {
       '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
       '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
       '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
-      '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
+      '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
+      '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
       '/get-started/release': `${basePath}/releases/`,
       '/seo/indexing': `${basePath}/setup/seo/indexing`,
       '/seo/metadata': `${basePath}/setup/seo/metadata`,
@@ -113,7 +114,13 @@ async function config() {
       '/dropins/all/eventbus': `${basePath}/sdk/reference/events`,
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
       '/dropins/other/search': `${basePath}/dropins/product-discovery`,
-      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`
+      '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
+      '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-details/containers/product-details': `${basePath}/dropins/product-details/containers/product-attributes`,
+      '/dropins/product-details/slots': `${basePath}/dropins/product-details/containers/product-attributes`
     },
     integrations: [
       starlight({
@@ -138,6 +145,7 @@ async function config() {
         title: 'Adobe Commerce Storefront',
         favicon: 'favicon.ico',
         lastUpdated: true,
+
         plugins: [
           starlightSidebarTopics([
             {
@@ -296,7 +304,7 @@ async function config() {
                       ],
                     },
                     {
-                      label: 'Product details page',
+                      label: 'Product details (PDP)',
                       collapsed: true,
                       items: [
                         { label: 'Overview', link: '/dropins/product-details/' },
@@ -314,10 +322,8 @@ async function config() {
                             { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                             { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
                           ]
                         },
-                        { label: 'Slots', link: '/dropins/product-details/slots/' },
                         { label: 'Functions', link: '/dropins/product-details/functions/' },
                         { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
                       ]

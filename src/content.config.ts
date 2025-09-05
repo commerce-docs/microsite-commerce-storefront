@@ -14,6 +14,7 @@ const prerequisiteSchema = zod
     sharepoint: zod.boolean().default(false).optional(),
     googledrive: zod.boolean().default(false).optional(),
     node: zod.boolean().default(false).optional(),
+    aemcli: zod.boolean().default(false).optional(),
     sidekick: zod.boolean().default(false).optional(),
     codesync: zod.boolean().default(false).optional(),
     commerce: zod.boolean().default(false).optional(),

@@ -67,6 +67,10 @@ The available scripts for running the project are defined in the `package.json` 
 1. Create a pull request to the `develop` branch of the `commerce-docs/microsite-commerce-storefront` repository.
 1. Wait for the PR to be reviewed and merged.
 
+### Publishing to production
+
+Content updates from merged PRs are published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) production site automatically by the nightly build job that runs M-F between 10 and 11pm CDT.  
+
 ## How to create a new docs page
 
 1. Create a new `.mdx` file in the `src/content/docs/<docs-directory>`.
