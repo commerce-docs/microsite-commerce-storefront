@@ -38,16 +38,52 @@ The following table contains the current available event names and their descrip
   ]}
 />
 
-## Example
+The following code shows an example implementation of payment method availability event handlers for the checkout page.
 
 ```javascript
-await initializeDropin(async () => {
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on(
+  'payment-services/method-available/checkout',
+  (code) => {
+    switch (code) {
+      case PaymentMethodCode.APPLE_PAY:
+        console.log("Apple Pay available for checkout page.");
+        break
+      case PaymentMethodCode.CREDIT_CARD:
+        console.log("Credit Card available for checkout page.");
+        break
+    }
+  },
+);
+```
+
+## Initialization example
+
+```javascript
+import { fetchPlaceholders } from '../commerce.js';
+import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
+import { getCookie } from '@dropins/tools/lib.js';
+import { initializers } from '@dropins/tools/initializer.js';
+
+const initializeDropin = async () => {
+  const labels = await fetchPlaceholders('placeholders/payment-services.json');
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
   const coreEndpoint = await getConfigValue('commerce-core-endpoint');
   const getUserTokenCookie = () => getCookie('auth_dropin_user_token');
 
   return initializers.mountImmediately(initialize, {
     apiUrl: coreEndpoint,
     getCustomerToken: getUserTokenCookie,
+    langDefinitions,
   });
-})();
+};
+
+await initializeDropin();
 ```
