@@ -209,10 +209,6 @@ async function config() {
                           link: '/setup/configuration/commerce-configuration/'
                         },
                         {
-                          label: 'Multistore setup',
-                          link: '/setup/configuration/multistore-setup/'
-                        },
-                        {
                           label: 'Content delivery network',
                           link: '/setup/configuration/content-delivery-network/'
                         },
@@ -221,14 +217,36 @@ async function config() {
                           link: '/setup/configuration/gated-content/'
                         },
                         {
-                          label: 'Storefront Compatibility Package',
+                          label: 'Data export validation',
+                          link: '/setup/discovery/data-export-validation/'
+                        },
+                        {
+                          label: 'Compatibility Package',
                           collapsed: true,
-                          autogenerate:
-                          {
-                            directory: '/setup/configuration/storefront-compatibility/',
-                          },
+                          items: [
+                            {
+                              label: 'Installation',
+                              link: '/setup/configuration/storefront-compatibility/install/'
+                            },
+                            {
+                              label: 'Adobe Commerce 2.4.7',
+                              link: '/setup/configuration/storefront-compatibility/v247/'
+                            },
+                            {
+                              label: 'Adobe Commerce 2.4.8',
+                              link: '/setup/configuration/storefront-compatibility/v248/'
+                            },
+                          ]
                         },
                       ]
+                    },
+                    {
+                      label: 'Multistore setup',
+                      link: '/setup/configuration/multistore-setup/'
+                    },
+                    {
+                      label: 'Luma Bridge Integration',
+                      link: '/setup/discovery/luma-bridge/'
                     },
                     {
                       label: 'Analytics',
