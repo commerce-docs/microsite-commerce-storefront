@@ -71,7 +71,7 @@ async function config() {
       '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
       '/dropins/user-account/useraccount-introduction': `${basePath}/dropins/user-account`,
       '/dropins/user-auth/userauth-introduction': `${basePath}/dropins/user-auth`,
-      '/faq': `${basePath}/troublshooting/faq`,
+      '/faq': `${basePath}/troubleshooting/faq`,
       '/get-started/launch-checklist': `${basePath}/launch`,
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
@@ -117,7 +117,32 @@ async function config() {
       '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
       '/get-started/overview/': `${basePath}/get-started/`,
       '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
-      '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`
+      '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
+      // Product Discovery container redirects
+      '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
+      '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/pagination`,
+      '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery`,
+      '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery`,
+      '/dropins/product-discovery/events': `${basePath}/dropins/product-discovery`,
+      // Cart tutorial redirects
+      '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
+      '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
+      '/dropins/cart/containers': `${basePath}/dropins/cart`,
+      // Dropin general redirects
+      '/dropins/all/anatomy': `${basePath}/dropins/all/introduction`,
+      // Merchant/Storefront Builder redirects
+      '/merchants/get-started/localization': `${basePath}/merchants/multistore/content-localization`,
+  
+      '/merchants/multistore/commerce-localization': `${basePath}/merchants/multistore/content-localization`,
+      '/merchants/multistore/localization': `${basePath}/merchants/multistore/content-localization`,
+      // SDK redirects
+      '/sdk/get-started/create-a-dropin': `${basePath}/dropins/all/creating`,
+      '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
+      '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
+      // Miscellaneous redirects
+      '/activate': `${basePath}/setup`,
+      '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
+      '/setup/aem-assets-integration': `${basePath}/merchants/storefront-builder/visual-editor`
     },
     integrations: [
       starlight({
