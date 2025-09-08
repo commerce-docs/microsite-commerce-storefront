@@ -42,9 +42,17 @@ function formatDropinName(name) {
 function replacePlaceholders(content, dropinName) {
     const formats = formatDropinName(dropinName);
 
-    return content
+    // Replace DROPIN_NAME in title with the full dropin name + page type (e.g., "Company Management overview")
+    let updatedContent = content.replace(/title: DROPIN_NAME (\w+)/g, (match, pageType) => {
+        return `title: ${formats.original} ${pageType}`;
+    });
+
+    // Replace remaining DROPIN_NAME instances with the full dropin name
+    updatedContent = updatedContent
         .replace(/DROPIN_NAME/g, formats.original)
         .replace(/DROPIN_PACKAGE/g, formats.kebab);
+
+    return updatedContent;
 }
 
 // Helper function to create directory if it doesn't exist
@@ -68,7 +76,7 @@ function copyTemplateFile(templatePath, targetPath, dropinName) {
 }
 
 // Helper function to update astro.config.mjs sidebar
-function updateSidebarConfig(dropinName, formats) {
+function updateSidebarConfig(dropinName, formats, isB2B) {
     try {
         const configPath = join(projectRoot, 'astro.config.mjs');
         const configContent = readFileSync(configPath, 'utf8');
@@ -76,25 +84,26 @@ function updateSidebarConfig(dropinName, formats) {
         // Create the new dropin sidebar entry
         const dropinLabel = formats.original;
         const dropinKebab = formats.kebab;
+        const basePath = isB2B ? 'dropins-b2b' : 'dropins';
 
         const newDropinEntry = `                    {
                       label: '${dropinLabel}',
                       collapsed: true,
                       items: [
-                        { label: 'Overview', link: '/dropins/${dropinKebab}/' },
-                        { label: 'Installation', link: '/dropins/${dropinKebab}/installation/' },
-                        { label: 'Initialization', link: '/dropins/${dropinKebab}/initialization/' },
-                        { label: 'Styles', link: '/dropins/${dropinKebab}/styles/' },
+                        { label: 'Overview', link: '/${basePath}/${dropinKebab}/overview/' },
+                        { label: 'Installation', link: '/${basePath}/${dropinKebab}/installation/' },
+                        { label: 'Initialization', link: '/${basePath}/${dropinKebab}/initialization/' },
                         {
                           label: 'Containers', collapsed: true,
                           items: [
-                            { label: 'Overview', link: '/dropins/${dropinKebab}/containers/container/' },
-                            { label: 'Slots', link: '/dropins/${dropinKebab}/containers/container-slots/' },
+                            { label: 'Overview', link: '/${basePath}/${dropinKebab}/containers/container/' },
+                            { label: 'Styles', link: '/${basePath}/${dropinKebab}/containers/styles/' },
+                            { label: 'Slots', link: '/${basePath}/${dropinKebab}/containers/container-slots/' },
                           ]
                         },
-                        { label: 'Data Events', link: '/dropins/${dropinKebab}/data-events/' },
-                        { label: 'Functions', link: '/dropins/${dropinKebab}/functions/' },
-                        { label: 'Dictionary', link: '/dropins/${dropinKebab}/dictionary/' },
+                        { label: 'Data events', link: '/${basePath}/${dropinKebab}/data-events/' },
+                        { label: 'Functions', link: '/${basePath}/${dropinKebab}/functions/' },
+                        { label: 'Dictionary', link: '/${basePath}/${dropinKebab}/dictionary/' },
                       ]
                     },`;
 
@@ -177,18 +186,23 @@ async function createDropin() {
 
         console.log('\n📄 Copying and customizing template files...');
 
-        // List of template files to copy (excluding order-of-usage.txt)
-        const templateFiles = [
-            'dropin-overview.mdx',
-            'dropin-installation.mdx',
-            'dropin-initialization.mdx',
-            'dropin-containers.mdx',
-            'dropin-styles.mdx',
-            'dropin-data-events.mdx',
-            'dropin-functions.mdx',
-            'dropin-dictionary.mdx',
-            'dropin-slots.mdx'
-        ];
+        // Read the order from order-of-usage.txt file
+        const orderFilePath = join(templatesPath, 'order-of-usage.txt');
+        const orderContent = readFileSync(orderFilePath, 'utf8');
+
+        // Parse the order file to extract template filenames in the correct order
+        const templateFiles = orderContent
+            .split('\n')
+            .filter(line => line.trim() && line.includes(':'))
+            .map(line => {
+                const match = line.match(/\d+\.\s+\w+.*?:\s*(.+\.mdx)/);
+                return match ? match[1] : null;
+            })
+            .filter(file => file !== null);
+
+        // Add dropin-slots.mdx and dropin-styles.mdx at the end (not in order file but needed)
+        templateFiles.push('dropin-slots.mdx');
+        templateFiles.push('dropin-styles.mdx');
 
         // Copy each template file
         for (const templateFile of templateFiles) {
@@ -196,11 +210,13 @@ async function createDropin() {
             let targetFileName = templateFile.replace('dropin-', '').replace('dropin', 'index');
             let targetPath;
 
-            // Put containers.mdx and slots.mdx inside the containers folder with simple names
+            // Put containers.mdx, slots.mdx, and styles.mdx inside the containers folder with simple names
             if (templateFile === 'dropin-containers.mdx') {
                 targetPath = join(containersPath, 'container.mdx');
             } else if (templateFile === 'dropin-slots.mdx') {
                 targetPath = join(containersPath, 'container-slots.mdx');
+            } else if (templateFile === 'dropin-styles.mdx') {
+                targetPath = join(containersPath, 'styles.mdx');
             } else {
                 targetPath = join(dropinPath, targetFileName);
             }
@@ -212,13 +228,9 @@ async function createDropin() {
             }
         }
 
-        // Only update sidebar for B2C dropins (B2B uses autogenerate)
-        if (!isB2B) {
-            console.log('\n📝 Updating sidebar configuration...');
-            updateSidebarConfig(formats.original, formats);
-        } else {
-            console.log('\n📝 B2B dropin will be automatically included in sidebar via autogenerate');
-        }
+        // Update sidebar for both B2C and B2B dropins
+        console.log('\n📝 Updating sidebar configuration...');
+        updateSidebarConfig(formats.original, formats, isB2B);
 
         console.log('\n✅ Dropin creation completed successfully!');
         console.log(`\n📂 Created dropin structure:`);
