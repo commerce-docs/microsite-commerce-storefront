@@ -585,7 +585,35 @@ async function config() {
                         { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
                     },
+                    {
+                      label: 'Company Management',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/company-management/' },
+                        { label: 'Installation', link: '/dropins/company-management/installation/' },
+                        { label: 'Initialization', link: '/dropins/company-management/initialization/' },
+                        { label: 'Styles', link: '/dropins/company-management/styles/' },
+                        {
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'Overview', link: '/dropins/company-management/containers/company-management-container/' },
+                          ]
+                        },
+                        { label: 'Data Events', link: '/dropins/company-management/data-events/' },
+                        { label: 'Functions', link: '/dropins/company-management/functions/' },
+                        { label: 'Dictionary', link: '/dropins/company-management/dictionary/' },
+                        { label: 'Slots', link: '/dropins/company-management/slots/' },
+                      ]
+                    },
+
                   ]
+                },
+                {
+                  label: 'Drop-ins - B2B',
+                  collapsed: true,
+                  autogenerate: {
+                    directory: '/dropins-b2b/'
+                  }
                 },
                 {
                   label: 'Troubleshooting',
