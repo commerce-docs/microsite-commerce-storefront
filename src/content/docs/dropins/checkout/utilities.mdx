@@ -9,7 +9,7 @@ tableOfContents:
 import Aside from '@components/Aside.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 
-This topic provides details and instructions for using the utility functions available in the checkout drop-in component. These functions were moved from the integration layer and are now publicly accessible within the checkout block from `@dropins/storefront-checkout/lib/aem.js`.
+This topic provides details and instructions for using the utility functions available in the checkout drop-in component. These functions were moved from the integration layer and are now publicly accessible within the checkout block from `@dropins/storefront-checkout/lib/utils.js`.
 
 <Aside type="note">
 
@@ -36,7 +36,7 @@ import {
   scrollToElement,
   transformAddressFormValuesToCartAddressInput,
   transformCartAddressToFormValues,
-} from '@dropins/storefront-checkout/lib/aem.js';
+} from '@dropins/storefront-checkout/lib/utils.js';
 ```
 
 ## API Functions
@@ -80,7 +80,7 @@ Returns a function that accepts address form changes and updates the cart accord
 ### Usage
 
 ```ts
-import { setAddressOnCart } from '@dropins/storefront-checkout/lib/aem.js';
+import { setAddressOnCart } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Set up debounced shipping address handler
 const handleShippingChange = setAddressOnCart({
@@ -131,7 +131,7 @@ Returns a function that estimates shipping costs when address data changes.
 ### Usage
 
 ```ts
-import { estimateShippingCost } from '@dropins/storefront-checkout/lib/aem.js';
+import { estimateShippingCost } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Set up shipping cost estimation
 const handleEstimateShipping = estimateShippingCost({ debounceMs: 300 });
@@ -152,10 +152,10 @@ addressForm.addEventListener('input', (event) => {
 
 ### isVirtualCart
 
-The `isVirtualCart` function checks if a cart contains only virtual products (no shipping required).
+The `isVirtualCart` function checks if a cart contains only virtual products (no shipping required). If no argument is provided, it reads the latest checkout data.
 
 ```ts
-export function isVirtualCart(data: Cart | null): boolean;
+export function isVirtualCart(data?: Cart | null): boolean;
 ```
 
 <OptionsTable
@@ -173,11 +173,14 @@ Returns `true` if the cart is virtual, `false` otherwise.
 ### Usage
 
 ```ts
-import { isVirtualCart } from '@dropins/storefront-checkout/lib/aem.js';
+import { isVirtualCart } from '@dropins/storefront-checkout/lib/utils.js';
 
-// Check if shipping is required
+// Check if shipping is required using explicit data
 const cartData = await getCart();
 const skipShipping = isVirtualCart(cartData);
+
+// Or check using the latest checkout data
+const skipShippingFromState = isVirtualCart();
 
 if (skipShipping) {
   // Hide shipping-related UI
@@ -208,7 +211,7 @@ Returns `true` if the cart is empty or null, `false` otherwise.
 ### Usage
 
 ```ts
-import { isEmptyCart } from '@dropins/storefront-checkout/lib/aem.js';
+import { isEmptyCart } from '@dropins/storefront-checkout/lib/utils.js';
 
 const cartData = await getCart();
 
@@ -245,7 +248,7 @@ Returns the selected shipping method object or `null` if none is selected.
 ### Usage
 
 ```ts
-import { getCartShippingMethod } from '@dropins/storefront-checkout/lib/aem.js';
+import { getCartShippingMethod } from '@dropins/storefront-checkout/lib/utils.js';
 
 const cartData = await getCart();
 const shippingMethod = getCartShippingMethod(cartData);
@@ -282,7 +285,7 @@ Returns the address object or `null` if no address is set.
 ### Usage
 
 ```ts
-import { getCartAddress } from '@dropins/storefront-checkout/lib/aem.js';
+import { getCartAddress } from '@dropins/storefront-checkout/lib/utils.js';
 
 const cartData = await getCart();
 const shippingAddress = getCartAddress(cartData, 'shipping');
@@ -316,7 +319,7 @@ Returns the selected payment method object or `null` if none is selected.
 ### Usage
 
 ```ts
-import { getCartPaymentMethod } from '@dropins/storefront-checkout/lib/aem.js';
+import { getCartPaymentMethod } from '@dropins/storefront-checkout/lib/utils.js';
 
 const cartData = await getCart();
 const paymentMethod = getCartPaymentMethod(cartData);
@@ -351,7 +354,7 @@ Returns a DocumentFragment containing the parsed HTML.
 ### Usage
 
 ```ts
-import { createFragment } from '@dropins/storefront-checkout/lib/aem.js';
+import { createFragment } from '@dropins/storefront-checkout/lib/utils.js';
 
 const html = `
   <div class="checkout-step">
@@ -391,7 +394,7 @@ Returns a function that queries elements within the given fragment.
 ### Usage
 
 ```ts
-import { createFragment, createScopedSelector } from '@dropins/storefront-checkout/lib/aem.js';
+import { createFragment, createScopedSelector } from '@dropins/storefront-checkout/lib/utils.js';
 
 const html = `
   <div class="checkout-step">
@@ -439,7 +442,7 @@ Returns `true` if the form is valid, `false` otherwise.
 ### Usage
 
 ```ts
-import { validateForm } from '@dropins/storefront-checkout/lib/aem.js';
+import { validateForm } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Validate checkout form before submission
 const isShippingValid = validateForm('shipping-form', shippingFormRef);
@@ -479,7 +482,7 @@ The function does not return a value; it modifies the document head.
 ### Usage
 
 ```ts
-import { createMetaTag } from '@dropins/storefront-checkout/lib/aem.js';
+import { createMetaTag } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Set checkout-specific meta tags
 createMetaTag('description', 'Complete your purchase securely', 'name');
@@ -509,7 +512,7 @@ The function does not return a value; it sets multiple meta tags.
 ### Usage
 
 ```ts
-import { setMetaTags } from '@dropins/storefront-checkout/lib/aem.js';
+import { setMetaTags } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Set meta tags for checkout page
 setMetaTags('Checkout');
@@ -540,7 +543,7 @@ The function does not return a value; it performs scrolling and focusing.
 ### Usage
 
 ```ts
-import { scrollToElement } from '@dropins/storefront-checkout/lib/aem.js';
+import { scrollToElement } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Scroll to error field
 const errorField = document.querySelector('.field-error');
@@ -580,7 +583,7 @@ Returns a formatted address input object for cart API calls.
 ### Usage
 
 ```ts
-import { transformAddressFormValuesToCartAddressInput } from '@dropins/storefront-checkout/lib/aem.js';
+import { transformAddressFormValuesToCartAddressInput } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Transform form data for API
 const formData = getFormValues(addressForm);
@@ -615,7 +618,7 @@ Returns a form-compatible object with address data.
 ### Usage
 
 ```ts
-import { transformCartAddressToFormValues, getCartAddress } from '@dropins/storefront-checkout/lib/aem.js';
+import { transformCartAddressToFormValues, getCartAddress } from '@dropins/storefront-checkout/lib/utils.js';
 
 // Pre-populate form with existing address
 const cartData = await getCart();
@@ -640,7 +643,7 @@ import {
   transformCartAddressToFormValues,
   getCartAddress,
   validateForm
-} from '@dropins/storefront-checkout/lib/aem.js';
+} from '@dropins/storefront-checkout/lib/utils.js';
 
 // Set up address form handling
 const handleAddressChange = setAddressOnCart({
@@ -674,7 +677,7 @@ import {
   isEmptyCart,
   getCartShippingMethod,
   getCartPaymentMethod
-} from '@dropins/storefront-checkout/lib/aem.js';
+} from '@dropins/storefront-checkout/lib/utils.js';
 
 function updateCheckoutUI(cartData) {
   // Handle empty cart
@@ -704,7 +707,7 @@ import {
   createFragment,
   createScopedSelector,
   scrollToElement
-} from '@dropins/storefront-checkout/lib/aem.js';
+} from '@dropins/storefront-checkout/lib/utils.js';
 
 function createCheckoutStep(stepHtml, stepName) {
   const fragment = createFragment(stepHtml);
