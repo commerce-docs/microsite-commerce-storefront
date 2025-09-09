@@ -22,7 +22,6 @@ const basePath = isProduction
     ? process.env.VITE_GITHUB_BASE_PATH
     : '';
 
-
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
   ? fs.readdirSync(sdkComponentsDir).filter(file => file.endsWith('.mdx'))
@@ -594,11 +593,6 @@ async function config() {
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/overview/' },
 
-
-
-
-
-
                   ]
                 },
                 {
@@ -1073,6 +1067,5 @@ async function config() {
     ]
   });
 }
-
 
 export default config();

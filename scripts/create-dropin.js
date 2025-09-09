@@ -10,41 +10,47 @@ const __dirname = dirname(__filename);
 
 // Get the project root directory (two levels up from scripts/)
 const projectRoot = join(__dirname, '..');
-const registryPath = join(projectRoot, 'dropin-registry.json');
+// Auto-generate registry from existing dropins instead of maintaining a file
+function generateRegistry() {
+    const registry = { dropins: {} };
 
-// Registry management functions
-function loadRegistry() {
-    try {
-        if (existsSync(registryPath)) {
-            return JSON.parse(readFileSync(registryPath, 'utf8'));
-        }
-    } catch (error) {
-        console.log('⚠️  Could not load dropin registry, creating new one');
-    }
-    return { dropins: {} };
+    // Scan existing dropins and build registry
+    const dropins = getExistingDropins();
+    dropins.forEach(dropin => {
+        registry.dropins[dropin.name] = {
+            label: dropin.name, // Use folder name as display name
+            isB2B: dropin.type === 'B2B',
+            createdAt: new Date().toISOString() // Use current time as fallback
+        };
+    });
+
+    return registry;
 }
 
-function saveRegistry(registry) {
-    try {
-        writeFileSync(registryPath, JSON.stringify(registry, null, 2));
-    } catch (error) {
-        console.log('⚠️  Could not save dropin registry:', error.message);
-    }
+function getDropinDisplayName(folderName) {
+    // Convert folder name to display name (capitalize first letter)
+    return folderName.charAt(0).toUpperCase() + folderName.slice(1);
 }
 
 function registerDropin(dropinName, isB2B = false) {
-    const registry = loadRegistry();
-    registry.dropins[dropinName] = {
-        label: dropinName,
-        isB2B: isB2B,
-        createdAt: new Date().toISOString()
-    };
-    saveRegistry(registry);
+    // No longer needed - registry is auto-generated
+    console.log(`📝 Dropin "${dropinName}" will be automatically registered in the generated registry`);
 }
 
 function getDropinStructure(dropinName) {
-    const registry = loadRegistry();
-    return registry.dropins[dropinName] || null;
+    // Check if dropin exists in file system
+    const dropins = getExistingDropins();
+    const dropin = dropins.find(d => d.name === dropinName);
+
+    if (dropin) {
+        return {
+            label: getDropinDisplayName(dropinName),
+            isB2B: dropin.type === 'B2B',
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    return null;
 }
 
 // Create readline interface for user input
@@ -467,7 +473,7 @@ function getDropinPages(dropinPath) {
     return pages;
 }
 
-// Conservative dropin removal - only removes sidebar entry, no file system changes
+// Precise dropin removal using brace counting - isolates dropin object boundaries
 function removeSidebarEntry(dropinName, isB2B) {
     try {
         const configPath = join(projectRoot, 'astro.config.mjs');
@@ -475,21 +481,146 @@ function removeSidebarEntry(dropinName, isB2B) {
 
         console.log(`🔍 Looking for sidebar entry: "${dropinName}"`);
 
-        // Simple approach: just remove the sidebar entry and let the user handle file cleanup
-        // This prevents the aggressive regex from damaging the config file
-        if (configContent.includes(`label: '${dropinName}'`)) {
-            console.log(`⚠️  Found "${dropinName}" in sidebar - manual removal required`);
-            console.log(`📝 Please manually remove the "${dropinName}" entry from the sidebar in astro.config.mjs`);
-            console.log(`💡 Tip: Look for the section with label: '${dropinName}' and remove the entire object`);
-        } else {
+        // Check if dropin exists in sidebar
+        if (!configContent.includes(`label: '${dropinName}'`)) {
             console.log(`✅ "${dropinName}" not found in sidebar`);
+            return;
         }
 
-        // Remove from registry
-        const registry = loadRegistry();
-        delete registry.dropins[dropinName];
-        saveRegistry(registry);
-        console.log(`✅ Removed from dropin registry`);
+        console.log(`📍 Found "${dropinName}" in sidebar, locating object boundaries...`);
+
+        const lines = configContent.split('\n');
+        let labelLineIndex = -1;
+
+        // Find the line with the dropin label
+        console.log(`🔍 Searching for label: '${dropinName}' in ${lines.length} lines...`);
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(`label: '${dropinName}'`)) {
+                labelLineIndex = i;
+                console.log(`📍 Found label line ${i + 1}: "${lines[i].trim()}"`);
+                console.log(`📍 Context around label line:`);
+                for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) {
+                    const marker = j === i ? ">>> " : "    ";
+                    console.log(`${marker}${j + 1}: "${lines[j]}"`);
+                }
+                break;
+            }
+        }
+
+        if (labelLineIndex === -1) {
+            console.log(`⚠️  Could not find label line for "${dropinName}"`);
+            return;
+        }
+
+        // Find the parent opening brace by going backwards from the label line
+        // Look for the opening brace that starts the dropin object (should be just above the label)
+        let openBraceIndex = -1;
+
+        console.log(`🔍 Searching backwards from line ${labelLineIndex + 1} for opening brace...`);
+        for (let i = labelLineIndex; i >= 0; i--) {
+            console.log(`🔍 Checking line ${i + 1}: "${lines[i]}" (trimmed: "${lines[i].trim()}")`);
+            if (lines[i].trim() === '{') {
+                openBraceIndex = i;
+                console.log(`📍 Found parent opening brace at line ${i + 1}: "${lines[i]}"`);
+                console.log(`📍 Context around opening brace:`);
+                for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) {
+                    const marker = j === i ? ">>> " : "    ";
+                    console.log(`${marker}${j + 1}: "${lines[j]}"`);
+                }
+                break;
+            }
+        }
+
+        if (openBraceIndex === -1) {
+            console.log(`⚠️  Could not find opening brace for "${dropinName}"`);
+            return;
+        }
+
+        // Count braces to find the matching closing brace
+        let braceCount = 0;
+        let closeBraceIndex = -1;
+
+        console.log(`📍 Starting brace count from line ${openBraceIndex + 1}`);
+
+        for (let i = openBraceIndex; i < lines.length; i++) {
+            const line = lines[i];
+            const openBraces = (line.match(/\{/g) || []).length;
+            const closeBraces = (line.match(/\}/g) || []).length;
+
+            braceCount += openBraces - closeBraces;
+
+            console.log(`📍 Line ${i + 1}: "${line.trim()}" - Open: ${openBraces}, Close: ${closeBraces}, Count: ${braceCount}`);
+
+            if (braceCount === 0 && i > openBraceIndex) {
+                closeBraceIndex = i;
+                console.log(`📍 Found closing brace at line ${i + 1}`);
+                break;
+            }
+        }
+
+        if (closeBraceIndex === -1) {
+            console.log(`⚠️  Could not find closing brace for "${dropinName}"`);
+            return;
+        }
+
+        console.log(`📍 Dropin object spans lines ${openBraceIndex + 1} to ${closeBraceIndex + 1}`);
+
+        // Check if there's a comma after the closing brace that needs to be removed
+        let endIndex = closeBraceIndex;
+        if (closeBraceIndex + 1 < lines.length && lines[closeBraceIndex + 1].trim() === ',') {
+            endIndex = closeBraceIndex + 1;
+            console.log(`📍 Including trailing comma at line ${endIndex + 1}`);
+        } else if (lines[closeBraceIndex].includes('},')) {
+            console.log(`📍 Comma is on the same line as closing brace`);
+        }
+
+        console.log(`📍 Final removal range: lines ${openBraceIndex + 1} to ${endIndex + 1}`);
+        console.log(`📍 Lines to be removed:`);
+        for (let i = openBraceIndex; i <= endIndex; i++) {
+            console.log(`  ${i + 1}: "${lines[i]}"`);
+        }
+
+        // Remove the dropin object by splicing out the lines
+        const beforeLines = lines.slice(0, openBraceIndex);
+        const afterLines = lines.slice(endIndex + 1);
+        const newLines = beforeLines.concat(afterLines);
+
+        console.log(`🔍 File modification details:`);
+        console.log(`  Original lines: ${lines.length}`);
+        console.log(`  Before lines: ${beforeLines.length}`);
+        console.log(`  After lines: ${afterLines.length}`);
+        console.log(`  New total lines: ${newLines.length}`);
+        console.log(`  Lines to remove: ${endIndex - openBraceIndex + 1}`);
+
+        const newContent = newLines.join('\n');
+
+        // Write the updated content
+        console.log(`🔍 Writing updated content to file...`);
+        writeFileSync(configPath, newContent);
+
+        const removedLines = lines.length - newLines.length;
+        console.log(`✅ Successfully removed "${dropinName}" from sidebar (${removedLines} lines removed)`);
+
+        // Registry is auto-generated, no need to manually remove entries
+        console.log(`✅ Dropin will be automatically removed from generated registry`);
+
+        // Final verification
+        console.log(`🔍 Reading file back for verification...`);
+        const finalContent = readFileSync(configPath, 'utf8');
+        const finalLines = finalContent.split('\n');
+        console.log(`🔍 Final file has ${finalLines.length} lines (was ${lines.length})`);
+
+        if (finalContent.includes(`label: '${dropinName}'`)) {
+            console.log(`❌ WARNING: "${dropinName}" still present after removal - manual cleanup may be needed`);
+            console.log(`🔍 Searching for remaining references:`);
+            finalLines.forEach((line, index) => {
+                if (line.includes(dropinName)) {
+                    console.log(`  Line ${index + 1}: "${line.trim()}"`);
+                }
+            });
+        } else {
+            console.log(`✅ Verified: "${dropinName}" completely removed from sidebar`);
+        }
 
     } catch (error) {
         console.log(`⚠️  Could not remove sidebar entry: ${error.message}`);
@@ -788,10 +919,15 @@ async function removeDropin() {
 
                 // Remove sidebar entry
                 const isB2B = selectedDropin.type === 'B2B';
-                removeSidebarEntry(selectedDropin.name, isB2B);
+
+                // Get the display name using the new auto-generated approach
+                const displayName = getDropinDisplayName(selectedDropin.name);
+                console.log(`🔍 Using display name: "${displayName}" (from folder: "${selectedDropin.name}")`);
+
+                removeSidebarEntry(displayName, isB2B);
 
                 // Run cleanup to remove any leftover fragments
-                cleanupLeftoverSidebarFragments(selectedDropin.name);
+                cleanupLeftoverSidebarFragments(displayName);
 
                 console.log(`\n✅ Successfully removed "${selectedDropin.name}" dropin!`);
             } catch (error) {
