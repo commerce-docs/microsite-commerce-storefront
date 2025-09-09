@@ -254,7 +254,7 @@ async function config() {
                   ]
                 },
                 {
-                  label: 'Drop-ins',
+                  label: 'Drop-ins for B2C',
                   collapsed: true,
                   items: [
                     {
@@ -589,72 +589,13 @@ async function config() {
                   ]
                 },
                 {
-                  label: 'Drop-ins - B2B',
+                  label: 'Drop-ins for B2B',
                   collapsed: true,
                   items: [
-                    {
-                      label: 'Quote Management',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/quote-management/overview/' },
-                        { label: 'Installation', link: '/dropins-b2b/quote-management/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'Overview', link: '/dropins-b2b/quote-management/containers/container/' },
-                            { label: 'Styles', link: '/dropins-b2b/quote-management/containers/styles/' },
-                            { label: 'Slots', link: '/dropins-b2b/quote-management/containers/container-slots/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/quote-management/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
-                      ]
-                    },
-
-                    {
-                      label: 'Company Management',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/company-management/' },
-                        { label: 'Installation', link: '/dropins-b2b/company-management/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'Overview', link: '/dropins-b2b/company-management/containers/container/' },
-                            { label: 'Styles', link: '/dropins-b2b/company-management/containers/styles/' },
-                            { label: 'Slots', link: '/dropins-b2b/company-management/containers/container-slots/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/company-management/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/company-management/dictionary/' },
-                      ]
-                    },
+                    { label: 'Overview', link: '/dropins-b2b/overview/' },
 
 
-                                      {
-                      label: 'Quote Management',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/quote-management/overview/' },
-                        { label: 'Installation', link: '/dropins-b2b/quote-management/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'Overview', link: '/dropins-b2b/quote-management/containers/container/' },
-                            { label: 'Styles', link: '/dropins-b2b/quote-management/containers/styles/' },
-                            { label: 'Slots', link: '/dropins-b2b/quote-management/containers/container-slots/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/quote-management/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
-                      ]
-                    },
+
 
 
 
