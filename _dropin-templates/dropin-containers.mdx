@@ -8,7 +8,7 @@ sidebar:
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The ContainerName container [describe what the container does]. You can customize it with slots, run separate instances, and it takes care of loading, errors, and real-time updates.
+The ContainerName container provides functionality for the DROPIN_NAME drop-in component. You can customize it with slots, run separate instances, and it takes care of loading, errors, and real-time updates.
 
 ## Import
 
@@ -30,7 +30,7 @@ The `ContainerName` container provides the following configuration options:
   ]}
 />
 
-## Basic Usage
+## Basic usage
 
 ```javascript
 // Basic container usage
@@ -50,9 +50,22 @@ await provider.render(ContainerName, {
 
 ## Slots
 
-The `ContainerName` container may support customization slots. For detailed information about available slots and their usage, see [DROPIN_NAME Slots](/dropins/DROPIN_PACKAGE/slots/).
+The `ContainerName` container supports customization slots for adding or modifying content within specific sections. Each slot receives a context object (`ctx`) that provides:
 
-### Example Slot Usage
+- **`ctx.data`**: Current component data and state
+- **`ctx.appendChild(element)`**: Method to add elements to the slot
+- **`ctx.replaceWith(element)`**: Method to replace slot content
+- **`ctx.onChange(callback)`**: Method to listen for data changes
+
+### Available slots
+
+| Slot | Purpose | Required |
+|------|---------|----------|
+| Header | Custom header content | No |
+| Footer | Custom footer content | No |
+| SlotName | Custom slot functionality | No |
+
+### Basic slot usage
 
 ```javascript
 slots: {
@@ -74,16 +87,35 @@ slots: {
 }
 ```
 
+### Dynamic content updates
+
+Slots can respond to data changes using the `ctx.onChange` method:
+
+```javascript
+slots: {
+  Header: (ctx) => {
+    const header = document.createElement('div');
+    header.innerHTML = `<h2>Items: ${ctx.data?.items?.length || 0}</h2>`;
+    ctx.appendChild(header);
+    
+    // Update when data changes
+    ctx.onChange((next) => {
+      header.innerHTML = `<h2>Items: ${next.data?.items?.length || 0}</h2>`;
+    });
+  }
+}
+```
+
 ## Features
 
-### Automatic Loading States
+### Automatic loading states
 
 - **Skeleton Loading**: Configurable skeleton items while fetching data
 - **Loading Indicators**: Automatic loading state management
 - **Error Handling**: Graceful error display with user-friendly messages
 - **Empty States**: Appropriate messaging when no data is available
 
-### Real-time Updates
+### Real-time updates
 
 The container automatically updates when events are received:
 
@@ -92,9 +124,36 @@ The container automatically updates when events are received:
 3. **Data Complete**: Removes loading state
 4. **Error Handling**: Displays error state if applicable
 
-## Integration Examples
+## Styling
 
-### Basic Setup
+You can customize the `ContainerName` container appearance by overriding CSS classes. The quickest way to identify classes to override is to inspect the container UI in your browser's developer tools.
+
+### CSS class override example
+
+```css title="ContainerName.css"
+.ContainerName-component__heading {
+  color: var(--color-positive-800);
+}
+
+.ContainerName-component__wrapper {
+  text-align: center;
+}
+
+.ContainerName-component__footer {
+  row-gap: var(--spacing-small);
+}
+```
+
+### Styling best practices
+
+1. **Use Design Tokens**: When you see design tokens in CSS rules, change the token's value rather than removing the token
+2. **BEM Naming**: We use BEM naming convention for CSS classes
+3. **Component-Specific Files**: Create separate CSS files for each component for easier maintenance
+4. **Browser Dev Tools**: Right-click and inspect elements to identify CSS classes to override
+
+## Integration examples
+
+### Basic setup
 
 ```javascript
 await provider.render(ContainerName, {
@@ -103,7 +162,7 @@ await provider.render(ContainerName, {
 })($containerElement);
 ```
 
-### Advanced Configuration
+### Advanced configuration
 
 ```javascript
 await provider.render(ContainerName, {
@@ -124,18 +183,24 @@ await provider.render(ContainerName, {
 })($containerElement);
 ```
 
-## Best Practices
+## Best practices
 
-1. **Scope Management**: Use unique scope identifiers for multiple instances
-2. **Slot Customization**: Use slots for merchant-specific customization
-3. **Performance**: Use lazy loading for off-screen containers
-4. **Error Handling**: Let the container handle errors automatically
-5. **Real-time Updates**: Let the container handle updates automatically
+1. **Scope management**: Use unique scope identifiers for multiple instances
+2. **Slot customization**: Use slots for merchant-specific customization
+3. **Element Creation**: Always create DOM elements and append them using `ctx.appendChild()`
+4. **CSS classes**: Use BEM naming convention for custom slot styles
+5. **Design tokens**: Use design tokens in CSS overrides for maintainability
+6. **Performance**: Use lazy loading for off-screen containers
+7. **Error handling**: Let the container handle errors automatically
+8. **Real-time updates**: Let the container handle updates automatically
 
 ## Troubleshooting
 
-### Common Issues
+### Common issues
 
-1. **Container Not Updating**: Check scope configuration and event handling
-2. **Slots Not Rendering**: Ensure the element is added to the slot using `ctx.appendChild()`, `ctx.replaceWith()`, etc.
-3. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
+1. **Container not updating**: Check scope configuration and event handling
+2. **Slots not rendering**: Ensure the element is added to the slot using `ctx.appendChild()`, `ctx.replaceWith()`, etc.
+3. **Styling not applied**: Check CSS class names and specificity
+4. **Event handlers not working**: Verify event listeners are added to the correct elements
+5. **Dynamic updates failing**: Make sure you're using `ctx.onChange()` for data-dependent content
+6. **Styling conflicts**: Use specific CSS classes to avoid conflicts
