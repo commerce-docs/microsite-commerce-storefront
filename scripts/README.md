@@ -25,12 +25,13 @@ The CLI will ask for:
 
 ```
 [dropin-folder]/
-├── containers/
-│   ├── container.mdx
-│   └── container-slots.mdx
 ├── overview.mdx
 ├── installation.mdx
 ├── initialization.mdx
+├── containers/
+│   ├── container.mdx
+│   └── container-slots.mdx
+
 ├── styles.mdx
 ├── data-events.mdx
 ├── functions.mdx
@@ -49,8 +50,11 @@ The CLI can remove:
 - ✅ **Replaces placeholders** (`DROPIN_NAME`, `DROPIN_PACKAGE`)
 - ✅ **Updates sidebar** (both B2C and B2B dropins)
 - ✅ **Creates containers** folder with container docs
-- ✅ **Removes dropins** and their sidebar entries
+- ✅ **Removes dropins** and their sidebar entries completely
 - ✅ **Removes individual pages** from dropins
+- ✅ **Alphabetical insertion** - new dropins are placed in alphabetical order
+- ✅ **Robust removal** - completely removes dropin objects from sidebar
+- ✅ **No merge conflicts** - registry is auto-generated from file system
 
 ## Examples
 
@@ -121,6 +125,14 @@ Select option (1 or 2): 1
 ✅ Removed sidebar entry for "company-management"
 ✅ Successfully removed "company-management" dropin!
 ```
+
+## Reliability
+
+The CLI has been extensively tested and improved to ensure:
+- **Complete removal** - no leftover sidebar entries or fragments
+- **Alphabetical ordering** - new dropins are inserted in the correct position
+- **No merge conflicts** - registry is generated dynamically from the file system
+- **Comprehensive debugging** - detailed output shows exactly what's happening
 
 ## Next Steps
 
