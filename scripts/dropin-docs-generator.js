@@ -558,7 +558,7 @@ async function createDropin() {
             let targetPath;
 
             // Handle container templates
-            if (templateFile === 'dropin-containers.mdx') {
+            if (templateFile === 'dropin-container.mdx') {
                 targetPath = join(containersPath, 'container-one.mdx');
             } else if (templateFile === 'dropin-containers-two.mdx') {
                 targetPath = join(containersPath, 'container-two.mdx');
