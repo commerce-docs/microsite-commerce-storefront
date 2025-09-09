@@ -84,18 +84,48 @@ function formatDropinName(name) {
 }
 
 // Helper function to replace placeholders in file content
-function replacePlaceholders(content, dropinName) {
+function replacePlaceholders(content, dropinName, isB2B = false) {
     const formats = formatDropinName(dropinName);
+    const basePath = isB2B ? 'dropins-b2b' : 'dropins';
 
     // Replace DROPIN_NAME in title with the full dropin name + page type (e.g., "Company Management overview")
     let updatedContent = content.replace(/title: DROPIN_NAME (\w+)/g, (match, pageType) => {
         return `title: ${formats.original} ${pageType}`;
     });
 
-    // Replace remaining DROPIN_NAME instances with the full dropin name
+    // Replace all placeholders with their resolved values
     updatedContent = updatedContent
         .replace(/DROPIN_NAME/g, formats.original)
-        .replace(/DROPIN_PACKAGE/g, formats.kebab);
+        .replace(/DROPIN_PACKAGE/g, formats.kebab)
+        .replace(/DROPINS_BASE_PATH/g, basePath)
+        // Replace common placeholder patterns that developers will need to customize
+        .replace(/SLOT_NAME/g, 'SLOT_NAME') // Keep as placeholder for manual customization
+        .replace(/FUNCTION_NAME/g, 'FUNCTION_NAME') // Keep as placeholder for manual customization
+        .replace(/COMMERCE_FEATURE_NAME/g, 'COMMERCE_FEATURE_NAME') // Keep as placeholder for manual customization
+        .replace(/CONTAINER_NAME-COMPONENT_NAME__ELEMENT_NAME/g, `${formats.kebab}-component__element`) // Provide example structure
+        .replace(/ContainerOne/g, 'ContainerOne') // Keep as placeholder for manual customization
+        .replace(/ContainerTwo/g, 'ContainerTwo') // Keep as placeholder for manual customization
+        .replace(/CSS_PROPERTY: VALUE/g, 'property: value') // Provide example structure
+        .replace(/PROPERTY_NAME/g, 'propertyName') // Provide example structure
+        .replace(/PARAMETER_NAME/g, 'parameterName') // Provide example structure
+        .replace(/PARAMETER_TYPE/g, 'ParameterType') // Provide example structure
+        .replace(/RETURN_TYPE/g, 'ReturnType') // Provide example structure
+        .replace(/ELEMENT_NAME/g, 'elementName') // Provide example structure
+        .replace(/ELEMENT_TYPE/g, 'elementType') // Provide example structure
+        .replace(/KEY_NAME: VALUE/g, 'keyName: value') // Provide example structure
+        .replace(/ISSUE_NAME/g, 'ISSUE_NAME') // Keep as placeholder for manual customization
+        .replace(/PRACTICE_NAME/g, 'PRACTICE_NAME') // Keep as placeholder for manual customization
+        .replace(/FEATURE_NAME/g, 'FEATURE_NAME') // Keep as placeholder for manual customization
+        .replace(/SCOPE_NAME/g, 'scopeName') // Provide example structure
+        .replace(/VALUE_OR_FUNCTION/g, 'valueOrFunction') // Provide example structure
+        .replace(/TYPE/g, 'Type') // Provide example structure
+        .replace(/Yes\/No/g, 'Yes/No') // Keep as placeholder for manual customization
+        .replace(/DESCRIPTION/g, 'DESCRIPTION') // Keep as placeholder for manual customization
+        .replace(/CONDITION/g, 'condition') // Provide example structure
+        .replace(/CUSTOM_SLOT_NAME/g, 'customSlotName') // Provide example structure
+        .replace(/INSPECTION_STEP/g, 'INSPECTION_STEP') // Keep as placeholder for manual customization
+        .replace(/IDENTIFICATION_STEP/g, 'IDENTIFICATION_STEP') // Keep as placeholder for manual customization
+        .replace(/OVERRIDE_STEP/g, 'OVERRIDE_STEP'); // Keep as placeholder for manual customization
 
     return updatedContent;
 }
@@ -109,10 +139,10 @@ function ensureDir(dirPath) {
 }
 
 // Helper function to copy and customize template file
-function copyTemplateFile(templatePath, targetPath, dropinName) {
+function copyTemplateFile(templatePath, targetPath, dropinName, isB2B = false) {
     try {
         const content = readFileSync(templatePath, 'utf8');
-        const customizedContent = replacePlaceholders(content, dropinName);
+        const customizedContent = replacePlaceholders(content, dropinName, isB2B);
         writeFileSync(targetPath, customizedContent);
         console.log(`✓ Created file: ${targetPath}`);
     } catch (error) {
@@ -141,7 +171,9 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
                         {
                           label: 'Containers', collapsed: true,
                           items: [
-                            { label: 'ContainerName', link: '/${basePath}/${dropinKebab}/containers/container-name/' },
+                            { label: 'Overview', link: '/${basePath}/${dropinKebab}/containers/' },
+                            { label: 'ContainerOne', link: '/${basePath}/${dropinKebab}/containers/container-one/' },
+                            { label: 'ContainerTwo', link: '/${basePath}/${dropinKebab}/containers/container-two/' },
                           ]
                         },
                         { label: 'Data events', link: '/${basePath}/${dropinKebab}/data-events/' },
@@ -507,11 +539,15 @@ async function createDropin() {
         const templateFiles = orderContent
             .split('\n')
             .filter(line => line.trim() && line.includes(':'))
-            .map(line => {
-                const match = line.match(/\d+\.\s+\w+.*?:\s*(.+\.mdx)/);
-                return match ? match[1] : null;
+            .flatMap(line => {
+                const match = line.match(/\d+\.\s+\w+.*?:\s*(.+)/);
+                if (match) {
+                    // Handle multiple templates separated by commas
+                    return match[1].split(',').map(file => file.trim());
+                }
+                return [];
             })
-            .filter(file => file !== null);
+            .filter(file => file !== null && file.endsWith('.mdx'));
 
         // Note: dropin-slots.mdx and dropin-styles.mdx are no longer included in new dropins
 
@@ -521,19 +557,24 @@ async function createDropin() {
             let targetFileName = templateFile.replace('dropin-', '').replace('dropin', 'index');
             let targetPath;
 
-            // Put containers.mdx inside the containers folder with simple name
+            // Handle container templates
             if (templateFile === 'dropin-containers.mdx') {
-                targetPath = join(containersPath, 'container-name.mdx');
+                targetPath = join(containersPath, 'container-one.mdx');
+            } else if (templateFile === 'dropin-containers-two.mdx') {
+                targetPath = join(containersPath, 'container-two.mdx');
+            } else if (templateFile === 'container-overview.mdx') {
+                targetPath = join(containersPath, 'index.mdx');
             } else {
                 targetPath = join(dropinPath, targetFileName);
             }
 
             if (existsSync(templatePath)) {
-                copyTemplateFile(templatePath, targetPath, formats.original);
+                copyTemplateFile(templatePath, targetPath, formats.original, isB2B);
             } else {
                 console.log(`⚠️  Template file not found: ${templatePath}`);
             }
         }
+
 
         // Update sidebar for both B2C and B2B dropins
         console.log('\n📝 Updating sidebar configuration...');
@@ -813,7 +854,9 @@ function cleanupLeftoverSidebarFragments(dropinName) {
             new RegExp(`^\\s*{ label: 'Data events', link: '/dropins/${dropinSlug}/data-events/' },?\\s*\\n`, 'gm'),
             new RegExp(`^\\s*{ label: 'Functions', link: '/dropins/${dropinSlug}/functions/' },?\\s*\\n`, 'gm'),
             new RegExp(`^\\s*{ label: 'Dictionary', link: '/dropins/${dropinSlug}/dictionary/' },?\\s*\\n`, 'gm'),
-            new RegExp(`^\\s*{ label: 'ContainerName', link: '/dropins/${dropinSlug}/containers/container-name/' },?\\s*\\n`, 'gm'),
+            new RegExp(`^\\s*{ label: 'Overview', link: '/dropins/${dropinSlug}/containers/' },?\\s*\\n`, 'gm'),
+            new RegExp(`^\\s*{ label: 'ContainerOne', link: '/dropins/${dropinSlug}/containers/container-one/' },?\\s*\\n`, 'gm'),
+            new RegExp(`^\\s*{ label: 'ContainerTwo', link: '/dropins/${dropinSlug}/containers/container-two/' },?\\s*\\n`, 'gm'),
             new RegExp(`^\\s*{ label: 'Styles', link: '/dropins/${dropinSlug}/containers/container-styles/' },?\\s*\\n`, 'gm'),
             new RegExp(`^\\s*{ label: 'Slots', link: '/dropins/${dropinSlug}/containers/container-slots/' },?\\s*\\n`, 'gm'),
             new RegExp(`^\\s*{ label: 'Overview', link: '/dropins/${dropinSlug}/overview/' },?\\s*\\n`, 'gm'),
