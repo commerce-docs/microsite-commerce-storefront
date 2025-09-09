@@ -592,62 +592,6 @@ async function config() {
                   collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/overview/' },
-                    {
-                      label: 'Cont',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/cont/overview/' },
-                        { label: 'Installation', link: '/dropins-b2b/cont/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/cont/initialization/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'ContainerName', link: '/dropins-b2b/cont/containers/container-name/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/cont/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/cont/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/cont/dictionary/' },
-                      ]
-                    },
-                    {
-                      label: 'Containers Test',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/containers-test/overview/' },
-                        { label: 'Installation', link: '/dropins-b2b/containers-test/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/containers-test/initialization/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'ContainerName', link: '/dropins-b2b/containers-test/containers/container-name/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/containers-test/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/containers-test/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/containers-test/dictionary/' },
-                      ]
-                    },
-                    {
-                      label: 'Slots Test',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins-b2b/slots-test/overview/' },
-                        { label: 'Installation', link: '/dropins-b2b/slots-test/installation/' },
-                        { label: 'Initialization', link: '/dropins-b2b/slots-test/initialization/' },
-                        {
-                          label: 'Containers', collapsed: false,
-                          items: [
-                            { label: 'ContainerName', link: '/dropins-b2b/slots-test/containers/container-name/' },
-                            { label: 'Styles', link: '/dropins-b2b/slots-test/containers/container-styles/' },
-                            { label: 'Slots', link: '/dropins-b2b/slots-test/containers/container-slots/' },
-                          ]
-                        },
-                        { label: 'Data events', link: '/dropins-b2b/slots-test/data-events/' },
-                        { label: 'Functions', link: '/dropins-b2b/slots-test/functions/' },
-                        { label: 'Dictionary', link: '/dropins-b2b/slots-test/dictionary/' },
-                      ]
-                    }
                   ]
                 },
                 {
