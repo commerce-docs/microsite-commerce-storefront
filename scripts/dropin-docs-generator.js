@@ -657,7 +657,7 @@ function getDropinPages(dropinPath) {
 }
 
 // Precise dropin removal using brace counting - isolates dropin object boundaries
-function removeSidebarEntry(dropinName, isB2B) {
+function deleteSidebarEntry(dropinName, isB2B) {
     try {
         const configPath = join(projectRoot, 'astro.config.mjs');
         let configContent = readFileSync(configPath, 'utf8');
@@ -748,7 +748,7 @@ function removeSidebarEntry(dropinName, isB2B) {
 
         console.log(`📍 Dropin object spans lines ${openBraceIndex + 1} to ${closeBraceIndex + 1}`);
 
-        // Check if there's a comma after the closing brace that needs to be removed
+        // Check if there's a comma after the closing brace that needs to be deleted
         let endIndex = closeBraceIndex;
         if (closeBraceIndex + 1 < lines.length && lines[closeBraceIndex + 1].trim() === ',') {
             endIndex = closeBraceIndex + 1;
@@ -758,7 +758,7 @@ function removeSidebarEntry(dropinName, isB2B) {
         }
 
         console.log(`📍 Final removal range: lines ${openBraceIndex + 1} to ${endIndex + 1}`);
-        console.log(`📍 Lines to be removed:`);
+        console.log(`📍 Lines to be deleted:`);
         for (let i = openBraceIndex; i <= endIndex; i++) {
             console.log(`  ${i + 1}: "${lines[i]}"`);
         }
@@ -793,7 +793,7 @@ function removeSidebarEntry(dropinName, isB2B) {
         console.log(`  Before lines: ${beforeLines.length}`);
         console.log(`  After lines: ${afterLines.length}`);
         console.log(`  New total lines: ${newLines.length}`);
-        console.log(`  Lines to remove: ${endIndex - openBraceIndex + 1}`);
+        console.log(`  Lines to delete: ${endIndex - openBraceIndex + 1}`);
 
         const newContent = newLines.join('\n');
 
@@ -801,11 +801,11 @@ function removeSidebarEntry(dropinName, isB2B) {
         console.log(`🔍 Writing updated content to file...`);
         writeFileSync(configPath, newContent);
 
-        const removedLines = lines.length - newLines.length;
-        console.log(`✅ Successfully removed "${dropinName}" from sidebar (${removedLines} lines removed)`);
+        const deletedLines = lines.length - newLines.length;
+        console.log(`✅ Successfully deleted "${dropinName}" from sidebar (${deletedLines} lines deleted)`);
 
-        // Registry is auto-generated, no need to manually remove entries
-        console.log(`✅ Dropin will be automatically removed from generated registry`);
+        // Registry is auto-generated, no need to manually delete entries
+        console.log(`✅ Dropin will be automatically deleted from generated registry`);
 
         // Final verification
         console.log(`🔍 Reading file back for verification...`);
@@ -822,15 +822,15 @@ function removeSidebarEntry(dropinName, isB2B) {
                 }
             });
         } else {
-            console.log(`✅ Verified: "${dropinName}" completely removed from sidebar`);
+            console.log(`✅ Verified: "${dropinName}" completely deleted from sidebar`);
         }
 
     } catch (error) {
-        console.log(`⚠️  Could not remove sidebar entry: ${error.message}`);
+        console.log(`⚠️  Could not delete sidebar entry: ${error.message}`);
     }
 }
 
-// Post-removal cleanup function - removes any leftover fragments
+// Post-removal cleanup function - deletes any leftover fragments
 function cleanupLeftoverSidebarFragments(dropinName) {
     try {
         const configPath = join(projectRoot, 'astro.config.mjs');
@@ -848,7 +848,7 @@ function cleanupLeftoverSidebarFragments(dropinName) {
         let hasChanges = false;
         let newContent = configContent;
 
-        // Look for common leftover patterns and remove them - be very specific to avoid removing legitimate code
+        // Look for common leftover patterns and delete them - be very specific to avoid removing legitimate code
         const fragmentPatterns = [
             // Remove specific dropin page links
             new RegExp(`^\\s*{ label: 'Data events', link: '/dropins/${dropinSlug}/data-events/' },?\\s*\\n`, 'gm'),
@@ -876,7 +876,7 @@ function cleanupLeftoverSidebarFragments(dropinName) {
             newContent = newContent.replace(pattern, '');
             if (newContent.length < before) {
                 hasChanges = true;
-                console.log(`🧹 Removed fragments (pattern removed ${before - newContent.length} characters)`);
+                console.log(`🧹 Removed fragments (pattern deleted ${before - newContent.length} characters)`);
             }
         }
 
@@ -885,14 +885,14 @@ function cleanupLeftoverSidebarFragments(dropinName) {
 
         if (hasChanges) {
             writeFileSync(configPath, newContent);
-            console.log(`✅ Cleanup completed - removed leftover fragments for "${dropinName}"`);
+            console.log(`✅ Cleanup completed - deleted leftover fragments for "${dropinName}"`);
 
             // Final verification
             const finalContent = readFileSync(configPath, 'utf8');
             if (finalContent.includes(dropinName)) {
                 console.log(`⚠️  Some references to "${dropinName}" may still remain`);
             } else {
-                console.log(`✅ Verified: All traces of "${dropinName}" removed`);
+                console.log(`✅ Verified: All traces of "${dropinName}" deleted`);
             }
         } else {
             console.log(`✅ No cleanup needed for "${dropinName}"`);
@@ -904,7 +904,7 @@ function cleanupLeftoverSidebarFragments(dropinName) {
 }
 
 // Remove sidebar entry for a specific page
-function removeSidebarPageEntry(page) {
+function deleteSidebarPageEntry(page) {
     try {
         const configPath = join(projectRoot, 'astro.config.mjs');
         let configContent = readFileSync(configPath, 'utf8');
@@ -925,13 +925,13 @@ function removeSidebarPageEntry(page) {
 
         if (newContent.length < originalLength) {
             writeFileSync(configPath, newContent);
-            console.log(`✅ Removed sidebar entry for "${page.name}" (removed ${originalLength - newContent.length} characters)`);
+            console.log(`✅ Removed sidebar entry for "${page.name}" (deleted ${originalLength - newContent.length} characters)`);
 
             // Verify removal
             if (newContent.includes(linkPath)) {
                 console.log(`⚠️  Some references to "${linkPath}" may still remain`);
             } else {
-                console.log(`✅ Verified: All references to "${page.name}" removed from sidebar`);
+                console.log(`✅ Verified: All references to "${page.name}" deleted from sidebar`);
             }
         } else {
             console.log(`⚠️  Could not find sidebar entry for "${page.name}" with link "${linkPath}"`);
@@ -960,7 +960,7 @@ function removeSidebarPageEntry(page) {
         }
 
     } catch (error) {
-        console.log(`⚠️  Could not remove sidebar entry: ${error.message}`);
+        console.log(`⚠️  Could not delete sidebar entry: ${error.message}`);
     }
 }
 
@@ -990,7 +990,7 @@ function cleanupOrphanedSidebarEntries() {
             }
 
             // Check if this dropin exists in the file system
-            // Convert label to folder name: remove parentheses content, convert to lowercase, replace spaces with hyphens
+            // Convert label to folder name: delete parentheses content, convert to lowercase, replace spaces with hyphens
             const folderName = labelName
                 .replace(/\s*\([^)]*\)\s*/g, '') // Remove parentheses and their content
                 .toLowerCase()
@@ -1018,8 +1018,8 @@ function cleanupOrphanedSidebarEntries() {
     }
 }
 
-// Main remove function
-async function removeDropin() {
+// Main delete function
+async function deleteDropin() {
     console.log('\n🗑️  Dropin Removal Tool');
     console.log('======================\n');
 
@@ -1042,13 +1042,13 @@ async function removeDropin() {
     }
 
     if (orphanedEntries.length > 0) {
-        console.log('\nOrphaned sidebar entries (folders removed but sidebar entries remain):');
+        console.log('\nOrphaned sidebar entries (folders deleted but sidebar entries remain):');
         orphanedEntries.forEach((entry, index) => {
             console.log(`  ${dropins.length + index + 1}. ${entry} (orphaned)`);
         });
     }
 
-    const choice = await prompt('\nSelect a dropin to remove (number) or "cancel": ');
+    const choice = await prompt('\nSelect a dropin to delete (number) or "cancel": ');
 
     if (choice.toLowerCase() === 'cancel') {
         console.log('❌ Operation cancelled.');
@@ -1077,17 +1077,17 @@ async function removeDropin() {
         isOrphaned = true;
     }
 
-    // Ask what to remove
-    console.log(`\nWhat would you like to remove for "${selectedDropin.name}"?`);
+    // Ask what to delete
+    console.log(`\nWhat would you like to delete for "${selectedDropin.name}"?`);
     console.log('  1. Entire dropin (all files and folders)');
     console.log('  2. Individual pages');
 
-    const removeChoice = await prompt('Select option (1 or 2): ');
+    const deleteChoice = await prompt('Select option (1 or 2): ');
 
-    if (removeChoice === '1') {
+    if (deleteChoice === '1') {
         if (isOrphaned) {
-            // For orphaned entries, just remove the sidebar entry
-            const confirm = await prompt(`\n⚠️  Are you sure you want to remove the orphaned sidebar entry for "${selectedDropin.name}"? (Y/n): `);
+            // For orphaned entries, just delete the sidebar entry
+            const confirm = await prompt(`\n⚠️  Are you sure you want to delete the orphaned sidebar entry for "${selectedDropin.name}"? (Y/n): `);
 
             if (confirm.toLowerCase() === 'n' || confirm.toLowerCase() === 'no') {
                 console.log('❌ Operation cancelled.');
@@ -1097,19 +1097,19 @@ async function removeDropin() {
 
             try {
                 // Remove sidebar entry (try both B2B and B2C)
-                removeSidebarEntry(selectedDropin.name, false);
-                removeSidebarEntry(selectedDropin.name, true);
+                deleteSidebarEntry(selectedDropin.name, false);
+                deleteSidebarEntry(selectedDropin.name, true);
 
-                // Run cleanup to remove any leftover fragments
+                // Run cleanup to delete any leftover fragments
                 cleanupLeftoverSidebarFragments(selectedDropin.name);
 
-                console.log(`\n✅ Successfully removed orphaned sidebar entry for "${selectedDropin.name}"!`);
+                console.log(`\n✅ Successfully deleted orphaned sidebar entry for "${selectedDropin.name}"!`);
             } catch (error) {
                 console.log(`❌ Error removing orphaned entry: ${error.message}`);
             }
         } else {
             // Remove entire dropin
-            const confirm = await prompt(`\n⚠️  Are you sure you want to remove the entire "${selectedDropin.name}" dropin? This will delete all files and folders. (Y/n): `);
+            const confirm = await prompt(`\n⚠️  Are you sure you want to delete the entire "${selectedDropin.name}" dropin? This will delete all files and folders. (Y/n): `);
 
             if (confirm.toLowerCase() === 'n' || confirm.toLowerCase() === 'no') {
                 console.log('❌ Operation cancelled.');
@@ -1129,20 +1129,20 @@ async function removeDropin() {
                 const displayName = getDropinDisplayName(selectedDropin.name);
                 console.log(`🔍 Using display name: "${displayName}" (from folder: "${selectedDropin.name}")`);
 
-                removeSidebarEntry(displayName, isB2B);
+                deleteSidebarEntry(displayName, isB2B);
 
-                // Run cleanup to remove any leftover fragments
+                // Run cleanup to delete any leftover fragments
                 cleanupLeftoverSidebarFragments(displayName);
 
-                console.log(`\n✅ Successfully removed "${selectedDropin.name}" dropin!`);
+                console.log(`\n✅ Successfully deleted "${selectedDropin.name}" dropin!`);
             } catch (error) {
                 console.log(`❌ Error removing dropin: ${error.message}`);
             }
         }
 
-    } else if (removeChoice === '2') {
+    } else if (deleteChoice === '2') {
         if (isOrphaned) {
-            console.log('❌ Cannot remove individual pages from orphaned entries. The folder no longer exists.');
+            console.log('❌ Cannot delete individual pages from orphaned entries. The folder no longer exists.');
             rl.close();
             return;
         }
@@ -1161,7 +1161,7 @@ async function removeDropin() {
             console.log(`  ${index + 1}. ${page.name}`);
         });
 
-        const pageChoice = await prompt('\nSelect a page to remove (number) or "cancel": ');
+        const pageChoice = await prompt('\nSelect a page to delete (number) or "cancel": ');
 
         if (pageChoice.toLowerCase() === 'cancel') {
             console.log('❌ Operation cancelled.');
@@ -1178,7 +1178,7 @@ async function removeDropin() {
 
         const selectedPage = pages[pageIndex];
 
-        const confirm = await prompt(`\n⚠️  Are you sure you want to remove "${selectedPage.name}"? (Y/n): `);
+        const confirm = await prompt(`\n⚠️  Are you sure you want to delete "${selectedPage.name}"? (Y/n): `);
 
         if (confirm.toLowerCase() === 'n' || confirm.toLowerCase() === 'no') {
             console.log('❌ Operation cancelled.');
@@ -1192,9 +1192,9 @@ async function removeDropin() {
             console.log(`✅ Removed page: ${selectedPage.path}`);
 
             // Remove the sidebar entry for this specific page
-            removeSidebarPageEntry(selectedPage);
+            deleteSidebarPageEntry(selectedPage);
 
-            console.log(`\n✅ Successfully removed "${selectedPage.name}" page and its sidebar entry!`);
+            console.log(`\n✅ Successfully deleted "${selectedPage.name}" page and its sidebar entry!`);
         } catch (error) {
             console.log(`❌ Error removing page: ${error.message}`);
         }
@@ -1220,7 +1220,7 @@ async function main() {
     if (choice === '1') {
         await createDropin();
     } else if (choice === '2') {
-        await removeDropin();
+        await deleteDropin();
     } else {
         console.log('❌ Invalid option. Exiting...');
         rl.close();
