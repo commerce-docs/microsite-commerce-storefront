@@ -648,6 +648,23 @@ async function config() {
                   ],
                 },
                 {
+                  label: 'Commerce blocks',
+                  items: [
+                    {
+                      label: 'Company Management',
+                      link: 'merchants/commerce-blocks/company-management/'
+                    },
+                    {
+                      label: 'Quotes',
+                      link: 'merchants/commerce-blocks/quotes/'
+                    },
+                    {
+                      label: 'Test Page',
+                      link: 'merchants/commerce-blocks/test-page/'
+                    }
+                  ],
+                },
+                {
                   label: 'Content customizations',
                   items: [
                     {
