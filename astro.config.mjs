@@ -309,14 +309,6 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'Multistore setup',
-                      link: '/setup/configuration/multistore-setup/'
-                    },
-                    {
-                      label: 'Luma Bridge Integration',
-                      link: '/setup/discovery/luma-bridge/'
-                    },
-                    {
                       label: 'Launch Preparation',
                       collapsed: true,
                       items: [
@@ -325,6 +317,26 @@ async function config() {
                         { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
                         { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
                         { label: 'Launch Checklist', link: '/setup/launch/' },
+                      ]
+                    },
+                  ]
+                },
+                {
+                  label: 'Integrations',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Multistore setup',
+                      link: '/setup/configuration/multistore-setup/'
+                    },
+                    {
+                      label: 'Luma Bridge',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Introduction to Luma Bridge',
+                          link: '/setup/discovery/luma-bridge/'
+                        },
                       ]
                     },
                   ]
