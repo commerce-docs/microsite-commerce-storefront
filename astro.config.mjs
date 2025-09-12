@@ -655,8 +655,8 @@ async function config() {
                       link: 'merchants/commerce-blocks/company-management/'
                     },
                     {
-                      label: 'Quotes',
-                      link: 'merchants/commerce-blocks/quotes/'
+                      label: 'Quote Management',
+                      link: 'merchants/commerce-blocks/quote-management/'
                     },
                     {
                       label: 'Test Page',
