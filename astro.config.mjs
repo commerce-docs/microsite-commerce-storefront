@@ -22,7 +22,6 @@ const basePath = isProduction
     ? process.env.VITE_GITHUB_BASE_PATH
     : '';
 
-
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
   ? fs.readdirSync(sdkComponentsDir).filter(file => file.endsWith('.mdx'))
@@ -254,7 +253,7 @@ async function config() {
                   ]
                 },
                 {
-                  label: 'Drop-ins',
+                  label: 'Drop-ins for B2C',
                   collapsed: true,
                   items: [
                     {
@@ -302,31 +301,6 @@ async function config() {
                           link: '/dropins/all/extending/'
                         },
                       ],
-                    },
-                    {
-                      label: 'Product details (PDP)',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins/product-details/' },
-                        { label: 'Installation', link: '/dropins/product-details/installation/' },
-                        { label: 'Initialization', link: '/dropins/product-details/initialization/' },
-                        { label: 'Styles', link: '/dropins/product-details/styles/' },
-                        {
-                          label: 'Containers', collapsed: true,
-                          items: [
-                            { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
-                            { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
-                            { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
-                            { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
-                            { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
-                            { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
-                            { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
-                            { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                          ]
-                        },
-                        { label: 'Functions', link: '/dropins/product-details/functions/' },
-                        { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
-                      ]
                     },
                     {
                       label: 'Cart',
@@ -478,6 +452,31 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'Product details (PDP)',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/product-details/' },
+                        { label: 'Installation', link: '/dropins/product-details/installation/' },
+                        { label: 'Initialization', link: '/dropins/product-details/initialization/' },
+                        { label: 'Styles', link: '/dropins/product-details/styles/' },
+                        {
+                          label: 'Containers', collapsed: true,
+                          items: [
+                            { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                            { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                            { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
+                            { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
+                            { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
+                            { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
+                            { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
+                            { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
+                          ]
+                        },
+                        { label: 'Functions', link: '/dropins/product-details/functions/' },
+                        { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
+                      ]
+                    },
+                    {
                       label: 'Recommendations',
                       collapsed: true,
                       items: [
@@ -519,29 +518,6 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'User auth',
-                      collapsed: true,
-                      items: [
-                        { label: 'Overview', link: '/dropins/user-auth/' },
-                        { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
-                        {
-                          label: 'Containers',
-                          collapsed: true,
-                          items: [
-                            { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
-                            { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
-                            { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
-                            { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
-                            { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
-                            { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
-                          ]
-                        },
-                        { label: 'Slots', link: '/dropins/user-auth/slots/' },
-                        { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
-                        { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
-                      ],
-                    },
-                    {
                       label: 'User account',
                       collapsed: true,
                       items: [
@@ -566,6 +542,29 @@ async function config() {
                       ]
                     },
                     {
+                      label: 'User auth',
+                      collapsed: true,
+                      items: [
+                        { label: 'Overview', link: '/dropins/user-auth/' },
+                        { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
+                        {
+                          label: 'Containers',
+                          collapsed: true,
+                          items: [
+                            { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
+                            { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
+                            { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
+                            { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
+                            { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
+                            { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
+                          ]
+                        },
+                        { label: 'Slots', link: '/dropins/user-auth/slots/' },
+                        { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
+                        { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
+                      ],
+                    },
+                    {
                       label: 'Wishlist',
                       collapsed: true,
                       items: [
@@ -585,6 +584,14 @@ async function config() {
                         { label: 'Styles', link: '/dropins/wishlist/styles/' },
                       ]
                     },
+
+                  ]
+                },
+                {
+                  label: 'Drop-ins for B2B',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/dropins-b2b/overview/' },
                   ]
                 },
                 {
@@ -1059,6 +1066,5 @@ async function config() {
     ]
   });
 }
-
 
 export default config();
