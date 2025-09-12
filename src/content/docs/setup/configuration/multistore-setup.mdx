@@ -259,6 +259,66 @@ Your multi-store infrastructure is now ready to support multiple locales with pr
 
 </Tasks>
 
+## Storefront Configuration
+
+### Folder Mapping
+
+Product Detail Pages (PDP) are mapped to a single document at `products/default`.
+When adding a new store view, you'll need to add a corresponding folder mapping for the new URLs.
+
+#### fstab.yaml
+
+If your project uses a `fstab.yaml` file, add the new store view mapping under the `folders:` section, like this:
+
+```yaml
+mountpoints:
+  /: https://example.mountpoint.com/:f:/r/sites/myproject
+
+folders:
+  /en/products/: /en/products/default
+  /en_ca/products/: /en_ca/products/default
+```
+
+#### Configuration Service
+
+If your project uses the Configuration Service, you must update the configuration to add the new store view mapping under the `folders:` section, like this:
+
+```json
+{
+  "folders": {
+    "/en/products/": "/en/products/default",
+    "/en_ca/products/": "/en_ca/products/default"
+  }
+}
+```
+
+To learn more about the Config Service, please see [aem.live's documentation](https://www.aem.live/docs/config-service-setup) or read the [api documentation](https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite) to learn how to publish your updates to the Config Service for your site.
+
+### Site Configuration
+
+You must update your [storefront config](/setup/configuration/commerce-configuration/) to include configuration overrides for the new store view. In this file, you'll define store-view specific settings, such as service headers and analytics values. The `key` of each overridden object must match the root folder path of the corresponding store view. These values will be merged into the default configuration.
+
+The `analytics` section contains the Adobe Commerce environment variables for the store view. These variables are used by the Analytics API. For more details, see [Analytics](/setup/analytics/instrumentation).
+
+```json
+{
+  "public": {
+    "default": {
+      // default configuration
+    },
+    "/en/": {}, // inherits the default
+    "/en_ca/": {
+      "headers": {
+        // overrides values from the default headers
+      },
+      "analytics": {
+        // overrides values from the default analytics configuration
+      }
+    }
+  }
+}
+```
+
 ## Key Configuration Details
 
 ### Headers Configuration
@@ -282,6 +342,33 @@ The headers section in your `config.json` is critical for proper store view func
 - Prioritize the current store view in the display order
 - Ensure all links point to the correct store view URLs
 - Test the switcher functionality across all store views
+
+## Troubleshooting
+
+### Common Issues
+
+#### Store View Not Loading
+- **Check folder mapping**: Verify that the folder mapping in `fstab.yaml` or Configuration Service matches your folder structure
+- **Verify headers**: Ensure the headers in `config.json` match the store view codes in Adobe Commerce Admin
+- **Check session storage**: Use browser developer tools to verify the correct headers are being sent
+
+#### Content Not Displaying
+- **Verify content structure**: Ensure all required files (index, store-switcher, placeholders) exist in the store view folder
+- **Check file permissions**: Verify that content files are properly published in da.live
+- **Validate JSON syntax**: Check that placeholder JSON files have valid syntax
+
+#### Store Switcher Issues
+- **Check links**: Ensure all store switcher links use the correct URLs and include `#nolocal` for absolute links
+- **Verify file structure**: Confirm that each store view has its own store-switcher file
+- **Test navigation**: Verify that switching between stores works correctly
+
+### Debugging Steps
+
+1. **Check browser console** for JavaScript errors
+2. **Verify network requests** in browser developer tools
+3. **Check session storage** for configuration values
+4. **Validate configuration files** for syntax errors
+5. **Test with different browsers** to rule out browser-specific issues
 
 ## Next Steps
 
