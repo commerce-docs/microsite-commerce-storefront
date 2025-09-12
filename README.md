@@ -60,16 +60,16 @@ The available scripts for running the project are defined in the `package.json` 
 
 ## How to contribute PRs
 
-1. Fork the repository.
+1. Clone the repository.
 1. Create a new branch for your changes.
 1. Make your changes.
-1. Push your changes to your fork.
+1. Push your changes to your branch.
 1. Create a pull request to the `develop` branch of the `commerce-docs/microsite-commerce-storefront` repository.
 1. Wait for the PR to be reviewed and merged.
 
 ### Publishing to production
 
-Content updates from merged PRs are published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) production site automatically by the nightly build job that runs M-F between 10 and 11pm CDT.  
+Content updates from merged PRs are published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) production site automatically by the nightly build job that runs daily between 19:00 and 20:00 CDT.
 
 ## How to create a new docs page
 
@@ -138,16 +138,12 @@ description: Example page using a content fragment
 
 import MyNote from 'src/content/fragments/my-note.mdx';
 
-# Page Title
+<MyNote />  
 
-Regular page content before the fragment...
-
-<MyNote />
-
-More content after the fragment...
+More content...
 ```
 
-The name `MyNote` is an example name/variable specific to the page to which you are importing the fragment. You can use any name you want. For example, `AcoVersionNote`.
+The name `MyNote` import is an example name/variable specific in the fragments directory: src/content/fragments. You can use any name you want to save the fragment. For example, `EDSNote`.
 
 ### Best Practices
 
@@ -157,7 +153,7 @@ The name `MyNote` is an example name/variable specific to the page to which you 
 - **Content scope**: Use fragments for content that appears on multiple pages (obviously).
 - **Updates**: Edit the fragment file once to update all instances.
 
-### Common Use Cases
+### Common Fragment Use Cases
 
 - Prerequisites and requirements
 - Warning messages and cautions
@@ -165,4 +161,3 @@ The name `MyNote` is an example name/variable specific to the page to which you 
 - Contact information
 - Version compatibility notes
 - Troubleshooting tips
-
