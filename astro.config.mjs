@@ -481,7 +481,7 @@ async function config() {
                 },
                 // B2C Drop-ins - individual drop-in components
                 {
-                  label: 'Drop-ins - B2C',
+                  label: 'Drop-ins for B2C',
                   collapsed: true,
                   items: [
                     // Individual Drop-ins (alphabetically ordered)
@@ -776,12 +776,12 @@ async function config() {
                 },
                 // B2B Drop-ins - B2B-specific drop-in components
                 {
-                  label: 'Drop-ins - B2B',
+                  label: 'Drop-ins for B2B',
                   collapsed: true,
                   items: [
                     {
-                      label: 'B2B Overview',
-                      link: '/b2b/'
+                      label: 'Overview',
+                      link: '/dropins-b2b/overview/'
                     },
                   ]
                 },
@@ -954,7 +954,7 @@ async function config() {
               ],
             },
           ], {
-            exclude: ['/sdk/**', '/videos/**']
+            exclude: ['/sdk/**', '/videos/**', '/b2b/**']
           }),
           starlightHeadingBadges(),
           starlightLinksValidator({
