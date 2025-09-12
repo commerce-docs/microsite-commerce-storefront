@@ -836,6 +836,19 @@ async function config() {
                   ],
                 },
                 {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Setup',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Localization',
+                      link: 'merchants/multistore/content-localization/'
+                    },
+                  ],
+                },
+                {
                   label: 'Commerce Blocks',
                   items: [
                     {
@@ -870,19 +883,6 @@ async function config() {
                     {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
-                    },
-                  ],
-                },
-                {
-                  label: 'Multistore',
-                  items: [
-                    {
-                      label: 'Setup',
-                      link: 'merchants/multistore/'
-                    },
-                    {
-                      label: 'Localization',
-                      link: 'merchants/multistore/content-localization/'
                     },
                   ],
                 },
