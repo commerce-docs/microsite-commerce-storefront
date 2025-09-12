@@ -547,7 +547,6 @@ async function config() {
                         { label: 'PDP Installation', link: '/dropins/product-details/installation/' },
                         { label: 'PDP Initialization', link: '/dropins/product-details/initialization/' },
                         { label: 'PDP Styling', link: '/dropins/product-details/styles/' },
-                        { label: 'PDP Slots', link: '/dropins/product-details/slots/' },
                         { label: 'PDP Functions', link: '/dropins/product-details/functions/' },
                         { label: 'PDP Dictionary', link: '/dropins/product-details/dictionary/' },
                         {
