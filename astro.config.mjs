@@ -322,12 +322,12 @@ async function config() {
                           link: '/setup/configuration/storefront-compatibility/install/'
                         },
                         {
-                          label: 'Adobe Commerce 2.4.7',
-                          link: '/setup/configuration/storefront-compatibility/v247/'
-                        },
-                        {
                           label: 'Adobe Commerce 2.4.8',
                           link: '/setup/configuration/storefront-compatibility/v248/'
+                        },
+                        {
+                          label: 'Adobe Commerce 2.4.7',
+                          link: '/setup/configuration/storefront-compatibility/v247/'
                         },
                       ]
                     },
@@ -836,19 +836,6 @@ async function config() {
                   ],
                 },
                 {
-                  label: 'Multistore',
-                  items: [
-                    {
-                      label: 'Setup',
-                      link: 'merchants/multistore/'
-                    },
-                    {
-                      label: 'Localization',
-                      link: 'merchants/multistore/content-localization/'
-                    },
-                  ],
-                },
-                {
                   label: 'Commerce Blocks',
                   items: [
                     {
@@ -883,6 +870,19 @@ async function config() {
                     {
                       label: 'Terms and conditions',
                       link: 'merchants/get-started/terms-and-conditions/'
+                    },
+                  ],
+                },
+                {
+                  label: 'Multistore',
+                  items: [
+                    {
+                      label: 'Setup',
+                      link: 'merchants/multistore/'
+                    },
+                    {
+                      label: 'Localization',
+                      link: 'merchants/multistore/content-localization/'
                     },
                   ],
                 },
