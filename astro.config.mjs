@@ -561,7 +561,6 @@ async function config() {
                             { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                             { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
-                            { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/', badge: 'Deprecated' },
                           ]
                         },
                       ]
@@ -683,7 +682,7 @@ async function config() {
                   items: [
                     {
                       label: 'Overview',
-                      link: '/dropins-b2b/overview/'
+                      link: '/b2b/'
                     },
                   ]
                 },
