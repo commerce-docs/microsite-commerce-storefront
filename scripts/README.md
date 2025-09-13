@@ -27,7 +27,7 @@ The CLI then automatically handles all the setup and configuration for you.
 ## What it creates
 
 **B2C drop-ins**: `src/content/docs/dropins/[name]/`  
-**B2B drop-ins**: `src/content/docs/dropins-b2b/[name]/`
+**B2B drop-ins**: `src/content/docs/_dropins-b2b/[name]/`
 
 ```
 [dropin-folder]/
@@ -54,7 +54,7 @@ The CLI can remove:
 
 - ✅ **Auto-generates** folder structure and template files
 - ✅ **Automatic placeholder resolution** (`DROPIN_NAME`, `DROPIN_PACKAGE`, `DROPINS_BASE_PATH`)
-- ✅ **Smart path handling** (B2C: `/dropins/`, B2B: `/dropins-b2b/`)
+- ✅ **Smart path handling** (B2C: `/dropins/`, B2B: `/_dropins-b2b/`)
 - ✅ **Updates sidebar** (both B2C and B2B drop-ins)
 - ✅ **Two-container system** (ContainerOne + ContainerTwo templates)
 - ✅ **Container overview** with card-based navigation
@@ -76,7 +76,7 @@ The CLI automatically resolves these placeholders when creating a dropin:
 |-------------|----------------|---------|
 | `DROPIN_NAME` | Actual component name | `Quote Management` |
 | `DROPIN_PACKAGE` | Package name (kebab-case) | `quote-management` |
-| `DROPINS_BASE_PATH` | Base path (`dropins` or `dropins-b2b`) | `dropins-b2b` |
+| `DROPINS_BASE_PATH` | Base path (`dropins` or `_dropins-b2b`) | `_dropins-b2b` |
 
 ### Template Processing Example
 
@@ -107,7 +107,7 @@ description: Learn about the features and functions of the Quote Management drop
 
 {/* DESCRIBE the main functionality and purpose of the Quote Management drop-in component. */}
 
-Visit the [Quote Management installation](/dropins-b2b/quote-management/installation/) page to get started.
+Visit the [Quote Management installation](/_dropins-b2b/quote-management/installation/) page to get started.
 
 ## Available slots
 
