@@ -371,14 +371,15 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
             const b2cSection = configContent.substring(b2cStart, b2cEnd);
 
             // Find all existing dropin entries and their positions
-            const dropinPattern = /^                    {\s*\n\s*label:\s*'([^']+)',/gm;
+            // Look for drop-in objects with collapsed: true (this identifies actual drop-ins)
+            const dropinPattern = /{\s*label:\s*'([^']+)',\s*collapsed:\s*true,/g;
             const existingDropins = [];
             let match;
 
             while ((match = dropinPattern.exec(b2cSection)) !== null) {
                 const name = match[1];
-                // Skip non-dropin sections
-                if (name !== 'Common' && name !== 'Overview' && name !== 'Containers') {
+                // Skip non-dropin sections and section headers
+                if (name !== 'Common' && name !== 'Overview' && name !== 'Containers' && name !== 'Drop-ins overview') {
                     existingDropins.push({
                         name: name,
                         position: b2cStart + match.index
@@ -437,7 +438,9 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
                 const beforeInsert = configContent.substring(0, insertPosition);
                 const afterInsert = configContent.substring(insertPosition);
 
-                configContent = beforeInsert + newDropinEntry + ',\n' + afterInsert;
+                // Add minimal indentation for B2C drop-ins (just 2 spaces)
+                const indentedEntry = newDropinEntry.replace(/^/gm, '  ');
+                configContent = beforeInsert + indentedEntry + ',\n' + afterInsert;
             } else {
                 console.log('⚠️  Could not determine insertion position');
                 return;
