@@ -584,7 +584,7 @@ async function config() {
                   {
                     label: 'Drop-ins for B2B',
                     collapsed: true,
-                    items: [{ label: 'Overview', link: '/_dropins-b2b/overview/', badge: 'In Progress' }],
+                    items: [{ label: 'Overview', link: '/dropins-b2b/overview/', badge: 'In Progress' }],
                   },
 
                   // ---------- DROP-INS SDK ----------
@@ -800,7 +800,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/_dropins-b2b/**', '/b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/b2b/**'],
             }
           ),
           starlightHeadingBadges(),

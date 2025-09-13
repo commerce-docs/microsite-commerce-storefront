@@ -86,7 +86,7 @@ function formatDropinName(name) {
 // Helper function to replace placeholders in file content
 function replacePlaceholders(content, dropinName, isB2B = false) {
     const formats = formatDropinName(dropinName);
-    const basePath = isB2B ? '_dropins-b2b' : 'dropins';
+    const basePath = isB2B ? 'dropins-b2b' : 'dropins';
 
     // Replace DROPIN_NAME in title with the full dropin name + page type (e.g., "Company Management overview")
     let updatedContent = content.replace(/title: DROPIN_NAME (\w+)/g, (match, pageType) => {
@@ -158,7 +158,7 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
 
         const dropinLabel = formats.original;
         const dropinKebab = formats.kebab;
-        const basePath = isB2B ? '_dropins-b2b' : 'dropins';
+        const basePath = isB2B ? 'dropins-b2b' : 'dropins';
 
         // Create the new dropin entry with EXACT formatting matching existing entries
         const newDropinEntry = `                    {
@@ -306,7 +306,7 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
                     }
                 } else {
                     // No existing dropins, insert after the Overview item
-                    const overviewIndex = configContent.indexOf(`{ label: 'Overview', link: '/_dropins-b2b/overview/' }`, b2bStart);
+                    const overviewIndex = configContent.indexOf(`{ label: 'Overview', link: '/dropins-b2b/overview/' }`, b2bStart);
                     if (overviewIndex !== -1) {
                         // Find the end of the Overview item
                         let pos = overviewIndex;
@@ -497,7 +497,7 @@ async function createDropin() {
         }
 
         const isB2B = dropinType.toLowerCase() === 'b2b';
-        const targetFolder = isB2B ? '_dropins-b2b' : 'dropins';
+        const targetFolder = isB2B ? 'dropins-b2b' : 'dropins';
         const typeLabel = isB2B ? 'B2B' : 'B2C';
 
         const formats = formatDropinName(dropinName.trim());
@@ -611,7 +611,7 @@ function getExistingDropins() {
     }
 
     // Check B2B dropins
-    const b2bPath = join(projectRoot, 'src/content/docs/_dropins-b2b');
+    const b2bPath = join(projectRoot, 'src/content/docs/dropins-b2b');
     if (existsSync(b2bPath)) {
         const b2bDirs = readdirSync(b2bPath, { withFileTypes: true })
             .filter(dirent => dirent.isDirectory())
@@ -997,7 +997,7 @@ function cleanupOrphanedSidebarEntries() {
                 .replace(/\s+/g, '-');
 
             const b2cPath = join(projectRoot, 'src/content/docs/dropins', folderName);
-            const b2bPath = join(projectRoot, 'src/content/docs/_dropins-b2b', folderName);
+            const b2bPath = join(projectRoot, 'src/content/docs/dropins-b2b', folderName);
 
             if (!existsSync(b2cPath) && !existsSync(b2bPath)) {
                 orphanedEntries.push(labelName);
