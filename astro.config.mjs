@@ -800,7 +800,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/_dropins-b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/_dropins-b2b/**', '/b2b/**'],
             }
           ),
           starlightHeadingBadges(),
