@@ -248,13 +248,13 @@ async function config() {
         plugins: [
           starlightSidebarTopics([
             {
-              label: 'Storefront Developers',
+              label: 'Storefront developers',
               link: '/get-started/',
               icon: 'seti:json',
               items: [
                 // Flattened navigation - moved Getting Started subsections to top level
                 {
-                  label: 'Quick Start',
+                  label: 'Quick start',
                   collapsed: false,
                   items: [
                     {
@@ -284,7 +284,7 @@ async function config() {
                   collapsed: true,
                   items: [
                     {
-                      label: 'Setup Overview',
+                      label: 'Setup overview',
                       link: '/setup/'
                     },
                     {
@@ -314,7 +314,7 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'Compatibility Package',
+                      label: 'Compatibility package',
                       collapsed: true,
                       items: [
                         {
@@ -332,14 +332,14 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'Launch Preparation',
+                      label: 'Launch preparation',
                       collapsed: true,
                       items: [
-                        { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
+                        { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
                         { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-                        { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
-                        { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
-                        { label: 'Launch Checklist', link: '/setup/launch/' },
+                        { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+                        { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+                        { label: 'Launch checklist', link: '/setup/launch/' },
                       ]
                     },
                   ]
@@ -366,7 +366,7 @@ async function config() {
                 },
                 // Creating drop-ins - SDK and essentials for building drop-ins
                 {
-                  label: 'Drop-ins Overview',
+                  label: 'Drop-ins overview',
                   collapsed: true,
                   items: [
                     // Drop-in Essentials
@@ -377,7 +377,7 @@ async function config() {
                     { label: 'Styling', link: '/dropins/all/styling/' },
                     { label: 'Labeling', link: '/dropins/all/labeling/' },
                     { label: 'Linking', link: '/dropins/all/linking/' },
-                    { label: 'Slots & Extensions', link: '/dropins/all/slots/' },
+                    { label: 'Slots', link: '/dropins/all/slots/' },
                     { label: 'Layouts', link: '/dropins/all/layouts/' },
                     { label: 'Extending', link: '/dropins/all/extending/' },
                   ],
@@ -392,13 +392,13 @@ async function config() {
                       label: 'Cart',
                       collapsed: true,
                       items: [
-                        { label: 'Cart Overview', link: '/dropins/cart/' },
-                        { label: 'Cart Installation', link: '/dropins/cart/installation/' },
-                        { label: 'Cart Initialization', link: '/dropins/cart/initialization/' },
-                        { label: 'Cart Styling', link: '/dropins/cart/styles/' },
-                        { label: 'Cart Slots', link: '/dropins/cart/slots/' },
-                        { label: 'Cart Functions', link: '/dropins/cart/functions/' },
-                        { label: 'Cart Dictionary', link: '/dropins/cart/dictionary/' },
+                        { label: 'Cart overview', link: '/dropins/cart/' },
+                        { label: 'Cart installation', link: '/dropins/cart/installation/' },
+                        { label: 'Cart initialization', link: '/dropins/cart/initialization/' },
+                        { label: 'Cart styling', link: '/dropins/cart/styles/' },
+                        { label: 'Cart slots', link: '/dropins/cart/slots/' },
+                        { label: 'Cart functions', link: '/dropins/cart/functions/' },
+                        { label: 'Cart dictionary', link: '/dropins/cart/dictionary/' },
                         {
                           label: 'Cart Containers',
                           collapsed: false,
@@ -434,21 +434,21 @@ async function config() {
                       label: 'Checkout',
                       collapsed: true,
                       items: [
-                        { label: 'Checkout Overview', link: '/dropins/checkout/' },
-                        { label: 'Checkout Installation', link: '/dropins/checkout/installation/' },
-                        { label: 'Checkout Initialization', link: '/dropins/checkout/initialization/' },
-                        { label: 'Checkout Styling', link: '/dropins/checkout/styles/' },
-                        { label: 'Checkout Extending', link: '/dropins/checkout/extending/' },
-                        { label: 'Checkout Error Handling', link: '/dropins/checkout/error-handling/' },
-                        { label: 'Checkout Event Handling', link: '/dropins/checkout/event-handling/' },
-                        { label: 'Checkout Slots', link: '/dropins/checkout/slots/' },
-                        { label: 'Checkout Functions', link: '/dropins/checkout/functions/' },
-                        { label: 'Checkout Dictionary', link: '/dropins/checkout/dictionary/' },
+                        { label: 'Checkout overview', link: '/dropins/checkout/' },
+                        { label: 'Checkout installation', link: '/dropins/checkout/installation/' },
+                        { label: 'Checkout initialization', link: '/dropins/checkout/initialization/' },
+                        { label: 'Checkout styling', link: '/dropins/checkout/styles/' },
+                        { label: 'Checkout extending', link: '/dropins/checkout/extending/' },
+                        { label: 'Checkout error handling', link: '/dropins/checkout/error-handling/' },
+                        { label: 'Checkout event handling', link: '/dropins/checkout/event-handling/' },
+                        { label: 'Checkout slots', link: '/dropins/checkout/slots/' },
+                        { label: 'Checkout functions', link: '/dropins/checkout/functions/' },
+                        { label: 'Checkout dictionary', link: '/dropins/checkout/dictionary/' },
                         {
                           label: 'Checkout Containers',
                           collapsed: false,
                           items: [
-                            { label: 'Checkout Overview', link: '/dropins/checkout/containers/overview/' },
+                            { label: 'Checkout overview', link: '/dropins/checkout/containers/overview/' },
                             { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                             { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                             { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
@@ -462,7 +462,7 @@ async function config() {
                           ]
                         },
                         {
-                          label: 'Checkout Tutorials',
+                          label: 'Checkout tutorials',
                           collapsed: false,
                           items: [
                             { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
@@ -477,14 +477,14 @@ async function config() {
                       label: 'Order Management',
                       collapsed: true,
                       items: [
-                        { label: 'Order Overview', link: '/dropins/order/' },
-                        { label: 'Order Initialization', link: '/dropins/order/initialization/' },
-                        { label: 'Order Styling', link: '/dropins/order/styles/' },
-                        { label: 'Order Slots', link: '/dropins/order/slots/' },
-                        { label: 'Order Functions', link: '/dropins/order/functions/' },
-                        { label: 'Order Dictionary', link: '/dropins/order/dictionary/' },
+                        { label: 'Order overview', link: '/dropins/order/' },
+                        { label: 'Order initialization', link: '/dropins/order/initialization/' },
+                        { label: 'Order styling', link: '/dropins/order/styles/' },
+                        { label: 'Order slots', link: '/dropins/order/slots/' },
+                        { label: 'Order functions', link: '/dropins/order/functions/' },
+                        { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
                         {
-                          label: 'Order Containers',
+                          label: 'Order containers',
                           collapsed: false,
                           items: [
                             { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
@@ -499,7 +499,7 @@ async function config() {
                           ]
                         },
                         {
-                          label: 'Order Tutorials',
+                          label: 'Order tutorials',
                           collapsed: false,
                           items: [
                             { label: 'Order cancellation tutorial', link: '/dropins/order/tutorials/order-cancellation/' },
@@ -511,11 +511,11 @@ async function config() {
                       label: 'Payment Services',
                       collapsed: true,
                       items: [
-                        { label: 'Payment Services Overview', link: '/dropins/payment-services/' },
-                        { label: 'Payment Services Installation', link: '/dropins/payment-services/installation/' },
-                        { label: 'Payment Services Dictionary', link: '/dropins/payment-services/dictionary/' },
+                        { label: 'Payment Services overview', link: '/dropins/payment-services/' },
+                        { label: 'Payment Services installation', link: '/dropins/payment-services/installation/' },
+                        { label: 'Payment Services dictionary', link: '/dropins/payment-services/dictionary/' },
                         {
-                          label: 'Payment Containers',
+                          label: 'Payment containers',
                           collapsed: false,
                           items: [
                             { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
@@ -527,11 +527,11 @@ async function config() {
                       label: 'Personalization',
                       collapsed: true,
                       items: [
-                        { label: 'Personalization Overview', link: '/dropins/personalization/' },
-                        { label: 'Personalization Initialization', link: '/dropins/personalization/initialization/' },
-                        { label: 'Personalization Functions', link: '/dropins/personalization/functions/' },
+                        { label: 'Personalization overview', link: '/dropins/personalization/' },
+                        { label: 'Personalization initialization', link: '/dropins/personalization/initialization/' },
+                        { label: 'Personalization functions', link: '/dropins/personalization/functions/' },
                         {
-                          label: 'Personalization Containers',
+                          label: 'Personalization containers',
                           collapsed: false,
                           items: [
                             { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' },
@@ -543,14 +543,14 @@ async function config() {
                       label: 'Product Details',
                       collapsed: true,
                       items: [
-                        { label: 'Product Details Overview', link: '/dropins/product-details/' },
-                        { label: 'PDP Installation', link: '/dropins/product-details/installation/' },
-                        { label: 'PDP Initialization', link: '/dropins/product-details/initialization/' },
-                        { label: 'PDP Styling', link: '/dropins/product-details/styles/' },
-                        { label: 'PDP Functions', link: '/dropins/product-details/functions/' },
-                        { label: 'PDP Dictionary', link: '/dropins/product-details/dictionary/' },
+                        { label: 'Product Details overview', link: '/dropins/product-details/' },
+                        { label: 'PDP installation', link: '/dropins/product-details/installation/' },
+                        { label: 'PDP initialization', link: '/dropins/product-details/initialization/' },
+                        { label: 'PDP styling', link: '/dropins/product-details/styles/' },
+                        { label: 'PDP functions', link: '/dropins/product-details/functions/' },
+                        { label: 'PDP dictionary', link: '/dropins/product-details/dictionary/' },
                         {
-                          label: 'Product Detail Containers',
+                          label: 'Product Detail containers',
                           collapsed: false,
                           items: [
                             { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
@@ -569,14 +569,14 @@ async function config() {
                       label: 'Product Discovery',
                       collapsed: true,
                       items: [
-                        { label: 'Discovery Overview', link: '/dropins/product-discovery/' },
-                        { label: 'Discovery Installation', link: '/dropins/product-discovery/installation/' },
-                        { label: 'Discovery Styling', link: '/dropins/product-discovery/styles/' },
-                        { label: 'Discovery Functions', link: '/dropins/product-discovery/functions/' },
-                        { label: 'Discovery Dictionary', link: '/dropins/product-discovery/dictionary/' },
-                        { label: 'Discovery Slots', link: '/dropins/product-discovery/slots/' },
+                        { label: 'Discovery overview', link: '/dropins/product-discovery/' },
+                        { label: 'Discovery installation', link: '/dropins/product-discovery/installation/' },
+                        { label: 'Discovery styling', link: '/dropins/product-discovery/styles/' },
+                        { label: 'Discovery functions', link: '/dropins/product-discovery/functions/' },
+                        { label: 'Discovery dictionary', link: '/dropins/product-discovery/dictionary/' },
+                        { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
                         {
-                          label: 'Product Discovery Containers',
+                          label: 'Product Discovery containers',
                           collapsed: false,
                           items: [
                             { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
@@ -591,14 +591,14 @@ async function config() {
                       label: 'Recommendations',
                       collapsed: true,
                       items: [
-                        { label: 'Recommendations Overview', link: '/dropins/recommendations/' },
-                        { label: 'Recommendations Installation', link: '/dropins/recommendations/installation/' },
-                        { label: 'Recommendations Styling', link: '/dropins/recommendations/styles/' },
-                        { label: 'Recommendations Functions', link: '/dropins/recommendations/functions/' },
-                        { label: 'Recommendations Slots', link: '/dropins/recommendations/slots/' },
-                        { label: 'Recommendations Dictionary', link: '/dropins/recommendations/dictionary/' },
+                        { label: 'Recommendations overview', link: '/dropins/recommendations/' },
+                        { label: 'Recommendations installation', link: '/dropins/recommendations/installation/' },
+                        { label: 'Recommendations styling', link: '/dropins/recommendations/styles/' },
+                        { label: 'Recommendations functions', link: '/dropins/recommendations/functions/' },
+                        { label: 'Recommendations slots', link: '/dropins/recommendations/slots/' },
+                        { label: 'Recommendations dictionary', link: '/dropins/recommendations/dictionary/' },
                         {
-                          label: 'Recommendation Containers',
+                          label: 'Recommendation containers',
                           collapsed: false,
                           items: [
                             { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' },
@@ -610,15 +610,15 @@ async function config() {
                       label: 'User Account',
                       collapsed: true,
                       items: [
-                        { label: 'User Account Overview', link: '/dropins/user-account/' },
-                        { label: 'Account Initialization', link: '/dropins/user-account/initialization/' },
-                        { label: 'Account Styling', link: '/dropins/user-account/styles/' },
-                        { label: 'Account Functions', link: '/dropins/user-account/functions/' },
-                        { label: 'Account Dictionary', link: '/dropins/user-account/dictionary/' },
-                        { label: 'Account Sidebar', link: '/dropins/user-account/sidebar/' },
-                        { label: 'Account Tutorial', link: '/dropins/user-account/tutorials/' },
+                        { label: 'User Account overview', link: '/dropins/user-account/' },
+                        { label: 'Account initialization', link: '/dropins/user-account/initialization/' },
+                        { label: 'Account styling', link: '/dropins/user-account/styles/' },
+                        { label: 'Account functions', link: '/dropins/user-account/functions/' },
+                        { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
+                        { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
+                        { label: 'Account tutorials', link: '/dropins/user-account/tutorials/' },
                         {
-                          label: 'Account Containers',
+                          label: 'Account containers',
                           collapsed: false,
                           items: [
                             { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
@@ -633,13 +633,13 @@ async function config() {
                       label: 'User Authentication',
                       collapsed: true,
                       items: [
-                        { label: 'User Auth Overview', link: '/dropins/user-auth/' },
+                        { label: 'User Auth overview', link: '/dropins/user-auth/' },
                         { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
-                        { label: 'Auth Slots', link: '/dropins/user-auth/slots/' },
-                        { label: 'Auth Functions', link: '/dropins/user-auth/auth-functions/' },
-                        { label: 'Auth Dictionary', link: '/dropins/user-auth/dictionary/' },
+                        { label: 'Auth slots', link: '/dropins/user-auth/slots/' },
+                        { label: 'Auth functions', link: '/dropins/user-auth/auth-functions/' },
+                        { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
                         {
-                          label: 'Authentication Containers',
+                          label: 'Authentication containers',
                           collapsed: false,
                           items: [
                             { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
@@ -656,13 +656,13 @@ async function config() {
                       label: 'Wishlist',
                       collapsed: true,
                       items: [
-                        { label: 'Wishlist Overview', link: '/dropins/wishlist/' },
-                        { label: 'Wishlist Installation', link: '/dropins/wishlist/installation/' },
-                        { label: 'Wishlist Dictionary', link: '/dropins/wishlist/dictionary/' },
-                        { label: 'Wishlist Functions', link: '/dropins/wishlist/functions/' },
-                        { label: 'Wishlist Styling', link: '/dropins/wishlist/styles/' },
+                        { label: 'Wishlist overview', link: '/dropins/wishlist/' },
+                        { label: 'Wishlist installation', link: '/dropins/wishlist/installation/' },
+                        { label: 'Wishlist dictionary', link: '/dropins/wishlist/dictionary/' },
+                        { label: 'Wishlist functions', link: '/dropins/wishlist/functions/' },
+                        { label: 'Wishlist styling', link: '/dropins/wishlist/styles/' },
                         {
-                          label: 'Wishlist Containers',
+                          label: 'Wishlist containers',
                           collapsed: false,
                           items: [
                             { label: 'Wishlist Container', link: '/dropins/wishlist/containers/wishlist/' },
@@ -691,13 +691,13 @@ async function config() {
                   label: 'Drop-ins SDK',
                   collapsed: true,
                   items: [
-                    { label: 'SDK Introduction', link: '/sdk/' },
+                    { label: 'SDK introduction', link: '/sdk/' },
                     { label: 'SDK CLI usage', link: '/sdk/get-started/cli/' },
                     {
-                      label: 'SDK Components',
+                      label: 'SDK components',
                       collapsed: true,
                       items: [
-                        { label: 'Components Overview', link: '/sdk/components/overview/' },
+                        { label: 'Components overview', link: '/sdk/components/overview/' },
                         { label: 'Accordion', link: '/sdk/components/accordion/' },
                         { label: 'ActionButton', link: '/sdk/components/actionbutton/' },
                         { label: 'ActionButtonGroup', link: '/sdk/components/actionbuttongroup/' },
@@ -740,11 +740,11 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'SDK Design',
+                      label: 'SDK design',
                       collapsed: true,
                       items: [
-                        { label: 'Design Overview', link: '/sdk/design/' },
-                        { label: 'Design Tokens', link: '/sdk/design/base/' },
+                        { label: 'Design overview', link: '/sdk/design/' },
+                        { label: 'Design tokens', link: '/sdk/design/base/' },
                         { label: 'Colors', link: '/sdk/design/colors/' },
                         { label: 'Typography', link: '/sdk/design/typography/' },
                         { label: 'Spacing', link: '/sdk/design/spacing/' },
@@ -753,10 +753,10 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'SDK Reference',
+                      label: 'SDK reference',
                       collapsed: true,
                       items: [
-                        { label: 'Reference Overview', link: '/sdk/reference/' },
+                        { label: 'Reference overview', link: '/sdk/reference/' },
                         { label: 'Events', link: '/sdk/reference/events/' },
                         { label: 'GraphQL', link: '/sdk/reference/graphql/' },
                         { label: 'Initializer', link: '/sdk/reference/initializer/' },
@@ -768,10 +768,10 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'SDK Utilities',
+                      label: 'SDK utilities',
                       collapsed: true,
                       items: [
-                        { label: 'Utilities Overview', link: '/sdk/utilities/' },
+                        { label: 'Utilities overview', link: '/sdk/utilities/' },
                         { label: 'classList', link: '/sdk/utilities/classlist/' },
                         { label: 'debounce', link: '/sdk/utilities/debounce/' },
                         { label: 'deepmerge', link: '/sdk/utilities/deepmerge/' },
@@ -805,7 +805,7 @@ async function config() {
               icon: 'seti:svg',
               items: [
                 {
-                  label: 'Quick Start',
+                  label: 'Quick start',
                   items: [
                     {
                       label: 'Overview',
@@ -834,7 +834,7 @@ async function config() {
                   ],
                 },
                 {
-                  label: 'Commerce Blocks',
+                  label: 'Commerce blocks',
                   items: [
                     {
                       label: 'Overview',
@@ -892,7 +892,7 @@ async function config() {
               icon: 'seti:video',
               items: [
                 {
-                  label: 'Storefront Videos',
+                  label: 'Storefront videos',
                   items: [
                     { label: 'Overview', link: '/videos/' },
                     {
@@ -918,7 +918,7 @@ async function config() {
               icon: 'laptop',
               items: [
                 {
-                  label: 'Storefront Playgrounds',
+                  label: 'Storefront playgrounds',
                   items: [
                     {
                       label: 'Introduction',
@@ -943,7 +943,7 @@ async function config() {
               collapsed: true,
               items: [
                 {
-                  label: 'Release Notes',
+                  label: 'Release notes',
                   items: [
                     { label: 'Overview', link: '/releases/' },
                     { label: 'Changelog', link: '/releases/changelog/' },
