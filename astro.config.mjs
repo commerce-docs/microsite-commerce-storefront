@@ -22,7 +22,6 @@ const basePath = isProduction
     ? process.env.VITE_GITHUB_BASE_PATH
     : '';
 
-
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
   ? fs.readdirSync(sdkComponentsDir).filter(file => file.endsWith('.mdx'))
@@ -387,7 +386,44 @@ async function config() {
                   label: 'Drop-ins for B2C',
                   collapsed: true,
                   items: [
-                    // Individual Drop-ins (alphabetically ordered)
+                      {
+                          label: 'Creating',
+                          link: '/dropins/all/creating/'
+                        },
+                        {
+                          label: 'Installing',
+                          link: '/dropins/all/installing/'
+                        },
+                        {
+                          label: 'Branding',
+                          link: '/dropins/all/branding/'
+                        },
+                        {
+                          label: 'Labeling',
+                          link: '/dropins/all/labeling/'
+                        },
+                        {
+                          label: 'Linking',
+                          link: '/dropins/all/linking/'
+                        },
+                        {
+                          label: 'Styling',
+                          link: '/dropins/all/styling/'
+                        },
+                        {
+                          label: 'Slots',
+                          link: '/dropins/all/slots/'
+                        },
+                        {
+                          label: 'Layouts',
+                          link: '/dropins/all/layouts/'
+                        },
+                        {
+                          label: 'Extending',
+                          link: '/dropins/all/extending/'
+                        },
+                      ],
+                    },
                     {
                       label: 'Cart',
                       collapsed: true,
@@ -540,18 +576,15 @@ async function config() {
                       ]
                     },
                     {
-                      label: 'Product Details',
+                      label: 'Product details (PDP)',
                       collapsed: true,
                       items: [
-                        { label: 'Product Details overview', link: '/dropins/product-details/' },
-                        { label: 'PDP installation', link: '/dropins/product-details/installation/' },
-                        { label: 'PDP initialization', link: '/dropins/product-details/initialization/' },
-                        { label: 'PDP styling', link: '/dropins/product-details/styles/' },
-                        { label: 'PDP functions', link: '/dropins/product-details/functions/' },
-                        { label: 'PDP dictionary', link: '/dropins/product-details/dictionary/' },
+                        { label: 'Overview', link: '/dropins/product-details/' },
+                        { label: 'Installation', link: '/dropins/product-details/installation/' },
+                        { label: 'Initialization', link: '/dropins/product-details/initialization/' },
+                        { label: 'Styles', link: '/dropins/product-details/styles/' },
                         {
-                          label: 'Product Detail containers',
-                          collapsed: false,
+                          label: 'Containers', collapsed: true,
                           items: [
                             { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                             { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
@@ -563,6 +596,8 @@ async function config() {
                             { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
                           ]
                         },
+                        { label: 'Functions', link: '/dropins/product-details/functions/' },
+                        { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
                       ]
                     },
                     {
@@ -673,6 +708,13 @@ async function config() {
                         },
                       ]
                     },
+                  ]
+                },
+                {
+                  label: 'Drop-ins for B2B',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/dropins-b2b/overview/' },
                   ]
                 },
                 // B2B Drop-ins - B2B-specific drop-in components
@@ -1003,6 +1045,5 @@ async function config() {
     ]
   });
 }
-
 
 export default config();
