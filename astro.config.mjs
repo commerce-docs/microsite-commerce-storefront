@@ -854,6 +854,35 @@ async function config() {
 
       react(),
     ],
+
+    vite: {
+      build: {
+        chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
+        rollupOptions: {
+          onwarn(warning, warn) {
+            // Suppress warnings about unused imports from expressive-code packages
+            if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
+              warning.source &&
+              (warning.source.includes('@expressive-code/') ||
+                warning.source.includes('expressive-code'))) {
+              return;
+            }
+            warn(warning);
+          }
+        }
+      },
+      logLevel: 'warn',
+      customLogger: {
+        warn(msg, options) {
+          // Suppress specific expressive-code warnings
+          if (msg.includes('@expressive-code/plugin-text-markers') &&
+            msg.includes('never used')) {
+            return;
+          }
+          console.warn(msg, options);
+        }
+      }
+    }
   });
 }
 
