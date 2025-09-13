@@ -515,26 +515,6 @@ async function config() {
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins-b2b/overview/' },
-                      {
-                        label: 'Freeze',
-                        collapsed: true,
-                        items: [
-                          { label: 'Overview', link: '/dropins-b2b/freeze/overview/' },
-                          { label: 'Installation', link: '/dropins-b2b/freeze/installation/' },
-                          { label: 'Initialization', link: '/dropins-b2b/freeze/initialization/' },
-                          {
-                            label: 'Containers', collapsed: true,
-                            items: [
-                              { label: 'Overview', link: '/dropins-b2b/freeze/containers/' },
-                              { label: 'ContainerOne', link: '/dropins-b2b/freeze/containers/container-one/' },
-                              { label: 'ContainerTwo', link: '/dropins-b2b/freeze/containers/container-two/' },
-                            ]
-                          },
-                          { label: 'Data events', link: '/dropins-b2b/freeze/data-events/' },
-                          { label: 'Functions', link: '/dropins-b2b/freeze/functions/' },
-                          { label: 'Dictionary', link: '/dropins-b2b/freeze/dictionary/' },
-                        ]
-                      }
                     ],
                   },
 
