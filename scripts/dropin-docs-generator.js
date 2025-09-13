@@ -185,56 +185,29 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
         const sectionLabel = isB2B ? 'Drop-ins for B2B' : 'Drop-ins for B2C';
 
         if (isB2B) {
-            // For B2B, use sophisticated logic similar to B2C but adapted for B2B structure
+            // For B2B, use the same logic as B2C (which works perfectly)
 
-            // Find the B2B section boundaries
+            // Find the B2B section
             const b2bStart = configContent.indexOf("label: 'Drop-ins for B2B'");
+            const b2bEnd = configContent.indexOf("label: 'Drop-ins SDK'");
 
-            if (b2bStart === -1) {
-                console.log('⚠️  Could not find B2B section');
+            if (b2bStart === -1 || b2bEnd === -1) {
+                console.log('⚠️  Could not find B2B section boundaries');
                 return;
             }
 
-            // B2B section comes after B2C, so we need to find the end of the file or next major section
-            // Find the end of the B2B section by looking for the closing brace
-            const b2bSectionStart = configContent.indexOf('items: [', b2bStart);
-            if (b2bSectionStart === -1) {
-                console.log('⚠️  Could not find B2B items array');
-                return;
-            }
+            const b2bSection = configContent.substring(b2bStart, b2bEnd);
 
-            // Find the matching closing bracket for the items array
-            let bracketCount = 0;
-            let pos = b2bSectionStart;
-            let foundEnd = false;
-
-            while (pos < configContent.length && !foundEnd) {
-                if (configContent[pos] === '[') bracketCount++;
-                if (configContent[pos] === ']') bracketCount--;
-                if (bracketCount === 0) {
-                    foundEnd = true;
-                    break;
-                }
-                pos++;
-            }
-
-            if (!foundEnd) {
-                console.log('⚠️  Could not find end of B2B items array');
-                return;
-            }
-
-            const b2bSection = configContent.substring(b2bStart, pos + 1);
-
-            // Find all existing B2B dropin entries and their positions
-            // B2B dropins have the pattern: { label: 'DropinName', (with proper indentation)
-            const dropinPattern = /^                    {\s*\n\s*label:\s*'([^']+)',/gm;
+            // Find all existing dropin entries and their positions
+            // Look for drop-in objects with collapsed: true (this identifies actual drop-ins)
+            const dropinPattern = /{\s*label:\s*'([^']+)',\s*collapsed:\s*true,/g;
             const existingDropins = [];
             let match;
 
             while ((match = dropinPattern.exec(b2bSection)) !== null) {
                 const name = match[1];
-                // Skip non-dropin sections (Overview, etc.)
-                if (name !== 'Overview' && name !== 'Containers') {
+                // Skip non-dropin sections and section headers
+                if (name !== 'Common' && name !== 'Overview' && name !== 'Containers' && name !== 'Drop-ins overview') {
                     existingDropins.push({
                         name: name,
                         position: b2bStart + match.index
@@ -250,7 +223,7 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
                 if (newDropinName.localeCompare(existingDropins[i].name) < 0) {
                     // Found the dropin we should insert before
                     const targetDropinName = existingDropins[i].name;
-                    const targetIndex = configContent.indexOf(`label: '${targetDropinName}',`, b2bStart);
+                    const targetIndex = configContent.indexOf(`label: '${targetDropinName}',`);
 
                     if (targetIndex !== -1) {
                         // Find the opening brace before the label
@@ -270,91 +243,43 @@ function updateSidebarConfig(dropinName, formats, isB2B) {
                 }
             }
 
-            // If no position found, insert at the end (after the last dropin)
+            // If no position found, insert after the Overview entry
             if (insertPosition === null) {
-                if (existingDropins.length > 0) {
-                    // Find the last dropin and insert after it
-                    const lastDropin = existingDropins[existingDropins.length - 1];
-                    const lastDropinIndex = configContent.indexOf(`label: '${lastDropin.name}',`, b2bStart);
-
-                    if (lastDropinIndex !== -1) {
-                        // Find the closing brace of the last dropin
-                        let braceCount = 0;
-                        let pos = lastDropinIndex;
-                        let foundClosingBrace = false;
-
-                        // Find the opening brace of the last dropin
-                        while (pos > 0 && configContent[pos] !== '{') {
-                            pos--;
-                        }
-
-                        // Count braces to find the matching closing brace
-                        while (pos < configContent.length && !foundClosingBrace) {
-                            if (configContent[pos] === '{') braceCount++;
-                            if (configContent[pos] === '}') braceCount--;
-                            if (braceCount === 0) {
-                                foundClosingBrace = true;
-                                break;
-                            }
-                            pos++;
-                        }
-
-                        if (foundClosingBrace) {
-                            // Insert after the closing brace
-                            insertPosition = pos + 1;
-                        }
+                // Look for the Overview entry in B2B section
+                const overviewIndex = configContent.indexOf(`{ label: 'Overview', link: '/dropins-b2b/overview/' }`, b2bStart);
+                if (overviewIndex !== -1) {
+                    // Find the end of the Overview entry (closing brace)
+                    let pos = overviewIndex;
+                    while (pos < configContent.length && configContent[pos] !== '}') {
+                        pos++;
                     }
-                } else {
-                    // No existing dropins, insert after the Overview item
-                    const overviewIndex = configContent.indexOf(`{ label: 'Overview', link: '/dropins-b2b/overview/' }`, b2bStart);
-                    if (overviewIndex !== -1) {
-                        // Find the end of the Overview item
-                        let pos = overviewIndex;
-                        while (pos < configContent.length && configContent[pos] !== '}') {
+                    if (pos < configContent.length) {
+                        // Move past the closing brace
+                        pos++;
+                        // Skip any trailing comma and whitespace to get to the next line
+                        while (pos < configContent.length && (configContent[pos] === ',' || configContent[pos] === ' ')) {
                             pos++;
                         }
-                        if (pos < configContent.length) {
-                            // Move to the end of the line (after the closing brace)
-                            while (pos < configContent.length && configContent[pos] !== '\n') {
-                                pos++;
-                            }
-                            insertPosition = pos;
+                        // Move to the next line
+                        if (pos < configContent.length && configContent[pos] === '\n') {
+                            pos++;
                         }
+                        insertPosition = pos;
                     }
                 }
             }
 
-            if (insertPosition === null) {
-                console.log('⚠️  Could not find insertion position in B2B section');
+            if (insertPosition !== null) {
+                const beforeInsert = configContent.substring(0, insertPosition);
+                const afterInsert = configContent.substring(insertPosition);
+
+                // Add minimal indentation for B2B drop-ins (same as B2C)
+                const indentedEntry = newDropinEntry.replace(/^/gm, '  ');
+                configContent = beforeInsert + indentedEntry + ',\n' + afterInsert;
+            } else {
+                console.log('⚠️  Could not determine insertion position');
                 return;
             }
-
-            // Insert the new dropin at the calculated position
-            const beforeInsert = configContent.substring(0, insertPosition);
-            const afterInsert = configContent.substring(insertPosition);
-
-            // Check if we need a comma before the new entry
-            const beforeTrimmed = beforeInsert.trim();
-            const needsCommaBefore = !beforeTrimmed.endsWith('[') && !beforeTrimmed.endsWith(',') && !beforeTrimmed.endsWith('}');
-
-            // Check if we need a comma after the new entry
-            const afterTrimmed = afterInsert.trim();
-            const isLastItem = afterTrimmed.startsWith(']') || afterTrimmed.startsWith('\n]');
-            const needsCommaAfter = !isLastItem;
-
-            // Check if afterInsert already starts with a newline to avoid double newlines
-            const afterStartsWithNewline = afterInsert.startsWith('\n');
-
-            // Determine the separators
-            const separatorBefore = needsCommaBefore ? ',\n' : '\n';
-            let separatorAfter = '';
-            if (needsCommaAfter) {
-                separatorAfter = afterStartsWithNewline ? ',' : ',\n';
-            } else if (!afterStartsWithNewline) {
-                separatorAfter = '\n';
-            }
-
-            configContent = beforeInsert + separatorBefore + newDropinEntry + separatorAfter + afterInsert;
 
         } else {
             // For B2C, insert alphabetically in the correct position
