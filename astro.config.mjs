@@ -281,22 +281,6 @@ async function config() {
 
                   // ---------- DROP-INS (B2C) ----------
                   {
-                    label: 'Drop-ins overview',
-                    collapsed: true,
-                    items: [
-                      { label: 'Overview', link: '/dropins/all/introduction/' },
-                      { label: 'Creating', link: '/dropins/all/creating/' },
-                      { label: 'Installing', link: '/dropins/all/installing/' },
-                      { label: 'Branding', link: '/dropins/all/branding/' },
-                      { label: 'Styling', link: '/dropins/all/styling/' },
-                      { label: 'Labeling', link: '/dropins/all/labeling/' },
-                      { label: 'Linking', link: '/dropins/all/linking/' },
-                      { label: 'Slots', link: '/dropins/all/slots/' },
-                      { label: 'Layouts', link: '/dropins/all/layouts/' },
-                      { label: 'Extending', link: '/dropins/all/extending/' },
-                    ],
-                  },
-                  {
                     label: 'Drop-ins for B2C',
                     collapsed: true,
                     items: [
@@ -382,38 +366,6 @@ async function config() {
                               { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                               { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                             ],
-                          },
-                        ],
-                      },
-                      {
-                        label: 'Order Management',
-                        collapsed: true,
-                        items: [
-                          { label: 'Order overview', link: '/dropins/order/' },
-                          { label: 'Order initialization', link: '/dropins/order/initialization/' },
-                          { label: 'Order styling', link: '/dropins/order/styles/' },
-                          { label: 'Order slots', link: '/dropins/order/slots/' },
-                          { label: 'Order functions', link: '/dropins/order/functions/' },
-                          { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
-                          {
-                            label: 'Order containers',
-                            collapsed: false,
-                            items: [
-                              { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
-                              { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
-                              { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
-                              { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
-                              { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
-                              { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
-                              { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
-                              { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
-                              { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
-                            ],
-                          },
-                          {
-                            label: 'Order tutorials',
-                            collapsed: false,
-                            items: [{ label: 'Order cancellation tutorial', link: '/dropins/order/tutorials/order-cancellation/' }],
                           },
                         ],
                       },
@@ -534,29 +486,6 @@ async function config() {
                         ],
                       },
                       {
-                        label: 'User Authentication',
-                        collapsed: true,
-                        items: [
-                          { label: 'User Auth overview', link: '/dropins/user-auth/' },
-                          { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
-                          { label: 'Auth slots', link: '/dropins/user-auth/slots/' },
-                          { label: 'Auth functions', link: '/dropins/user-auth/auth-functions/' },
-                          { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
-                          {
-                            label: 'Authentication containers',
-                            collapsed: false,
-                            items: [
-                              { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
-                              { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
-                              { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
-                              { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
-                              { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
-                              { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
-                            ],
-                          },
-                        ],
-                      },
-                      {
                         label: 'Wishlist',
                         collapsed: true,
                         items: [
@@ -584,7 +513,29 @@ async function config() {
                   {
                     label: 'Drop-ins for B2B',
                     collapsed: true,
-                    items: [{ label: 'Overview', link: '/dropins-b2b/overview/', badge: 'In Progress' }],
+                    items: [
+                      { label: 'Overview', link: '/dropins-b2b/overview/' },
+                      {
+                        label: 'Freeze',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/freeze/overview/' },
+                          { label: 'Installation', link: '/dropins-b2b/freeze/installation/' },
+                          { label: 'Initialization', link: '/dropins-b2b/freeze/initialization/' },
+                          {
+                            label: 'Containers', collapsed: true,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/freeze/containers/' },
+                              { label: 'ContainerOne', link: '/dropins-b2b/freeze/containers/container-one/' },
+                              { label: 'ContainerTwo', link: '/dropins-b2b/freeze/containers/container-two/' },
+                            ]
+                          },
+                          { label: 'Data events', link: '/dropins-b2b/freeze/data-events/' },
+                          { label: 'Functions', link: '/dropins-b2b/freeze/functions/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/freeze/dictionary/' },
+                        ]
+                      }
+                    ],
                   },
 
                   // ---------- DROP-INS SDK ----------
@@ -800,7 +751,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
             }
           ),
           starlightHeadingBadges(),
