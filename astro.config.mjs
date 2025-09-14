@@ -219,8 +219,8 @@ async function config() {
                     collapsed: false,
                     items: [
                       { label: 'Overview', link: '/get-started/' },
-                      { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Create a storefront', link: '/get-started/create-storefront' },
+                      { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
                     ],
@@ -245,6 +245,18 @@ async function config() {
                         ],
                       },
                       {
+                        label: 'Advanced setup',
+                        collapsed: true,
+                        items: [
+                          { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+                          {
+                            label: 'Luma Bridge',
+                            collapsed: true,
+                            items: [{ label: 'Introduction to Luma Bridge', link: '/setup/discovery/luma-bridge/' }],
+                          },
+                        ],
+                      },
+                      {
                         label: 'Compatibility package',
                         collapsed: true,
                         items: [
@@ -266,19 +278,6 @@ async function config() {
                       },
                     ],
                   },
-                  {
-                    label: 'Integrations',
-                    collapsed: true,
-                    items: [
-                      { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
-                      {
-                        label: 'Luma Bridge',
-                        collapsed: true,
-                        items: [{ label: 'Introduction to Luma Bridge', link: '/setup/discovery/luma-bridge/' }],
-                      },
-                    ],
-                  },
-
                   // ---------- DROP-INS (B2C) ----------
                   {
                     label: 'Drop-ins for B2C',
