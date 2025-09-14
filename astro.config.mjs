@@ -386,6 +386,38 @@ async function config() {
                         ],
                       },
                       {
+                        label: 'Order Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Order overview', link: '/dropins/order/' },
+                          { label: 'Order initialization', link: '/dropins/order/initialization/' },
+                          { label: 'Order styling', link: '/dropins/order/styles/' },
+                          { label: 'Order slots', link: '/dropins/order/slots/' },
+                          { label: 'Order functions', link: '/dropins/order/functions/' },
+                          { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
+                          {
+                            label: 'Order containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
+                              { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
+                              { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
+                              { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
+                              { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
+                              { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
+                              { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
+                              { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
+                              { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
+                            ],
+                          },
+                          {
+                            label: 'Order tutorials',
+                            collapsed: false,
+                            items: [{ label: 'Order cancellation tutorial', link: '/dropins/order/tutorials/order-cancellation/' }],
+                          },
+                        ],
+                      },
+                      {
                         label: 'Payment Services',
                         collapsed: true,
                         items: [
@@ -497,6 +529,29 @@ async function config() {
                               { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
                               { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                               { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        label: 'User Authentication',
+                        collapsed: true,
+                        items: [
+                          { label: 'User Auth overview', link: '/dropins/user-auth/' },
+                          { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
+                          { label: 'Auth slots', link: '/dropins/user-auth/slots/' },
+                          { label: 'Auth functions', link: '/dropins/user-auth/auth-functions/' },
+                          { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
+                          {
+                            label: 'Authentication containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
+                              { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
+                              { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
+                              { label: 'SignUp', link: '/dropins/user-auth/containers/sign-up/' },
+                              { label: 'SuccessNotification', link: '/dropins/user-auth/containers/success-notification/' },
+                              { label: 'UpdatePassword', link: '/dropins/user-auth/containers/update-password/' },
                             ],
                           },
                         ],
