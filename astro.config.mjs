@@ -278,27 +278,28 @@ async function config() {
                       },
                     ],
                   },
-                  // ---------- DROP-INS (B2C) ----------
+                  // ---------- DROP-INS Overview ----------
                   {
-                    label: 'Drop-ins for B2C',
+                    label: 'Drop-ins overview',
                     collapsed: true,
                     items: [
-                      {
-                        label: 'Drop-ins overview',
-                        collapsed: true,
-                        items: [
-                          { label: 'Overview', link: '/dropins/all/introduction/' },
-                          { label: 'Creating', link: '/dropins/all/creating/' },
-                          { label: 'Installing', link: '/dropins/all/installing/' },
-                          { label: 'Branding', link: '/dropins/all/branding/' },
-                          { label: 'Styling', link: '/dropins/all/styling/' },
-                          { label: 'Labeling', link: '/dropins/all/labeling/' },
-                          { label: 'Linking', link: '/dropins/all/linking/' },
-                          { label: 'Slots', link: '/dropins/all/slots/' },
-                          { label: 'Layouts', link: '/dropins/all/layouts/' },
-                          { label: 'Extending', link: '/dropins/all/extending/' },
-                        ],
-                      },
+                      { label: 'Overview', link: '/dropins/all/introduction/' },
+                      { label: 'Creating', link: '/dropins/all/creating/' },
+                      { label: 'Installing', link: '/dropins/all/installing/' },
+                      { label: 'Branding', link: '/dropins/all/branding/' },
+                      { label: 'Styling', link: '/dropins/all/styling/' },
+                      { label: 'Labeling', link: '/dropins/all/labeling/' },
+                      { label: 'Linking', link: '/dropins/all/linking/' },
+                      { label: 'Slots', link: '/dropins/all/slots/' },
+                      { label: 'Layouts', link: '/dropins/all/layouts/' },
+                      { label: 'Extending', link: '/dropins/all/extending/' },
+                    ],
+                  },
+                  // ---------- DROP-INS (B2C) ----------
+                  {
+                    label: 'Drop-ins',
+                    collapsed: true,
+                    items: [
                       {
                         label: 'Cart',
                         collapsed: true,
