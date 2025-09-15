@@ -520,7 +520,14 @@ async function config() {
                           { label: 'Account functions', link: '/dropins/user-account/functions/' },
                           { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
-                          { label: 'Account tutorials', link: '/dropins/user-account/tutorials/' },
+                          {
+                            label: 'Account tutorials',
+                            collapsed: false,
+                            items: [
+                              { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                              { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
+                            ],
+                          },
                           {
                             label: 'Account containers',
                             collapsed: false,
