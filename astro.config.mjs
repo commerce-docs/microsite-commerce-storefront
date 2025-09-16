@@ -520,13 +520,21 @@ async function config() {
                           { label: 'Account functions', link: '/dropins/user-account/functions/' },
                           { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
-                          { label: 'Account tutorials', link: '/dropins/user-account/tutorials/' },
+                          {
+                            label: 'Account tutorials',
+                            collapsed: false,
+                            items: [
+                              { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                              { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
+                            ],
+                          },
                           {
                             label: 'Account containers',
                             collapsed: false,
                             items: [
                               { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
                               { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
+                              { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                               { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                               { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
                             ],
