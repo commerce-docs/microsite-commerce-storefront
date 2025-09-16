@@ -1,0 +1,253 @@
+---
+title: Build a new drop-in or extend an existing one?
+description: A decision framework to determine when to create a new drop-in component versus extending or composing existing drop-ins, including granularity guidelines, examples, and escalation paths.
+sidebar:
+  label: Build vs. extend a drop-in
+---
+
+Developers often ask: “Should I build a new drop-in, or just add my functionality by extending the existing ones?” This guide provides a structured decision process, examples, granularity heuristics, and what to do when current extensibility (slots, events, styling, configuration) is insufficient.
+
+## TL;DR Decision Summary
+
+| If your feature... | Then likely... | Why |
+|--------------------|----------------|-----|
+| Is a one-off customization for a single merchant | Do NOT build a drop-in | Extra abstraction & lifecycle overhead |
+| Embeds a simple third-party widget (reviews, chat bubble, pixel) | Just add markup / script (or use a slot) | No multi-tenant productization required |
+| Enhances an existing purchase / browse / account flow | Extend an existing drop-in via slots/events | Reuse upgrade path & styling |
+| Requires being configurable, reusable across multiple merchants/brands | Build (or plan) a drop-in | Productization justifies SDK + abstraction |
+| Needs runtime theming and further extension by other developers | Build a drop-in | Extensibility APIs provide value |
+| Must replace (substitute) an existing drop-in entirely | Evaluate: smaller alternative drop-in vs. request new extension points | Avoid unnecessary fragmentation |
+| Combines several loosely related concerns | Split into multiple smaller drop-ins | Maintains single, clear responsibility |
+| Fails because a needed slot is missing | Request an extension point before forking | Keeps ecosystem consistent |
+
+## Core Definitions
+
+**Drop-in**  
+A productized, reusable, upgradable micro-frontend built with the Drop-in SDK providing standard extensibility surfaces (slots, events, styling/theming tokens, configuration, i18n). Designed for one-to-many distribution.
+
+**Extending a drop-in**  
+Using published extension mechanisms (slots, composition, configuration, style overrides, public events) to augment or adapt an existing drop-in without owning its full lifecycle.
+
+**Custom one-off / local component**  
+A storefront-specific implementation (HTML/JS/React/etc.) that does not need distribution, runtime configurability, or third-party extension.
+
+## Decision Flow (Diagram)
+
+### Mermaid (primary)
+
+```mermaid
+flowchart TD
+    A[Start: What are you building?] --> B{Will this be reused<br/>across multiple merchants/brands?}
+    B -- No --> C[One-off customization<br/>Build local component or extend via slot]
+    B -- Yes --> D{Does an existing drop-in<br/>cover ≥60% of the domain?}
+    D -- Yes --> E{Can required changes be done<br/>with current slots/events/styling?}
+    E -- Yes --> F[EXTEND existing drop-in]
+    E -- No --> G{Is missing extension point<br/>reasonable to add?}
+    G -- Yes --> H[Request new slot/extension<br/>+ extend later]
+    G -- No --> I{Is the need a full functional substitute<br/>for the existing drop-in?}
+    I -- Yes --> J[Design alternative drop-in<br/>(ensure narrow scope)]
+    I -- No --> K[Re-assess requirements / reduce scope]
+    D -- No --> L{Is the feature cohesive<br/>with a single responsibility?}
+    L -- Yes --> M[BUILD new drop-in]
+    L -- No --> N[Split into multiple focused drop-ins]
+    M --> O[Define extension points early]
+    J --> O
+```
+
+### ASCII (fallback / simplified)
+
+```
+Start
+ └─> Reused across multiple merchants? (Y/N)
+     N: One-off → Just extend or implement locally (not a drop-in)
+     Y: Existing drop-in covers majority? (Y/N)
+        Y: Can slots/events/styling achieve it? (Y/N)
+           Y: Extend existing drop-in
+           N: Reasonable to add a new slot? (Y/N)
+              Y: Request/Contribute slot → then extend
+              N: Do you truly need a full replacement? (Y/N)
+                 Y: Design alternative drop-in (keep scope tight)
+                 N: Re-scope / avoid fragmentation
+        N: Is the new feature cohesive (single responsibility)? (Y/N)
+           Y: Build a new drop-in (define extension points early)
+           N: Split into multiple smaller focused drop-ins
+```
+
+## Granularity & Scope Heuristics
+
+A “good” drop-in typically:
+
+- Encapsulates 1 primary user journey or domain concept (e.g., Cart, Checkout Payment Step, Product Search).
+- Exposes extension points *at semantic boundaries* (before/after UI sections, alternate panels, data transformation events).
+- Has a bounded configuration surface (avoid mixing unrelated toggles).
+- Uses < ~5 core Commerce API groupings. Crossing many API domains may indicate the scope is too broad.
+- Avoids combining marketing decoration + transactional flow in the same bundle.
+
+Smell indicators you are too big:
+
+- “And it also does …” appears repeatedly in description.
+- Two separate teams want to evolve different parts independently.
+- You plan separate versioning or release cadences for sub-features.
+
+Smell indicators you are too small:
+
+- Requires consumers to orchestrate 3–5 always-used micro drop-ins together just to achieve a single basic flow.
+- Each “micro” adds only a trivial wrapper around a single API field.
+
+## When NOT to Build a New Drop-in
+
+- Adding a provider-specific script (e.g., reviews widget, chat bubble, analytics pixel).
+- Injecting a promo banner into Cart or Checkout header.
+- Styling changes or minor UI variations.
+- Merchant-specific gating logic (feature flags, content swaps).
+- Experimental A/B variant not yet productized.
+
+## When Building a New Drop-in IS Justified
+
+| Criterion | Typical Signal |
+|-----------|----------------|
+| Multi-merchant reuse | Marketplace distribution planned |
+| Requires runtime theming & extension | Exposes slots for third parties |
+| Clear functional boundary | “Does X” without “also manages Y/Z” |
+| Needs isolation | Different cache, error states, performance tuning |
+| API orchestration complexity | Normalizes several backend calls with fallbacks |
+| Distribution lifecycle | Versioning, changelog, upgrade path needed |
+| Configuration surface | Merchant toggles / provider credentials |
+
+## Substitution vs Augmentation
+
+- Augmentation (preferred): Add panels, fields, or interactions *around* existing flows via slots/events.
+- Substitution: Provide an *alternative* implementation for an existing domain (e.g., entire Payment Step).  
+  Only pursue substitution if:
+  - Core behavior is fundamentally different (e.g., specialized B2B quoting workflow).
+  - Extension points cannot express required structural changes.
+  - There is a defined migration/selection mechanism (avoid runtime conflicts).
+  - Scope is narrowed (e.g., “Payment Method Entry Panel” vs. “Entire Checkout”).
+
+## Missing Extension Point? Escalation Path
+
+1. Inventory needs:
+   - UI insertion location(s)
+   - Data dependencies / events
+   - Styling integration
+   - Accessibility considerations
+2. Classify: Enhancement of existing slot or need for new slot region?
+3. Open a request (issue / RFC) including:
+   - Use case scenario (user story)
+   - Proposed slot name & semantic contract
+   - Lifecycle (when rendered, when updated)
+   - Expected data context shape
+   - Fallback when unused
+4. Avoid forking unless:
+   - Timeline blocks contribution
+   - Change would destabilize existing consumers
+   - Interim wrapper is feasible (document temporary status)
+
+## Example Scenarios
+
+| Scenario | Decision | Rationale |
+|----------|----------|-----------|
+| Bazaarvoice Ratings & Reviews embed | Do not build drop-in | Simple widget; no broad abstraction needed |
+| Stripe Payments provider integration | Extend Checkout drop-in | Works inside existing payment step via slot(s) |
+| New B2B “Requisition Lists” feature | New drop-in | Distinct domain, multi-merchant potential |
+| Adding donation checkbox to Cart | Extend Cart via slot | Minor localized UI |
+| Full alternative Checkout flow for regulated market | Possibly substitute (alternate drop-in) | Structural changes cannot be slotted |
+| Multi-provider “Intelligent Search” component | New drop-in | Reusable, cross-storefront product surface |
+
+## Anti-Patterns
+
+- “Kitchen sink” drop-in bundling search + personalization + chat.
+- Building a drop-in solely to host one script tag.
+- Adding slots *inside* purely presentational internal elements (too fine-grained).
+- Re-implementing an existing drop-in to add a single new button (request slot instead).
+- Shipping a drop-in with *zero* documented extension API (becomes opaque monolith).
+
+## Planning a New Drop-in: Minimum Checklist
+
+| Area | Questions |
+|------|-----------|
+| Responsibility | Can I summarize it in one sentence without “and”? |
+| Extension points | What slots/events are needed by *others*? |
+| Configuration | Which options justify runtime config vs. hard-coded? |
+| Theming | Do I expose tokens vs. forcing overrides? |
+| Accessibility | What ARIA patterns & keyboard flows are guaranteed? |
+| Versioning | How do breaking changes surface? |
+| Performance | Code-splitting boundaries? |
+| Security | Data isolation, sanitization of slot content? |
+
+## Evolving a One-off into a Drop-in Later
+
+1. Start as local component (validate UX/functionality).
+2. Extract boundaries (data fetching, UI state machine).
+3. Introduce controlled extension surfaces (slots/events).
+4. Add configuration schema (documented JSON or declarative config).
+5. Harden: accessibility, theming tokens, performance contracts.
+6. Publish as drop-in with migration notes.
+
+## Requesting New Slots: Template
+
+```
+Title: Add <slot-name> to <drop-in-name>
+
+Use case:
+- <Concise scenario>
+
+Location in UI:
+- <Description / screenshot reference>
+
+Data required:
+- e.g. cart totals, product IDs
+
+Lifecycle:
+- Needs initial render + re-render on <events>
+
+Fallback behavior:
+- Absent = no UI / zero height
+
+Accessibility:
+- Wrapper inherits region landmark? (Y/N)
+```
+
+## Quick Decision Checklist (Yes/No)
+
+Answer “Yes” for each that applies:
+
+| Question | If Yes, pushes toward... |
+|----------|--------------------------|
+| Will this ship to many merchants? | New drop-in |
+| Do others need to extend it further? | New drop-in |
+| Is there already a drop-in covering most of this? | Extend instead |
+| Can slots/events meet needs? | Extend |
+| Is missing capability only a new slot region? | Request slot |
+| Would substitution fragment ecosystem? | Reconsider |
+| Does feature combine unrelated concerns? | Split scope |
+
+## FAQs
+
+**Q: Are slots the *only* extensibility mechanism?**  
+Currently the primary stable surface. If insufficient, propose additional patterns (e.g., data transforms, adapter APIs) via RFC.
+
+**Q: Can a third party fully replace an OOTB drop-in?**  
+Possible, but should be rare. Consider whether improving extension points yields lower ecosystem friction.
+
+**Q: How do we approach low-code / no-code install?**  
+This is a broader platform concern (packaging + manifest + runtime registration). Strive for: declarative registration + configuration forms. (Track separately; not a reason alone to build a new drop-in.)
+
+## Glossary
+
+- Slot: Declarative anchor where arbitrary UI content can be injected.
+- Substitution: Providing an alternate implementation of a whole drop-in domain.
+- Augmentation: Adding to existing UI without owning full logic.
+- Productization: Packaging for reuse, versioning, distribution, and external extension.
+
+## Next Steps
+
+- Unsure? Start by attempting an extension.
+- Document blockers (missing slot? event?) before deciding to fork.
+- Open an issue with a slot request template if needed.
+- Only propose new drop-ins with a concise responsibility statement + extension plan.
+
+---
+
+Last updated: (insert date)
+Contributions welcome. Open an issue if a decision case is missing.

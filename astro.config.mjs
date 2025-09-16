@@ -294,6 +294,7 @@ async function config() {
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Extending', link: '/dropins/all/extending/' },
+                      { label: 'Extend or Build', link: '/dropins/all/extend-or-build/' },
                     ],
                   },
                   // ---------- DROP-INS (B2C) ----------
