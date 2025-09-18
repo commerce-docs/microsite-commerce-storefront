@@ -9,7 +9,7 @@ export const ACCS_QUERY_HEADERS = {
 
 export const ACO_QUERY_HEADERS = {
   "Content-Type": "application/json",
-  "AC-View-ID": "cde0ab4c-1f7b-4e12-91f6-9c7840ab6523"  # View ID for the Global catalog
+  "AC-View-ID": "cde0ab4c-1f7b-4e12-91f6-9c7840ab6523"
 }
 
 export const getQueryHeaders = (service) => {
