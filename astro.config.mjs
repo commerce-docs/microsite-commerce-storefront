@@ -285,7 +285,8 @@ async function config() {
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
-                      { label: 'Creating', link: '/dropins/all/creating/' },
+                      { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
+                      { label: 'Extending', link: '/dropins/all/extending/' },
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
@@ -293,8 +294,7 @@ async function config() {
                       { label: 'Linking', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
-                      { label: 'Extending', link: '/dropins/all/extending/' },
-                      { label: 'Extend or Build', link: '/dropins/all/extend-or-build/' },
+                      { label: 'Creating', link: '/dropins/all/creating/' },
                     ],
                   },
                   // ---------- DROP-INS (B2C) ----------
