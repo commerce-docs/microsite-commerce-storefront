@@ -8,11 +8,12 @@ import Diagram from '@components/Diagram.astro';
 
 The `ProductGiftCardOptions` container manages and displays gift card-specific options on the product details page.
 
-The container receives initial product data during [initialization](/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope. It also listens to `pdp/values` to keep its displayed state in sync with the currently selected configuration, and it updates the global PDP configuration values and validity as shoppers interact with the gift card fields.
+The container receives initial product data during [initialization](/dropins/product-details/initialization/) to preload the component. Once loaded, it operates in an event-driven manner, updating with data emitted to `pdp/data` within the event scope. Additionally, it listens to `pdp/values` to keep its displayed state in sync with the currently selected configuration. As shoppers interact with the gift card fields, the container updates the global PDP configuration values and validity.
 
 :::note
-- Rendering is conditional. The container renders only when the product includes the `ac_giftcard` attribute. The attribute must contain a JSON string with the shape `{ "options": Option[] }`, which defines the fields shown in the UI.
-- As shoppers edit fields, the container writes the selected values to the PDP configuration (`enteredOptions`) and updates the overall configuration validity, enabling downstream actions like Add to Cart.
+- Rendering is conditional. The container renders only when the product includes the `ac_giftcard` attribute containing a JSON string with the shape `{ "options": Option[] }` that defines the UI fields.
+- User interactions are tracked. As shoppers edit fields, the container writes selected values to the PDP configuration (`enteredOptions`) and updates validity to enable actions like **Add to Cart**.
+- Additionally, the container passes the currency of the product to the `GiftCardOptions` component so it can format and display the currency correctly.
 :::
 
 ## Container rendering
@@ -44,9 +45,3 @@ return productRenderer.render(ProductGiftCardOptions, {
   className: 'pdp-gift-card-options--custom',
 });
 ```
-
-## Behavior in context
-
-- The container will read the product's `ac_giftcard` attribute to determine which gift card fields to render.
-- As the shopper fills out gift card fields, selections are synchronized to the PDP values store (`enteredOptions`) and overall configuration validity is updated accordingly.
-- If the product does not include `ac_giftcard`, the container renders nothing.
