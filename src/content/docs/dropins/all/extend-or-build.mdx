@@ -22,192 +22,44 @@ Developers often ask: “Should I build a new drop-in, or just add my functional
 
 ### Extending a drop-in
 
-Adding functionality to a drop-in by adding slots, configuration, style overrides, and public events.
+Adding functionality to a drop-in using existing extensibility mechanisms like slots, configuration, styling, and events.
 
 ### Building a new drop-in
 
-Building a new drop-in is the process of creating a new drop-in from scratch using the Dropin SDK. TODO: Add link to Dropin SDK.
+Creating a new drop-in from scratch using the [drop-in template](https://github.com/adobe-commerce/dropin-template) and SDK.
 
 ### Slots
 
-Declarative anchor where arbitrary UI content can be injected.
-
-### Configuration
-
-Configuration is the process of setting the properties for a drop-in container.
-
-### Style overrides
-
-Style overrides are the process of overriding the styles of a drop-in container.
-
-### Public events
-
-Public events are the process of emitting or observing events from a drop-in.
+Declarative anchors where custom UI content can be injected into a drop-in.
 
 </Vocabulary>
 
-## Decision flow
+## Do NOT build a drop-in for these scenarios
 
-<Diagram
-  type="mermaid"
-  caption="Decision Flow"
-  code={`
-flowchart LR
-    A{"Need reuse?"}
-    A -- No --> B["Use HTML/JS"]
-    A -- Yes --> C{"Can use slots, etc?"}
-    C -- Yes --> D["Extend existing"]
-    C -- No --> E{"Independent?"}
-    E -- Yes --> F["Build Drop-in"]
-    E -- No --> G["Build Drop-in"]
-  `}
-/>
+| Scenario | Why not? | Use instead |
+|----------|------------------------------|-------------|
+| **Third-party components** | They come with pre-built UI and JavaScript | Use the vendor's provided scripts (e.g., BV ratings) |
+| **Simple content additions** | Overkill for basic content placement | HTML/CSS or slots |
+| **Styling and UI changes** | Existing drop-ins can be customized extensively | Modify layouts, replace components, or use slots |
+| **Merchant-specific logic** | Not reusable across different stores | Application-level conditional logic or configuration |
+| **Experimental A/B variants** | Temporary and not yet proven for reuse | Feature flags or temporary code branches |
 
-## Quick decision checklist (Yes/No)
+## Need a new extension point?
 
-Answer "Yes" for each that applies:
-
-| Question | If Yes, pushes toward... |
-|----------|--------------------------|
-| Will this ship to many merchants? | Custom UI |
-| Do others need to extend it further? | Custom UI |
-| Is there already a drop-in covering most of this? | Extend a drop-in |
-| Can slots/events meet needs? | Extend a drop-in |
-| Is missing capability only a new slot region? | Request a slot |
-
-<Diagram
-  type="mermaid"
-  caption="Quick Decision Checklist Flow"
-  code={`
-flowchart TD
-    A["Will this ship to many merchants?"]
-    B["Do others need to extend it further?"]
-    C["Is there already a drop-in covering most of this?"]
-    D["Can slots/events meet needs?"]
-    E["Is missing capability only a new slot region?"]
-    
-    A -- Yes --> F["Custom UI"]
-    B -- Yes --> F
-    C -- Yes --> G["Extend a drop-in"]
-    D -- Yes --> G
-    E -- Yes --> H["Request a slot"]
-    
-    style F fill:#ffebee
-    style G fill:#e8f5e8
-    style H fill:#fff3e0
-  `}
-/>
-
-## Examples of when NOT to build a new drop-in
-
-- Adding a provider-specific script (e.g., reviews widget, chat bubble, analytics pixel).
-- Injecting a promo banner into Cart or Checkout header.
-- Styling changes or minor UI variations.
-- Merchant-specific gating logic (feature flags, content swaps).
-- Experimental A/B variant not yet productized.
-
-<Diagram
-  type="mermaid"
-  caption="Common Use Cases - Use HTML/JS or Extend Existing"
-  code={`
-flowchart TD
-    A["Provider Script"] --> B["Add script tag directly"]
-    C["Promo Banner"] --> D["Use HTML/JS with slots"]
-    E["Styling Changes"] --> F["CSS overrides"]
-    G["Feature Flags"] --> H["Conditional HTML/JS"]
-    I["A/B Testing"] --> J["HTML/JS variants"]
-    
-    style A fill:#e1f5fe
-    style C fill:#e1f5fe
-    style E fill:#e1f5fe
-    style G fill:#e1f5fe
-    style I fill:#e1f5fe
-  `}
-/>
-
-## When building a new drop-in is justified
-
-Never
-
-## Missing extension point? Escalation path
+If existing drop-ins don't provide the slots or events you need:
 
 <Steps>
-1. Inventory needs:
-   - UI insertion location(s)
-   - Data dependencies / events
-   - Styling integration
-   - Accessibility considerations
-1. Classify: Enhancement of existing slot or need for new slot region?
-1. Open a request (issue / RFC) including:
-   - Use case scenario (user story)
-   - Proposed slot name & semantic contract
-   - Lifecycle (when rendered, when updated)
-   - Expected data context shape
-   - Fallback when unused
+1. **Document your use case** - Explain what you're trying to achieve
+1. **Identify the gap** - What specific slot or event is missing?
+1. **Submit a request** - Open an issue with your requirements
 </Steps>
 
-## Example scenarios
-
-| Scenario | Decision | Rationale |
-|----------|----------|-----------|
-| Bazaarvoice Ratings & Reviews embed | Do not build drop-in | Simple widget; no broad abstraction needed |
-| Stripe Payments provider integration | Extend Checkout drop-in | Works inside existing payment step via slot(s) |
-| Adding donation checkbox to Cart | Extend Cart via slot | Minor localized UI |
-
-<Diagram
-  type="mermaid"
-  caption="Example Scenarios and Decisions"
-  code={`
-flowchart TD
-    A["Bazaarvoice Ratings & Reviews embed"]
-    B["Stripe Payments provider integration"]
-    C["Adding donation checkbox to Cart"]
-    
-    A --> D["Do not build drop-in"]
-    B --> E["Extend Checkout drop-in"]
-    C --> F["Extend Cart via slot"]
-    
-    D --> G["Simple widget;<br/>no broad abstraction needed"]
-    E --> H["Works inside existing<br/>payment step via slot(s)"]
-    F --> I["Minor localized UI"]
-    
-    style A fill:#e3f2fd
-    style B fill:#e8f5e8
-    style C fill:#e8f5e8
-    style D fill:#ffebee
-    style E fill:#e8f5e8
-    style F fill:#e8f5e8
-    style G fill:#fff3e0
-    style H fill:#fff3e0
-    style I fill:#fff3e0
-  `}
-/>
-
-## Anti-Patterns
-
-- "Kitchen sink" drop-in bundling search + personalization + chat.
-- Building a drop-in solely to host one script tag.
-- Adding slots *inside* purely presentational internal elements (too fine-grained).
-- Re-implementing an existing drop-in to add a single new button (request slot instead).
-- Shipping a drop-in with *zero* documented extension API (becomes opaque monolith).
-
-## Planning a new drop-in: minimum checklist
-
-| Area | Questions |
-|------|-----------|
-| Responsibility | Can I summarize it in one sentence without “and”? |
-| Extension points | What slots/events are needed by *others*? |
-| Configuration | Which options justify runtime config vs. hard-coded? |
-| Theming | Do I expose tokens vs. forcing overrides? |
-| Accessibility | What ARIA patterns & keyboard flows are guaranteed? |
-| Versioning | How do breaking changes surface? |
-| Performance | Code-splitting boundaries? |
-| Security | Data isolation, sanitization of slot content? |
+**TODO**: Add link to request a new slot or event
 
 ## FAQs
 
 **Q: Are slots the *only* extensibility mechanism?**  
-Currently the primary stable surface. If insufficient, propose additional patterns (e.g., data transforms, adapter APIs) via RFC.
+Slots are currently the primary stable extensibility mechanism. If they don't meet your needs, you can request new extensibility options through a formal feature request.
 
-**Q: Can a third party fully replace an OOTB drop-in?**  
-You can build your UI against the APIs directly rather than using dropins, however you will have to re-implement all logic/functionality currently provided by a dropin OOTB.
+**Q: Can a third-party developer fully replace an out-of-the-box (OOTB) drop-in?**  
+You *can* build your UI against the APIs directly rather than using drop-ins. However, you will have to re-implement all logic/functionality currently provided by an OOTB drop-in. We don't recommend this approach.
