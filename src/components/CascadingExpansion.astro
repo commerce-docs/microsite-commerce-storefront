@@ -1,0 +1,78 @@
+---
+// Cascading Expansion Script Component
+// This adds the feature to automatically open all nested sections when a parent section is opened
+---
+
+<script>
+    console.log("🔧 Cascading Expansion script loading...");
+    console.log("🔧 Script timestamp:", new Date().toISOString());
+
+    const initializeCascadingExpansion = () => {
+        console.log("🔧 Initializing cascading expansion...");
+
+        const sidebar = document.querySelector("#starlight__sidebar");
+        console.log("🔧 Sidebar found:", !!sidebar);
+
+        if (!sidebar) {
+            console.log("❌ No sidebar found, retrying in 100ms...");
+            setTimeout(initializeCascadingExpansion, 100);
+            return;
+        }
+
+        const details = sidebar.querySelectorAll("details");
+        console.log("🔧 Found details elements:", details.length);
+
+        // Cascading expansion feature
+        const handleCascadingExpansion = (event) => {
+            console.log("🔥 Toggle event fired on:", event.target.tagName);
+
+            if (event.target.tagName === "DETAILS" && event.target.open) {
+                console.log("✅ DETAILS element opened!");
+                const sectionName = event.target
+                    .querySelector("summary")
+                    ?.textContent?.trim();
+                console.log("📂 Section opened:", sectionName);
+
+                // Find all nested details elements within this specific section
+                const nestedDetails = event.target.querySelectorAll("details");
+                console.log("🔍 Found nested details:", nestedDetails.length);
+
+                if (nestedDetails.length > 0) {
+                    nestedDetails.forEach((nested, index) => {
+                        const nestedName = nested
+                            .querySelector("summary")
+                            ?.textContent?.trim();
+                        console.log(
+                            `🔓 Opening nested section ${index}:`,
+                            nestedName,
+                        );
+                        nested.open = true;
+                    });
+                    console.log("✅ All nested sections opened!");
+                } else {
+                    console.log("ℹ️ No nested sections found");
+                }
+            }
+        };
+
+        // Add event listeners
+        sidebar.addEventListener("toggle", handleCascadingExpansion, true);
+        console.log("✅ Event listeners attached!");
+    };
+
+    // Try multiple initialization methods
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeCascadingExpansion,
+        );
+    } else {
+        initializeCascadingExpansion();
+    }
+
+    // Also try on window load as a fallback
+    window.addEventListener("load", () => {
+        console.log("🔧 Window loaded, trying initialization again...");
+        setTimeout(initializeCascadingExpansion, 100);
+    });
+</script>
