@@ -13,67 +13,87 @@ import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Options from '@components/Options.astro';
+import Option from '@components/Option.astro';
 
 When customizing Commerce drop-ins, you have three main approaches. **Extending** existing drop-ins is the recommended and fully supported path. **Substituting** drop-ins with third-party solutions is sometimes necessary and possible thanks to drop-ins' composable architecture. **Creating** your own drop-ins with the Drop-in SDK (currently experimental) is another option. This guide helps you choose the right approach for your specific needs.
 
 ## Vocabulary
 
-<Vocabulary>
+<Vocabulary columns={2}>
 
 ### Extend
-
 Modify or enhance existing drop-ins using slots, styling, events, or configuration. This is the **recommended and fully supported** approach.
 
 ### Substitute
-
 Replace an Adobe drop-in entirely with a third-party solution (like using Stripe for checkout). This comes with maintenance responsibilities and compatibility risks.
 
 ### Create
-
-Build a brand-new drop-in from scratch using the SDK. Currently in **early access** - experimental with limited support.
+Build a brand-new drop-in from scratch using the SDK. Currently in **early access** with limited third-party support.
 
 ### Slots
-
 Declarative anchors where custom UI content can be injected into a drop-in.
+
+### Transformers
+Modify how drop-ins process and display data from Commerce APIs.
+
+### Configuration
+Settings and options that customize drop-in behavior without changing core functionality.
+
+### Styling
+Override CSS, modify layouts, and replace visual components to change how drop-ins appear without altering their core functionality.
+
+### Events
+Data events that drop-ins emit, allowing you to listen and add custom behavior.
+
+### SDK (Drop-in SDK)
+Software Development Kit for building custom drop-ins from scratch (currently in early access).
+
+### Third-party solution
+External service or component that replaces an Adobe drop-in (for example, Stripe for checkout).
 
 </Vocabulary>
 
 ## Decision guidance
-
 Use this decision flow to determine the right approach for your needs:
 
 <Steps>
 1. **Can you achieve your goals by extending?** 
-   - Use slots to add custom content
-   - Common with checkout flows (Stripe, PayPal, etc.)
-   - Third-party service provides their own UI/logic
-   - Apply custom styling and layouts
-   - Listen to events for custom behavior
    - Modify configurations
+   - Apply custom styling and layouts
+   - Use slots to add custom content (including third-party payment methods)
+   - Listen to events for custom behavior
+   - Use transformers to change how data is processed
    
    **If yes** → **Extend** (recommended path)
+   
+   **Note**: You can integrate third-party services using slots without replacing the entire drop-in. For example, you canintegrate Stripe or PayPal payment methods into the existing Checkout drop-in rather than replacing the whole checkout flow.
 
 2. **Do you need to completely replace core functionality?**
    - Adobe's drop-in doesn't fit your business model
+   - You want an all-in-one experience from a payment provider
+   - Third-party service provides their own complete UI/logic
    
    **If yes** → **Substitute** (proceed with caution)
 
 3. **Do you need something entirely new that doesn't exist?**
-   - Building for reuse across multiple storefronts/brands
    - No existing drop-in covers your use case
+   - Building for reuse across multiple storefronts/brands
    - You understand the maintenance responsibilities
    
    **If yes** → **Create** (early access)
 </Steps>
 
-<Aside type="tip">
-**Default recommendation**: Start with extending. Most customization needs can be met through slots, styling, and events without the complexity and maintenance burden of substitution or creation.
+<Aside type="tip" title="Default recommendation">
+Start with extending. Most customization needs can be met through slots, styling, and events without the complexity and maintenance burden of substitution or creation.
 </Aside>
 
-## The three approaches
+## Three approaches
 
-### 1. Extend (Recommended)
+<Options>
 
+<Option>
+### Extend (Recommended)
 This is the **default and fully supported** approach. Extending allows you to customize drop-ins while maintaining compatibility and receiving updates.
 
 #### When to extend:
@@ -95,8 +115,10 @@ This is the **default and fully supported** approach. Extending allows you to cu
 - Lower maintenance overhead
 - Access to new features and bug fixes
 
-### 2. Substitute (Proceed with caution)
+</Option>
 
+<Option>
+### Substitute (Proceed with caution)
 Replace an Adobe drop-in entirely with a third-party solution. This is common in practice but comes with significant responsibilities.
 
 #### When substitution happens:
@@ -111,12 +133,14 @@ Replace an Adobe drop-in entirely with a third-party solution. This is common in
 - **Feature gaps** - May miss out on new Commerce features
 - **Support limitations** - Adobe cannot provide support for third-party code
 
-<Aside type="caution">
-**Important**: Substitution means you're responsible for maintaining compatibility with Commerce APIs and handling all future updates yourself.
+<Aside type="caution" title='Substitution risks'>
+Substitution means you're responsible for maintaining compatibility with Commerce APIs and handling all future updates yourself.
 </Aside>
 
-### 3. Create (Early access)
+</Option>
 
+<Option>
+### Create (Early access)
 Build entirely new drop-ins from scratch using the SDK. This is currently in early access with limited support for third-party services.
 
 #### When creation might be considered:
@@ -125,8 +149,8 @@ Build entirely new drop-ins from scratch using the SDK. This is currently in ear
 - You have significant development resources and expertise
 - You understand the long-term maintenance commitment
 
-<Aside type="caution" title='Early Access Warning'>
-The drop-in SDK is currently early access with limited support for third parties. Building new drop-ins comes with these risks and limitations:
+<Aside type="caution" title='Early access considerations'>
+The drop-in SDK is currently early access with limited support for third-party solutions. Building new drop-ins comes with these risks and limitations:
 
 - **Limited support** - Adobe cannot provide enablement or troubleshooting help
 - **API instability** - SDK APIs may change without notice
@@ -136,8 +160,11 @@ The drop-in SDK is currently early access with limited support for third parties
 **Before building**: Contact Adobe to discuss your use case. There may be better alternatives or upcoming features that address your needs.
 </Aside>
 
-## Boundaries and limitations
+</Option>
 
+</Options>
+
+## Boundaries and limitations
 Drop-ins work best for certain types of functionality. Understanding these boundaries helps you choose the right approach:
 
 #### Drop-ins excel at:
@@ -154,7 +181,6 @@ Drop-ins work best for certain types of functionality. Understanding these bound
 - Single-use, non-reusable customizations
 
 ## Need a new extension point?
-
 If existing drop-ins don't provide the slots or events you need:
 
 <Steps>
@@ -166,7 +192,6 @@ If existing drop-ins don't provide the slots or events you need:
 **TODO**: Add link to request a new slot or event
 
 ## FAQs
-
 **Q: Why does Adobe recommend extending over building new drop-ins?**  
 Extending is fully supported, maintains compatibility with updates, and reduces maintenance overhead. Most customization needs can be met through extension without the risks associated with building from scratch or substituting drop-ins.
 
