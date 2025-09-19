@@ -67,19 +67,19 @@ import { render as PaymentServices } from '@dropins/storefront-payment-services/
 import * as orderApi from '@dropins/storefront-order/api.js';
 import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
 
-const cart = events.lastPayload('pdp/values');
+const product = events.lastPayload('pdp/values');
 
-if (cart) {
+if (product) {
   const $content = document.createElement('div');
   PaymentServices.render(ApplePay, {
     location: PaymentLocation.PRODUCT_DETAIL,
     createCart: {
       getCartItems: () => [{
-        sku: cart.sku
+        sku: product.sku
         quantity: 1,
       }],
     },
-    onSuccess: () => orderApi.placeOrder(cart.id),
+    onSuccess: ({cartId}) => orderApi.placeOrder(cartId),
     onError: (error) => { console.error(error) },
   })($content);
 }
