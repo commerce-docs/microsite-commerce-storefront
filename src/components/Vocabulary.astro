@@ -10,6 +10,26 @@ const { columns = 1 } = Astro.props;
   <slot />
 </div>
 
+<script>
+  // Wrap each h3 and its following p in a div container
+  document.addEventListener("DOMContentLoaded", () => {
+    const vocabularyContainer = document.querySelector(".vocabularyContainer");
+    if (!vocabularyContainer) return;
+
+    const h3Elements = vocabularyContainer.querySelectorAll("h3");
+    h3Elements.forEach((h3) => {
+      const nextP = h3.nextElementSibling;
+      if (nextP && nextP.tagName === "P") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "vocabulary-item";
+        h3.parentNode.insertBefore(wrapper, h3);
+        wrapper.appendChild(h3);
+        wrapper.appendChild(nextP);
+      }
+    });
+  });
+</script>
+
 <style define:vars={{ columns }}>
   .vocabularyContainer {
     overflow-wrap: break-word;
@@ -22,19 +42,25 @@ const { columns = 1 } = Astro.props;
     column-count: var(--columns);
     column-gap: 1.5rem;
   }
-  .vocabularyContainer > :global(p) {
+
+  .vocabulary-item {
+    break-inside: avoid-column;
+    page-break-inside: avoid;
+    margin-bottom: 0.5rem;
+  }
+  .vocabularyContainer :global(p) {
     margin-top: 0;
     margin-bottom: 0.25rem;
     margin-left: 2rem;
   }
 
-  .vocabularyContainer > :global(h3) {
+  .vocabularyContainer :global(h3) {
     margin-top: 0.25rem;
     margin-bottom: 0.1rem;
     padding-top: unset;
   }
 
-  .vocabulary > :global(h3) {
+  .vocabulary :global(h3) {
     color: var(--sl-color-white);
     font-size: 1.1rem;
     font-weight: 700;
@@ -44,11 +70,11 @@ const { columns = 1 } = Astro.props;
     break-inside: avoid-column;
   }
 
-  .vocabulary > :global(h3:first-child) {
+  .vocabulary :global(h3:first-child) {
     margin-top: 0 !important;
   }
 
-  .vocabulary > :global(h3::before) {
+  .vocabulary :global(h3::before) {
     display: inline-block;
     border-color: var(--sl-color-black);
     text-align: center;
