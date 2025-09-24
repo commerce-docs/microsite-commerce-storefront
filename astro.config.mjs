@@ -140,6 +140,7 @@ async function config() {
       '/get-started/overview/': `${basePath}/get-started/`,
       '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
       '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
+      '/dropins/product-details/containers/': `${basePath}/dropins/product-details/`,
     },
 
     integrations: [
@@ -460,6 +461,7 @@ async function config() {
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                               { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                               { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
+                              { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
                               { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
                               { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                               { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
