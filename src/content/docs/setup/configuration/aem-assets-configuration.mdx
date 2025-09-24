@@ -10,13 +10,7 @@ import Task from '@components/Task.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
-In this section, you'll learn how Commerce blocks in your storefront connect to an AEM Assets integration using values from either your site's [public config](https://www.aem.live/docs/admin.html#schema/PublicConfig) or a [config.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json) file in your code repo.
-
 The AEM Assets integration allows your storefront to display product images that are managed in AEM Assets instead of traditional Commerce-hosted images. This integration provides enhanced image management capabilities, including advanced optimization, cropping, and delivery through Adobe's Content Delivery Network (CDN).
-
-## Overview
-
-To enable AEM Assets integration in your storefront, you need to add the `commerce-assets-enabled` property to your configuration. This tells the Commerce drop-ins to handle images from AEM Assets appropriately, applying the correct optimization parameters and CDN paths.
 
 ## Configuration examples
 
@@ -26,7 +20,7 @@ The configuration varies depending on your Commerce setup. Select the tab that m
 
 <TabItem label="Adobe Commerce">
 
-```json title="config.json" showLineNumbers  ins={'1':4}
+```json title="config.json" showLineNumbers  ins={'1':4} collapse={7-18}
 {
   "public": {
     "default": {
@@ -55,7 +49,7 @@ The configuration varies depending on your Commerce setup. Select the tab that m
 
 <TabItem label="Adobe Commerce as a Cloud Service">
 
-```json title="config.json" showLineNumbers  ins={'1':4}
+```json title="config.json" showLineNumbers  ins={'1':4} collapse={7-17}
 {
   "public": {
     "default": {
@@ -82,7 +76,7 @@ The configuration varies depending on your Commerce setup. Select the tab that m
 
 <TabItem label="Adobe Commerce Optimizer">
 
-```json title="config.json" ins={'1':4}
+```json title="config.json" ins={'1':4} collapse={7-14}
 {
   "public": {
     "default": {
@@ -107,12 +101,6 @@ The configuration varies depending on your Commerce setup. Select the tab that m
 
 </Tabs>
 
-<Callouts columnCount={1} square={true} color="#5f9051">
-
-1. **commerce-assets-enabled:** (boolean) When set to `true`, enables AEM Assets integration for product images. This tells Commerce drop-ins to handle AEM Assets URLs properly and apply appropriate image optimization parameters. See [AEM Assets Integration](https://experienceleague.adobe.com/en/docs/commerce/aem-assets-integration/overview) documentation for details.
-
-</Callouts>
-
 ## How it works in the boilerplate
 
 The Commerce drop-ins automatically detect the `commerce-assets-enabled` configuration and adjust image handling accordingly. Here's how you can access this configuration in your custom code:
@@ -135,7 +123,7 @@ import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
 
 ### Render images via drop-in slots
 
-Use the`tryRenderAemAssetsImage` function inside your drop-in image slots as shown in the example below.
+Use the `tryRenderAemAssetsImage` function inside your drop-in image slots as shown in the example below.
 
 ```javascript showLineNumbers=false {"Container:":4-5} {"Container Image Slot:":6-8} {"AEM Assets integration:":10-17}
 import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
@@ -249,13 +237,9 @@ The following table describes what happens in different configuration scenarios.
 
 - **Drop-ins vs. custom code:** The automatic image handling described above applies to Commerce drop-ins. If you're using custom image handling code, you'll need to implement the AEM Assets compatibility yourself.
 
-## Implementation details
+## Using drop-ins outside the boilerplate (optional)
 
-If you [set up your storefront](/get-started/create-storefront/) using the boilerplate code, AEM Assets is supported out-of-the-box through the Commerce drop-ins.
-
-If you set up your storefront without the boilerplate code, you can still enable AEM Assets compatibility, but you'll need to implement the configuration system that drop-ins expect.
-
-### Configuring drop-ins outside the boilerplate
+If you use the boilerplate, AEM Assets works out of the box. Without the boilerplate, implement the minimal config and slot usage below.
 
 <Aside type="caution" title="Important limitation">
 If you're using Commerce drop-ins as standalone NPM packages without the boilerplate, the `commerce-assets-enabled` configuration system described in this document may not be available to you. The boilerplate provides the configuration infrastructure (`config.json`, `getConfigValue` function, etc.) that drop-ins rely on to detect AEM Assets settings.
@@ -263,156 +247,21 @@ If you're using Commerce drop-ins as standalone NPM packages without the boilerp
 
 To enable AEM Assets with standalone drop-ins, you'll need to implement the configuration system that drop-ins expect:
 
-#### Configuration requirements
+### Minimal configuration
 
-Your configuration should follow the structure from [`demo-config.json`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json):
-```json
-{
-  "public": {
-    "default": {
-      "commerce-assets-enabled": true,
-      "commerce-core-endpoint": "https://your-commerce-endpoint.com/graphql",
-      "commerce-endpoint": "https://your-commerce-services-endpoint.com/graphql",
-      "headers": {
-        "all": {
-          "Store": "your-store-view-code"
-        },
-        "cs": {
-          "Magento-Customer-Group": "b6589fc6ab0dc82cf12099d1c2d40ab994e8410c",
-          "Magento-Store-Code": "your-store-code",
-          "Magento-Store-View-Code": "your-storeview-code",
-          "Magento-Website-Code": "your-website-code",
-          "x-api-key": "your-api-key",
-          "Magento-Environment-Id": "your-environment-id"
-        }
-      }
-    }
-  }
-}
-```
+Set `commerce-assets-enabled: true` in a `public.default` config (JSON or config service). Align endpoints/headers to your environment as needed.
 
-#### Integration Requirements
+### Minimal integration steps
 
-1. **Install the @dropins/tools package** - This provides the `tryRenderAemAssetsImage` function
-2. **Import the AEM Assets utility** - `import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js'`
-3. **Use in image slots** - Call `tryRenderAemAssetsImage` in your drop-in image slots with proper configuration
-4. **Provide SKU alias** - AEM Assets uses the product SKU as an alias to match images
-5. **Configure image parameters** - Set width, height, and other image optimization parameters
+1. Install `@dropins/tools`.
+2. Import `tryRenderAemAssetsImage`.
+3. In each image slot, call `tryRenderAemAssetsImage(ctx, { alias: <sku>, imageProps, params: { width, height } })`.
 
-#### Technical Implementation Details
+Result: uses AEM Assets when available; falls back to Commerce; applies correct CDN params automatically.
 
-The `tryRenderAemAssetsImage` function is used in the [boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/__dropins__/tools/types/elsie/src/lib/aem/assets.d.ts)and handles:
+### Reference implementation
 
-- **Automatic fallback** - If AEM Assets images are not available, it falls back to Commerce-hosted images
-- **Image optimization** - Applies the correct parameters for AEM Assets CDN delivery
-- **SKU-based matching** - Uses the product SKU to locate the corresponding asset in AEM
-- **Dynamic rendering** - Creates optimized image elements with proper attributes
-- **Configuration detection** - Automatically detects if AEM Assets integration is enabled
-
-#### Alternative: Use the boilerplate as reference
-
-You can also study the [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) to understand how AEM Assets integration works:
-
-- Study the configuration structure in [`demo-config.json`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json)
-- Examine how Commerce blocks in the [`blocks`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks) directory use configuration
-- Review the configuration utilities in the [`scripts`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts) directory
-- Study how drop-ins are initialized and configured within Commerce blocks
-- Use this knowledge to implement similar patterns in your own storefront
-
-This approach lets you build independently while learning from the tested implementation patterns.
-
-## AEM Assets integration patterns in the boilerplate
-
-To help developers understand exactly where and how AEM Assets are configured in the boilerplate, here's a breakdown of the key integration points:
-
-### Configuration Flow Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    AEM Assets Integration Flow                  │
-└─────────────────────────────────────────────────────────────────┘
-
-1. Configuration Source
-   ├── demo-config.json (or config.json)
-   │   └── { "commerce-assets-enabled": true }
-   │
-2. StorefrontSDK Integration
-   ├── @dropins/tools/lib/aem/assets.js
-   │   └── tryRenderAemAssetsImage() function
-   │
-3. Commerce Blocks (blocks/commerce-*)
-   ├── blocks/product-details/
-   │   └── Uses tryRenderAemAssetsImage() in gallery slots
-   ├── blocks/product-list-page/
-   │   └── Uses tryRenderAemAssetsImage() in ProductImage slot
-   ├── blocks/commerce-wishlist/
-   │   └── Uses tryRenderAemAssetsImage() in image slot
-   └── blocks/commerce-cart/
-       └── Uses tryRenderAemAssetsImage() for cart item images
-   │
-4. Drop-in Image Slots
-   └── Image slots call tryRenderAemAssetsImage() with:
-       ├── SKU alias for asset matching
-       ├── Image dimensions and optimization params
-       └── Automatic fallback to Commerce images
-```
-
-### Key Integration Points
-
-Based on the [boilerplate structure](https://github.com/hlxsites/aem-boilerplate-commerce), AEM Assets integration happens at these specific locations:
-
-#### 1. Configuration Layer
-- **File**: [`demo-config.json`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json)
-- **Purpose**: Central configuration including `commerce-assets-enabled`
-- **Pattern**: Nested JSON structure under `public.default`
-
-#### 2. Configuration Access Layer  
-- **Directory**: [`scripts/`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts)
-- **Purpose**: Provides `getConfigValue()` function for blocks to access config
-- **Pattern**: Async function supporting dot-notation keys
-
-#### 3. Commerce Block Layer
-- **Directory**: [`blocks/`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks) (commerce-* folders)
-- **Purpose**: Each Commerce block checks `commerce-assets-enabled` and handles images accordingly
-- **Pattern**: Import `getConfigValue`, check config, apply appropriate image handling
-
-#### 4. Drop-in Integration Layer
-- **Location**: Within Commerce blocks
-- **Purpose**: Drop-ins receive configuration through the blocks that initialize them
-- **Pattern**: Configuration passed to drop-ins during initialization
-
-### Actual Implementation Pattern
-
-Based on the boilerplate implementation, Commerce blocks use this pattern for AEM Assets integration:
-
-```javascript
-// 1. Import AEM Assets utility
-import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
-
-// 2. Use in drop-in image slots
-export default async function decorate(block) {
-  // Initialize drop-in with AEM Assets-aware image slots
-  dropinRenderer.render(DropinComponent, {
-    slots: {
-      ImageSlot: (ctx) => {
-        const { product, defaultImageProps } = ctx;
-        
-        // 3. Render with AEM Assets support
-        tryRenderAemAssetsImage(ctx, {
-          alias: product.sku,
-          imageProps: defaultImageProps,
-          params: {
-            width: defaultImageProps.width,
-            height: defaultImageProps.height,
-          },
-        });
-      },
-    },
-  })(block);
-}
-```
-
-**Note:** For actual implementation examples, see the Commerce blocks in the [`blocks`](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks) directory of the boilerplate repository. For example, the [`product-list-page.js`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-list-page/product-list-page.js) shows how the AEM Assests configuration is used in practice.
+See the [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) for complete examples.
 
 ## Troubleshooting
 
