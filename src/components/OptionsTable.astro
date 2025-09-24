@@ -3,9 +3,10 @@ import { setBasePath } from "@utils/basePath";
 interface Props {
   options: (string | { text: string; link: string })[][];
   compact?: boolean;
+  centerColumns?: number[];
 }
 
-const { options, compact = false } = Astro.props;
+const { options, compact = false, centerColumns = [] } = Astro.props;
 
 if (!options || options.length === 0) {
   throw new Error(
@@ -55,10 +56,13 @@ const newRows = rows.map((row) => {
     <thead class="tableHeader">
       <tr class="headerRow">
         {
-          newHeaders.map((header) => {
+          newHeaders.map((header, index) => {
             let headerClassName = "headerCell";
             if (header.minWidth) {
               headerClassName += ` minWidth`;
+            }
+            if (centerColumns.includes(index)) {
+              headerClassName += ` centerCell`;
             }
 
             return (
@@ -83,6 +87,10 @@ const newRows = rows.map((row) => {
                   ? "compactCodeCell"
                   : "codeCell"
                 : cellClassName;
+
+              if (centerColumns.includes(index)) {
+                cellClassNameOverride += " centerCell";
+              }
 
               // Check if the cell contains a link
               if (
@@ -156,11 +164,15 @@ const newRows = rows.map((row) => {
     white-space: nowrap;
   }
 
-  td.headerCell {
+  th.headerCell {
     border: none;
-    padding: 2rem 0;
+    padding: 2rem 3rem 0 0;
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  .centerCell {
+    text-align: center;
   }
 
   tbody.body {
