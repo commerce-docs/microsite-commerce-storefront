@@ -5,7 +5,9 @@ description: Configure the ProductOptions container for the product details page
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ProductOptions` container manages and displays product options on the product details page. 
+The `ProductOptions` container manages and displays product options on the product details page.
+
+The container receives initial product data during [initialization](/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
 
 ## ProductOptions configurations
 
@@ -19,6 +21,7 @@ The `ProductOptions` container provides the following configuration options:
     ['onValues', 'function', 'No', 'A callback function that receives the selected option UIDs.'],
     ['onErrors', 'function', 'No', 'A callback function that receives any errors encountered during option selection.'],
     ['slots', 'object', 'No', 'An object containing slot overrides for the Swatches component.'],
+    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
   ]}
 />
 
@@ -27,22 +30,24 @@ The `ProductOptions` container provides the following configuration options:
 The following example demonstrates how to configure the `ProductOptions` container:
 
 ```js
-slots: {
-  Swatches: (ctx) => {
-          const size = ctx.getSlotElement('product-swatch--fashion_size');
+return productRenderer.render(ProductOptions, {
+  slots: {
+    Swatches: (ctx) => {
+      const size = ctx.getSlotElement('product-swatch--fashion_size');
 
-          // Add link to Sizes
-          if (size) {
-            // Create Size Link
-            const link = document.createElement('a');
-            link.href = '#';
-            link.addEventListener('click', (e) => {
-              e.preventDefault();
-              console.log('Size Chart');
-            });
-            // append inside size
-            size.appendChild(link);
-          }
-        },
-},
+      // Add link to Sizes
+      if (size) {
+        // Create Size Link
+        const link = document.createElement('a');
+        link.href = '#';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Size Chart');
+        });
+        // append inside size
+        size.appendChild(link);
+      }
+    },
+  },
+});
 ```

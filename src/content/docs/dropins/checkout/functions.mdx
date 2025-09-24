@@ -36,8 +36,6 @@ The function does not return any value explicitly; it performs side effects by f
 See the following example for usage details:
 
 ```ts
-import { authenticateCustomer } from '@/checkout/api/authenticateCustomer';
-
 async function authenticate() {
   try {
     await authenticateCustomer(true);
@@ -100,8 +98,6 @@ export type ShippingMethod = {
 See the following example for usage details:
 
 ```ts
-import { estimateShippingMethods } from '@/checkout/api/estimateShippingMethods';
-
 // By country code and region name
 const input = {
   criteria: {
@@ -185,8 +181,6 @@ export interface Cart {
 See the following example for usage details:
 
 ```ts
-import { getCart } from '@/checkout/api/getCart';
-
 async function fetchCartData() {
   try {
     const cartData = await getCart();
@@ -238,8 +232,6 @@ export interface CheckoutAgreement {
 See the following example for usage details:
 
 ```ts
-import { getCheckoutAgreements } from '@/checkout/api/getCheckoutAgreements';
-
 async function fetchAndLogTermsAndConditions() {
   try {
     const agreements = await getCheckoutAgreements();
@@ -278,8 +270,6 @@ export interface Customer {
 See the following example for usage details:
 
 ```ts
-import { getCustomer } from '@/checkout/api/getCustomer';
-
 async function fetchAndLogCustomer() {
   try {
     const customer = await getCustomer();
@@ -328,8 +318,6 @@ export interface StoreConfig {
 See the following example for usage details:
 
 ```ts
-import { getStoreConfig } from '@/checkout/api/getStoreConfig';
-
 async function fetchAndLogStoreConfig() {
   try {
     const storeConfig = await getStoreConfig();
@@ -374,8 +362,6 @@ The function does not return any value explicitly; it performs some initializati
 See the following example for usage details:
 
 ```ts
-import { initializeCheckout } from '@/checkout/api/initializeCheckout';
-
 await initializeCheckout(null);
 ```
 
@@ -412,8 +398,6 @@ export type EmailAvailability = boolean;
 See the following example for usage details:
 
 ```ts
-import { isEmailAvailable } from '@/checkout/api/isEmailAvailable';
-
 await isEmailAvailable('test@example.com');
 ```
 
@@ -434,8 +418,6 @@ The function does not return any value explicitly; it performs some initializati
 See the following example for usage details:
 
 ```ts
-import { resetCheckout } from '@/checkout/api/resetCheckout';
-
 resetCheckout();
 ```
 
@@ -444,8 +426,6 @@ resetCheckout();
 The `setBillingAddress` function sets the billing address for a specific cart using the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/) Adobe Commerce GraphQL mutation.
 
 ```ts
-import { BillingAddressInput } from '@/checkout/data/models';
-
 export const setBillingAddress = async (input: BillingAddressInput);
 ```
 
@@ -457,14 +437,47 @@ export const setBillingAddress = async (input: BillingAddressInput);
   ]}
 />
 
-It takes an `input` parameter where `BillingAddressInput` is an interface that contains the specific properties for the billing address:
+The `input` parameter accepts a `BillingAddressInput` object with the following structure:
 
 ```ts
-export interface BillingAddressInput {
+interface BillingAddressInput {
   address?: CartAddress;
   customerAddressId?: number;
   sameAsShipping?: boolean;
   useForShipping?: boolean;
+}
+```
+
+Where `CartAddress` has the following properties:
+
+```ts
+interface CartAddress {
+  city: string;
+  company?: string;
+  countryCode: string;
+  customAttributes: CustomAttribute[];
+  firstName: string;
+  lastName: string;
+  postcode?: string;
+  region?: string;
+  regionId?: number;
+  saveInAddressBook?: boolean;
+  street: string[];
+  telephone?: string;
+  vatId?: string;
+  prefix?: string;
+  suffix?: string;
+  middleName?: string;
+  fax?: string;
+}
+```
+
+And `CustomAttribute` is defined as:
+
+```ts
+interface CustomAttribute {
+  attribute_code: string;
+  value: string;
 }
 ```
 
@@ -491,8 +504,6 @@ export interface Cart {
 To set the billing address as the same as the shipping address:
 
 ```ts
-import { setBillingAddress } from '@/checkout/api/setBillingAddress';
-
 await setBillingAddress({
   sameAsShipping: true,
 });
@@ -501,8 +512,6 @@ await setBillingAddress({
 To set a specific billing address:
 
 ```ts
-import { setBillingAddress } from '@/checkout/api/setBillingAddress';
-
 await setBillingAddress({
   address: {
     firstName: 'John',
@@ -556,8 +565,6 @@ export interface Cart {
 See the following example for usage details:
 
 ```ts
-import { setGuestEmailOnCart } from '@/checkout/api/setGuestEmailOnCart';
-
 await setGuestEmailOnCart('test@example.com');
 ```
 
@@ -606,8 +613,6 @@ export interface Cart {
 See the following example for usage details:
 
 ```ts
-import { setPaymentMethod } from '@/checkout/api/setPaymentMethod';
-
 await setPaymentMethod({ code: 'braintree' });
 ```
 
@@ -616,8 +621,6 @@ await setPaymentMethod({ code: 'braintree' });
 The `setShippingAddress` function sets the shipping address for a specific cart using the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/) mutation.
 
 ```ts
-import { ShippingAddressInput } from '@/checkout/data/models';
-
 export const setShippingAddress = async (input: ShippingAddressInput);
 ```
 
@@ -629,13 +632,46 @@ export const setShippingAddress = async (input: ShippingAddressInput);
   ]}
 />
 
-It takes an `input` parameter where `ShippingAddressInput` is an interface that contains the specific properties for the shipping address:
+The `input` parameter accepts a `ShippingAddressInput` object with the following structure:
 
 ```ts
-export interface ShippingAddressInput {
+interface ShippingAddressInput {
   address?: CartAddress;
   customerAddressId?: number;
   pickupLocationCode?: string;
+}
+```
+
+Where `CartAddress` has the following properties:
+
+```ts
+interface CartAddress {
+  city: string;
+  company?: string;
+  countryCode: string;
+  customAttributes: CustomAttribute[];
+  firstName: string;
+  lastName: string;
+  postcode?: string;
+  region?: string;
+  regionId?: number;
+  saveInAddressBook?: boolean;
+  street: string[];
+  telephone?: string;
+  vatId?: string;
+  prefix?: string;
+  suffix?: string;
+  middleName?: string;
+  fax?: string;
+}
+```
+
+And `CustomAttribute` is defined as:
+
+```ts
+interface CustomAttribute {
+  attribute_code: string;
+  value: string;
 }
 ```
 
@@ -662,8 +698,6 @@ export interface Cart {
 See the following example for usage details:
 
 ```ts
-import { setShippingAddress } from '@/checkout/api/setShippingAddress';
-
 await setShippingAddress({
   address: {
     firstName: 'John',
@@ -726,8 +760,6 @@ export interface Cart {
 See the following example for usage details:
 
 ```ts
-import { setShippingMethodsOnCart } from '@/checkout/api/setShippingMethods';
-
 const shippingMethod = {
   carrier_code: 'flatrate',
   method_code: 'flatrate',
@@ -766,7 +798,5 @@ The function does not return any value explicitly; it performs some initializati
 See the following example for usage details:
 
 ```ts
-import { synchronizeCheckout } from '@/checkout/api/synchronizeCheckout';
-
 await synchronizeCheckout(cart);
 ```
