@@ -240,6 +240,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/setup/configuration/' },
                           { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                          { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
                           { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
                           { label: 'Gated content', link: '/setup/configuration/gated-content/' },
                           { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
