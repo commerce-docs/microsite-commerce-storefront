@@ -1,0 +1,107 @@
+---
+title: RequestNegotiableQuoteForm container
+description: Learn about the RequestNegotiableQuoteForm container for negotiable quotes.
+---
+
+import Diagram from '@components/Diagram.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+
+The `RequestNegotiableQuoteForm` container renders an authenticated-only form for collecting data to create a negotiable quote. It wires validation and handlers, and exposes slots so each UI piece can be extended or replaced.
+
+<Diagram caption="RequestNegotiableQuoteForm container">
+![RequestNegotiableQuoteForm container](@images/dropins/b2b/request-negotiable-quote-form.png)
+</Diagram>
+
+## Configurations
+
+The `RequestNegotiableQuoteForm` container provides the following configuration options:
+
+<OptionsTable
+compact
+options={[
+['Option', 'Type', 'Req?', 'Description'],
+['cartId', 'string', 'Yes', 'Cart id used by the request. If empty, an error banner is shown.'],
+['onAttachFiles', 'function', 'No', 'Function to handle the attach files'],
+['onRequestNegotiableQuote', 'function', 'No', 'Function to handle the request for a negotiable quote. Overrides the default request for a negotiable quote.'],
+['onSaveNegotiableQuote', 'function', 'No', 'Function to handle the save negotiable quote as a draft. Overrides the default save negotiable quote.'],
+['onSubmitError', 'function', 'No', 'Function called when the form submission fails validation'],
+['onError', 'function', 'No', 'Function called when there is an error that occurs when setting up the form or when the form submission fails'],
+['slots', 'object', 'No', 'Object map of slot render functions to override default UI pieces. See Supported slots.'],
+]}
+/>
+
+## Supported slots
+
+The `RequestNegotiableQuoteForm` container supports the following slots:
+
+- ErrorBanner
+- SuccessBanner
+- Title
+- CommentField
+- QuoteNameField
+- AttachFileField
+
+## Example configuration
+
+The following example demonstrates how to render the `RequestNegotiableQuoteForm` container with custom handlers and a few overridden slots:
+
+```js
+provider.render(RequestNegotiableQuoteForm, {
+  cartId, // required cart identifier used by the request
+
+  // Called when the user submits "Request quote" (non-draft)
+  onRequestNegotiableQuote: async ({ cartId, quoteName, comment, isDraft }) => {},
+
+  // Called when the user submits "Save as draft"
+  onSaveNegotiableQuote: async ({ cartId, quoteName, comment, isDraft }) => {},
+
+  // Called when files are attached (array of File objects)
+  onAttachFiles: async (files) => {},
+
+  onError: ({ error, isFormDisabled, setIsFormDisabled }) => {
+    console.error(error);
+  },
+
+  slots: {
+    // Title slot: render provided text
+    Title: (ctx) => {
+      const heading = document.createElement('h2');
+      heading.textContent = ctx.text;
+      ctx.appendChild(heading);
+    },
+
+    CommentField: (ctx) => {
+      const textarea = document.createElement('textarea');
+      textarea.name = 'comment';
+      textarea.required = true;
+      textarea.disabled = !!ctx.isFormDisabled;
+      textarea.value = ctx.value || '';
+      // Optionally render ctx.errorMessage near the field
+      ctx.appendChild(textarea);
+    },
+
+    QuoteNameField: (ctx) => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'quoteName';
+      input.required = true;
+      input.disabled = !!ctx.isFormDisabled;
+      input.value = ctx.value || '';
+      // Optionally render ctx.errorMessage near the field
+      ctx.appendChild(input);
+    },
+
+    AttachFileField: (ctx) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.disabled = !!ctx.isFormDisabled;
+      input.onchange = () => {
+        const files = Array.from(input.files || []);
+        ctx.onChange && ctx.onChange(files);
+      };
+      ctx.appendChild(input);
+    },
+  },
+})(containerWrapper);
+```
+```
