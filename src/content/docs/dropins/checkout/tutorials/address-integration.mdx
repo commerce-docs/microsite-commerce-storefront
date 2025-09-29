@@ -22,7 +22,7 @@ Upon successful completion of this tutorial, a form similar to the following wil
 
 ## Step-by-step
 
-The following steps describe how to integrate the Google Address Validation API with the Commerce boilerplate template. You can use these steps as a reference to integrate other API providers as well.
+The following steps describe how to integrate the Google Address Validation API with the Commerce boilerplate template using the provided address autocomplete implementation.
 
 <Tasks>
 
@@ -31,155 +31,64 @@ The following steps describe how to integrate the Google Address Validation API 
 
 For this tutorial, you must have a valid Google API key. [Use API keys](https://developers.google.com/maps/documentation/javascript/get-api-key) describes the process to obtain and set up this key.
 
-</Task>
-
-<Task>
-### Identify the container and override the default field
-
-Locate the `Addresses` or `AddressForm` container in the `commerce-checkout.js` block. Use the `Addresses` container when the customer has saved addresses. Use the `AddressForm` container when no addresses are saved. The same approach works for both.
-
-To override the `street` field in the `AddressForm` container for the shipping address, pass the `AddressFormInput_street` slot parameter. Here's how you remove the default field:
-
-```javascript
-shippingForm = await AccountProvider.render(AddressForm, {
-  // Other parameters
-  slots: {
-    AddressFormInput_street: async (ctx) => {
-    },
-  },
-});
-```
-</Task>
-
-<Task>
-### Define a function to generate the custom field markup
-
-Use a function to create and render a custom input field.
-
-The following code generates markup for new input using the `Input` component from the `@dropins/tools` package. The callback is destructured from the `context` passed into the slot from the container, allowing the custom input to be fully functional and integrated with the form. As a result of these changes, the default input will be replaced by custom input that matches the general look and feel, but is not functional yet.
-
-```javascript
-import { Input } from '@dropins/tools/components.js';
-
-const generateMarkup = async (context) => {
-  const { inputName, handleOnChange, handleOnBlur, handleOnFocus, config } = context;
-
-  const wrapper = document.createElement('div');
-  const errorContainer = document.createElement('div');
-  errorContainer.classList.add('dropin-field__hint', 'dropin-field__hint--medium', 'dropin-field__hint--error');
-  errorContainer.style.display = 'none';
-
-  const inputComponent = await UI.render(Input, {
-    name: inputName,
-    onChange: handleOnChange,
-    onBlur: handleOnBlur,
-    onFocus: handleOnFocus,
-    floatingLabel: `${config.label} *`,
-    placeholder: config.label,
-  })(wrapper);
-
-  wrapper.appendChild(errorContainer);
-  ctx.appendChild(wrapper);
-
-  return { inputElement: wrapper.querySelector('input'), inputComponent, errorContainer };
-};
-
-const markupElements = await generateMarkup(ctx);
-```
-</Task>
-
-<Task>
-### Replicate the default functionality for the custom input
-
-Make the custom input fully functional by using the `onChange` callback provided by the slot context. This enables validation and integration with the form.
-
-```javascript
-const handleStateChange = (next, { inputElement, inputComponent, errorContainer }) => {
-  const { errorMessage, errors, handleOnChange, handleOnBlur } = next;
-
-  const getNextProps = (prev, error) => ({
-    ...prev,
-    error,
-    onChange: (e) => handleOnChange(e, errors),
-    onBlur: (e) => handleOnBlur(e, errors),
-  });
-
-  if (errorMessage) {
-    errorContainer.innerText = errorMessage;
-    errorContainer.style.display = 'block';
-    inputComponent.setProps((prev) => getNextProps(prev, true));
-  } else {
-    errorContainer.innerText = '';
-    errorContainer.style.display = 'none';
-    inputComponent.setProps((prev) => getNextProps(prev, false));
-  }
-
-  if (document.activeElement === inputElement) {
-    setTimeout(() => inputElement.focus(), 0);
-  }
-};
-
-ctx.onChange((nextState) => handleStateChange(nextState, markupElements));
-```
-</Task>
-
-<Task>
-### Enable Google Address Lookup integration
-
-Use the following steps to enable the integration.
-
 <Aside type="note">
-Replace `{GOOGLE_API_KEY}` with your actual API key.
+The address autocomplete implementation includes a placeholder for the Google API key. You must replace `ADD-YOUR-GOOGLE-API-KEY-HERE` with your actual API key before using the implementation.
 </Aside>
 
-<Steps>
+</Task>
 
-1. Add the Google Places API to the checkout page:
+<Task>
+### Download and configure the address autocomplete implementation
 
-   ```javascript
-   const scriptUrl = 'https://maps.googleapis.com/maps/api/js?key={GOOGLE_API_KEY}&loading=async&libraries=places';
-   
-   if (!document.querySelector(`script[src="${scriptUrl}"]`)) {
-    const script = document.createElement('script');
-    script.src = scriptUrl;
-    script.async = true;
-    document.head.appendChild(script);
-    }
-   ```
+1. **Download the implementation:**
 
-1. Initialize the Google Autocomplete API for the custom field:
+   Copy the `address-autocomplete.js` file from `/public/samples/address-autocomplete.js` in this documentation repository to your project directory.
+
+2. **Replace the API key placeholder:**
+
+   Open the `address-autocomplete.js` file and replace `ADD-YOUR-GOOGLE-API-KEY-HERE` with your actual Google API key:
 
    ```javascript
-   const initAutocomplete = (inputElement) => {
-     const autocompleteEl = new google.maps.places.Autocomplete(inputElement, {
-       types: ['address'],
-       fields: ['address_components'],
-     });
-
-    autocompleteEl.addListener('place_changed', onPlaceChanged);
+   const CONFIG = {
+       googleApiKey: 'YOUR_ACTUAL_GOOGLE_API_KEY',
+       // ... rest of configuration
    };
-
-   const onPlaceChanged = () => {
-     const place = autocompleteEl.getPlace();
-     const addressComponents = place.address_components;
-
-     let street = '', city = '', countryCode = '';
- 
-     addressComponents.forEach((component) => {
-       if (component.types.includes('route')) street = component.long_name;
-       if (component.types.includes('locality') || component.types.includes('sublocality')) city = component.long_name;
-       if (component.types.includes('country')) countryCode = component.short_name;
-     });
-
-     document.getElementById('country_code').value = countryCode;
-     document.getElementById('street').value = street;
-     document.getElementById('city').value = city;
-   };
-  
-   initAutocomplete(markupElements.inputElement);
    ```
 
-</Steps>
+</Task>
+
+<Task>
+### Import and initialize the autocomplete service
+
+In your `commerce-checkout.js` file, make the following changes to enable address autocomplete:
+
+1. **Import the autocomplete service:**
+
+   ```javascript
+   import { initializeAutocompleteWhenReady } from './address-autocomplete.js';
+   ```
+
+2. **Initialize the autocomplete in the `initializeCheckout` function:**
+
+   ```javascript
+   const initializeCheckout = async () => {
+     // ... existing checkout initialization code ...
+
+     // Initialize address autocomplete for shipping form
+     const shippingContainer = document.querySelector('[data-commerce-checkout-shipping]');
+     if (shippingContainer) {
+       initializeAutocompleteWhenReady(shippingContainer, 'input[name="street"]');
+     }
+
+     // ... rest of initialization code ...
+   };
+   ```
+
+The `initializeAutocompleteWhenReady` function automatically:
+- Waits for the address form to be rendered
+- Attaches autocomplete functionality to the street input field
+- Handles form field population when an address is selected
+- Manages Google Maps API loading and initialization
 
 </Task>
 
@@ -187,4 +96,12 @@ Replace `{GOOGLE_API_KEY}` with your actual API key.
 
 ## Example
 
-See [blocks/commerce-checkout-address-lookup](https://github.com/hlxsites/aem-boilerplate-commerce/blob/demos/blocks/commerce-checkout-address-lookup) in the `demos` branch of the boilerplate repository for complete JS and CSS code for the address verification flow.
+The complete address autocomplete implementation is available in `/public/samples/address-autocomplete.js`. This implementation includes:
+
+- **AddressAutocompleteService class**: Handles Google Places API integration
+- **initializeAutocompleteWhenReady function**: Utility function for easy integration
+- **Automatic form field population**: Populates street, city, country, and postal code fields
+- **Keyboard navigation**: Arrow keys, Enter, and Escape support
+- **Error handling**: Graceful fallback when Google Maps API is unavailable
+
+For additional customization options and advanced usage, see the implementation comments in the sample file.
