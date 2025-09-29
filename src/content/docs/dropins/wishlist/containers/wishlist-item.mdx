@@ -8,8 +8,8 @@ import OptionsTable from '@components/OptionsTable.astro';
 
 The `WishlistItem` container manages and displays a single product from a wishlist. It allows users to interact with the product, such as moving it to the cart or navigating to the product details page.
 
-For complex products that have no variant selected in the wishlist, the "move to cart" button becomes disabled. The system prompts users to select a variant first by navigating to the product details page.
-Its behavior is driven by configuration options such as `routeEmptyWishlistCTA`, `routeEmptyWishlistCTA` and routing via `routeProdDetailPage` callbacks.
+For complex products that have no variant selected in the wishlist, the **Move To Cart** button becomes a **Customize** button. Users must select a variant first by navigating to the product details page.
+Its behavior is driven by configuration options such as `moveProdToCart`, `getProductData`, `getRefinedProduct` and routing via `routeProdDetailPage` callbacks.
 
 <Diagram caption="WishlistItem container">
   ![Wishlist container](@images/dropins/wish-list/wishlist-item.png)
@@ -23,9 +23,11 @@ The `WishlistItem` container provides the following configuration options:
 compact
     options={[
         ['Options', 'Type', 'Req?', 'Description'],
-        ['initialData', 'Item', 'Yes', 'The wishlisted item.'],
+        ['item', 'Item', 'Yes', 'The wishlisted item.'],
         ['moveProdToCart', 'function', 'Yes', 'A function that is executed when the user clicks the "move product to cart" button.'],
         ['routeProdDetailPage', 'function', 'Yes', 'A function that returns the URL for the product details page.'],
+        ['getProductData', 'function', 'No', 'A function that is executed to retrieve product information when rendering the wishlist item.'],
+        ['getRefinedProduct', 'function', 'No', 'A function that is executed to retrieve complex product information (such as product options) when rendering the wishlist item.']
     ]}
 />
 
@@ -35,8 +37,10 @@ The following example demonstrates how to render the `WishlistItem` container:
 
 ```javascript
 provider.render(WishlistItem, {
-    initialData: sampleWishlistItem,
+    item: sampleWishlistItem,
     moveProdToCart: cartApi.addProductsToCart,
     routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct
   });
 ```
