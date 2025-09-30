@@ -240,6 +240,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/setup/configuration/' },
                           { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                          { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
                           { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
                           { label: 'Gated content', link: '/setup/configuration/gated-content/' },
                           { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
@@ -285,7 +286,7 @@ async function config() {
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
-                      { label: 'Creating', link: '/dropins/all/creating/' },
+                      { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
@@ -294,6 +295,7 @@ async function config() {
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Extending', link: '/dropins/all/extending/' },
+                      { label: 'Creating', link: '/dropins/all/creating/' },
                     ],
                   },
                   // ---------- DROP-INS (B2C) ----------
