@@ -728,6 +728,7 @@ async function config() {
                       { label: 'Using the Visual Editor', link: '/merchants/storefront-builder/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/storefront-builder/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/storefront-builder/content-commerce-blocks/' },
+                      { label: 'Install the Commerce Picker', link: '/merchants/storefront-builder/commerce-picker/' },
                     ],
                   },
                   {
