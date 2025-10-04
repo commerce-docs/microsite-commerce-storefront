@@ -1,0 +1,214 @@
+---
+title: AEM Assets integration
+description: Learn how to connect your Edge Delivery Services storefront to your AEM Assets integration.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Vocabulary from '@components/Vocabulary.astro';
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+The AEM Assets integration allows your storefront to display product images that are managed in AEM Assets instead of traditional Commerce-hosted images. This integration provides enhanced image management capabilities, including advanced optimization, cropping, and delivery through Adobe's Content Delivery Network (CDN).
+
+## Boilerplate update required
+
+Only one update is required: set `"commerce-assets-enabled": true` in your [Storefront configuration](/setup/configuration/commerce-configuration/).
+
+```json title="config.json" ins={'+':4}
+{
+  "public": {
+    "default": {
+      "commerce-assets-enabled": true
+    }
+  }
+}
+```
+
+The Commerce drop-ins automatically detect the `commerce-assets-enabled` configuration and adjust image handling accordingly. See the [demo configratuion](https://www.aemshop.net/config.json). 
+
+## Expected behaviors
+
+The following table describes what happens in different configuration scenarios. The **Image source** refers to where you store your images: either "Commerce" for traditional Commerce-hosted images or "AEM Assets" for images managed in AEM Assets. For background, see the [AEM Assets Integration documentation](https://experienceleague.adobe.com/en/docs/commerce/aem-assets-integration/overview). The **`commerce-assets-enabled setting`** column indicates whether this configuration is set to `true` or `false`.
+
+<OptionsTable
+  centerColumns={[1]}
+  options={[
+    ['Image source', 'commerce-assets-enabled setting', 'Expected behavior'],
+    ['Commerce-hosted images', 'true', 'Images display correctly. The AEM Assets integration code passes through Commerce-hosted images without modification.'],
+    ['AEM Assets images', 'true', 'Images display correctly with proper AEM Assets CDN optimization parameters applied. This is the intended configuration for AEM Assets integration.'],
+    ['Commerce-hosted images', 'false', 'Images display correctly using standard Commerce image handling without AEM Assets optimization.'],
+    ['AEM Assets images', 'false', 'Images may not display correctly. AEM Assets images require specific optimization parameters that may conflict with standard Commerce image handling, potentially resulting in 400 errors or broken images.'],
+  ]}
+/>
+
+## How it works in the boilerplate
+
+The Commerce drop-ins automatically detect the `commerce-assets-enabled` configuration and adjust image handling accordingly. Here's how the boilerplate integrates this configuration:
+
+<div class="no-steps">
+<Tasks>
+
+<Task>
+
+### Import the AEM Assets utility
+
+The Commerce blocks in the boilerplate import the `tryRenderAemAssetsImage` helper from the drop-ins tools package.
+
+```javascript showLineNumbers=false 
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+```
+
+</Task>
+
+<Task>
+
+### Render images via drop-in slots
+
+The Commerce blocks use the `tryRenderAemAssetsImage` function inside its drop-in image slots, as shown below.
+
+```javascript showLineNumbers=false {"Container:":4-5} {"Container Image Slot:":6-8} {"AEM Assets integration:":10-17}
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+
+export default async function decorate(block) {
+  
+  await dropinRenderer.render(DropinComponent, {
+
+    slots: {
+      DropinImageSlot: (ctx) => {
+        const { data, defaultImageProps } = ctx;
+
+        tryRenderAemAssetsImage(ctx, {
+          imageProps: defaultImageProps,
+          params: {
+            width: defaultImageProps.width,
+            height: defaultImageProps.height,
+          },
+        });
+      },
+    },
+  })(block);
+}
+```
+</Task>
+
+</Tasks>
+</div>
+
+## Real-world examples from the boilerplate
+
+Based on the  Commerce blocks in the boilerplate, AEM Assets integration uses the `tryRenderAemAssetsImage` function from `@dropins/tools/lib/aem/assets.js` as follows.
+
+### Product List SearchResults container
+
+```javascript showLineNumbers=false {"Container:":2-3} {"Container Image Slot:":4-6} {"AEM Assets integration:":11-20}
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+
+provider.render(SearchResults, {
+
+  slots: {
+    ProductImage: (ctx) => {
+      const { product, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = rootLink(`/products/${product.urlKey}/${product.sku}`);
+
+
+      tryRenderAemAssetsImage(ctx, {
+        alias: product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    },
+  },
+});
+```
+
+### Checkout OrderProductList container
+
+```javascript showLineNumbers=false  {"Container:":2-3} {"Container Image Slot:":4-6} {"AEM Assets integration:":8-16}
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+
+OrderProvider.render(OrderProductList, {
+
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    },
+    ...
+  },
+})($orderProductList);
+```
+
+## Using drop-ins outside the boilerplate (optional)
+
+If you use the boilerplate, AEM Assets works out of the box. Without the boilerplate, you need to implement the minimal config and slot usage below. See the [Commerce drop-ins overview](/dropins/all/introduction/) for how slots and initializers work.
+
+To enable AEM Assets with standalone drop-ins, you'll need to implement the configuration system that drop-ins expect. See [Storefront configuration](/setup/configuration/commerce-configuration/) for full configuration details.
+
+### Minimal configuration
+
+Set `commerce-assets-enabled: true` in a `public.default` config (JSON or config service). Align endpoints/headers to your environment as needed.
+
+<Aside type="tip" title="Reference implementation">
+See the [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) for complete examples.
+</Aside>
+
+### Minimal integration steps
+
+1. Install `@dropins/tools`.
+1. Add the `assets.js` file from the boilerplate to your project.
+1. Import `tryRenderAemAssetsImage` into your drop-in components.
+1. In each image slot, call `tryRenderAemAssetsImage(ctx, { alias: <sku>, imageProps, params: { width, height } })`. Fallback to Commerce-hosted images is automatic from functions in `assets.js`—no extra code is required.
+1. Use the product SKU (or your configured alias) for `alias` so the correct asset is matched in AEM.
+1. When linking images, pass a `wrapper` element (for example, an anchor) in the options.
+1. Set the `width`/`height` params to the slot’s intended render size (e.g., from `defaultImageProps`).
+1. For more details, see [Commerce drop-ins overview](/dropins/all/introduction/).
+
+**Minimal implementation results**: Uses AEM Assets when available; falls back to Commerce; applies correct CDN params automatically.
+
+<Aside type="tip" title="AEM Assets API helpers">
+
+Outside the boilerplate, use these helpers from `@dropins/tools/lib/aem/assets.js` to detect enablement, generate optimized URLs, and render slots:
+  - `isAemAssetsEnabled()`
+  - `getDefaultAemAssetsOptimizationParams()`
+  - `isAemAssetsUrl(url)`
+  - `generateAemAssetsOptimizedUrl(assetUrl, alias, params)`
+  - `tryGenerateAemAssetsOptimizedUrl(assetUrl, alias, params)`
+  - `makeAemAssetsImageSlot(config)`
+  - `tryRenderAemAssetsImage(ctx, config)`
+
+</Aside>
+
+## Troubleshooting
+
+### Images not displaying
+
+If product images are not displaying correctly:
+
+1. **Check your configuration:** Ensure `commerce-assets-enabled` is set to `true` if you're using AEM Assets.
+2. **Verify image URLs:** AEM Assets images typically include specific URL patterns that indicate they're served from AEM.
+3. **Check browser console:** Look for 400 errors that might indicate incompatible optimization parameters.
+4. **Test with mixed sources:** Try with both AEM Assets and Commerce-hosted images to isolate the issue.
+5. **Confirm slot integration:** If not using the boilerplate, ensure each drop-in image slot calls `tryRenderAemAssetsImage` with a valid `alias` (SKU).
+6. **Validate size params:** Ensure `params.width`/`params.height` match the slot's intended render size (for example, from `defaultImageProps`).
+
+### Configuration not taking effect
+
+1. **Clear cache:** Ensure your configuration changes are not cached.
+2. **Check config location:** Verify your [storefront configuration](https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/) is properly formatted.
+3. **Validate JSON:** Use a JSON validator to ensure your configuration file is valid.
+
+

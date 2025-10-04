@@ -1,0 +1,203 @@
+---
+title: SearchResults container
+description: Learn about the SearchResults container and configurations for the Product Discovery drop-in component v2.0.0.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The SearchResults container shows products from a search. You can customize it with slots, run separate instances, and it takes care of loading, errors, and real-time updates.
+
+## Import
+
+```javascript
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+```
+
+## Configurations
+
+The `SearchResults` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['skeletonCount', 'number', 'No', 'Number of skeleton items to show while loading. Default: 12.'],
+    ['scope', 'string', 'No', 'Scope identifier for isolated instances. Default: undefined.'],
+    ['routeProduct', 'function', 'No', 'Function to generate product URLs. Receives a Product object as parameter.'],
+    ['onSearchResult', 'function', 'No', 'Callback when search results are received. Receives products array.'],
+    ['slots', 'object', 'No', 'Custom slot renderers for Header, Footer, ProductActions.'],
+  ]}
+/>
+
+## Basic Usage
+
+```javascript
+// Basic search results container
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  routeProduct: (product) => `/product/${product.sku}`
+})($container);
+
+// With scope for isolated instance
+await provider.render(SearchResults, {
+  skeletonCount: 6,
+  scope: 'popover',
+  routeProduct: (product) => `/product/${product.sku}`
+})($container);
+
+// With callback for custom handling
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  onSearchResult: (products) => {
+    console.log('Received', products.length, 'results');
+  }
+})($container);
+```
+
+## Slots
+
+The `SearchResults` container supports several customization slots. For detailed information about available slots and their usage, see [Product Discovery Slots](/dropins/product-discovery/slots/).
+
+### Example Slot Usage
+
+```javascript
+slots: {
+  Header: (ctx) => {
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <h2>Search Results</h2>
+      <p>Found ${ctx.products.length} products</p>
+    `;
+    ctx.appendChild(header);
+  },
+  
+  ProductActions: (ctx) => {
+    const actions = document.createElement('div');
+    
+    const addToCartBtn = document.createElement('button');
+    addToCartBtn.textContent = 'Add to Cart';
+    addToCartBtn.onclick = () => addToCart(ctx.product);
+    
+    const quickViewBtn = document.createElement('button');
+    quickViewBtn.textContent = 'Quick View';
+    quickViewBtn.onclick = () => openQuickView(ctx.product);
+    
+    actions.appendChild(addToCartBtn);
+    actions.appendChild(quickViewBtn);
+    
+    ctx.appendChild(actions);
+  }
+}
+```
+
+## Features
+
+### Automatic Loading States
+
+- **Skeleton Loading**: Configurable skeleton items while fetching results
+- **Loading Indicators**: Automatic loading state management
+- **Error Handling**: Graceful error display with user-friendly messages
+- **Empty States**: Appropriate messaging when no results are found
+
+### Real-time Updates
+
+The container automatically updates when search events are received:
+
+1. **Search Start**: Shows loading state with skeleton items
+2. **Search Results**: Updates with new product data
+3. **Search Complete**: Removes loading state
+4. **Error Handling**: Displays error state if applicable
+
+### Product Routing
+
+Customize how products link to their detail pages:
+
+```javascript
+// Basic product routing
+routeProduct: (product) => `/product/${product.sku}`
+```
+
+## Integration Examples
+
+### Basic PLP Setup
+
+```javascript
+await provider.render(SearchResults, {
+  skeletonCount: 12,
+  routeProduct: (product) => `/product/${product.sku}`
+})($searchResults);
+```
+
+### Quick Search Popover
+
+```javascript
+await render.render(SearchResults, {
+  skeletonCount: pageSize,
+  scope: 'popover',
+  routeProduct: ({ urlKey, sku }) => rootLink(`/products/${urlKey}/${sku}`),
+  onSearchResult: (results) => {
+    searchResult.style.display = results.length > 0 ? 'block' : 'none';
+  },
+  slots: {
+    Footer: async (ctx) => {
+      // View all results button
+      const viewAllResultsWrapper = document.createElement('div');
+
+      const viewAllResultsButton = await UI.render(Button, {
+        children: labels.Global?.SearchViewAll,
+        variant: 'secondary',
+        href: rootLink('/search'),
+      })(viewAllResultsWrapper);
+
+      ctx.appendChild(viewAllResultsWrapper);
+
+      ctx.onChange((next) => {
+        viewAllResultsButton?.setProps((prev) => ({
+          ...prev,
+          href: `${rootLink('/search')}?q=${encodeURIComponent(next.variables?.phrase || '')}`,
+        }));
+      });
+    },
+  },
+})(searchResult);
+```
+
+### Search Results Integration
+
+```javascript
+await provider.render(SearchResults, {
+  routeProduct: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+  slots: {
+    ProductActions: (ctx) => {
+      // Wrapper
+      const wrapper = document.createElement('div');
+      wrapper.className = 'product-discovery-product-actions';
+      
+      // Add to Cart Button
+      const addToCartBtn = document.createElement('button');
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      addToCartBtn.innerText = placeholders.Global.AddToCartLabel;
+      addToCartBtn.addEventListener('click', () => console.log(ctx.product));
+
+      // Append element to Slot
+      ctx.appendChild(addToCartBtn);
+    },
+  },
+})($productList);
+```
+
+## Best Practices
+
+1. **Scope Management**: Use unique scope identifiers for multiple instances
+2. **Slot Customization**: Use slots for merchant-specific customization
+3. **Performance**: Use lazy loading for off-screen containers
+4. **Error Handling**: Let the container handle errors automatically
+5. **Real-time Updates**: Let the container handle updates automatically
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container Not Updating**: Check scope configuration and event handling
+2. **Slots Not Rendering**: Ensure the element is added to the slot using `ctx.appendChild()`, `ctx.replaceWith()`, etc.
+3. **Styling Conflicts**: Use specific CSS classes to avoid conflicts
