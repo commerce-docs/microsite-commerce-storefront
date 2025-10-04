@@ -300,7 +300,7 @@ async function config() {
                   },
                   // ---------- DROP-INS (B2C) ----------
                   {
-                    label: 'Drop-ins',
+                    label: 'Drop-ins for B2C',
                     collapsed: true,
                     items: [
                       {
@@ -814,7 +814,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
+              exclude: ['/sdk/**', '/videos/**'],
             }
           ),
           starlightHeadingBadges(),
