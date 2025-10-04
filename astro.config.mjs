@@ -597,7 +597,14 @@ async function config() {
                     label: 'Drop-ins for B2B',
                     collapsed: true,
                     items: [
-                      { label: 'Overview', link: '/dropins-b2b/overview/' },
+                      { label: 'B2B Commerce Overview', link: '/dropins-b2b/' },
+                      {
+                        label: 'B2B Containers',
+                        collapsed: true,
+                        items: [
+                          { label: 'RequestNegotiableQuoteForm', link: '/dropins-b2b/container/request-negotiable-quote-form/' },
+                        ],
+                      },
                     ],
                   },
 
