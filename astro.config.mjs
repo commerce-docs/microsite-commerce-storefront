@@ -216,13 +216,14 @@ async function config() {
                 icon: 'seti:json',
                 items: [
                   {
-                    label: 'Quick start',
+                    label: 'Essentials',
                     collapsed: false,
                     items: [
                       { label: 'Overview', link: '/get-started/' },
                       { label: 'Create a storefront', link: '/get-started/create-storefront' },
                       { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
+                      { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
                     ],
                   },
