@@ -31,6 +31,39 @@ The following example demonstrates how to configure the `ProductOptions` contain
 
 ```js
 return productRenderer.render(ProductOptions, {
+  hideSelectedValue: false,
+  onValues: (optionsUIDs) => {
+    console.log('Selected options:', optionsUIDs);
+  },
+  onErrors: (errors) => {
+    console.error('Option errors:', errors);
+  },
+});
+```
+
+## Slots
+
+The `ProductOptions` container provides the following slots for customization:
+
+### Swatches
+
+The `Swatches` slot allows you to customize or extend the entire product options/swatches UI.
+
+**Slot context:**
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['data', 'ProductModel | null', 'The current product data containing options and other product information.'],
+    ['optionsUIDs', 'string[]', 'Array of currently selected option UIDs.'],
+  ]}
+/>
+
+**Example:**
+
+```js
+return productRenderer.render(ProductOptions, {
   slots: {
     Swatches: (ctx) => {
       const size = ctx.getSlotElement('product-swatch--fashion_size');
@@ -48,6 +81,42 @@ return productRenderer.render(ProductOptions, {
         size.appendChild(link);
       }
     },
+  },
+});
+```
+
+### SwatchImage
+
+The `SwatchImage` slot allows you to customize how swatch images are rendered for image-based options.
+
+**Slot context:**
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['data', 'ProductModel | null', 'The current product data containing options and other product information.'],
+    ['optionsUIDs', 'string[]', 'Array of currently selected option UIDs.'],
+    ['defaultImageProps', 'ImageProps', 'Default image properties including src, alt, width, height, and other image attributes.'],
+    ['imageSwatchContext', 'ImageNodeRenderProps["imageSwatchContext"]', 'Context object containing information about the specific image swatch being rendered.'],
+  ]}
+/>
+
+**Example:**
+
+```js
+return productRenderer.render(ProductOptions, {
+  slots: {
+    SwatchImage: (ctx) => `
+      <div class="custom-swatch-image">
+        <img 
+          src="${ctx.defaultImageProps.src}" 
+          alt="${ctx.defaultImageProps.alt}"
+          width="${ctx.defaultImageProps.width}"
+          height="${ctx.defaultImageProps.height}"
+        />
+      </div>
+    `,
   },
 });
 ```
