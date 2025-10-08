@@ -1,0 +1,287 @@
+---
+title: Quote Management events
+description: Learn about the events emitted by the quote management drop-in component.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+
+The quote management drop-in uses an event-driven architecture to communicate with other components and enable real-time updates. This allows for seamless integration with other storefront components and provides flexibility for custom implementations.
+
+## Event System
+
+The quote management drop-in emits events through the Adobe Commerce Event Bus (`@adobe-commerce/event-bus`). You can listen to these events to:
+
+- Update UI components in real-time
+- Integrate with other storefront components
+- Implement custom business logic
+- Track user interactions and analytics
+
+## Core Events
+
+### quote-management/negotiable-quote-requested
+
+Emitted when a new negotiable quote is successfully requested.
+
+<OptionsTable
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['quote', 'NegotiableQuoteModel | null', 'The created quote object.'],
+    ['input', 'object', 'The input parameters used to create the quote.'],
+  ]}
+/>
+
+**Input object properties:**
+- `cartId` (string): Cart ID used for the request
+- `quoteName` (string): Name for the quote
+- `comment` (string, optional): Comment for the quote
+- `isDraft` (boolean, optional): Whether the quote is a draft
+
+**Example:**
+```js
+import { events } from '@adobe-commerce/event-bus';
+
+events.on('quote-management/negotiable-quote-requested', (data) => {
+  console.log('New quote created:', data.quote);
+  console.log('Input parameters:', data.input);
+  
+  // Update UI to show success message
+  showNotification('Quote requested successfully!');
+  
+  // Navigate to quote management page
+  if (data.quote) {
+    navigateToQuoteManagement(data.quote.id);
+  }
+});
+```
+
+### quote-management/quote-data
+
+Emitted when quote data is retrieved or updated.
+
+<OptionsTable
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['quote', 'NegotiableQuoteModel', 'The quote data object.'],
+    ['permissions', 'object', 'Current user permissions for the quote.'],
+  ]}
+/>
+
+**Example:**
+```js
+events.on('quote-management/quote-data', (data) => {
+  console.log('Quote data loaded:', data.quote);
+  console.log('User permissions:', data.permissions);
+  
+  // Update quote display components
+  updateQuoteDisplay(data.quote);
+  
+  // Enable/disable actions based on permissions
+  updateActionButtons(data.permissions);
+});
+```
+
+### quote-management/quote-data/initialized
+
+Emitted when quote data is initially loaded during drop-in initialization.
+
+<OptionsTable
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['quote', 'NegotiableQuoteModel', 'The quote data object.'],
+    ['permissions', 'object', 'Current user permissions for the quote.'],
+  ]}
+/>
+
+**Example:**
+```js
+events.on('quote-management/quote-data/initialized', (data) => {
+  console.log('Quote initialized:', data.quote);
+  console.log('User permissions:', data.permissions);
+  
+  // Initialize UI with quote data
+  initializeQuoteDisplay(data.quote);
+});
+```
+
+### quote-management/quote-data/error
+
+Emitted when an error occurs while loading quote data.
+
+<OptionsTable
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['error', 'Error', 'The error object that occurred.'],
+  ]}
+/>
+
+**Example:**
+```js
+events.on('quote-management/quote-data/error', (data) => {
+  console.error('Error loading quote data:', data.error);
+  
+  // Show error message to user
+  showErrorMessage('Failed to load quote data');
+});
+```
+
+### quote-management/permissions
+
+Emitted when user permissions are updated or refreshed.
+
+<OptionsTable
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['permissions', 'object', 'The updated permissions object.'],
+  ]}
+/>
+
+**Example:**
+```js
+events.on('quote-management/permissions', (data) => {
+  console.log('Permissions updated:', data.permissions);
+  
+  // Update UI based on new permissions
+  updateActionButtons(data.permissions);
+  
+  // Show/hide features based on permissions
+  toggleFeatures(data.permissions);
+});
+```
+
+## External Events
+
+The quote management drop-in also listens to external events from other parts of the application:
+
+### authenticated
+
+Emitted when user authentication status changes.
+
+**Example:**
+```js
+events.on('authenticated', (isAuthenticated) => {
+  console.log('Authentication status:', isAuthenticated);
+  
+  // Update UI based on authentication status
+  if (isAuthenticated) {
+    showAuthenticatedFeatures();
+  } else {
+    hideAuthenticatedFeatures();
+  }
+});
+```
+
+### locale
+
+Emitted when the application locale changes.
+
+**Example:**
+```js
+events.on('locale', (locale) => {
+  console.log('Locale changed to:', locale);
+  
+  // Update UI language
+  updateUILanguage(locale);
+});
+```
+
+## Integration Examples
+
+### Cart Integration
+
+Listen for quote events to update cart components:
+
+```js
+// When a quote is requested from cart
+events.on('quote-management/negotiable-quote-requested', (data) => {
+  if (data.quote) {
+    // Clear cart after successful quote request
+    clearCart();
+    
+    // Show success message
+    showCartNotification('Items moved to quote successfully');
+  }
+});
+
+// When quote data is loaded
+events.on('quote-management/quote-data', (data) => {
+  // Update UI with quote information
+  updateQuoteDisplay(data.quote);
+});
+```
+
+### Navigation Integration
+
+Handle navigation based on quote events:
+
+```js
+// Navigate to quote management after creation
+events.on('quote-management/negotiable-quote-requested', (data) => {
+  if (data.quote) {
+    window.location.href = `/quotes/${data.quote.id}`;
+  }
+});
+
+// Navigate to quotes list after error
+events.on('quote-management/quote-data/error', (data) => {
+  console.error('Failed to load quote:', data.error);
+  window.location.href = '/quotes';
+});
+```
+
+### Analytics Integration
+
+Track user interactions for analytics:
+
+```js
+// Track quote requests
+events.on('quote-management/negotiable-quote-requested', (data) => {
+  if (data.quote) {
+    analytics.track('Quote Requested', {
+      quoteId: data.quote.id,
+      quoteName: data.input.quoteName,
+      cartId: data.input.cartId,
+      isDraft: data.input.isDraft || false
+    });
+  }
+});
+
+// Track quote data loading
+events.on('quote-management/quote-data', (data) => {
+  analytics.track('Quote Data Loaded', {
+    quoteId: data.quote.id,
+    permissions: Object.keys(data.permissions)
+  });
+});
+```
+
+## Event Cleanup
+
+Remember to clean up event listeners when components are unmounted:
+
+```js
+// Store reference to event handler
+const handleQuoteRequested = (data) => {
+  console.log('Quote requested:', data);
+};
+
+// Add event listener and store the subscription
+const subscription = events.on('quote-management/negotiable-quote-requested', handleQuoteRequested);
+
+// Clean up when component unmounts
+const cleanup = () => {
+  subscription.off();
+};
+
+// Call cleanup when appropriate
+window.addEventListener('beforeunload', cleanup);
+```
+
+## Best Practices
+
+- Always handle errors appropriately in event listeners
+- Use descriptive event handler names for better debugging
+- Clean up event listeners to prevent memory leaks
+- Use events for loose coupling between components
+- Implement proper error boundaries for event handling
+- Consider using TypeScript for better type safety with events

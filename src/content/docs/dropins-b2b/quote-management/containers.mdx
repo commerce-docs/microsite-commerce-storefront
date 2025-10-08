@@ -1,0 +1,254 @@
+---
+title: Quote Management containers
+description: Learn about the container components available in the quote management drop-in.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+
+The quote management drop-in provides three main container components that handle different aspects of the B2B quote workflow. Each container is designed to be flexible and customizable to meet your specific B2B requirements.
+
+## Available Containers
+
+<CardGrid>
+  <Card title="RequestNegotiableQuoteForm" icon="plus">
+    Enables customers to request new negotiable quotes from their cart contents with form validation and draft saving capabilities.
+  </Card>
+  <Card title="ManageNegotiableQuote" icon="settings">
+    Provides comprehensive quote management including status updates, product management, and quote actions.
+  </Card>
+  <Card title="ItemsQuoted" icon="list">
+    Displays a summary of quoted items with pricing details and management actions.
+  </Card>
+  <Card title="QuotesListTable" icon="table">
+    Displays a comprehensive list of quotes with pagination, sorting, and bulk actions.
+  </Card>
+</CardGrid>
+
+## RequestNegotiableQuoteForm
+
+The `RequestNegotiableQuoteForm` container enables customers to request new negotiable quotes from their current cart contents.
+
+### Features
+
+- Quote name and comment input fields
+- Form validation with error handling
+- Draft saving functionality
+- Success/error messaging
+- Integration with cart contents
+- Authentication checks
+
+### Configuration options
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['cartId', 'string', 'Yes', 'Cart id used by the request. If empty, an error banner is shown.'],
+    ['onAttachFiles', 'function', 'No', 'Function to handle the attach files.'],
+    ['onRequestNegotiableQuote', 'function', 'No', 'Function to handle the request for a negotiable quote. Overrides the default request for a negotiable quote.'],
+    ['onSaveNegotiableQuote', 'function', 'No', 'Function to handle the save negotiable quote as a draft. Overrides the default save negotiable quote.'],
+    ['onSubmitErrors', 'function', 'No', 'Function called when the form submission fails validation.'],
+    ['onError', 'function', 'No', 'Function called when there is an error that occurs when setting up the form or when the form submission fails.'],
+    ['slots', 'object', 'No', 'Slots to customize various parts of the form (ErrorBanner, SuccessBanner, Title, CommentField, QuoteNameField, AttachFileField, RequestButton, SaveDraftButton).'],
+  ]}
+/>
+
+### Example usage
+
+```js
+provider.render(RequestNegotiableQuoteForm, {
+  cartId: 'cart-123',
+  onAttachFiles: async (files) => {
+    console.log('Files attached:', files);
+    // Handle file upload
+  },
+  onRequestNegotiableQuote: async (data) => {
+    console.log('Quote requested:', data);
+    // Custom quote request logic
+    return null;
+  },
+  onSaveNegotiableQuote: async (data) => {
+    console.log('Draft saved:', data);
+    // Custom draft save logic
+    return null;
+  },
+  onSubmitErrors: (errors) => {
+    console.log('Form validation errors:', errors);
+    // Handle validation errors
+  },
+  onError: (props) => {
+    console.error('Error occurred:', props.error);
+    // Handle error state
+  },
+})(document.getElementById('request-quote-form'));
+```
+
+## ManageNegotiableQuote
+
+The `ManageNegotiableQuote` container provides comprehensive quote management capabilities for existing quotes.
+
+### Features
+
+- Quote details display (creation date, sales rep, expiration)
+- Quote status management and updates
+- Product list with pricing and quantity controls
+- Quote actions (print, copy, delete, send for review)
+- Shipping information display
+- Quote comments section
+- Permission-based action availability
+
+### Configuration options
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['onActionsDropdownChange', 'function', 'No', 'Function to handle the actions dropdown change.'],
+    ['onActionsButtonClick', 'function', 'No', 'Function to handle when one of the action buttons is clicked.'],
+    ['onSendForReview', 'function', 'No', 'Function to handle when the send for review button is clicked.'],
+    ['slots', 'object', 'No', 'Slots to customize various parts of the quote management (QuoteName, QuoteStatus, Banner, Details, ActionBar, QuoteContent, ShippingInformationTitle, ShippingInformation, QuoteCommentsTitle, QuoteComments, Footer).'],
+  ]}
+/>
+
+### Example usage
+
+```js
+provider.render(ManageNegotiableQuote, {
+  onActionsDropdownChange: (event) => {
+    console.log('Actions dropdown changed:', event);
+    // Handle dropdown change
+  },
+  onActionsButtonClick: (action) => {
+    console.log('Action button clicked:', action);
+    // Handle specific actions (close, delete, print, createTemplate, createCopy)
+  },
+  onSendForReview: (quoteData) => {
+    console.log('Send for review:', quoteData);
+    // Handle send for review action
+  },
+})(document.getElementById('manage-quote'));
+```
+
+## ItemsQuoted
+
+The `ItemsQuoted` container displays a summary of items that have been quoted, providing a quick overview of quoted products.
+
+### Features
+
+- Product information and pricing display
+- Quantity and discount details
+- Subtotal calculations
+- Action buttons for quote management
+- Responsive design for mobile and desktop
+
+### Configuration options
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['quoteData', 'NegotiableQuoteModel', 'No', 'The initial data to display in the ItemsQuoted. If not provided, listens for quote-management/quote-data event.'],
+    ['onItemCheckboxChange', 'function', 'No', 'Callback function to handle when the item checkbox is changed.'],
+    ['onItemDropdownChange', 'function', 'No', 'Callback function to handle when the item dropdown value is changed.'],
+    ['onUpdate', 'function', 'No', 'Callback function to handle when the update button is clicked and the form is submitted.'],
+    ['slots', 'object', 'No', 'Slots to customize various parts of the items display (ProductListTable, QuotePricesSummary).'],
+  ]}
+/>
+
+### Example usage
+
+```js
+provider.render(ItemsQuoted, {
+  quoteData: quoteData, // Optional: provide initial data
+  onItemCheckboxChange: (item, isSelected) => {
+    console.log('Item checkbox changed:', item, isSelected);
+    // Handle checkbox change
+  },
+  onItemDropdownChange: (item, action) => {
+    console.log('Item dropdown changed:', item, action);
+    // Handle dropdown change
+  },
+  onUpdate: (e) => {
+    console.log('Update button clicked:', e);
+    // Handle form submission
+  },
+})(document.getElementById('items-quoted'));
+```
+
+## QuotesListTable
+
+The `QuotesListTable` container displays a comprehensive list of quotes with advanced filtering, sorting, and management capabilities.
+
+### Features
+
+- Quote list display with status indicators
+- Pagination and sorting controls
+- Search and filtering options
+- Bulk actions for multiple quotes
+- Quote selection and navigation
+- Responsive table design
+
+### Configuration options
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['pageSize', 'number', 'No', 'Page size for pagination. Defaults to first page size option if not provided.'],
+    ['showItemRange', 'boolean', 'No', 'Whether to show the item range display (e.g., "Items 1 to 20 of 27 total"). Default: true.'],
+    ['showPageSizePicker', 'boolean', 'No', 'Whether to show the page size picker. Default: true.'],
+    ['showPagination', 'boolean', 'No', 'Whether to show the pagination controls. Default: true.'],
+    ['onViewQuote', 'function', 'No', 'Callback function when a quote is viewed.'],
+    ['onPageSizeChange', 'function', 'No', 'Callback function when page size changes.'],
+    ['onPageChange', 'function', 'No', 'Callback function when page changes.'],
+    ['slots', 'object', 'No', 'Slots to customize various parts of the table (QuoteName, Created, CreatedBy, Status, LastUpdated, QuoteTemplate, QuoteTotal, Actions, EmptyQuotes, ItemRange, PageSizePicker, Pagination).'],
+  ]}
+/>
+
+### Example usage
+
+```js
+provider.render(QuotesListTable, {
+  pageSize: 25,
+  showItemRange: true,
+  showPageSizePicker: true,
+  showPagination: true,
+  onViewQuote: (quoteId, quoteName, status) => {
+    console.log('View quote:', quoteId, quoteName, status);
+    // Navigate to quote management page
+    window.location.href = `/quotes/${quoteId}`;
+  },
+  onPageSizeChange: (newPageSize) => {
+    console.log('Page size changed:', newPageSize);
+    // Handle page size change
+  },
+  onPageChange: (newPage) => {
+    console.log('Page changed:', newPage);
+    // Handle page change
+  },
+})(document.getElementById('quotes-list-table'));
+```
+
+## Container Integration
+
+These containers are designed to work together to provide a complete quote management experience:
+
+1. **RequestNegotiableQuoteForm** - Used on cart pages or product pages to initiate quote requests
+2. **ManageNegotiableQuote** - Used on dedicated quote management pages for comprehensive quote handling
+3. **ItemsQuoted** - Used on quote summary pages or as a sidebar component
+4. **QuotesListTable** - Used on quotes listing pages for browsing and managing multiple quotes
+
+## Customization
+
+Each container can be customized through:
+
+- **Props**: Configuration options passed to the container
+- **Slots**: Content areas that can be customized with your own components
+- **Events**: Callback functions for handling user interactions
+- **Styles**: CSS customization for visual appearance
+
+## Best Practices
+
+- Use `RequestNegotiableQuoteForm` on cart pages to enable easy quote requests
+- Implement `ManageNegotiableQuote` on dedicated quote management pages
+- Use `ItemsQuoted` as a summary component in quote lists or sidebars
+- Handle errors gracefully with appropriate callback functions
+- Ensure proper authentication checks before rendering containers
+- Test all quote workflows thoroughly in your B2B environment

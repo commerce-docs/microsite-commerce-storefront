@@ -1,0 +1,268 @@
+---
+title: Quote Management dictionary
+description: Learn about the internationalization (i18n) dictionary for the quote management drop-in component.
+---
+
+The quote management drop-in component includes comprehensive internationalization support through dictionary files. These files contain all the text strings used throughout the component, making it easy to localize for different languages and regions.
+
+## Dictionary Structure
+
+The quote management dictionary follows a hierarchical structure organized by component and feature:
+
+```json
+{
+  "NegotiableQuote": {
+    "Request": {
+      "title": "Request a Quote",
+      "comment": "Comment",
+      "commentError": "Please add your comment",
+      "quoteName": "Quote name",
+      "quoteNameError": "Please add a quote name",
+      "attachmentsError": "Error uploading attachments",
+      "requestCta": "Request a Quote",
+      "saveDraftCta": "Save as draft",
+      "error": {
+        "header": "Error",
+        "unauthenticated": "Please sign in to request a quote.",
+        "unauthorized": "You are not authorized to request a quote.",
+        "missingCart": "Could not find a valid cart."
+      },
+      "success": {
+        "header": "Success",
+        "submitted": "Quote request submitted successfully!",
+        "draftSaved": "Quote saved as draft successfully!"
+      }
+    },
+    "Manage": {
+      "createdLabel": "Created:",
+      "salesRepLabel": "Sales Rep:",
+      "expiresLabel": "Expires:",
+      "actionsLabel": "Actions",
+      "actions": {
+        "remove": "Remove"
+      },
+      "bannerTitle": "Alert",
+      "bannerStatusMessages": {
+        "pending": "This quote is currently locked for editing. It will become available once released by the Merchant.",
+        "expired": "Your quote has expired and the product prices have been updated as per the latest prices in your catalog. You can either re-submit the quote to seller for further negotiation or go to checkout."
+      },
+      "actionButtons": {
+        "close": "Close quote",
+        "delete": "Delete quote",
+        "print": "Print quote",
+        "createTemplate": "Create quote template",
+        "createCopy": "Create copy",
+        "sendForReview": "Send for review"
+      },
+      "shippingInformation": {
+        "title": "Shipping Information"
+      },
+      "quoteComments": {
+        "title": "Quote Comments",
+        "placeholder": "Add your comment"
+      },
+      "productListTable": {
+        "headers": {
+          "productName": "Product name",
+          "sku": "SKU",
+          "price": "Price",
+          "quantity": "Quantity",
+          "discount": "Discount",
+          "subtotal": "Subtotal",
+          "actions": "Actions"
+        },
+        "submitButton": "Update",
+        "actions": {
+          "editNoteToSeller": "Edit note to seller",
+          "remove": "Remove"
+        }
+      },
+      "quotePricesSummary": {
+        "subtotal": {
+          "excludingTax": "Quote Subtotal (excluding tax)"
+        },
+        "appliedTaxes": "Applied Taxes",
+        "grandTotal": {
+          "includingTax": "Quote Grand Total (including tax)"
+        }
+      }
+    }
+  }
+}
+```
+
+## Dictionary Categories
+
+### Request Category
+
+Contains all text strings related to the quote request form:
+
+- **Form Labels**: Field labels for quote name, comments, and attachments
+- **Error Messages**: Validation and error messages for form submission
+- **Success Messages**: Confirmation messages for successful operations
+- **Action Buttons**: Text for request and draft save buttons
+
+### Manage Category
+
+Contains all text strings related to quote management:
+
+- **Quote Details**: Labels for creation date, sales rep, expiration
+- **Status Messages**: Banner messages for different quote states
+- **Action Buttons**: Text for quote management actions
+- **Product Table**: Headers and labels for product list display
+- **Pricing Summary**: Labels for pricing calculations
+
+## Customizing Dictionary Entries
+
+You can customize dictionary entries by overriding them in your initialization configuration:
+
+```js
+// Custom dictionary overrides
+const customDictionary = {
+  NegotiableQuote: {
+    Request: {
+      title: "Request Custom Quote",
+      requestCta: "Submit Quote Request",
+      success: {
+        submitted: "Your custom quote request has been submitted!"
+      }
+    },
+    Manage: {
+      actionButtons: {
+        print: "Generate PDF",
+        createTemplate: "Save as Template"
+      }
+    }
+  }
+};
+
+// Merge with default dictionary
+const finalDictionary = {
+  ...defaultDictionary,
+  ...customDictionary
+};
+```
+
+## Adding New Languages
+
+To add support for a new language, create a new dictionary file following the same structure:
+
+```json
+// fr_FR.json
+{
+  "NegotiableQuote": {
+    "Request": {
+      "title": "Demander un devis",
+      "comment": "Commentaire",
+      "quoteName": "Nom du devis",
+      "requestCta": "Demander un devis",
+      "saveDraftCta": "Enregistrer comme brouillon"
+    },
+    "Manage": {
+      "createdLabel": "Créé :",
+      "salesRepLabel": "Commercial :",
+      "expiresLabel": "Expire :",
+      "actionButtons": {
+        "close": "Fermer le devis",
+        "delete": "Supprimer le devis",
+        "print": "Imprimer le devis"
+      }
+    }
+  }
+}
+```
+
+## Loading Dictionary Files
+
+Load dictionary files during initialization:
+
+```js
+// Load multiple language dictionaries
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+const de_DE = await fetch('/i18n/de_DE.json').then((res) => res.json());
+
+// Configure language definitions
+const langDefinitions = {
+  default: en_US,
+  en_US,
+  fr_FR,
+  de_DE,
+};
+
+// Initialize with language support
+initializers.register(api.initialize, {
+  langDefinitions,
+});
+```
+
+## Dynamic Language Switching
+
+You can switch languages dynamically at runtime:
+
+```js
+// Switch to French
+await api.setLanguage('fr_FR');
+
+// Switch to German
+await api.setLanguage('de_DE');
+
+// Get current language
+const currentLanguage = api.getCurrentLanguage();
+console.log('Current language:', currentLanguage);
+```
+
+## Best Practices
+
+- **Consistency**: Use consistent terminology across all dictionary entries
+- **Context**: Provide context for translators through clear key names
+- **Completeness**: Ensure all user-facing text is included in the dictionary
+- **Testing**: Test all languages thoroughly to ensure proper display
+- **Fallbacks**: Always provide fallback text for missing translations
+- **Pluralization**: Consider plural forms for different languages
+- **Cultural Adaptation**: Adapt content for cultural differences, not just language
+
+## Common Dictionary Patterns
+
+### Error Messages
+```json
+"error": {
+  "header": "Error",
+  "unauthenticated": "Please sign in to request a quote.",
+  "unauthorized": "You are not authorized to request a quote.",
+  "validation": {
+    "required": "This field is required",
+    "invalid": "Please enter a valid value"
+  }
+}
+```
+
+### Action Buttons
+```json
+"actionButtons": {
+  "primary": "Submit",
+  "secondary": "Cancel",
+  "tertiary": "Save Draft",
+  "destructive": "Delete"
+}
+```
+
+### Status Messages
+```json
+"statusMessages": {
+  "loading": "Loading...",
+  "success": "Operation completed successfully",
+  "error": "An error occurred",
+  "warning": "Please review your input"
+}
+```
+
+### Form Labels
+```json
+"formLabels": {
+  "required": "Required",
+  "optional": "Optional",
+  "placeholder": "Enter your text here",
+  "helpText": "This information will be used for..."
+}
+```

@@ -1,0 +1,288 @@
+---
+title: Quote Management installation
+description: Learn how to install the quote management drop-in component into your B2B site.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Callouts from '@components/Callouts.astro';
+import Vocabulary from '@components/Vocabulary.astro';
+
+The quote management drop-in component is designed for the browser's JavaScript runtime without the need for a bundler. You can also install and execute the drop-in component in a build-time environment with bundlers like Vite. The installation steps for both runtime and build-time environments are the same after the initial drop-in component package imports.
+
+## Prerequisites
+
+Before installing the quote management drop-in, ensure you have:
+
+- Adobe Commerce B2B module installed and configured
+- Negotiable quotes functionality enabled in your Commerce backend
+- User authentication system in place
+- Cart functionality available
+
+## Step-by-step
+
+Use the following steps to install the quote management component:
+
+:::note[Edge Delivery Service]
+These steps are specific for EDS projects, and may not necessarily be the same for other frameworks such as a static HTML or React framework.
+:::
+
+<Tasks>
+
+<Task>
+
+### Install the packages
+
+Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and quote management (`@dropins/storefront-quote-management`) packages.
+
+<Tabs>
+  <TabItem label="NPM" icon="seti:npm">
+
+    ```bash frame="none"
+    npm install @dropins/tools @dropins/storefront-quote-management
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+
+    ```html title="index.html" del={"Replace with actual URLs":5-7}
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your B2B Storefront</title>
+
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-quote-management@latest"></script>
+    </head>
+    ```
+
+  </TabItem>
+</Tabs>
+
+:::note[Install @dropins/tools]
+All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+:::
+
+</Task>
+
+<Task>
+### Map the packages
+
+In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
+
+<Tabs>
+<TabItem label="node_modules" icon="seti:npm">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the quote management (@dropins/storefront-quote-management):
+
+  ```html title="head.html"
+  <script type="importmap">
+    {
+      "imports": {
+        "@dropins/tools/": "/node_modules/@dropins/tools/",
+        "@dropins/storefront-quote-management/": "/node_modules/@dropins/storefront-quote-management/",
+      }
+    }
+  </script>
+  <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+    <TabItem label="custom" icon="seti:folder">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the quote management (@dropins/storefront-quote-management):
+
+    ```html title="head.html"
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "/scripts/__dropins__/tools/",
+          "@dropins/storefront-quote-management/": "/scripts/__dropins__/storefront-quote-management/",
+        }
+      }
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+    This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the quote management (@dropins/storefront-quote-management):
+
+    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
+    <head>
+      <script type="importmap">
+        {
+          "imports": {
+
+            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
+            "@dropins/storefront-quote-management/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-quote-management@latest",
+          }
+        }
+      </script>
+    </head>
+    ```
+
+  </TabItem>
+
+</Tabs>
+
+With the `importmap` defined for both runtime and build-time environments, you can now **import the required files** from these packages into your quote management block as described in the next step.
+
+</Task>
+
+<Task>
+### Import the required files
+
+Import the required files from the drop-in components tools (`@dropins/tools/fetch-graphql.js'`, `@dropin/tools/initializers.js`) and the quote management (`@dropins/storefront-quote-management`) into a JavaScript file for your quote management block. The example here shows the imports added to a `quote-management.js` file. These imports constitute the minimum imports you need to create a fully functioning quote management system for your B2B site:
+
+```js title="quote-management.js"
+// GraphQL Client
+import * as mesh from '@dropins/tools/fetch-graphql.js';
+
+// component tools
+import { initializers } from '@dropins/tools/initializer.js';
+
+// drop-in component functions
+import * as pkg from '@dropins/storefront-quote-management/api.js';
+
+// Drop-in component provider
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+
+// Drop-in component containers
+import RequestNegotiableQuoteForm from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+import ManageNegotiableQuote from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+import ItemsQuoted from '@dropins/storefront-quote-management/containers/ItemsQuoted.js';
+import QuotesListTable from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+```
+
+<Vocabulary>
+
+### GraphQL client
+
+Enables the ability to set and get endpoints and headers, as well as fetches data and configurations for quote management operations.
+
+### Drop-in component tools
+
+The Initializer is responsible for setting up event listeners and initializing the quote management module with the given configuration.
+
+### Drop-in component functions
+
+Enables the quote management API functions: requestNegotiableQuote, getQuoteData, getCustomerData, and more.
+
+### Drop-in component provider
+
+Renders the quote management UI components.
+
+### Drop-in component containers
+
+Structural elements that are responsible for managing and displaying the UI for quote request forms, quote management interfaces, and quoted items display.
+
+</Vocabulary>
+
+</Task>
+
+<Task>
+### Connect to the endpoint
+
+Connect your quote management component to the API Mesh endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
+
+```js title="quote-management.js"
+// Set endpoint configuration
+mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
+```
+
+#### Request headers
+
+The quote management drop-in requires specific headers for B2B functionality. The below example shows how to set the `Commerce-Auth` header with the customer token for the Authorization header, and how to set the store code header for store specific features. Replace the header values with the actual values from your Commerce backend services:
+
+```js title="quote-management.js"
+// Set the customer token. This method is specific to @dropins/storefront-quote-management package.
+pkg.setFetchGraphQlHeader('commerce-auth', '<token>');
+
+// Set store code header. This method is specific to the @dropins/tools package.
+mesh.setFetchGraphQlHeader('store', '<default>');
+```
+
+:::note[Authentication]
+Note that this setting is specific for GraphQL Mesh, so refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections. Visit the [user authentication](/dropins/user-auth/) drop-in component for instructions on setting up Authentication features.
+:::
+
+</Task>
+
+<Task>
+### Register and load the drop-in
+
+The code below shows how to register the quote management drop-in, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your Quote Management HTML page as shown here:
+
+```html title="index.html" ins={"1":5} ins={"2":8}
+<script type="module">
+  // more code above...
+
+  // Register and load the Quote Management drop-in
+  initializers.register(pkg.initialize);
+
+  // Mount Initializers (must be called after all initializers are registered)
+  window.addEventListener('load', initializers.mount);
+</script>
+```
+
+<Callouts square color="var(--sl-color-green)">
+
+1. This function registers the quote management drop-in to be loaded on the page by the `initializers.mount` function.
+1. This event handler triggers the initializers.mount function to load the quote management drop-in after the page has loaded.
+
+</Callouts>
+
+</Task>
+
+<Task>
+### Render the drop-in
+
+Render the quote management components on the page. The example below provides the minimal configuration options required to render the quote management drop-in components:
+
+```js title="quote-management.js"
+// Render Request Quote Form
+provider.render(RequestNegotiableQuoteForm, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeCart: () => 'your-cart-element',
+})(document.getElementById('your-request-quote-element'));
+
+// Render Manage Quote
+provider.render(ManageNegotiableQuote, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeCart: () => 'your-cart-element',
+  routeCheckout: () => 'your-checkout-element',
+})(document.getElementById('your-manage-quote-element'));
+
+// Render Items Quoted
+provider.render(ItemsQuoted, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+})(document.getElementById('your-items-quoted-element'));
+
+// Render Quotes List Table
+provider.render(QuotesListTable, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  onQuoteSelected: (quote) => {
+    console.log('Quote selected:', quote);
+    // Navigate to quote management page
+  },
+})(document.getElementById('your-quotes-list-element'));
+```
+
+Test the quote management functionality by viewing your quote management page in a browser, or running your local dev or build server. If you see the quote management components rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
+
+</Task>
+
+</Tasks>
+
+## Summary
+
+The installation of the quote management drop-in follows the same pattern as other drop-in components: Install, Map, Import, Connect, Register, and Render. The key difference is the B2B-specific functionality and the requirement for proper authentication and permissions setup.

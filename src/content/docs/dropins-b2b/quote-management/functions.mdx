@@ -1,0 +1,248 @@
+---
+title: Quote Management functions
+description: Learn about the API functions available in the quote management drop-in component.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The quote management drop-in provides a comprehensive set of API functions for managing negotiable quotes in B2B commerce scenarios. These functions handle everything from requesting new quotes to managing existing ones.
+
+## Core Functions
+
+### requestNegotiableQuote
+
+Creates a new negotiable quote request from cart contents.
+
+<OptionsTable
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['cartId', 'string', 'Yes', 'The ID of the cart to create a quote from.'],
+    ['quoteName', 'string', 'Yes', 'The name for the quote.'],
+    ['comment', 'string', 'Yes', 'Comments or notes for the quote.'],
+    ['isDraft', 'boolean', 'No', 'Whether to save as draft (default: false).'],
+  ]}
+/>
+
+**Returns:** `Promise<NegotiableQuoteModel | null>`
+
+**Example:**
+```js
+import { requestNegotiableQuote } from '@dropins/storefront-quote-management/api.js';
+
+try {
+  const quote = await requestNegotiableQuote({
+    cartId: 'cart-123',
+    quoteName: 'Q1 2024 Office Supplies',
+    comment: 'Please provide volume discount pricing',
+    isDraft: false
+  });
+  
+  console.log('Quote created:', quote);
+} catch (error) {
+  console.error('Failed to create quote:', error);
+}
+```
+
+### getQuoteData
+
+Retrieves detailed information about a specific negotiable quote.
+
+<OptionsTable
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['quoteId', 'string', 'Yes', 'The ID of the quote to retrieve.'],
+  ]}
+/>
+
+**Returns:** `Promise<NegotiableQuoteModel>`
+
+**Example:**
+```js
+import { getQuoteData } from '@dropins/storefront-quote-management/api.js';
+
+try {
+  const quote = await getQuoteData('quote-123');
+  console.log('Quote data:', quote);
+} catch (error) {
+  console.error('Failed to get quote:', error);
+}
+```
+
+### getCustomerData
+
+Retrieves customer information and permissions for B2B operations. This function does not require any parameters. Instead it uses the current authenticated session to fetch the data.
+
+**Returns:** `Promise<CustomerModel>`
+
+**Example:**
+```js
+import { getCustomerData } from '@dropins/storefront-quote-management/api.js';
+
+try {
+  const customer = await getCustomerData();
+  console.log('Customer data:', customer);
+  console.log('Permissions:', customer.permissions);
+} catch (error) {
+  console.error('Failed to get customer data:', error);
+}
+```
+
+## Data Models
+
+The quote management drop-in uses several TypeScript interfaces to define data structures:
+
+### NegotiableQuoteModel
+
+Represents a negotiable quote with all its properties and relationships.
+
+```typescript
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  comments?: QuoteComment[];
+  prices: QuotePrices;
+  items: NegotiableQuoteCartItem[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+}
+```
+
+### NegotiableQuoteStatus
+
+Enumeration of possible quote statuses.
+
+```typescript
+enum NegotiableQuoteStatus {
+  SUBMITTED = 'SUBMITTED',
+  PENDING = 'PENDING',
+  UPDATED = 'UPDATED',
+  OPEN = 'OPEN',
+  ORDERED = 'ORDERED',
+  CLOSED = 'CLOSED',
+  DECLINED = 'DECLINED',
+  EXPIRED = 'EXPIRED',
+  DRAFT = 'DRAFT',
+}
+```
+
+### CustomerModel
+
+Represents customer data and permissions.
+
+```typescript
+interface CustomerModel {
+  permissions: CustomerPermissions;
+}
+
+interface CustomerPermissions {
+  canRequestQuote: boolean;
+  canEditQuote: boolean;
+  canDeleteQuote: boolean;
+  canCheckoutQuote: boolean;
+}
+```
+
+## Utility Functions
+
+### negotiableQuotes
+
+Retrieves a list of negotiable quotes for the current customer with filtering, sorting, and pagination.
+
+<OptionsTable
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['filter', 'NegotiableQuoteFilterInput', 'No', 'Filters to apply to the quote list.'],
+    ['pageSize', 'number', 'No', 'Number of quotes per page (default: 20).'],
+    ['currentPage', 'number', 'No', 'Current page number (default: 1).'],
+    ['sort', 'NegotiableQuoteSortInput', 'No', 'Sorting options for the results.'],
+  ]}
+/>
+
+**Returns:** `Promise<NegotiableQuotesListModel>`
+
+**Example:**
+```js
+import { negotiableQuotes } from '@dropins/storefront-quote-management/api.js';
+
+try {
+  const result = await negotiableQuotes({
+    filter: {
+      name: {
+        match: 'Office Supplies',
+        match_type: 'PARTIAL'
+      }
+    },
+    pageSize: 25,
+    currentPage: 1,
+    sort: {
+      sort_field: 'CREATED_AT',
+      sort_direction: 'DESC'
+    }
+  });
+  console.log('Quotes:', result.items);
+  console.log('Pagination:', result.pageInfo);
+} catch (error) {
+  console.error('Failed to get quotes list:', error);
+}
+```
+
+## Error Handling
+
+All functions return promises and should be wrapped in try-catch blocks for proper error handling:
+
+```js
+try {
+  const result = await someQuoteFunction(parameters);
+  // Handle success
+} catch (error) {
+  // Handle error
+  console.error('Operation failed:', error.message);
+  
+  // Check for specific error types
+  if (error.message.includes('Unauthorized')) {
+    // Handle authentication error
+  } else if (error.message.includes('Not Found')) {
+    // Handle not found error
+  }
+}
+```
+
+## Event Integration
+
+Many functions emit events that you can listen to for real-time updates:
+
+```js
+import { events } from '@adobe-commerce/event-bus';
+
+// Listen for quote events
+events.on('quote-management/negotiable-quote-requested', (data) => {
+  console.log('Quote requested:', data.quote);
+});
+
+events.on('quote-management/quote-data', (data) => {
+  console.log('Quote data updated:', data.quote);
+});
+
+events.on('quote-management/quote-data/initialized', (data) => {
+  console.log('Quote initialized:', data.quote);
+});
+```
+
+## Best Practices
+
+- Always handle errors appropriately with try-catch blocks
+- Check user permissions before performing operations
+- Use events for real-time UI updates
+- Validate input parameters before making API calls
+- Implement proper loading states for better UX
+- Cache frequently accessed data when appropriate

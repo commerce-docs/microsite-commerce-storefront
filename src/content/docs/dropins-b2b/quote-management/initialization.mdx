@@ -1,0 +1,98 @@
+---
+title: Quote Management initialization
+description: Learn how to configure the initializer for the quote management drop-in component.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The quote management drop-in component initializer provides options for configuring language definitions and specifying quote identifiers.
+
+## Configuration options
+
+The quote management component initializer accepts the following configuration options:
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['quoteId', 'string', 'No', 'The identifier of the quote to load and manage.'],
+  ]}
+/>
+
+## Example
+
+The following code shows an example implementation of the quote management initializer configuration:
+
+```ts
+// Initialize quote management 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    quoteId: 'quote-123',
+  });
+})();
+```
+
+## Set language definitions
+
+The `langDefinitions` property registers the quote management component dictionary files, which are used for internationalization purposes. These files allow you to provide localized text for different languages in your B2B application.
+
+```ts
+// Fetch the dictionary files for your application
+const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+
+// Register the component with language definitions
+const langDefinitions = {
+  default: en_US,
+  en_US,
+  fr_FR,
+};
+
+// Initialize quote management with language definitions
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+  });
+})();
+```
+
+## Set quote ID
+
+The `quoteId` property specifies which quote should be loaded and managed by the component. This is required when you want to work with a specific quote.
+
+```ts
+// Initialize quote management with a specific quote
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    quoteId: 'quote-123',
+  });
+})();
+```
+
+## Complete example
+
+Here's a complete example showing all configuration options:
+
+```ts
+// Complete quote management initialization
+const initializeQuoteManagement = async () => {
+  // Fetch language definitions
+  const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
+  const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+  
+  // Initialize the component
+  await initializers.mountImmediately(initialize, {
+    langDefinitions: { 
+      default: en_US, 
+      en_US,
+      fr_FR 
+    },
+    quoteId: 'quote-123',
+  });
+};
+
+// Register and mount
+initializers.register(initializeQuoteManagement);
+window.addEventListener('load', initializers.mount);
+```
