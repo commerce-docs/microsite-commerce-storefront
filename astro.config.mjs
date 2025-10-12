@@ -222,6 +222,7 @@ async function config() {
                       { label: 'Overview', link: '/get-started/' },
                       { label: 'Create a storefront', link: '/get-started/create-storefront' },
                       { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
+                      { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
                       { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
