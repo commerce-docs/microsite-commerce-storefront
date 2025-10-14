@@ -1,5 +1,5 @@
 export const ACCS_VARIABLES = {
-  Cart: JSON.stringify({ cartId: 'xEd9DiX2zdJV7yo1K7AUb1q9CYw4jijj' }, null, 2),
+  Cart: JSON.stringify({ cartId: 'bpQs2a4fWcfABqRTHGOXPkfLSJmBkvzS' }, null, 2),
   Products: JSON.stringify({ sku: 'ADB256' }, null, 2),
   Recommendations: JSON.stringify(
     {
