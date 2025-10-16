@@ -1,37 +1,59 @@
 ---
-import { Image } from 'astro:assets';
-import { Icons } from '@components/overrides/Icons';
-import Icon from '@components/overrides/Icon.astro';
-import type { HTMLAttributes } from 'astro/types';
-import { setBasePath } from '@utils/basePath';
+import { Image } from "astro:assets";
+import { Icons } from "@components/overrides/Icons";
+import Icon from "@components/overrides/Icon.astro";
+import type { HTMLAttributes } from "astro/types";
+import { setBasePath } from "@utils/basePath";
 
-interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
+interface Props extends Omit<HTMLAttributes<"a">, "title"> {
   title: string;
   description?: string;
-  image?: string | ImageMetadata | Promise<{ default: ImageMetadata }> | undefined;
+  image?:
+    | string
+    | ImageMetadata
+    | Promise<{ default: ImageMetadata }>
+    | undefined;
   icon?: keyof typeof Icons;
   rightIcon?: keyof typeof Icons;
   link: string;
   noborder?: boolean;
 }
 
-const { title, description, image, icon, rightIcon, noborder, link, ...attributes } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  icon,
+  rightIcon,
+  noborder,
+  link,
+  ...attributes
+} = Astro.props;
 
-const iconClass = noborder ? '' : 'icon';
-const iconSize = noborder ? '1.5rem' : '2rem';
+const iconClass = noborder ? "" : "icon";
+const iconSize = noborder ? "1.5rem" : "2rem";
 ---
 
 <div class="sl-link-card">
   {
     image && (
       <div class="sl-flex">
-        <Image src={image as string} alt={title} width="64" height="64" class="rounded-full" />
+        <Image
+          src={image as string}
+          alt={title}
+          width="64"
+          height="64"
+          class="rounded-full"
+        />
       </div>
     )
   }
   {icon && <Icon name={icon} class={iconClass} size={iconSize} />}
   <div class="sl-flex stack">
-    <a href={link?.toString().startsWith('https://') ? link : setBasePath(link)} {...attributes}></a>
+    <a
+      href={link?.toString().startsWith("https://") ? link : setBasePath(link)}
+      {...attributes}
+    >
       <span class="title" set:html={title} />
     </a>
     {description && <span class="description" set:html={description} />}
@@ -54,6 +76,11 @@ const iconSize = noborder ? '1.5rem' : '2rem';
     position: relative;
     padding-top: 0;
     margin-top: 0;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+    will-change: transform;
   }
 
   .sl-link-card:nth-child(4n + 1) {
@@ -91,9 +118,15 @@ const iconSize = noborder ? '1.5rem' : '2rem';
 
   /* a11y fix for https://github.com/withastro/starlight/issues/487 */
   a::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
+  }
+
+  /* Ensure card can receive hover events */
+  .sl-link-card:hover a::before {
+    pointer-events: auto;
   }
 
   .sl-link-card .stack {
@@ -113,19 +146,42 @@ const iconSize = noborder ? '1.5rem' : '2rem';
   }
 
   .description {
-    color: var(--sl-color-gray-3);
+    color: var(--sl-color-gray-2);
     line-height: 1.5;
     letter-spacing: 0;
     text-wrap: balance;
   }
 
   /* Hover state */
-  .sl-link-card:hover {
-    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
-    border-color: var(--sl-color-gray-2);
+  .sl-link-card:hover,
+  .sl-link-card:has(a:hover) {
+    transform: translateY(-6px) !important;
+    background-color: var(--sl-color-gray-7, var(--sl-color-gray-6));
+    box-shadow:
+      0 6px 12px rgba(0, 0, 0, 0.2),
+      0 3px 6px rgba(0, 0, 0, 0.15);
   }
 
-  .sl-link-card:hover .icon {
+  .sl-link-card:hover .icon,
+  .sl-link-card:has(a:hover) .icon {
     color: var(--sl-color-white);
+  }
+
+  /* Light mode specific styles */
+  :global(html:not([data-theme="dark"])) .sl-link-card {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-color: var(--sl-color-gray-4);
+  }
+
+  :global(html:not([data-theme="dark"])) .sl-link-card:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+
+  :global(html[data-theme="light"]) .sl-link-card .title {
+    color: #1a1a1a !important;
+  }
+
+  :global(html[data-theme="light"]) .sl-link-card .description {
+    color: #4a4a4a !important;
   }
 </style>
