@@ -280,7 +280,7 @@ async function config() {
                           { label: 'Launch checklist', link: '/setup/launch/' },
                         ],
                       },
-                    ],
+                    ]
                   },
                   // ---------- DROP-INS Overview ----------
                   {
@@ -358,6 +358,7 @@ async function config() {
                           { label: 'Checkout extending', link: '/dropins/checkout/extending/' },
                           { label: 'Checkout error handling', link: '/dropins/checkout/error-handling/' },
                           { label: 'Checkout event handling', link: '/dropins/checkout/event-handling/' },
+                          { label: 'Checkout utility functions', link: '/dropins/checkout/utilities/' },
                           { label: 'Checkout slots', link: '/dropins/checkout/slots/' },
                           { label: 'Checkout functions', link: '/dropins/checkout/functions/' },
                           { label: 'Checkout dictionary', link: '/dropins/checkout/dictionary/' },
@@ -366,6 +367,7 @@ async function config() {
                             collapsed: false,
                             items: [
                               { label: 'Checkout overview', link: '/dropins/checkout/containers/overview/' },
+                              { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
                               { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                               { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
                               { label: 'LoginForm', link: '/dropins/checkout/containers/login-form/' },
@@ -384,6 +386,7 @@ async function config() {
                             items: [
                               { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
                               { label: 'Address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                              { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
                               { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
                               { label: 'Multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
                             ],
