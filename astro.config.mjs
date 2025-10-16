@@ -282,20 +282,6 @@ async function config() {
                       },
                     ]
                   },
-                  {
-                    label: 'Troubleshooting',
-                    collapsed: true,
-                    autogenerate: {
-                      directory: '/troubleshooting/'
-                    }
-                  },
-                  {
-                    label: 'Resources',
-                    collapsed: true,
-                    autogenerate: {
-                      directory: '/resources/'
-                    },
-                  },
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
