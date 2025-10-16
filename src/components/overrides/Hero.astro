@@ -1,28 +1,36 @@
 ---
-import { Image } from 'astro:assets';
-import { PAGE_TITLE_ID } from '../constants';
-import type { Props } from '@astrojs/starlight/props';
-import CallToAction from './CallToAction.astro';
-import { setBasePath } from '@utils/basePath';
+import { Image } from "astro:assets";
+import { PAGE_TITLE_ID } from "../constants";
+import type { Props } from "@astrojs/starlight/props";
+import CallToAction from "./CallToAction.astro";
 
 const { data } = Astro.locals.starlightRoute.entry;
-const { title = data.title, subtitle, tagline, image, actions = [] } = data.hero || {};
+const {
+  title = data.title,
+  subtitle,
+  tagline,
+  image,
+  actions = [],
+} = data.hero || {};
 
 const imageAttrs = {
-  loading: 'eager' as const,
-  decoding: 'async' as const,
+  loading: "eager" as const,
+  decoding: "async" as const,
+  fetchpriority: "high" as const,
   width: 400,
   height: 400,
-  alt: image?.alt || '',
+  widths: [176, 320, 400, 700],
+  sizes: "(max-width: 50rem) 176px, 400px",
+  alt: image?.alt || "",
 };
 
 let darkImage: ImageMetadata | undefined;
 let lightImage: ImageMetadata | undefined;
 let rawHtml: string | undefined;
 if (image) {
-  if ('file' in image) {
+  if ("file" in image) {
     darkImage = image.file;
-  } else if ('dark' in image) {
+  } else if ("dark" in image) {
     darkImage = image.dark;
     lightImage = image.light;
   } else {
@@ -37,11 +45,15 @@ if (image) {
       <Image
         src={darkImage}
         {...imageAttrs}
-        class:list={{ 'light:sl-hidden': Boolean(lightImage) }}
+        class:list={{ "light:sl-hidden": Boolean(lightImage) }}
       />
     )
   }
-  {lightImage && <Image src={lightImage} {...imageAttrs} class="dark:sl-hidden" />}
+  {
+    lightImage && (
+      <Image src={lightImage} {...imageAttrs} class="dark:sl-hidden" />
+    )
+  }
   {rawHtml && <div class="hero-html sl-flex" set:html={rawHtml} />}
   <div class="sl-flex stack">
     <div class="sl-flex copy">
@@ -52,9 +64,16 @@ if (image) {
     {
       actions.length > 0 && (
         <div class="sl-flex actions">
-          {actions.map(({ text, ...attrs }: { text: string; [key: string]: any }) => (
-            <CallToAction {...attrs} variant={attrs.variant} link={attrs.link} set:html={text} />
-          ))}
+          {actions.map(
+            ({ text, ...attrs }: { text: string; [key: string]: any }) => (
+              <CallToAction
+                {...attrs}
+                variant={attrs.variant}
+                link={attrs.link}
+                set:html={text}
+              />
+            )
+          )}
         </div>
       )
     }
@@ -75,7 +94,7 @@ if (image) {
   }
 
   .hero::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 50%;
@@ -94,7 +113,7 @@ if (image) {
       hsl(213deg 99% 78%) 82%,
       hsl(212deg 100% 74%) 100%
     ); */
-    background: url('./colorful-bg-dark.webp') no-repeat center center;
+    background: url("./colorful-bg-dark.webp") no-repeat center center;
     background-size: cover;
 
     /* Ensure it doesn't overflow the viewport */
@@ -216,7 +235,11 @@ if (image) {
     }
 
     h1 {
-      font-size: clamp(var(--sl-text-lg), calc(var(--sl-text-lg) + 1.65vw), 2.5rem);
+      font-size: clamp(
+        var(--sl-text-lg),
+        calc(var(--sl-text-lg) + 1.65vw),
+        2.5rem
+      );
       line-height: clamp(1.5rem, calc(1.5rem + 1vw), 2.25rem);
       font-weight: 800;
       letter-spacing: 0;
@@ -224,7 +247,11 @@ if (image) {
       padding-bottom: 0;
     }
     .subtitle {
-      font-size: clamp(var(--sl-text-lg), calc(var(--sl-text-lg) + 1.65vw), 2.5rem);
+      font-size: clamp(
+        var(--sl-text-lg),
+        calc(var(--sl-text-lg) + 1.65vw),
+        2.5rem
+      );
       line-height: clamp(1rem, calc(1rem + 1vw), 2.25rem);
       font-weight: 300;
       letter-spacing: -0.02em;
