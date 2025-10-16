@@ -57,6 +57,9 @@ async function config() {
     },
     trailingSlash: 'ignore',
     outDir: './dist',
+    build: {
+      inlineStylesheets: 'auto',
+    },
 
     redirects: {
       '/customize/design-tokens': `${basePath}/dropins/all/branding`,
@@ -150,10 +153,51 @@ async function config() {
         },
 
         head: [
+          // Preconnect to Adobe DTM for faster script loading
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preconnect',
+              href: 'https://assets.adobedtm.com',
+              crossorigin: 'anonymous',
+            },
+          },
+          // Preload critical fonts to reduce CLS
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preload',
+              href: `${basePath}/_astro/adobe-clean-400.BoLLPIg8.woff2`,
+              as: 'font',
+              type: 'font/woff2',
+              crossorigin: 'anonymous',
+            },
+          },
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preload',
+              href: `${basePath}/_astro/adobe-clean-700.Cdm7hjtA.woff2`,
+              as: 'font',
+              type: 'font/woff2',
+              crossorigin: 'anonymous',
+            },
+          },
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preload',
+              href: `${basePath}/_astro/adobe-clean-900.BfRIfQuJ.woff2`,
+              as: 'font',
+              type: 'font/woff2',
+              crossorigin: 'anonymous',
+            },
+          },
           {
             tag: 'script',
             attrs: {
               src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js',
+              async: true,
             },
           },
           {
