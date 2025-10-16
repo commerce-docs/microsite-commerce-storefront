@@ -1,13 +1,20 @@
 ---
 import type { Props } from "@astrojs/starlight/props";
 
+const { entry } = Astro.props;
+
 // Check if we're on the commerce-services page or the commerce-optimizer page
 const isPlaygroundPage = Astro.url.pathname.includes("/playgrounds/");
+// Check both template and URL for splash page detection
+const isHomePage =
+  Astro.url.pathname === "/" ||
+  Astro.url.pathname.endsWith("/microsite-commerce-storefront/");
+const isSplash = entry?.data?.template === "splash" || isHomePage;
 ---
 
-<div class="content-panel">
+<div class:list={["content-panel", { "splash-content": isSplash }]}>
   <div
-    class={`sl-container ${isPlaygroundPage ? "full-width-container" : ""}`}
+    class={`sl-container ${isPlaygroundPage ? "full-width-container" : ""} ${isSplash ? "splash-container" : ""}`}
   >
     <slot />
   </div>
@@ -17,6 +24,60 @@ const isPlaygroundPage = Astro.url.pathname.includes("/playgrounds/");
   .content-panel {
     padding: 1.25rem var(--sl-content-pad-x);
   }
+
+  /* Splash page content styling */
+  .splash-content {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .splash-container {
+    max-width: 1200px !important;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Center CardGrid on splash pages */
+  .splash-container :global(.sl-card-grid) {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  /* Stagger animation for cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .splash-container :global(.sl-link-card) {
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: backwards;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(1)) {
+    animation-delay: 0.24s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(2)) {
+    animation-delay: 0.3s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(3)) {
+    animation-delay: 0.36s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(4)) {
+    animation-delay: 0.42s;
+  }
+
   .sl-container {
     max-width: var(--sl-content-width);
   }

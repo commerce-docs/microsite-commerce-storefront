@@ -3,10 +3,15 @@ import type { Props } from "@astrojs/starlight/props";
 import MobileMenuToggle from "virtual:starlight/components/MobileMenuToggle";
 import CascadingExpansion from "../CascadingExpansion.astro";
 
-const { hasSidebar } = Astro.props;
+const { hasSidebar, entry } = Astro.props;
+// Check both template and URL for splash page detection
+const isHomePage =
+  Astro.url.pathname === "/" ||
+  Astro.url.pathname.endsWith("/microsite-commerce-storefront/");
+const isSplash = entry?.data?.template === "splash" || isHomePage;
 ---
 
-<div class="page sl-flex">
+<div class:list={["page", "sl-flex", { "splash-page": isSplash }]}>
   <header class="header"><slot name="header" /></header>
   {
     hasSidebar && (
@@ -35,6 +40,25 @@ const { hasSidebar } = Astro.props;
     min-height: 100vh;
   }
 
+  /* Full-page gradient background for splash pages */
+  .splash-page {
+    background: linear-gradient(
+      135deg,
+      hsl(240deg 90% 15%) 0%,
+      hsl(260deg 85% 18%) 25%,
+      hsl(280deg 80% 22%) 50%,
+      hsl(300deg 75% 25%) 75%,
+      hsl(320deg 70% 28%) 100%
+    );
+  }
+
+  .splash-page .main-frame {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+  }
+
   .header {
     z-index: var(--sl-z-index-navbar);
     position: fixed;
@@ -46,6 +70,12 @@ const { hasSidebar } = Astro.props;
     padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
     padding-inline-end: var(--sl-nav-pad-x);
     background-color: var(--sl-color-bg-nav);
+  }
+
+  /* Make header transparent for splash pages */
+  .splash-page .header {
+    background-color: transparent;
+    border-bottom: none;
   }
 
   :global([data-has-sidebar]) .header {

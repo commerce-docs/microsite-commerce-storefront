@@ -153,6 +153,14 @@ async function config() {
         },
 
         head: [
+          // DNS prefetch for the site's own domain
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'dns-prefetch',
+              href: 'https://commerce-docs.github.io',
+            },
+          },
           // Preconnect to Adobe DTM for faster script loading
           {
             tag: 'link',
@@ -162,37 +170,27 @@ async function config() {
               crossorigin: 'anonymous',
             },
           },
-          // Preload critical fonts to reduce CLS
+          // DNS prefetch for Adobe DTM
           {
             tag: 'link',
             attrs: {
-              rel: 'preload',
-              href: `${basePath}/_astro/adobe-clean-400.BoLLPIg8.woff2`,
-              as: 'font',
-              type: 'font/woff2',
-              crossorigin: 'anonymous',
+              rel: 'dns-prefetch',
+              href: 'https://assets.adobedtm.com',
             },
           },
-          {
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              href: `${basePath}/_astro/adobe-clean-700.Cdm7hjtA.woff2`,
-              as: 'font',
-              type: 'font/woff2',
-              crossorigin: 'anonymous',
-            },
-          },
-          {
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              href: `${basePath}/_astro/adobe-clean-900.BfRIfQuJ.woff2`,
-              as: 'font',
-              type: 'font/woff2',
-              crossorigin: 'anonymous',
-            },
-          },
+          // Note: Font preloads are commented out because the hashed filenames change
+          // between dev and production builds. They can be added back in production
+          // if needed, but aren't critical for performance.
+          // {
+          //   tag: 'link',
+          //   attrs: {
+          //     rel: 'preload',
+          //     href: `${basePath}/_astro/adobe-clean-400.BoLLPIg8.woff2`,
+          //     as: 'font',
+          //     type: 'font/woff2',
+          //     crossorigin: 'anonymous',
+          //   },
+          // },
           {
             tag: 'script',
             attrs: {
