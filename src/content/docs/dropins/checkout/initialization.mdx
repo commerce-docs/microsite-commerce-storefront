@@ -5,7 +5,7 @@ description: Learn how to configure initializer for the checkout drop-in compone
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The checkout drop-in component initializer provides options for configuring language definitions and extending the default models with new fields and transformers.
+The checkout drop-in component initializer provides options for configuring default behaviors, shipping options, feature flags, language definitions, and extending the default models with new fields and transformers.
 
 ## Configuration options
 
@@ -14,6 +14,9 @@ The checkout component initializer accepts the following configuration options:
 <OptionsTable
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
+    ['defaults', 'object', 'No', 'Configure default values for billing and shipping method selection.'],
+    ['shipping', 'object', 'No', 'Configure shipping options filtering.'],
+    ['features', 'object', 'No', 'Enable or configure feature flags (e.g., B2B quotes).'],
     ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
     ['models', 'object', 'No', 'Extend the default models (CartModel, CustomerModel) with new fields and transform them as needed.'],
   ]}
@@ -27,7 +30,20 @@ The `Initializer` receives an object as a parameter which implements the `Config
 
 ```ts
 export type ConfigProps = {
-  langDefinitions?: Lang;
+  defaults?: {
+    isBillToShipping?: boolean;
+    selectedShippingMethod?: Selector<ShippingMethod>;
+  };
+  shipping?: {
+    filterOptions?: Filter<ShippingMethod>;
+  };
+  features?: {
+    b2b?: {
+      quotes?: boolean;
+      routeLogin?: () => string | void;
+    };
+  };
+  langDefinitions?: typeof definition & { default: { Checkout: any } };
   models?: {
     CartModel?: Model<CartModel>;
     CustomerModel?: Model<CustomerModel>;
@@ -51,6 +67,66 @@ await initializeDropin(async () => {
   };
 
   return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+### Set defaults
+
+The `defaults` property allows you to configure default behaviors for billing and shipping:
+
+- **`isBillToShipping`**: Boolean flag to indicate if billing address should default to shipping address (default: `true`)
+- **`selectedShippingMethod`**: A selector function that determines which shipping method is selected by default. Receives an array of available shipping methods and returns the selected one
+
+```ts
+await initializeDropin(async () => {
+  return initializers.mountImmediately(initialize, {
+    defaults: {
+      isBillToShipping: true,
+      selectedShippingMethod: (options) => {
+        // Select the first available shipping method
+        return options.length > 0 ? options[0] : null;
+      },
+    },
+  });
+})();
+```
+
+### Set shipping options
+
+The `shipping` property allows you to filter available shipping methods:
+
+- **`filterOptions`**: A filter function that receives a shipping method and returns `true` to include it or `false` to exclude it
+
+```ts
+await initializeDropin(async () => {
+  return initializers.mountImmediately(initialize, {
+    shipping: {
+      filterOptions: (method) => {
+        // Only show standard shipping methods
+        return method.code === 'flatrate';
+      },
+    },
+  });
+})();
+```
+
+### Set features
+
+The `features` property allows you to enable or configure feature flags:
+
+- **`b2b.quotes`**: Boolean flag to enable B2B negotiable quotes support (default: `false`)
+- **`b2b.routeLogin`**: Function that returns the login route URL for B2B quote authentication
+
+```ts
+await initializeDropin(async () => {
+  return initializers.mountImmediately(initialize, {
+    features: {
+      b2b: {
+        quotes: true,
+        routeLogin: () => '/login?redirect=checkout',
+      },
+    },
+  });
 })();
 ```
 
