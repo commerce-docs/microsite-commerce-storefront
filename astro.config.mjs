@@ -191,12 +191,34 @@ async function config() {
           //     crossorigin: 'anonymous',
           //   },
           // },
+          // Lazy-load Adobe Launch only in production to reduce main-thread work
+          // and unused JS on initial load. Loads on idle or first interaction.
           {
             tag: 'script',
-            attrs: {
-              src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js',
-              async: true,
-            },
+            content: `
+              (function(){
+                try {
+                  var isProd = ${isProduction ? 'true' : 'false'};
+                  if (!isProd) return;
+                  var loaded = false;
+                  function loadLaunch(){
+                    if (loaded) return; loaded = true;
+                    var s = document.createElement('script');
+                    s.src = 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js';
+                    s.async = true;
+                    document.head.appendChild(s);
+                  }
+                  if ('requestIdleCallback' in window) {
+                    requestIdleCallback(loadLaunch, { timeout: 3000 });
+                  } else {
+                    setTimeout(loadLaunch, 2000);
+                  }
+                  ['pointerdown','keydown','scroll','touchstart'].forEach(function(evt){
+                    window.addEventListener(evt, loadLaunch, { once: true, passive: true });
+                  });
+                } catch(e) { /* no-op */ }
+              })();
+            `,
           },
           {
             tag: 'meta',
