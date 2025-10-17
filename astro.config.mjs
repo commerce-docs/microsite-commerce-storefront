@@ -57,6 +57,9 @@ async function config() {
     },
     trailingSlash: 'ignore',
     outDir: './dist',
+    build: {
+      inlineStylesheets: 'auto',
+    },
 
     redirects: {
       '/customize/design-tokens': `${basePath}/dropins/all/branding`,
@@ -150,11 +153,89 @@ async function config() {
         },
 
         head: [
+          // DNS prefetch for the site's own domain
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'dns-prefetch',
+              href: 'https://commerce-docs.github.io',
+            },
+          },
+          // Preconnect to Adobe DTM for faster script loading
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preconnect',
+              href: 'https://assets.adobedtm.com',
+              crossorigin: 'anonymous',
+            },
+          },
+          // DNS prefetch for Adobe DTM
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'dns-prefetch',
+              href: 'https://assets.adobedtm.com',
+            },
+          },
+          // Note: Font preload removed - hashed filenames change between builds
+          // causing 404s. With font-display: swap and system font fallbacks,
+          // desktop users get a smooth experience without preload.
+          // Inline critical CSS for instant above-the-fold render on mobile
+          {
+            tag: 'style',
+            content: `
+              /* Critical mobile-first styles for instant LCP */
+              @media (max-width:50rem){
+                body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
+                .page{display:flex;flex-direction:column;min-height:100vh}
+                .hero{display:flex;justify-content:center;align-items:center;padding:1.5rem 1rem;width:100%}
+                .hero .stack{flex-direction:column;gap:2rem;text-align:center;align-items:center}
+                .hero h1{font-size:clamp(2.5rem,8vw,4rem);line-height:.95;font-weight:900;color:#1a1a1a;margin:0}
+                .hero .tagline{font-size:clamp(1.125rem,2.5vw,1.5rem);line-height:1.6;color:#2a2a2a;font-weight:400}
+                .hero .actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+                .action{display:inline-flex;padding:.75rem 1.25rem;border-radius:.5rem;text-decoration:none;font-weight:600;font-size:1rem}
+                .action.primary{background:#0d47a1;color:#fff;border:1px solid rgba(255,255,255,.6)}
+                .action.minimal{background:#6b21a8;color:#fff;border:1px solid rgba(255,255,255,.6)}
+                .hero-splash::before{content:"";position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;background:linear-gradient(135deg,#dbeafe 0%,#fce7f3 50%,#ede9fe 100%)}
+                html[data-theme="dark"] .hero h1{color:#fff !important}
+                html[data-theme="dark"] .hero .tagline{color:#e8e8e8 !important}
+                html[data-theme="dark"] .hero-splash::before{background:linear-gradient(135deg,hsl(240deg 90% 15%),hsl(280deg 80% 22%),hsl(320deg 70% 28%)) !important}
+                html[data-theme="dark"] .action.primary{background:#0a3d91;color:#e8e8e8}
+                html[data-theme="dark"] .action.minimal{background:#5c1c8f;color:#e8e8e8}
+                .sl-link-card{display:grid;background-color:#9e9e9e24;border:1px solid rgba(255,255,255,.2);border-radius:.75rem;padding:1.25rem;opacity:1 !important;transform:none !important}
+                .content-panel{padding:1rem 2rem}
+              }
+            `,
+          },
+          // Lazy-load Adobe Launch only in production to reduce main-thread work
+          // and unused JS on initial load. Loads on idle or first interaction.
           {
             tag: 'script',
-            attrs: {
-              src: 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js',
-            },
+            content: `
+              (function(){
+                try {
+                  var isProd = ${isProduction ? 'true' : 'false'};
+                  if (!isProd) return;
+                  var loaded = false;
+                  function loadLaunch(){
+                    if (loaded) return; loaded = true;
+                    var s = document.createElement('script');
+                    s.src = 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js';
+                    s.async = true;
+                    document.head.appendChild(s);
+                  }
+                  if ('requestIdleCallback' in window) {
+                    requestIdleCallback(loadLaunch, { timeout: 3000 });
+                  } else {
+                    setTimeout(loadLaunch, 2000);
+                  }
+                  ['pointerdown','keydown','scroll','touchstart'].forEach(function(evt){
+                    window.addEventListener(evt, loadLaunch, { once: true, passive: true });
+                  });
+                } catch(e) { /* no-op */ }
+              })();
+            `,
           },
           {
             tag: 'meta',
