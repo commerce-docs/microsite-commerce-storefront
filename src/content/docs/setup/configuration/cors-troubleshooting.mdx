@@ -3,26 +3,22 @@ title: CORS Troubleshooting
 description: Comprehensive guide to debugging and resolving CORS issues with Adobe Commerce GraphQL endpoints, including common errors, testing strategies, and production best practices.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 import Link from '@components/Link.astro';
 
 This guide covers CORS configuration, common errors, debugging techniques, browser network inspection, and production patterns for Adobe Commerce Storefronts.
 
-<Aside type="caution">
-**Use CORS only when necessary.** For production, prefer serving the storefront and the API from the same origin (for example, via Fastly VCL) to avoid CORS.
-
-This guide combines information from standard CORS specifications (<Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="MDN Web Docs" />), Adobe Commerce best practices, and real-world troubleshooting scenarios.
-</Aside>
-
 ## CORS configuration
 
-If using a CORS module with admin UI configuration (such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)), navigate to its settings in the Adobe Commerce admin panel. The following configuration options are typically available:
+If using a CORS module with admin UI configuration (such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)), navigate to **Stores** → **Configuration** → **General** → **Web** → **CORS Whitelist** in the Adobe Commerce admin panel.
 
 <Aside type="note" title="Module installation issues">
 For installation troubleshooting specific to a CORS module (Composer conflicts, module enable failures, version issues), consult that module's documentation.
 </Aside>
+
+The following configuration options are typically available.
 
 ### Allowed Origins
 
@@ -34,14 +30,6 @@ http://localhost:5173
 https://staging-storefront.example.com
 https://storefront.example.com
 ```
-
-#### How origins are matched
-
-- Must match exactly: protocol (`http` vs `https`), hostname, and port
-- `http://localhost:3000` ≠ `https://localhost:3000` (different protocol)
-- `http://localhost:3000` ≠ `http://localhost:5173` (different port)
-- `http://localhost:3000` ≠ `http://127.0.0.1:3000` (different hostname)
-- No trailing slashes: `http://localhost:3000` not `http://localhost:3000/`
 
 <Aside type="tip" title="When to use a wildcard">
 If you have multiple dynamic URLs (such as Edge Delivery Services branch previews like `main--repo--hlxsites.aem.live`, `some-branch--repo--hlxsites.aem.live`, and `localhost:3000`), you can use a wildcard: `*`.
@@ -329,22 +317,43 @@ Each storefront is treated as a separate origin and must be explicitly allowed.
 
 ## Production best practices
 
-The recommended production approach is to avoid CORS by serving both the storefront and the backend from the same domain using a CDN proxy:
+The recommended production approach is to avoid CORS entirely by serving both the storefront and the backend from the same domain using a CDN proxy.
 
-### Same-origin setup
+### Same-origin architecture (recommended)
+
+Serve both your storefront and Commerce backend from the same domain:
 
 - Storefront: `https://example.com` → CDN serves static assets
 - GraphQL API: `https://example.com/graphql` → CDN proxies to Commerce backend
 
-### Benefits
+This requires configuring your CDN to proxy `/graphql` requests to your Commerce backend.
 
-- Eliminates CORS preflight requests
-- Reduces latency
-- Simplifies security configuration
+**Benefits:**
+- No CORS complexity
+- Better performance (fewer preflight requests)
+- Simpler security model
+- Better caching control
 
-### Implementation with Fastly
+**Implementation approaches:**
 
-Configure VCL to route `/graphql` requests to your Commerce backend while serving storefront assets from the CDN edge. This requires Fastly/VCL expertise and is typically handled by the DevOps teams.
+<Steps>
+
+1. **Fastly VCL routing:**
+   Configure Fastly to route GraphQL requests to your Commerce backend using VCL (Varnish Configuration Language). The VCL detects requests to `/graphql` and proxies them to your backend origin while serving other requests from your storefront origin.
+
+2. **Cloudflare Workers / CDN Edge Functions:**
+   Use edge functions to route API requests to your backend dynamically.
+
+3. **Reverse proxy (Nginx/Apache):**
+   Configure your web server to proxy `/graphql` requests to the backend.
+
+</Steps>
+
+**Note:** This approach requires CDN/infrastructure expertise. If you don't have these resources, use CORS configuration instead.
+
+### CORS configuration
+
+If you must use different domains (for example, `storefront.example.com` → `commerce.example.com`), use CORS configuration. Use specific allowed origins for single production domains, or a wildcard `*` when you have multiple dynamic preview URLs (such as Edge Delivery Services branch previews).
 
 ## References
 
@@ -364,4 +373,4 @@ Configure VCL to route `/graphql` requests to your Commerce backend while servin
 
 - <Link href="https://getcomposer.org/doc/" text="Composer documentation" /> - PHP dependency manager used for module installation
 - <Link href="https://docs.docker.com/network/" text="Docker networking" /> - Understanding Docker hostname resolution for CORS origins
-- <Link href="https://developer.fastly.com/reference/vcl/" text="Fastly VCL reference" /> - For implementing same-origin architecture with Fastly CDN
+- <Link href="https://developer.fastly.com/reference/vcl/" text="Fastly VCL documentation" /> - For implementing same-origin architecture with Fastly CDN routing
