@@ -178,14 +178,24 @@ async function config() {
               href: 'https://assets.adobedtm.com',
             },
           },
-          // Preload critical LCP font (adobe-clean-900 for h1)
-          // This eliminates render delay by loading the font in parallel with CSS
-          // Hash may change between builds, but this is the production hash
+          // Preload critical LCP fonts (h1 uses 900, tagline uses 400)
+          // This eliminates render delay by loading fonts in parallel with CSS
+          // Hashes may change between builds, but these are the production hashes
           {
             tag: 'link',
             attrs: {
               rel: 'preload',
               href: `${basePath}/_astro/adobe-clean-900.BfRIfQuJ.woff2`,
+              as: 'font',
+              type: 'font/woff2',
+              crossorigin: 'anonymous',
+            },
+          },
+          {
+            tag: 'link',
+            attrs: {
+              rel: 'preload',
+              href: `${basePath}/_astro/adobe-clean-400.BoLLPIg8.woff2`,
               as: 'font',
               type: 'font/woff2',
               crossorigin: 'anonymous',
