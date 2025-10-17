@@ -4,11 +4,9 @@ import MobileMenuToggle from "virtual:starlight/components/MobileMenuToggle";
 import CascadingExpansion from "../CascadingExpansion.astro";
 
 const { hasSidebar, entry } = Astro.props;
-// Check both template and URL for splash page detection
-const isHomePage =
-  Astro.url.pathname === "/" ||
-  Astro.url.pathname.endsWith("/microsite-commerce-storefront/");
-const isSplash = entry?.data?.template === "splash" || isHomePage;
+// Compute splash from entry frontmatter; fall back to locals entry in prod
+const routeEntry = entry ?? Astro.locals?.starlightRoute?.entry;
+const isSplash = routeEntry?.data?.template === "splash";
 ---
 
 <div class:list={["page", "sl-flex", { "splash-page": isSplash }]}>
@@ -52,11 +50,12 @@ const isSplash = entry?.data?.template === "splash" || isHomePage;
     );
   }
 
-  .splash-page .main-frame {
+  .page.splash-page .main-frame {
     display: flex;
     justify-content: center;
     align-items: center;
     flex: 1;
+    width: 100%;
   }
 
   .header {
