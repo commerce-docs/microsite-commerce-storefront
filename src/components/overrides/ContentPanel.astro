@@ -5,11 +5,9 @@ const { entry } = Astro.props;
 
 // Check if we're on the commerce-services page or the commerce-optimizer page
 const isPlaygroundPage = Astro.url.pathname.includes("/playgrounds/");
-// Check both template and URL for splash page detection
-const isHomePage =
-  Astro.url.pathname === "/" ||
-  Astro.url.pathname.endsWith("/microsite-commerce-storefront/");
-const isSplash = entry?.data?.template === "splash" || isHomePage;
+// Compute splash from entry frontmatter; fall back to locals entry in prod
+const routeEntry = entry ?? Astro.locals?.starlightRoute?.entry;
+const isSplash = routeEntry?.data?.template === "splash";
 ---
 
 <div class:list={["content-panel", { "splash-content": isSplash }]}>
@@ -26,21 +24,24 @@ const isSplash = entry?.data?.template === "splash" || isHomePage;
   }
 
   /* Splash page content styling */
-  .splash-content {
+  .content-panel.splash-content {
     background: transparent;
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 2rem;
+    width: 100%;
   }
 
-  .splash-container {
-    max-width: 1200px !important;
+  .content-panel .splash-container {
+    max-width: 1200px;
     width: 100%;
     margin: 0 auto;
+    text-align: center;
   }
 
   /* Center CardGrid on splash pages */
-  .splash-container :global(.sl-card-grid) {
+  .content-panel .splash-container :global(.sl-card-grid) {
     justify-content: center;
     margin: 0 auto;
   }
