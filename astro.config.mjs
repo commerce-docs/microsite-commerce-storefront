@@ -178,29 +178,9 @@ async function config() {
               href: 'https://assets.adobedtm.com',
             },
           },
-          // Preload critical LCP fonts (h1 uses 900, tagline uses 400)
-          // This eliminates render delay by loading fonts in parallel with CSS
-          // Hashes may change between builds, but these are the production hashes
-          {
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              href: `${basePath}/_astro/adobe-clean-900.BfRIfQuJ.woff2`,
-              as: 'font',
-              type: 'font/woff2',
-              crossorigin: 'anonymous',
-            },
-          },
-          {
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              href: `${basePath}/_astro/adobe-clean-400.BoLLPIg8.woff2`,
-              as: 'font',
-              type: 'font/woff2',
-              crossorigin: 'anonymous',
-            },
-          },
+          // Note: Font preloads removed - they can increase render delay on slow connections
+          // by making the browser wait for large font files. With font-display: swap,
+          // fonts load naturally from CSS without blocking initial render.
           // Lazy-load Adobe Launch only in production to reduce main-thread work
           // and unused JS on initial load. Loads on idle or first interaction.
           {
