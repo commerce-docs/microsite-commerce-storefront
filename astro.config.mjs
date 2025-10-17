@@ -178,9 +178,9 @@ async function config() {
               href: 'https://assets.adobedtm.com',
             },
           },
-          // Note: Font preloads removed - they can increase render delay on slow connections
-          // by making the browser wait for large font files. With font-display: swap,
-          // fonts load naturally from CSS without blocking initial render.
+          // Note: Font preload removed - hashed filenames change between builds
+          // causing 404s. With font-display: swap and system font fallbacks,
+          // desktop users get a smooth experience without preload.
           // Inline critical CSS for instant above-the-fold render on mobile
           {
             tag: 'style',
