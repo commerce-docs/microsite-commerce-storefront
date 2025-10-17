@@ -1,6 +1,6 @@
 ---
 title: CORS Troubleshooting
-description: Detailed reference for using graycore/magento2-cors with Adobe Commerce, plus Fastly guidance and troubleshooting notes.
+description: Comprehensive guide to debugging and resolving CORS issues with Adobe Commerce GraphQL endpoints, including common errors, testing strategies, and production best practices.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -8,68 +8,21 @@ import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 import Link from '@components/Link.astro';
 
-This guide covers installation, Magento admin configuration, Fastly/production patterns, development guidance, and common debugging steps for using CORS with Adobe Commerce Storefronts.
+This guide covers CORS configuration, common errors, debugging techniques, browser network inspection, and production patterns for Adobe Commerce Storefronts.
 
 <Aside type="caution">
 **Use CORS only when necessary.** For production, prefer serving the storefront and the API from the same origin (for example, via Fastly VCL) to avoid CORS.
 
-This guide combines information from the <Link href="https://github.com/graycoreio/magento2-cors" text="Graycore CORS module documentation" />, standard CORS specifications from <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="MDN Web Docs" />, and Adobe Commerce best practices.
+This guide combines information from standard CORS specifications (<Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="MDN Web Docs" />), Adobe Commerce best practices, and real-world troubleshooting scenarios.
 </Aside>
 
-## Installation and compatibility
+## CORS configuration
 
-Install the Graycore CORS module v2.x to your Adobe Commerce backend for Storefront API compatibility:
+If using a CORS module with admin UI configuration (such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)), navigate to its settings in the Adobe Commerce admin panel. The following configuration options are typically available:
 
-```bash
-composer require graycore/magento2-cors:^2.0
-php bin/magento module:enable Graycore_Cors
-php bin/magento setup:upgrade
-php bin/magento cache:flush
-```
-
-## Installation troubleshooting
-
-### Version conflicts
-
-If Composer reports conflicts, check your current version:
-
-```bash
-composer show graycore/magento2-cors
-```
-
-If you have v1.x installed, you need to upgrade:
-
-```bash
-composer require graycore/magento2-cors:^2.0 --update-with-dependencies
-```
-
-### Composer authentication errors
-
-If you see "Could not find package", ensure your Composer authentication is configured for Adobe Commerce:
-
-```bash
-composer config --auth http-basic.repo.magento.com <public-key> <private-key>
-```
-
-Replace `<public-key>` and `<private-key>` with your Adobe Commerce access keys from your account.
-
-### Module won't enable
-
-If `module:enable` fails, check for:
-- Typos in module name (it's `Graycore_Cors` not `Graycore_CORS`)
-- File permissions issues
-- Corrupted installation - try removing and reinstalling:
-
-```bash
-composer remove graycore/magento2-cors
-composer require graycore/magento2-cors:^2.0
-```
-
-## Admin configuration
-
-The Graycore CORS module adds a configuration section in the Adobe Commerce admin panel.
-
-Navigate to **Stores → Configuration → Web → CORS Whitelist**:
+<Aside type="note" title="Module installation issues">
+For installation troubleshooting specific to a CORS module (Composer conflicts, module enable failures, version issues), consult that module's documentation.
+</Aside>
 
 ### Allowed Origins
 
@@ -90,14 +43,14 @@ https://storefront.example.com
 - `http://localhost:3000` ≠ `http://127.0.0.1:3000` (different hostname)
 - No trailing slashes: `http://localhost:3000` not `http://localhost:3000/`
 
-<Aside type="tip" title="When to use wildcard">
+<Aside type="tip" title="When to use a wildcard">
 If you have multiple dynamic URLs (such as Edge Delivery Services branch previews like `main--repo--hlxsites.aem.live`, `some-branch--repo--hlxsites.aem.live`, and `localhost:3000`), you can use a wildcard:
 
 ```txt
 *
 ```
 
-For single production domains, use specific allowed origins instead. Note that wildcard `*` cannot be used when `Allow Credentials` is enabled - browsers will block the request.
+For single production domains, use specific allowed origins instead. Note that a wildcard `*` cannot be used when `Allow Credentials` is enabled - browsers will block the request.
 </Aside>
 
 ### Allow Credentials
@@ -163,13 +116,16 @@ requested resource.
 
 #### Cause
 
-The CORS module is not installed, not enabled, or the origin is not in the allowed list.
+CORS headers are not being sent by your Commerce backend. This could mean:
+- CORS support is not configured
+- The origin is not in the allowed list
+- The configuration cache needs to be cleared
 
 #### Solution
 
-- Verify the module is installed and enabled
-- Add `http://localhost:3000` to Allowed Origins in admin
-- Clear cache: `php bin/magento cache:flush`
+- Verify CORS is configured (via module, custom code, or server configuration)
+- Add your storefront origin to the allowed origins list
+- Clear the cache: `php bin/magento cache:flush`
 
 </Option>
 
@@ -217,7 +173,7 @@ Replace `*` with specific origins when credentials are required.
 
 ### Common issues
 
-If you encounter CORS errors after installing `adobe-commerce/storefront-compatibility`, verify that `magento2-cors` v2.x is installed. Earlier versions may not be compatible with Adobe Commerce Storefronts.
+If you encounter CORS errors after installing `adobe-commerce/storefront-compatibility`, verify that your CORS implementation is compatible with Adobe Commerce Storefronts. If using the graycore module, ensure v2.x or later is installed.
 
 ## Debug checklist
 
@@ -225,29 +181,24 @@ If you encounter CORS errors after installing `adobe-commerce/storefront-compati
 
 <Option>
 
-### Verify module installation
+### Verify CORS is configured
 
-Check the installed version:
+If using a CORS module, check that it's installed and enabled:
+
 ```bash
-composer show | grep graycore
+# List all enabled modules
+php bin/magento module:status | grep -i cors
 ```
 
-Expected output: `graycore/magento2-cors 2.x.x`
-
-Check module status:
-```bash
-php bin/magento module:status Graycore_Cors
-```
-
-Expected output: `Module is enabled`
+If using a custom CORS implementation, verify your code is deployed and active.
 
 </Option>
 
 <Option>
 
-### Verify admin configuration
+### Verify CORS configuration
 
-Navigate to **Stores → Configuration → Web → CORS Whitelist** and confirm:
+In your CORS configuration (admin panel, config files, or server configuration), confirm:
 - Your storefront origin is in the Allowed Origins list
 - Origins match exactly (including protocol and port)
 - No trailing slashes in origins
@@ -397,13 +348,9 @@ The recommended production approach is to avoid CORS by serving both the storefr
 
 ### Implementation with Fastly
 
-Configure VCL to route `/graphql` requests to your Commerce backend while serving storefront assets from the CDN edge. This requires Fastly/VCL expertise and is typically handled by DevOps teams.
+Configure VCL to route `/graphql` requests to your Commerce backend while serving storefront assets from the CDN edge. This requires Fastly/VCL expertise and is typically handled by the DevOps teams.
 
 ## References
-
-### Module documentation
-
-- <Link href="https://github.com/graycoreio/magento2-cors" text="graycore/magento2-cors" /> - Official module repository with installation and configuration instructions
 
 ### CORS standards and specifications
 
