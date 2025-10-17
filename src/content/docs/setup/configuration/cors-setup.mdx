@@ -1,6 +1,6 @@
 ---
 title: CORS Setup
-description: Quickstart guide to install and configure graycore/magento2-cors for local/dev use and provides guidance for Fastly-based production patterns.
+description: Guide to configure CORS headers for your Adobe Commerce GraphQL endpoints to enable cross-origin requests from your storefront.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -16,19 +16,19 @@ CORS should be a last resort for production. Prefer same-origin delivery of stor
 
 ## Quick test: Is CORS working?
 
-If you already have CORS configured, test it quickly:
+If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
 
 ```bash
 curl -I -X OPTIONS https://your-commerce-backend.com/graphql \
-  -H "Origin: http://localhost:3000" \
+  -H "Origin: YOUR_STOREFRONT_URL" \
   -H "Access-Control-Request-Method: POST"
 ```
 
 Look for these headers in the response:
-- `Access-Control-Allow-Origin: http://localhost:3000`
+- `Access-Control-Allow-Origin: YOUR_STOREFRONT_URL` (or `*` if using wildcard)
 - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
 
-If you see these headers, CORS is configured correctly. If not, follow the setup steps below.
+If you see these headers with your storefront URL, CORS is configured correctly. If not, follow the setup steps below.
 
 ## When do you need CORS?
 
@@ -53,24 +53,28 @@ This is a standard CORS error enforced by all modern browsers (Chrome, Firefox, 
 
 <Task>
 
-### Install the CORS module
+### Add CORS support
 
-Install the Graycore CORS package to your Adobe Commerce backend (v2.x required for Storefront):
+To add CORS headers to your Adobe Commerce GraphQL endpoints, you can configure your server, implement a custom module, or use a third-party CORS module (such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)).
+
+If using a CORS module, install it via Composer:
 
 ```bash
-composer require graycore/magento2-cors:^2.0
+composer require <module-package-name>
 ```
+
+Refer to your chosen module's documentation for specific installation and configuration steps.
 
 </Task>
 
 <Task>
 
-### Enable and configure the module
+### Enable the module
 
-Enable the module and run upgrades:
+If using a CORS module, enable it and run setup commands:
 
 ```bash
-php bin/magento module:enable Graycore_Cors
+php bin/magento module:enable <Module_Name>
 php bin/magento setup:upgrade
 php bin/magento cache:flush
 ```
@@ -91,15 +95,18 @@ In Commerce admin: **Stores** → **Configuration** → **Settings** → **Web**
 
 #### Allowed Origins
 
-Add your storefront URL(s), one per line:
+Specify which frontend URLs can access your Commerce backend. You need to set the actual URLs your storefront will use:
 
 ```txt
-http://localhost:3000
-http://localhost:5173
-https://staging-storefront.example.com
+https://main--aem-boilerplate-commerce--hlxsites.aem.live
+https://www.example.com
 ```
 
-For development only, you can use `*` to allow all origins (not recommended for production).
+If you have multiple dynamic URLs (such as Edge Delivery Services branch previews like `main--repo--hlxsites.aem.live`, `some-branch--repo--hlxsites.aem.live`, and `localhost:3000`), you can use a wildcard:
+
+```txt
+*
+```
 
 <Aside type="tip" title="Why origins must match exactly">
 Browsers check if the requesting origin (your storefront) is in this list. If not, the request is blocked. Each origin must match exactly - including protocol (`http` vs `https`) and port.
@@ -138,7 +145,7 @@ When enabled, browsers include cookies with cross-origin requests. Required for 
 Open your storefront in a browser and check the Network tab in DevTools:
 - Look for preflight `OPTIONS` requests to your GraphQL endpoint
 - Verify the response includes headers like:
-  - `Access-Control-Allow-Origin: http://localhost:3000`
+  - `Access-Control-Allow-Origin: <your-storefront-url>` (or `*` if using wildcard)
   - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
   - `Access-Control-Allow-Headers: Content-Type, Authorization`
 
@@ -210,7 +217,7 @@ This requires configuring your CDN to proxy `/graphql` requests to your Commerce
 
 ### CORS configuration
 
-If you must use different domains (e.g., `storefront.example.com` → `commerce.example.com`), use the CORS configuration above with specific allowed origins (never use `*` in production).
+If you must use different domains (for example, `storefront.example.com` → `commerce.example.com`), use the CORS configuration above. Use specific allowed origins for single production domains, or wildcard `*` when you have multiple dynamic preview URLs (such as Edge Delivery Services branch previews).
 
 </Option>
 
@@ -222,6 +229,5 @@ For troubleshooting, configuration examples, and debug steps, see the detailed r
 
 ## References
 
-- <Link href="https://github.com/graycoreio/magento2-cors" text="graycore/magento2-cors" /> - Official module repository with configuration details
 - <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="CORS specification" /> - MDN Web Docs on Cross-Origin Resource Sharing
 - <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors" text="CORS errors" /> - MDN documentation on common CORS error messages
