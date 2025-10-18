@@ -58,7 +58,7 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
-      inlineStylesheets: 'auto',
+      inlineStylesheets: 'always',
     },
 
     redirects: {
