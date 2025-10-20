@@ -111,7 +111,7 @@ function cloneOrUpdateRepo(repoName, repoConfig) {
         execFileSync('git', ['clone', '--depth', '1', repoConfig.url, tempPath], { stdio: 'inherit' });
     } else {
         console.log(`  Updating repository...`);
-        execSync(`cd ${tempPath} && git pull`, { stdio: 'inherit' });
+        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: tempPath });
     }
 
     return tempPath;
@@ -608,7 +608,6 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         // Replace EVENT_DESCRIPTION
         const description = generateEventDescription(eventName, emits, listeners);
         eventSection = eventSection.replace(/EVENT_DESCRIPTION/g, description);
-
         // Generate EVENT_PAYLOAD_SECTION
         let payloadSection = '';
         if (typedEvents.has(eventName)) {
@@ -627,7 +626,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
 
                 properties.forEach(prop => {
                     const optionalMark = prop.optional ? ' (optional)' : '';
-                    const escapedType = prop.type.replace(/\|/g, '\\|');
+                    const escapedType = prop.type.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
                     payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
                 });
 
