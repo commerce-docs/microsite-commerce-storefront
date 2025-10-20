@@ -1,0 +1,543 @@
+---
+title: Cart data & events
+description: Learn about the events used by the Cart and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Cart, Cart, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+<Aside type="note" title="Auto-generated on 2025-10-19. Do not edit this page directly." />
+
+The **Cart** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+## Emits
+
+These events are produced by the **Cart** drop-in. Subscribe to these events to react to state changes, trigger custom logic, integrate with third-party services, or coordinate with other drop-ins and components in your storefront.
+
+{/* EMITS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/initialized](#cartinitialized) | Emits | Emitted when the component completes initialization |
+| [cart/product/added](#cartproductadded) | Emits | Emitted when an item is added |
+| [cart/product/removed](#cartproductremoved) | Emits | Emitted when an item is removed |
+| [cart/product/updated](#cartproductupdated) | Emits | Emitted when the component state is updated |
+
+</TableWrapper>
+{/* EMITS_TABLE_END */}
+
+## Listens
+
+These events are consumed by the **Cart** drop-in. Emit these events from your storefront application, other drop-ins, or external integrations to communicate with and control this drop-in's behavior.
+
+{/* LISTENS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [authenticated](#authenticated) | Listens | Fired by external source when authentication state changes |
+| [checkout/initialized](#checkoutinitialized) | Listens | Fired by Checkout (`checkout`) when the component completes initialization |
+| [checkout/updated](#checkoutupdated) | Listens | Fired by Checkout (`checkout`) when the component state is updated |
+| [companyContext/changed](#companycontextchanged) | Listens | Fired by Company Context (`companyContext`) when a change occurs |
+| [locale](#locale) | Listens | Fired by external source when locale/language changes |
+
+</TableWrapper>
+{/* LISTENS_TABLE_END */}
+
+## Emits and Listens
+
+These events flow in both directions, enabling a bidirectional data channel between the **Cart** drop-in and external code:
+
+- **The drop-in emits** these events when its internal state changes (for example, when a user interacts with the UI)
+- **The drop-in listens** for these same events from external sources (your storefront code, other drop-ins, or integrations) to update its internal state programmatically
+
+This pattern allows you to both **react to** the drop-in's state changes (by subscribing to events it emits) and **control** the drop-in's state (by emitting events that it listens for). Common use cases include server synchronization, cross-tab updates, analytics integration, and coordinating multiple drop-ins.
+
+{/* BIDIRECTIONAL_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/data](#cartdata) | Emits and Listens | Triggered when data is available or changes |
+| [cart/merged](#cartmerged) | Emits and Listens | Triggered when data is merged |
+| [cart/reset](#cartreset) | Emits and Listens | Triggered when the component state is reset |
+| [cart/updated](#cartupdated) | Emits and Listens | Triggered when the component state is updated |
+| [shipping/estimate](#shippingestimate) | Emits and Listens | Triggered when an estimate is calculated |
+
+</TableWrapper>
+{/* BIDIRECTIONAL_TABLE_END */}
+
+
+## cart/initialized
+
+**Direction**: Emits
+
+Emitted when the component completes initialization
+
+### Data payload
+
+```typescript
+CartModel | null
+```
+
+<Aside type="tip">
+**CartModel** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartInitializedListener = events.on('cart/initialized', (data) => {
+  console.log('cart/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartInitializedListener.off();
+```
+
+## cart/product/added
+
+**Direction**: Emits
+
+Emitted when an item is added
+
+### Data payload
+
+```typescript
+Item[] | null
+```
+
+<Aside type="tip">
+**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductAddedListener = events.on('cart/product/added', (data) => {
+  console.log('cart/product/added event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductAddedListener.off();
+```
+
+## cart/product/removed
+
+**Direction**: Emits
+
+Emitted when an item is removed
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductRemovedListener = events.on('cart/product/removed', (data) => {
+  console.log('cart/product/removed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductRemovedListener.off();
+```
+
+## cart/product/updated
+
+**Direction**: Emits
+
+Emitted when the component state is updated
+
+### Data payload
+
+```typescript
+Item[] | null
+```
+
+<Aside type="tip">
+**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductUpdatedListener = events.on('cart/product/updated', (data) => {
+  console.log('cart/product/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductUpdatedListener.off();
+```
+
+## authenticated
+
+**Direction**: Listens
+
+Fired by external source when authentication state changes
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authenticatedListener = events.on('authenticated', (data) => {
+  console.log('authenticated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+authenticatedListener.off();
+```
+
+## checkout/initialized
+
+**Direction**: Listens
+
+Fired by Checkout (`checkout`) when the component completes initialization
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
+  console.log('checkout/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutInitializedListener.off();
+```
+
+## checkout/updated
+
+**Direction**: Listens
+
+Fired by Checkout (`checkout`) when the component state is updated
+
+### Data payload
+
+```typescript
+any
+```
+
+<Aside type="note">
+Refer to the TypeScript definition above for the complete payload structure.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
+  console.log('checkout/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutUpdatedListener.off();
+```
+
+## companyContext/changed
+
+**Direction**: Listens
+
+Fired by Company Context (`companyContext`) when a change occurs
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const companyContextChangedListener = events.on('companyContext/changed', (data) => {
+  console.log('companyContext/changed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+companyContextChangedListener.off();
+```
+
+## locale
+
+**Direction**: Listens
+
+Fired by external source when locale/language changes
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (data) => {
+  console.log('locale event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+localeListener.off();
+```
+
+## cart/data
+
+**Direction**: Emits and Listens
+
+Triggered when data is available or changes
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartDataListener = events.on('cart/data', (data) => {
+  console.log('cart/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartDataListener.off();
+```
+
+## cart/merged
+
+**Direction**: Emits and Listens
+
+Triggered when data is merged
+
+### Data payload
+
+```typescript
+{
+oldCartItems: Item[] | null;
+newCart: CartModel | null;
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `oldCartItems` | `Item[] \| null` | See type definition in source code |
+| `newCart` | `CartModel \| null` | See type definition in source code |
+
+<Aside type="tip">
+Refer to the TypeScript definition above for detailed property descriptions and nested type definitions.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartMergedListener = events.on('cart/merged', (data) => {
+  console.log('cart/merged event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartMergedListener.off();
+```
+
+## cart/reset
+
+**Direction**: Emits and Listens
+
+Triggered when the component state is reset
+
+### Data payload
+
+```typescript
+void
+```
+
+<Aside type="note">
+Refer to the TypeScript definition above for the complete payload structure.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartResetListener = events.on('cart/reset', (data) => {
+  console.log('cart/reset event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartResetListener.off();
+```
+
+## cart/updated
+
+**Direction**: Emits and Listens
+
+Triggered when the component state is updated
+
+### Data payload
+
+```typescript
+CartModel | null
+```
+
+<Aside type="tip">
+**CartModel** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartUpdatedListener = events.on('cart/updated', (data) => {
+  console.log('cart/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartUpdatedListener.off();
+```
+
+## shipping/estimate
+
+**Direction**: Emits and Listens
+
+Triggered when an estimate is calculated
+
+### Data payload
+
+```typescript
+{
+address: PartialAddress;
+shippingMethod: ShippingMethod | null;
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `address` | `PartialAddress` | See type definition in source code |
+| `shippingMethod` | `ShippingMethod \| null` | See type definition in source code |
+
+<Aside type="tip">
+Refer to the TypeScript definition above for detailed property descriptions and nested type definitions.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const shippingEstimateListener = events.on('shipping/estimate', (data) => {
+  console.log('shipping/estimate event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+shippingEstimateListener.off();
+```
+

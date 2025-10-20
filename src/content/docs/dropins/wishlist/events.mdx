@@ -1,0 +1,275 @@
+---
+title: Wishlist data & events
+description: Learn about the events used by the Wishlist and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Wishlist, Wishlist, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+<Aside type="note" title="Auto-generated on 2025-10-19. Do not edit this page directly." />
+
+The **Wishlist** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+
+## Emits
+
+These events are produced by the **Wishlist** drop-in. Subscribe to these events to react to state changes, trigger custom logic, integrate with third-party services, or coordinate with other drop-ins and components in your storefront.
+
+{/* EMITS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [wishlist/initialized](#wishlistinitialized) | Emits | Emitted when the component completes initialization |
+
+</TableWrapper>
+{/* EMITS_TABLE_END */}
+
+## Listens
+
+These events are consumed by the **Wishlist** drop-in. Emit these events from your storefront application, other drop-ins, or external integrations to communicate with and control this drop-in's behavior.
+
+{/* LISTENS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [authenticated](#authenticated) | Listens | Fired by external source when authentication state changes |
+| [locale](#locale) | Listens | Fired by external source when locale/language changes |
+
+</TableWrapper>
+{/* LISTENS_TABLE_END */}
+
+## Emits and Listens
+
+These events flow in both directions, enabling a bidirectional data channel between the **Wishlist** drop-in and external code:
+
+- **The drop-in emits** these events when its internal state changes (for example, when a user interacts with the UI)
+- **The drop-in listens** for these same events from external sources (your storefront code, other drop-ins, or integrations) to update its internal state programmatically
+
+This pattern allows you to both **react to** the drop-in's state changes (by subscribing to events it emits) and **control** the drop-in's state (by emitting events that it listens for). Common use cases include server synchronization, cross-tab updates, analytics integration, and coordinating multiple drop-ins.
+
+{/* BIDIRECTIONAL_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [wishlist/alert](#wishlistalert) | Emits and Listens | Triggered when an alert or notification is triggered |
+| [wishlist/data](#wishlistdata) | Emits and Listens | Triggered when data is available or changes |
+| [wishlist/reset](#wishlistreset) | Emits and Listens | Triggered when the component state is reset |
+
+</TableWrapper>
+{/* BIDIRECTIONAL_TABLE_END */}
+
+
+## wishlist/initialized
+
+**Direction**: Emits
+
+Emitted when the component completes initialization
+
+### Data payload
+
+```typescript
+Wishlist | null
+```
+
+<Aside type="tip">
+**Wishlist** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const wishlistInitializedListener = events.on('wishlist/initialized', (data) => {
+  console.log('wishlist/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+wishlistInitializedListener.off();
+```
+
+## authenticated
+
+**Direction**: Listens
+
+Fired by external source when authentication state changes
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authenticatedListener = events.on('authenticated', (data) => {
+  console.log('authenticated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+authenticatedListener.off();
+```
+
+## locale
+
+**Direction**: Listens
+
+Fired by external source when locale/language changes
+
+### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (data) => {
+  console.log('locale event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+localeListener.off();
+```
+
+## wishlist/alert
+
+**Direction**: Emits and Listens
+
+Triggered when an alert or notification is triggered
+
+### Data payload
+
+```typescript
+WishlistActionPayload | null
+```
+
+<Aside type="tip">
+**WishlistActionPayload** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const wishlistAlertListener = events.on('wishlist/alert', (data) => {
+  console.log('wishlist/alert event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+wishlistAlertListener.off();
+```
+
+## wishlist/data
+
+**Direction**: Emits and Listens
+
+Triggered when data is available or changes
+
+### Data payload
+
+```typescript
+Wishlist | null
+```
+
+<Aside type="tip">
+**Wishlist** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const wishlistDataListener = events.on('wishlist/data', (data) => {
+  console.log('wishlist/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+wishlistDataListener.off();
+```
+
+## wishlist/reset
+
+**Direction**: Emits and Listens
+
+Triggered when the component state is reset
+
+### Data payload
+
+```typescript
+void
+```
+
+<Aside type="note">
+Refer to the TypeScript definition above for the complete payload structure.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const wishlistResetListener = events.on('wishlist/reset', (data) => {
+  console.log('wishlist/reset event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+wishlistResetListener.off();
+```
+
