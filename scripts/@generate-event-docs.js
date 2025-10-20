@@ -111,7 +111,7 @@ function cloneOrUpdateRepo(repoName, repoConfig) {
         execFileSync('git', ['clone', '--depth', '1', repoConfig.url, tempPath], { stdio: 'inherit' });
     } else {
         console.log(`  Updating repository...`);
-        execSync(`cd ${tempPath} && git pull`, { stdio: 'inherit' });
+        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: tempPath });
     }
 
     return tempPath;
