@@ -694,6 +694,13 @@ async function config() {
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins-b2b/overview/' },
+                      {
+                        label: 'Company Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Events', link: '/dropins-b2b/company-management/events/' },
+                        ],
+                      },
                     ],
                   },
 
