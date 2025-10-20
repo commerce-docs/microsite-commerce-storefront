@@ -707,6 +707,12 @@ async function main() {
             writeFileSync(outputPath, mdxContent);
             console.log(`  ✅ Generated ${outputPath}`);
 
+            // Show preview link for single drop-in generation
+            if (targetDropin) {
+                const previewUrl = `http://localhost:4321/${basePath}/${repoName}/events`;
+                console.log(`  🔗 Preview: ${previewUrl}`);
+            }
+
             // Update sidebar navigation
             updateSidebarNavigation(repoName, repoConfig);
             console.log('');
