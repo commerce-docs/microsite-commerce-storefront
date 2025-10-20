@@ -9,6 +9,13 @@
  * 3. Extracting TypeScript type definitions
  * 4. Generating comprehensive MDX documentation with examples
  * 
+ * USAGE:
+ * - Generate all drop-ins: npm run generate-event-docs
+ * - Generate single drop-in: npm run generate-event-docs cart
+ * - Available drop-ins: cart, checkout, order, product-details, product-discovery,
+ *                       recommendations, user-account, user-auth, wishlist,
+ *                       payment-services, company-management
+ * 
  * TEMPLATE RELATIONSHIP:
  * - Reads structure from: _dropin-templates/dropin-events.mdx
  * - Uses: Section text, imports, REPEAT_FOR_EACH_EVENT block, placeholders
@@ -637,8 +644,29 @@ async function main() {
     console.log('🚀 Event Documentation Generator');
     console.log('================================\n');
 
+    // Parse command-line arguments
+    const targetDropin = process.argv[2];
+
+    // Filter drop-ins based on target
+    let dropinsToProcess = DROPIN_REPOS;
+
+    if (targetDropin) {
+        if (!DROPIN_REPOS[targetDropin]) {
+            console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
+            console.log('Available drop-ins:');
+            Object.keys(DROPIN_REPOS).forEach(name => {
+                console.log(`  - ${name}`);
+            });
+            process.exit(1);
+        }
+        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
+        console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
+    } else {
+        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
+    }
+
     // Process each drop-in
-    for (const [repoName, repoConfig] of Object.entries(DROPIN_REPOS)) {
+    for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
         try {
             const repoPath = cloneOrUpdateRepo(repoName, repoConfig);
             const eventsData = scanForEvents(repoPath);
