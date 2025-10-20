@@ -1,6 +1,6 @@
 ---
-title: User Account data & events
-description: Learn about the events used by the User Account and the data available within the events.
+title: Company Management data & events
+description: Learn about the events used by the Company Management and the data available within the events.
 sidebar:
   label: Events
   order: 5
@@ -15,7 +15,7 @@ sidebar:
   - Section headings and descriptive text (used as-is)
   - Import statements
   - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
-  - Placeholders: User Account, User Account, EVENT_NAME, etc.
+  - Placeholders: Company Management, Company Management, EVENT_NAME, etc.
   
   WHAT THE SCRIPT GENERATES INDEPENDENTLY:
   - Table contents between START/END markers (example rows are for reference only)
@@ -32,17 +32,18 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 <Aside type="note" title="Auto-generated on 2025-10-20. Do not edit this page directly." />
 
-The **User Account** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+The **Company Management** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
 
 ## Emits
 
-These events are produced by the **User Account** drop-in. Subscribe to these events to react to state changes, trigger custom logic, integrate with third-party services, or coordinate with other drop-ins and components in your storefront.
+These events are produced by the **Company Management** drop-in. Subscribe to these events to react to state changes, trigger custom logic, integrate with third-party services, or coordinate with other drop-ins and components in your storefront.
 
 {/* EMITS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
+| [company/updated](#companyupdated) | Emits | Emitted when the component state is updated |
 | [error](#error) | Emits | Emitted when an error occurs |
 
 </TableWrapper>
@@ -50,13 +51,14 @@ These events are produced by the **User Account** drop-in. Subscribe to these ev
 
 ## Listens
 
-These events are consumed by the **User Account** drop-in. Emit these events from your storefront application, other drop-ins, or external integrations to communicate with and control this drop-in's behavior.
+These events are consumed by the **Company Management** drop-in. Emit these events from your storefront application, other drop-ins, or external integrations to communicate with and control this drop-in's behavior.
 
 {/* LISTENS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
+| [companyContext/changed](#companycontextchanged) | Listens | Fired by Company Context (`companyContext`) when a change occurs |
 | [locale](#locale) | Listens | Fired by external source when locale/language changes |
 
 </TableWrapper>
@@ -64,7 +66,7 @@ These events are consumed by the **User Account** drop-in. Emit these events fro
 
 ## Emits and Listens
 
-These events flow in both directions, enabling a bidirectional data channel between the **User Account** drop-in and external code:
+These events flow in both directions, enabling a bidirectional data channel between the **Company Management** drop-in and external code:
 
 - **The drop-in emits** these events when its internal state changes (for example, when a user interacts with the UI)
 - **The drop-in listens** for these same events from external sources (your storefront code, other drop-ins, or integrations) to update its internal state programmatically
@@ -80,6 +82,45 @@ This pattern allows you to both **react to** the drop-in's state changes (by sub
 </TableWrapper>
 {/* BIDIRECTIONAL_TABLE_END */}
 
+
+## company/updated
+
+**Direction**: Emits
+
+Emitted when the component state is updated
+
+### Data payload
+
+```typescript
+{ company?: any; message?: string; error?: any }
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `company` | `any` (optional) | See type definition in source code |
+| `message` | `string` (optional) | See type definition in source code |
+| `error` | `any` (optional) | See type definition in source code |
+
+<Aside type="tip">
+Refer to the TypeScript definition above for detailed property descriptions and nested type definitions.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const companyUpdatedListener = events.on('company/updated', (data) => {
+  console.log('company/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+companyUpdatedListener.off();
+```
 
 ## error
 
@@ -107,6 +148,39 @@ const errorListener = events.on('error', (data) => {
 
 // Later, when you want to stop listening
 errorListener.off();
+```
+
+## companyContext/changed
+
+**Direction**: Listens
+
+Fired by Company Context (`companyContext`) when a change occurs
+
+### Data payload
+
+```typescript
+string | null | undefined
+```
+
+<Aside type="note">
+Refer to the TypeScript definition above for the complete payload structure.
+</Aside>
+
+
+### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const companyContextChangedListener = events.on('companyContext/changed', (data) => {
+  console.log('companyContext/changed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+companyContextChangedListener.off();
 ```
 
 ## locale
