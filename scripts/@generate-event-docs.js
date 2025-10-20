@@ -33,7 +33,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -108,7 +108,7 @@ function cloneOrUpdateRepo(repoName, repoConfig) {
 
     if (!existsSync(tempPath)) {
         console.log(`  Cloning repository...`);
-        execSync(`git clone --depth 1 ${repoConfig.url} ${tempPath}`, { stdio: 'inherit' });
+        execFileSync('git', ['clone', '--depth', '1', repoConfig.url, tempPath], { stdio: 'inherit' });
     } else {
         console.log(`  Updating repository...`);
         execSync(`cd ${tempPath} && git pull`, { stdio: 'inherit' });
