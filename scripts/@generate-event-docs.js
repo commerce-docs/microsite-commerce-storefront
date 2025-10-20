@@ -34,7 +34,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, execFileSync } from 'child_process';
-
+import fg from 'fast-glob';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
@@ -125,31 +125,22 @@ function scanForEvents(repoPath) {
 
     // Find all TypeScript/JavaScript files (excluding tests and node_modules)
     try {
-        let files;
-        if (process.platform === 'win32') {
-            // Use 'cmd.exe' to call 'dir' with proper quoting
-            const dirArgs = [
-                '/s', '/b',
-                `${repoPath}\\src\\*.ts`,
-                `${repoPath}\\src\\*.tsx`
-            ];
-            // Use execFileSync to avoid shell interpretation
-            files = execFileSync('cmd.exe', ['/c', 'dir', ...dirArgs], { encoding: 'utf8' })
-                .split('\r\n')
-                .filter(f => f.trim());
-        } else {
-            const findArgs = [
-                `${repoPath}/src`,
-                '-type', 'f',
-                '(', '-name', '*.ts', '-o', '-name', '*.tsx', ')',
-                '!', '-path', '*/node_modules/*',
-                '!', '-name', '*.test.*',
-                '!', '-name', '*.d.ts'
-            ];
-            files = execFileSync('find', findArgs, { encoding: 'utf8' })
-                .split('\n')
-                .filter(f => f.trim());
-        }
+        // Use fast-glob to find all TypeScript/TSX source files, excluding tests, node_modules, and .d.ts
+        let files = fg.sync(
+            [
+                join(repoPath, 'src', '**', '*.ts'),
+                join(repoPath, 'src', '**', '*.tsx')
+            ],
+            {
+                ignore: [
+                    '**/node_modules/**',
+                    '**/*.test.*',
+                    '**/*.d.ts'
+                ],
+                absolute: true,
+                dot: false
+            }
+        );
 
         files.forEach(file => {
             if (!existsSync(file)) return;
