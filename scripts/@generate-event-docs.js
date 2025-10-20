@@ -709,8 +709,9 @@ async function main() {
 
             // Show preview link for single drop-in generation
             if (targetDropin) {
-                const previewUrl = `http://localhost:4321/${basePath}/${repoName}/events`;
-                console.log(`  🔗 Preview: ${previewUrl}`);
+                const urlPath = `/${basePath}/${repoName}/events`;
+                console.log(`  📄 View at: ${urlPath}`);
+                console.log(`     (Start dev server with 'npm run dev' if not already running)`);
             }
 
             // Update sidebar navigation
