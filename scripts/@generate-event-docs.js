@@ -125,13 +125,31 @@ function scanForEvents(repoPath) {
 
     // Find all TypeScript/JavaScript files (excluding tests and node_modules)
     try {
-        const findCommand = process.platform === 'win32'
-            ? `dir /s /b "${repoPath}\\src\\*.ts" "${repoPath}\\src\\*.tsx"`
-            : `find "${repoPath}/src" -type f \\( -name "*.ts" -o -name "*.tsx" \\) ! -path "*/node_modules/*" ! -name "*.test.*" ! -name "*.d.ts"`;
-
-        const files = execSync(findCommand, { encoding: 'utf8' })
-            .split('\n')
-            .filter(f => f.trim());
+        let files;
+        if (process.platform === 'win32') {
+            // Use 'cmd.exe' to call 'dir' with proper quoting
+            const dirArgs = [
+                '/s', '/b',
+                `${repoPath}\\src\\*.ts`,
+                `${repoPath}\\src\\*.tsx`
+            ];
+            // Use execFileSync to avoid shell interpretation
+            files = execFileSync('cmd.exe', ['/c', 'dir', ...dirArgs], { encoding: 'utf8' })
+                .split('\r\n')
+                .filter(f => f.trim());
+        } else {
+            const findArgs = [
+                `${repoPath}/src`,
+                '-type', 'f',
+                '(', '-name', '*.ts', '-o', '-name', '*.tsx', ')',
+                '!', '-path', '*/node_modules/*',
+                '!', '-name', '*.test.*',
+                '!', '-name', '*.d.ts'
+            ];
+            files = execFileSync('find', findArgs, { encoding: 'utf8' })
+                .split('\n')
+                .filter(f => f.trim());
+        }
 
         files.forEach(file => {
             if (!existsSync(file)) return;
