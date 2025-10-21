@@ -651,7 +651,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         // Clone the repeat template for this event
         let eventSection = repeatTemplate;
 
-        // Replace EVENT_NAME
+        // Replace EVENT_NAME and EVENT_ANCHOR
+        const anchor = eventNameToAnchor(eventName);
+        eventSection = eventSection.replace(/EVENT_ANCHOR/g, anchor);
         eventSection = eventSection.replace(/EVENT_NAME/g, eventName);
 
         // Replace EVENT_LISTENER_VAR with camelCase variable name
