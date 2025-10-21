@@ -270,6 +270,10 @@ async function config() {
                         ],
                       },
                       {
+                          label: 'Storefront Compatibility B2B Package',
+                          link: '/setup/configuration/storefront-compatibility-b2b/'
+                      },
+                      {
                         label: 'Launch preparation',
                         collapsed: true,
                         items: [
