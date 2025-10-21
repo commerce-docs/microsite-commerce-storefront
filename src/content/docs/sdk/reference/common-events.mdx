@@ -1,0 +1,354 @@
+---
+title: Common Events
+description: Core events shared across multiple drop-ins for authentication, localization, error handling, and cross-component communication.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Many drop-ins listen for or emit common events that enable cross-component communication, authentication state management, localization, and error handling. These events provide a standardized way for your storefront to communicate with drop-ins and coordinate behavior across the application.
+
+Instead of documenting these events separately in each drop-in's event reference, this page serves as a centralized reference for all common events used throughout the system.
+
+<Aside type="tip">
+For drop-in-specific events, refer to each drop-in's individual Events page. This page only documents events that are shared across multiple drop-ins.
+</Aside>
+
+## Common Event Categories
+
+<TableWrapper nowrap={[0]}>
+
+| Event | Category | Used By | Description |
+|-------|----------|---------|-------------|
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [companyContext/changed](#companycontextchanged) | B2B Context | B2B drop-ins | Company context changes |
+
+</TableWrapper>
+
+---
+
+## Authentication Events
+
+### authenticated
+
+**Category**: Authentication  
+**Direction**: Emitted by external source, Listened to by drop-ins  
+**Used By**: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fired when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI based on the current authentication status.
+
+#### When to emit
+
+Emit this event from your storefront when:
+- A user successfully logs in
+- A user logs out
+- An authentication token is refreshed
+- A session expires
+- Authentication state is restored (e.g., page refresh with active session)
+
+#### Data payload
+
+```typescript
+{
+  authenticated: boolean;
+  userId?: string;
+  email?: string;
+  token?: string;
+}
+```
+
+<Aside type="note">
+The exact payload structure may vary by implementation. At minimum, include an `authenticated` boolean. Consult your authentication service documentation for additional fields.
+</Aside>
+
+#### Usage
+
+**Emit when authentication changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User logged in
+events.emit('authenticated', {
+  authenticated: true,
+  userId: 'user-123',
+  email: 'user@example.com'
+});
+
+// User logged out
+events.emit('authenticated', {
+  authenticated: false
+});
+```
+
+**Listen for authentication changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authListener = events.on('authenticated', (data) => {
+  if (data.authenticated) {
+    console.log('User authenticated:', data.userId);
+    // Update UI, load user-specific data, etc.
+  } else {
+    console.log('User logged out');
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Later, when you want to stop listening
+authListener.off();
+```
+
+---
+
+## Localization Events
+
+### locale
+
+**Category**: Localization  
+**Direction**: Emitted by external source, Listened to by drop-ins  
+**Used By**: All drop-ins with internationalization support
+
+Fired when the application's language or locale changes. Drop-ins listen to this event to update their text content, date formatting, currency display, and other locale-specific elements.
+
+#### When to emit
+
+Emit this event from your storefront when:
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+#### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard locale format (e.g., `en-US`, `fr-FR`, `de-DE`).
+
+#### Usage
+
+**Emit when locale changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+**Listen for locale changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (newLocale) => {
+  console.log('Locale changed to:', newLocale);
+  // Update UI text, reload translations, etc.
+  updateTranslations(newLocale);
+});
+
+// Later, when you want to stop listening
+localeListener.off();
+```
+
+---
+
+## Error Handling Events
+
+### error
+
+**Category**: Error Handling  
+**Direction**: Emitted by drop-ins, Listened to by external code  
+**Used By**: Most drop-ins for error reporting
+
+Emitted when a drop-in encounters an error (API failure, validation error, network timeout, etc.). Your storefront should listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+#### When emitted
+
+Drop-ins emit this event when:
+- API requests fail
+- Network errors occur
+- Validation fails
+- Critical operations fail
+- Unexpected errors occur
+
+#### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+<Aside type="note">
+The exact payload structure varies by drop-in. The `message` field is typically always present. Check individual drop-in documentation for specific error structures.
+</Aside>
+
+#### Usage
+
+**Listen for errors from drop-ins:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  
+  // Display error to user
+  showErrorNotification(error.message);
+  
+  // Log to error tracking service
+  if (window.Sentry) {
+    Sentry.captureException(error);
+  }
+  
+  // Handle specific error codes
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+// Later, when you want to stop listening
+errorListener.off();
+```
+
+**Emit errors from custom code:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+try {
+  // Your custom logic
+  await customOperation();
+} catch (err) {
+  events.emit('error', {
+    message: 'Custom operation failed',
+    code: 'CUSTOM_ERROR',
+    details: err,
+    source: 'MyCustomComponent'
+  });
+}
+```
+
+---
+
+## B2B Context Events
+
+### companyContext/changed
+
+**Category**: B2B Context  
+**Direction**: Emitted by Company Context, Listened to by B2B drop-ins  
+**Used By**: Cart, Checkout, Order, Company Management, and other B2B components
+
+Fired when the active company context changes in a B2B environment. This typically occurs when a user switches between companies they have access to, or when company permissions are updated.
+
+#### When emitted
+
+This event is emitted when:
+- A user switches to a different company
+- Company permissions are updated
+- The company context is initialized
+- The company context is cleared
+
+#### Data payload
+
+```typescript
+string | null | undefined
+```
+
+The payload is typically the company ID or identifier. A `null` or `undefined` value indicates the company context has been cleared.
+
+#### Usage
+
+**Emit when company context changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User switches company
+events.emit('companyContext/changed', 'company-456');
+
+// Clear company context
+events.emit('companyContext/changed', null);
+```
+
+**Listen for company context changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const companyContextListener = events.on('companyContext/changed', (companyId) => {
+  if (companyId) {
+    console.log('Company context changed to:', companyId);
+    // Reload company-specific data, update permissions, etc.
+    loadCompanyData(companyId);
+  } else {
+    console.log('Company context cleared');
+    // Clear company-specific state
+    clearCompanyData();
+  }
+});
+
+// Later, when you want to stop listening
+companyContextListener.off();
+```
+
+---
+
+## Best Practices
+
+### Event Naming
+
+Common events use simple, descriptive names without namespaces (e.g., `locale`, `error`, `authenticated`) or namespace-prefixed names for context-specific events (e.g., `companyContext/changed`).
+
+### Error Handling
+
+Always include error listeners in production applications to gracefully handle failures and provide helpful feedback to users.
+
+### State Management
+
+Use `events.lastPayload('<event>')` to retrieve the most recent state without waiting for the next event:
+
+```javascript
+// Get current authentication state
+const currentAuth = events.lastPayload('authenticated');
+if (currentAuth?.authenticated) {
+  console.log('User is authenticated');
+}
+
+// Get current locale
+const currentLocale = events.lastPayload('locale');
+console.log('Current locale:', currentLocale);
+```
+
+### Cleanup
+
+Always clean up event listeners when components unmount or are no longer needed:
+
+```javascript
+// Store the listener reference
+const listener = events.on('locale', handleLocaleChange);
+
+// Clean up when done
+listener.off();
+```
+
+---
+
+## Related Documentation
+
+- [Event Bus API Reference](/sdk/reference/events/) - Core event system documentation
+- [Drop-in Events](/dropins/cart/events/) - Drop-in-specific event documentation
+- Individual drop-in event pages for component-specific events
+

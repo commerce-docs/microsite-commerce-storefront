@@ -486,6 +486,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         ...typedEvents.keys()
     ]);
 
+    // Define common events that are documented separately
+    const commonEvents = new Set(['locale', 'error', 'authenticated', 'companyContext/changed']);
+
     // Group events by direction
     const emitsOnly = [];
     const listensOnly = [];
@@ -504,13 +507,40 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         }
     });
 
-    // Sort each group alphabetically
-    emitsOnly.sort();
-    listensOnly.sort();
-    bidirectional.sort();
+    // Sort function: alphabetize by type (event prefix/namespace), then by full name
+    const sortByTypeAndName = (a, b) => {
+        // Extract the type/prefix (part before '/' or the whole name if no '/')
+        const getEventType = (eventName) => {
+            if (eventName.includes('/')) {
+                return eventName.split('/')[0];
+            }
+            return eventName; // Events without namespace (like 'locale', 'error')
+        };
+
+        const typeA = getEventType(a).toLowerCase();
+        const typeB = getEventType(b).toLowerCase();
+
+        // First, sort by type
+        if (typeA !== typeB) {
+            return typeA.localeCompare(typeB);
+        }
+
+        // If types are the same, sort by full event name
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    };
+
+    // Filter out common events from all groups (they're documented separately in common-events page)
+    const emitsOnlyFiltered = emitsOnly.filter(eventName => !commonEvents.has(eventName));
+    const listensOnlyFiltered = listensOnly.filter(eventName => !commonEvents.has(eventName));
+    const bidirectionalFiltered = bidirectional.filter(eventName => !commonEvents.has(eventName));
+
+    // Sort each group alphabetically by type, then by name
+    emitsOnlyFiltered.sort(sortByTypeAndName);
+    listensOnlyFiltered.sort(sortByTypeAndName);
+    bidirectionalFiltered.sort(sortByTypeAndName);
 
     // Combine for full iteration (maintains grouped order)
-    const sortedEvents = [...emitsOnly, ...listensOnly, ...bidirectional];
+    const sortedEvents = [...emitsOnlyFiltered, ...listensOnlyFiltered, ...bidirectionalFiltered];
 
     // Read the template file
     const templatePath = join(projectRoot, '_dropin-templates', 'dropin-events.mdx');
@@ -524,13 +554,26 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     // Generate emits table
     // NOTE: This table structure is built independently (not read from template)
     // If you change formatting here, update template example rows to match
-    let emitsTable = '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
-    emitsOnly.forEach(eventName => {
-        const description = generateEventDescription(eventName, eventEmits.get(eventName), null);
-        const anchor = eventNameToAnchor(eventName);
-        emitsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
-    });
-    emitsTable += '\n</TableWrapper>';
+    let emitsTable = '';
+
+    // Add explanation if no emits (skip table and intro entirely)
+    if (emitsOnlyFiltered.length === 0) {
+        if (bidirectionalFiltered.length > 0) {
+            emitsTable = '<Aside type="note">\nAll emitted events are bidirectional. See [Emits and Listens Reference](#emits-and-listens-reference) below.\n</Aside>';
+        } else {
+            emitsTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
+        }
+    } else {
+        // Only show intro and table if there are events
+        emitsTable = 'Events produced by this drop-in that you can subscribe to.\n\n';
+        emitsTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
+        emitsOnlyFiltered.forEach(eventName => {
+            const description = generateEventDescription(eventName, eventEmits.get(eventName), null);
+            const anchor = eventNameToAnchor(eventName);
+            emitsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
+        });
+        emitsTable += '\n</TableWrapper>';
+    }
 
     template = template.replace(
         /\{\/\* EMITS_TABLE_START \*\/\}[\s\S]*?\{\/\* EMITS_TABLE_END \*\/\}/,
@@ -538,13 +581,26 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     );
 
     // Generate listens table
-    let listensTable = '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
-    listensOnly.forEach(eventName => {
-        const description = generateEventDescription(eventName, null, eventListeners.get(eventName));
-        const anchor = eventNameToAnchor(eventName);
-        listensTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
-    });
-    listensTable += '\n</TableWrapper>';
+    let listensTable = '';
+
+    // Add explanation if no listens (skip table and intro entirely)
+    if (listensOnlyFiltered.length === 0) {
+        if (bidirectionalFiltered.length > 0) {
+            listensTable = '<Aside type="note">\nAll events this drop-in listens for are bidirectional. See [Emits and Listens Reference](#emits-and-listens-reference) below.\n</Aside>';
+        } else {
+            listensTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
+        }
+    } else {
+        // Only show intro and table if there are events
+        listensTable = 'Events this drop-in listens for from external sources.\n\n';
+        listensTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
+        listensOnlyFiltered.forEach(eventName => {
+            const description = generateEventDescription(eventName, null, eventListeners.get(eventName));
+            const anchor = eventNameToAnchor(eventName);
+            listensTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
+        });
+        listensTable += '\n</TableWrapper>';
+    }
 
     template = template.replace(
         /\{\/\* LISTENS_TABLE_START \*\/\}[\s\S]*?\{\/\* LISTENS_TABLE_END \*\/\}/,
@@ -552,13 +608,22 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     );
 
     // Generate bidirectional table
-    let bidirectionalTable = '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
-    bidirectional.forEach(eventName => {
-        const description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
-        const anchor = eventNameToAnchor(eventName);
-        bidirectionalTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
-    });
-    bidirectionalTable += '\n</TableWrapper>';
+    let bidirectionalTable = '';
+
+    if (bidirectionalFiltered.length === 0) {
+        // If no bidirectional events, show a note
+        bidirectionalTable = '<Aside type="note">\nNo bidirectional events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
+    } else {
+        // Only show intro and table if there are events
+        bidirectionalTable = 'Bidirectional events that both emit state changes and listen for external updates.\n\n';
+        bidirectionalTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
+        bidirectionalFiltered.forEach(eventName => {
+            const description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
+            const anchor = eventNameToAnchor(eventName);
+            bidirectionalTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
+        });
+        bidirectionalTable += '\n</TableWrapper>';
+    }
 
     template = template.replace(
         /\{\/\* BIDIRECTIONAL_TABLE_START \*\/\}[\s\S]*?\{\/\* BIDIRECTIONAL_TABLE_END \*\/\}/,
@@ -593,7 +658,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         const listenerVar = eventNameToListenerVar(eventName);
         eventSection = eventSection.replace(/EVENT_LISTENER_VAR/g, listenerVar);
 
-        // Replace EVENT_DIRECTION
+        // Replace EVENT_DIRECTION (replace lowercase version first to avoid conflicts)
         let directionText = '';
         if (emits && listeners) {
             directionText = 'Emits and Listens';
@@ -602,6 +667,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         } else if (listeners) {
             directionText = 'Listens';
         }
+        eventSection = eventSection.replace(/EVENT_DIRECTION_LOWERCASE/g, directionText.toLowerCase());
         eventSection = eventSection.replace(/EVENT_DIRECTION/g, directionText);
 
         // Replace EVENT_DESCRIPTION
@@ -651,6 +717,46 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
 
         eventsContent += eventSection;
     });
+
+    // Check if there are no drop-in-specific events (only common events)
+    if (sortedEvents.length === 0) {
+        // Determine what types of events are missing
+        const hasNoEmits = emitsOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
+        const hasNoListens = listensOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
+
+        // Generate explanation based on what's missing
+        let explanation = '';
+        if (hasNoEmits && hasNoListens) {
+            explanation = 'This drop-in focuses on UI presentation and data display, relying on function calls rather than event-driven communication for its core functionality. It uses only common events for standard cross-component functionality like localization and error handling.';
+        } else if (hasNoEmits) {
+            explanation = 'This drop-in does not emit any drop-in-specific events because it primarily responds to external state changes and user interactions without needing to broadcast its own state to other components. It uses only common events for standard functionality.';
+        } else if (hasNoListens) {
+            explanation = 'This drop-in does not listen to any drop-in-specific events because it operates independently, managing its own state without requiring coordination with other drop-ins. It uses only common events for standard functionality.';
+        }
+
+        // Generate simplified content for drop-ins that only use common events
+        const simplifiedContent = `---
+title: ${repoConfig.displayName} data & events
+description: Learn about the events used by the ${repoConfig.displayName} and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The **${repoConfig.displayName}** drop-in uses the [Event Bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
+
+<Aside type="note" title="Auto-generated on ${new Date().toISOString().split('T')[0]}. Do not edit this page directly." />
+
+## Events
+
+This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
+
+For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [Common Events Reference](/sdk/reference/common-events/).
+`;
+        return simplifiedContent;
+    }
 
     // Assemble final content
     return beforeRepeat + eventsContent + afterRepeat;

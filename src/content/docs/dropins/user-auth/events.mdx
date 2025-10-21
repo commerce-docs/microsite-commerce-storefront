@@ -30,15 +30,15 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-<Aside type="note" title="Auto-generated on 2025-10-20. Do not edit this page directly." />
+The **User Auth** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common Events Reference](/sdk/reference/common-events/).
 
-The **User Auth** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and listen to events for communication between drop-ins and external integrations.
+<Aside type="note" title="Auto-generated on 2025-10-21. Do not edit this page directly." />
 
-## Emits
-
-These events are produced by the **User Auth** drop-in. Subscribe to these events to react to state changes, trigger custom logic, integrate with third-party services, or coordinate with other drop-ins and components in your storefront.
+## Emits Reference
 
 {/* EMITS_TABLE_START */}
+Events produced by this drop-in that you can subscribe to.
+
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
@@ -49,47 +49,32 @@ These events are produced by the **User Auth** drop-in. Subscribe to these event
 </TableWrapper>
 {/* EMITS_TABLE_END */}
 
-## Listens
-
-These events are consumed by the **User Auth** drop-in. Emit these events from your storefront application, other drop-ins, or external integrations to communicate with and control this drop-in's behavior.
+## Listens Reference
 
 {/* LISTENS_TABLE_START */}
-<TableWrapper nowrap={[0, 1]}>
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| [locale](#locale) | Listens | Fired by external source when locale/language changes |
-
-</TableWrapper>
+<Aside type="note">
+No drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.
+</Aside>
 {/* LISTENS_TABLE_END */}
 
-## Emits and Listens
-
-These events flow in both directions, enabling a bidirectional data channel between the **User Auth** drop-in and external code:
-
-- **The drop-in emits** these events when its internal state changes (for example, when a user interacts with the UI)
-- **The drop-in listens** for these same events from external sources (your storefront code, other drop-ins, or integrations) to update its internal state programmatically
-
-This pattern allows you to both **react to** the drop-in's state changes (by subscribing to events it emits) and **control** the drop-in's state (by emitting events that it listens for). Common use cases include server synchronization, cross-tab updates, analytics integration, and coordinating multiple drop-ins.
+## Emits and Listens Reference
 
 {/* BIDIRECTIONAL_TABLE_START */}
-<TableWrapper nowrap={[0, 1]}>
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| [authenticated](#authenticated) | Emits and Listens | Triggered when authentication state changes |
-
-</TableWrapper>
+<Aside type="note">
+No bidirectional events. See [Common Events](/sdk/reference/common-events/) for shared events.
+</Aside>
 {/* BIDIRECTIONAL_TABLE_END */}
 
+## Events Reference
 
-## auth/error
+The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
 
-**Direction**: Emits
+
+### auth/error (emits)
 
 Emitted when an error occurs
 
-### Data payload
+#### Data payload
 
 ```typescript
 { source: string; type: string; error: Error | string }
@@ -106,7 +91,7 @@ Refer to the TypeScript definition above for detailed property descriptions and 
 </Aside>
 
 
-### Usage
+#### Usage
 
 Listen to this event in your storefront:
 
@@ -122,13 +107,11 @@ const authErrorListener = events.on('auth/error', (data) => {
 authErrorListener.off();
 ```
 
-## auth/permissions
-
-**Direction**: Emits
+### auth/permissions (emits)
 
 Emitted when permissions are updated
 
-### Data payload
+#### Data payload
 
 ```typescript
 PermissionsModel
@@ -139,7 +122,7 @@ PermissionsModel
 </Aside>
 
 
-### Usage
+#### Usage
 
 Listen to this event in your storefront:
 
@@ -153,61 +136,5 @@ const authPermissionsListener = events.on('auth/permissions', (data) => {
 
 // Later, when you want to stop listening
 authPermissionsListener.off();
-```
-
-## locale
-
-**Direction**: Listens
-
-Fired by external source when locale/language changes
-
-### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const localeListener = events.on('locale', (data) => {
-  console.log('locale event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-localeListener.off();
-```
-
-## authenticated
-
-**Direction**: Emits and Listens
-
-Triggered when authentication state changes
-
-### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const authenticatedListener = events.on('authenticated', (data) => {
-  console.log('authenticated event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-authenticatedListener.off();
 ```
 
