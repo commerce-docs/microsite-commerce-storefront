@@ -113,7 +113,6 @@ async function config() {
       '/dropins/product-discovery/containers/results-info': `${basePath}/dropins/product-discovery/containers/pagination`,
       '/dropins/product-discovery/containers/search-bar-input': `${basePath}/dropins/product-discovery`,
       '/dropins/product-discovery/containers/search-bar-results': `${basePath}/dropins/product-discovery`,
-      '/dropins/product-discovery/events': `${basePath}/dropins/product-discovery`,
       // Cart Tutorial Redirects
       '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
       '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
@@ -775,6 +774,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Reference overview', link: '/sdk/reference/' },
+                          { label: 'Common events', link: '/sdk/reference/common-events/' },
                           { label: 'Events', link: '/sdk/reference/events/' },
                           { label: 'GraphQL', link: '/sdk/reference/graphql/' },
                           { label: 'Initializer', link: '/sdk/reference/initializer/' },
