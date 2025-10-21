@@ -442,6 +442,139 @@ function generateEventDescription(eventName, emits, listeners) {
     return 'Event for component communication and state management';
 }
 
+function parseDocumentedEvents(repoPath) {
+    // Parse manually documented events from API.mdx (for company-management)
+    const apiMdxPath = join(repoPath, 'src/api/API.mdx');
+    if (!existsSync(apiMdxPath)) {
+        return { documented: new Map(), descriptions: new Map() };
+    }
+
+    console.log(`  📖 Reading manually documented events from API.mdx...`);
+
+    const content = readFileSync(apiMdxPath, 'utf8');
+    const documented = new Map();
+    const descriptions = new Map();
+
+    // Common events to exclude (documented separately)
+    const commonEvents = new Set(['locale', 'error', 'authenticated']);
+
+    // Look for event patterns in the documentation
+    // Pattern 1: Event list items like "- `company/updated` - Description"
+    const listPattern = /[-*]\s+`([^`]+)`\s+[-—–]\s+([^\n]+)/g;
+    let match;
+
+    while ((match = listPattern.exec(content)) !== null) {
+        const eventName = match[1];
+        const description = match[2].trim();
+
+        // Only capture if it looks like an event name and is not a common event
+        if (eventName.includes('/') && !commonEvents.has(eventName)) {
+            documented.set(eventName, {
+                source: 'documented',
+                description: description
+            });
+            descriptions.set(eventName, description);
+            console.log(`    Found documented event: ${eventName}`);
+        }
+    }
+
+    // Pattern 2: Section headers for event groups
+    // This helps us identify events even if they're in a different format
+    const sectionPattern = /###\s+([^\n]+Events[^\n]*)\s+((?:[-*]\s+`[^`]+`[^\n]*\n?)+)/g;
+    while ((match = sectionPattern.exec(content)) !== null) {
+        const sectionTitle = match[1];
+        const sectionContent = match[2];
+
+        // Extract events from this section
+        const eventPattern = /[-*]\s+`([^`]+)`/g;
+        let eventMatch;
+
+        while ((eventMatch = eventPattern.exec(sectionContent)) !== null) {
+            const eventName = eventMatch[1];
+
+            // Skip common events
+            if (!commonEvents.has(eventName) && eventName.includes('/')) {
+                if (!documented.has(eventName)) {
+                    documented.set(eventName, {
+                        source: 'documented',
+                        description: `Event from ${sectionTitle}`
+                    });
+                    console.log(`    Found documented event: ${eventName} (from ${sectionTitle})`);
+                }
+            }
+        }
+    }
+
+    console.log(`  ✓ Found ${documented.size} documented events`);
+    return { documented, descriptions };
+}
+
+function mergeDocumentedAndCodeEvents(eventsData, documentedData) {
+    // Merge documented events with code-scanned events
+    // Priority: Keep all documented events, enhance with code data if available
+
+    const { eventEmits, eventListeners, typedEvents } = eventsData;
+    const { documented, descriptions } = documentedData;
+
+    // Create enhanced maps that include both documented and implemented events
+    const enhancedEmits = new Map(eventEmits);
+    const enhancedListeners = new Map(eventListeners);
+    const enhancedTypes = new Map(typedEvents);
+    const implementationStatus = new Map(); // Track which events are implemented vs documented-only
+
+    // Mark all code-found events as implemented
+    for (const eventName of eventEmits.keys()) {
+        implementationStatus.set(eventName, 'implemented-emit');
+    }
+    for (const eventName of eventListeners.keys()) {
+        const current = implementationStatus.get(eventName);
+        if (current === 'implemented-emit') {
+            implementationStatus.set(eventName, 'implemented-both');
+        } else {
+            implementationStatus.set(eventName, 'implemented-listen');
+        }
+    }
+
+    // Add documented events that aren't in the code yet
+    for (const [eventName, eventInfo] of documented.entries()) {
+        if (!implementationStatus.has(eventName)) {
+            implementationStatus.set(eventName, 'documented-only');
+
+            // Infer direction from event name or description
+            const desc = eventInfo.description.toLowerCase();
+
+            if (desc.includes('fired') || desc.includes('listen')) {
+                // Likely a listened event
+                if (!enhancedListeners.has(eventName)) {
+                    enhancedListeners.set(eventName, [{
+                        file: 'documented in API.mdx',
+                        line: 0,
+                        documented: true
+                    }]);
+                }
+            } else {
+                // Default to emit
+                if (!enhancedEmits.has(eventName)) {
+                    enhancedEmits.set(eventName, [{
+                        file: 'documented in API.mdx',
+                        line: 0,
+                        payload: 'See documentation',
+                        documented: true
+                    }]);
+                }
+            }
+        }
+    }
+
+    return {
+        eventEmits: enhancedEmits,
+        eventListeners: enhancedListeners,
+        typedEvents: enhancedTypes,
+        implementationStatus,
+        documentedDescriptions: descriptions
+    };
+}
+
 function updateSidebarNavigation(dropinName, repoConfig) {
     const configPath = join(projectRoot, 'astro.config.mjs');
     const config = readFileSync(configPath, 'utf8');
@@ -479,7 +612,7 @@ function updateSidebarNavigation(dropinName, repoConfig) {
 }
 
 function generateEventsMDX(dropinName, repoConfig, eventsData) {
-    const { eventEmits, eventListeners, typedEvents } = eventsData;
+    const { eventEmits, eventListeners, typedEvents, implementationStatus, documentedDescriptions } = eventsData;
     const allEvents = new Set([
         ...eventEmits.keys(),
         ...eventListeners.keys(),
@@ -487,7 +620,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     ]);
 
     // Define common events that are documented separately
-    const commonEvents = new Set(['locale', 'error', 'authenticated', 'companyContext/changed']);
+    const commonEvents = new Set(['locale', 'error', 'authenticated']);
 
     // Group events by direction
     const emitsOnly = [];
@@ -568,7 +701,19 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         emitsTable = 'Events produced by this drop-in that you can subscribe to.\n\n';
         emitsTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
         emitsOnlyFiltered.forEach(eventName => {
-            const description = generateEventDescription(eventName, eventEmits.get(eventName), null);
+            // Use documented description if available, otherwise generate one
+            let description;
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+                description = documentedDescriptions.get(eventName);
+            } else {
+                description = generateEventDescription(eventName, eventEmits.get(eventName), null);
+            }
+
+            // Add implementation status badge if available
+            if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
+                description += ' 🚧';
+            }
+
             const anchor = eventNameToAnchor(eventName);
             emitsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
         });
@@ -595,7 +740,19 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         listensTable = 'Events this drop-in listens for from external sources.\n\n';
         listensTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
         listensOnlyFiltered.forEach(eventName => {
-            const description = generateEventDescription(eventName, null, eventListeners.get(eventName));
+            // Use documented description if available, otherwise generate one
+            let description;
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+                description = documentedDescriptions.get(eventName);
+            } else {
+                description = generateEventDescription(eventName, null, eventListeners.get(eventName));
+            }
+
+            // Add implementation status badge if available
+            if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
+                description += ' 🚧';
+            }
+
             const anchor = eventNameToAnchor(eventName);
             listensTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
         });
@@ -618,7 +775,19 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         bidirectionalTable = 'Bidirectional events that both emit state changes and listen for external updates.\n\n';
         bidirectionalTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
         bidirectionalFiltered.forEach(eventName => {
-            const description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
+            // Use documented description if available, otherwise generate one
+            let description;
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+                description = documentedDescriptions.get(eventName);
+            } else {
+                description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
+            }
+
+            // Add implementation status badge if available
+            if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
+                description += ' 🚧';
+            }
+
             const anchor = eventNameToAnchor(eventName);
             bidirectionalTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
         });
@@ -672,11 +841,26 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         eventSection = eventSection.replace(/EVENT_DIRECTION_LOWERCASE/g, directionText.toLowerCase());
         eventSection = eventSection.replace(/EVENT_DIRECTION/g, directionText);
 
-        // Replace EVENT_DESCRIPTION
-        const description = generateEventDescription(eventName, emits, listeners);
+        // Replace EVENT_DESCRIPTION - use documented description if available
+        let description;
+        if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            description = documentedDescriptions.get(eventName);
+        } else {
+            description = generateEventDescription(eventName, emits, listeners);
+        }
+
+        // Add implementation status note for documented-only events
+        if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
+            description += '\n\n<Aside type="caution" title="Planned Event">\nThis event is documented but not yet implemented in the current version. The API may change before implementation.\n</Aside>';
+        }
+
         eventSection = eventSection.replace(/EVENT_DESCRIPTION/g, description);
         // Generate EVENT_PAYLOAD_SECTION
         let payloadSection = '';
+
+        // Check if this is a documented-only event
+        const isDocumentedOnly = implementationStatus && implementationStatus.get(eventName) === 'documented-only';
+
         if (typedEvents.has(eventName)) {
             const typeDefinition = typedEvents.get(eventName);
             payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;
@@ -696,8 +880,6 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                     const escapedType = prop.type.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
                     payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
                 });
-
-                payloadSection += `\n<Aside type="tip">\nRefer to the TypeScript definition above for detailed property descriptions and nested type definitions.\n</Aside>\n`;
             } else if (!hasObjectStructure) {
                 // This is a reference to another type (like CartModel, OrderDataModel, string | null, etc.)
                 const baseType = typeDefinition.split('|')[0].trim().split('[')[0].trim();
@@ -705,12 +887,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
 
                 if (isComplexType && baseType !== 'void') {
                     payloadSection += `<Aside type="tip">\n**${baseType}** is a complex type with multiple properties. Key properties typically include \`id\`, domain-specific data fields, and metadata.\n</Aside>\n`;
-                } else {
-                    payloadSection += `<Aside type="note">\nRefer to the TypeScript definition above for the complete payload structure.\n</Aside>\n`;
                 }
-            } else {
-                payloadSection += `<Aside type="note">\nRefer to the TypeScript definition above for the complete payload structure.\n</Aside>\n`;
             }
+        } else if (isDocumentedOnly) {
+            payloadSection += `<Aside type="note">\nPayload structure will be defined when this event is implemented. Check the documentation or source code for the most current information.\n</Aside>`;
         } else {
             payloadSection += `<Aside type="caution">\nNo TypeScript definition available. Refer to the event implementation for payload structure details.\n</Aside>`;
         }
@@ -793,7 +973,16 @@ async function main() {
     for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
         try {
             const repoPath = cloneOrUpdateRepo(repoName, repoConfig);
-            const eventsData = scanForEvents(repoPath);
+            let eventsData = scanForEvents(repoPath);
+
+            // Special handling for company-management: merge documented events from API.mdx
+            if (repoName === 'company-management') {
+                console.log(`  🔄 Merging documented events from API.mdx...`);
+                const documentedData = parseDocumentedEvents(repoPath);
+                eventsData = mergeDocumentedAndCodeEvents(eventsData, documentedData);
+                console.log(`  ✓ Merged ${eventsData.eventEmits.size} emits, ${eventsData.eventListeners.size} listens`);
+            }
+
             const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData);
 
             // Write to the appropriate location in docs
