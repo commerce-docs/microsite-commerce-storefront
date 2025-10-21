@@ -58,7 +58,7 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
-      inlineStylesheets: 'auto',
+      inlineStylesheets: 'always',
     },
 
     redirects: {
@@ -178,9 +178,7 @@ async function config() {
               href: 'https://assets.adobedtm.com',
             },
           },
-          // Note: Font preload removed - hashed filenames change between builds
-          // causing 404s. With font-display: swap and system font fallbacks,
-          // desktop users get a smooth experience without preload.
+          // Using font-display: block for h1 font to prevent CLS (no preload needed)
           // Inline critical CSS for instant above-the-fold render on mobile
           {
             tag: 'style',
