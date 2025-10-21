@@ -1,0 +1,521 @@
+---
+title: Company functions
+description: Learn about the API functions provided by the Company drop-in component.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import CodeInclude from '@components/CodeInclude.astro';
+
+The Company drop-in component provides API functions that allow developers to retrieve and manage B2B company information dynamically. These functions are permissions-aware and integrate seamlessly with Adobe Commerce B2B features.
+
+## allowCompanyRegistration
+
+The `allowCompanyRegistration` function checks if company registration is allowed in the Adobe Commerce store configuration. This determines whether new companies can be registered through the storefront. The function uses the [`storeConfig` query](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) to fetch the `b2b/company_registration/allow` setting.
+
+```ts
+export const allowCompanyRegistration = async (): Promise<boolean>
+```
+
+### Returns
+
+Returns a promise that resolves to a boolean indicating if company registration is allowed.
+
+### Usage
+
+```js
+import { allowCompanyRegistration } from '@dropins/storefront-company-management/api';
+
+const canRegister = await allowCompanyRegistration();
+if (canRegister) {
+  console.log('Company registration is enabled');
+  showRegistrationForm();
+} else {
+  console.log('Company registration is disabled');
+  hideRegistrationForm();
+}
+```
+
+## companyEnabled
+
+The `companyEnabled` function checks if B2B company features are enabled in the Adobe Commerce store configuration. This is the primary function to determine if the store has B2B capabilities. It calls the [`storeConfig` query](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) to fetch the `b2b/general/enabled` setting.
+
+If the API call succeeds, it returns `{ companyEnabled: true }`. On failure, it returns `{ companyEnabled: false, error: 'Company functionality not available' }`.
+
+
+```ts
+export const companyEnabled = async (): Promise<boolean>
+```
+
+### Returns
+
+Returns a promise that resolves to a boolean indicating if company features are enabled.
+
+### Usage
+
+```js
+import { companyEnabled } from '@dropins/storefront-company-management/api';
+
+try {
+  const isEnabled = await companyEnabled();
+  if (isEnabled) {
+    console.log('Company features are enabled');
+    initializeCompanyFeatures();
+  } else {
+    console.log('Company features are disabled');
+  }
+} catch (error) {
+  console.error('Failed to check company status:', error.message);
+}
+```
+
+## createCompany
+
+The `createCompany` function creates a new company registration. This function is used when a customer wants to register their business as a company.
+
+The form data must include:
+
+- Company information - Basic company details (name, email, legal name, tax IDs)
+- Legal address - Complete business address with country/region validation
+- Company administrator - Primary contact and administrator setup
+
+This function calls the [`createCompany` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/company/mutations/create/).
+
+```ts
+export const createCompany = async (
+  companyData: CreateCompanyDto
+): Promise<CompanyModel>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['companyData', 'CreateCompanyDto', 'Yes', 'Company registration data including name, email, address, and admin information.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to the newly created `CompanyModel` object.
+
+### Usage
+
+```js
+import { createCompany } from '@dropins/storefront-company-management/api';
+
+try {
+  const newCompany = await createCompany({
+    name: 'Acme Corporation',
+    email: 'contact@acme.com',
+    legalName: 'Acme Corporation LLC',
+    legalAddress: {
+      street: ['123 Business Ave'],
+      city: 'San Francisco',
+      region: { region: 'California', regionCode: 'CA' },
+      countryCode: 'US',
+      postcode: '94105',
+      telephone: '+1-555-123-4567'
+    }
+  });
+  
+  console.log('Company created successfully:', newCompany.name);
+} catch (error) {
+  console.error('Failed to create company:', error.message);
+}
+```
+
+## fetchUserPermissions
+
+The `fetchUserPermissions` function retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. This function is used internally by other API functions to determine what data the user can access and modify. It uses the [`customer` query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) to fetch the role and permissions.
+
+If the user's role is identified as "Company Administrator" (the role ID is `0` or the role name is "Company Administrator"), the function automatically grants all company permissions, even if the permissions tree is empty.
+
+```ts
+export const fetchUserPermissions = async (): Promise<{
+  allowedIds: Set<string>;
+  roleResponse: any;
+}>
+```
+
+### Returns
+
+Returns a promise that resolves to an object containing a set of permission IDs and the raw GraphQL response with role data.
+
+```ts
+{
+  allowedIds: Set<string>;
+  roleResponse: any;
+}
+```
+
+### Common permission IDs
+
+| Permission ID                              | Description                    |
+|-------------------------------------------|--------------------------------|
+| `Magento_Company::view_account`           | View company account info      |
+| `Magento_Company::edit_account`           | Edit company account fields    |
+| `Magento_Company::view_address`           | View legal address             |
+| `Magento_Company::edit_address`           | Edit legal address             |
+| `Magento_Company::contacts`               | View company contacts          |
+| `Magento_Company::payment_information`    | View payment methods           |
+| `Magento_Company::shipping_information`   | View shipping methods          |
+
+### Usage
+
+```js
+import { fetchUserPermissions } from '@dropins/storefront-company-management/api';
+
+try {
+  const { allowedIds, roleResponse } = await fetchUserPermissions();
+  
+  console.log('User role:', roleResponse.data.customer.role.name);
+  
+  if (allowedIds.has('Magento_Company::edit_account')) {
+    console.log('User can edit company account fields');
+    enableEditButton();
+  }
+  
+  // Company Administrators automatically have all permissions
+  const isAdmin = roleResponse.data.customer.role.id === '0';
+  if (isAdmin) {
+    console.log('User is a Company Administrator');
+  }
+} catch (error) {
+  console.error('Failed to fetch user permissions:', error.message);
+}
+```
+
+## getCompany
+
+The `getCompany` function retrieves company information based on the current user's role permissions. It first fetches the role permission tree, then dynamically queries only the allowed company fields.
+
+```ts
+export const getCompany = async (): Promise<CompanyModel | null>
+```
+
+### Returns
+
+Returns a promise that resolves to a `CompanyModel` object with company information and computed permission flags.
+
+```ts
+type CompanyModel = {
+  id: string;
+  name: string;
+  email: string;
+  legalName?: string;
+  vatTaxId?: string;
+  resellerId?: string;
+  legalAddress?: {
+    street: string[];
+    city: string;
+    region?: { region: string; regionCode: string; regionId: number };
+    countryCode: string;
+    postcode: string;
+    telephone?: string;
+  };
+  companyAdmin?: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    jobTitle?: string;
+  };
+  salesRepresentative?: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  availablePaymentMethods?: { code: string; title: string }[];
+  availableShippingMethods?: { code: string; title: string }[];
+  canEditAccount: boolean;
+  canEditAddress: boolean;
+  permissionsFlags: {
+    canViewAccount: boolean;
+    canEditAccount: boolean;
+    canViewAddress: boolean;
+    canEditAddress: boolean;
+    canViewContacts: boolean;
+    canViewPaymentInformation: boolean;
+    canViewShippingInformation: boolean;
+  };
+};
+```
+
+### Usage
+
+```js
+import { getCompany } from '@dropins/storefront-company-management/api';
+
+try {
+  const company = await getCompany();
+  
+  if (!company) {
+    console.log('No company data available');
+    return;
+  }
+  
+  console.log('Company Name:', company.name);
+  console.log('Company Email:', company.email);
+  
+  if (company.legalAddress) {
+    console.log('Address:', company.legalAddress.street.join(', '));
+  }
+  
+  if (company.canEditAccount) {
+    showEditButton();
+  }
+} catch (error) {
+  console.error('Failed to fetch company:', error.message);
+}
+```
+
+## getCountries
+
+The `getCountries` function uses the [`countries` query](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) to retrieve the list of available countries and their regions for company address forms. The function uses `sessionStorage` with the key `_company_countries` to cache results. Cached data is returned on subsequent calls to avoid repeated API requests.
+
+
+```ts
+export const getCountries = async (): Promise<{
+  availableCountries: Country[];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+### Returns
+
+Returns a promise that resolves to a countries data object.
+
+```ts
+type CountriesData = {
+  availableCountries: Array<{
+    value: string;     // ISO 2-letter country code
+    text: string;      // Country display name
+  }>;
+  countriesWithRequiredRegion: string[];  // Countries requiring region selection
+  optionalZipCountries: string[];         // Countries where postal code is optional
+};
+```
+
+### Usage
+
+```js
+import { getCountries } from '@dropins/storefront-company-management/api';
+
+// Get all countries (cached after first call)
+const countriesData = await getCountries();
+console.log('Available countries:', countriesData.availableCountries);
+console.log('Countries requiring regions:', countriesData.countriesWithRequiredRegion);
+
+// Check if a country requires a region
+const isRegionRequired = countriesData.countriesWithRequiredRegion.includes('US');
+```
+
+## getCustomerCompany
+
+The `getCustomerCompany` function calls the [`customer` query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) to retrieve basic company information for the current customer. This is a simplified API that returns essential company info without requiring full company permissions. It first checks if company features are enabled before fetching data.
+
+```ts
+export const getCustomerCompany = async (): Promise<CustomerCompanyInfo | null>
+```
+
+### Returns
+
+Returns a promise that resolves to customer company information or null if any of the following conditions are met:
+
+- Company features are not enabled
+- The customer is not associated with a company
+- An error occurs
+
+### Usage
+
+```js
+import { getCustomerCompany } from '@dropins/storefront-company-management/api';
+
+try {
+  const customerCompany = await getCustomerCompany();
+  
+  if (customerCompany) {
+    console.log('Customer company:', customerCompany.name);
+    displayCompanyBadge(customerCompany);
+  } else {
+    console.log('Customer is not part of a company');
+    hideCompanyFeatures();
+  }
+} catch (error) {
+  console.error('Failed to fetch customer company:', error.message);
+}
+```
+
+## isCompanyAdmin
+
+The `isCompanyAdmin` function uses the [`customer` query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) to check if the current authenticated user is a Company Administrator. Company Administrators have full access to all company features.
+
+```ts
+export const isCompanyAdmin = async (): Promise<boolean>
+```
+
+### Returns
+
+Returns a promise that resolves to `true` if the user is a Company Administrator, `false` otherwise.
+
+### Usage
+
+```js
+import { isCompanyAdmin } from '@dropins/storefront-company-management/api';
+
+const isAdmin = await isCompanyAdmin();
+if (isAdmin) {
+  console.log('User is a Company Administrator');
+  showAdminFeatures();
+} else {
+  console.log('User has limited permissions');
+}
+```
+
+## isCompanyUser
+
+The `isCompanyUser` function checks if the current authenticated user is associated with a company. It calls the [`customer` query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/).
+
+```ts
+export const isCompanyUser = async (): Promise<boolean>
+```
+
+### Returns
+
+Returns a promise that resolves to `true` if the user is part of a company, `false` otherwise.
+
+### Usage
+
+```js
+import { isCompanyUser } from '@dropins/storefront-company-management/api';
+
+const hasCompany = await isCompanyUser();
+if (hasCompany) {
+  console.log('User is part of a company');
+  renderCompanyFeatures();
+} else {
+  console.log('User is not part of a company');
+  showJoinCompanyPrompt();
+}
+```
+
+## updateCompany
+
+The `updateCompany` function updates company information. It only sends fields the user is permitted to edit based on their role permissions. The function dynamically builds the mutation response to request only allowed fields.
+
+The function includes logic for handling street addresses (arrays vs strings) and regions (predefined vs custom regions). Custom regions are sent with `region_id: 0`.
+
+```ts
+export const updateCompany = async (
+  companyData: Partial<CompanyModel>
+): Promise<CompanyModel>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['companyData', 'Partial<CompanyModel>', 'Yes', 'Partial company data object containing fields to update.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to the updated `CompanyModel` object.
+
+### Usage
+
+```js
+import { updateCompany } from '@dropins/storefront-company-management/api';
+
+try {
+  const updatedCompany = await updateCompany({
+    name: 'New Company Name',
+    email: 'newemail@company.com',
+    legalAddress: {
+      street: ['123 Business Ave', 'Suite 100'],
+      city: 'San Francisco',
+      region: { region: 'California', regionCode: 'CA' },
+      countryCode: 'US',
+      postcode: '94105',
+      telephone: '+1-555-123-4567'
+    }
+  });
+  
+  console.log('Company updated successfully:', updatedCompany.name);
+} catch (error) {
+  console.error('Failed to update company:', error.message);
+}
+```
+
+For countries without predefined regions:
+
+```js
+// Update with custom region (e.g., for Uganda)
+await updateCompany({
+  legalAddress: {
+    street: ['456 International Blvd'],
+    city: 'Kampala',
+    region: {
+      region: 'Central Region',
+      regionCode: 'Central Region'  // Same as region for custom
+    },
+    countryCode: 'UG',
+    postcode: '12345'
+  }
+});
+```
+
+## validateCompanyEmail
+
+The `validateCompanyEmail` function validates if an email address is available for company registration or updates. It checks against existing company emails in the system.
+
+```ts
+export const validateCompanyEmail = async (
+  email: string
+): Promise<ValidateCompanyEmailResponse>
+```
+
+<OptionsTable
+  compact
+  options={[
+    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['email', 'string', 'Yes', 'The email address to validate.'],
+  ]}
+/>
+
+### Returns
+
+Returns a promise that resolves to a validation result object:
+
+```ts
+type ValidateCompanyEmailResponse = {
+  isValid: boolean;
+  error?: string;
+}
+```
+
+### Usage
+
+```js
+import { validateCompanyEmail } from '@dropins/storefront-company-management/api';
+
+const result = await validateCompanyEmail('test@company.com');
+
+if (result.isValid) {
+  console.log('Email is available');
+  allowFormSubmission();
+} else {
+  console.log('Email validation failed:', result.error);
+  showErrorMessage(result.error);
+}
+```
+

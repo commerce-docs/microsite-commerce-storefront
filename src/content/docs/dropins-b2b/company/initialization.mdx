@@ -1,0 +1,230 @@
+---
+title: Company initialization
+description: Learn how to configure the initializer for the Company drop-in component.
+sidebar:
+  label: Initialization
+  order: 3
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The Company drop-in initializer provides configuration options for setting up language definitions, extending data models, and customizing the component behavior. It enables internationalization support and allows you to extend the default company data models with custom fields and transformations.
+
+## Configuration options
+
+The Company initializer accepts the following configuration options to customize behavior and extend functionality:
+
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['langDefinitions', 'Record<string, Record<string, string>>', 'No', 'Language definitions for internationalization support. Allows customization of all text displayed in the component.'],
+    ['models', 'Record<string, ModelConfig>', 'No', 'Extend default data models with custom fields and transformations for company-specific requirements.'],
+  ]}
+/>
+
+### Basic initialization
+
+The simplest way to initialize the Company drop-in with default settings:
+
+```ts
+import { initialize } from '@dropins/storefront-company-management/api';
+
+// Basic initialization
+await initialize();
+```
+
+### Advanced initialization
+
+Initialize with custom configuration options:
+
+```ts
+import { initialize } from '@dropins/storefront-company-management/api';
+import { initializers } from '@dropins/tools/initializer.js';
+
+// Advanced initialization with configuration
+const initializeCompany = async () => {
+  await initialize({
+    langDefinitions: {
+      en_US: {
+        'Company.CompanyProfile.containerTitle': 'Business Profile',
+        'Company.shared.fields.companyName': 'Business Name'
+      }
+    },
+    models: {
+      Company: {
+        transformer: (data) => ({
+          ...data,
+          customField: data?.custom_field,
+        }),
+      },
+    },
+  });
+};
+
+// Register the initializer
+initializers.register(initializeCompany, {});
+```
+
+### Set language definitions
+
+The `langDefinitions` option allows you to customize text throughout the Company drop-in component. You can override individual dictionary keys or provide complete translations for different languages.
+
+```ts
+// Load custom language definitions
+const customEnglish = {
+  'Company.CompanyProfile.containerTitle': 'Business Information',
+  'Company.shared.fields.companyName': 'Business Name',
+  'Company.shared.fields.legalName': 'Legal Business Name',
+  'Company.shared.buttons.edit': 'Modify',
+  'Company.shared.buttons.save': 'Update Information'
+};
+
+// Load French translations
+const frenchTranslations = await fetch('/i18n/company_fr_FR.json')
+  .then(res => res.json());
+
+// Initialize with multiple language support
+await initialize({
+  langDefinitions: {
+    en_US: customEnglish,
+    fr_FR: frenchTranslations
+  }
+});
+```
+
+#### Multi-language setup
+
+For applications supporting multiple languages, you can load different language files dynamically:
+
+```ts
+// Dynamic language loading based on user preference
+const userLocale = getUserLocale(); // Your function to get user's locale
+const languageDefinitions = {};
+
+if (userLocale === 'fr_FR') {
+  languageDefinitions.fr_FR = await fetch('/i18n/company_fr_FR.json')
+    .then(res => res.json());
+} else if (userLocale === 'es_ES') {
+  languageDefinitions.es_ES = await fetch('/i18n/company_es_ES.json')
+    .then(res => res.json());
+}
+
+await initialize({
+  langDefinitions: languageDefinitions
+});
+```
+
+### Set models
+
+The `models` option allows you to extend the default Company data models with custom fields and transformations. This is useful when you have custom company attributes or need to transform data from your backend.
+
+#### Default models
+
+The Company drop-in includes these default models:
+- **Company**: Main company information model
+- **CompanyAddress**: Legal address model
+- **CompanyContact**: Contact information model
+
+#### Extending models with custom fields
+
+```ts
+await initialize({
+  models: {
+    Company: {
+      transformer: (data) => ({
+        // Include all default fields
+        ...data,
+        // Add custom fields
+        industryType: data?.industry_type,
+        yearEstablished: data?.year_established,
+        employeeCount: data?.employee_count,
+        customAttributes: data?.custom_attributes?.reduce((acc, attr) => {
+          acc[attr.attribute_code] = attr.value;
+          return acc;
+        }, {})
+      }),
+    },
+    CompanyAddress: {
+      transformer: (data) => ({
+        ...data,
+        // Add custom address fields
+        buildingName: data?.building_name,
+        floorNumber: data?.floor_number,
+        deliveryInstructions: data?.delivery_instructions
+      }),
+    }
+  }
+});
+```
+
+#### Complex model transformations
+
+For more complex data transformations, you can implement custom logic:
+
+```ts
+await initialize({
+  models: {
+    Company: {
+      transformer: (data) => {
+        // Transform payment methods to include additional metadata
+        const enhancedPaymentMethods = data?.available_payment_methods?.map(method => ({
+          ...method,
+          isPreferred: method.code === data?.preferred_payment_method,
+          fees: getPaymentMethodFees(method.code), // Your custom function
+        }));
+
+        // Calculate company metrics
+        const companyMetrics = {
+          totalOrders: data?.order_statistics?.total_orders || 0,
+          averageOrderValue: data?.order_statistics?.average_order_value || 0,
+          creditLimit: data?.credit_limit || 0,
+          creditUsed: data?.credit_used || 0,
+          creditAvailable: (data?.credit_limit || 0) - (data?.credit_used || 0)
+        };
+
+        return {
+          ...data,
+          availablePaymentMethods: enhancedPaymentMethods,
+          metrics: companyMetrics,
+          // Format display names
+          displayName: data?.legal_name || data?.name,
+          shortName: data?.name?.substring(0, 20) + (data?.name?.length > 20 ? '...' : '')
+        };
+      },
+    }
+  }
+});
+```
+
+#### Model validation
+
+You can also add validation logic to your model transformers:
+
+```ts
+await initialize({
+  models: {
+    Company: {
+      transformer: (data) => {
+        // Validate required fields
+        if (!data?.name) {
+          console.warn('Company name is missing');
+        }
+        
+        if (!data?.email) {
+          console.warn('Company email is missing');
+        }
+
+        // Sanitize and validate data
+        return {
+          ...data,
+          name: data?.name?.trim(),
+          email: data?.email?.toLowerCase().trim(),
+          vatTaxId: data?.vat_tax_id?.replace(/[^A-Za-z0-9]/g, ''), // Remove special chars
+          phoneNumber: formatPhoneNumber(data?.legal_address?.telephone) // Your formatting function
+        };
+      },
+    }
+  }
+});
+```
+

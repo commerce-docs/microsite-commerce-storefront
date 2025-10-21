@@ -1,0 +1,400 @@
+---
+title: Company data & events
+description: Learn about the events used by the Company and the data available within the events.
+sidebar:
+  label: Data events
+  order: 5
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import { Steps } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+
+The Company drop-in component emits various events throughout its lifecycle to communicate state changes, data updates, and user interactions. These events enable integration with other components, analytics tracking, and custom business logic implementation.
+
+## Event flow overview
+
+The Company drop-in follows a predictable event flow pattern:
+
+1. **Initialization** - Component starts up and emits initialization events
+2. **Data loading** - Company information is fetched and loading events are emitted
+3. **User interactions** - Edit actions, form submissions, and validation events
+4. **Data updates** - Successful updates trigger data change events
+5. **Error handling** - Failed operations emit error events with details
+
+## Event categories
+
+### Data events
+Events related to company data fetching, updating, and state changes:
+- `company/data/loaded` - Company information has been successfully loaded
+- `company/data/updated` - Company information has been updated
+- `company/data/error` - Error occurred while loading or updating company data
+
+### User interaction events
+Events triggered by user actions within the component:
+- `company/edit/started` - User initiated edit mode
+- `company/edit/cancelled` - User cancelled edit operation
+- `company/form/submitted` - User submitted the edit form
+- `company/form/validated` - Form validation completed
+
+### Permission events
+Events related to user permissions and access control:
+- `company/permissions/loaded` - User permissions have been fetched
+- `company/permissions/changed` - User permissions have been updated
+
+## company/data/loaded
+
+Emitted when company information has been successfully fetched and is ready for display. This event is triggered after the initial data load and contains the complete company model.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['company', 'CompanyModel', 'Complete company information including profile, address, contacts, and permissions'],
+    ['timestamp', 'number', 'Unix timestamp when the data was loaded'],
+    ['source', 'string', 'Source of the data load (initial, refresh, update)'],
+  ]}
+/>
+
+### Usage example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('company/data/loaded', (data) => {
+  console.log('Company loaded:', data.company.name);
+  console.log('User can edit account:', data.company.canEditAccount);
+  
+  // Update other components or analytics
+  updateBreadcrumbs(data.company.name);
+  trackAnalytics('company_profile_viewed', {
+    companyId: data.company.id,
+    companyName: data.company.name
+  });
+});
+```
+
+## company/data/updated
+
+Emitted when company information has been successfully updated through the edit form. This event contains both the previous and new company data for comparison.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['company', 'CompanyModel', 'Updated company information'],
+    ['previousCompany', 'CompanyModel', 'Company information before the update'],
+    ['changedFields', 'string[]', 'Array of field names that were modified'],
+    ['timestamp', 'number', 'Unix timestamp when the update occurred'],
+  ]}
+/>
+
+### Usage example
+
+```js
+events.on('company/data/updated', (data) => {
+  console.log('Company updated:', data.company.name);
+  console.log('Changed fields:', data.changedFields);
+  
+  // Show success notification
+  showNotification('Company profile updated successfully', 'success');
+  
+  // Track changes for audit purposes
+  trackAuditEvent('company_profile_updated', {
+    companyId: data.company.id,
+    changedFields: data.changedFields,
+    userId: getCurrentUserId()
+  });
+  
+  // Update related components
+  if (data.changedFields.includes('name')) {
+    updateHeaderCompanyName(data.company.name);
+  }
+});
+```
+
+## company/data/error
+
+Emitted when an error occurs during company data operations such as loading or updating. Contains error details for debugging and user feedback.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['error', 'Error', 'Error object containing details about the failure'],
+    ['operation', 'string', 'The operation that failed (load, update, validate)'],
+    ['timestamp', 'number', 'Unix timestamp when the error occurred'],
+    ['retryable', 'boolean', 'Whether the operation can be retried'],
+  ]}
+/>
+
+### Usage example
+
+```js
+events.on('company/data/error', (data) => {
+  console.error('Company operation failed:', data.error.message);
+  
+  // Show user-friendly error message
+  if (data.operation === 'update') {
+    showNotification('Failed to update company profile. Please try again.', 'error');
+  } else if (data.operation === 'load') {
+    showNotification('Unable to load company information.', 'error');
+  }
+  
+  // Track errors for monitoring
+  trackError('company_operation_failed', {
+    operation: data.operation,
+    errorMessage: data.error.message,
+    retryable: data.retryable
+  });
+  
+  // Offer retry option if applicable
+  if (data.retryable) {
+    showRetryButton(() => {
+      // Retry the failed operation
+      if (data.operation === 'load') {
+        companyApi.getCompany();
+      }
+    });
+  }
+});
+```
+
+## company/edit/started
+
+Emitted when a user initiates edit mode for the company profile. This event signals the beginning of an edit session.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['company', 'CompanyModel', 'Current company information being edited'],
+    ['editableFields', 'string[]', 'Array of field names the user can edit based on permissions'],
+    ['timestamp', 'number', 'Unix timestamp when edit mode was started'],
+  ]}
+/>
+
+### Usage example
+
+```js
+events.on('company/edit/started', (data) => {
+  console.log('Edit mode started for:', data.company.name);
+  console.log('Editable fields:', data.editableFields);
+  
+  // Track user engagement
+  trackAnalytics('company_edit_started', {
+    companyId: data.company.id,
+    editableFieldsCount: data.editableFields.length
+  });
+  
+  // Show editing indicators in UI
+  showEditingIndicator();
+  disableOtherActions();
+});
+```
+
+## company/form/submitted
+
+Emitted when the user submits the company edit form. This event is fired before the actual update operation begins.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['formData', 'Partial<CompanyModel>', 'Form data submitted by the user'],
+    ['originalCompany', 'CompanyModel', 'Original company data before changes'],
+    ['validationResults', 'ValidationResult[]', 'Results of form validation'],
+    ['timestamp', 'number', 'Unix timestamp when the form was submitted'],
+  ]}
+/>
+
+### Usage example
+
+```js
+events.on('company/form/submitted', (data) => {
+  console.log('Form submitted with data:', data.formData);
+  
+  // Show loading state
+  showLoadingIndicator('Saving company information...');
+  
+  // Track form submission
+  trackAnalytics('company_form_submitted', {
+    companyId: data.originalCompany.id,
+    fieldsModified: Object.keys(data.formData).length
+  });
+  
+  // Validate critical fields
+  if (data.formData.email && !isValidEmail(data.formData.email)) {
+    showValidationError('Please enter a valid email address');
+    return;
+  }
+});
+```
+
+## company/permissions/loaded
+
+Emitted when user permissions for company operations have been loaded. This event provides information about what the user can view and modify.
+
+### Data payload
+
+<OptionsTable
+  compact
+  options={[
+    ['Property', 'Type', 'Description'],
+    ['permissions', 'PermissionFlags', 'Object containing boolean flags for each permission type'],
+    ['role', 'CompanyRole', 'User\'s role information within the company'],
+    ['timestamp', 'number', 'Unix timestamp when permissions were loaded'],
+  ]}
+/>
+
+### Usage example
+
+```js
+events.on('company/permissions/loaded', (data) => {
+  console.log('User permissions loaded:', data.permissions);
+  console.log('User role:', data.role.name);
+  
+  // Customize UI based on permissions
+  if (!data.permissions.canEditAccount) {
+    hideEditButton();
+  }
+  
+  if (!data.permissions.canViewPaymentInformation) {
+    hidePaymentSection();
+  }
+  
+  // Track permission levels for analytics
+  trackAnalytics('company_permissions_loaded', {
+    roleName: data.role.name,
+    canEdit: data.permissions.canEditAccount || data.permissions.canEditAddress,
+    permissionCount: Object.values(data.permissions).filter(Boolean).length
+  });
+});
+```
+
+## Event listening patterns
+
+### Single event listener
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Listen to a specific event
+events.on('company/data/updated', (data) => {
+  // Handle company update
+  console.log('Company updated:', data.company.name);
+});
+```
+
+### Multiple event listener
+
+```js
+// Listen to multiple related events
+const companyEvents = [
+  'company/data/loaded',
+  'company/data/updated',
+  'company/data/error'
+];
+
+companyEvents.forEach(eventName => {
+  events.on(eventName, (data) => {
+    console.log(`Event: ${eventName}`, data);
+    updateCompanyStatus(eventName, data);
+  });
+});
+```
+
+### Event cleanup
+
+```js
+// Store event listeners for cleanup
+const listeners = [];
+
+// Add listeners
+listeners.push(
+  events.on('company/data/loaded', handleCompanyLoaded),
+  events.on('company/data/updated', handleCompanyUpdated)
+);
+
+// Clean up when component unmounts
+function cleanup() {
+  listeners.forEach(unsubscribe => unsubscribe());
+}
+```
+
+## Integration examples
+
+### Analytics integration
+
+```js
+// Track all company events for analytics
+const companyAnalyticsHandler = (eventName, data) => {
+  const analyticsData = {
+    event: eventName,
+    timestamp: Date.now(),
+    companyId: data.company?.id,
+    userId: getCurrentUserId()
+  };
+  
+  // Send to analytics service
+  analytics.track(eventName.replace('/', '_'), analyticsData);
+};
+
+// Register analytics for all company events
+['company/data/loaded', 'company/data/updated', 'company/edit/started'].forEach(event => {
+  events.on(event, (data) => companyAnalyticsHandler(event, data));
+});
+```
+
+### State management integration
+
+```js
+// Redux/state management integration
+events.on('company/data/loaded', (data) => {
+  store.dispatch({
+    type: 'COMPANY_LOADED',
+    payload: data.company
+  });
+});
+
+events.on('company/data/updated', (data) => {
+  store.dispatch({
+    type: 'COMPANY_UPDATED',
+    payload: data.company
+  });
+});
+```
+
+### Notification system integration
+
+```js
+// Centralized notification handling
+const notificationHandler = {
+  'company/data/updated': (data) => {
+    showNotification('Company profile updated successfully', 'success');
+  },
+  'company/data/error': (data) => {
+    showNotification(`Error: ${data.error.message}`, 'error');
+  },
+  'company/edit/started': (data) => {
+    showNotification('Edit mode activated', 'info');
+  }
+};
+
+// Register all notification handlers
+Object.entries(notificationHandler).forEach(([event, handler]) => {
+  events.on(event, handler);
+});
+```

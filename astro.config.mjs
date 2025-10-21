@@ -601,6 +601,16 @@ async function config() {
                     items: [
                       { label: 'B2B Commerce Overview', link: '/dropins-b2b/' },
                       {
+                        label: 'Company Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/company/' },
+                          { label: 'Initialization', link: '/dropins-b2b/company/initialization/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company/dictionary/' },
+                          { label: 'Functions', link: '/dropins-b2b/company/functions/' },
+                        ],
+                      },
+                      {
                         label: 'B2B Containers',
                         collapsed: true,
                         items: [
