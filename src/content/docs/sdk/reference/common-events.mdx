@@ -23,7 +23,6 @@ For drop-in-specific events, refer to each drop-in's individual Events page. Thi
 | [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
 | [locale](#locale) | Localization | All drop-ins | Language/locale changes |
 | [error](#error) | Error Handling | Most drop-ins | Error notifications |
-| [companyContext/changed](#companycontextchanged) | B2B Context | B2B drop-ins | Company context changes |
 
 </TableWrapper>
 
@@ -239,69 +238,6 @@ try {
     source: 'MyCustomComponent'
   });
 }
-```
-
----
-
-## B2B Context Events
-
-### companyContext/changed
-
-**Category**: B2B Context  
-**Direction**: Emitted by Company Context, Listened to by B2B drop-ins  
-**Used By**: Cart, Checkout, Order, Company Management, and other B2B components
-
-Fired when the active company context changes in a B2B environment. This typically occurs when a user switches between companies they have access to, or when company permissions are updated.
-
-#### When emitted
-
-This event is emitted when:
-- A user switches to a different company
-- Company permissions are updated
-- The company context is initialized
-- The company context is cleared
-
-#### Data payload
-
-```typescript
-string | null | undefined
-```
-
-The payload is typically the company ID or identifier. A `null` or `undefined` value indicates the company context has been cleared.
-
-#### Usage
-
-**Emit when company context changes:**
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-// User switches company
-events.emit('companyContext/changed', 'company-456');
-
-// Clear company context
-events.emit('companyContext/changed', null);
-```
-
-**Listen for company context changes:**
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const companyContextListener = events.on('companyContext/changed', (companyId) => {
-  if (companyId) {
-    console.log('Company context changed to:', companyId);
-    // Reload company-specific data, update permissions, etc.
-    loadCompanyData(companyId);
-  } else {
-    console.log('Company context cleared');
-    // Clear company-specific state
-    clearCompanyData();
-  }
-});
-
-// Later, when you want to stop listening
-companyContextListener.off();
 ```
 
 ---
