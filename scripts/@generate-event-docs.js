@@ -14,7 +14,7 @@
  * - Generate single drop-in: npm run generate-event-docs cart
  * - Available drop-ins: cart, checkout, order, product-details, product-discovery,
  *                       recommendations, user-account, user-auth, wishlist,
- *                       payment-services, company-management
+ *                       payment-services
  * 
  * TEMPLATE RELATIONSHIP:
  * - Reads structure from: _dropin-templates/dropin-events.mdx
@@ -101,15 +101,9 @@ const DROPIN_REPOS = {
         gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
         type: 'B2C',
         displayName: 'Payment Services'
-    },
-    // B2B Drop-ins
-    'company-management': {
-        packageName: '@dropins/storefront-company-management',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-company-management.git',
-        type: 'B2B',
-        displayName: 'Company Management'
-    },
+    }
     // Note: Personalization drop-in has no i18n dictionary or events (data-only)
+    // Only drop-ins published to npm and used in the boilerplate should be included here
 };
 
 function cloneOrUpdateBoilerplate() {
