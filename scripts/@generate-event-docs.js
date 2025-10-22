@@ -538,13 +538,13 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     const listensOnlyFiltered = listensOnly.filter(eventName => !commonEvents.has(eventName));
     const bidirectionalFiltered = bidirectional.filter(eventName => !commonEvents.has(eventName));
 
-    // Sort each group alphabetically by type, then by name
+    // Sort each group alphabetically by type, then by name (for table generation)
     emitsOnlyFiltered.sort(sortByTypeAndName);
     listensOnlyFiltered.sort(sortByTypeAndName);
     bidirectionalFiltered.sort(sortByTypeAndName);
 
-    // Combine for full iteration (maintains grouped order)
-    const sortedEvents = [...emitsOnlyFiltered, ...listensOnlyFiltered, ...bidirectionalFiltered];
+    // For Event Details section: pure alphabetical order for easier scanning
+    const sortedEvents = [...emitsOnlyFiltered, ...listensOnlyFiltered, ...bidirectionalFiltered].sort(sortByTypeAndName);
 
     // Read the template file
     const templatePath = join(projectRoot, '_dropin-templates', 'dropin-events.mdx');
@@ -555,24 +555,22 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
     template = template.replace(/GENERATION_DATE/g, new Date().toISOString().split('T')[0]);
 
-    // Generate emits table
+    // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
     // If you change formatting here, update template example rows to match
-    let emitsTable = '';
+    let eventsTable = '';
 
-    // Add explanation if no emits (skip table and intro entirely)
-    if (emitsOnlyFiltered.length === 0) {
-        if (bidirectionalFiltered.length > 0) {
-            emitsTable = '<Aside type="note">\nAll emitted events are bidirectional. See [Emits and Listens Reference](#emits-and-listens-reference) below.\n</Aside>';
-        } else {
-            emitsTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
-        }
+    // Check if there are any events at all
+    const hasAnyEvents = sortedEvents.length > 0;
+
+    if (!hasAnyEvents) {
+        eventsTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
     } else {
-        // Only show intro and table if there are events
-        emitsTable = 'Events produced by this drop-in that you can subscribe to.\n\n';
-        emitsTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
+        // Generate combined table with all events ordered by direction, then alphabetically
+        eventsTable = '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
+
+        // Add events in order: Emits, Listens, Emits and Listens
         emitsOnlyFiltered.forEach(eventName => {
-            // Use documented description if available, otherwise generate one
             let description;
             if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
@@ -580,38 +578,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), null);
             }
 
-            // Add implementation status badge if available
             if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
                 description += ' 🚧';
             }
 
             const anchor = eventNameToAnchor(eventName, 'emits');
-            emitsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
+            eventsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
         });
-        emitsTable += '\n</TableWrapper>';
-    }
 
-    template = template.replace(
-        /\{\/\* EMITS_TABLE_START \*\/\}[\s\S]*?\{\/\* EMITS_TABLE_END \*\/\}/,
-        `{/* EMITS_TABLE_START */}\n${emitsTable}\n{/* EMITS_TABLE_END */}`
-    );
-
-    // Generate listens table
-    let listensTable = '';
-
-    // Add explanation if no listens (skip table and intro entirely)
-    if (listensOnlyFiltered.length === 0) {
-        if (bidirectionalFiltered.length > 0) {
-            listensTable = '<Aside type="note">\nAll events this drop-in listens for are bidirectional. See [Emits and Listens Reference](#emits-and-listens-reference) below.\n</Aside>';
-        } else {
-            listensTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
-        }
-    } else {
-        // Only show intro and table if there are events
-        listensTable = 'Events this drop-in listens for from external sources.\n\n';
-        listensTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
         listensOnlyFiltered.forEach(eventName => {
-            // Use documented description if available, otherwise generate one
             let description;
             if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
@@ -619,34 +594,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description = generateEventDescription(eventName, null, eventListeners.get(eventName));
             }
 
-            // Add implementation status badge if available
             if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
                 description += ' 🚧';
             }
 
             const anchor = eventNameToAnchor(eventName, 'listens');
-            listensTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
+            eventsTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
         });
-        listensTable += '\n</TableWrapper>';
-    }
 
-    template = template.replace(
-        /\{\/\* LISTENS_TABLE_START \*\/\}[\s\S]*?\{\/\* LISTENS_TABLE_END \*\/\}/,
-        `{/* LISTENS_TABLE_START */}\n${listensTable}\n{/* LISTENS_TABLE_END */}`
-    );
-
-    // Generate bidirectional table
-    let bidirectionalTable = '';
-
-    if (bidirectionalFiltered.length === 0) {
-        // If no bidirectional events, show a note
-        bidirectionalTable = '<Aside type="note">\nNo bidirectional events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
-    } else {
-        // Only show intro and table if there are events
-        bidirectionalTable = 'Bidirectional events that both emit state changes and listen for external updates.\n\n';
-        bidirectionalTable += '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
         bidirectionalFiltered.forEach(eventName => {
-            // Use documented description if available, otherwise generate one
             let description;
             if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
@@ -654,20 +610,20 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
             }
 
-            // Add implementation status badge if available
             if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
                 description += ' 🚧';
             }
 
             const anchor = eventNameToAnchor(eventName, 'emits-and-listens');
-            bidirectionalTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
+            eventsTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
         });
-        bidirectionalTable += '\n</TableWrapper>';
+
+        eventsTable += '\n</TableWrapper>';
     }
 
     template = template.replace(
-        /\{\/\* BIDIRECTIONAL_TABLE_START \*\/\}[\s\S]*?\{\/\* BIDIRECTIONAL_TABLE_END \*\/\}/,
-        `{/* BIDIRECTIONAL_TABLE_START */}\n${bidirectionalTable}\n{/* BIDIRECTIONAL_TABLE_END */}`
+        /\{\/\* EVENTS_TABLE_START \*\/\}[\s\S]*?\{\/\* EVENTS_TABLE_END \*\/\}/,
+        `{/* EVENTS_TABLE_START */}\n${eventsTable}\n{/* EVENTS_TABLE_END */}`
     );
 
     // Extract the repeatable event section

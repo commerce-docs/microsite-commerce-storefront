@@ -34,63 +34,61 @@ The **Cart** drop-in uses the [Event Bus](/sdk/reference/events/) to emit and li
 
 <Aside type="note" title="Auto-generated on 2025-10-22. Do not edit this page directly." />
 
-## Emits Reference
+## Events Reference
 
-{/* EMITS_TABLE_START */}
-Events produced by this drop-in that you can subscribe to.
-
+{/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [cart/initialized](#cartinitialized) | Emits | Emitted when the component completes initialization |
-| [cart/product/added](#cartproductadded) | Emits | Emitted when an item is added |
-| [cart/product/removed](#cartproductremoved) | Emits | Emitted when an item is removed |
-| [cart/product/updated](#cartproductupdated) | Emits | Emitted when the component state is updated |
+| [cart/initialized](#cartinitialized-emits) | Emits | Emitted when the component completes initialization |
+| [cart/product/added](#cartproductadded-emits) | Emits | Emitted when an item is added |
+| [cart/product/removed](#cartproductremoved-emits) | Emits | Emitted when an item is removed |
+| [cart/product/updated](#cartproductupdated-emits) | Emits | Emitted when the component state is updated |
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated |
+| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs |
+| [cart/data](#cartdata-emits-and-listens) | Emits and Listens | Triggered when data is available or changes |
+| [cart/merged](#cartmerged-emits-and-listens) | Emits and Listens | Triggered when data is merged |
+| [cart/reset](#cartreset-emits-and-listens) | Emits and Listens | Triggered when the component state is reset |
+| [cart/updated](#cartupdated-emits-and-listens) | Emits and Listens | Triggered when the component state is updated |
+| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and Listens | Triggered when an estimate is calculated |
 
 </TableWrapper>
-{/* EMITS_TABLE_END */}
-
-## Listens Reference
-
-{/* LISTENS_TABLE_START */}
-Events this drop-in listens for from external sources.
-
-<TableWrapper nowrap={[0, 1]}>
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| [checkout/initialized](#checkoutinitialized) | Listens | Fired by Checkout (`checkout`) when the component completes initialization |
-| [checkout/updated](#checkoutupdated) | Listens | Fired by Checkout (`checkout`) when the component state is updated |
-| [companyContext/changed](#companycontextchanged) | Listens | Fired by Company Context (`companyContext`) when a change occurs |
-
-</TableWrapper>
-{/* LISTENS_TABLE_END */}
-
-## Emits and Listens Reference
-
-{/* BIDIRECTIONAL_TABLE_START */}
-Bidirectional events that both emit state changes and listen for external updates.
-
-<TableWrapper nowrap={[0, 1]}>
-
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| [cart/data](#cartdata) | Emits and Listens | Triggered when data is available or changes |
-| [cart/merged](#cartmerged) | Emits and Listens | Triggered when data is merged |
-| [cart/reset](#cartreset) | Emits and Listens | Triggered when the component state is reset |
-| [cart/updated](#cartupdated) | Emits and Listens | Triggered when the component state is updated |
-| [shipping/estimate](#shippingestimate) | Emits and Listens | Triggered when an estimate is calculated |
-
-</TableWrapper>
-{/* BIDIRECTIONAL_TABLE_END */}
+{/* EVENTS_TABLE_END */}
 
 ## Event Details
 
 The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
 
 
-<h3 id="cartinitialized">cart/initialized (emits)</h3>
+### `cart/data` (emits and listens)
+
+Triggered when data is available or changes
+
+#### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartDataListener = events.on('cart/data', (data) => {
+  console.log('cart/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartDataListener.off();
+```
+
+### `cart/initialized` (emits)
 
 Emitted when the component completes initialization
 
@@ -121,201 +119,7 @@ const cartInitializedListener = events.on('cart/initialized', (data) => {
 cartInitializedListener.off();
 ```
 
-<h3 id="cartproductadded">cart/product/added (emits)</h3>
-
-Emitted when an item is added
-
-#### Data payload
-
-```typescript
-Item[] | null
-```
-
-<Aside type="tip">
-**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
-</Aside>
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const cartProductAddedListener = events.on('cart/product/added', (data) => {
-  console.log('cart/product/added event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-cartProductAddedListener.off();
-```
-
-<h3 id="cartproductremoved">cart/product/removed (emits)</h3>
-
-Emitted when an item is removed
-
-#### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const cartProductRemovedListener = events.on('cart/product/removed', (data) => {
-  console.log('cart/product/removed event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-cartProductRemovedListener.off();
-```
-
-<h3 id="cartproductupdated">cart/product/updated (emits)</h3>
-
-Emitted when the component state is updated
-
-#### Data payload
-
-```typescript
-Item[] | null
-```
-
-<Aside type="tip">
-**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
-</Aside>
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const cartProductUpdatedListener = events.on('cart/product/updated', (data) => {
-  console.log('cart/product/updated event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-cartProductUpdatedListener.off();
-```
-
-<h3 id="checkoutinitialized">checkout/initialized (listens)</h3>
-
-Fired by Checkout (`checkout`) when the component completes initialization
-
-#### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
-  console.log('checkout/initialized event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-checkoutInitializedListener.off();
-```
-
-<h3 id="checkoutupdated">checkout/updated (listens)</h3>
-
-Fired by Checkout (`checkout`) when the component state is updated
-
-#### Data payload
-
-```typescript
-any
-```
-
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
-  console.log('checkout/updated event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-checkoutUpdatedListener.off();
-```
-
-<h3 id="companycontextchanged">companyContext/changed (listens)</h3>
-
-Fired by Company Context (`companyContext`) when a change occurs
-
-#### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const companyContextChangedListener = events.on('companyContext/changed', (data) => {
-  console.log('companyContext/changed event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-companyContextChangedListener.off();
-```
-
-<h3 id="cartdata">cart/data (emits and listens)</h3>
-
-Triggered when data is available or changes
-
-#### Data payload
-
-<Aside type="caution">
-No TypeScript definition available. Refer to the event implementation for payload structure details.
-</Aside>
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const cartDataListener = events.on('cart/data', (data) => {
-  console.log('cart/data event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-cartDataListener.off();
-```
-
-<h3 id="cartmerged">cart/merged (emits and listens)</h3>
+### `cart/merged` (emits and listens)
 
 Triggered when data is merged
 
@@ -350,7 +154,95 @@ const cartMergedListener = events.on('cart/merged', (data) => {
 cartMergedListener.off();
 ```
 
-<h3 id="cartreset">cart/reset (emits and listens)</h3>
+### `cart/product/added` (emits)
+
+Emitted when an item is added
+
+#### Data payload
+
+```typescript
+Item[] | null
+```
+
+<Aside type="tip">
+**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductAddedListener = events.on('cart/product/added', (data) => {
+  console.log('cart/product/added event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductAddedListener.off();
+```
+
+### `cart/product/removed` (emits)
+
+Emitted when an item is removed
+
+#### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductRemovedListener = events.on('cart/product/removed', (data) => {
+  console.log('cart/product/removed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductRemovedListener.off();
+```
+
+### `cart/product/updated` (emits)
+
+Emitted when the component state is updated
+
+#### Data payload
+
+```typescript
+Item[] | null
+```
+
+<Aside type="tip">
+**Item** is a complex type with multiple properties. Key properties typically include `id`, domain-specific data fields, and metadata.
+</Aside>
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartProductUpdatedListener = events.on('cart/product/updated', (data) => {
+  console.log('cart/product/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartProductUpdatedListener.off();
+```
+
+### `cart/reset` (emits and listens)
 
 Triggered when the component state is reset
 
@@ -378,7 +270,7 @@ const cartResetListener = events.on('cart/reset', (data) => {
 cartResetListener.off();
 ```
 
-<h3 id="cartupdated">cart/updated (emits and listens)</h3>
+### `cart/updated` (emits and listens)
 
 Triggered when the component state is updated
 
@@ -409,7 +301,87 @@ const cartUpdatedListener = events.on('cart/updated', (data) => {
 cartUpdatedListener.off();
 ```
 
-<h3 id="shippingestimate">shipping/estimate (emits and listens)</h3>
+### `checkout/initialized` (listens)
+
+Fired by Checkout (`checkout`) when the component completes initialization
+
+#### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
+  console.log('checkout/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutInitializedListener.off();
+```
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated
+
+#### Data payload
+
+```typescript
+any
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
+  console.log('checkout/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutUpdatedListener.off();
+```
+
+### `companyContext/changed` (listens)
+
+Fired by Company Context (`companyContext`) when a change occurs
+
+#### Data payload
+
+<Aside type="caution">
+No TypeScript definition available. Refer to the event implementation for payload structure details.
+</Aside>
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const companyContextChangedListener = events.on('companyContext/changed', (data) => {
+  console.log('companyContext/changed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+companyContextChangedListener.off();
+```
+
+### `shipping/estimate` (emits and listens)
 
 Triggered when an estimate is calculated
 
