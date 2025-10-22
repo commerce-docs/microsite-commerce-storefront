@@ -670,7 +670,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             }
 
             const anchor = eventNameToAnchor(eventName, 'emits-and-listens');
-            eventsTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
+            eventsTable += `| [${eventName}](#${anchor}) | Emits and listens | ${description} |\n`;
         });
 
         eventsTable += '\n</TableWrapper>';
@@ -705,7 +705,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         // Determine EVENT_DIRECTION first (needed for anchor generation)
         let directionText = '';
         if (emits && listeners) {
-            directionText = 'Emits and Listens';
+            directionText = 'Emits and listens';
         } else if (emits) {
             directionText = 'Emits';
         } else if (listeners) {
@@ -772,6 +772,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                     payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
                 });
             }
+        } else {
+            // No TypeScript definition available
+            payloadSection += `This event's data payload structure is not documented in the source code.\n\n`;
         }
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
@@ -806,7 +809,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-The **${repoConfig.displayName}** drop-in uses the [Event Bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
+The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: ${version.replace(/^[\^~]/, '')}</strong>
@@ -816,7 +819,7 @@ The **${repoConfig.displayName}** drop-in uses the [Event Bus](/sdk/reference/ev
 
 This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
 
-For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [Common Events Reference](/sdk/reference/common-events/).
+For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [common events reference](/sdk/reference/common-events/).
 `;
         return simplifiedContent;
     }
