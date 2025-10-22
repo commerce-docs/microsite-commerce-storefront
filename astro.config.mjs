@@ -606,9 +606,9 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/company/' },
                           { label: 'Initialization', link: '/dropins-b2b/company/initialization/' },
-                          { label: 'Dictionary', link: '/dropins-b2b/company/dictionary/' },
                           { label: 'Functions', link: '/dropins-b2b/company/functions/' },
-                          { label: 'Events', link: '/dropins-b2b/company/data-events/' },
+                          { label: 'Events', link: '/dropins-b2b/company/events/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company/dictionary/' },
                         ],
                       },
                       {
