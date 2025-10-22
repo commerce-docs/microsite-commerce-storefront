@@ -553,7 +553,6 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     // Replace global placeholders
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
-    template = template.replace(/GENERATION_DATE/g, new Date().toISOString().split('T')[0]);
 
     // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
@@ -716,19 +715,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                     const escapedType = prop.type.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
                     payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
                 });
-            } else if (!hasObjectStructure) {
-                // This is a reference to another type (like CartModel, OrderDataModel, string | null, etc.)
-                const baseType = typeDefinition.split('|')[0].trim().split('[')[0].trim();
-                const isComplexType = baseType.match(/^[A-Z]/); // Starts with capital letter, likely a custom type
-
-                if (isComplexType && baseType !== 'void') {
-                    payloadSection += `<Aside type="tip">\n**${baseType}** is a complex type with multiple properties. Key properties typically include \`id\`, domain-specific data fields, and metadata.\n</Aside>\n`;
-                }
             }
-        } else if (isDocumentedOnly) {
-            payloadSection += `<Aside type="note">\nPayload structure will be defined when this event is implemented. Check the documentation or source code for the most current information.\n</Aside>`;
-        } else {
-            payloadSection += `<Aside type="caution">\nNo TypeScript definition available. Refer to the event implementation for payload structure details.\n</Aside>`;
         }
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
@@ -754,7 +741,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
 
         // Generate simplified content for drop-ins that only use common events
         const simplifiedContent = `---
-title: ${repoConfig.displayName} data & events
+title: ${repoConfig.displayName} Data & Events
 description: Learn about the events used by the ${repoConfig.displayName} and the data available within the events.
 sidebar:
   label: Events
@@ -764,8 +751,6 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 The **${repoConfig.displayName}** drop-in uses the [Event Bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
-
-<Aside type="note" title="Auto-generated on ${new Date().toISOString().split('T')[0]}. Do not edit this page directly." />
 
 ## Events
 
