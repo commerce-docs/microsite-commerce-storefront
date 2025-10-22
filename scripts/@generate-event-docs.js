@@ -297,10 +297,13 @@ function parseTypeScriptProperties(typeDefinition) {
     return properties;
 }
 
-function eventNameToAnchor(eventName) {
-    // Convert event name to anchor ID format (matches MDX heading anchor generation)
-    // MDX converts headings to lowercase and replaces special chars with hyphens
-    return eventName.toLowerCase().replace(/[\/\s]/g, '');
+function eventNameToAnchor(eventName, direction) {
+    // Convert event name to anchor ID format matching Starlight's auto-generation
+    // For heading: ### `event/name` (direction)
+    // Starlight creates: event/name-direction -> eventname-direction
+    const cleanName = eventName.toLowerCase().replace(/[\/\s]/g, '');
+    const cleanDirection = direction ? direction.toLowerCase().replace(/\s+and\s+/g, '-').replace(/\s+/g, '-') : '';
+    return cleanDirection ? `${cleanName}-${cleanDirection}` : cleanName;
 }
 
 function extractSourceComponent(eventName) {
@@ -582,7 +585,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description += ' 🚧';
             }
 
-            const anchor = eventNameToAnchor(eventName);
+            const anchor = eventNameToAnchor(eventName, 'emits');
             emitsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
         });
         emitsTable += '\n</TableWrapper>';
@@ -621,7 +624,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description += ' 🚧';
             }
 
-            const anchor = eventNameToAnchor(eventName);
+            const anchor = eventNameToAnchor(eventName, 'listens');
             listensTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
         });
         listensTable += '\n</TableWrapper>';
@@ -656,7 +659,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
                 description += ' 🚧';
             }
 
-            const anchor = eventNameToAnchor(eventName);
+            const anchor = eventNameToAnchor(eventName, 'emits-and-listens');
             bidirectionalTable += `| [${eventName}](#${anchor}) | Emits and Listens | ${description} |\n`;
         });
         bidirectionalTable += '\n</TableWrapper>';
@@ -688,16 +691,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         // Clone the repeat template for this event
         let eventSection = repeatTemplate;
 
-        // Replace EVENT_NAME and EVENT_ANCHOR
-        const anchor = eventNameToAnchor(eventName);
-        eventSection = eventSection.replace(/EVENT_ANCHOR/g, anchor);
-        eventSection = eventSection.replace(/EVENT_NAME/g, eventName);
-
-        // Replace EVENT_LISTENER_VAR with camelCase variable name
-        const listenerVar = eventNameToListenerVar(eventName);
-        eventSection = eventSection.replace(/EVENT_LISTENER_VAR/g, listenerVar);
-
-        // Replace EVENT_DIRECTION (replace lowercase version first to avoid conflicts)
+        // Determine EVENT_DIRECTION first (needed for anchor generation)
         let directionText = '';
         if (emits && listeners) {
             directionText = 'Emits and Listens';
@@ -706,8 +700,26 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
         } else if (listeners) {
             directionText = 'Listens';
         }
+
+        // Generate anchor with direction for proper linking
+        const directionForAnchor = directionText.toLowerCase().replace(/\s+and\s+/g, '-').replace(/\s+/g, '-');
+        const anchor = eventNameToAnchor(eventName, directionForAnchor);
+
+        // Replace EVENT_NAME and EVENT_ANCHOR
+        eventSection = eventSection.replace(/EVENT_ANCHOR/g, anchor);
+        eventSection = eventSection.replace(/EVENT_NAME/g, eventName);
+
+        // Replace EVENT_LISTENER_VAR with camelCase variable name
+        const listenerVar = eventNameToListenerVar(eventName);
+        eventSection = eventSection.replace(/EVENT_LISTENER_VAR/g, listenerVar);
+
+        // Replace EVENT_DIRECTION
         eventSection = eventSection.replace(/EVENT_DIRECTION_LOWERCASE/g, directionText.toLowerCase());
         eventSection = eventSection.replace(/EVENT_DIRECTION/g, directionText);
+
+        // Generate EVENT_HEADING - use backticks around event name to handle special chars
+        const eventHeading = `### \`${eventName}\` (${directionText.toLowerCase()})`;
+        eventSection = eventSection.replace(/EVENT_HEADING/g, eventHeading);
 
         // Replace EVENT_DESCRIPTION - use documented description if available
         let description;
