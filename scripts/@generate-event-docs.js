@@ -38,82 +38,143 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
 
-// Configuration for drop-in repositories
+// Configuration for drop-in packages
+// Maps documentation paths to npm package names and git repos
 const DROPIN_REPOS = {
     // B2C Drop-ins
     'cart': {
-        url: 'https://github.com/adobe-commerce/storefront-cart.git',
+        packageName: '@dropins/storefront-cart',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
         type: 'B2C',
         displayName: 'Cart'
     },
     'checkout': {
-        url: 'https://github.com/adobe-commerce/storefront-checkout.git',
+        packageName: '@dropins/storefront-checkout',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-checkout.git',
         type: 'B2C',
         displayName: 'Checkout'
     },
     'order': {
-        url: 'https://github.com/adobe-commerce/storefront-order.git',
+        packageName: '@dropins/storefront-order',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-order.git',
         type: 'B2C',
         displayName: 'Order'
     },
     'product-details': {
-        url: 'https://github.com/adobe-commerce/storefront-pdp.git',
+        packageName: '@dropins/storefront-pdp',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-pdp.git',
         type: 'B2C',
         displayName: 'Product Details'
     },
     'product-discovery': {
-        url: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
+        packageName: '@dropins/storefront-product-discovery',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
         type: 'B2C',
         displayName: 'Product Discovery'
     },
     'recommendations': {
-        url: 'https://github.com/adobe-commerce/storefront-recommendations.git',
+        packageName: '@dropins/storefront-recommendations',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-recommendations.git',
         type: 'B2C',
         displayName: 'Recommendations'
     },
     'user-account': {
-        url: 'https://github.com/adobe-commerce/storefront-account.git',
+        packageName: '@dropins/storefront-account',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-account.git',
         type: 'B2C',
         displayName: 'User Account'
     },
     'user-auth': {
-        url: 'https://github.com/adobe-commerce/storefront-auth.git',
+        packageName: '@dropins/storefront-auth',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-auth.git',
         type: 'B2C',
         displayName: 'User Auth'
     },
     'wishlist': {
-        url: 'https://github.com/adobe-commerce/storefront-wishlist.git',
+        packageName: '@dropins/storefront-wishlist',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-wishlist.git',
         type: 'B2C',
         displayName: 'Wishlist'
     },
     'payment-services': {
-        url: 'https://github.com/adobe-commerce/storefront-payment-services.git',
+        packageName: '@dropins/storefront-payment-services',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
         type: 'B2C',
         displayName: 'Payment Services'
     },
     // B2B Drop-ins
     'company-management': {
-        url: 'https://github.com/adobe-commerce/storefront-company-management.git',
+        packageName: '@dropins/storefront-company-management',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-company-management.git',
         type: 'B2B',
         displayName: 'Company Management'
     },
     // Note: Personalization drop-in has no i18n dictionary or events (data-only)
 };
 
-function cloneOrUpdateRepo(repoName, repoConfig) {
-    const tempPath = join(projectRoot, '.temp-repos', repoName);
+function cloneOrUpdateBoilerplate() {
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
 
-    console.log(`\n📦 Processing ${repoConfig.displayName}...`);
+    console.log(`\n📦 Setting up boilerplate repository...`);
 
-    if (!existsSync(tempPath)) {
-        console.log(`  Cloning repository...`);
-        execFileSync('git', ['clone', '--depth', '1', repoConfig.url, tempPath], { stdio: 'inherit' });
+    if (!existsSync(boilerplatePath)) {
+        console.log(`  Cloning boilerplate...`);
+        mkdirSync(dirname(boilerplatePath), { recursive: true });
+        execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', boilerplateUrl, boilerplatePath], { stdio: 'inherit' });
+
+        console.log(`  Installing boilerplate dependencies...`);
+        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
     } else {
-        console.log(`  Updating repository...`);
-        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: tempPath });
+        console.log(`  Updating boilerplate...`);
+        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
+
+        console.log(`  Updating dependencies...`);
+        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
     }
 
-    return tempPath;
+    return boilerplatePath;
+}
+
+function getBoilerplatePackageVersions(boilerplatePath) {
+    const packageJsonPath = join(boilerplatePath, 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    return packageJson.dependencies || {};
+}
+
+function cloneDropinAtVersion(repoName, repoConfig, version) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    // Clean version string (remove ~ ^ etc)
+    const cleanVersion = version.replace(/^[\^~]/, '');
+    const tag = `v${cleanVersion}`;
+
+    console.log(`  Using version: ${cleanVersion}`);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Cloning repository at ${tag}...`);
+        try {
+            execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        } catch (error) {
+            // If tag doesn't exist, try without 'v' prefix
+            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        }
+    } else {
+        console.log(`  Checking out ${tag}...`);
+        try {
+            // First fetch all tags
+            execFileSync('git', ['fetch', '--tags'], { cwd: dropinPath, stdio: 'pipe' });
+            // Then checkout the specific tag
+            execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
+        } catch (error) {
+            // If tag with 'v' doesn't exist, try without
+            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+        }
+    }
+
+    return dropinPath;
 }
 
 function scanForEvents(repoPath) {
@@ -482,7 +543,7 @@ function updateSidebarNavigation(dropinName, repoConfig) {
     }
 }
 
-function generateEventsMDX(dropinName, repoConfig, eventsData) {
+function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     const { eventEmits, eventListeners, typedEvents, implementationStatus, documentedDescriptions } = eventsData;
     const allEvents = new Set([
         ...eventEmits.keys(),
@@ -553,6 +614,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData) {
     // Replace global placeholders
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
+    template = template.replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''));
 
     // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
@@ -752,6 +814,10 @@ import { Aside } from '@astrojs/starlight/components';
 
 The **${repoConfig.displayName}** drop-in uses the [Event Bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
 
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: ${version.replace(/^[\^~]/, '')}</strong>
+</div>
+
 ## Events
 
 This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
@@ -790,12 +856,31 @@ async function main() {
         console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
     }
 
+    // Clone/update boilerplate once for all drop-ins
+    const boilerplatePath = cloneOrUpdateBoilerplate();
+
+    // Get package versions from boilerplate
+    const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
+    console.log(`\n📦 Loaded package versions from boilerplate\n`);
+
     // Process each drop-in
     for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
         try {
-            const repoPath = cloneOrUpdateRepo(repoName, repoConfig);
-            const eventsData = scanForEvents(repoPath);
-            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData);
+            console.log(`\n📦 Processing ${repoConfig.displayName}...`);
+
+            // Get version from boilerplate package.json
+            const version = packageVersions[repoConfig.packageName];
+
+            if (!version) {
+                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
+                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
+                continue;
+            }
+
+            // Clone git repo at specific version
+            const dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
+            const eventsData = scanForEvents(dropinPath);
+            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, version);
 
             // Write to the appropriate location in docs
             const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
