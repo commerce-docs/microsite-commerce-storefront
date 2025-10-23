@@ -6,7 +6,7 @@ description: Learn how to instrument your Adobe Commerce on Edge Delivery Servic
 import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 import CodeExample from '@components/CodeExample.astro';
-import { Steps } from '@astrojs/starlight/components';
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
 
 ## Overview
@@ -56,39 +56,91 @@ The Adobe Commerce boilerplate includes ACDL by default, so you don't need to in
 
 ### Store Configuration
 
-To enable proper event collection, you need to configure your store's analytics settings. This configuration tells the instrumentation system about your store's identity and structure. Refer to the <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/" text="Commerce Configuration documentation" /> for more information.
+To enable proper event collection, you need to configure your store's analytics settings. This configuration tells the instrumentation system about your store's identity and structure. The specific values depend on your Commerce environment type.
+
+Refer to the <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/setup/configuration/commerce-configuration/" text="Commerce Configuration documentation" /> for complete details on how to configure your store.
 
 ### Required Configuration Parameters
 
-<CodeExample code={`
- ...
-  "analytics": {
-    "base-currency-code": "USD",
-    "environment": "Testing",
-    "store-id": 1,
-    "store-name": "Main Website Store",
-    "store-url": "https://adobe-commerce.example.com",
-    "store-view-id": 1,
-    "store-view-name": "Default Store View",
-    "website-id": 1,
-    "website-name": "Main Website"
-  }
-  ...
-`} lang="json" title="config.json" />
+The analytics configuration structure varies based on your Commerce backend type:
 
-### Configuration Parameters Explained
+<Tabs>
+
+<TabItem label="Adobe Commerce (PaaS) / ACCS">
+
+For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce Environment. You can obtain these values using a `storeConfig` query.
+
+<CodeExample code={`{
+  "analytics": {
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{ENVIRONMENT_ID}}",
+    "store-code": "{{STORE_CODE}}",
+    "store-id": {{STORE_ID}},
+    "store-name": "{{STORE_NAME}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-code": "{{STORE_VIEW_CODE}}",
+    "store-view-id": {{STORE_VIEW_ID}},
+    "store-view-name": "{{STORE_VIEW_NAME}}",
+    "website-code": "{{WEBSITE_CODE}}",
+    "website-id": {{WEBSITE_ID}},
+    "website-name": "{{WEBSITE_NAME}}"
+  }
+}`} lang="json" title="config.json" />
+
+**Configuration Properties:**
 
 | Parameter | Description | Example | Required |
 |-----------|-------------|---------|----------|
-| `base-currency-code` | Default currency for your store | `"USD"`, `"EUR"` | Yes |
-| `environment` | Current environment type | `"Testing"`, `"Production"` | Yes |
-| `store-id` | Unique identifier for your store | `1`, `2` | Yes |
-| `store-name` | Human-readable store name | `"Main Website Store"` | Yes |
-| `store-url` | Your store's primary URL | `"https://example.com"` | Yes |
-| `store-view-id` | Unique identifier for store view | `1`, `2` | Yes |
-| `store-view-name` | Human-readable store view name | `"Default Store View"` | Yes |
-| `website-id` | Unique identifier for website | `1`, `2` | Yes |
-| `website-name` | Human-readable website name | `"Main Website"` | Yes |
+| `base-currency-code` | The base currency code for the store | `"USD"`, `"EUR"` | Yes |
+| `environment` | Environment type | `"Testing"`, `"Production"` | Yes |
+| `environment-id` | Unique identifier for the Commerce environment | `"f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a"` | Yes |
+| `store-code` | Code identifier for the store from your Commerce environment | `"main_website_store"` | Yes |
+| `store-id` | Numeric ID for the store | `1`, `2` | Yes |
+| `store-name` | Display name for the store | `"Main Website Store"` | Yes |
+| `store-url` | Base URL for the store | `"https://example.com"` | Yes |
+| `store-view-code` | Code identifier for the store view | `"default"` | Yes |
+| `store-view-id` | Numeric ID for the store view | `1`, `2` | Yes |
+| `store-view-name` | Display name for the store view | `"Default Store View"` | Yes |
+| `website-code` | Code identifier for the website from your Commerce environment | `"base"` | Yes |
+| `website-id` | Numeric ID for the website | `1`, `2` | Yes |
+| `website-name` | Display name for the website | `"Main Website"` | Yes |
+
+</TabItem>
+
+<TabItem label="Adobe Commerce Optimizer (ACO)">
+
+For Adobe Commerce Optimizer environments, use a simplified analytics configuration structure:
+
+<CodeExample code={`{
+  "analytics": {
+    "base-currency-code": "{{CURRENCY_CODE}}",
+    "environment": "{{ENVIRONMENT_TYPE}}",
+    "environment-id": "{{TENANT_ID}}",
+    "locale": "{{LOCALE}}",
+    "store-url": "{{STORE_URL}}",
+    "store-view-currency-code": "{{CURRENCY_CODE}}",
+    "storefront-template": "{{TEMPLATE_TYPE}}",
+    "view-id": "{{CATALOG_VIEW_ID}}"
+  }
+}`} lang="json" title="config.json" />
+
+**Configuration Properties:**
+
+| Parameter | Description | Example | Required |
+|-----------|-------------|---------|----------|
+| `base-currency-code` | The base currency code for the store | `"USD"`, `"EUR"` | Yes |
+| `environment` | Environment type | `"Testing"`, `"Production"` | Yes |
+| `environment-id` | The tenant ID for the Adobe Commerce Optimizer instance | `"8idEEDDiVwjCEJAyB5kjfi"` | Yes |
+| `locale` | Catalog source locale (language or geography) | `"en-US"` | Yes |
+| `store-url` | Base URL for the store | `"https://example.com"` | Yes |
+| `store-view-currency-code` | Currency code for the store view | `"USD"`, `"EUR"` | Yes |
+| `storefront-template` | Storefront template type | `"Other"` | No |
+| `view-id` | The unique ID assigned to the catalog view | `"0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"` | Yes |
+
+</TabItem>
+
+</Tabs>
 
 <Aside type="note" title="environment">
 The `environment` parameter is used to determine the type of environment your store is running in. This is important because it affects how data is collected and processed. Be sure to set this to `"Testing"` when you are developing your storefront, and `"Production"` when you are ready to deploy your storefront.
