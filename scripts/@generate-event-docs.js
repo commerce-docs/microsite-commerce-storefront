@@ -619,7 +619,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     const hasAnyEvents = sortedEvents.length > 0;
 
     if (!hasAnyEvents) {
-        eventsTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/sdk/reference/common-events/) for shared events.\n</Aside>';
+        eventsTable = '<Aside type="note">\nNo drop-in-specific events. See [Common Events](/dropins/all/events/#common-events-reference) for shared events.\n</Aside>';
     } else {
         // Generate combined table with all events ordered by direction, then alphabetically
         eventsTable = '<TableWrapper nowrap={[0, 1]}>\n\n| Event | Direction | Description |\n|-------|-----------|-------------|\n';
@@ -819,7 +819,7 @@ The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/ev
 
 This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
 
-For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [common events reference](/sdk/reference/common-events/).
+For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [common events reference](/dropins/all/events/#common-events-reference).
 `;
         return simplifiedContent;
     }
