@@ -1,0 +1,241 @@
+---
+title: Company installation
+description: Learn how to install the Company drop-in component into your site.
+sidebar:
+  label: Installation
+  order: 2
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Callouts from '@components/Callouts.astro';
+import Diagram from '@components/Diagram.astro';
+import Vocabulary from '@components/Vocabulary.astro';
+
+The Company drop-in component requires Adobe Commerce B2B features to be enabled and properly configured. It integrates with the Adobe Commerce GraphQL API to provide comprehensive company management functionality. The component is compatible with modern browsers and requires JavaScript ES6+ support for optimal performance.
+
+## Step-by-step
+
+Use the following steps to install the Company component:
+
+:::note
+These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as a static HTML or React framework.
+:::
+
+<Tasks>
+
+<Task>
+
+### Install the packages
+
+Install the Company drop-in component and its required dependencies. The `@dropins/tools` package provides essential utilities for GraphQL communication, event handling, and component initialization.
+
+    ```bash frame="none"
+    npm install @dropins/tools @dropins/storefront-company-management
+    ```
+
+:::note
+All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+:::
+
+</Task>
+
+<Task>
+### Map the packages
+
+Configure the import map to enable proper module resolution for the Company drop-in component. Add the Company package mapping to your existing import map configuration.
+
+This example shows an `importmap` added to the `head.html` file.
+
+```json title="head.html"
+<script nonce="aem" type="importmap">
+{
+  "imports": {
+    "@dropins/storefront-account/": "/scripts/__dropins__/storefront-account/",
+    "@dropins/storefront-auth/": "/scripts/__dropins__/storefront-auth/",
+    "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
+    "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
+    "@dropins/storefront-company-management/": "/scripts/__dropins__/storefront-company-management/",
+    "@dropins/storefront-order/": "/scripts/__dropins__/storefront-order/",
+    "@dropins/storefront-payment-services/": "/scripts/__dropins__/storefront-payment-services/",
+    "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
+    "@dropins/storefront-recommendations/": "/scripts/__dropins__/storefront-recommendations/",
+    "@dropins/storefront-wishlist/": "/scripts/__dropins__/storefront-wishlist/",
+    "@dropins/storefront-personalization/": "/scripts/__dropins__/storefront-personalization/",
+    "@dropins/storefront-product-discovery/": "/scripts/__dropins__/storefront-product-discovery/",
+    "@dropins/tools/": "/scripts/__dropins__/tools/"
+  }
+}
+</script>
+```
+
+With the `importmap` defined, you can now **import the required files** from these packages into your Company block as described in the next step.
+
+</Task>
+
+<Task>
+### Import the required files
+
+Import the necessary modules for the Company drop-in component. These imports provide GraphQL communication, initialization tools, API functions, rendering capabilities, and UI containers.
+
+```js title="Company.js"
+// GraphQL Client
+import * as mesh from '@dropins/tools/fetch-graphql.js';
+
+// component tools
+import { initializers } from '@dropins/tools/initializer.js';
+
+// drop-in component functions
+import * as companyApi from '@dropins/storefront-company-management/api.js';
+
+// Drop-in component provider
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+
+// Drop-in component containers
+import { CompanyProfile, CustomerCompanyInfo } from '@dropins/storefront-company-management/containers.js';
+```
+
+<Vocabulary>
+
+### GraphQL client
+
+Enables the ability to set and get endpoints and headers, as well as fetches data and configurations.
+
+### Drop-in component tools
+
+The Initializer is responsible for setting up event listeners and initializing a module with the given configuration.
+
+### drop-in component functions
+
+Provides API functions for company management including getCompany, updateCompany, getCountries, and permission handling.
+
+### Drop-in component provider
+
+Renders the Company UI components and manages their lifecycle and state.
+
+### Drop-in component containers
+
+Structural elements including CompanyProfile and CustomerCompanyInfo containers that manage and display company information.
+
+</Vocabulary>
+
+</Task>
+
+<Task>
+### Connect to the endpoint
+
+Configure the GraphQL endpoint to connect the Company drop-in to your Adobe Commerce B2B instance. This enables the component to fetch and update company information.
+
+```js title="Company.js"
+// Set endpoint configuration
+mesh.setEndpoint('https://<your-commerce-instance>/graphql');
+```
+
+#### Request headers
+
+Configure authentication and store headers required for B2B company operations. The customer token is essential for accessing company-specific data and permissions.
+
+```js title="Company.js"
+// Set the customer token for authenticated requests
+companyApi.setFetchGraphQlHeader('authorization', 'Bearer <customer-token>');
+
+// Set store code header for multi-store environments
+mesh.setFetchGraphQlHeader('store', '<store-code>');
+
+// Optional: Set additional headers for B2B features
+mesh.setFetchGraphQlHeader('content-type', 'application/json');
+```
+
+:::note
+Note that this setting is specific for GraphQL Mesh, so refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections. Visit the [user authentication](/dropins-b2b/user-auth/) drop-in component for instructions on setting up Authentication features.
+:::
+
+</Task>
+
+<Task>
+### Register and load the drop-in
+
+Initialize the Company drop-in component with proper configuration including language definitions and any custom settings. This step registers the component and prepares it for rendering.
+
+```js title="Company.js"
+// Initialize the Company drop-in
+const initialize = async () => {
+  // Initialize the company API with configuration
+  await companyApi.initialize({
+    langDefinitions: {
+      en_US: {
+        // Custom language overrides if needed
+        'Company.CompanyProfile.containerTitle': 'My Company Profile'
+      }
+    }
+  });
+};
+
+// Register the initializer
+initializers.register(initialize, {});
+```
+
+```html title="index.html"
+<script type="module">
+  // Import your Company.js file
+  import './Company.js';
+  
+  // Mount all registered initializers
+  initializers.mountImmediately();
+</script>
+```
+
+<Callouts columnCount="1">
+1. The `initialize` function sets up the Company drop-in with configuration options and language definitions.
+2. The `mountImmediately` function loads all registered drop-in components after the page has loaded.
+</Callouts>
+
+</Task>
+
+<Task>
+### Render the drop-in
+
+Render the Company containers on your page. You can use either the CompanyProfile container for full company management or the CustomerCompanyInfo container for basic company display.
+
+```js title="Company.js"
+// Render CompanyProfile container (full company management)
+provider.render(CompanyProfile, {
+  withHeader: true,
+  className: 'company-profile-section'
+})(document.getElementById('company-profile'));
+
+// Render CustomerCompanyInfo container (basic company info display)
+provider.render(CustomerCompanyInfo, {
+  withHeader: false,
+  className: 'customer-company-widget'
+})(document.getElementById('customer-company-info'));
+```
+
+#### Verification steps
+
+To verify the installation is working correctly:
+
+1. **Check browser console** for any JavaScript errors
+2. **Verify network requests** to the GraphQL endpoint are successful
+3. **Test user permissions** by logging in with different company roles
+4. **Validate data display** ensures company information loads correctly
+5. **Test edit functionality** if the user has appropriate permissions
+
+</Task>
+
+</Tasks>
+
+## Summary
+
+The Company drop-in component installation follows the standard Adobe Commerce drop-in pattern:
+
+1. **Install packages** - Add the Company drop-in and tools packages to your project
+2. **Configure import map** - Set up module resolution for proper component loading  
+3. **Import modules** - Import GraphQL client, initializers, API functions, and containers
+4. **Connect endpoint** - Configure GraphQL endpoint and authentication headers
+5. **Initialize component** - Register and load the drop-in with configuration options
+6. **Render containers** - Display CompanyProfile or CustomerCompanyInfo on your pages
+
+The component integrates seamlessly with Adobe Commerce B2B features and provides role-based access control, ensuring users only see and can modify information appropriate to their permissions. Once installed, the component automatically handles data fetching, form validation, and state management for company information.
+
