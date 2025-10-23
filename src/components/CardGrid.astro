@@ -1,33 +1,83 @@
 ---
 interface Props {
   stagger?: boolean;
+  columns?: 2 | 3;
 }
 
-const { stagger = false } = Astro.props;
+const { stagger = false, columns = 2 } = Astro.props;
 ---
 
-<div class:list={['card-grid', { stagger }]}><slot /></div>
+<div
+  class:list={[
+    "card-grid",
+    "sl-card-grid",
+    { stagger, "three-columns": columns === 3 },
+  ]}
+>
+  <slot />
+</div>
 
 <style is:global>
   .card-grid {
     display: grid;
-    gap: 1rem;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.875rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
+  /* 2-column layout (default for desktop) */
   @media (min-width: 50rem) {
     .card-grid.card-grid {
       grid-template-columns: 1fr 1fr;
-      margin-top: 1.5rem;
+      gap: 1rem;
+      margin-top: 1rem;
     }
     .stagger {
-      --stagger-height: 5rem;
+      --stagger-height: 3rem;
       padding-bottom: var(--stagger-height);
+    }
+
+    .stagger > :global(*) {
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        background-color 0.3s ease;
     }
 
     .stagger > :global(*):nth-child(2n) {
       transform: translateY(var(--stagger-height));
+    }
+
+    .stagger > :global(.sl-link-card:hover):nth-child(2n),
+    .stagger > :global(.sl-link-card:has(a:hover)):nth-child(2n) {
+      transform: translateY(calc(var(--stagger-height) - 6px));
+    }
+  }
+
+  /* 3-column responsive layout */
+  @media (min-width: 40rem) {
+    .card-grid.three-columns {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .card-grid.three-columns {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .stagger.three-columns > :global(*):nth-child(2n) {
+      transform: none;
+    }
+
+    .stagger.three-columns > :global(*):nth-child(3n + 2) {
+      transform: translateY(var(--stagger-height));
+    }
+
+    .stagger.three-columns > :global(.sl-link-card:hover):nth-child(3n + 2),
+    .stagger.three-columns
+      > :global(.sl-link-card:has(a:hover)):nth-child(3n + 2) {
+      transform: translateY(calc(var(--stagger-height) - 6px));
     }
   }
 </style>
