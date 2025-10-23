@@ -1,13 +1,18 @@
 ---
 import type { Props } from "@astrojs/starlight/props";
 
+const { entry } = Astro.props;
+
 // Check if we're on the commerce-services page or the commerce-optimizer page
 const isPlaygroundPage = Astro.url.pathname.includes("/playgrounds/");
+// Compute splash from entry frontmatter; fall back to locals entry in prod
+const routeEntry = entry ?? Astro.locals?.starlightRoute?.entry;
+const isSplash = routeEntry?.data?.template === "splash";
 ---
 
-<div class="content-panel">
+<div class:list={["content-panel", { "splash-content": isSplash }]}>
   <div
-    class={`sl-container ${isPlaygroundPage ? "full-width-container" : ""}`}
+    class={`sl-container ${isPlaygroundPage ? "full-width-container" : ""} ${isSplash ? "splash-container" : ""}`}
   >
     <slot />
   </div>
@@ -17,6 +22,88 @@ const isPlaygroundPage = Astro.url.pathname.includes("/playgrounds/");
   .content-panel {
     padding: 1.25rem var(--sl-content-pad-x);
   }
+
+  /* Splash page content styling */
+  .content-panel.splash-content {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 2rem;
+    width: 100%;
+  }
+
+  .content-panel .splash-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* Center CardGrid on splash pages */
+  .content-panel .splash-container :global(.sl-card-grid) {
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  /* Stagger animation for cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .splash-container :global(.sl-link-card) {
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: backwards;
+  }
+
+  /* Disable animations on mobile to improve LCP */
+  @media (max-width: 50rem) {
+    .splash-container :global(.sl-link-card) {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .splash-container :global(.sl-link-card) {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(1)) {
+    animation-delay: 0.24s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(2)) {
+    animation-delay: 0.3s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(3)) {
+    animation-delay: 0.36s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(4)) {
+    animation-delay: 0.42s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(5)) {
+    animation-delay: 0.48s;
+  }
+
+  .splash-container :global(.sl-link-card:nth-child(6)) {
+    animation-delay: 0.54s;
+  }
+
   .sl-container {
     max-width: var(--sl-content-width);
   }

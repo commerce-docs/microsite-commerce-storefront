@@ -10,34 +10,53 @@ Learn about the slots provided in the Product Discovery drop-in component.
 
 [Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
 
-## ProductList slots
+## SearchResults slots
 
-The slots for the `ProductList` container allow you to customize the appearance of the product list.
+The slots for the `SearchResults` container allow you to customize the appearance of product search results.
 
 ```js
-interface ProductListProps
-
 slots?: {
-    Header?: SlotProps;
-    ProductActions?: SlotProps;
-    ProductPrice?: SlotProps;
-    ProductName?: SlotProps;
-    ProductImage?: SlotProps;
-    Footer?: SlotProps;
+    ProductActions?: SlotProps<{ 
+      product: Product;
+      variables: SearchVariables | null; 
+    }>;
+    
+    ProductPrice?: SlotProps<{ 
+      product: Product; 
+      variables: SearchVariables | null; 
+    }>;
+
+    ProductName?: SlotProps<{ 
+      product: Product; 
+      variables: SearchVariables | null; 
+    }>;
+    
+    ProductImage?: SlotProps<{ 
+      product: Product; 
+      variables: SearchVariables | null; 
+      defaultImageProps: ImageProps 
+    }>
+    
+    NoResults?: SlotProps<{ 
+      error: string | null; 
+      variables: SearchVariables | null 
+    }>;
+    
+    Header?: SlotProps<{ 
+      products: Product[]; 
+      variables: SearchVariables | null 
+    }>;
+    
+    Footer?: SlotProps<{ 
+      products: Product[]; 
+      variables: SearchVariables | null 
+    }>;
 };
 ```
 
-### Header and Footer slot
+### Product interface
 
-The `Header` and `Footer` slot allow you to change content at the top and bottom of the `ProductList` container.
-
-The context object passed to the callback function includes a `productList` property that contains the product list data as an array of product objects.
-
-### Product slots
-
-The `Product<type>` slots allow you to add content to the `ProductListItem` component for each product in search query results.
-
-The context object passed to the callback function includes a `product` property that contains the product data with the following type:
+The `Product` interface provides access to product data in slot context objects:
 
 ```typescript
 export interface Product {
@@ -87,20 +106,124 @@ export interface ProductImage {
 }
 ```
 
+### SearchVariables interface
+
+The `SearchVariables` interface provides access to search parameters and context in slot context objects:
+
+```typescript
+export type Scope = 'search' | 'popover' | string;
+
+export interface SearchVariables {
+  scope?: Scope;
+  phrase?: string;
+  filter?: SearchFilter[];
+  sort?: SortOrder[];
+  currentPage?: number;
+  pageSize?: number;
+  context?: SearchContext;
+}
+
+export interface SearchContext {
+  customerGroup?: string;
+  userViewHistory?: ViewHistoryRecord[];
+}
+
+export interface ViewHistoryRecord {
+  sku: string;
+  dateTime: string;
+}
+
+export interface SearchFilter {
+  attribute: string;
+  in?: string[];
+  eq?: string;
+  range?: {
+    from: number;
+    to: number;
+  };
+}
+
+export interface SortOrder {
+  attribute: string;
+  direction: 'ASC' | 'DESC';
+}
+```
+
+### Header slot
+
+The `Header` slot allows you to change content at the top of the `SearchResults` container.
+
+The context object passed to the callback function includes a `products` property containing the search results and a `variables` property with the current search parameters. You can access properties like `products.length` for result count, `variables.phrase` for the search term, `variables.currentPage` for pagination info, and iterate through `products` to display summary information.
+
+### Footer slot
+
+The `Footer` slot allows you to change content at the bottom of the `SearchResults` container.
+
+The context object passed to the callback function includes a `products` property containing the search results and a `variables` property with the current search parameters. You can access properties like `products.length` for result count, `variables.currentPage` and `variables.pageSize` for pagination controls, and iterate through `products` to display summary information.
+
+### ProductActions slot
+
+The `ProductActions` slot allows you to add or replace content in the actions section of each product's rendering.
+
+The context object passed to the callback function includes a `product` property containing the product data and a `variables` property with the current search parameters. You can access properties like `product.addToCartAllowed`, `product.inStock`, and `product.id` to conditionally render actions. The `variables.context?.customerGroup` can be used to show different actions based on user permissions.
+
+### ProductPrice slot
+
+The `ProductPrice` slot allows you to add or replace content in the price section of each product's rendering.
+
+The context object passed to the callback function includes a `product` property containing the product data and a `variables` property with the current search parameters. You can access `product.price` for the current price or `product.priceRange` for min/max pricing. Use `variables.context?.customerGroup` to display role-based pricing.
+
+### ProductName slot
+
+The `ProductName` slot allows you to add or replace content in the name section of each product's rendering.
+
+The context object passed to the callback function includes a `product` property containing the product data and a `variables` property with the current search parameters. You can access properties like `product.name`, `product.sku`, and `product.shortDescription` for display. The `variables.phrase` can be used to highlight matching search terms.
+
+### ProductImage slot
+
+The `ProductImage` slot allows you to add or replace content in the image section of each product's rendering.
+
+The context object passed to the callback function includes a `product` property containing the product data, a `variables` property with the current search parameters, and a `defaultImageProps` property with the following structure:
+
+```typescript
+interface ImageProps {
+  loading: 'lazy';
+  src: string;
+  alt: string;
+  width: string;
+  height: string;
+}
+```
+
+### NoResults slot
+
+The `NoResults` slot allows you to customize what is displayed when there are no matching results or if an error occurs.
+
+The context includes:
+- `error`: An error message or `null`
+- `variables`: The search parameters used for the query
+
+You can access `variables.phrase` to show the search term that returned no results, `variables.filter` to display applied filters, and `variables.scope` to customize messaging based on the search context.
+
 #### Example implementation
 
-Here is an example of how to use the `ProductName` slot to prepend the SKU of each product in the list:
-
 ```js
-provider.render(ProductList, {
-    slots: {
-          ProductName: (ctx) => {
-            const skuDiv = document.createElement('div');
-            skuDiv.innerHTML = ctx.product.sku;
-            ctx.prependSibling(skuDiv);
-          },
-        },
-})($productListContainer);
+provider.render(SearchResults, {
+  slots: {
+    ProductName: (ctx) => {
+      const skuDiv = document.createElement('div');
+      skuDiv.innerHTML = ctx.product.sku;
+      ctx.prependSibling(skuDiv);
+    },
+    NoResults: (ctx) => {
+      const message = document.createElement('p');
+      message.textContent = ctx.error
+        ? `Error: ${ctx.error}`
+        : 'No products found for your search.';
+      return message;
+    }
+  }
+})($searchResultsContainer);
 ```
 
 ## Facets slots
@@ -108,20 +231,20 @@ provider.render(ProductList, {
 The slots for the `Facets` container allow you to customize the appearance of the facets.
 
 ```js
-interface FacetsProps
-
 slots?: {
-    Facet?: SlotProps;
-    SelectedFacets?: SlotProps;
-    Facets?: SlotProps;
-  };
+    Facet?: SlotProps<{ data: SearchFacet }>;
+    SelectedFacets?: SlotProps<{ data: SearchFacet[] }>;
+    Facets?: SlotProps<{ data: SearchFacet[] }>;
+    FacetBucket?: SlotProps<{ data: FacetBucket }>;
+    FacetBucketLabel?: SlotProps<{ data: FacetBucket }>;
+};
 ```
 
 ### Facet slot
 
-The `Facet` slot allows you to customize the appearance of each individual facet in the list of facets. 
+The `Facet` slot allows you to customize the appearance of each individual facet.
 
-The context object passed to the callback function includes a `data` property that contains the facet data with the following types:
+The context object includes a `data` property with the facet details:
 
 ```typescript
 export interface SearchFacet {
@@ -144,99 +267,22 @@ export interface FacetBucket {
 
 The `Facets` slot allows you to customize the appearance of the entire list of facets.
 
-The context object passed to the callback function includes a `data` property that contains an array of `SearchFacet` objects, which represent the facets available for filtering.
+The context object includes a `data` property containing an array of `SearchFacet` objects.
 
 ### SelectedFacets slot
 
-The `SelectedFacets` slot allows you to customize the appearance of the list of selected facets.
+The `SelectedFacets` slot allows you to customize the list of currently selected facets.
 
-The context object passed to the callback function includes a `data` property that contains an array of `SearchFacet` objects, which represent the facets that have been selected by the user in current search results.
+The context object includes a `data` property containing an array of `SearchFacet` objects that represent the selected filters.
 
-## ResultsInfo slots
+### FacetBucket slot
 
-The slots for the `ResultsInfo` container allow you to customize the appearance of the search phrase and total count of products.
+The `FacetBucket` slot allows you to customize the rendering of each bucket within a facet.
 
-```js
-interface ResultsInfoProps
-slots?: {
-    SearchPhrase?: SlotProps;
-    TotalCount?: SlotProps;
-};
-```
+The context object includes a `data` property containing a `FacetBucket` object.
 
-### SearchPhrase slot
+### FacetBucketLabel slot
 
-The `SearchPhrase` slot allows you to customize the appearance of the search phrase or category path used in the current search results.
+The `FacetBucketLabel` slot allows you to customize only the label portion of each bucket within a facet.
 
-The context object passed to the callback function includes a `searchResult` property that contains the info about the current search request and result.
-
-### TotalCount slot
-
-The `TotalCount` slot allows you to customize the appearance of the total count of products matching the current search results.
-
-The context object passed to the callback function includes a `searchResult` property that contains the info about the current search request and result.
-
-## SearchBarInput slots
-
-The slots for the `SearchBarInput` container allow you to customize the appearance of the search input form and search icon.
-
-```js
-interface SearchBarInputProps
-slots?: {
-    InputForm?: SlotProps;
-    SearchIcon?: SlotProps;
-};
-```
-
-### InputForm slot
-
-The `InputForm` slot allows you to customize the entire search input form component, including the input field, search functionality, and user interactions.
-
-The context object passed to the callback function includes the search input component properties and state information.
-
-### SearchIcon slot
-
-The `SearchIcon` slot allows you to customize the search icon displayed within the input field.
-
-The context object passed to the callback function includes the default icon properties and styling information.
-
-## SearchBarResults slots
-
-The slots for the `SearchBarResults` container allow you to customize the appearance of product search suggestions that appear in the dropdown.
-
-```js
-interface SearchBarResultsProps
-slots?: {
-    ProductImage?: SlotProps;
-    ProductName?: SlotProps;
-    ProductPrice?: SlotProps;
-};
-```
-
-### ProductImage slot
-
-The `ProductImage` slot allows you to customize the product image display within each search suggestion item.
-
-The context object passed to the callback function includes a `productItem` property that contains the product data and a `defaultImageProps` property with the following structure:
-
-```typescript
-interface ImageProps {
-  loading: 'lazy';
-  src: string;
-  alt: string;
-  width: string;
-  height: string;
-}
-```
-
-### ProductName slot
-
-The `ProductName` slot allows you to customize the product name display within each search suggestion item.
-
-The context object passed to the callback function includes a `productItem` property that contains the complete product data object.
-
-### ProductPrice slot
-
-The `ProductPrice` slot allows you to customize the product price display within each search suggestion item.
-
-The context object passed to the callback function includes a `productItem` property that contains the product data, including price and currency information for both simple and complex products.
+The context object includes a `data` property containing a `FacetBucket` object.
