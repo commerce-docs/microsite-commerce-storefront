@@ -8,13 +8,23 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 
-<Aside type="caution" title="Production recommendation">
-CORS should be a last resort for production. Prefer same-origin delivery of the storefront and API (for example, via Fastly VCL) to avoid CORS entirely.
-</Aside>
+Cross-Origin Resource Sharing (CORS) is a browser security feature that restricts web pages from making requests to a different domain than the one serving the page. CORS is required when your storefront runs on a different domain or port than your Adobe Commerce backend. 
+
+For example, if your storefront is running on `http://localhost:3000` and your Adobe Commerce backend is running on `https://commerce.example.com`, you will need to configure CORS to allow requests from the storefront to the backend. This is a common scenario when using Edge Delivery Services (EDS) to serve the storefront and Adobe Commerce backend from different domains.
+
+:::caution
+**Production recommendation**: CORS should be a last resort for production. Prefer same-origin delivery of the storefront and API (for example, via Fastly VCL) to avoid CORS entirely.
+
+But during development, it's a common scenario for storefronts to run on a different domain or port than the Adobe Commerce backend, so CORS is required. Without CORS, browsers will block cross-origin requests and you'll see errors like the following in the browser console:
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+:::
 
 ## Quick test: Is CORS working?
 
-If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
+Your Adobe Commerce GraphQL endpoint (typically `/graphql`) is the primary endpoint that requires CORS configuration. If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
 
 ```bash
 curl -I -X OPTIONS https://your-commerce-backend.com/graphql \
@@ -27,17 +37,6 @@ Look for these headers in the response:
 - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
 
 If you see these headers with your storefront URL, CORS is configured correctly. If not, follow the setup steps below.
-
-## When do you need CORS?
-
-You need CORS when your storefront runs on a different domain or port than your Adobe Commerce backend (for example, `http://localhost:3000` → `https://commerce.example.com`).
-
-Without CORS, browsers block cross-origin requests and you'll see errors like:
-
-```txt
-Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
-has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
-```
 
 ## Quick steps
 
@@ -66,52 +65,49 @@ Refer to your chosen module's documentation for specific installation and config
 If using a CORS module, enable it and run setup commands:
 
 ```bash
-php bin/magento module:enable <Module_Name>
-php bin/magento setup:upgrade
-php bin/magento cache:flush
+bin/magento module:enable <Module_Name>
+bin/magento setup:upgrade
+bin/magento cache:flush
 ```
 
 </Task>
 
 <Task>
 
-### Configure CORS in the Magento Admin
+### Configure CORS settings
 
-The module adds a **CORS Whitelist** configuration section in the Admin.
+Configuration methods vary by module. For example:
 
-Navigate to **Stores** > Configuration **General** > **Web** > CORS Whitelist** and configure the following fields:
+- **graycore/magento2-cors**: Configured via environment variables or `app/etc/env.php`. See the [module documentation](https://github.com/graycoreio/magento2-cors#configuration) for details.
+- **Other modules**: May offer admin panel configuration or file-based configuration.
 
-#### Allowed Origins
+Refer to your chosen module's documentation for specific configuration instructions.
 
-Add your storefront URLs (one per line, no trailing slashes):
+#### Key configuration values
 
+Regardless of the configuration method, you'll typically need to set:
+
+**Allowed Origins**: Your storefront URLs (no trailing slashes):
 ```txt
 https://main--aem-boilerplate-commerce--hlxsites.aem.live
 https://www.example.com
 ```
+Or use `*` for development with multiple dynamic URLs (such as branch previews and localhost).
 
-Or use `*` for multiple dynamic URLs (such as branch previews and localhost):
+**Allowed Methods**: `GET,POST,OPTIONS`
 
+**Allowed Headers**: `Content-Type,Authorization,X-Requested-With` (add `Store` if using multistore)
+
+**Allow Credentials**: Enable if your storefront sends cookies or authentication credentials
+
+:::note
 **How origins are matched:**
 - Must match exactly: protocol (`http` vs `https`), hostname, and port
 - `http://localhost:3000` ≠ `https://localhost:3000` (different protocol)
 - `http://localhost:3000` ≠ `http://localhost:5173` (different port)
 - `http://localhost:3000` ≠ `http://127.0.0.1:3000` (different hostname)
 - No trailing slashes: `http://localhost:3000` not `http://localhost:3000/`
-
-#### Allowed Methods
-
-Set to: `GET,POST,OPTIONS`
-
-#### Allowed Headers
-
-Set to: `Content-Type,Authorization,X-Requested-With`
-
-Add `Store` if using multistore.
-
-#### Allow Credentials
-
-Enable this if your storefront sends cookies or authentication credentials.
+:::
 
 </Task>
 

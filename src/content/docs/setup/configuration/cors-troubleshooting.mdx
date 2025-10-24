@@ -1,6 +1,6 @@
 ---
 title: CORS Troubleshooting
-description: Comprehensive guide to debugging and resolving CORS issues with Adobe Commerce GraphQL endpoints, including common errors, testing strategies, and production best practices.
+description: Diagnose and resolve CORS issues with Adobe Commerce GraphQL endpoints, including common errors, debugging techniques, and browser network inspection.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
@@ -8,79 +8,11 @@ import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 import Link from '@components/Link.astro';
 
-This guide covers CORS configuration, common errors, debugging techniques, browser network inspection, and production patterns for Adobe Commerce Storefronts.
+This guide helps you diagnose and resolve CORS issues with Adobe Commerce GraphQL endpoints.
 
-## CORS configuration
-
-If using a CORS module with admin UI configuration (such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)), navigate to **Stores** → **Configuration** → **General** → **Web** → **CORS Whitelist** in the Adobe Commerce admin panel.
-
-<Aside type="note" title="Module installation issues">
-For installation troubleshooting specific to a CORS module (Composer conflicts, module enable failures, version issues), consult that module's documentation.
+<Aside type="note">
+If you need to set up CORS for the first time, see [CORS Setup](/setup/configuration/cors-setup/).
 </Aside>
-
-The following configuration options are typically available.
-
-### Allowed Origins
-
-Add your storefront URLs, one per line (no trailing slashes):
-
-```txt
-http://localhost:3000
-http://localhost:5173
-https://staging-storefront.example.com
-https://storefront.example.com
-```
-
-<Aside type="tip" title="When to use a wildcard">
-If you have multiple dynamic URLs (such as Edge Delivery Services branch previews like `main--repo--hlxsites.aem.live`, `some-branch--repo--hlxsites.aem.live`, and `localhost:3000`), you can use a wildcard: `*`.
-
-For single production domains, use specific allowed origins instead. Note that a wildcard `*` cannot be used when `Allow Credentials` is enabled; browsers will block the request.
-</Aside>
-
-### Allow Credentials
-
-Enable this setting if your storefront needs to:
-- Send authentication cookies
-- Include session cookies
-- Send credentials with cross-origin requests
-
-When enabled, the `Access-Control-Allow-Credentials: true` header will be sent.
-
-### Allowed Methods
-
-Specify HTTP methods your storefront uses (comma-separated):
-
-```txt
-GET,POST,OPTIONS
-```
-
-#### Understanding preflight requests
-
-Before sending the actual request, browsers send an OPTIONS request (called a "preflight") to check if the cross-origin request is allowed. This happens automatically for requests with:
-- Custom headers (like `Authorization`)
-- Methods other than GET/POST/HEAD
-- Content-Type other than basic types
-
-The OPTIONS request asks: "Can I send a POST request with these headers?"
-The server responds with allowed methods, headers, and origins.
-
-<Aside type="tip" title="OPTIONS method is critical">
-Without it, all cross-origin requests will fail at the preflight stage.
-</Aside>
-
-### Allowed Headers
-
-Specify headers your storefront sends (comma-separated):
-
-```txt
-Content-Type,Authorization,X-Requested-With,Store
-```
-
-Common headers include:
-- `Content-Type`: For JSON requests
-- `Authorization`: For bearer tokens
-- `Store`: For multistore configurations
-- `X-Requested-With`: For AJAX requests
 
 ## Common CORS errors
 
@@ -107,9 +39,9 @@ CORS headers are not being sent by your Commerce backend. This could mean:
 
 #### Solution
 
-- Verify CORS is configured (via module, custom code, or server configuration)
+- Verify CORS is configured. See [CORS Setup](/setup/configuration/cors-setup/) if not configured yet.
 - Add your storefront origin to the allowed origins list
-- Clear the cache: `php bin/magento cache:flush`
+- Clear the cache: `bin/magento cache:flush`
 
 </Option>
 
@@ -171,7 +103,7 @@ If using a CORS module, check that it's installed and enabled:
 
 ```bash
 # List all enabled modules
-php bin/magento module:status | grep -i cors
+bin/magento module:status | grep -i cors
 ```
 
 If using a custom CORS implementation, verify your code is deployed and active.
@@ -182,12 +114,14 @@ If using a custom CORS implementation, verify your code is deployed and active.
 
 ### Verify CORS configuration
 
-In your CORS configuration (admin panel, config files, or server configuration), confirm:
+Check your CORS configuration and confirm:
 - Your storefront origin is in the Allowed Origins list
 - Origins match exactly (including protocol and port)
 - No trailing slashes in origins
 - Allowed Methods includes `OPTIONS`
-- Allowed Headers includes headers your storefront sends
+- Allowed Headers includes all headers your storefront sends
+
+See [CORS Setup](/setup/configuration/cors-setup/) for configuration details.
 
 </Option>
 
@@ -249,8 +183,8 @@ Look for PHP errors, GraphQL exceptions, or module conflicts.
 After any configuration changes:
 
 ```bash
-php bin/magento cache:flush
-php bin/magento cache:clean
+bin/magento cache:flush
+bin/magento cache:clean
 ```
 
 Some CORS configurations may also be cached in Varnish/Fastly if applicable.
