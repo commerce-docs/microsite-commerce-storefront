@@ -1,9 +1,23 @@
 ---
-title: Wishlist functions
-description: Learn about the API functions provided by the wishlist drop-in component.
+title: Wishlist Functions
+description: API functions provided by the Wishlist drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
 ---
 
-This topic provides the details and instructions you need to use the functions provided by the wishlist drop-in component.
+import OptionsTable from '@components/OptionsTable.astro';
+
+The Wishlist drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.0.1</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
 ## addProductsToWishlist
 
@@ -12,11 +26,66 @@ This function is typically used when a user wants to save a product for later pu
 
 ### Example usage
 
-```typescript
-import { addProductsToWishlist } from '@/wishlist/api/addProductToWishlist';
+### Signature
 
-addProductsToWishlist([{ sku: 'sku_item_1', quantity: 1 }]);
+```ts
+export const addProductsToWishlist = async (
+  items: [
+    {
+      sku: string;
+      quantity: number;
+      optionsUIDs?: string[]; // should be the options available for the product
+      enteredOptions?: { uid: string; value: string }[]; // refer to both selected and entered options
+    }
+  ]
+): Promise<Wishlist | null>
 ```
+
+### Usage
+
+### Add Simple Product to Wishlist
+
+```js
+addProductsToWishlist(
+    [{
+        sku: 'VA19-GO-NA',
+        quantity: 1
+    }]
+);
+```
+
+### Add Configurable Product to Wishlist
+
+```js
+addProductsToWishlist(
+    [{
+        sku: 'VSW01',
+        quantity: 1,
+        optionsUIDs: [
+            'Y29uZmlndXJhYmxlLzE1Ny8zMQ==',
+            'Y29uZmlndXJhYmxlLzE5MC80NA=='
+        ]
+    }]
+);
+```
+
+### Add Bundle Product to Wishlist
+```js
+addProductsToWishlist(
+    [{
+        sku: 'VA24',
+        quantity: 1,
+        optionsUIDs: [
+          'YnVuZGxlLzEvMS8x',
+          'YnVuZGxlLzIvMy8x',
+          'YnVuZGxlLzMvNS8x',
+          'YnVuZGxlLzQvNy8x'
+        ]
+    }]
+);
+```
+
+---
 
 ## getStoreConfig
 
@@ -24,11 +93,21 @@ The `getStoreConfig` function retrieves the store configuration, which includes 
 
 ### Example function usage
 
-```typescript
-import { getStoreConfig } from '@/wishlist/api/getStoreConfig';
+### Signature
 
+```ts
+export const getStoreConfig = async (
+  
+): Promise<StoreConfigModel | null>
+```
+
+### Usage
+
+```ts
 getStoreConfig();
 ```
+
+---
 
 ## getWishlistById
 
@@ -36,11 +115,23 @@ The `getWishlistById` function retrieves a wishlist by its ID. This is useful fo
 
 ### Example function usage
 
-```typescript
-import { getWishlistById } from '@/wishlist/api/getWishlistById';
+### Signature
 
-getWishlistById('1');
+```ts
+export const getWishlistById = async (
+  wishlistId: string
+): Promise<void | Wishlist | null>
 ```
+
+### Usage
+
+### Get the wishlist with a specific wishlistId from a logged-in user.
+
+```js
+getWishlistById('wishlist-id');
+```
+
+---
 
 ## getWishlists
 
@@ -48,24 +139,23 @@ The `getWishlists` function retrieves all wishlists associated with a user. This
 
 ### Example function usage
 
-```typescript
-import { getWishlists } from '@/wishlist/api/getWishlists';
+### Signature
 
+```ts
+export const getWishlists = async (
+  
+): Promise<void | Wishlist[] | null>
+```
+
+### Usage
+
+### Get all wishlists from a logged-in user.
+
+```js
 getWishlists();
 ```
 
-## mergeWishlists
-
-The `mergeWishlists` function allows you to merge a wishlist from local storage with one belonging to a registered user.
-This is useful when a user wants to synchronize both local and remote wishlists into one wishlist after logging in.
-
-### Example function usage
-
-```typescript
-import { mergeWishlists } from '@/wishlist/api/mergeWishlists';
-
-mergeWishlists(wishlist);
-```
+---
 
 ## removeProductsFromWishlist
 
@@ -73,11 +163,41 @@ The `removeProductsFromWishlist` function allows you to remove products from a u
 
 ### Example usage
 
-```typescript
-import { removeProductsFromWishlist } from '@/wishlist/api/removeProductsFromWishlist';
+### Signature
 
-removeProductsFromWishlist([{ product: { sku: 'sku_item_1' }}]);
+```ts
+export const removeProductsFromWishlist = async (
+  items: Array<Item>
+): Promise<Wishlist | null>
 ```
+
+### Usage
+
+### Remove simple Product from Wishlist
+
+```js
+await removeProductsFromWishlist([wishlistItem]);
+```
+
+### Remove multiple simple Products from Wishlist
+
+```js
+await removeProductsFromWishlist([wishlistItem1, wishlistItem2]);
+```
+
+---
+
+## resetWishlist
+
+API function for the drop-in.
+
+### Usage
+
+```ts
+resetWishlist();
+```
+
+---
 
 ## updateProductsInWishlist
 
@@ -85,8 +205,52 @@ The `updateProductsInWishlist` function allows you to update the quantity of pro
 
 ### Example usage
 
-```typescript
-import { updateProductsInWishlist } from '@/wishlist/api/updateProductsInWishlist';
+### Signature
 
-updateProductsInWishlist([{ wishlistItemId: 'test-id', quantity: 1, description: 'Lorem ipsum' }]);
+```ts
+export const updateProductsInWishlist = async (
+  items: {
+    wishlistItemId: string;
+    quantity: number;
+    description: string;
+    selectedOptions?: string[];
+    enteredOptions?: { uid: string; value: string }[];
+  }[]
+): Promise<Wishlist | null>
 ```
+
+### Usage
+
+### Add Simple Product to Wishlist
+
+```js
+updateProductsInWishlist(
+    [{
+        wishlistItemId: '1',
+        quantity: 1,
+        description: 'Lorem ipsum'
+    }]
+);
+```
+
+### Update configurable product to wishlist
+
+```js
+updateProductsInWishlist(
+    [{
+        wishlistItemId: '1',
+        quantity: 1,
+        description: 'Lorem ipsum',
+        selectedOptions: [
+            'Y29uZmlndXJhYmxlLzE1Ny8zMQ==',
+            'Y29uZmlndXJhYmxlLzE5MC80NA=='
+        ]
+    }]
+);
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: https://github.com/adobe-commerce/storefront-wishlist */}
