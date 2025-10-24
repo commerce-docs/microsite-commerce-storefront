@@ -1,0 +1,152 @@
+---
+title: Product Discovery Data & Events
+description: Learn about the events used by the Product Discovery and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Product Discovery, Product Discovery, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Product Discovery** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.0</strong>
+</div>
+
+<Aside type="tip">
+**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
+</Aside>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [search/error](#searcherror-emits-and-listens) | Emits and listens | Triggered when an error occurs |
+| [search/loading](#searchloading-emits-and-listens) | Emits and listens | Triggered when loading state changes |
+| [search/result](#searchresult-emits-and-listens) | Emits and listens | Triggered when results are available |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
+
+
+### `search/error` (emits and listens)
+
+Triggered when an error occurs
+
+#### Data payload
+
+```typescript
+string
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const searchErrorListener = events.on('search/error', (data) => {
+  console.log('search/error event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+searchErrorListener.off();
+```
+
+### `search/loading` (emits and listens)
+
+Triggered when loading state changes
+
+#### Data payload
+
+```typescript
+boolean
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const searchLoadingListener = events.on('search/loading', (data) => {
+  console.log('search/loading event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+searchLoadingListener.off();
+```
+
+### `search/result` (emits and listens)
+
+Triggered when results are available
+
+#### Data payload
+
+```typescript
+{
+result: ProductSearchResult;
+request: SearchVariables;
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `result` | `ProductSearchResult` | See type definition in source code |
+| `request` | `SearchVariables` | See type definition in source code |
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const searchResultListener = events.on('search/result', (data) => {
+  console.log('search/result event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+searchResultListener.off();
+```
+
