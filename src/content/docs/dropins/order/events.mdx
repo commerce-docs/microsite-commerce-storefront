@@ -1,0 +1,179 @@
+---
+title: Order Data & Events
+description: Learn about the events used by the Order and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Order, Order, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Order** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.4.0</strong>
+</div>
+
+<Aside type="tip">
+**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
+</Aside>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [cart/reset](#cartreset-emits) | Emits | Emitted when the component state is reset |
+| [order/error](#ordererror-emits) | Emits | Emitted when an error occurs |
+| [order/placed](#orderplaced-emits) | Emits | Emitted when an order is placed |
+| [order/data](#orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
+
+
+### `cart/reset` (emits)
+
+Emitted when the component state is reset
+
+#### Data payload
+
+```typescript
+void
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartResetListener = events.on('cart/reset', (data) => {
+  console.log('cart/reset event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartResetListener.off();
+```
+
+### `order/data` (emits and listens)
+
+Triggered when data is available or changes
+
+#### Data payload
+
+```typescript
+OrderDataModel
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const orderDataListener = events.on('order/data', (data) => {
+  console.log('order/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+orderDataListener.off();
+```
+
+### `order/error` (emits)
+
+Emitted when an error occurs
+
+#### Data payload
+
+```typescript
+{ source: string; type: string; error: Error | string }
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `source` | `string` | See type definition in source code |
+| `type` | `string` | See type definition in source code |
+| `error` | `Error \| string` | See type definition in source code |
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const orderErrorListener = events.on('order/error', (data) => {
+  console.log('order/error event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+orderErrorListener.off();
+```
+
+### `order/placed` (emits)
+
+Emitted when an order is placed
+
+#### Data payload
+
+```typescript
+OrderDataModel
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const orderPlacedListener = events.on('order/placed', (data) => {
+  console.log('order/placed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+orderPlacedListener.off();
+```
+
