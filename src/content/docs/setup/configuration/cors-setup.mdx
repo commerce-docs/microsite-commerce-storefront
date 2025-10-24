@@ -20,11 +20,9 @@ Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://lo
 ```
 </Aside>
 
-During development, it's common for storefronts to run on a different domain or port than the Adobe Commerce backend. For example, if your storefront is running on `http://localhost:3000` and your Adobe Commerce backend is running on `https://commerce.example.com`, you will need to configure CORS to allow requests from the storefront to the backend.
-
 ## Quick test: Is CORS working?
 
-Your Adobe Commerce GraphQL endpoint (typically `/graphql`) is the primary endpoint that requires CORS configuration. If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
+Adobe Commerce uses `/graphql` as the GraphQL endpoint, and this is the primary endpoint that requires CORS configuration. If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
 
 ```bash
 curl -I -X OPTIONS https://your-commerce-backend.com/graphql \
@@ -48,23 +46,9 @@ If you see these headers with your storefront URL, CORS is configured correctly.
 
 To add CORS headers to your Adobe Commerce GraphQL endpoints, you have several options:
 
-- **Server configuration**: Configure CORS headers at the web server level (Nginx, Apache)
+- **Server configuration**: Configure CORS headers at the web server level ([Nginx](https://enable-cors.org/server_nginx.html), [Apache](https://enable-cors.org/server_apache.html))
+- **Third-party module**: Use a community module such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)
 - **Custom module**: Implement a custom Adobe Commerce module to add CORS headers
-- **Third-party module**: Use a community module such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors) or similar
-
-Each approach has different implementation steps. If using a module-based approach:
-
-1. Install via Composer:
-   ```bash
-   composer require <module-package-name>
-   ```
-
-2. Enable the module and run setup:
-   ```bash
-   bin/magento module:enable <Module_Name>
-   bin/magento setup:upgrade
-   bin/magento cache:flush
-   ```
 
 Refer to your chosen implementation's documentation for specific configuration steps.
 
@@ -76,12 +60,12 @@ Refer to your chosen implementation's documentation for specific configuration s
 
 Configure your CORS implementation to allow requests from your storefront domain(s) to your Adobe Commerce GraphQL endpoint.
 
-Configuration methods vary by implementation:
-- **Server configuration**: Consult your web server documentation (Nginx, Apache)
-- **Custom module**: Follow your implementation's configuration approach
-- **Third-party modules**: Refer to the module's documentation (e.g., [graycore/magento2-cors configuration](https://github.com/graycoreio/magento2-cors#configuration))
+At minimum, you'll need to configure:
+- **Allowed origins**: Your storefront domain(s) (for example, `http://localhost:3000`, `https://your-storefront.com`)
+- **Allowed methods**: `GET`, `POST`, `OPTIONS`
+- **Allowed headers**: `Content-Type`, `Authorization`, `X-Requested-With`
 
-At minimum, you'll need to allow your storefront's origin(s), the necessary HTTP methods (GET, POST, OPTIONS), and required headers (Content-Type, Authorization).
+Refer to your chosen implementation's documentation for specific configuration steps.
 
 </Task>
 
