@@ -324,6 +324,8 @@ async function config() {
                           { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
                           { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
                           { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
+                          { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
+                          { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
                           { label: 'Gated content', link: '/setup/configuration/gated-content/' },
                           { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
                         ],
