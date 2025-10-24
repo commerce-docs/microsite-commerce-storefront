@@ -1,0 +1,329 @@
+---
+title: User Auth Functions
+description: API functions provided by the User Auth drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+
+The User Auth drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.1</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+## confirmEmail
+
+The `confirmEmail` function uses the supplied `customerEmail` and `customerConfirmationKey` parameters to complete the customer activation process. Adobe Commerce sends the confirmation key to the customer when they request to create an account. The function calls the [`confirmEmail` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/confirm-email/).
+
+### Signature
+
+```ts
+export const confirmEmail = async (
+  {
+  customerEmail,
+  customerConfirmationKey,
+}: confirmEmailProps
+): Promise<confirmEmailResponse | undefined>
+```
+
+### Usage
+
+```ts
+import { confirmEmail } from '@/auth/api/confirmEmail';
+
+confirmEmail({
+  customerEmail: 'abc@example.com',
+  customerConfirmationKey: '1234567890',
+});
+```
+
+---
+
+## createCustomer
+
+The `createCustomer` function creates a customer account based on the data supplied in the `forms` parameter. By default, the function uses the [`createCustomer` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-customer/). If the `apiVersion2` parameter is set to `true`, the function uses the [`createCustomerV2` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-v2/).
+
+### Signature
+
+```ts
+export const createCustomer = async (
+  forms: Customer,
+  apiVersion2: boolean
+): Promise<CustomerModel>
+```
+
+### Usage
+
+```ts
+import { createCustomer } from '@/auth/api/createCustomer';
+
+createCustomer(forms: {
+  allow_remote_shopping_assistance: true,
+  date_of_birth: "1990-01-01",
+  email: "john.doe@example.com",
+  firstname: "John",
+  is_subscribed: true,
+  lastname: "Doe",
+  middlename: "",
+  password: "Password123",
+  prefix: "",
+  suffix: "",
+  taxvat: "",
+}, apiVersion2: true);
+```
+
+---
+
+## createCustomerAddress
+
+The `createCustomerAddress` function defines a new customer address. The customer can subsequently designate the address for billing or shipping orders. The function calls the [`createCustomerAddress` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-customer-address/).
+
+### Signature
+
+```ts
+export const createCustomerAddress = async (
+  address: AddressFormProps
+): Promise<string>
+```
+
+### Usage
+
+```ts
+import { createCustomerAddress } from '@/auth/api/createCustomerAddress';
+
+createCustomerAddress(address: {
+  "city": "Phoenix",
+  "country_code": "US",
+  "default_billing": true,
+  "default_shipping": false,
+  "firstname": "Bob",
+  "lastname": "Loblaw",
+  "postcode": "77777",
+  "region": {
+    "region": "Arizona",
+    "region_code": "AZ",
+  },
+  "street": ["123 Main St"],
+  "telephone": "555 555-5555",
+});
+```
+
+---
+
+## getAttributesForm
+
+The `getAttributesForm` function uses the `attributesForm` query to retrieve EAV attributes associated with customer and customer address frontend forms. The function calls the [`attributesForm` query](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/).
+
+### Signature
+
+```ts
+export const getAttributesForm = async (
+  formCode: string
+): Promise<AttributesFormModel[]>
+```
+
+### Usage
+
+```ts
+import { getAttributesForm } from '@/auth/api/getAttributesForm';
+
+getAttributesForm(formCode: "customer_account_create");
+```
+
+---
+
+## getCustomerData
+
+The `getCustomerData` function retrieves data about the customer represented by the value of the `auth_dropin_user_token` parameter. The function calls the [`customer` query](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/).
+
+### Signature
+
+```ts
+export const getCustomerData = async (
+  user_token: string
+): Promise<CustomerModel>
+```
+
+### Usage
+
+```ts
+import { getCustomerData } from '@/auth/api/getCustomerData';
+
+getCustomerData(auth_dropin_user_token: "abcdefghi12345");
+```
+
+---
+
+## getCustomerToken
+
+The `getCustomerToken` function handles the sign-in operation. It requires `userName` and `password` parameters and performs the following actions under the hood:
+
+1. Retrieves the customer token.
+2. Fetches customer data using the token.
+3. Sets the `auth_dropin_firstname` and `auth_dropin_user_token` cookies.
+4. Publishes an [Adobe Client Data Layer (ACDL)](https://github.com/adobe/adobe-client-data-layer) event.
+5. Emits an "authenticated" event.
+
+You can use the `getCustomerToken` function to build a custom authentication flow that remains fully integrated with other drop-in components. The function calls the [`generateCustomerToken` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/generate-token/).
+
+### Signature
+
+```ts
+export const getCustomerToken = async (
+  {
+  email,
+  password,
+  translations,
+  onErrorCallback,
+  handleSetInLineAlertProps,
+}: getCustomerTokenProps
+): Promise<{
+  errorMessage: string;
+  userName: string;
+  userEmail: string;
+}>
+```
+
+### Usage
+
+```ts
+import { getCustomerToken } from '@/auth/api/getCustomerToken';
+
+getCustomerToken(email: "abc@example.com", password: "MyBadPassword");
+```
+
+---
+
+## getStoreConfig
+
+The `getStoreConfig` function uses the [`storeConfig` query](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) to retrieve store configuration data.
+
+### Signature
+
+```ts
+export const getStoreConfig = async (
+  
+): Promise<StoreConfigModel>
+```
+
+### Usage
+
+```ts
+import { getStoreConfig } from '@/auth/api/getStoreConfig';
+
+getStoreConfig();
+```
+
+---
+
+## requestPasswordResetEmail
+
+The `requestPasswordResetEmail` function initiates the process of resetting a customer's password. The function calls the [`requestPasswordResetEmail` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/request-password-reset-email/).
+
+### Signature
+
+```ts
+export const requestPasswordResetEmail = async (
+  email: string
+): Promise<PasswordResetEmailModel>
+```
+
+### Usage
+
+```ts
+import { requestPasswordResetEmail } from '@/auth/api/requestPasswordResetEmail';
+
+requestPasswordResetEmail(email: "abc@example.com");
+```
+
+---
+
+## resendConfirmationEmail
+
+The `resendConfirmationEmail` function resends the email confirmation to the customer using the supplied `customerEmail` parameter. The function calls the `resendConfirmationEmail` mutation, which is included in the Storefront Compatibility Package.
+
+### Signature
+
+```ts
+export const resendConfirmationEmail = async (
+  customerEmail: string
+): Promise<resendConfirmationEmailResponse>
+```
+
+### Usage
+
+```ts
+import { resendConfirmationEmail } from '@/auth/api/resendConfirmationEmail';
+
+resendConfirmationEmail(customerEmail:"abc@example.com");
+```
+
+---
+
+## resetPassword
+
+The `resetPassword` function resets a customer's password using the supplied `email`, `resetPasswordToken`, and `newPassword` parameters. The function calls the [`resetPassword` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/reset-password/).
+
+### Signature
+
+```ts
+export const resetPassword = async (
+  email: string,
+  resetPasswordToken: string,
+  newPassword: string
+): Promise<ResetPasswordModel>
+```
+
+### Usage
+
+```ts
+import { resetPassword } from '@/auth/api/resetPassword';
+
+resetPassword(
+  email: "abc@example.com",
+  resetPasswordToken: "gh80pkjGdsPyiXc0sUUXswX1uGN7crUr",
+  newPassword: "ThisNewPasswordIsSomewhatBetter");
+```
+
+---
+
+## revokeCustomerToken
+
+The `revokeCustomerToken` function revokes the customer's token and clears cookie. It then publishes an ACDL event and emits an "authenticated" event. This API can also be used to build a custom sign-out flow that stays fully integrated with other drop-in components. The function calls the [`revokeCustomerToken` mutation](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/revoke-token/).
+
+### Usage
+
+```ts
+import { revokeCustomerToken } from '@/auth/api/revokeCustomerToken';
+
+revokeCustomerToken();
+```
+
+---
+
+## verifyToken
+
+The `verifyToken` function checks the validity of the provided token and returns the authentication result.
+
+### Usage
+
+```ts
+const authType: string = 'Authorizaton';
+const type: string = 'Bearer'
+
+verifyToken(authType: string, type: string);
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: https://github.com/adobe-commerce/storefront-auth */}
