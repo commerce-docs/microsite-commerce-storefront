@@ -401,7 +401,6 @@ npm run generate-initialization-docs cart
 - Creates examples with actual model names
 - Supports enrichment data for detailed configuration documentation
 
->>>>>>> origin/develop
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
