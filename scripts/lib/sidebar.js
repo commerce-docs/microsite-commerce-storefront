@@ -126,6 +126,17 @@ export function updateSidebarForDictionary(dropinName, repoConfig) {
 }
 
 /**
+ * Update sidebar navigation for installation
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForInstallation(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Installation', null); // Insert at top
+}
+
+/**
  * Check if a sidebar entry exists
  * 
  * @param {string} dropinName - Name of the drop-in
