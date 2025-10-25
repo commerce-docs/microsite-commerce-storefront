@@ -30,150 +30,23 @@
  * This ensures accuracy in type definitions, API patterns, and code examples.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync, execFileSync } from 'child_process';
+import { execFileSync } from 'child_process';
+
+// Import shared utilities
+import { loadEventEnrichments } from './lib/enrichment.js';
+import { updateSidebarForEvents } from './lib/sidebar.js';
+import { runGenerator, getProjectRoot } from './lib/generator-core.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
+import { cleanVersion } from './lib/utils.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..');
-
-// Configuration for drop-in packages
-// Maps documentation paths to npm package names and git repos
-const DROPIN_REPOS = {
-    // B2C Drop-ins
-    'cart': {
-        packageName: '@dropins/storefront-cart',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
-        type: 'B2C',
-        displayName: 'Cart'
-    },
-    'checkout': {
-        packageName: '@dropins/storefront-checkout',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-checkout.git',
-        type: 'B2C',
-        displayName: 'Checkout'
-    },
-    'order': {
-        packageName: '@dropins/storefront-order',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-order.git',
-        type: 'B2C',
-        displayName: 'Order'
-    },
-    'product-details': {
-        packageName: '@dropins/storefront-pdp',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-pdp.git',
-        type: 'B2C',
-        displayName: 'Product Details'
-    },
-    'product-discovery': {
-        packageName: '@dropins/storefront-product-discovery',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
-        type: 'B2C',
-        displayName: 'Product Discovery'
-    },
-    'recommendations': {
-        packageName: '@dropins/storefront-recommendations',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-recommendations.git',
-        type: 'B2C',
-        displayName: 'Recommendations'
-    },
-    'user-account': {
-        packageName: '@dropins/storefront-account',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-account.git',
-        type: 'B2C',
-        displayName: 'User Account'
-    },
-    'user-auth': {
-        packageName: '@dropins/storefront-auth',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-auth.git',
-        type: 'B2C',
-        displayName: 'User Auth'
-    },
-    'wishlist': {
-        packageName: '@dropins/storefront-wishlist',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-wishlist.git',
-        type: 'B2C',
-        displayName: 'Wishlist'
-    },
-    'payment-services': {
-        packageName: '@dropins/storefront-payment-services',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
-        type: 'B2C',
-        displayName: 'Payment Services'
-    }
-    // Note: Personalization drop-in has no i18n dictionary or events (data-only)
-    // Only drop-ins published to npm and used in the boilerplate should be included here
-};
-
-function cloneOrUpdateBoilerplate() {
-    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
-    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
-
-    console.log(`\n📦 Setting up boilerplate repository...`);
-
-    if (!existsSync(boilerplatePath)) {
-        console.log(`  Cloning boilerplate...`);
-        mkdirSync(dirname(boilerplatePath), { recursive: true });
-        execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', boilerplateUrl, boilerplatePath], { stdio: 'inherit' });
-
-        console.log(`  Installing boilerplate dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
-    } else {
-        console.log(`  Updating boilerplate...`);
-        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
-
-        console.log(`  Updating dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
-    }
-
-    return boilerplatePath;
-}
-
-function getBoilerplatePackageVersions(boilerplatePath) {
-    const packageJsonPath = join(boilerplatePath, 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-    return packageJson.dependencies || {};
-}
-
-function cloneDropinAtVersion(repoName, repoConfig, version) {
-    const dropinPath = join(projectRoot, '.temp-repos', repoName);
-
-    // Clean version string (remove ~ ^ etc)
-    const cleanVersion = version.replace(/^[\^~]/, '');
-    const tag = `v${cleanVersion}`;
-
-    console.log(`  Using version: ${cleanVersion}`);
-
-    if (!existsSync(dropinPath)) {
-        console.log(`  Cloning repository at ${tag}...`);
-        try {
-            execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
-        } catch (error) {
-            // If tag doesn't exist, try without 'v' prefix
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
-        }
-    } else {
-        console.log(`  Checking out ${tag}...`);
-        try {
-            // First fetch all tags
-            execFileSync('git', ['fetch', '--tags'], { cwd: dropinPath, stdio: 'pipe' });
-            // Then checkout the specific tag
-            execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
-        } catch (error) {
-            // If tag with 'v' doesn't exist, try without
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
-        }
-    }
-
-    return dropinPath;
-}
+const projectRoot = getProjectRoot();
 
 function scanForEvents(repoPath) {
-    console.log(`  🔍 Scanning for events...`);
-
     const eventEmits = new Map();
     const eventListeners = new Map();
 
@@ -308,11 +181,19 @@ function scanForEvents(repoPath) {
         }
     }
 
-    console.log(`  ✓ Found ${eventEmits.size} emitted events`);
-    console.log(`  ✓ Found ${eventListeners.size} listened events`);
-    console.log(`  ✓ Found ${typedEvents.size} typed events`);
+    // Calculate total unique events for reporting
+    const allEvents = new Set([
+        ...eventEmits.keys(),
+        ...eventListeners.keys(),
+        ...typedEvents.keys()
+    ]);
 
-    return { eventEmits, eventListeners, typedEvents };
+    return {
+        eventEmits,
+        eventListeners,
+        typedEvents,
+        count: allEvents.size
+    };
 }
 
 function parseTypeScriptProperties(typeDefinition) {
@@ -501,43 +382,7 @@ function generateEventDescription(eventName, emits, listeners) {
 }
 
 
-function updateSidebarNavigation(dropinName, repoConfig) {
-    const configPath = join(projectRoot, 'astro.config.mjs');
-    const config = readFileSync(configPath, 'utf8');
-
-    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const sidebarEntry = `{ label: 'Events', link: '/${basePath}/${dropinName}/events/' },`;
-
-    // Find the Functions entry for this dropin and add events after it
-    // Order: Functions → Events → Dictionary
-    const functionsPattern = new RegExp(
-        `(\\{\\s*label:\\s*'Functions',\\s*link:\\s*'/${basePath}/${dropinName}/functions/'\\s*\\},)`,
-        'i'
-    );
-
-    const match = config.match(functionsPattern);
-    if (match) {
-        // Check if the events entry already exists
-        const eventsPattern = new RegExp(`label:\\s*'Events',\\s*link:\\s*'/${basePath}/${dropinName}/events/'`);
-        if (!eventsPattern.test(config)) {
-            const updated = config.replace(
-                functionsPattern,
-                `$1\n                          ${sidebarEntry}`
-            );
-            writeFileSync(configPath, updated);
-            console.log(`  ✅ Added sidebar entry for ${repoConfig.displayName} events`);
-            return true;
-        } else {
-            console.log(`  ℹ️  Sidebar entry already exists for ${repoConfig.displayName} events`);
-            return false;
-        }
-    } else {
-        console.log(`  ⚠️  Could not find Functions entry to insert after`);
-        return false;
-    }
-}
-
-function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
+function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichmentData = null) {
     const { eventEmits, eventListeners, typedEvents, implementationStatus, documentedDescriptions } = eventsData;
     const allEvents = new Set([
         ...eventEmits.keys(),
@@ -601,14 +446,13 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     // For Event Details section: pure alphabetical order for easier scanning
     const sortedEvents = [...emitsOnlyFiltered, ...listensOnlyFiltered, ...bidirectionalFiltered].sort(sortByTypeAndName);
 
-    // Read the template file
-    const templatePath = join(projectRoot, '_dropin-templates', 'dropin-events.mdx');
-    let template = readFileSync(templatePath, 'utf8');
-
-    // Replace global placeholders
-    template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
-    template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
-    template = template.replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''));
+    // Read template and replace global placeholders using shared utilities
+    let template = readTemplate('dropin-events.mdx');
+    template = replacePlaceholders(template, {
+        'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_DISPLAY_NAME': repoConfig.displayName,
+        'DROPIN_VERSION': cleanVersion(version)
+    });
 
     // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
@@ -627,7 +471,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         // Add events in order: Emits, Listens, Emits and Listens
         emitsOnlyFiltered.forEach(eventName => {
             let description;
-            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            // Check enrichment data first, then documented descriptions, then generate
+            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
+                description = enrichmentData[eventName].description;
+            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), null);
@@ -643,7 +490,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
 
         listensOnlyFiltered.forEach(eventName => {
             let description;
-            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            // Check enrichment data first, then documented descriptions, then generate
+            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
+                description = enrichmentData[eventName].description;
+            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, null, eventListeners.get(eventName));
@@ -659,7 +509,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
 
         bidirectionalFiltered.forEach(eventName => {
             let description;
-            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            // Check enrichment data first, then documented descriptions, then generate
+            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
+                description = enrichmentData[eventName].description;
+            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
@@ -732,9 +585,11 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         const eventHeading = `### \`${eventName}\` (${directionText.toLowerCase()})`;
         eventSection = eventSection.replace(/EVENT_HEADING/g, eventHeading);
 
-        // Replace EVENT_DESCRIPTION - use documented description if available
+        // Replace EVENT_DESCRIPTION - check enrichment, documented, then generate
         let description;
-        if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+        if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
+            description = enrichmentData[eventName].description;
+        } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
             description = documentedDescriptions.get(eventName);
         } else {
             description = generateEventDescription(eventName, emits, listeners);
@@ -812,7 +667,7 @@ import { Aside } from '@astrojs/starlight/components';
 The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version.replace(/^[\^~]/, '')}</strong>
+<strong>Version: ${cleanVersion(version)}</strong>
 </div>
 
 ## Events
@@ -828,93 +683,13 @@ For information about common events like \`locale\`, \`error\`, and \`authentica
     return beforeRepeat + eventsContent + afterRepeat;
 }
 
-async function main() {
-    console.log('🚀 Event Documentation Generator');
-    console.log('================================\n');
-
-    // Parse command-line arguments
-    const targetDropin = process.argv[2];
-
-    // Filter drop-ins based on target
-    let dropinsToProcess = DROPIN_REPOS;
-
-    if (targetDropin) {
-        if (!DROPIN_REPOS[targetDropin]) {
-            console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
-            console.log('Available drop-ins:');
-            Object.keys(DROPIN_REPOS).forEach(name => {
-                console.log(`  - ${name}`);
-            });
-            process.exit(1);
-        }
-        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
-        console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
-    } else {
-        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
-    }
-
-    // Clone/update boilerplate once for all drop-ins
-    const boilerplatePath = cloneOrUpdateBoilerplate();
-
-    // Get package versions from boilerplate
-    const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
-    console.log(`\n📦 Loaded package versions from boilerplate\n`);
-
-    // Process each drop-in
-    for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
-        try {
-            console.log(`\n📦 Processing ${repoConfig.displayName}...`);
-
-            // Get version from boilerplate package.json
-            const version = packageVersions[repoConfig.packageName];
-
-            if (!version) {
-                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
-                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
-                continue;
-            }
-
-            // Clone git repo at specific version
-            const dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
-            const eventsData = scanForEvents(dropinPath);
-            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, version);
-
-            // Write to the appropriate location in docs
-            const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-            const outputDir = join(
-                projectRoot,
-                'src/content/docs',
-                basePath,
-                repoName
-            );
-            const outputPath = join(outputDir, 'events.mdx');
-
-            // Create directory if it doesn't exist
-            if (!existsSync(outputDir)) {
-                mkdirSync(outputDir, { recursive: true });
-                console.log(`  📁 Created directory ${outputDir}`);
-            }
-
-            writeFileSync(outputPath, mdxContent);
-            console.log(`  ✅ Generated ${outputPath}`);
-
-            // Show preview link for single drop-in generation
-            if (targetDropin) {
-                const urlPath = `/${basePath}/${repoName}/events`;
-                console.log(`  📄 View at: ${urlPath}`);
-                console.log(`     (Start dev server with 'npm run dev' if not already running)`);
-            }
-
-            // Update sidebar navigation
-            updateSidebarNavigation(repoName, repoConfig);
-            console.log('');
-
-        } catch (error) {
-            console.error(`  ❌ Error processing ${repoName}: ${error.message}\n`);
-        }
-    }
-
-    console.log('✨ Event documentation generation complete!');
-}
-
-main();
+// Main execution using shared generator framework
+runGenerator({
+    name: 'Event',
+    itemType: 'events',
+    loadEnrichments: loadEventEnrichments,
+    scanRepo: scanForEvents,
+    generateContent: generateEventsMDX,
+    updateSidebar: updateSidebarForEvents,
+    outputFileName: 'events.mdx'
+});
