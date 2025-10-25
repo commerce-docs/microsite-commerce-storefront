@@ -240,6 +240,7 @@ The CLI has been extensively tested and improved to ensure:
 
 Automated generators for creating function and event documentation from drop-in source repositories.
 
+<<<<<<< HEAD
 ## Master Command - Generate All Documentation ⭐
 
 **Run all 9 generators at once** to regenerate the entire documentation site (500+ pages):
@@ -297,6 +298,8 @@ npm run generate-all-docs -- --dry-run
 ✨ All generators completed successfully!
 ```
 
+=======
+>>>>>>> origin/develop
 ## Available Generators
 
 ### Function Documentation Generator
@@ -458,6 +461,7 @@ npm run generate-initialization-docs cart
 - Creates examples with actual model names
 - Supports enrichment data for detailed configuration documentation
 
+<<<<<<< HEAD
 ### Boilerplate Documentation Generator
 
 Generates comprehensive documentation for the AEM Commerce boilerplate by analyzing the repository structure and blocks.
@@ -509,6 +513,8 @@ npm run generate-merchant-block-docs
 - Multi-file output (29+ block pages)
 - Complements technical boilerplate documentation
 
+=======
+>>>>>>> origin/develop
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -656,6 +662,7 @@ logger.complete('My Generator');
 - Easy to test
 - Centralized updates
 
+<<<<<<< HEAD
 ### `content-transforms.js`
 
 Content transformation utilities for cleaning and formatting generated documentation.
@@ -692,6 +699,8 @@ content = normalizeWhitespace(content);
 - Reusable transformation logic
 - Cleaner generated output
 
+=======
+>>>>>>> origin/develop
 ### `dropin-config.js`
 
 Centralized configuration for all drop-in repositories.
