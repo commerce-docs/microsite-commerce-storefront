@@ -333,6 +333,29 @@ npm run generate-slot-docs cart
 - Supports enrichment data for slot descriptions
 - Auto-updates sidebar navigation
 
+### Dictionary Documentation Generator
+
+Generates dictionary documentation by extracting i18n strings from source repositories.
+
+```bash
+# Generate for all drop-ins
+npm run generate-dictionary-docs
+
+# Generate for specific drop-in
+npm run generate-dictionary-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/dictionary.mdx`
+
+**Features**:
+- Scans for `i18n/en_US.json` files in multiple locations
+- Extracts all dictionary keys and values
+- Formats JSON content for easy reference
+- Counts total number of keys
+- Generates usage instructions and examples
+- Supports enrichment data for additional documentation
+- Auto-updates sidebar navigation
+
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -344,6 +367,7 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 - `events.json` - Event descriptions and use cases
 - `containers.json` - Container descriptions and configuration
 - `slots.json` - Slot descriptions and customization examples
+- `dictionary.json` - Additional documentation for i18n keys
 
 ### Example: Event Enrichment
 

@@ -115,6 +115,17 @@ export function updateSidebarForContainers(dropinName, repoConfig) {
 }
 
 /**
+ * Update sidebar navigation for dictionary
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForDictionary(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Dictionary', 'Containers');
+}
+
+/**
  * Check if a sidebar entry exists
  * 
  * @param {string} dropinName - Name of the drop-in

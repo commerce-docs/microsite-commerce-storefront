@@ -399,6 +399,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/cart/slots/' },
                           { label: 'Events', link: '/dropins/cart/events/' },
                           { label: 'Containers', link: '/dropins/cart/containers/' },
+                          { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
                           { label: 'Cart dictionary', link: '/dropins/cart/dictionary/' },
                           {
                             label: 'Cart Containers',
@@ -448,6 +449,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/checkout/slots/' },
                           { label: 'Events', link: '/dropins/checkout/events/' },
                           { label: 'Containers', link: '/dropins/checkout/containers/' },
+                          { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
                           { label: 'Checkout dictionary', link: '/dropins/checkout/dictionary/' },
                           {
                             label: 'Checkout Containers',
@@ -492,6 +494,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/order/slots/' },
                           { label: 'Events', link: '/dropins/order/events/' },
                           { label: 'Containers', link: '/dropins/order/containers/' },
+                          { label: 'Dictionary', link: '/dropins/order/dictionary/' },
                           { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
                           {
                             label: 'Order containers',
@@ -525,6 +528,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Containers', link: '/dropins/payment-services/containers/' },
+                          { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           { label: 'Payment Services dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Payment containers',
@@ -588,6 +592,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/product-discovery/slots/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
                           { label: 'Containers', link: '/dropins/product-discovery/containers/' },
+                          { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
                           {
@@ -613,6 +618,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/recommendations/slots/' },
                           { label: 'Events', link: '/dropins/recommendations/events/' },
                           { label: 'Containers', link: '/dropins/recommendations/containers/' },
+                          { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
                           { label: 'Recommendations slots', link: '/dropins/recommendations/slots/' },
                           { label: 'Recommendations dictionary', link: '/dropins/recommendations/dictionary/' },
                           {
@@ -633,6 +639,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/user-account/slots/' },
                           { label: 'Events', link: '/dropins/user-account/events/' },
                           { label: 'Containers', link: '/dropins/user-account/containers/' },
+                          { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
                           {
@@ -667,6 +674,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/user-auth/slots/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
                           { label: 'Containers', link: '/dropins/user-auth/containers/' },
+                          { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                           { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
                             label: 'Authentication containers',
@@ -693,6 +701,7 @@ async function config() {
                           { label: 'Slots', link: '/dropins/wishlist/slots/' },
                           { label: 'Events', link: '/dropins/wishlist/events/' },
                           { label: 'Containers', link: '/dropins/wishlist/containers/' },
+                          { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
                           { label: 'Wishlist styling', link: '/dropins/wishlist/styles/' },
                           {
                             label: 'Wishlist containers',

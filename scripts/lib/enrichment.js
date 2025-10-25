@@ -99,6 +99,16 @@ export function loadSlotEnrichments(dropinName) {
 }
 
 /**
+ * Load dictionary enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Dictionary enrichment data
+ */
+export function loadDictionaryEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'dictionary');
+}
+
+/**
  * Check if a specific item has enrichment data
  * 
  * @param {Object} enrichmentData - The loaded enrichment data object
