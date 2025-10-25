@@ -427,6 +427,31 @@ npm run generate-boilerplate-docs
 - Analyzes a single repository (AEM boilerplate)
 - Uses content transformation utilities for cleanup
 
+### Merchant Block Documentation Generator
+
+Generates merchant-focused documentation for commerce blocks, emphasizing document authoring and business user perspective.
+
+```bash
+# Generate all merchant block documentation
+npm run generate-merchant-block-docs
+```
+
+**Output**: Multiple MDX files in `src/content/docs/merchants/blocks/`
+
+**Features**:
+- Generates merchant-friendly documentation (non-technical language)
+- Extracts configuration options from block README files
+- Creates practical examples and configuration tables
+- Provides merchant-specific tips and best practices
+- Links to related technical documentation
+- Focuses on document-based authoring approach
+
+**Unique Characteristics**:
+- Business user perspective (not developer)
+- Emphasizes AEM document authoring
+- Multi-file output (29+ block pages)
+- Complements technical boilerplate documentation
+
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
