@@ -132,6 +132,7 @@ export function toTitleCase(str) {
  */
 export function escapeMDX(text) {
     return text
+        .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
         .replace(/\{/g, '\\{')
         .replace(/\}/g, '\\}')
         .replace(/</g, '&lt;')
