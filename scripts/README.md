@@ -401,6 +401,32 @@ npm run generate-initialization-docs cart
 - Creates examples with actual model names
 - Supports enrichment data for detailed configuration documentation
 
+### Boilerplate Documentation Generator
+
+Generates comprehensive documentation for the AEM Commerce boilerplate by analyzing the repository structure and blocks.
+
+```bash
+# Generate all boilerplate documentation
+npm run generate-boilerplate-docs
+```
+
+**Output**: Multiple MDX files in `src/content/docs/boilerplate/`
+
+**Features**:
+- Analyzes commerce blocks from the boilerplate repository
+- Generates overview page with CardGrid of all blocks
+- Creates individual documentation pages for each block (30+ pages)
+- Extracts drop-in usage, containers, events, and API calls
+- Generates project structure documentation
+- Generates build process documentation
+- Generates configuration documentation
+- Auto-updates sidebar navigation
+
+**Unique Characteristics**:
+- Multi-file output (unlike other generators)
+- Analyzes a single repository (AEM boilerplate)
+- Uses content transformation utilities for cleanup
+
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -547,6 +573,42 @@ logger.complete('My Generator');
 - Consistent formatting and emojis
 - Easy to test
 - Centralized updates
+
+### `content-transforms.js`
+
+Content transformation utilities for cleaning and formatting generated documentation.
+
+```javascript
+import { applyStandardTransforms, formatPackageNames } from './lib/content-transforms.js';
+
+// Apply all standard transformations
+let content = generateContent();
+content = applyStandardTransforms(content);
+
+// Or use individual transformations
+content = formatPackageNames(content);
+content = boldContainerNames(content);
+content = normalizeWhitespace(content);
+```
+
+**Available functions:**
+- `formatPackageNames(text)` - Wrap @dropins/package names in backticks
+- `boldContainerNames(text)` - Bold container names in text
+- `normalizeWhitespace(content)` - Remove excess blank lines
+- `wrapTablesWithTableWrapper(content)` - Wrap markdown tables in TableWrapper
+- `removeEmptyContainerHeadings(content)` - Remove headings with no content
+- `promoteHeadingsToH2(content)` - Promote H3 to H2
+- `splitConfigurationTables(content)` - Split large tables
+- `applyStandardTransforms(content)` - Apply all standard transformations
+
+**Used by:**
+- Boilerplate generator (primary user)
+- Any generator needing content cleanup
+
+**Benefits:**
+- Consistent content formatting
+- Reusable transformation logic
+- Cleaner generated output
 
 ### `dropin-config.js`
 
