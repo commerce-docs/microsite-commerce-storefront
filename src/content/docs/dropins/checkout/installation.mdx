@@ -1,22 +1,171 @@
 ---
-title: Checkout installation
-description: Learn how to install the checkout drop-in component on your site.
+title: Checkout Installation
+description: Learn how to install the Checkout drop-in component into your site.
+sidebar:
+  label: Installation
+  order: 2
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Callouts from '@components/Callouts.astro';
 
-The checkout drop-in component provides a customizable UI for the checkout process. The checkout component is designed to be integrated into your storefront and provides a seamless checkout experience for customers.
+{/* 
+TEMPLATE INSTRUCTIONS:
+This template is used by scripts/@generate-installation-docs.js to generate installation documentation.
 
-## Installation
+PLACEHOLDERS:
+- Checkout: Display name (e.g., "Cart", "Checkout")
+- @dropins/storefront-checkout: Full package name (e.g., "@dropins/storefront-cart")
+- 2.1.0: Package version (e.g., "1.5.1")
+- AddressValidation: Name of a primary container for examples
+- import { AddressValidation } from '@dropins/storefront-checkout';: Generated import statement
+- 11: Number of available containers
+- https://github.com/adobe-commerce/storefront-checkout: Source repository URL
 
-Since the checkout component relies on containers from several other drop-in components, you must install and configure those components before you can use the checkout component.
+TO MODIFY:
+- Structure changes: Edit this template
+- Content changes: Usually automatic from script extraction
+*/}
 
-The [Commerce boilerplate template](https://github.com/hlxsites/aem-boilerplate-commerce) includes all of the necessary drop-in components and configurations to help you get started quickly, so Adobe recommends relying on the boilerplate instead of installing, configuring, and integrating the drop-in components individually.
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.0</strong> | <strong>11 containers</strong>
+</div>
 
-## Admin configuration
+## Step-by-step
 
-Before you can use the checkout component on your storefront, you must enable and configure [payment providers](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/payments/payments) and [checkout options](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/point-of-purchase/checkout/checkout-process) in the Adobe Commerce Admin.
+Use the following steps to install the **Checkout** component:
 
-:::note
-The checkout [overview](/dropins/checkout/) provides a summary of supported Adobe Commerce features.
-:::
+<Aside type="note">
+These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as static HTML or React.
+</Aside>
+
+<Tasks>
+
+<Task>
+
+### Install the packages
+
+Install the required packages using npm:
+
+```bash frame="none"
+npm install @dropins/tools @dropins/storefront-checkout
+```
+
+<Aside type="tip">
+All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Map the packages
+
+Add the drop-in to your `importmap` in the `head.html` file:
+
+```json title="head.html"
+<script nonce="aem" type="importmap">
+{
+  "imports": {
+    "@dropins/storefront-checkout/": "/scripts/__dropins__/@dropins/storefront-checkout/",
+    "@dropins/tools/": "/scripts/__dropins__/tools/"
+  }
+}
+</script>
+```
+
+With the `importmap` defined, you can now import the required files from these packages into your block as described in the next step.
+
+</Task>
+
+<Task>
+
+### Import the required files
+
+Import the necessary components and utilities:
+
+```js title="Checkout.js"
+// GraphQL Client
+import * as mesh from '@dropins/tools/fetch-graphql.js';
+
+// Component tools
+import { initializers } from '@dropins/tools/initializer.js';
+
+// Drop-in component provider
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+
+// Drop-in component API functions
+import * as api from '@dropins/storefront-checkout/api.js';
+
+// Drop-in component containers
+import { AddressValidation } from '@dropins/storefront-checkout';
+```
+
+</Task>
+
+<Task>
+
+### Connect to the endpoint
+
+Configure the GraphQL endpoint:
+
+```js title="Checkout.js"
+// Set endpoint configuration
+mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
+
+// Set store code header
+mesh.setFetchGraphQlHeader('store', '<default>');
+```
+
+<Aside type="note">
+This setting is specific for GraphQL Mesh. Refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Register and load the drop-in
+
+Mount the initializers after the page has loaded:
+
+```js title="Checkout.js"
+// Register drop-in initializer
+initializers.register(api.initialize, {});
+
+// Mount initializers (must be called after all initializers are registered)
+initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+</Task>
+
+<Task>
+
+### Render the drop-in
+
+Render the AddressValidation container on your page:
+
+```js title="Checkout.js"
+// Render Checkout
+provider.render(AddressValidation, {
+  // Add configuration options here
+})(document.getElementById('your-dropin-element'));
+```
+
+<Aside type="tip">
+See the [Containers documentation](/dropins/Checkout/containers/) for a complete list of available containers and their configuration options.
+</Aside>
+
+</Task>
+
+</Tasks>
+
+## Next steps
+
+- Explore the [API functions](/dropins/Checkout/functions/) available for programmatic control
+- Customize the appearance using [slots](/dropins/Checkout/slots/)
+- Learn about [events](/dropins/Checkout/events/) for integration with other components
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-checkout */}

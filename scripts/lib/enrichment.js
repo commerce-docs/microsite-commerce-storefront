@@ -109,6 +109,16 @@ export function loadDictionaryEnrichments(dropinName) {
 }
 
 /**
+ * Load installation enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Installation enrichment data
+ */
+export function loadInstallationEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'installation');
+}
+
+/**
  * Check if a specific item has enrichment data
  * 
  * @param {Object} enrichmentData - The loaded enrichment data object
