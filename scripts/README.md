@@ -310,6 +310,29 @@ npm run generate-container-docs cart
 
 **Unique**: This generator creates **multiple files** (one per container) plus an overview page, unlike other generators that create a single file.
 
+### Slot Documentation Generator
+
+Generates slot documentation by scanning for slot definitions in container files.
+
+```bash
+# Generate for all drop-ins
+npm run generate-slot-docs
+
+# Generate for specific drop-in
+npm run generate-slot-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/slots.mdx`
+
+**Features**:
+- Scans `src/containers/` directories for `.tsx` files
+- Extracts Props interfaces with slots definitions
+- Parses TypeScript slot types
+- Generates complete slot interfaces for each container
+- Creates placeholder usage examples for each slot
+- Supports enrichment data for slot descriptions
+- Auto-updates sidebar navigation
+
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -320,6 +343,7 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 - `functions.json` - Function descriptions and metadata
 - `events.json` - Event descriptions and use cases
 - `containers.json` - Container descriptions and configuration
+- `slots.json` - Slot descriptions and customization examples
 
 ### Example: Event Enrichment
 

@@ -93,6 +93,17 @@ export function updateSidebarForEvents(dropinName, repoConfig) {
 }
 
 /**
+ * Update sidebar navigation for slots
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForSlots(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Slots', 'Functions');
+}
+
+/**
  * Update sidebar navigation for containers
  * 
  * @param {string} dropinName - Name of the drop-in
