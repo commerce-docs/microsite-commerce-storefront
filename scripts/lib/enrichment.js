@@ -89,6 +89,16 @@ export function loadContainerEnrichments(dropinName) {
 }
 
 /**
+ * Load slot enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Slot enrichment data
+ */
+export function loadSlotEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'slots');
+}
+
+/**
  * Check if a specific item has enrichment data
  * 
  * @param {Object} enrichmentData - The loaded enrichment data object
