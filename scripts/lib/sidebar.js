@@ -93,6 +93,17 @@ export function updateSidebarForEvents(dropinName, repoConfig) {
 }
 
 /**
+ * Update sidebar navigation for slots
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForSlots(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Slots', 'Functions');
+}
+
+/**
  * Update sidebar navigation for containers
  * 
  * @param {string} dropinName - Name of the drop-in
@@ -101,6 +112,39 @@ export function updateSidebarForEvents(dropinName, repoConfig) {
  */
 export function updateSidebarForContainers(dropinName, repoConfig) {
     return insertSidebarEntry(dropinName, repoConfig, 'Containers', 'Events');
+}
+
+/**
+ * Update sidebar navigation for dictionary
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForDictionary(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Dictionary', 'Containers');
+}
+
+/**
+ * Update sidebar navigation for installation
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForInstallation(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Installation', null); // Insert at top
+}
+
+/**
+ * Update sidebar navigation for initialization
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {boolean} True if successful
+ */
+export function updateSidebarForInitialization(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Installation'); // After Installation
 }
 
 /**

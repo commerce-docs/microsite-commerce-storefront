@@ -89,6 +89,46 @@ export function loadContainerEnrichments(dropinName) {
 }
 
 /**
+ * Load slot enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Slot enrichment data
+ */
+export function loadSlotEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'slots');
+}
+
+/**
+ * Load dictionary enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Dictionary enrichment data
+ */
+export function loadDictionaryEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'dictionary');
+}
+
+/**
+ * Load installation enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Installation enrichment data
+ */
+export function loadInstallationEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'installation');
+}
+
+/**
+ * Load initialization enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Initialization enrichment data
+ */
+export function loadInitializationEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'initialization');
+}
+
+/**
  * Check if a specific item has enrichment data
  * 
  * @param {Object} enrichmentData - The loaded enrichment data object
