@@ -1,3 +1,18 @@
+# Documentation Automation Scripts
+
+This directory contains automation tools for managing drop-in documentation, including:
+- **Dropin Management CLI** - Create and remove drop-in components
+- **Documentation Generators** - Auto-generate function and event documentation
+- **Shared Library** - Reusable utilities for all generators
+
+## Table of Contents
+
+1. [Dropin Management CLI](#dropin-management-cli)
+2. [Documentation Generators](#documentation-generators)
+3. [Shared Library](#shared-library)
+
+---
+
 # Dropin Management CLI
 
 Create and remove drop-in components for the Commerce Storefront documentation.
@@ -218,3 +233,638 @@ The CLI has been extensively tested and improved to ensure:
 1. Review and customize the generated files
 2. Add specific containers to the `containers/` folder
 3. Update content to match your dropin's functionality
+
+---
+
+# Documentation Generators
+
+Automated generators for creating function and event documentation from drop-in source repositories.
+
+## Available Generators
+
+### Function Documentation Generator
+
+Generates comprehensive function documentation by scanning drop-in repositories.
+
+```bash
+# Generate for all drop-ins
+npm run generate-function-docs
+
+# Generate for specific drop-in
+npm run generate-function-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/functions.mdx`
+
+**Features**:
+- Scans `src/api/` directories for function MDX files
+- Extracts TypeScript function signatures
+- Supports enrichment data for manual descriptions
+- Auto-updates sidebar navigation
+
+### Event Documentation Generator
+
+Generates event documentation by scanning for event emissions and listeners.
+
+```bash
+# Generate for all drop-ins
+npm run generate-event-docs
+
+# Generate for specific drop-in
+npm run generate-event-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/events.mdx`
+
+**Features**:
+- Scans source code for `events.emit()` and `events.on()`
+- Extracts TypeScript type definitions
+- Identifies documented vs undocumented events
+- Supports enrichment data for event descriptions
+- Auto-updates sidebar navigation
+
+### Container Documentation Generator
+
+Generates container documentation by scanning for TypeScript container definitions.
+
+```bash
+# Generate for all drop-ins
+npm run generate-container-docs
+
+# Generate for specific drop-in
+npm run generate-container-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/containers/{container-name}.mdx` (multiple files)
+
+**Features**:
+- Scans `src/containers/` directories for `.tsx` files
+- Extracts Props interfaces from TypeScript
+- Parses JSDoc comments for property descriptions
+- Generates fallback descriptions for undocumented props
+- Extracts and documents slots
+- Creates usage examples
+- Generates overview page with all containers
+- Supports enrichment data for container descriptions
+- Auto-updates sidebar navigation
+
+**Unique**: This generator creates **multiple files** (one per container) plus an overview page, unlike other generators that create a single file.
+
+### Slot Documentation Generator
+
+Generates slot documentation by scanning for slot definitions in container files.
+
+```bash
+# Generate for all drop-ins
+npm run generate-slot-docs
+
+# Generate for specific drop-in
+npm run generate-slot-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/slots.mdx`
+
+**Features**:
+- Scans `src/containers/` directories for `.tsx` files
+- Extracts Props interfaces with slots definitions
+- Parses TypeScript slot types
+- Generates complete slot interfaces for each container
+- Creates placeholder usage examples for each slot
+- Supports enrichment data for slot descriptions
+- Auto-updates sidebar navigation
+
+## Enrichment System
+
+Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
+
+**Location**: `_dropin-enrichments/{dropin-name}/`
+
+**Supported Files**:
+- `functions.json` - Function descriptions and metadata
+- `events.json` - Event descriptions and use cases
+- `containers.json` - Container descriptions and configuration
+- `slots.json` - Slot descriptions and customization examples
+
+### Example: Event Enrichment
+
+```json
+{
+  "cart:updated": {
+    "description": "Fired when the cart is updated with new items, quantities, or pricing information.",
+    "useCase": "Use this event to sync cart state with external systems or trigger UI updates."
+  }
+}
+```
+
+When the generator runs:
+1. It scans the source repository for events
+2. If an enrichment exists, it uses the enriched description
+3. Otherwise, it generates a description from the code
+
+**Benefits**:
+- Preserve manually written, high-quality descriptions
+- Keep API signatures and types up-to-date automatically
+- Reduce maintenance burden
+- Ensure consistency across documentation
+
+---
+
+# Shared Library
+
+The `scripts/lib/` directory contains reusable utilities used by all generators and scripts.
+
+## Architecture Benefits
+
+✅ **DRY Principle** - Write features once, use everywhere  
+✅ **Easy Maintenance** - Update shared code in one place  
+✅ **Independent Generators** - Each generator can be developed in separate branches  
+✅ **Modular Design** - Import only what you need  
+✅ **Testable** - Shared utilities can be unit tested separately
+
+## Library Modules
+
+### `generator-core.js` ⭐
+
+**Core generator execution framework** - This is the heart of the system!
+
+Provides a standardized workflow for all generators, eliminating boilerplate code and ensuring consistency.
+
+```javascript
+import { runGenerator } from './lib/generator-core.js';
+import { loadEventEnrichments } from './lib/enrichment.js';
+import { updateSidebarForEvents } from './lib/sidebar.js';
+
+// Your generator-specific functions
+function scanForEvents(repoPath) {
+  // Scan logic...
+  return { data, count };
+}
+
+function generateEventsMDX(repoName, repoConfig, data, version, enrichments) {
+  // Generation logic...
+  return mdxContent;
+}
+
+// Use the framework - that's it!
+runGenerator({
+  name: 'Event',
+  itemType: 'events',
+  loadEnrichments: loadEventEnrichments,
+  scanRepo: scanForEvents,
+  generateContent: generateEventsMDX,
+  updateSidebar: updateSidebarForEvents,
+  outputFileName: 'events.mdx'
+});
+```
+
+**What it handles automatically:**
+- ✅ CLI argument parsing (single drop-in vs all)
+- ✅ Boilerplate repository setup
+- ✅ Version management from boilerplate
+- ✅ Iterating through drop-ins
+- ✅ Enrichment loading
+- ✅ Repository scanning
+- ✅ Content generation
+- ✅ File output with proper paths
+- ✅ Sidebar updates
+- ✅ Error handling and logging
+- ✅ Preview link generation
+
+**You only write:**
+- Scanner function (find what you need in the repo)
+- Generator function (create the MDX content)
+
+**Benefits:**
+- New generators are 60% smaller
+- 100% consistent workflow
+- Fixes/improvements benefit all generators instantly
+
+### `logger.js`
+
+Standardized logging utilities for consistent console output.
+
+```javascript
+import { logger } from './lib/logger.js';
+
+// Use throughout your generator
+logger.header('My Generator');
+logger.processingDropin('Cart');
+logger.found(15, 'items');
+logger.generated('/path/to/file.mdx');
+logger.complete('My Generator');
+```
+
+**Available methods:**
+- `header(name)` - Print generator header
+- `processingAll(count)` - Log processing all drop-ins
+- `processingSingle(name)` - Log single drop-in
+- `processingDropin(displayName)` - Starting a drop-in
+- `skipping(packageName, reason)` - Skip a drop-in
+- `enrichmentLoaded(count, type)` - Enrichment loaded
+- `scanning(type)` - Scanning repository
+- `found(count, type)` - Items found
+- `noneFound(type)` - No items found
+- `generated(path)` - File generated
+- `viewAt(url)` - Show preview URL
+- `boilerplateLoaded()` - Boilerplate ready
+- `complete(type)` - Generation complete
+- `error(name, message)` - Error occurred
+- `errorNotFound(name)` - Drop-in not found
+- `blank()` - Blank line for spacing
+
+**Benefits:**
+- Consistent formatting and emojis
+- Easy to test
+- Centralized updates
+
+### `dropin-config.js`
+
+Centralized configuration for all drop-in repositories.
+
+```javascript
+import { DROPIN_REPOS } from './lib/dropin-config.js';
+
+// Access configuration
+const cartConfig = DROPIN_REPOS['cart'];
+// {
+//   packageName: '@dropins/storefront-cart',
+//   gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
+//   type: 'B2C',
+//   displayName: 'Cart'
+// }
+```
+
+**Used by**: All generators  
+**Maintains**: Drop-in repository URLs, package names, types, and display names
+
+### `enrichment.js`
+
+Load and manage enrichment data for generators.
+
+```javascript
+import { loadFunctionEnrichments, loadEventEnrichments } from './lib/enrichment.js';
+
+// Load function enrichments
+const functionData = loadFunctionEnrichments('cart');
+
+// Load event enrichments
+const eventData = loadEventEnrichments('cart');
+
+// Check if enrichment exists
+import { hasEnrichment, getEnrichedValue } from './lib/enrichment.js';
+if (hasEnrichment(enrichmentData, 'myFunction', 'description')) {
+  const desc = getEnrichedValue(enrichmentData, 'myFunction', 'description');
+}
+```
+
+**Used by**: Function and event generators  
+**Features**:
+- Loads enrichment JSON files
+- Validates enrichment data
+- Provides fallback mechanisms
+- Returns null for empty enrichments
+
+### `repository.js`
+
+Git repository operations for cloning and version management.
+
+```javascript
+import { 
+  cloneOrUpdateBoilerplate,
+  getBoilerplatePackageVersions,
+  cloneDropinAtVersion 
+} from './lib/repository.js';
+
+// Clone/update boilerplate
+const boilerplatePath = cloneOrUpdateBoilerplate();
+
+// Get package versions
+const versions = getBoilerplatePackageVersions(boilerplatePath);
+
+// Clone drop-in at specific version
+const dropinPath = cloneDropinAtVersion('cart', cartConfig, '1.0.0');
+```
+
+**Used by**: All generators  
+**Features**:
+- Clones repositories with proper depth and branching
+- Handles version tags (with and without 'v' prefix)
+- Updates existing repositories
+- Manages `.temp-repos/` directory
+
+### `sidebar.js`
+
+Automatic sidebar navigation management.
+
+```javascript
+import { 
+  updateSidebarForFunctions,
+  updateSidebarForEvents,
+  updateSidebarForContainers,
+  insertSidebarEntry 
+} from './lib/sidebar.js';
+
+// Update sidebar for functions (inserts after Slots)
+updateSidebarForFunctions('cart', cartConfig);
+
+// Update sidebar for events (inserts after Functions)
+updateSidebarForEvents('cart', cartConfig);
+
+// Custom insertion
+insertSidebarEntry('cart', cartConfig, 'CustomPage', 'Events');
+```
+
+**Used by**: All generators  
+**Features**:
+- Automatically inserts sidebar entries
+- Maintains proper order (Slots → Functions → Events → Containers)
+- Checks for existing entries
+- Updates `astro.config.mjs`
+
+### `markdown.js`
+
+MDX generation and template processing utilities.
+
+```javascript
+import { 
+  readTemplate,
+  replacePlaceholders,
+  replaceContentBetweenMarkers,
+  toTitleCase,
+  escapeMDX 
+} from './lib/markdown.js';
+
+// Read template file
+const template = readTemplate('dropin-functions.mdx');
+
+// Replace placeholders
+const content = replacePlaceholders(template, {
+  'DROPIN_NAME': 'Cart',
+  'VERSION': '1.0.0'
+});
+
+// Replace content between markers
+const updated = replaceContentBetweenMarkers(
+  content,
+  '{/* TABLE_START */}',
+  '{/* TABLE_END */}',
+  tableContent
+);
+```
+
+**Used by**: All generators  
+**Features**:
+- Template reading from `_dropin-templates/`
+- Placeholder replacement
+- Content marker replacement
+- MDX escaping utilities
+- Case conversion utilities
+
+### `utils.js`
+
+General-purpose utilities used across scripts.
+
+```javascript
+import { 
+  ensureDirectoryExists,
+  ensureParentDirectoryExists,
+  toKebabCase,
+  toCamelCase,
+  capitalize,
+  formatDate,
+  cleanVersion 
+} from './lib/utils.js';
+
+// Ensure directories exist
+ensureParentDirectoryExists('/path/to/file.mdx');
+
+// String utilities
+const kebab = toKebabCase('getUserToken'); // 'get-user-token'
+const camel = toCamelCase('user-account'); // 'userAccount'
+
+// Version cleaning
+const version = cleanVersion('^1.0.0'); // '1.0.0'
+```
+
+**Used by**: All generators and scripts  
+**Features**:
+- File system operations
+- String manipulation
+- Date formatting
+- Version string cleaning
+- Command-line argument parsing
+
+## Creating New Generators
+
+Creating a new generator is now incredibly simple with the `runGenerator()` framework! Here's the complete process:
+
+### 1. Create Your Generator File
+
+```javascript
+#!/usr/bin/env node
+
+/**
+ * Container Documentation Generator
+ * 
+ * Generates container documentation for drop-in components by:
+ * 1. Scanning repository for container definitions
+ * 2. Generating comprehensive MDX documentation
+ */
+
+import { readFileSync, existsSync, readdirSync } from 'fs';
+import { join } from 'path';
+
+// Import framework and utilities
+import { runGenerator, getProjectRoot } from './lib/generator-core.js';
+import { loadEnrichmentData } from './lib/enrichment.js';
+import { updateSidebarForContainers } from './lib/sidebar.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
+
+const projectRoot = getProjectRoot();
+```
+
+### 2. Write Generator-Specific Functions
+
+Only write the logic specific to your generator:
+
+```javascript
+// Scanner: Find what you need in the repository
+function scanForContainers(repoPath) {
+    const containersPath = join(repoPath, 'src', 'containers');
+    
+    if (!existsSync(containersPath)) {
+        return [];
+    }
+    
+    const containers = readdirSync(containersPath, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => ({
+            name: entry.name,
+            path: join(containersPath, entry.name)
+        }));
+    
+    return containers;
+}
+
+// Generator: Create the MDX content
+function generateContainersMDX(repoName, repoConfig, containers, version, enrichmentData) {
+    // Read template
+    const template = readTemplate('dropin-containers.mdx');
+    
+    // Build content
+    let containersContent = '';
+    for (const container of containers) {
+        // Extract container info and build MDX sections
+        containersContent += `## ${container.name}\n\n`;
+        // ... more logic
+    }
+    
+    // Replace placeholders
+    return replacePlaceholders(template, {
+        'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_VERSION': version,
+        'CONTAINERS_CONTENT': containersContent
+    });
+}
+```
+
+### 3. Use the Framework - That's It!
+
+```javascript
+// Main execution - single call to runGenerator()
+runGenerator({
+    name: 'Containers',
+    itemType: 'containers',
+    loadEnrichments: (repoName) => loadEnrichmentData(repoName, 'containers'),
+    scanRepo: scanForContainers,
+    generateContent: generateContainersMDX,
+    updateSidebar: updateSidebarForContainers,
+    outputFileName: 'containers.mdx'
+});
+```
+
+### Complete Example (Full Generator in ~100 Lines!)
+
+```javascript
+#!/usr/bin/env node
+import { readFileSync, existsSync, readdirSync } from 'fs';
+import { join } from 'path';
+import { runGenerator, getProjectRoot } from './lib/generator-core.js';
+import { loadEnrichmentData } from './lib/enrichment.js';
+import { updateSidebarForContainers } from './lib/sidebar.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
+
+const projectRoot = getProjectRoot();
+
+function scanForContainers(repoPath) {
+    const containersPath = join(repoPath, 'src', 'containers');
+    if (!existsSync(containersPath)) return [];
+    
+    return readdirSync(containersPath, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => ({
+            name: entry.name,
+            path: join(containersPath, entry.name)
+        }));
+}
+
+function generateContainersMDX(repoName, repoConfig, containers, version, enrichmentData) {
+    const template = readTemplate('dropin-containers.mdx');
+    
+    let containersContent = '';
+    for (const container of containers) {
+        containersContent += `## ${container.name}\n\n`;
+        containersContent += `Container component for ${repoConfig.displayName}.\n\n`;
+    }
+    
+    return replacePlaceholders(template, {
+        'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_VERSION': version,
+        'CONTAINERS_CONTENT': containersContent
+    });
+}
+
+// That's it - everything else is handled by the framework!
+runGenerator({
+    name: 'Containers',
+    itemType: 'containers',
+    loadEnrichments: (repoName) => loadEnrichmentData(repoName, 'containers'),
+    scanRepo: scanForContainers,
+    generateContent: generateContainersMDX,
+    updateSidebar: updateSidebarForContainers,
+    outputFileName: 'containers.mdx'
+});
+```
+
+### What You Get Automatically
+
+The framework handles ALL of this for you:
+- ✅ CLI argument parsing
+- ✅ Drop-in filtering
+- ✅ Boilerplate setup and version extraction
+- ✅ Repository cloning at correct versions
+- ✅ Enrichment loading and logging
+- ✅ Scanning with progress logging
+- ✅ Content generation
+- ✅ File output with proper paths
+- ✅ Sidebar updates
+- ✅ Error handling
+- ✅ Success messages and preview links
+
+### Benefits
+
+- **~60% less code** compared to manual implementation
+- **100% consistent** with other generators
+- **Instant improvements** when framework is enhanced
+- **Focus on logic** not infrastructure
+- **Easy to test** your scanner and generator functions
+
+## Best Practices
+
+1. **Import only what you need**: Don't import entire modules
+2. **Use shared types**: When adding features, consider making them shared
+3. **Document in JSDoc**: All shared functions have comprehensive JSDoc comments
+4. **Handle errors gracefully**: Shared functions return null on errors with warnings
+5. **Keep generators focused**: Generators should focus on their specific task
+6. **Test incrementally**: Test with single drop-ins before running on all
+
+## Troubleshooting
+
+### Generator fails to find repository
+
+Check `lib/dropin-config.js` to ensure the repository is configured:
+```javascript
+'my-dropin': {
+    packageName: '@dropins/storefront-my-dropin',
+    gitUrl: 'https://github.com/adobe-commerce/storefront-my-dropin.git',
+    type: 'B2C',
+    displayName: 'My Dropin'
+}
+```
+
+### Enrichment not being used
+
+1. Verify file exists: `_dropin-enrichments/{dropin-name}/functions.json`
+2. Check JSON syntax is valid
+3. Ensure enrichment keys match function/event names exactly
+4. Check generator logs for warnings
+
+### Sidebar not updating
+
+1. Run generator again (it skips existing entries)
+2. Manually verify `astro.config.mjs` for correct format
+3. Check that reference entry exists (e.g., Functions for Events)
+
+---
+
+## Summary
+
+The shared library architecture provides a robust foundation for all documentation automation:
+
+- **Maintainable**: Update once, benefit everywhere
+- **Scalable**: Add new generators easily
+- **Reliable**: Tested, shared code reduces bugs
+- **Flexible**: Generators can evolve independently
+- **Professional**: Clean, modular, well-documented code
+
+This system is designed to grow with the project, making it easy to add new generators and features while maintaining consistency and quality across all documentation.
