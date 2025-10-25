@@ -240,6 +240,63 @@ The CLI has been extensively tested and improved to ensure:
 
 Automated generators for creating function and event documentation from drop-in source repositories.
 
+## Master Command - Generate All Documentation ⭐
+
+**Run all 9 generators at once** to regenerate the entire documentation site (500+ pages):
+
+```bash
+# Run all generators sequentially
+npm run generate-all-docs
+
+# Dry run (preview what will be generated without running)
+npm run generate-all-docs -- --dry-run
+```
+
+**What it does:**
+- ✅ Runs all 9 generators in sequence
+- ✅ Provides progress updates for each generator
+- ✅ Shows timing for each generator
+- ✅ Handles errors gracefully (asks to continue on failure)
+- ✅ Displays comprehensive summary at the end
+
+**Generated documentation:**
+- **70+ drop-in pages** (functions, events, containers, slots, dictionaries, installation, initialization)
+- **33 boilerplate pages** (technical documentation)
+- **29 merchant block pages** (business user documentation)
+- **500+ total pages**
+
+**Estimated time:** 15-20 minutes
+
+**Use cases:**
+- Testing all generators after framework changes
+- Regenerating all docs after drop-in updates
+- Verifying complete documentation pipeline
+- CI/CD integration for automated doc updates
+
+**Example output:**
+```
+======================================================================
+  MASTER DOCUMENTATION GENERATOR
+======================================================================
+
+📚 This will regenerate ALL documentation (500+ pages)
+⏱️  Estimated total time: 15-20 minutes
+
+[1/9] Running Functions Generator...
+✅ Functions completed in 134.2s
+
+[2/9] Running Events Generator...
+✅ Events completed in 128.5s
+
+...
+
+📊 SUMMARY:
+   ✅ Successful: 9/9
+   ⏱️  Total time: 18.4 minutes
+
+✨ All generators completed successfully!
+```
+
 ## Available Generators
 
 ### Function Documentation Generator
