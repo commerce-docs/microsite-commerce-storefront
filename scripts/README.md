@@ -356,6 +356,51 @@ npm run generate-dictionary-docs cart
 - Supports enrichment data for additional documentation
 - Auto-updates sidebar navigation
 
+### Installation Documentation Generator
+
+Generates comprehensive installation documentation with package setup, imports, and configuration.
+
+```bash
+# Generate for all drop-ins
+npm run generate-installation-docs
+
+# Generate for specific drop-in
+npm run generate-installation-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/installation.mdx`
+
+**Features**:
+- Extracts package names and versions from package.json
+- Identifies available containers for import examples
+- Generates accurate importmap configurations
+- Creates step-by-step installation guides
+- Includes version information and container counts
+- Provides usage examples with actual container names
+- Supports enrichment data for custom instructions
+
+### Initialization Documentation Generator
+
+Generates initialization documentation by parsing TypeScript configuration from initialize.ts files.
+
+```bash
+# Generate for all drop-ins
+npm run generate-initialization-docs
+
+# Generate for specific drop-in
+npm run generate-initialization-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/initialization.mdx`
+
+**Features**:
+- Parses TypeScript ConfigProps from initialize.ts files
+- Extracts property names, types, and generates descriptions
+- Identifies available models from data/models directories
+- Generates configuration options tables
+- Creates examples with actual model names
+- Supports enrichment data for detailed configuration documentation
+
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -368,6 +413,8 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 - `containers.json` - Container descriptions and configuration
 - `slots.json` - Slot descriptions and customization examples
 - `dictionary.json` - Additional documentation for i18n keys
+- `installation.json` - Custom installation instructions and requirements
+- `initialization.json` - Additional configuration documentation
 
 ### Example: Event Enrichment
 
