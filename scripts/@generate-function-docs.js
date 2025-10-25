@@ -23,166 +23,20 @@
  * - Generates independently: Function sections with signatures and examples
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execFileSync } from 'child_process';
+
+// Import shared utilities
+import { loadFunctionEnrichments } from './lib/enrichment.js';
+import { updateSidebarForFunctions } from './lib/sidebar.js';
+import { runGenerator, getProjectRoot } from './lib/generator-core.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
+import { cleanVersion } from './lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..');
-
-// Load enrichment data for a drop-in (if available)
-function loadEnrichmentData(dropinName) {
-    const enrichmentPath = join(projectRoot, '_dropin-enrichments', dropinName, 'functions.json');
-    if (existsSync(enrichmentPath)) {
-        try {
-            const content = readFileSync(enrichmentPath, 'utf8');
-            return JSON.parse(content);
-        } catch (error) {
-            console.warn(`  ⚠️  Failed to load enrichment data: ${error.message}`);
-            return null;
-        }
-    }
-    return null;
-}
-
-// Drop-in repositories configuration
-const DROPIN_REPOS = {
-    // B2C Drop-ins
-    'cart': {
-        packageName: '@dropins/storefront-cart',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
-        type: 'B2C',
-        displayName: 'Cart'
-    },
-    'checkout': {
-        packageName: '@dropins/storefront-checkout',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-checkout.git',
-        type: 'B2C',
-        displayName: 'Checkout'
-    },
-    'order': {
-        packageName: '@dropins/storefront-order',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-order.git',
-        type: 'B2C',
-        displayName: 'Order'
-    },
-    'product-details': {
-        packageName: '@dropins/storefront-pdp',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-pdp.git',
-        type: 'B2C',
-        displayName: 'Product Details'
-    },
-    'product-discovery': {
-        packageName: '@dropins/storefront-product-discovery',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
-        type: 'B2C',
-        displayName: 'Product Discovery'
-    },
-    'recommendations': {
-        packageName: '@dropins/storefront-recommendations',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-recommendations.git',
-        type: 'B2C',
-        displayName: 'Recommendations'
-    },
-    'user-account': {
-        packageName: '@dropins/storefront-account',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-account.git',
-        type: 'B2C',
-        displayName: 'User Account'
-    },
-    'user-auth': {
-        packageName: '@dropins/storefront-auth',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-auth.git',
-        type: 'B2C',
-        displayName: 'User Auth'
-    },
-    'wishlist': {
-        packageName: '@dropins/storefront-wishlist',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-wishlist.git',
-        type: 'B2C',
-        displayName: 'Wishlist'
-    },
-    'payment-services': {
-        packageName: '@dropins/storefront-payment-services',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
-        type: 'B2C',
-        displayName: 'Payment Services'
-    },
-    // B2B Drop-ins
-    'company-management': {
-        packageName: '@dropins/storefront-company-management',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-company-management.git',
-        type: 'B2B',
-        displayName: 'Company Management'
-    },
-};
-
-function cloneOrUpdateBoilerplate() {
-    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
-    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
-
-    console.log(`\n📦 Setting up boilerplate repository...`);
-
-    if (!existsSync(boilerplatePath)) {
-        console.log(`  Cloning boilerplate...`);
-        mkdirSync(dirname(boilerplatePath), { recursive: true });
-        execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', boilerplateUrl, boilerplatePath], { stdio: 'inherit' });
-
-        console.log(`  Installing boilerplate dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
-    } else {
-        console.log(`  Updating boilerplate...`);
-        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
-
-        console.log(`  Updating dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
-    }
-
-    return boilerplatePath;
-}
-
-function getBoilerplatePackageVersions(boilerplatePath) {
-    const packageJsonPath = join(boilerplatePath, 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-    return packageJson.dependencies || {};
-}
-
-function cloneDropinAtVersion(repoName, repoConfig, version) {
-    const dropinPath = join(projectRoot, '.temp-repos', repoName);
-
-    // Clean version string (remove ~ ^ etc)
-    const cleanVersion = version.replace(/^[\^~]/, '');
-    const tag = `v${cleanVersion}`;
-
-    console.log(`  Using version: ${cleanVersion}`);
-
-    if (!existsSync(dropinPath)) {
-        console.log(`  Cloning repository at ${tag}...`);
-        try {
-            execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
-        } catch (error) {
-            // If tag doesn't exist, try without 'v' prefix
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
-        }
-    } else {
-        console.log(`  Checking out ${tag}...`);
-        try {
-            // First fetch all tags
-            execFileSync('git', ['fetch', '--tags'], { cwd: dropinPath, stdio: 'pipe' });
-            // Then checkout the specific tag
-            execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
-        } catch (error) {
-            // If tag with 'v' doesn't exist, try without
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
-        }
-    }
-
-    return dropinPath;
-}
+const projectRoot = getProjectRoot();
 
 function scanForFunctions(repoPath) {
     const apiPath = join(repoPath, 'src', 'api');
@@ -432,7 +286,7 @@ import { Aside } from '@astrojs/starlight/components';
 This drop-in does not currently expose public API functions.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version.replace(/^[\^~]/, '')}</strong>
+<strong>Version: ${cleanVersion(version)}</strong>
 </div>${alternativesText}
 
 <Aside type="tip">
@@ -443,11 +297,8 @@ If you need programmatic control, consider reaching out to Adobe Commerce suppor
 }
 
 function generateFunctionsMDX(dropinName, repoConfig, functions, version, enrichmentData = null) {
-    const dropinDisplayName = repoConfig.displayName;
-
-    // Read template
-    const templatePath = join(projectRoot, '_dropin-templates', 'dropin-functions.mdx');
-    let template = readFileSync(templatePath, 'utf8');
+    // Read template using shared utility
+    const template = readTemplate('dropin-functions.mdx');
 
     // Build functions content
     let functionsContent = '';
@@ -508,153 +359,29 @@ function generateFunctionsMDX(dropinName, repoConfig, functions, version, enrich
         functionsContent += `---\n\n`;
     }
 
-    // Replace placeholders in template
-    const mdxContent = template
-        .replace(/DROPIN_NAME/g, dropinDisplayName)
-        .replace(/DROPIN_PACKAGE/g, dropinName)
-        .replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''))
-        .replace(/FUNCTIONS_CONTENT/g, functionsContent)
-        .replace(/REPO_URL/g, repoConfig.gitUrl.replace('.git', ''));
-
-    return mdxContent;
+    // Replace placeholders using shared utility
+    return replacePlaceholders(template, {
+        'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_PACKAGE': dropinName,
+        'DROPIN_VERSION': cleanVersion(version),
+        'FUNCTIONS_CONTENT': functionsContent,
+        'REPO_URL': repoConfig.gitUrl.replace('.git', '')
+    });
 }
 
-function updateSidebarNavigation(dropinName, repoConfig) {
-    const configPath = join(projectRoot, 'astro.config.mjs');
-    const config = readFileSync(configPath, 'utf8');
-
-    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const sidebarEntry = `{ label: 'Functions', link: '/${basePath}/${dropinName}/functions/' },`;
-
-    // Find the Slots entry for this dropin and add functions after it
-    const slotsPattern = new RegExp(
-        `(\\{\\s*label:\\s*'Slots',\\s*link:\\s*'/${basePath}/${dropinName}/slots/'\\s*\\},)`,
-        'i'
-    );
-
-    // Check if the functions entry already exists first
-    const functionsPattern = new RegExp(`label:\\s*'Functions',\\s*link:\\s*'/${basePath}/${dropinName}/functions/'`);
-    if (functionsPattern.test(config)) {
-        console.log(`  ℹ️  Sidebar entry already exists for ${repoConfig.displayName} functions`);
-        return false;
-    }
-
-    // Try to insert after Slots
-    const match = config.match(slotsPattern);
-    if (match) {
-        const updated = config.replace(
-            slotsPattern,
-            `$1\n                          ${sidebarEntry}`
-        );
-        writeFileSync(configPath, updated);
-        console.log(`  ✅ Added sidebar entry for ${repoConfig.displayName} functions`);
-        return true;
-    }
-
-    // If Slots doesn't exist, that's okay - sidebar can be managed manually
-    return false;
-}
-
-// Main execution
-async function main() {
-    console.log('🚀 Functions Documentation Generator');
-    console.log('=====================================\n');
-
-    // Parse command-line arguments
-    const targetDropin = process.argv[2];
-
-    // Filter drop-ins based on target
-    let dropinsToProcess = DROPIN_REPOS;
-
-    if (targetDropin) {
-        if (!DROPIN_REPOS[targetDropin]) {
-            console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
-            console.log('Available drop-ins:');
-            Object.keys(DROPIN_REPOS).forEach(name => {
-                console.log(`  - ${name}`);
-            });
-            process.exit(1);
+// Main execution using shared generator framework
+runGenerator({
+    name: 'Functions',
+    itemType: 'functions',
+    loadEnrichments: loadFunctionEnrichments,
+    scanRepo: scanForFunctions,
+    generateContent: (repoName, repoConfig, functions, version, enrichmentData) => {
+        // Handle empty functions case
+        if (functions.length === 0) {
+            return generateEmptyFunctionsMDX(repoName, repoConfig, version);
         }
-        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
-        console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
-    } else {
-        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
-    }
-
-    // Clone/update boilerplate once for all drop-ins
-    const boilerplatePath = cloneOrUpdateBoilerplate();
-
-    // Get package versions from boilerplate
-    const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
-    console.log(`\n📦 Loaded package versions from boilerplate\n`);
-
-    // Process each drop-in
-    for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
-        try {
-            console.log(`\n📦 Processing ${repoConfig.displayName}...`);
-
-            // Get version from boilerplate package.json
-            const version = packageVersions[repoConfig.packageName];
-
-            if (!version) {
-                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
-                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
-                continue;
-            }
-
-            // Clone git repo at specific version
-            const repoPath = cloneDropinAtVersion(repoName, repoConfig, version);
-
-            // Load enrichment data if available
-            const enrichmentData = loadEnrichmentData(repoName);
-            if (enrichmentData) {
-                console.log(`  📚 Loaded enrichment data for ${Object.keys(enrichmentData).length} functions`);
-            }
-
-            // Scan for functions
-            console.log(`  🔍 Scanning for functions...`);
-            const functions = scanForFunctions(repoPath);
-
-            let mdxContent;
-            if (functions.length === 0) {
-                console.log(`  ⚠️  No functions found - generating placeholder page`);
-                // Generate a placeholder page explaining no functions are available
-                mdxContent = generateEmptyFunctionsMDX(repoName, repoConfig, version);
-            } else {
-                console.log(`  ✓ Found ${functions.length} functions`);
-                // Generate MDX with actual functions
-                mdxContent = generateFunctionsMDX(repoName, repoConfig, functions, version, enrichmentData);
-            }
-
-            // Write to output file
-            const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-            const outputPath = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'functions.mdx');
-            const outputDir = dirname(outputPath);
-
-            if (!existsSync(outputDir)) {
-                mkdirSync(outputDir, { recursive: true });
-            }
-
-            writeFileSync(outputPath, mdxContent, 'utf8');
-            console.log(`  ✅ Generated ${outputPath}`);
-
-            // Show preview link for single drop-in generation
-            if (targetDropin) {
-                const urlPath = `/${basePath}/${repoName}/functions`;
-                console.log(`  📄 View at: ${urlPath}`);
-                console.log(`     (Start dev server with 'npm run dev' if not already running)`);
-            }
-
-            // Update sidebar navigation
-            updateSidebarNavigation(repoName, repoConfig);
-            console.log('');
-
-        } catch (error) {
-            console.error(`  ❌ Error processing ${repoName}: ${error.message}\n`);
-        }
-    }
-
-    console.log('\n✨ Functions documentation generation complete!\n');
-}
-
-main();
+        return generateFunctionsMDX(repoName, repoConfig, functions, version, enrichmentData);
+    },
+    updateSidebar: updateSidebarForFunctions,
+    outputFileName: 'functions.mdx'
+});

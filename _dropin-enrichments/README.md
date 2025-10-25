@@ -4,14 +4,15 @@ This directory contains enrichment data for auto-generated drop-in documentation
 
 ## How It Works
 
-The functions generator (`scripts/@generate-function-docs.js`) automatically looks for enrichment files in this directory. If found, it merges the enriched content with auto-generated content, giving priority to the enriched versions.
+The documentation generators (`scripts/@generate-function-docs.js` and `scripts/@generate-event-docs.js`) automatically look for enrichment files in this directory. If found, they merge the enriched content with auto-generated content, giving priority to the enriched versions.
 
 ## Directory Structure
 
 ```
 _dropin-enrichments/
   {dropin-name}/
-    functions.json
+    functions.json   # Enriched function documentation
+    events.json      # Enriched event documentation
 ```
 
 Example:
@@ -19,15 +20,19 @@ Example:
 _dropin-enrichments/
   user-auth/
     functions.json
+    events.json
   cart/
     functions.json
+    events.json
 ```
 
-## Enrichment File Format
+## Enrichment File Formats
+
+### functions.json
 
 Each `functions.json` file is a JSON object where:
 - **Keys** = function names (must match exactly)
-- **Values** = enrichment objects with optional `description` and `usage` fields
+- **Values** = enrichment objects with optional fields like `description`, `usage`, `parameters`, `returns`, `events`, etc.
 
 ### Basic Structure
 
@@ -79,6 +84,8 @@ Each `functions.json` file is a JSON object where:
 
 All fields are **optional** - use only what you need:
 
+> **⚠️ Important:** Do NOT use JSX components (like `<CodeInclude>`, `<Aside>`, etc.) with variable references in enrichment data. Use plain Markdown/text instead. See examples below for recommended approaches.
+
 - **description** (string): Enhanced function description
   - Provide context, explain behavior, link to GraphQL docs
   - Supports Markdown formatting including links
@@ -95,7 +102,12 @@ All fields are **optional** - use only what you need:
 - **returns** (string): Return value documentation
   - Describe what the function returns
   - Can include type information and structure
-  - Supports Markdown formatting
+  - Supports Markdown formatting (including code blocks)
+  - **Do NOT use JSX components** (like `<CodeInclude>`) with variable references
+  - **Recommended approaches:**
+    - Simple reference: `"Returns a CartModel object. See [types](link) for details."`
+    - Inline code block: Use `\n\n\`\`\`typescript\ninterface Type {...}\n\`\`\``
+    - Structured description: List key fields with descriptions
   - If omitted, no returns section is shown
 
 - **events** (string): Events emitted by this function
@@ -116,6 +128,91 @@ All fields are **optional** - use only what you need:
   - Automatically wrapped in TypeScript code block
   - Use `\n` for line breaks
   - If omitted, auto-generated example is used
+
+### Documenting Return Types - Best Practices
+
+There are three recommended ways to document complex return types without using JSX components:
+
+#### Approach 1: Simple Reference with Link (Recommended)
+
+```json
+{
+  "returns": "Returns a promise that resolves to an `OrderDataModel` object. See the [Order types](https://github.com/adobe-commerce/storefront-order/blob/main/src/types/index.ts) for the complete type definition."
+}
+```
+
+**Pros:** Clean, maintainable, links to source of truth  
+**Cons:** Requires external navigation
+
+#### Approach 2: Inline TypeScript Code Block
+
+```json
+{
+  "returns": "Returns a promise that resolves to an `OrderDataModel` object with the following structure:\n\n```typescript\ninterface OrderDataModel {\n  id: string;\n  status: string;\n  items: OrderItem[];\n  total: number;\n}\n```"
+}
+```
+
+**Pros:** Complete information in one place  
+**Cons:** Verbose, needs manual updates if types change
+
+#### Approach 3: Structured Field Description
+
+```json
+{
+  "returns": "Returns a promise that resolves to an `OrderDataModel` object containing:\n- `id` (string) - The order identifier\n- `status` (string) - Current order status\n- `items` (array) - Array of order items\n- `total` (number) - Order total amount"
+}
+```
+
+**Pros:** Readable, highlights important fields  
+**Cons:** May not show complete structure
+
+#### ❌ What NOT to Do
+
+```json
+{
+  "returns": "Returns CartModel:\n\n<CodeInclude code={cartModel} lang=\"ts\" />"
+}
+```
+
+**Why it fails:** The `{cartModel}` variable is not defined in the MDX scope, causing runtime errors.
+
+### events.json
+
+Each `events.json` file is a JSON object where:
+- **Keys** = event names (must match exactly, including slashes like `cart/updated`)
+- **Values** = enrichment objects with `description` field
+
+#### Basic Structure
+
+```json
+{
+  "eventName": {
+    "description": "Detailed description explaining when the event is emitted/listened, what data it carries, and common use cases"
+  }
+}
+```
+
+#### Complete Example
+
+```json
+{
+  "cart/data": {
+    "description": "Triggered when cart data is available or changes. This event carries the full cart state including items, totals, and applied discounts. External code can emit this event to update the cart programmatically or subscribe to it to react to cart changes."
+  },
+  "cart/initialized": {
+    "description": "Emitted after the Cart drop-in completes its initialization sequence. This event signals that the cart is ready to accept user interactions and process cart operations."
+  }
+}
+```
+
+#### Fields
+
+- **description** (string): Enhanced event description
+  - Explain when the event fires and what triggers it
+  - Describe the data payload and its purpose
+  - Provide use cases for listening/emitting
+  - Supports Markdown formatting
+  - If omitted, auto-generated description is used
 
 ## Benefits
 
