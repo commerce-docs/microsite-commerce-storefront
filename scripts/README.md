@@ -400,7 +400,6 @@ npm run generate-initialization-docs cart
 - Generates configuration options tables
 - Creates examples with actual model names
 - Supports enrichment data for detailed configuration documentation
-
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
