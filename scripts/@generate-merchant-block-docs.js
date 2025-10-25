@@ -42,7 +42,7 @@ function cloneBoilerplate() {
 
     if (!existsSync(boilerplatePath)) {
         console.log('  Cloning boilerplate repository...');
-        execSync('git clone --depth 1 https://github.com/hlxsites/aem-boilerplate-commerce.git ' + boilerplatePath, { stdio: 'inherit' });
+        execFileSync('git', ['clone', '--depth', '1', 'https://github.com/hlxsites/aem-boilerplate-commerce.git', boilerplatePath], { stdio: 'inherit' });
     } else {
         console.log('  Updating boilerplate repository...');
         execSync(`cd ${boilerplatePath} && git pull`, { stdio: 'inherit' });
