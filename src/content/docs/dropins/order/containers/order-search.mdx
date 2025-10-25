@@ -1,100 +1,85 @@
+{/*
+  Template for Drop-in Container Documentation
+  
+  This template is used by scripts/@generate-container-docs.js to generate container documentation
+  for each container from the source repositories.
+  
+  Placeholders used in this template:
+  - Order → Display name (e.g., "Cart", "Checkout")
+  - @dropins/storefront-order → Package name (e.g., "cart", "checkout")
+  - OrderSearch → Container name (e.g., "MiniCart", "OrderSummary")
+  - OrderSearch → Display name for container (e.g., "Mini Cart")
+  - 1.4.0 → Version number (e.g., "1.5.1")
+  - The OrderSearch container component for the drop-in. → Brief description of what the container does
+  - | No configurations | - | - | - | → Generated markdown table of all Props
+  - This container does not currently expose any customizable slots. → Generated slots sections with examples
+  - ```jsx
+import { OrderSearch } from '@dropins/storefront-order';
+
+export default function MyComponent() {
+  return (
+    <OrderSearch/>
+  );
+}
+``` → Basic usage example with code
+  - https://github.com/adobe-commerce/storefront-order → GitHub repository URL
+  
+  The script handles:
+  - Extracting container Props from TypeScript interfaces
+  - Generating configuration tables with types and descriptions
+  - Extracting and documenting all slots
+  - Creating basic usage examples
+  
+  The template and script must be kept in sync.
+*/}
+
 ---
-title: OrderSearch container
-description: Learn about the OrderSearch container.
+title: Order - OrderSearch Container
+description: Learn about the OrderSearch container in the Order drop-in.
+sidebar:
+  label: OrderSearch
+  order: auto
 ---
 
-import Diagram from '@components/Diagram.astro';
-import Callouts from '@components/Callouts.astro';
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-The `OrderSearch` container enables order searches using email, last name, and order number. It is available to both guest and registered users for quick access to order details.
+## Overview
 
-<Diagram caption="OrderSearch container">
-  ![OrderSearch  container](@images/dropins/order/order-search.png)
-</Diagram>
+The OrderSearch container component for the drop-in.
 
-## Configurations
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.4.0</strong>
+</div>
+
+## Configuration
 
 The `OrderSearch` container provides the following configuration options:
 
-<OptionsTable
-compact
-    options={[
-        ['Options', 'Type', 'Req?', 'Description'],
-        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
-        ['isAuth', 'boolean', 'No', 'Indicates whether the user is authenticated.'],
-        ['renderSignIn', 'function', 'No', 'A function responsible for rendering the sign-in form for the user.'],
-        ['routeGuestOrder', 'function', 'No', 'A function that returns the URL for the guest (unauthenticated user) order route.'],
-        ['onError', 'function', 'No', 'A function executed when an error occurs. It receives an errorInformation object containing details about the error.'],
-    ]}
-/>
+<TableWrapper nowrap={[0]}>
 
-## Example
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| No configurations | - | - | - |
 
-The following example demonstrates how to render the `OrderSearch` container:
+</TableWrapper>
 
-```javascript
-const renderSignIn = async (element, email, orderNumber) => authRenderer.render(SignIn, {
-  initialEmailValue: email,
-  renderSignUpLink: false,
-  labels: {
-    formTitleText: email
-      ? 'Enter your password to view order details'
-      : 'Sign in to view order details',
-    primaryButtonText: 'View order',
-  },
-  routeForgotPassword: () => 'reset-password.html',
-  routeRedirectOnSignIn: () => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
-})(element);
+## Slots
 
-export default async function decorate(block) {
-  block.innerHTML = '';
+This container does not currently expose any customizable slots.
 
-  events.on('order/data', async (order) => {
-    if (!order) return;
+## Usage
 
-    block.innerHTML = '';
+The following example demonstrates how to use the `OrderSearch` container:
 
-    await orderRenderer.render(OrderSearch, {
-      isAuth: checkIsAuthenticated(),
-      renderSignIn: async ({ render, formValues }) => {
-        if (render) {
-          renderSignIn(
-            block,
-            formValues?.email ?? '',
-            formValues?.number ?? '',
-          );
+```jsx
+import { OrderSearch } from '@dropins/storefront-order';
 
-          return false;
-        }
-        return true;
-      },
-      routeCustomerOrder: () => CUSTOMER_ORDER_DETAILS_PATH,
-      routeGuestOrder: () => ORDER_DETAILS_PATH,
-      onError: async (errorInformation) => {
-        console.info('errorInformation', errorInformation);
-      },
-    })(block);
-  });
-
-  await orderRenderer.render(OrderSearch, {
-    isAuth: checkIsAuthenticated(),
-    renderSignIn: async ({ render, formValues }) => {
-      if (render) {
-        renderSignIn(block, formValues?.email ?? '', formValues?.number ?? '');
-
-        return false;
-      }
-
-      return true;
-    },
-    routeCustomerOrder: () => CUSTOMER_ORDER_DETAILS_PATH,
-    routeGuestOrder: () => ORDER_DETAILS_PATH,
-    onError: async (errorInformation) => {
-      console.info('errorInformation', errorInformation);
-    },
-  })(block);
+export default function MyComponent() {
+  return (
+    <OrderSearch/>
+  );
 }
 ```
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-order */}
