@@ -119,6 +119,16 @@ export function loadInstallationEnrichments(dropinName) {
 }
 
 /**
+ * Load initialization enrichments for a drop-in
+ * 
+ * @param {string} dropinName - Name of the drop-in
+ * @returns {Object|null} Initialization enrichment data
+ */
+export function loadInitializationEnrichments(dropinName) {
+    return loadEnrichmentData(dropinName, 'initialization');
+}
+
+/**
  * Check if a specific item has enrichment data
  * 
  * @param {Object} enrichmentData - The loaded enrichment data object

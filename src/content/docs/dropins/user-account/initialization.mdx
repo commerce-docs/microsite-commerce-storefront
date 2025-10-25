@@ -1,66 +1,101 @@
 ---
-title: User account initialization
-description: Learn how to configure initializer for the user account drop-in component.
+title: User Account initialization
+description: Learn how to configure the initializer for the User Account drop-in component.
+sidebar:
+  label: Initialization
+  order: 3
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 import OptionsTable from '@components/OptionsTable.astro';
 
-The user account drop-in component does not require any special data or specific parameters to be initialized. To initialize the drop-in component, you must import [`/scripts/initializers/account.js`](https://github.com/hlxsites/aem-boilerplate-commerce/blob/develop/scripts/initializers/account.js) into the appropriate file.
+<Aside type="note" title="Auto-generated on GENERATION_DATE. Do not edit this page directly." />
 
-```js
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-account/api.js';
-import { initializeDropin } from './index.js';
-import { fetchPlaceholders } from '../commerce.js';
+{/* 
+TEMPLATE INSTRUCTIONS:
+This template is used by scripts/@generate-initialization-docs.js to generate initialization documentation.
 
-await initializeDropin(async () => {
-  const labels = await fetchPlaceholders();
+PLACEHOLDERS:
+- User Account: Display name (e.g., "Cart", "Checkout")
+- @dropins/storefront-account: Package name (e.g., "storefront-cart", "storefront-checkout")
+- GENERATION_DATE: ISO date of generation
+- ModelName: Primary model name (e.g., "CartModel", "CheckoutModel")
+- OptionsTable options array: Dynamically generated from ConfigProps
 
-  const langDefinitions = {
-    default: {
-      ...labels,
-    },
-  };
+TO MODIFY:
+- Structure changes: Edit this template
+- Config options: Extracted automatically from source code ConfigProps
+- Model names: Extracted automatically from data/models directory
+*/}
 
-  return initializers.mountImmediately(initialize, { langDefinitions });
-})();
-```
-
-The `langDefinitions` property defines and registers language packs for the user account component. This allows you to provide localized text for different languages in your application.
+{/* DESCRIBE what the User Account initializer provides. Include information about global options, language definitions, and model extensions. */}
 
 ## Configuration options
 
-The user account component initializer accepts the following property:
+{/* DESCRIBE the configuration options available for the User Account initializer. */}
 
 <OptionsTable
-  compact
   options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
+    ['Option', 'Type', 'Req?', 'Description'],
     ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
+    ['models', 'object', 'No', 'Extend the default model with new fields and transform them as needed.'],
   ]}
 />
 
 ### Example
 
-The following example initializes the `commerce-addresses` block:
+{/* DESCRIBE the User Account initializer configuration implementation. */}
 
-```js
-import '../../scripts/initializers/account.js';
+```ts
+// Initialize User Account 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models,
+  });
+})();
+```
 
-export default async function decorate(block) {
- const {
-   'minified-view': minifiedViewConfig = 'false',
- } = readBlockConfig(block);
+### Set language definitions
 
- if (!checkIsAuthenticated()) {
-   window.location.href = CUSTOMER_LOGIN_PATH;
- } else {
-   await accountRenderer.render(Addresses, {
-     minifiedView: minifiedViewConfig === 'true',
-     withActionsInMinifiedView: false,
-     withActionsInFullSizeView: true,
-     routeAddressesPage: () => CUSTOMER_ADDRESS_PATH,
-   })(block);
- }
-}
+{/* DESCRIBE how the langDefinitions property works for the User Account. Include information about dictionary files and internationalization. */}
+
+```ts
+// Fetch the dictionary files for your application
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+
+// Register the component with language definitions
+const langDefinitions = {
+  default: fr_FR,
+};
+
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
+});
+```
+
+### Set models
+
+{/* DESCRIBE how to extend default models in the User Account component. Include information about transformers and new fields. */}
+
+{/* DESCRIBE the models property structure for the User Account. Include information about default models and transformers. */}
+
+{/* DESCRIBE how to extend default models with new fields and transformers for the User Account. */}
+
+```ts
+// Initialize User Account
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models: {
+      ModelName: {
+        transformer: (data) => ({
+          customField1: data?.custom_field_1,
+          customField2: data?.custom_field_2,
+        }),
+      },
+    },
+  });
+})();
 ```
