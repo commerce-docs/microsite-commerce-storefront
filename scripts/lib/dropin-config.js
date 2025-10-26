@@ -72,13 +72,13 @@ export const DROPIN_REPOS = {
         gitUrl: 'git@github.com:adobe-commerce/storefront-payment-services.git',
         type: 'B2C',
         displayName: 'Payment Services'
-    },
+    }
     // B2B Drop-ins
-    'company-management': {
-        packageName: '@dropins/storefront-company-management',
-        gitUrl: 'git@github.com:adobe-commerce/storefront-company-management.git',
-        type: 'B2B',
-        displayName: 'Company Management'
-    },
+    // 'company-management': {
+    //     packageName: '@dropins/storefront-company-management',
+    //     gitUrl: 'git@github.com:adobe-commerce/storefront-company-management.git',
+    //     type: 'B2B',
+    //     displayName: 'Company Management'
+    // },
 };
 
