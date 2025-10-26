@@ -15,68 +15,68 @@ export const DROPIN_REPOS = {
     // B2C Drop-ins
     'cart': {
         packageName: '@dropins/storefront-cart',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-cart.git',
         type: 'B2C',
         displayName: 'Cart'
     },
     'checkout': {
         packageName: '@dropins/storefront-checkout',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-checkout.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-checkout.git',
         type: 'B2C',
         displayName: 'Checkout'
     },
     'order': {
         packageName: '@dropins/storefront-order',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-order.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-order.git',
         type: 'B2C',
         displayName: 'Order'
     },
     'product-details': {
         packageName: '@dropins/storefront-pdp',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-pdp.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-pdp.git',
         type: 'B2C',
         displayName: 'Product Details'
     },
     'product-discovery': {
         packageName: '@dropins/storefront-product-discovery',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-search-dropin.git',
         type: 'B2C',
         displayName: 'Product Discovery'
     },
     'recommendations': {
         packageName: '@dropins/storefront-recommendations',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-recommendations.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-recommendations.git',
         type: 'B2C',
         displayName: 'Recommendations'
     },
     'user-account': {
         packageName: '@dropins/storefront-account',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-account.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-account.git',
         type: 'B2C',
         displayName: 'User Account'
     },
     'user-auth': {
         packageName: '@dropins/storefront-auth',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-auth.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-auth.git',
         type: 'B2C',
         displayName: 'User Auth'
     },
     'wishlist': {
         packageName: '@dropins/storefront-wishlist',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-wishlist.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-wishlist.git',
         type: 'B2C',
         displayName: 'Wishlist'
     },
     'payment-services': {
         packageName: '@dropins/storefront-payment-services',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-payment-services.git',
         type: 'B2C',
         displayName: 'Payment Services'
     },
     // B2B Drop-ins
     'company-management': {
         packageName: '@dropins/storefront-company-management',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-company-management.git',
+        gitUrl: 'git@github.com:adobe-commerce/storefront-company-management.git',
         type: 'B2B',
         displayName: 'Company Management'
     },
