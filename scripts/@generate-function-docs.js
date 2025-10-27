@@ -31,6 +31,7 @@ import { join } from 'path';
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadFunctionEnrichments } from './lib/enrichment.js';
 import { updateSidebarForFunctions } from './lib/sidebar.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
 
 const projectRoot = getProjectRoot();
@@ -73,7 +74,7 @@ function scanForFunctions(repoPath) {
 
             if (existsSync(mdxPath)) {
                 const mdxContent = readFileSync(mdxPath, 'utf8');
-                
+
                 // Extract TypeScript signature if .ts file exists
                 let signature = null;
                 if (existsSync(tsPath)) {
@@ -151,55 +152,76 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     // Sort functions alphabetically
     functions.sort((a, b) => a.name.localeCompare(b.name));
 
-    const cleanedVersion = cleanVersion(version);
-
-    // Start with frontmatter and imports
-    let content = `---
-title: ${repoConfig.displayName} functions
-description: Learn about the API functions provided by the ${repoConfig.displayName} drop-in component.
-sidebar:
-  label: Functions
-  order: 6
-tableOfContents:
-  minHeadingLevel: 2
-  maxHeadingLevel: 2
----
-
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import CodeInclude from '@components/CodeInclude.astro';
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanedVersion}</strong>
-</div>
-
-The **${repoConfig.displayName}** drop-in provides API functions that allow developers to interact with ${repoConfig.displayName.toLowerCase()} functionality programmatically.
-
-`;
-
-    // Add each function's documentation
+    // Generate functions content
+    let functionsContent = '';
     functions.forEach(func => {
         // Clean up the MDX content from the source
         let funcContent = func.mdxContent;
-        
+
         // Remove Storybook imports and Meta tags
         funcContent = funcContent.replace(/import\s+{\s*Meta\s*}\s+from\s+['"]@storybook\/blocks['"];?\s*/g, '');
         funcContent = funcContent.replace(/<Meta\s+title=["'][^"']*["']\s*\/>/g, '');
-        
+
         // Remove leading/trailing whitespace
         funcContent = funcContent.trim();
-        
-        // Remove the first H1 if it matches the function name (we'll add it back with proper formatting)
+
+        // Remove the first H1 if it matches the function name (we'll add it back with proper formatting as H3)
         funcContent = funcContent.replace(new RegExp(`^#\\s+${func.name}\\s*\\n`, 'i'), '');
-        
-        // Add the function section with proper heading
-        content += `## ${func.name}\n\n`;
-        
+
+        // Remove the Examples section and everything after it
+        funcContent = funcContent.replace(/^## Examples[\s\S]*$/m, '');
+
+        // Combine import statement with Usage section for more concise documentation
+        // Pattern: standalone import code block + ## Usage + usage code block
+        // Result: Combined import + usage in one code block (without "Usage" heading)
+        const importMatch = funcContent.match(/```(?:ts|typescript|js|javascript)\s*(import\s+{[^}]+}\s+from\s+['"][^'"]+['"];?)\s*```/);
+        if (importMatch) {
+            const importStatement = importMatch[1];
+            const importBlock = importMatch[0];
+
+            // Find the Usage section and its code block
+            const usageMatch = funcContent.match(/##\s+Usage\s*\n+(```(?:ts|typescript|js|javascript)\s*\n)([\s\S]*?)(```)/);
+            if (usageMatch) {
+                const codeStart = usageMatch[1];
+                const usageCode = usageMatch[2];
+                const codeEnd = usageMatch[3];
+
+                // Combine import with usage code (without "Usage" heading)
+                const combinedCode = `\n\n${codeStart}${importStatement}\n\n${usageCode}${codeEnd}`;
+
+                // Replace the Usage section with combined version (removes heading)
+                funcContent = funcContent.replace(usageMatch[0], combinedCode);
+
+                // Remove the standalone import block
+                funcContent = funcContent.replace(importBlock, '');
+            }
+        }
+
+        // Remove any remaining standalone "Usage" headings (self-evident from code blocks)
+        funcContent = funcContent.replace(/^##\s+Usage\s*\n+/gm, '\n');
+
+        // Add the function section with H3 heading (under the "Function details" H2)
+        functionsContent += `### ${func.name}\n\n`;
+
+        // Increase heading level in function content to match Events hierarchy
+        // H2 "Function details" > H3 "Function Name" > H4 "Subsections"
+        // Convert: H2 (##) -> H4 (####), H3 (###) -> H4 (####)
+        funcContent = funcContent.replace(/^### /gm, '#### ');  // H3 -> H4
+        funcContent = funcContent.replace(/^## /gm, '#### ');   // H2 -> H4
+
         // Add the cleaned function content
-        content += funcContent + '\n\n';
+        functionsContent += funcContent + '\n\n';
     });
 
-    return content;
+    // Read template and replace placeholders
+    const template = readTemplate('dropin-functions.mdx');
+
+    return replacePlaceholders(template, {
+        DROPIN_NAME: repoConfig.displayName,
+        DROPIN_DISPLAY_NAME: repoConfig.displayName,
+        DROPIN_VERSION: cleanVersion(version),
+        FUNCTIONS_CONTENT: functionsContent
+    });
 }
 
 /**
@@ -211,30 +233,21 @@ The **${repoConfig.displayName}** drop-in provides API functions that allow deve
  * @returns {string} Generated MDX content
  */
 function generateEmptyFunctionsDocs(repoName, repoConfig, version) {
-    const cleanedVersion = cleanVersion(version);
-
-    return `---
-title: ${repoConfig.displayName} functions
-description: Learn about the API functions provided by the ${repoConfig.displayName} drop-in component.
-sidebar:
-  label: Functions
-  order: 6
----
-
-import { Aside } from '@astrojs/starlight/components';
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanedVersion}</strong>
-</div>
-
-## API Functions
-
-<Aside type="note">
+    const functionsContent = `<Aside type="note">
 No public API functions are currently documented for this drop-in. This drop-in may operate through containers and events only, or API documentation may be added in a future release.
 </Aside>
 
-For information about using this drop-in through its UI containers, see the [Containers](/dropins/${repoName}/) documentation.
-`;
+For information about using this drop-in through its UI containers, see the [Containers](/dropins/${repoName}/) documentation.`;
+
+    // Use template with placeholder content
+    const template = readTemplate('dropin-functions.mdx');
+
+    return replacePlaceholders(template, {
+        DROPIN_NAME: repoConfig.displayName,
+        DROPIN_DISPLAY_NAME: repoConfig.displayName,
+        DROPIN_VERSION: cleanVersion(version),
+        FUNCTIONS_CONTENT: functionsContent
+    });
 }
 
 // ============================================================================
