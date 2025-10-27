@@ -34,77 +34,11 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, execFileSync } from 'child_process';
+import { DROPIN_REPOS } from './lib/dropin-config.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
-
-// Configuration for drop-in packages
-// Maps documentation paths to npm package names and git repos
-const DROPIN_REPOS = {
-    // B2C Drop-ins
-    'cart': {
-        packageName: '@dropins/storefront-cart',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-cart.git',
-        type: 'B2C',
-        displayName: 'Cart'
-    },
-    'checkout': {
-        packageName: '@dropins/storefront-checkout',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-checkout.git',
-        type: 'B2C',
-        displayName: 'Checkout'
-    },
-    'order': {
-        packageName: '@dropins/storefront-order',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-order.git',
-        type: 'B2C',
-        displayName: 'Order'
-    },
-    'product-details': {
-        packageName: '@dropins/storefront-pdp',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-pdp.git',
-        type: 'B2C',
-        displayName: 'Product Details'
-    },
-    'product-discovery': {
-        packageName: '@dropins/storefront-product-discovery',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-search-dropin.git',
-        type: 'B2C',
-        displayName: 'Product Discovery'
-    },
-    'recommendations': {
-        packageName: '@dropins/storefront-recommendations',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-recommendations.git',
-        type: 'B2C',
-        displayName: 'Recommendations'
-    },
-    'user-account': {
-        packageName: '@dropins/storefront-account',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-account.git',
-        type: 'B2C',
-        displayName: 'User Account'
-    },
-    'user-auth': {
-        packageName: '@dropins/storefront-auth',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-auth.git',
-        type: 'B2C',
-        displayName: 'User Auth'
-    },
-    'wishlist': {
-        packageName: '@dropins/storefront-wishlist',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-wishlist.git',
-        type: 'B2C',
-        displayName: 'Wishlist'
-    },
-    'payment-services': {
-        packageName: '@dropins/storefront-payment-services',
-        gitUrl: 'https://github.com/adobe-commerce/storefront-payment-services.git',
-        type: 'B2C',
-        displayName: 'Payment Services'
-    }
-    // Note: Personalization drop-in has no i18n dictionary or events (data-only)
-    // Only drop-ins published to npm and used in the boilerplate should be included here
-};
 
 function cloneOrUpdateBoilerplate() {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
