@@ -523,10 +523,10 @@ async function config() {
                         items: [
                           { label: 'Payment Services overview', link: '/dropins/payment-services/' },
                           { label: 'Payment Services installation', link: '/dropins/payment-services/installation/' },
+                          { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Containers', link: '/dropins/payment-services/containers/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
-                          { label: 'Payment Services dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Payment containers',
                             collapsed: false,
