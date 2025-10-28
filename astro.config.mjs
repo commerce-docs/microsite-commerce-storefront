@@ -525,7 +525,7 @@ async function config() {
                           { label: 'Containers', link: '/dropins/payment-services/containers/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
-                            label: 'Payment containers',
+                            label: 'Containers',
                             collapsed: false,
                             items: [{ label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }],
                           },
@@ -539,7 +539,7 @@ async function config() {
                           { label: 'Personalization initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Personalization functions', link: '/dropins/personalization/functions/' },
                           {
-                            label: 'Personalization containers',
+                            label: 'Containers',
                             collapsed: false,
                             items: [{ label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' }],
                           },
@@ -589,7 +589,7 @@ async function config() {
                           { label: 'Discovery dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
                           {
-                            label: 'Product Discovery containers',
+                            label: 'Containers',
                             collapsed: false,
                             items: [
                               { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
