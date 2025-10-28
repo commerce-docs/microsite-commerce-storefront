@@ -240,6 +240,59 @@ The CLI has been extensively tested and improved to ensure:
 
 Automated generators for creating function and event documentation from drop-in source repositories.
 
+## Source-First Principle 🎯
+
+**ALL generators prioritize data extraction from source repositories over manual enrichment files.**
+
+### Version Management
+
+The generator workflow ensures documentation matches the exact version in production:
+
+1. **Clone Boilerplate** → Clones/updates `aem-boilerplate-commerce` (main branch)
+2. **Read Versions** → Extracts `@dropins/*` package versions from `package.json`
+3. **Clone Drop-ins** → For each drop-in, clones the **specific tagged version** (e.g., `v1.2.3`)
+4. **Extract Data** → Reads actual source code, examples, JSDoc, tests
+5. **Generate Docs** → Creates documentation from verified, working code
+
+### What Gets Extracted from Source
+
+| Data Type | Source Locations | Priority |
+|-----------|------------------|----------|
+| **Function Signatures** | TypeScript definitions | Always from source |
+| **Parameters** | TypeScript interfaces | Always from source |
+| **Return Types** | TypeScript types | Always from source |
+| **Usage Examples** | JSDoc → HTML examples → Boilerplate blocks | Source first, enrichment fallback |
+| **Event Emissions** | `events.emit()` calls in source | Always from source |
+| **Event Listeners** | `events.on()` calls in source | Always from source |
+
+### Repository Structure
+
+```
+.temp-repos/
+├── boilerplate/              # Main branch (determines versions)
+│   ├── package.json         # Source of truth for @dropin versions
+│   └── blocks/              # Real-world usage examples
+│       ├── product-details/
+│       ├── product-list-page/
+│       └── commerce-cart/
+├── cart/                    # Tagged version (e.g., v1.2.3)
+│   ├── src/api/            # Function source code
+│   ├── examples/           # HTML example demonstrations
+│   └── tests/              # Test files with usage examples
+├── checkout/                # Tagged version
+├── order/                  # Tagged version
+└── ...                     # All other drop-ins at tagged versions
+```
+
+### Enrichment Files (Fallback Only)
+
+Manual enrichment files in `_dropin-enrichments/` are used **only when**:
+- Source code lacks necessary documentation
+- Additional business context is needed
+- Examples in source are insufficient
+
+**Rule:** If it exists in source code, extract it. Don't maintain it manually.
+
 ## Master Command - Generate All Documentation ⭐
 
 **Run all 9 generators at once** to regenerate the entire documentation site (500+ pages):
@@ -518,13 +571,51 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 **Location**: `_dropin-enrichments/{dropin-name}/`
 
 **Supported Files**:
-- `functions.json` - Function descriptions and metadata
+- `functions.json` - Function descriptions, metadata, and **accurate type signatures**
 - `events.json` - Event descriptions and use cases
 - `containers.json` - Container descriptions and configuration
 - `slots.json` - Slot descriptions and customization examples
 - `dictionary.json` - Additional documentation for i18n keys
 - `installation.json` - Custom installation instructions and requirements
 - `initialization.json` - Additional configuration documentation
+
+### Signature Enrichment (Type Accuracy)
+
+When TypeScript source files lack explicit return type annotations, the generator infers `Promise<any>` or `any` as a safe fallback. For accurate documentation, you can override these with correct types in enrichment files.
+
+**Run the audit tool to find functions needing type enrichment:**
+
+```bash
+# Audit specific drop-in
+npm run audit-signatures cart
+
+# Or run directly
+node scripts/audit-signatures.js cart
+```
+
+**Example output:**
+```
+⚠️  Functions needing manual type enrichment:
+----------------------------------------------------------------------
+   createGuestCart
+      Inferred: Promise<any>
+      Action: Add to _dropin-enrichments/cart/functions.json
+```
+
+**Add accurate signature to enrichment file:**
+
+```json
+{
+  "createGuestCart": {
+    "signature": {
+      "params": "",
+      "returnType": "Promise<string>"
+    }
+  }
+}
+```
+
+The generator will use your enriched signature instead of the inferred one, ensuring accurate documentation.
 
 ### Example: Event Enrichment
 
@@ -741,6 +832,88 @@ if (hasEnrichment(enrichmentData, 'myFunction', 'description')) {
 - Validates enrichment data
 - Provides fallback mechanisms
 - Returns null for empty enrichments
+
+### `source-validator.js` ⭐
+
+**SOURCE-FIRST PRINCIPLE**: Validates and merges source code data with manual documentation, ensuring source code is always the source of truth for technical specifications.
+
+```javascript
+import { 
+  validateAndMerge, 
+  validateFunctionSignature,
+  validateEventData,
+  createValidationReport 
+} from './lib/source-validator.js';
+
+// Create validation report for a generator run
+const report = createValidationReport();
+
+// Validate and merge function data
+const result = validateAndMerge({
+  itemName: 'addToCart',
+  itemType: 'function',
+  sourceData: {
+    signature: '(items: CartItem[]) => Promise<CartModel>',
+    params: [{ name: 'items', type: 'CartItem[]' }],
+    returnType: 'Promise<CartModel>'
+  },
+  manualData: enrichmentData,
+  warnOnMismatch: true
+});
+
+// Use merged data (source takes precedence)
+const mergedData = result.data;
+
+// Add to report
+report.addItem('addToCart', result);
+
+// Print validation summary at end of generation
+report.printSummary();
+```
+
+**Used by**: ALL generators (required for Source-First Principle)  
+**What It Does**:
+- ✅ **Validates** source code vs manual docs
+- ✅ **Merges** data with source taking precedence
+- ✅ **Warns** when conflicts are detected
+- ✅ **Reports** validation results
+- ✅ **Overwrites** outdated manual specs
+
+**Source-Controlled Fields** (source always wins):
+- Function signatures, parameters, return types
+- Event names and data payloads
+- Container props and slot definitions
+- Model/type structures
+- Usage examples
+
+**Manual-Controlled Fields** (manual preserved):
+- Descriptions and explanations
+- Business context and rationale
+- Best practices and recommendations
+- Deprecation notices
+
+### `example-extractor.js`
+
+Extracts real-world usage examples from source repositories (HTML examples, boilerplate blocks, JSDoc).
+
+```javascript
+import { getAllExamples } from './lib/example-extractor.js';
+
+// Get examples for a function (prioritizes source over enrichment)
+const examples = getAllExamples('cart', 'addProductsToCart', 3);
+
+// Returns array of { title, code, source }
+// source: 'jsdoc' | 'html-example' | 'boilerplate'
+```
+
+**Used by**: Function generators  
+**Priority Order**:
+1. JSDoc `@example` tags (highest)
+2. HTML examples (`examples/html-host/index.html`)
+3. Boilerplate blocks (`blocks/*/*.js`)
+4. Enrichment files (fallback only)
+
+**Important**: Must be called AFTER repositories are cloned at correct versions.
 
 ### `repository.js`
 
