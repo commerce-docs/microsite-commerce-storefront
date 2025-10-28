@@ -13,12 +13,14 @@
  * - Restores modified/deleted files in src/content/docs/dropins/
  * - Restores modified/deleted files in src/content/docs/dropins-b2b/
  * - Removes untracked (new) files in these directories
- * - Shows what files were restored/removed
+ * - PRESERVES structural files: */containers/index.mdx (overview pages)
+ * - Shows what files were restored/removed/skipped
  * 
  * SAFETY:
  * - Only affects files in dropins directories
  * - Uses git restore for tracked files
  * - Uses git clean for untracked files
+ * - Skips container overview files (structural navigation)
  * - Does not affect other parts of the codebase
  */
 
@@ -69,6 +71,12 @@ for (const path of GENERATED_PATHS) {
                 const [status, ...fileParts] = file.trim().split(/\s+/);
                 const fileName = fileParts.join(' ');
 
+                // Skip container overview files (structural, not generated)
+                if (fileName.includes('/containers/index.mdx')) {
+                    console.log(`     ⏭️  Skipping structural file: ${fileName}`);
+                    return;
+                }
+
                 if (status.includes('M')) {
                     console.log(`     ↩️  Restoring modified: ${fileName}`);
                     modifiedFiles.push(fileName);
@@ -84,19 +92,31 @@ for (const path of GENERATED_PATHS) {
                 }
             });
 
-            // Restore tracked files that were modified/deleted
+            // Restore tracked files that were modified/deleted (one by one to respect skip list)
             if (modifiedFiles.length > 0) {
-                execSync(`git restore ${path}`, {
-                    cwd: projectRoot,
-                    stdio: 'pipe'
+                modifiedFiles.forEach(file => {
+                    try {
+                        execSync(`git restore "${file}"`, {
+                            cwd: projectRoot,
+                            stdio: 'pipe'
+                        });
+                    } catch (error) {
+                        console.error(`     ⚠️  Could not restore: ${file}`);
+                    }
                 });
             }
 
-            // Remove untracked files
+            // Remove untracked files (one by one to respect skip list)
             if (untrackedFiles.length > 0) {
-                execSync(`git clean -f ${path}`, {
-                    cwd: projectRoot,
-                    stdio: 'pipe'
+                untrackedFiles.forEach(file => {
+                    try {
+                        execSync(`git clean -f "${file}"`, {
+                            cwd: projectRoot,
+                            stdio: 'pipe'
+                        });
+                    } catch (error) {
+                        console.error(`     ⚠️  Could not remove: ${file}`);
+                    }
                 });
             }
         } else {
