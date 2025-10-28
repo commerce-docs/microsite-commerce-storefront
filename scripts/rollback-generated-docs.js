@@ -13,7 +13,7 @@
  * - Restores modified/deleted files in src/content/docs/dropins/
  * - Restores modified/deleted files in src/content/docs/dropins-b2b/
  * - Removes untracked (new) files in these directories
- * - PRESERVES structural files: */containers/index.mdx (overview pages)
+ * - PRESERVES structural files: [dropin]/containers/index.mdx (overview pages)
  * - Shows what files were restored/removed/skipped
  * 
  * SAFETY:
