@@ -118,7 +118,6 @@ async function config() {
       '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
       // Dropin General Redirects
       '/dropins/all/anatomy': `${basePath}/dropins/all/introduction`,
-      '/dropins/cart/containers': `${basePath}/dropins/cart`,
       // SDK Redirects
       '/sdk/get-started/create-a-dropin': `${basePath}/dropins/all/creating`,
       '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
