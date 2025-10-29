@@ -36,6 +36,7 @@ tableOfContents:
 */}
 
 import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
 The Checkout drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
@@ -51,16 +52,16 @@ The Checkout drop-in provides API functions that enable you to programmatically 
 | Function | Description |
 | --- | --- |
 | [`estimateShippingMethods`](#estimateshippingmethods) | The estimateShippingMethods function returns a list with the available shipping methods for the given criteria. |
-| [`getCart`](#getcart) | Returns checkout data for the current cart. |
+| [`getCart`](#getcart) | The getCart function retrieves the current cart's checkout data from Adobe Commerce. |
 | [`getCheckoutAgreements`](#getcheckoutagreements) | The getCheckoutAgreements function returns a list with the available checkout agreements. |
-| [`getNegotiableQuote`](#getnegotiablequote) | Returns the specified negotiable quote.. |
+| [`getNegotiableQuote`](#getnegotiablequote) | The getNegotiableQuote function retrieves a negotiable quote for B2B customers.. |
 | [`getStoreConfig`](#getstoreconfig) | The storeConfig query defines information about a store's configuration. |
 | [`isEmailAvailable`](#isemailavailable) | The isEmailAvailable query checks whether the specified email has already been used to create a customer account. |
 | [`setBillingAddress`](#setbillingaddress) | The setBillingAddress mutation sets the billing address for a specific cart or negotiable quote.. |
 | [`setGuestEmailOnCart`](#setguestemailoncart) | A logged-in customer specifies an email address when they create an account. |
 | [`setPaymentMethod`](#setpaymentmethod) | Sets the provided payment method on a cart or negotiable quote.. |
 | [`setShippingAddress`](#setshippingaddress) | Sets the provided shipping address on the active cart or negotiable quote.. |
-| [`setShippingMethods`](#setshippingmethods) | The setShippingMethods mutation sets one or more delivery methods on a cart or a negotiable quote.. |
+| [`setShippingMethods`](#setshippingmethods) | The setShippingMethods function sets one or more shipping methods on the cart.. |
 
 </TableWrapper>
 
@@ -82,6 +83,10 @@ const estimateShippingMethods = async (
 
 </TableWrapper>
 
+### Events
+
+Emits the [`shipping/estimate`](../events#shippingestimate-emits-and-listens) event.
+
 ### Returns
 
 Returns an array of [`ShippingMethod`](#shippingmethod) objects or `null`.
@@ -90,15 +95,19 @@ Returns an array of [`ShippingMethod`](#shippingmethod) objects or `null`.
 
 ## getCart
 
-Returns checkout data for the current cart. The cart ID is retrieved from the internal state.
+The `getCart` function retrieves the current cart's checkout data from Adobe Commerce. It automatically uses the cart ID from internal state and calls either the `getCart` or `customerCart` GraphQL query depending on authentication status. The returned data includes billing address, shipping addresses, available and selected payment methods, email, total quantity, and virtual cart status—all the information needed to complete the checkout process.
 
 ```ts
 const getCart = async (): Promise<any>
 ```
 
+### Events
+
+Does not emit any drop-in events.
+
 ### Returns
 
-Returns checkout cart data including billing address, shipping addresses, payment methods, and cart status: [`Cart`](#cart)
+Returns a [`Cart`](#cart) model containing complete checkout information.
 
 ---
 
@@ -110,6 +119,10 @@ The getCheckoutAgreements function returns a list with the available checkout ag
 const getCheckoutAgreements = async (): Promise<CheckoutAgreement[]>
 ```
 
+### Events
+
+Does not emit any drop-in events.
+
 ### Returns
 
 Returns an array of [`CheckoutAgreement`](#checkoutagreement) objects.
@@ -118,7 +131,7 @@ Returns an array of [`CheckoutAgreement`](#checkoutagreement) objects.
 
 ## getNegotiableQuote
 
-Returns the specified negotiable quote.
+The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers.
 
 ```ts
 const getNegotiableQuote = async (
@@ -130,9 +143,13 @@ const getNegotiableQuote = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `input` | `GetNegotiableQuoteInput` | No | See function signature above |
+| `input` | `GetNegotiableQuoteInput` | No | Input parameters including the quote UID to retrieve. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -147,6 +164,10 @@ The storeConfig query defines information about a store's configuration. You can
 ```ts
 const getStoreConfig = async (): Promise<any>
 ```
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -172,6 +193,10 @@ const isEmailAvailable = async (
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
 ### Returns
 
 Returns `EmailAvailability`.
@@ -195,6 +220,10 @@ const setBillingAddress = async (
 | `input` | `BillingAddressInputModel` | Yes | The billing address to set on the cart, including street, city, region, country, and postal code. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -220,6 +249,10 @@ const setGuestEmailOnCart = async (
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
 ### Returns
 
 Returns `void`.
@@ -243,6 +276,10 @@ const setPaymentMethod = async (
 | `input` | `PaymentMethodInputModel` | Yes | The payment method code and additional payment data required by the selected payment processor. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -268,6 +305,10 @@ const setShippingAddress = async (
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
 ### Returns
 
 Returns `void`.
@@ -276,7 +317,7 @@ Returns `void`.
 
 ## setShippingMethods
 
-The setShippingMethods mutation sets one or more delivery methods on a cart or a negotiable quote.
+The `setShippingMethods` function sets one or more shipping methods on the cart.
 
 ```ts
 const setShippingMethods = async (
@@ -288,9 +329,13 @@ const setShippingMethods = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `input` | `Array<ShippingMethodInputModel>` | Yes | See function signature above |
+| `input` | `Array<ShippingMethodInputModel>` | Yes | An array of shipping method objects, each containing a carrier code and method code. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 

@@ -261,6 +261,28 @@ function extractModelFromSourceHint(modelName, sourceHint, repoName) {
 }
 
 // ============================================================================
+// LINK CONVERSION
+// ============================================================================
+
+/**
+ * Convert external markdown links to Link component for proper external link handling
+ * 
+ * @param {string} text - Text containing markdown links
+ * @returns {string} Text with external links converted to Link components
+ */
+function convertExternalLinks(text) {
+    if (!text) return text;
+
+    // Match markdown links: [text](url)
+    // Only convert external links (starting with http:// or https://)
+    return text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, (match, linkText, url) => {
+        // Strip backticks from link text for cleaner display
+        const cleanText = linkText.replace(/`/g, '');
+        return `<Link href="${url}" text="${cleanText}" />`;
+    });
+}
+
+// ============================================================================
 // EVENT EXTRACTION FROM SOURCE
 // ============================================================================
 
@@ -365,6 +387,16 @@ function scanForFunctions(repoPath) {
                 if (existsSync(tsPath)) {
                     const tsContent = readFileSync(tsPath, 'utf8');
                     signature = extractFunctionSignature(tsContent, entry);
+
+                    // Skip non-exported functions (respect public API boundary)
+                    if (!signature) {
+                        console.log(`  ⚠️  Skipping ${entry} - function is not exported (not part of public API)`);
+                        continue;
+                    }
+                } else {
+                    // No .ts file found - skip this function
+                    console.log(`  ⚠️  Skipping ${entry} - no .ts file found (cannot verify it's exported)`);
+                    continue;
                 }
 
                 functions.push({
@@ -1048,6 +1080,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
         if (description) {
+            // Convert external markdown links to Link components
+            description = convertExternalLinks(description);
             functionsContent += `${description}\n\n`;
         }
 
@@ -1297,9 +1331,37 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             });
         }
 
-        // Add Events section from enrichment data (comes before Returns)
-        if (enrichment && enrichment.events) {
-            let eventsContent = enrichment.events;
+        // Add Events section from source code (CODE-FIRST strategy)
+        // ALWAYS add Events section for every function
+        let eventsContent = '';
+
+        // PRIMARY: Extract events from source code
+        const emittedEvents = extractEventsFromSource(repoPath, func.name);
+
+        if (emittedEvents.length > 0) {
+            // Check if enrichment provides a complete event description
+            // (starts with "Emits" and contains event names)
+            const hasCompleteEnrichment = enrichment && enrichment.events &&
+                enrichment.events.startsWith('Emits') &&
+                emittedEvents.some(e => enrichment.events.includes(`\`${e}\``));
+
+            if (hasCompleteEnrichment) {
+                // Use ONLY enrichment (it's more explicit and complete)
+                eventsContent = enrichment.events;
+            } else {
+                // Build events content from extracted events
+                if (emittedEvents.length === 1) {
+                    eventsContent = `Emits the \`${emittedEvents[0]}\` event.`;
+                } else {
+                    const eventList = emittedEvents.map(e => `\`${e}\``).join(', ');
+                    eventsContent = `Emits the following events: ${eventList}.`;
+                }
+
+                // OPTIONAL: Add enrichment context if available (editorial layer on top of code)
+                if (enrichment && enrichment.events) {
+                    eventsContent += '\n\n' + enrichment.events;
+                }
+            }
 
             // Auto-link event names to events documentation
             // Match event names in backticks like `cart/data`, `cart/updated`, etc.
@@ -1335,9 +1397,32 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     eventsContent = eventsContent.replace(modelPattern, `[\`${modelName}\`](#${modelAnchor})`);
                 }
             }
+        } else {
+            // No drop-in events extracted from source
+            // ALWAYS state drop-in event status first
+            eventsContent = 'Does not emit any drop-in events.';
 
-            functionsContent += `### Events\n\n${eventsContent}\n\n`;
+            // Then add ACDL or other context if provided in enrichment
+            if (enrichment && enrichment.events) {
+                eventsContent += '\n\n' + enrichment.events;
+
+                // Still auto-link any event names in the enrichment (if any)
+                eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
+                    const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
+                    const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged', 'cart/reset', 'shipping/estimate'];
+                    const emitsOnlyEvents = ['cart/initialized', 'cart/product/added', 'cart/product/removed', 'cart/product/updated'];
+                    let anchorSuffix = '-emits-and-listens';
+                    if (emitsOnlyEvents.includes(eventName)) {
+                        anchorSuffix = '-emits';
+                    } else if (emitsAndListensEvents.includes(eventName)) {
+                        anchorSuffix = '-emits-and-listens';
+                    }
+                    return `[\`${eventName}\`](../events#${baseAnchor}${anchorSuffix})`;
+                });
+            }
         }
+
+        functionsContent += `### Events\n\n${eventsContent}\n\n`;
 
         // Add Returns section from TypeScript return type
         // ALWAYS add a Returns section for every function
@@ -1395,7 +1480,17 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         const description = enrichment.returns || '';
                         if (extractedType.source === 'model') {
                             // For models, reference the Data Models section
-                            returnsContent = `Returns ${description}: [\`${extractedType.type}\`](#${extractedType.type.toLowerCase()})`;
+                            // Enrichment should be a complete sentence starting with lowercase (e.g., "a Cart model...")
+                            // Find the model name in the description and link it
+                            const modelNamePattern = new RegExp(`\\b${extractedType.type}\\b`, 'g');
+                            if (description.includes(extractedType.type)) {
+                                // Replace first occurrence of model name with a link
+                                const linkedDescription = description.replace(modelNamePattern, `[\`${extractedType.type}\`](#${extractedType.type.toLowerCase()})`);
+                                returnsContent = `Returns ${linkedDescription}.`;
+                            } else {
+                                // Fallback: append the model link at the end
+                                returnsContent = `Returns ${description} [\`${extractedType.type}\`](#${extractedType.type.toLowerCase()}).`;
+                            }
 
                             // Also extract and track the full model definition
                             if (extractedType.fullDefinition) {
@@ -1516,10 +1611,13 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     // Read template and replace placeholders
     const template = readTemplate('dropin-functions.mdx');
 
+    const introText = `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
+
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
         DROPIN_VERSION: cleanVersion(version),
+        INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
         FUNCTIONS_CONTENT: functionsContent + dataModelsSection
     });
@@ -1534,11 +1632,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
  * @returns {string} Generated MDX content
  */
 function generateEmptyFunctionsDocs(repoName, repoConfig, version) {
-    const functionsContent = `<Aside type="note">
-No public API functions are currently documented for this drop-in. This drop-in may operate through containers and events only, or API documentation may be added in a future release.
-</Aside>
+    const introText = `This drop-in currently has no functions defined.`;
 
-For information about using this drop-in through its UI containers, see the [Containers](/dropins/${repoName}/) documentation.`;
+    const functionsContent = ``; // No additional content needed
 
     // Use template with placeholder content
     const template = readTemplate('dropin-functions.mdx');
@@ -1547,6 +1643,8 @@ For information about using this drop-in through its UI containers, see the [Con
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
         DROPIN_VERSION: cleanVersion(version),
+        INTRO_TEXT: introText,
+        FUNCTIONS_TABLE: '', // No table needed for empty functions
         FUNCTIONS_CONTENT: functionsContent
     });
 }

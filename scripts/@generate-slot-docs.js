@@ -179,7 +179,7 @@ function scanForSlots(repoPath) {
  */
 function generateSlotsContent(containers) {
     if (containers.length === 0) {
-        return '<Aside type="note">\nThis drop-in does not currently expose customizable slots.\n</Aside>';
+        return ''; // No additional content needed for empty slots
     }
 
     let content = '';
@@ -245,11 +245,32 @@ function generateSlotsMDX(repoName, repoConfig, containers, version, enrichmentD
     // Generate slots content
     const slotsContent = generateSlotsContent(containers);
 
+    // Generate intro text based on whether slots exist
+    let introText;
+    if (containers.length === 0) {
+        // Concise intro for drop-ins with no slots
+        introText = `This drop-in currently has no slots defined.`;
+    } else {
+        // Full intro with explanation for drop-ins with slots
+        introText = `## Overview
+
+Learn about the slots provided in the **${repoConfig.displayName}** drop-in component for customizing container appearance and behavior.
+
+<Aside type="tip">
+[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
+</Aside>
+
+## What are Slots?
+
+Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.`;
+    }
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
+        'INTRO_TEXT': introText,
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
