@@ -36,6 +36,7 @@ tableOfContents:
 */}
 
 import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
 The Product Details drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
@@ -50,20 +51,20 @@ The Product Details drop-in provides API functions that enable you to programmat
 
 | Function | Description |
 | --- | --- |
-| [`fetchProductData`](#fetchproductdata) | Fetches product data for a given SKU.. |
-| [`getFetchedProductData`](#getfetchedproductdata) | It uses the Adobe Commerce event bus to either return the most recent pdp/data event payload immediately, or wait for the next event if none exists.. |
-| [`getProductConfigurationValues`](#getproductconfigurationvalues) | It uses the Adobe Commerce event bus to get the most recent pdp/values event payload.. |
-| [`getProductData`](#getproductdata) | This function returns the product data for a given product sku. |
-| [`getRefinedProduct`](#getrefinedproduct) | A function that returns refined product's data. |
-| [`isProductConfigurationValid`](#isproductconfigurationvalid) | It uses the Adobe Commerce event bus to get the most recent pdp/valid event payload.. |
-| [`setProductConfigurationValid`](#setproductconfigurationvalid) | It uses a callback pattern to determine the new validity state based on the previous state, then emits a pdp/valid event with the updated value.. |
-| [`setProductConfigurationValues`](#setproductconfigurationvalues) | It uses a callback pattern to determine the new configuration state based on the previous state, then emits a pdp/values event with the updated values.. |
+| [`fetchProductData`](#fetchproductdata) | The fetchProductData function fetches product data for a given SKU. |
+| [`getFetchedProductData`](#getfetchedproductdata) | The getFetchedProductData function returns previously fetched product data from cache.. |
+| [`getProductConfigurationValues`](#getproductconfigurationvalues) | The getProductConfigurationValues function returns the current product configuration values.. |
+| [`getProductData`](#getproductdata) | The getProductData function returns the product data for a given product SKU. |
+| [`getRefinedProduct`](#getrefinedproduct) | The getRefinedProduct function returns refined product data with specific options selected. |
+| [`isProductConfigurationValid`](#isproductconfigurationvalid) | The isProductConfigurationValid function checks if the current product configuration is valid.. |
+| [`setProductConfigurationValid`](#setproductconfigurationvalid) | The setProductConfigurationValid function sets a callback to be called when product configuration validity changes.. |
+| [`setProductConfigurationValues`](#setproductconfigurationvalues) | The setProductConfigurationValues function sets a callback to be called when product configuration values change.. |
 
 </TableWrapper>
 
 ## fetchProductData
 
-Fetches product data for a given SKU.
+The `fetchProductData` function fetches product data for a given SKU. It can fetch either simple product data or refined product data with selected options.
 
 ```ts
 const fetchProductData = async (
@@ -76,10 +77,14 @@ const fetchProductData = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `sku` | `string` | Yes | See function signature above |
-| `options` | `Options` | No | See function signature above |
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `options` | `Options` | No | Optional configuration including `anchors` (anchor options), `optionsUIDs` (selected option IDs), `preselectFirstOption` (whether to preselect first option), `isBundle` (whether product is a bundle), and `skipTransform` (whether to skip data transformation). |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -89,7 +94,7 @@ Returns `void`.
 
 ## getFetchedProductData
 
-It uses the Adobe Commerce event bus to either return the most recent `pdp/data` event payload immediately, or wait for the next event if none exists.
+The `getFetchedProductData` function returns previously fetched product data from cache.
 
 ```ts
 const getFetchedProductData = async (
@@ -103,9 +108,13 @@ const getFetchedProductData = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | See function signature above |
+| `options` | `string } = {}` | Yes | Optional configuration for retrieving cached product data. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -115,7 +124,7 @@ Returns [`ProductModel`](#productmodel) or `null`.
 
 ## getProductConfigurationValues
 
-It uses the Adobe Commerce event bus to get the most recent `pdp/values` event payload.
+The `getProductConfigurationValues` function returns the current product configuration values.
 
 ```ts
 const getProductConfigurationValues = async (
@@ -129,9 +138,13 @@ const getProductConfigurationValues = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | See function signature above |
+| `options` | `string } = {}` | Yes | Optional configuration for retrieving product configuration values. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -141,7 +154,7 @@ Returns [`ValuesModel`](#valuesmodel) or `null`.
 
 ## getProductData
 
-This function returns the product data for a given product `sku`. It takes `sku` as a parameter.
+The `getProductData` function returns the product data for a given product SKU. It fetches data from Adobe Commerce and optionally preselects the first available option.
 
 ```ts
 const getProductData = async (
@@ -158,12 +171,16 @@ const getProductData = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `sku` | `string` | Yes | See function signature above |
-| `preselectFirstOption` | `boolean` | No | See function signature above |
-| `optionsUIDs` | `string[]` | No | See function signature above |
-| `raw` | `boolean` | No | See function signature above |
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `preselectFirstOption` | `boolean` | No | Whether to automatically preselect the first available option for configurable products. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs to preselect for the product. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -173,7 +190,7 @@ Returns [`ProductModel`](#productmodel) or `null`.
 
 ## getRefinedProduct
 
-A function that returns refined product's data. It takes `sku`, `optionUIDs`, and `isBundle?` as parameters.
+The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen.
 
 ```ts
 const getRefinedProduct = async (
@@ -188,12 +205,16 @@ const getRefinedProduct = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `sku` | `string` | Yes | See function signature above |
-| `optionUIDs` | `string[]` | Yes | See function signature above |
-| `anchorOptions` | `string[]` | No | See function signature above |
-| `raw` | `boolean` | No | See function signature above |
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `optionUIDs` | `string[]` | Yes | An array of option UIDs representing the selected variant. |
+| `anchorOptions` | `string[]` | No | Anchor options for the product selection. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -203,7 +224,7 @@ Returns [`ProductModel`](#productmodel) or `null`.
 
 ## isProductConfigurationValid
 
-It uses the Adobe Commerce event bus to get the most recent `pdp/valid` event payload.
+The `isProductConfigurationValid` function checks if the current product configuration is valid.
 
 ```ts
 const isProductConfigurationValid = async (
@@ -217,9 +238,13 @@ const isProductConfigurationValid = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | See function signature above |
+| `options` | `string } = {}` | Yes | Configuration options to validate. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
@@ -229,7 +254,7 @@ Returns `boolean | null`.
 
 ## setProductConfigurationValid
 
-It uses a callback pattern to determine the new validity state based on the previous state, then emits a `pdp/valid` event with the updated value.
+The `setProductConfigurationValid` function sets a callback to be called when product configuration validity changes.
 
 ```ts
 const setProductConfigurationValid = async (
@@ -241,9 +266,13 @@ const setProductConfigurationValid = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `callback` | `(prev: boolean` | Yes | See function signature above |
+| `callback` | `(prev: boolean` | Yes | A callback function that receives the validity status of the product configuration. |
 
 </TableWrapper>
+
+### Events
+
+Emits the [`pdp/valid`](../events#pdpvalid-emits-and-listens) event.
 
 ### Returns
 
@@ -253,7 +282,7 @@ Returns `void`.
 
 ## setProductConfigurationValues
 
-It uses a callback pattern to determine the new configuration state based on the previous state, then emits a `pdp/values` event with the updated values.
+The `setProductConfigurationValues` function sets a callback to be called when product configuration values change.
 
 ```ts
 const setProductConfigurationValues = async (
@@ -265,9 +294,13 @@ const setProductConfigurationValues = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `callback` | `(prev: ValuesModel` | Yes | See function signature above |
+| `callback` | `(prev: ValuesModel` | Yes | A callback function that receives the updated product configuration values. |
 
 </TableWrapper>
+
+### Events
+
+Emits the [`pdp/values`](../events#pdpvalues-emits-and-listens) event.
 
 ### Returns
 
