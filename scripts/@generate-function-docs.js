@@ -157,6 +157,109 @@ function extractTypeFromSource(returnsSource, repoPath, functionName) {
     return null;
 }
 
+/**
+ * Extract model definition from source TypeScript files using a source hint path
+ * 
+ * @param {string} modelName - Name of the interface/type to extract
+ * @param {string} sourceHint - Path hint to the source file (relative to repo or node_modules)
+ * @param {string} repoName - Repository name (for node_modules lookup)
+ * @returns {string|null} The interface/type definition or null if not found
+ */
+function extractModelFromSourceHint(modelName, sourceHint, repoName) {
+    if (!modelName || !sourceHint) return null;
+
+    try {
+        const projectRoot = getProjectRoot();
+        let sourceFilePath = null;
+
+        // Try multiple possible locations
+        const possiblePaths = [
+            // node_modules (published package)
+            join(projectRoot, 'node_modules', '.pnpm', `@dropins+storefront-${repoName}@*`, 'node_modules', '@dropins', `storefront-${repoName}`, sourceHint),
+            // .temp-repos (cloned source)
+            join(projectRoot, '.temp-repos', repoName, sourceHint),
+            join(projectRoot, '.temp-repos', repoName, 'src', sourceHint)
+        ];
+
+        // Find the first existing file
+        for (const path of possiblePaths) {
+            // Handle glob pattern in path (for version wildcards)
+            if (path.includes('*')) {
+                // Get the base directory (everything before the glob pattern)
+                const parts = path.split('/');
+                const globIndex = parts.findIndex(p => p.includes('*'));
+                const baseDir = parts.slice(0, globIndex).join('/');
+
+                if (existsSync(baseDir)) {
+                    const dirs = readdirSync(baseDir);
+                    // Find the dropin version directory
+                    const versionDir = dirs.find(d => d.startsWith(`@dropins+storefront-${repoName}@`));
+                    if (versionDir) {
+                        // Reconstruct the full path
+                        const remainingPath = parts.slice(globIndex + 1).join('/');
+                        const fullPath = join(baseDir, versionDir, remainingPath);
+                        if (existsSync(fullPath)) {
+                            sourceFilePath = fullPath;
+                            break;
+                        }
+                    }
+                }
+            } else if (existsSync(path)) {
+                sourceFilePath = path;
+                break;
+            }
+        }
+
+        if (!sourceFilePath) {
+            console.warn(`  ⚠️  Could not find source file for ${modelName} using hint: ${sourceHint}`);
+            return null;
+        }
+
+        const sourceContent = readFileSync(sourceFilePath, 'utf-8');
+
+        // Try to extract interface definition
+        const interfacePattern = new RegExp(`export\\s+interface\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+        const interfaceMatch = sourceContent.match(interfacePattern);
+
+        if (interfaceMatch) {
+            // Remove 'export ' prefix for cleaner output
+            return interfaceMatch[0].replace(/^export\s+/, '');
+        }
+
+        // Try to extract enum definition
+        const enumPattern = new RegExp(`export\\s+declare\\s+enum\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+        const enumMatch = sourceContent.match(enumPattern);
+
+        if (enumMatch) {
+            // Remove 'export declare ' prefix for cleaner output
+            return enumMatch[0].replace(/^export\s+declare\s+/, '');
+        }
+
+        // Try to extract type definition
+        const typePattern = new RegExp(`export\\s+type\\s+${modelName}\\s*=\\s*[\\s\\S]*?;`, 'm');
+        const typeMatch = sourceContent.match(typePattern);
+
+        if (typeMatch) {
+            return typeMatch[0].replace(/^export\s+/, '');
+        }
+
+        // If not exported, try without export keyword
+        const nonExportedInterface = new RegExp(`interface\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+        const nonExportedMatch = sourceContent.match(nonExportedInterface);
+
+        if (nonExportedMatch) {
+            return nonExportedMatch[0];
+        }
+
+        console.warn(`  ⚠️  Found file ${sourceFilePath} but could not extract ${modelName} definition`);
+        return null;
+
+    } catch (error) {
+        console.warn(`  ⚠️  Failed to extract ${modelName} from source:`, error.message);
+        return null;
+    }
+}
+
 // ============================================================================
 // EVENT EXTRACTION FROM SOURCE
 // ============================================================================
@@ -533,6 +636,57 @@ function parseParameter(paramStr) {
     return { name, type, optional };
 }
 
+/**
+ * Extract nested properties from an inline object type
+ * 
+ * @param {string} objectType - Object type string like "{ sku: string; quantity: number }[]"
+ * @returns {Array<{name: string, type: string, optional: boolean}>} Nested properties
+ */
+function extractNestedProperties(objectType) {
+    const properties = [];
+
+    // Remove array brackets if present
+    const isArray = objectType.trim().endsWith('[]');
+    let cleanType = isArray ? objectType.trim().slice(0, -2).trim() : objectType.trim();
+
+    // Extract content between braces
+    const match = cleanType.match(/^\{([\s\S]*)\}$/);
+    if (!match) return properties;
+
+    const content = match[1];
+    let current = '';
+    let depth = 0;
+
+    // Split on semicolons at depth 0
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+
+        if (char === '{' || char === '[' || char === '<') {
+            depth++;
+        } else if (char === '}' || char === ']' || char === '>') {
+            depth--;
+        }
+
+        if (char === ';' && depth === 0) {
+            if (current.trim()) {
+                const param = parseParameter(current.trim());
+                if (param) properties.push(param);
+            }
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Don't forget the last property
+    if (current.trim()) {
+        const param = parseParameter(current.trim());
+        if (param) properties.push(param);
+    }
+
+    return properties;
+}
+
 // ============================================================================
 // CONTENT GENERATION
 // ============================================================================
@@ -697,6 +851,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
 
     // First pass: Extract model definitions from TypeScript return types
     const modelDefinitions = new Map(); // modelName -> { definition: string, count: number, functions: string[] }
+    const inputModelDefinitions = new Map(); // inputModelName -> { definition: string, description: string, functions: string[] }
+    const outputModelDefinitions = new Map(); // outputModelName -> { definition: string, description: string, functions: string[] }
 
     // Calculate repository path
     const repoPath = join(getProjectRoot(), '.temp-repos', repoName);
@@ -774,6 +930,62 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     functions.forEach(func => {
         // Check for enrichment data for this function
         const enrichment = enrichmentData && enrichmentData[func.name] ? enrichmentData[func.name] : null;
+
+        // Collect input models from enrichment data
+        if (enrichment && enrichment.input_models) {
+            Object.entries(enrichment.input_models).forEach(([modelName, modelData]) => {
+                if (!inputModelDefinitions.has(modelName)) {
+                    // Extract definition from source if source_hint is provided
+                    let definition = modelData.definition; // Fallback to hardcoded if present
+                    if (modelData.source_hint) {
+                        const extracted = extractModelFromSourceHint(modelName, modelData.source_hint, repoName);
+                        if (extracted) {
+                            definition = extracted;
+                        } else if (!definition) {
+                            console.warn(`  ⚠️  No definition found for ${modelName}, skipping`);
+                            return;
+                        }
+                    }
+
+                    inputModelDefinitions.set(modelName, {
+                        definition: definition,
+                        description: modelData.description,
+                        functions: [func.name]
+                    });
+                } else {
+                    const existing = inputModelDefinitions.get(modelName);
+                    existing.functions.push(func.name);
+                }
+            });
+        }
+
+        // Collect output models from enrichment data (for return types)
+        if (enrichment && enrichment.output_models) {
+            Object.entries(enrichment.output_models).forEach(([modelName, modelData]) => {
+                if (!outputModelDefinitions.has(modelName)) {
+                    // Extract definition from source if source_hint is provided
+                    let definition = modelData.definition; // Fallback to hardcoded if present
+                    if (modelData.source_hint) {
+                        const extracted = extractModelFromSourceHint(modelName, modelData.source_hint, repoName);
+                        if (extracted) {
+                            definition = extracted;
+                        } else if (!definition) {
+                            console.warn(`  ⚠️  No definition found for ${modelName}, skipping`);
+                            return;
+                        }
+                    }
+
+                    outputModelDefinitions.set(modelName, {
+                        definition: definition,
+                        description: modelData.description,
+                        functions: [func.name]
+                    });
+                } else {
+                    const existing = outputModelDefinitions.get(modelName);
+                    existing.functions.push(func.name);
+                }
+            });
+        }
 
         // SOURCE-FIRST VALIDATION: Validate and merge source data with enrichment
         const validationResult = validateAndMerge({
@@ -897,11 +1109,35 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 // Parameter rows
                 parameters.forEach(param => {
                     const required = param.optional ? 'No' : 'Yes';
-
-                    // Simplify complex types for table display
                     let type = param.type;
 
-                    // If type contains newlines or is very long, simplify it
+                    // Check if this is an inline object type with nested properties
+                    const hasNestedProps = type.includes('{') && type.includes('}') && type.includes(':');
+
+                    if (hasNestedProps) {
+                        // Extract nested properties from the inline object
+                        const nestedProps = extractNestedProperties(type);
+
+                        if (nestedProps.length > 0) {
+                            // Show each nested property as a separate row
+                            nestedProps.forEach(nestedProp => {
+                                const nestedRequired = nestedProp.optional ? 'No' : 'Yes';
+                                let nestedType = `\`${nestedProp.type}\``;
+
+                                // Get description from enrichment
+                                let description = 'See function signature above';
+                                if (enrichment && enrichment.parameters && enrichment.parameters[nestedProp.name]) {
+                                    description = enrichment.parameters[nestedProp.name].description || description;
+                                }
+
+                                functionsContent += `| \`${nestedProp.name}\` | ${nestedType} | ${nestedRequired} | ${description} |\n`;
+                            });
+                            return; // Skip the default handling for this parameter
+                        }
+                    }
+
+                    // Default handling for non-object parameters
+                    // Simplify complex types for table display
                     if (type.includes('\n') || type.length > 80) {
                         // For object types, just show "object" or "object[]"
                         if (type.includes('{') && type.includes('}')) {
@@ -917,7 +1153,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     type = `\`${type}\``;
 
                     // Get description from enrichment if available
-                    const description = 'See function signature above'; // Point to full signature
+                    let description = 'See function signature above';
+                    if (enrichment && enrichment.parameters && enrichment.parameters[param.name]) {
+                        description = enrichment.parameters[param.name].description || description;
+                    }
                     functionsContent += `| \`${param.name}\` | ${type} | ${required} | ${description} |\n`;
                 });
 
@@ -1101,6 +1340,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
         }
 
         // Add Returns section from TypeScript return type
+        // ALWAYS add a Returns section for every function
+        let returnsContent = '';
+
         if (signature && signature.returnType) {
             let returnType = signature.returnType;
 
@@ -1109,7 +1351,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             const actualType = promiseMatch ? promiseMatch[1] : returnType;
 
             // Check if this is a shared model that should be referenced
-            let returnsContent = '';
             let isSharedModel = false;
 
             for (const modelName of Array.from(modelDefinitions.keys())) {
@@ -1122,16 +1363,16 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
 
                     // Create a friendly reference
                     if (actualType === modelName) {
-                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}) (see structure below).`;
+                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}).`;
                     } else if (actualType === `${modelName} | null`) {
-                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}) or \`null\` (see structure below).`;
+                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}) or \`null\`.`;
                     } else if (actualType === `${modelName}[]`) {
-                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects (see structure below).`;
+                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects.`;
                     } else if (actualType === `${modelName}[] | null` || actualType === `${modelName}[] | undefined`) {
-                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects or \`null\` (see structure below).`;
+                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects or \`null\`.`;
                     } else {
                         // For other complex types with the model
-                        returnsContent = `Returns \`${actualType}\` (see [\`${modelName}\`](#${modelAnchor}) structure below).`;
+                        returnsContent = `Returns \`${actualType}\`. See [\`${modelName}\`](#${modelAnchor}).`;
                     }
                     break;
                 }
@@ -1139,8 +1380,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
 
             // If not a shared model, just show the return type
             if (!isSharedModel) {
-                if (actualType === 'void') {
-                    returnsContent = 'This function does not return a value.';
+                if (actualType === 'void' || actualType === 'undefined') {
+                    returnsContent = 'Returns `void`.';
                 } else if (actualType.includes('any') || actualType.includes('unknown')) {
                     // For unhelpful generic types (any, unknown, any | null, etc.), try to extract from source
                     // Check if enrichment provides a returns_source hint
@@ -1173,8 +1414,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         // Fallback to enrichment returns field (legacy format)
                         returnsContent = enrichment.returns;
                     } else {
-                        // No enrichment - rely on description instead
-                        returnsContent = null;
+                        // No enrichment - default to void message
+                        returnsContent = 'Returns `void`.';
                     }
                 } else if (actualType === 'string') {
                     returnsContent = 'Returns `string`.';
@@ -1189,12 +1430,13 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     returnsContent = 'Returns:\n\n```ts\n' + actualType + '\n```';
                 }
             }
-
-            // Only add Returns section if we have meaningful content
-            if (returnsContent) {
-                functionsContent += `### Returns\n\n${returnsContent}\n\n`;
-            }
+        } else {
+            // No signature found - default message
+            returnsContent = 'Returns `void`.';
         }
+
+        // ALWAYS add Returns section
+        functionsContent += `### Returns\n\n${returnsContent}\n\n`;
 
         // Add separator between functions
         functionsContent += `---\n\n`;
@@ -1208,13 +1450,16 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     // Show ALL models (not just those used 2+ times)
     // IMPORTANT: This must be AFTER the functions loop since enrichment models are added during processing
     const sharedModels = Array.from(modelDefinitions.keys()).sort();
+    const inputModels = Array.from(inputModelDefinitions.keys()).sort();
+    const outputModels = Array.from(outputModelDefinitions.keys()).sort();
 
-    // Add Data Models section if there are shared models
+    // Add Data Models section if there are shared models, input models, or output models
     let dataModelsSection = '';
-    if (sharedModels.length > 0) {
+    if (sharedModels.length > 0 || inputModels.length > 0 || outputModels.length > 0) {
         dataModelsSection = '## Data Models\n\n';
-        dataModelsSection += 'The following data models are returned by multiple functions in this drop-in.\n\n';
+        dataModelsSection += 'The following data models are used by functions in this drop-in.\n\n';
 
+        // Output return type models first (standard models extracted from source)
         for (const modelName of sharedModels) {
             const modelData = modelDefinitions.get(modelName);
             const modelAnchor = modelName.toLowerCase().replace(/model$/, '-model');
@@ -1229,6 +1474,38 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 .replace(/^export\s+(interface\s+)/m, '$1')
                 .replace(/^export\s+(type\s+)/m, '$1');
             dataModelsSection += cleanedDefinition;
+            dataModelsSection += '\n```\n\n';
+        }
+
+        // Output custom return type models (from enrichment output_models)
+        for (const modelName of outputModels) {
+            const modelData = outputModelDefinitions.get(modelName);
+
+            dataModelsSection += `### ${modelName}\n\n`;
+            if (modelData.description) {
+                dataModelsSection += `${modelData.description}\n\n`;
+            }
+            dataModelsSection += `Returned by: `;
+            dataModelsSection += modelData.functions.map(fn => `[\`${fn}\`](#${fn.toLowerCase()})`).join(', ');
+            dataModelsSection += '.\n\n';
+            dataModelsSection += '```ts\n';
+            dataModelsSection += modelData.definition;
+            dataModelsSection += '\n```\n\n';
+        }
+
+        // Output input parameter type models (from enrichment input_models)
+        for (const modelName of inputModels) {
+            const modelData = inputModelDefinitions.get(modelName);
+
+            dataModelsSection += `### ${modelName}\n\n`;
+            if (modelData.description) {
+                dataModelsSection += `${modelData.description}\n\n`;
+            }
+            dataModelsSection += `Used by: `;
+            dataModelsSection += modelData.functions.map(fn => `[\`${fn}\`](#${fn.toLowerCase()})`).join(', ');
+            dataModelsSection += '.\n\n';
+            dataModelsSection += '```ts\n';
+            dataModelsSection += modelData.definition;
             dataModelsSection += '\n```\n\n';
         }
     }
