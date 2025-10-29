@@ -6,7 +6,7 @@ sidebar:
   order: 6
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 2
+  maxHeadingLevel: 3
 ---
 
 {/*
@@ -59,7 +59,7 @@ The Cart drop-in provides API functions that enable you to programmatically cont
 | [`getEstimateShipping`](#getestimateshipping) | The getEstimateShipping function returns the first available shipping method and its estimated cost, based on the provided address. |
 | [`getStoreConfig`](#getstoreconfig) | The getStoreConfig function returns information about a store's configuration. |
 | [`initializeCart`](#initializecart) | The initializeCart function initializes a guest or customer cart. |
-| [`publishShoppingCartViewEvent`](#publishshoppingcartviewevent) | Publishes a shopping cart view event to the ACDL.. |
+| [`publishShoppingCartViewEvent`](#publishshoppingcartviewevent) | Publishes a shopping cart view event to the ACDL. |
 | [`refreshCart`](#refreshcart) | The refreshCart function refreshes the cart data.. |
 | [`removeGiftCardFromCart`](#removegiftcardfromcart) | This function removes a single gift card from the cart. |
 | [`resetCart`](#resetcart) | This function resets the cart drop-in. |
@@ -89,7 +89,12 @@ const addProductsToCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `items` | `object[]` | Yes | See function signature above |
+| `sku` | `string` | Yes | The SKU of the product. |
+| `parentSku` | `string` | No | For a child product, the SKU of its parent product. |
+| `quantity` | `number` | Yes | The amount or number of an item to add. |
+| `optionsUIDs` | `string[]` | No | The selected options for the base product, such as color or size, using the unique ID for an object. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | An array of entered options for the base product, such as personalization text. |
+| `customFields` | `Record<string, any>` | No | Custom attributes or additional data to associate with the product in the cart. |
 
 </TableWrapper>
 
@@ -99,7 +104,7 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -118,8 +123,8 @@ const applyCouponsToCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `couponCodes` | `string[]` | Yes | See function signature above |
-| `type` | `ApplyCouponsStrategy` | Yes | See function signature above |
+| `couponCodes` | `string[]` | Yes | An array of coupon codes to apply to the cart. |
+| `type` | `ApplyCouponsStrategy` | Yes | The strategy for applying coupons. See [`ApplyCouponsStrategy`](#applycouponsstrategy). |
 
 </TableWrapper>
 
@@ -129,7 +134,7 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -147,7 +152,7 @@ const applyGiftCardToCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `giftCardCode` | `string` | Yes | See function signature above |
+| `giftCardCode` | `string` | Yes | The code assigned to a gift card. |
 
 </TableWrapper>
 
@@ -157,7 +162,7 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -185,7 +190,7 @@ const getCartData = async (): Promise<CartModel | null>
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -203,13 +208,13 @@ const getEstimatedTotals = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `address` | `EstimateAddressShippingInput` | Yes | See function signature above |
+| `address` | `EstimateAddressShippingInput` | Yes | The shipping address used to calculate estimated cart totals, taxes, and shipping costs. See [`EstimateAddressShippingInput`](#estimateaddressshippinginput). |
 
 </TableWrapper>
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -227,7 +232,7 @@ const getEstimateShipping = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `address` | `EstimateAddressInput` | Yes | See function signature above |
+| `address` | `EstimateAddressInput` | Yes | The address criteria used to determine available shipping methods. See [`EstimateAddressInput`](#estimateaddressinput). |
 
 </TableWrapper>
 
@@ -237,7 +242,7 @@ Emits the [`shipping/estimate`](../events#shippingestimate-emits-and-listens) ev
 
 ### Returns
 
-Returns a raw shipping method object from GraphQL, or null if no valid shipping method is available: `GraphQL response structure`
+Returns a [`RawShippingMethodGraphQL`](#rawshippingmethodgraphql) object with snake_case properties from the GraphQL response, or null if no valid shipping method is available: `GraphQL response structure`
 
 ---
 
@@ -251,7 +256,7 @@ const getStoreConfig = async (): Promise<StoreConfigModel | null>
 
 ### Returns
 
-Returns [`StoreConfigModel`](#storeconfigmodel) or `null` (see structure below).
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
 
 ---
 
@@ -269,17 +274,25 @@ Emits the [`cart/initialized`](../events#cartinitialized-emits), [`cart/data`](.
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
 ## publishShoppingCartViewEvent
 
-Publishes a shopping cart view event to the ACDL.
+Publishes a shopping cart view event to the ACDL. This function sets the shopping cart context and triggers a `SHOPPING_CART_VIEW` event on the Adobe Client Data Layer, typically used when a cart page loads.
 
 ```ts
 const publishShoppingCartViewEvent = async (): any
 ```
+
+### Events
+
+Publishes the `SHOPPING_CART_VIEW` event to the Adobe Client Data Layer (ACDL) with the current cart context.
+
+### Returns
+
+Returns `void`.
 
 ---
 
@@ -297,7 +310,7 @@ Emits the [`cart/data`](../events#cartdata-emits-and-listens) event with the upd
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -315,7 +328,7 @@ const removeGiftCardFromCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `giftCardCode` | `string` | Yes | See function signature above |
+| `giftCardCode` | `string` | Yes | Defines the gift card code to remove. |
 
 </TableWrapper>
 
@@ -325,7 +338,7 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -339,7 +352,7 @@ const resetCart = async (): Promise<CartModel | null>
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -357,7 +370,7 @@ const setGiftOptionsOnCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `giftForm` | `GiftFormDataType` | Yes | See function signature above |
+| `giftForm` | `GiftFormDataType` | Yes | Defines the gift options to set. |
 
 </TableWrapper>
 
@@ -367,7 +380,7 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
@@ -387,7 +400,7 @@ const updateProductsFromCart = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `items` | `UpdateProductsFromCart` | Yes | See function signature above |
+| `items` | `UpdateProductsFromCart` | Yes | An input object that defines products to be updated. |
 
 </TableWrapper>
 
@@ -397,13 +410,13 @@ Emits the [`cart/updated`](../events#cartupdated-emits-and-listens) and [`cart/d
 
 ### Returns
 
-Returns [`CartModel`](#cartmodel) or `null` (see structure below).
+Returns [`CartModel`](#cartmodel) or `null`.
 
 ---
 
 ## Data Models
 
-The following data models are returned by multiple functions in this drop-in.
+The following data models are used by functions in this drop-in.
 
 ### CartModel
 
@@ -503,6 +516,87 @@ interface StoreConfigModel {
   printedCardPrice: Price;
   cartGiftWrapping: string;
   cartPrintedCard: string;
+}
+```
+
+### RawShippingMethodGraphQL
+
+The raw GraphQL response structure with snake_case properties returned by the estimateShippingMethods mutation.
+
+Returned by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface RawShippingMethodGraphQL {
+  amount: {
+    currency: string;
+    value: number;
+  };
+  carrier_code: string;
+  method_code: string;
+  error_message?: string;
+  price_excl_tax: {
+    currency: string;
+    value: number;
+  };
+  price_incl_tax: {
+    currency: string;
+    value: number;
+  };
+}
+```
+
+### ApplyCouponsStrategy
+
+Strategy for how coupons should be applied to the cart:
+
+- `APPEND`: Adds the specified coupons to any existing coupons already applied to the cart
+- `REPLACE`: Removes all existing coupons and applies only the specified coupons
+
+Used by: [`applyCouponsToCart`](#applycouponstocart).
+
+```ts
+enum ApplyCouponsStrategy {
+    APPEND = "APPEND",
+    REPLACE = "REPLACE"
+}
+```
+
+### EstimateAddressInput
+
+Defines the address criteria for estimating shipping methods.
+
+Used by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface EstimateAddressInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        code?: string;
+        id?: number;
+    };
+}
+```
+
+### EstimateAddressShippingInput
+
+Defines the shipping address for calculating cart totals.
+
+Used by: [`getEstimatedTotals`](#getestimatedtotals).
+
+```ts
+interface EstimateAddressShippingInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        id?: number;
+    };
+    shipping_method?: {
+        carrier_code?: string;
+        method_code?: string;
+    };
 }
 ```
 
