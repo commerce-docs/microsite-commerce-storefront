@@ -641,6 +641,172 @@ When the generator runs:
 
 ---
 
+# Reference Documentation System
+
+The project includes a lightweight reference documentation system for linking to external documentation sources (e.g., AEM.live).
+
+## Overview
+
+Rather than scraping and maintaining local copies of external docs, the system provides a centralized registry of reference URLs that enrichment files and generators can use to create consistent, accurate links.
+
+**Location**: `reference-docs.json` (root of project)
+
+## Available References
+
+### AEM.live Documentation
+
+The system includes **40+ indexed topics** from the official [AEM.live documentation](https://www.aem.live/docs/):
+
+- Developer topics: blocks, spreadsheets, indexing, custom headers, etc.
+- Authoring topics: content creation, AEM authoring, bulk metadata, etc.
+- Launch topics: CDN setup, redirects, sitemap, go-live checklist, etc.
+- Architecture topics: security, global CDN, anti-patterns, etc.
+
+## Using Reference Links
+
+### In Enrichment Files
+
+Reference external documentation directly in your enrichment JSON:
+
+```json
+{
+  "myFunction": {
+    "description": "This function integrates with [AEM blocks](https://www.aem.live/developer/block-collection) to render content. For data sources, see the [spreadsheets documentation](https://www.aem.live/developer/spreadsheets)."
+  }
+}
+```
+
+### In Generator Scripts
+
+Programmatically access reference URLs:
+
+```javascript
+import { getReferenceUrl, createReferenceLink } from './lib/reference-docs.js';
+
+// Get a specific URL
+const url = getReferenceUrl('aem-live', 'block-collection');
+// Returns: "https://www.aem.live/developer/block-collection"
+
+// Create a markdown link
+const link = createReferenceLink('aem-live', 'authoring', 'Learn about authoring');
+// Returns: "[Learn about authoring](https://www.aem.live/docs/authoring)"
+```
+
+## CLI Tools
+
+### List All References
+
+Display all available reference documentation sources and topics:
+
+```bash
+npm run list-reference-docs
+```
+
+**Output:**
+```
+📚 Available Reference Documentation Sources:
+
+Adobe Experience Manager - Edge Delivery Services
+  Base URL: https://www.aem.live/docs/
+  Description: Official AEM Edge Delivery Services documentation
+  Topics: 40
+
+💡 Usage Examples:
+  - Get URL: getReferenceUrl("aem-live", "authoring")
+  - Create Link: createReferenceLink("aem-live", "block-collection")
+```
+
+### Search for Topics
+
+Search across all reference documentation:
+
+```bash
+npm run list-reference-docs -- search authoring
+npm run list-reference-docs -- search security
+npm run list-reference-docs -- search blocks
+```
+
+### List Topics for a Source
+
+Show all available topics for a specific source:
+
+```bash
+npm run list-reference-docs -- list aem-live
+```
+
+**Output:**
+```
+📖 Topics in 'aem-live':
+
+  developer-tutorial
+    Title: Developer Tutorial
+    URL: https://www.aem.live/developer/tutorial
+    Description: Get up-and-running with a new project
+  
+  block-collection
+    Title: Block Collection
+    URL: https://www.aem.live/developer/block-collection
+    Description: Product blocks and recommended blueprints
+  
+  ... (40+ topics)
+```
+
+## Available Helper Functions
+
+The `scripts/lib/reference-docs.js` module provides:
+
+```javascript
+import { 
+  getReferenceUrl,           // Get URL by source and topic key
+  getReferenceTopic,         // Get topic info (title, description, URL)
+  createReferenceLink,       // Create markdown link
+  getAllTopics,              // Get all topics for a source
+  searchTopics,              // Search by keyword
+  listSources,               // List all available sources
+  displayReferenceInfo       // Display CLI info
+} from './lib/reference-docs.js';
+```
+
+## Adding New Reference Sources
+
+To add a new reference documentation source:
+
+1. Edit `reference-docs.json`
+2. Add a new source under `references`:
+
+```json
+{
+  "references": {
+    "aem-live": { ... },
+    "my-new-source": {
+      "name": "My Documentation Source",
+      "base_url": "https://docs.example.com/",
+      "description": "Description of the documentation",
+      "topics": {
+        "getting-started": {
+          "url": "https://docs.example.com/getting-started",
+          "title": "Getting Started",
+          "description": "Introduction and setup guide"
+        }
+      }
+    }
+  }
+}
+```
+
+3. The CLI and helper functions will automatically pick up the new source
+
+## Benefits
+
+- ✅ **Centralized** - All reference links in one place
+- ✅ **Maintainable** - Update URLs once, reflected everywhere
+- ✅ **Consistent** - Standardized linking across all docs
+- ✅ **Discoverable** - Search and explore available references
+- ✅ **No Scraping** - Links to live documentation, always up-to-date
+- ✅ **Lightweight** - Just configuration, no cached files
+
+---
+
 # Shared Library
 
 The `scripts/lib/` directory contains reusable utilities used by all generators and scripts.
@@ -1210,6 +1376,51 @@ The framework handles ALL of this for you:
 - **Focus on logic** not infrastructure
 - **Easy to test** your scanner and generator functions
 
+## Documentation Accuracy Standards
+
+**🎯 Critical**: All generated documentation must be 100% accurate and verifiable.
+
+### Verification Checklist
+
+Before committing enrichment data with `returns` fields:
+
+- [ ] **Verified from source** - Checked actual implementation file
+- [ ] **Complete structure** - All fields from GraphQL query/mutation included
+- [ ] **Verification link** - Added GitHub source link in documentation
+- [ ] **Tested accuracy** - Cross-referenced with test files for validation
+- [ ] **Documented raw vs transformed** - Clarified if data is raw GraphQL or transformed
+
+### Tools for Verification
+
+1. **Return Type Analyzer** (`scripts/lib/return-type-analyzer.js`)
+   - Analyzes function implementations
+   - Extracts GraphQL field structures
+   - Generates verified JSON examples
+   - Provides GitHub verification links
+
+2. **Manual Verification Process**
+   - Read the function implementation (`src/api/[function]/[function].ts`)
+   - Find what's actually returned (look for `return` statements)
+   - If returning raw GraphQL, check the query/mutation file
+   - Extract all fields from the GraphQL definition
+   - Cross-reference with test data for validation
+
+### Example: Verifying `getEstimateShipping`
+
+```bash
+# 1. Check implementation
+cat .temp-repos/cart/src/api/getEstimateShipping/getEstimateShipping.ts
+# → Returns: selectedMethod (line 81)
+
+# 2. Check GraphQL query
+cat .temp-repos/cart/src/api/getEstimateShipping/graphql/estimateShippingMethodsMutation.ts
+# → Fields: amount, carrier_code, method_code, error_message, price_excl_tax, price_incl_tax
+
+# 3. Verify with tests
+grep -A 10 "estimateShippingMethods:" .temp-repos/cart/src/api/getEstimateShipping/getEstimateShipping.test.ts
+# → Confirms all fields present in test data
+```
+
 ## Best Practices
 
 1. **Import only what you need**: Don't import entire modules
@@ -1218,6 +1429,7 @@ The framework handles ALL of this for you:
 4. **Handle errors gracefully**: Shared functions return null on errors with warnings
 5. **Keep generators focused**: Generators should focus on their specific task
 6. **Test incrementally**: Test with single drop-ins before running on all
+7. **Verify accuracy**: Always verify enrichment data against source code before committing
 
 ## Troubleshooting
 

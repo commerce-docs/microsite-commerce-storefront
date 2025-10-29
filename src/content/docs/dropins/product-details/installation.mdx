@@ -1,33 +1,45 @@
 ---
-title: PDP installation
-description: Learn how to install the product details page drop-in component into your site.
+title: Product Details Installation
+description: Learn how to install the Product Details drop-in component into your site.
 sidebar:
+  label: Installation
   order: 2
-
-base: /developer/commerce/storefront
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Callouts from '@components/Callouts.astro';
-import Diagram from '@components/Diagram.astro';
 
-Our drop-in components are designed for the browser's JavaScript run-time without the need for a bundler. But they can also be installed and executed in a build-time environment with bundlers like Webpack and Vite. The installation steps for both run-time and build-time environments are the same after the initial drop-in component package imports.
+{/* 
+TEMPLATE INSTRUCTIONS:
+This template is used by scripts/@generate-installation-docs.js to generate installation documentation.
 
-## Prerequisites
+PLACEHOLDERS:
+- DROPIN_NAME: Display name (e.g., "Cart", "Checkout")
+- DROPIN_PACKAGE: Full package name (e.g., "@dropins/storefront-cart")
+- DROPIN_VERSION: Package version (e.g., "1.5.1")
+- CONTAINER_EXAMPLE: Name of a primary container for examples
+- IMPORT_EXAMPLE: Generated import statement
+- CONTAINER_COUNT: Number of available containers
+- REPO_URL: Source repository URL
 
-Before you install the product details page (PDP) drop-in component, ensure you have the following prerequisites:
+TO MODIFY:
+- Structure changes: Edit this template
+- Content changes: Usually automatic from script extraction
+*/}
 
-## Workflow
-
-The steps for installing the PDP drop-in component are as follows:
-
-<Diagram>![PDP Installation](@images/pdp/pdp-installation.svg)</Diagram>
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.3.5</strong> | <strong>10 containers</strong>
+</div>
 
 ## Step-by-step
 
-The following steps show how to install the product details component into your site.
+Use the following steps to install the **Product Details** component:
+
+<Aside type="note">
+These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as static HTML or React.
+</Aside>
 
 <Tasks>
 
@@ -35,204 +47,125 @@ The following steps show how to install the product details component into your 
 
 ### Install the packages
 
-Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and product details (`@dropins/storefront-pdp`) packages.
+Install the required packages using npm:
 
-<Tabs>
-  <TabItem label="NPM" icon="seti:npm">
-
-    ```bash frame="none"
-    npm install @dropins/tools @dropins/storefront-pdp
-    ```
-
-  </TabItem>
-  <TabItem label="CDN" icon="external">
-
-    ```html title="index.html" del={"Replace with actual URLs":5-7}
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Your Storefront</title>
-
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest"></script>
-    </head>
-    ```
-
-  </TabItem>
-</Tabs>
-
-:::note[Install @dropins/tools]
-All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
-:::
-
-</Task>
-
-<Task>
-### Map the packages
-
-In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
-
-<Tabs>
-<TabItem label="node_modules" icon="seti:npm">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the PDP drop-in component (@dropins/storefront-pdp):
-
-  ```html title="head.html"
-  <script type="importmap">
-    {
-      "imports": {
-        "@dropins/tools/": "/node_modules/@dropins/tools/",
-        "@dropins/storefront-pdp/": "/node_modules/@dropins/storefront-pdp/",
-      }
-    }
-  </script>
-  <script src="/scripts/scripts.js" type="module"></script>
-    ```
-  </TabItem>
-    <TabItem label="custom" icon="seti:folder">
-    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the product details component (@dropins/storefront-pdp):
-
-    ```html title="head.html"
-    <script type="importmap">
-      {
-        "imports": {
-          "@dropins/tools/": "/scripts/__dropins__/tools/",
-          "@dropins/storefront-pdp/": "/scripts/__dropins__/storefront-pdp/",
-        }
-      }
-    </script>
-    <script src="/scripts/scripts.js" type="module"></script>
-    ```
-
-  </TabItem>
-  <TabItem label="CDN" icon="external">
-    This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the product details component (@dropins/storefront-pdp):
-
-    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
-    <head>
-      <script type="importmap">
-        {
-          "imports": {
-
-            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
-            "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest",
-          }
-        }
-      </script>
-    </head>
-    ```
-
-  </TabItem>
-
-</Tabs>
-
-With the `importmap` defined for both run-time and build-time environments, you can now **import the required files** from these packages into your PDP drop-in component JavaScript file as described in the next step.
-
-</Task>
-
-<Task>
-### Import the required files
-
-Import the required files from the drop-in components tools (`@dropin/tools/initializers.js`) and the product details component (`@dropins/storefront-pdp`) into a JavaScript file for your PDP drop-in. In this example, we'll call this file `product-details.js`. See the [boilerplate code](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.js) for a list of the default imports.
-
-</Task>
-
-<Task>
-### Connect to the endpoint
-
-Connect your product details component to the Catalog Service GraphQL endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
-
-```js title="product-details.js"
-// Set endpoint configuration
-product.setEndpoint('https://<catalog-service-endpoint>/graphql');
-
-product.setFetchGraphQlHeaders({
-  // Environment required headers
-  'Magento-Environment-Id': 'your-environment-id',
-  'Magento-Store-View-Code': 'your-store-view-code',
-  'Magento-Website-Code': 'your-website-code',
-  'x-api-key': 'your-api-key',
-  'Magento-Store-Code': 'main_website_store',
-  'Magento-Customer-Group': 'your-customer-group',
-  'Content-Type': 'application/json',
-});
+```bash frame="none"
+npm install @dropins/tools @dropins/storefront-pdp
 ```
 
+<Aside type="tip">
+All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
+</Aside>
+
 </Task>
 
 <Task>
-### Register and load the drop-in
 
-The code below shows how to register the product details component, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your product details HTML page as shown here:
+### Map the packages
 
-```html title="index.html" ins={"1":5} ins={"2":8}
-<script type="module">
-  // more code above...
+Add the drop-in to your `importmap` in the `head.html` file:
 
-  // Register and load the product details component
-  initializers.mountImmediately(pdp.initialize);
+```json title="head.html"
+<script nonce="aem" type="importmap">
+{
+  "imports": {
+    "@dropins/storefront-pdp/": "/scripts/__dropins__/@dropins/storefront-pdp/",
+    "@dropins/tools/": "/scripts/__dropins__/tools/"
+  }
+}
 </script>
 ```
 
-<Callouts square color="var(--sl-color-green)">
-
-1. This function registers the product details component to be loaded on the page by the `initializers.mount` function.
-1. This event handler triggers the initializers.mount function to load the product details component after the page has loaded.
-
-</Callouts>
+With the `importmap` defined, you can now import the required files from these packages into your block as described in the next step.
 
 </Task>
 
 <Task>
-### Create templates and render the drop-in
 
-Render the product details components on the page. The example below provides the minimal configuration options required to render the default product details components:
+### Import the required files
 
-```js title="product-details.js"
-  const fragment = document.createRange().createContextualFragment(`
-    <div class="product-details__wrapper">
-      <div class="product-details__alert"></div>
-      <div class="product-details__left-column">
-        <div class="product-details__gallery"></div>
-      </div>
-      <div class="product-details__right-column">
-        <div class="product-details__header"></div>
-        <div class="product-details__price"></div>
-        <div class="product-details__gallery"></div>
-        <div class="product-details__short-description"></div>
-        <div class="product-details__configuration">
-          <div class="product-details__options"></div>
-          <div class="product-details__quantity"></div>
-          <div class="product-details__buttons">
-            <div class="product-details__buttons__add-to-cart"></div>
-            <div class="product-details__buttons__add-to-wishlist"></div>
-          </div>
-        </div>
-        <div class="product-details__description"></div>
-        <div class="product-details__attributes"></div>
-      </div>
-    </div>
-  `);
+Import the necessary components and utilities:
 
-  const $alert = fragment.querySelector('.product-details__alert');
-  const $gallery = fragment.querySelector('.product-details__gallery');
-  const $header = fragment.querySelector('.product-details__header');
-  const $price = fragment.querySelector('.product-details__price');
-  const $galleryMobile = fragment.querySelector('.product-details__right-column .product-details__gallery');
-  const $shortDescription = fragment.querySelector('.product-details__short-description');
-  const $options = fragment.querySelector('.product-details__options');
-  const $quantity = fragment.querySelector('.product-details__quantity');
-  const $addToCart = fragment.querySelector('.product-details__buttons__add-to-cart');
-  const $addToWishlist = fragment.querySelector('.product-details__buttons__add-to-wishlist');
-  const $description = fragment.querySelector('.product-details__description');
-  const $attributes = fragment.querySelector('.product-details__attributes');
+```js title="Product Details.js"
+// GraphQL Client
+import * as mesh from '@dropins/tools/fetch-graphql.js';
+
+// Component tools
+import { initializers } from '@dropins/tools/initializer.js';
+
+// Drop-in component provider
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+
+// Drop-in component API functions
+import * as api from '@dropins/storefront-pdp/api.js';
+
+// Drop-in component containers
+import { ProductAttributes } from '@dropins/storefront-pdp';
 ```
 
-Test the product details component by viewing your PDP page in a browser, or running your local dev or build server. If you see the product details components rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
+</Task>
+
+<Task>
+
+### Connect to the endpoint
+
+Configure the GraphQL endpoint:
+
+```js title="Product Details.js"
+// Set endpoint configuration
+mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
+
+// Set store code header
+mesh.setFetchGraphQlHeader('store', '<default>');
+```
+
+<Aside type="note">
+This setting is specific for GraphQL Mesh. Refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Register and load the drop-in
+
+Mount the initializers after the page has loaded:
+
+```js title="Product Details.js"
+// Register drop-in initializer
+initializers.register(api.initialize, {});
+
+// Mount initializers (must be called after all initializers are registered)
+initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+</Task>
+
+<Task>
+
+### Render the drop-in
+
+Render the ProductAttributes container on your page:
+
+```js title="Product Details.js"
+// Render Product Details
+provider.render(ProductAttributes, {
+  // Add configuration options here
+})(document.getElementById('your-dropin-element'));
+```
+
+<Aside type="tip">
+See the [Containers documentation](/dropins/Product Details/containers/) for a complete list of available containers and their configuration options.
+</Aside>
 
 </Task>
 
 </Tasks>
 
-## Summary
+## Next steps
 
-The installation of all drop-in components follows the same pattern demonstrated by installing the PDP drop-in: Install, Map, Import, Connect, Register, and Render. We like to call the process `iMICRR` for short, pronounced `eye-mike-er`. Actually, we don't call it that, but if it helps...Enjoy!
+- Explore the [API functions](/dropins/Product Details/functions/) available for programmatic control
+- Customize the appearance using [slots](/dropins/Product Details/slots/)
+- Learn about [events](/dropins/Product Details/events/) for integration with other components
+
+{/* This documentation is auto-generated from: REPO_URL */}

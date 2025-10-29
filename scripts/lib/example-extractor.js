@@ -168,8 +168,9 @@ export function extractExamplesFromBoilerplate(boilerplatePath, functionName) {
 
     const examples = [];
 
-    // Common block directories where cart functions are used
+    // Common block directories where drop-in functions are used
     const blockFiles = [
+        'header/header.js',
         'product-details/product-details.js',
         'product-list-page/product-list-page.js',
         'product-recommendations/product-recommendations.js',
@@ -200,6 +201,15 @@ export function extractExamplesFromBoilerplate(boilerplatePath, functionName) {
 
         for (const match of functionMatches) {
             const startIndex = match.index;
+
+            // Skip dynamic imports (e.g., "await import(...)")
+            const lineStart = content.lastIndexOf('\n', startIndex) + 1;
+            const lineEnd = content.indexOf('\n', startIndex);
+            const line = content.substring(lineStart, lineEnd !== -1 ? lineEnd : content.length);
+            if (line.includes('await import(') || line.includes('import(')) {
+                continue;
+            }
+
             const openParenIndex = content.indexOf('(', startIndex);
 
             // Find matching closing paren
@@ -216,9 +226,29 @@ export function extractExamplesFromBoilerplate(boilerplatePath, functionName) {
 
             let code = content.substring(startIndex, endIndex).trim();
 
-            // Add await if missing
-            if (!code.startsWith('await ')) {
+            // Detect void-returning functions (side-effect only)
+            const voidFunctionPatterns = [
+                /^publish/,    // publishShoppingCartViewEvent
+                /^emit/,       // emitEvent
+                /^trigger/,    // triggerAction
+                /^send/,       // sendNotification
+                /^log/,        // logEvent
+                /^track/,      // trackEvent
+                /^notify/,     // notifyUser
+                /^broadcast/,  // broadcastMessage
+                /^dispatch/,   // dispatchEvent
+            ];
+
+            const isVoidFunction = voidFunctionPatterns.some(pattern => pattern.test(functionName));
+
+            // Add await only for non-void functions that return a Promise
+            if (!code.startsWith('await ') && !isVoidFunction) {
                 code = `await ${code}`;
+            }
+
+            // Remove await from void functions if present
+            if (isVoidFunction && code.startsWith('await ')) {
+                code = code.replace(/^await\s+/, '');
             }
 
             // Skip if it's just a reference (no actual call with args)
@@ -319,12 +349,129 @@ function validateRepositories(dropinPath, boilerplatePath, repoName) {
 }
 
 /**
+ * Extract examples from reference repositories (dropin-template, SDK, etc.)
+ * 
+ * @param {string} functionName - Name of the function to extract examples for
+ * @returns {Array} Array of example objects with title and code
+ */
+export function extractExamplesFromReferenceRepos(functionName) {
+    const referenceRepos = [
+        'dropin-template',
+        'storefront-sdk',
+        'storefront-tools'
+    ];
+
+    const examples = [];
+
+    for (const repoName of referenceRepos) {
+        const repoPath = join(projectRoot, '.temp-repos', repoName);
+
+        if (!existsSync(repoPath)) {
+            continue;
+        }
+
+        // Search for usage in example files, documentation, and source
+        const searchPaths = [
+            join(repoPath, 'examples'),
+            join(repoPath, 'src'),
+            join(repoPath, 'docs')
+        ];
+
+        for (const searchPath of searchPaths) {
+            if (!existsSync(searchPath)) continue;
+
+            try {
+                // Search for TypeScript/JavaScript files that use this function
+                const files = readdirSync(searchPath, { recursive: true });
+
+                for (const file of files) {
+                    if (typeof file !== 'string') continue;
+                    if (!file.endsWith('.ts') && !file.endsWith('.js') && !file.endsWith('.tsx') && !file.endsWith('.jsx')) continue;
+                    if (file.includes('.test.') || file.includes('.spec.')) continue;
+
+                    const filePath = join(searchPath, file);
+                    if (!existsSync(filePath) || !statSync(filePath).isFile()) continue;
+
+                    const content = readFileSync(filePath, 'utf8');
+
+                    // Check if this file uses the function
+                    if (!content.includes(functionName)) continue;
+
+                    // Extract JSDoc examples from this reference file
+                    const jsdocExamples = extractExamplesFromJSDoc(dirname(filePath), functionName);
+                    if (jsdocExamples.length > 0) {
+                        examples.push(...jsdocExamples.map(ex => ({
+                            ...ex,
+                            source: 'reference-repo',
+                            title: ex.title || `From ${repoName}`
+                        })));
+                    }
+                }
+            } catch (error) {
+                // Continue to next repo if error
+                continue;
+            }
+        }
+    }
+
+    return examples;
+}
+
+/**
+ * Format test description for use as example title
+ * - Capitalizes first letter
+ * - Converts SCREAMING_SNAKE_CASE constants to Title Case
+ * 
+ * @param {string} str - Test description to format
+ * @returns {string} Formatted title
+ */
+function formatExampleTitle(str) {
+    if (!str || str.length === 0) return str;
+
+    // Convert SCREAMING_SNAKE_CASE constants to Title Case
+    // e.g., "ESTIMATE_SHIPPING_METHODS_QUERY" -> "Estimate Shipping Methods Query"
+    str = str.replace(/\b[A-Z_]{4,}\b/g, (match) => {
+        return match
+            .split('_')
+            .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+            .join(' ');
+    });
+
+    // Capitalize first letter
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Extract examples from test files (*.test.ts, *.spec.ts)
+ * ⚠️ DISABLED: Tests are NOT suitable for documentation examples.
+ * 
+ * Tests focus on edge cases, errors, and use mock data with misleading titles.
+ * They are fundamentally incompatible with real-world usage documentation.
+ * 
+ * @param {string} dropinPath - Path to the drop-in repository
+ * @param {string} functionName - Name of the function
+ * @returns {Array} Always returns empty array (test extraction disabled)
+ */
+export function extractExamplesFromTests(dropinPath, functionName) {
+    // TEST EXTRACTION PERMANENTLY DISABLED
+    // Tests are not appropriate for documentation:
+    // - Test negative scenarios ("should not", "throws error", "missing parameter")
+    // - Use mock data (mockItemUid, testData, fakeUser)
+    // - Include test assertions (expect(), .rejects.toThrow())
+    // - Focus on edge cases, not real-world usage
+    return [];
+
+    // Original implementation removed - see git history if needed
+}
+
+
+/**
  * Get all examples for a function from all available sources
  * 
  * @param {string} repoName - Drop-in repository name (e.g., 'cart')
  * @param {string} functionName - Name of the function to extract examples for
  * @param {number} maxExamples - Maximum number of examples to return (default: 3)
- * @returns {Array} Array of example objects with title and code
+ * @returns {Array} Array of example objects
  */
 export function getAllExamples(repoName, functionName, maxExamples = 3) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
@@ -339,47 +486,103 @@ export function getAllExamples(repoName, functionName, maxExamples = 3) {
     }
 
     const allExamples = [
+        ...extractExamplesFromJSDoc(dropinPath, functionName),
+        // Tests DISABLED - they test edge cases, not real-world usage
         ...extractExamplesFromHTML(dropinPath, functionName),
         ...extractExamplesFromBoilerplate(boilerplatePath, functionName),
-        ...extractExamplesFromJSDoc(dropinPath, functionName)
+        ...extractExamplesFromReferenceRepos(functionName)
     ];
 
-    // Prioritize: JSDoc > HTML Example > Boilerplate
+    // Prioritize: JSDoc > HTML Example > Boilerplate > Reference Repos
     const prioritized = [
         ...allExamples.filter(ex => ex.source === 'jsdoc'),
         ...allExamples.filter(ex => ex.source === 'html-example'),
-        ...allExamples.filter(ex => ex.source === 'boilerplate')
+        ...allExamples.filter(ex => ex.source === 'boilerplate'),
+        ...allExamples.filter(ex => ex.source === 'reference-repo')
     ];
 
-    // Remove duplicates and limit
-    const seen = new Set();
-    const unique = prioritized.filter(ex => {
-        // Aggressive normalization for comparison - remove all whitespace, quotes, and common variations
-        // Also strip out dummy values like IDs, tokens, auth keys that don't make examples different
-        const normalized = ex.code
-            .replace(/\s+/g, '')  // Remove ALL whitespace
+    // Detect void-returning functions
+    const voidFunctionPatterns = [
+        /^publish/,    // publishShoppingCartViewEvent
+        /^emit/,       // emitEvent
+        /^trigger/,    // triggerAction
+        /^send/,       // sendNotification
+        /^log/,        // logEvent
+        /^track/,      // trackEvent
+        /^notify/,     // notifyUser
+        /^broadcast/,  // broadcastMessage
+        /^dispatch/,   // dispatchEvent
+    ];
+    const isVoidFunction = voidFunctionPatterns.some(pattern => pattern.test(functionName));
+
+    // Skip examples for void-returning functions - their usage is obvious from signature
+    // (e.g., publishShoppingCartViewEvent() - no parameters, no return value)
+    if (isVoidFunction && prioritized.length > 0) {
+        // Check if any examples show meaningful usage (e.g., parameters)
+        const hasMeaningfulExample = prioritized.some(ex => {
+            // If the function call includes parameters, it's meaningful
+            const funcCallPattern = new RegExp(`${functionName}\\s*\\([^)]+\\)`, 'i');
+            return funcCallPattern.test(ex.code);
+        });
+
+        // If no meaningful examples (all are just empty calls), skip them
+        if (!hasMeaningfulExample) {
+            return [];
+        }
+    }
+
+    // Group examples by normalized function call signature (ignoring variable assignment)
+    const exampleGroups = new Map();
+
+    for (const ex of prioritized) {
+        // Extract just the function call, removing variable assignment and whitespace
+        const callSignature = ex.code
+            .replace(/^\s*(?:const|let|var)\s+\w+\s*=\s*/, '') // Remove variable assignment
+            .replace(/\s+/g, '')  // Remove whitespace
             .replace(/['"`]/g, '') // Remove quotes
-            .replace(/,$/gm, '')   // Remove trailing commas
-            // Strip common dummy values (IDs, tokens, keys, etc.)
-            .replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, 'UUID') // UUIDs
-            .replace(/[a-f0-9]{32,64}/gi, 'TOKEN') // Long hex strings (tokens/keys)
-            .replace(/[A-Za-z0-9+/]{20,}={0,2}/g, 'BASE64') // Base64 tokens
-            .replace(/\d{10,}/g, 'NUMERIC_ID') // Long numeric IDs
-            .replace(/id:\d+/gi, 'id:ID') // id: 123 patterns
-            .replace(/sku:\w+/gi, 'sku:SKU') // SKU values
-            .replace(/customerid:\w+/gi, 'customerid:ID') // Customer IDs
-            .replace(/token:\w+/gi, 'token:TOKEN') // Explicit token fields
-            .replace(/apikey:\w+/gi, 'apikey:KEY') // API keys
-            .replace(/key:\w+/gi, 'key:KEY') // Generic keys
+            // Strip common dummy values
+            .replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, 'UUID')
+            .replace(/[a-f0-9]{32,64}/gi, 'TOKEN')
+            .replace(/[A-Za-z0-9+/]{20,}={0,2}/g, 'BASE64')
+            .replace(/\d{10,}/g, 'NUMERIC_ID')
+            .replace(/id:\d+/gi, 'id:ID')
+            .replace(/sku:\w+/gi, 'sku:SKU')
             .toLowerCase()
             .trim();
 
-        if (seen.has(normalized)) {
-            return false;
+        // Check if example has variable assignment
+        const hasVarAssignment = /^\s*(?:const|let|var)\s+\w+\s*=\s*/.test(ex.code);
+
+        if (!exampleGroups.has(callSignature)) {
+            exampleGroups.set(callSignature, []);
         }
-        seen.add(normalized);
-        return true;
-    });
+        exampleGroups.get(callSignature).push({ ...ex, hasVarAssignment });
+    }
+
+    // For each group, select the best example
+    const unique = [];
+    for (const [callSignature, examples] of exampleGroups) {
+        // For non-void functions, prefer examples WITH variable assignment
+        // For void functions, prefer examples WITHOUT variable assignment
+        if (!isVoidFunction) {
+            // Prefer example with variable assignment
+            const withVar = examples.find(ex => ex.hasVarAssignment);
+            if (withVar) {
+                unique.push(withVar);
+            } else {
+                // Skip examples that use 'await' without capturing result for data-returning functions
+                const hasAwait = examples[0].code.includes('await');
+                if (!hasAwait) {
+                    unique.push(examples[0]);
+                }
+                // If all examples use 'await' without capturing, skip them (they're pointless)
+            }
+        } else {
+            // For void functions, prefer example WITHOUT variable assignment
+            const withoutVar = examples.find(ex => !ex.hasVarAssignment);
+            unique.push(withoutVar || examples[0]);
+        }
+    }
 
     return unique.slice(0, maxExamples);
 }

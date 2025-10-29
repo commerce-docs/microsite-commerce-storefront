@@ -1,107 +1,49 @@
 ---
-title: SuccessNotification container
-description: Learn about the SuccessNotification container in the UserAuth drop-in.
+title: SuccessNotification Container
+description: Learn about the SuccessNotification container in the User Auth drop-in.
+sidebar:
+  label: SuccessNotification
 ---
 
-import Diagram from '@components/Diagram.astro';
-import Callouts from '@components/Callouts.astro';
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-The SuccessNotification container displays a message to the user after a successful action, such as signing up or updating a password. The SignIn, SignUp, and UpdatePassword containers can pass the SuccessNotification container as a slot.
+## Overview
 
-In the following diagram, a SignIn container has passed the SuccessNotification container, which defines the displayed text and action buttons.
+The SuccessNotification container component for the drop-in.
 
-<Diagram caption="SuccessNotification container">
-  ![SuccessNotification container](@images/user-auth/success-notification.png)
-</Diagram>
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.1</strong>
+</div>
 
-## SuccessNotification configurations
+## Configuration
 
-The SuccessNotification container provides the following configuration options:
+The `SuccessNotification` container provides the following configuration options:
 
-<OptionsTable
-  compact
-  options={[
-    ['Options', 'Type', 'Req?', 'Description'],
-    [
-      'slots',
-      'function',
-      'No',
-      'Allows overriding the SuccessNotification container action buttons (SuccessNotificationActions).',
-    ],
-    [
-      'formSize',
-      'default | small',
-      'No',
-      'Controls form paddings and spacing. Use "small" to embed the form in small layout containers like a dropdown in the header.',
-    ],
-    ['headingText', 'string', 'No', 'Heading text content.'],
-    ['messageText', 'string', 'No', 'Message text content.'],
-  ]}
-/>
+<TableWrapper nowrap={[0]}>
 
-## Example
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| No configurations | - | - | - |
 
-The following example renders the SignIn container. On success, the container displays a welcome heading, a message, and two action buttons: "My Account" and "Logout".
+</TableWrapper>
 
-```javascript
-export default async function decorate(block) {
-  if (checkIsAuthenticated()) {
-    window.location.href = CUSTOMER_ACCOUNT_PATH;
-  } else {
-    await authRenderer.render(SignIn, {
-      enableEmailConfirmation: true,
-      routeForgotPassword: () => CUSTOMER_FORGOTPASSWORD_PATH,
-      slots: {
-        SuccessNotification: (ctx) => {
-          const userName = ctx?.isSuccessful?.userName || '';
+## Slots
 
-          const elem = document.createElement('div');
+This container does not currently expose any customizable slots.
 
-          authRenderer.render(SuccessNotification, {
-            labels: {
-              headingText: `Welcome ${userName}!`,
-              messageText: 'You have successfully logged in.',
-            },
-            slots: {
-              SuccessNotificationActions: (innerCtx) => {
-                const primaryBtn = document.createElement('div');
+## Usage
 
-                authRenderer.render(Button, {
-                  children: 'My Account',
+The following example demonstrates how to use the `SuccessNotification` container:
 
-                  onClick: () => {
-                    window.location.href = CUSTOMER_ACCOUNT_PATH;
-                  },
-                })(primaryBtn);
+```jsx
+import { SuccessNotification } from '@dropins/storefront-auth';
 
-                innerCtx.appendChild(primaryBtn);
-
-                const secondaryButton = document.createElement('div');
-                secondaryButton.style.display = 'flex';
-                secondaryButton.style.justifyContent = 'center';
-                secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
-
-                authRenderer.render(Button, {
-                  children: 'Logout',
-                  variant: 'tertiary',
-                  onClick: async () => {
-                    await authApi.revokeCustomerToken();
-                    window.location.href = '/';
-                  },
-                })(secondaryButton);
-
-                innerCtx.appendChild(secondaryButton);
-              },
-            },
-          })(elem);
-
-          ctx.appendChild(elem);
-        },
-      },
-    })(block);
-  }
+export default function MyComponent() {
+  return (
+    <SuccessNotification/>
+  );
 }
 ```
+
+{/* This documentation is auto-generated from: REPO_URL */}

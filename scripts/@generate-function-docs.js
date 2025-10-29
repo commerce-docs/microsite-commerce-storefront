@@ -39,6 +39,186 @@ import { validateAndMerge, validateFunctionSignature, createValidationReport } f
 const projectRoot = getProjectRoot();
 
 // ============================================================================
+// TYPE EXTRACTION FROM SOURCE
+// ============================================================================
+
+/**
+ * Extract actual type from source code based on returns_source hint
+ * 
+ * @param {string} returnsSource - Source hint (e.g., "state.cartId", "graphql.mutation")
+ * @param {string} repoPath - Path to cloned repository
+ * @param {string} functionName - Name of the function
+ * @returns {Object|null} Object with {type, definition, source} or null
+ */
+function extractTypeFromSource(returnsSource, repoPath, functionName) {
+    if (!returnsSource) return null;
+
+    try {
+        // Handle state.X pattern
+        if (returnsSource.startsWith('state.')) {
+            const fieldName = returnsSource.replace('state.', '');
+            const statePath = join(repoPath, 'src/lib/state.ts');
+
+            if (!existsSync(statePath)) {
+                return null;
+            }
+
+            const stateContent = readFileSync(statePath, 'utf-8');
+
+            // Look for the field definition: fieldName: Type
+            const fieldPattern = new RegExp(`${fieldName}\\s*:\\s*([^;,}\\n]+)`);
+            const match = stateContent.match(fieldPattern);
+
+            if (match) {
+                return {
+                    type: match[1].trim(),
+                    definition: `${fieldName}: ${match[1].trim()}`,
+                    source: 'state'
+                };
+            }
+        }
+
+        // Handle model.X pattern
+        if (returnsSource.startsWith('model.')) {
+            const modelName = returnsSource.replace('model.', '');
+            const modelDirs = [
+                join(repoPath, 'src/data/models'),
+                join(repoPath, 'src/models')
+            ];
+
+            for (const modelDir of modelDirs) {
+                if (!existsSync(modelDir)) continue;
+
+                // Try finding the model file (kebab-case or exact match)
+                const kebabName = modelName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+                const possibleFiles = [
+                    join(modelDir, `${kebabName}.ts`),
+                    join(modelDir, `${modelName}.ts`),
+                    join(modelDir, 'index.ts')
+                ];
+
+                for (const filePath of possibleFiles) {
+                    if (!existsSync(filePath)) continue;
+
+                    const modelContent = readFileSync(filePath, 'utf-8');
+
+                    // Look for interface or type definition
+                    const interfacePattern = new RegExp(`export interface ${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+                    const typePattern = new RegExp(`export type ${modelName}\\s*=\\s*[\\s\\S]*?;`, 'm');
+
+                    const interfaceMatch = modelContent.match(interfacePattern);
+                    const typeMatch = modelContent.match(typePattern);
+
+                    if (interfaceMatch || typeMatch) {
+                        const fullDefinition = (interfaceMatch || typeMatch)[0];
+                        return {
+                            type: modelName,
+                            definition: `${modelName} (see structure below)`,
+                            fullDefinition: fullDefinition, // Store the complete type definition
+                            source: 'model'
+                        };
+                    }
+                }
+            }
+        }
+
+        // Handle graphql.X pattern
+        if (returnsSource.startsWith('graphql.')) {
+            const mutationName = returnsSource.replace('graphql.', '');
+            const graphqlDir = join(repoPath, 'src/api', functionName, 'graphql');
+
+            if (!existsSync(graphqlDir)) {
+                return null;
+            }
+
+            // Find the GraphQL file
+            const files = readdirSync(graphqlDir);
+            const graphqlFile = files.find(f => f.includes(mutationName) || f.endsWith('.ts'));
+
+            if (!graphqlFile) {
+                return null;
+            }
+
+            const graphqlContent = readFileSync(join(graphqlDir, graphqlFile), 'utf-8');
+
+            // Extract GraphQL query/mutation fields
+            // This is a simplified extraction - could be enhanced
+            return {
+                type: 'object',
+                definition: 'GraphQL response structure',
+                source: 'graphql'
+            };
+        }
+
+    } catch (error) {
+        console.warn(`  ⚠️  Failed to extract type from ${returnsSource}:`, error.message);
+    }
+
+    return null;
+}
+
+// ============================================================================
+// EVENT EXTRACTION FROM SOURCE
+// ============================================================================
+
+/**
+ * Extract events emitted by a function from its source code
+ * 
+ * @param {string} repoPath - Path to cloned repository
+ * @param {string} functionName - Name of the function
+ * @returns {string[]} Array of event names (e.g., ['cart/updated', 'cart/data'])
+ */
+function extractEventsFromSource(repoPath, functionName) {
+    const events = new Set();
+
+    // Convert camelCase to kebab-case for file lookup
+    const fileName = functionName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+    const possiblePaths = [
+        join(repoPath, 'src', 'api', functionName, `${functionName}.ts`),
+        join(repoPath, 'src', 'api', fileName, `${fileName}.ts`),
+        join(repoPath, 'src', 'api', `${functionName}.ts`),
+        join(repoPath, 'src', 'api', `${fileName}.ts`),
+    ];
+
+    let fileContent = null;
+    for (const path of possiblePaths) {
+        if (existsSync(path)) {
+            fileContent = readFileSync(path, 'utf-8');
+            break;
+        }
+    }
+
+    if (!fileContent) {
+        return [];
+    }
+
+    // Look for event emission patterns:
+    // - events.emit('event/name')
+    // - eventBus.emit('event/name')
+    // - publish('event/name')
+    // - emit('event/name')
+    const emitPatterns = [
+        /events\.emit\(['"]([^'"]+)['"]/g,
+        /eventBus\.emit\(['"]([^'"]+)['"]/g,
+        /publish\(['"]([^'"]+)['"]/g,
+        /\.emit\(['"]([^'"]+)['"]/g,
+    ];
+
+    for (const pattern of emitPatterns) {
+        let match;
+        while ((match = pattern.exec(fileContent)) !== null) {
+            const eventName = match[1];
+            // Only add if it looks like an event name (has a slash)
+            if (eventName.includes('/')) {
+                events.add(eventName);
+            }
+        }
+    }
+
+    return Array.from(events).sort();
+}
+
+// ============================================================================
 // REPOSITORY SCANNING
 // ============================================================================
 
@@ -144,6 +324,213 @@ function extractFunctionSignature(tsContent, functionName) {
     }
 
     return null;
+}
+
+/**
+ * Extract type/model definition from TypeScript source files
+ * 
+ * @param {string} repoPath - Path to the repository
+ * @param {string} typeName - Name of the type to find (e.g., "CartModel", "OrderData", "CustomerType")
+ * @returns {string|null} Type definition or null if not found
+ */
+function extractModelDefinitionFromSource(repoPath, typeName) {
+    // Convert PascalCase to kebab-case (ProductModel -> product-model, OrderData -> order-data)
+    const kebabCase = typeName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+    // Common directories where types/models are defined
+    const searchDirectories = [
+        join(repoPath, 'src', 'data', 'models'),
+        join(repoPath, 'src', 'types'),
+        join(repoPath, 'src'),
+    ];
+
+    // Also check specific files
+    const specificFiles = [
+        join(repoPath, 'src', 'data', 'models.ts'),
+        join(repoPath, 'src', 'types.ts'),
+        join(repoPath, 'src', 'models.ts'),
+        join(repoPath, 'src', 'api', 'types.ts'),
+    ];
+
+    // Search through directories first
+    for (const dir of searchDirectories) {
+        if (!existsSync(dir)) continue;
+
+        try {
+            const files = readdirSync(dir);
+            for (const file of files) {
+                if (!file.endsWith('.ts') || file.endsWith('.test.ts')) continue;
+
+                const filePath = join(dir, file);
+                if (!statSync(filePath).isFile()) continue;
+
+                const result = searchFileForType(filePath, typeName);
+                if (result) return result;
+            }
+        } catch (error) {
+            continue;
+        }
+    }
+
+    // Then search specific files
+    for (const filePath of specificFiles) {
+        if (!existsSync(filePath)) continue;
+
+        const result = searchFileForType(filePath, typeName);
+        if (result) return result;
+    }
+
+    return null;
+}
+
+/**
+ * Search a single file for a type definition
+ * 
+ * @param {string} filePath - Path to the file to search
+ * @param {string} typeName - Name of the type to find
+ * @returns {string|null} Type definition or null if not found
+ */
+function searchFileForType(filePath, typeName) {
+    try {
+        const content = readFileSync(filePath, 'utf8');
+
+        // Match type or interface definition
+        // Need to handle nested braces properly
+        const exportInterfaceMatch = content.match(new RegExp(`export\\s+interface\\s+${typeName}\\s*\\{`));
+        const exportTypeMatch = content.match(new RegExp(`export\\s+type\\s+${typeName}\\s*=\\s*\\{`));
+        const interfaceMatch = content.match(new RegExp(`interface\\s+${typeName}\\s*\\{`));
+        const typeMatch = content.match(new RegExp(`type\\s+${typeName}\\s*=\\s*\\{`));
+
+        let startMatch = exportInterfaceMatch || exportTypeMatch || interfaceMatch || typeMatch;
+
+        if (startMatch) {
+            const startIndex = startMatch.index;
+            const openBraceIndex = content.indexOf('{', startIndex);
+
+            // Find matching closing brace
+            let braceCount = 0;
+            let endIndex = openBraceIndex;
+
+            for (let i = openBraceIndex; i < content.length; i++) {
+                if (content[i] === '{') braceCount++;
+                if (content[i] === '}') braceCount--;
+                if (braceCount === 0) {
+                    endIndex = i + 1;
+                    break;
+                }
+            }
+
+            return content.substring(startIndex, endIndex).trim();
+        }
+    } catch (error) {
+        // File can't be read
+        return null;
+    }
+
+    return null;
+}
+
+/**
+ * Parse TypeScript parameters string into structured parameter objects
+ * 
+ * @param {string} paramsString - The parameters part of a function signature
+ * @returns {Array<{name: string, type: string, optional: boolean}>} Parsed parameters
+ */
+function parseTypeScriptParameters(paramsString) {
+    if (!paramsString || paramsString.trim().length === 0) {
+        return [];
+    }
+
+    const parameters = [];
+    let current = '';
+    let depth = 0;
+    let inGeneric = false;
+
+    // Track bracket types for complex nested structures
+    for (let i = 0; i < paramsString.length; i++) {
+        const char = paramsString[i];
+
+        if (char === '<') {
+            inGeneric = true;
+            depth++;
+        } else if (char === '>') {
+            depth--;
+            if (depth === 0) inGeneric = false;
+        } else if (char === '{' || char === '[' || char === '(') {
+            depth++;
+        } else if (char === '}' || char === ']' || char === ')') {
+            depth--;
+        }
+
+        // Split on comma only at depth 0 (top level parameters)
+        if (char === ',' && depth === 0 && !inGeneric) {
+            if (current.trim()) {
+                parameters.push(parseParameter(current.trim()));
+            }
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Don't forget the last parameter
+    if (current.trim()) {
+        parameters.push(parseParameter(current.trim()));
+    }
+
+    return parameters.filter(p => p !== null);
+}
+
+/**
+ * Parse a single parameter into name, type, and optional status
+ * 
+ * @param {string} paramStr - Single parameter string like "sku: string" or "quantity?: number"
+ * @returns {{name: string, type: string, optional: boolean}|null}
+ */
+function parseParameter(paramStr) {
+    // Handle destructured parameters: { sku, quantity }: { sku: string, quantity: number }
+    // For now, we'll skip these as they're complex
+    if (paramStr.startsWith('{') && paramStr.includes('}:')) {
+        // This is object destructuring - extract type after the colon
+        const colonIndex = paramStr.lastIndexOf(':');
+        if (colonIndex > -1) {
+            const type = paramStr.substring(colonIndex + 1).trim();
+            return {
+                name: 'options',
+                type: type,
+                optional: false
+            };
+        }
+    }
+
+    // Standard parameter: name: type or name?: type
+    const colonIndex = paramStr.indexOf(':');
+    if (colonIndex === -1) {
+        // No type annotation found
+        return null;
+    }
+
+    let name = paramStr.substring(0, colonIndex).trim();
+    let type = paramStr.substring(colonIndex + 1).trim();
+    let optional = false;
+
+    // Check for optional parameter (ends with ?)
+    if (name.endsWith('?')) {
+        optional = true;
+        name = name.slice(0, -1).trim();
+    }
+
+    // Check for default value (contains =)
+    const equalsIndex = type.indexOf('=');
+    if (equalsIndex > -1) {
+        optional = true;
+        type = type.substring(0, equalsIndex).trim();
+    }
+
+    // Clean up type (remove wrapping parentheses if present)
+    type = type.replace(/^\((.+)\)$/, '$1');
+
+    return { name, type, optional };
 }
 
 // ============================================================================
@@ -308,39 +695,53 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     // Sort functions alphabetically
     functions.sort((a, b) => a.name.localeCompare(b.name));
 
-    // First pass: Detect duplicate return models across functions
+    // First pass: Extract model definitions from TypeScript return types
     const modelDefinitions = new Map(); // modelName -> { definition: string, count: number, functions: string[] }
 
-    if (enrichmentData) {
-        functions.forEach(func => {
-            const enrichment = enrichmentData[func.name];
-            if (enrichment && enrichment.returns) {
-                // Check if returns contains a code block (likely a model definition)
-                const codeBlockMatch = enrichment.returns.match(/```(?:ts|typescript)\n([\s\S]+?)\n```/);
-                if (codeBlockMatch) {
-                    const modelCode = codeBlockMatch[1];
-                    // Try to extract model name from the code (e.g., "type CartModel = " or "interface CartModel")
-                    const modelNameMatch = modelCode.match(/(?:type|interface|export (?:type|interface))\s+(\w+Model)/);
-                    if (modelNameMatch) {
-                        const modelName = modelNameMatch[1];
-                        if (!modelDefinitions.has(modelName)) {
-                            modelDefinitions.set(modelName, { definition: modelCode, count: 0, functions: [] });
+    // Calculate repository path
+    const repoPath = join(getProjectRoot(), '.temp-repos', repoName);
+
+    // Extract models from function return types
+    functions.forEach(func => {
+        if (func.signature && func.signature.returnType) {
+            let returnType = func.signature.returnType;
+
+            // Extract the actual type from Promise<Type>
+            const promiseMatch = returnType.match(/^Promise<(.+)>$/);
+            const actualType = promiseMatch ? promiseMatch[1] : returnType;
+
+            // Look for custom type names (PascalCase identifiers)
+            // Match: CartModel, ShippingMethod, Customer, ProductSearchResult, etc.
+            // But exclude built-in types
+            const builtInTypes = ['Promise', 'Array', 'String', 'Number', 'Boolean', 'Date', 'Object', 'Function', 'RegExp', 'Error', 'Map', 'Set', 'WeakMap', 'WeakSet', 'Symbol', 'Partial', 'Required', 'Readonly', 'Record', 'Pick', 'Omit', 'Exclude', 'Extract', 'NonNullable', 'Parameters', 'ReturnType'];
+
+            // Match PascalCase identifiers (at least 3 chars, starts with capital)
+            const typePattern = /\b([A-Z][a-z]+[A-Z]\w*|[A-Z][a-z]{2,}\w*)\b/g;
+            const typeMatches = actualType.match(typePattern);
+
+            if (typeMatches) {
+                // Deduplicate and filter out built-in types
+                const uniqueTypes = [...new Set(typeMatches)].filter(type => !builtInTypes.includes(type));
+
+                uniqueTypes.forEach(typeName => {
+                    // Try to find the type definition in TypeScript source
+                    const typeDefinition = extractModelDefinitionFromSource(repoPath, typeName);
+
+                    if (typeDefinition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, { definition: typeDefinition, count: 0, functions: [] });
                         }
-                        const modelData = modelDefinitions.get(modelName);
+                        const modelData = modelDefinitions.get(typeName);
                         modelData.count++;
                         modelData.functions.push(func.name);
                     }
-                }
+                });
             }
-        });
-    }
-
-    // Identify models that should be extracted (used 2+ times)
-    const sharedModels = Array.from(modelDefinitions.entries())
-        .filter(([_, data]) => data.count >= 2)
-        .map(([name, _]) => name);
+        }
+    });
 
     // Generate function index table (wrapped in TableWrapper with first column nowrap)
+    // Description column should wrap, only Function name column should not wrap
     let functionsTable = '<TableWrapper nowrap={[0]}>\n\n';
     functionsTable += '| Function | Description |\n';
     functionsTable += '| --- | --- |\n';
@@ -426,8 +827,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
         funcContent = funcContent.replace(/\n{3,}/g, '\n\n');
         funcContent = funcContent.trim();
 
-        // Add the function section with H3 heading (under the "Function details" H2)
-        functionsContent += `### ${func.name}\n\n`;
+        // Add the function section with H2 heading
+        functionsContent += `## ${func.name}\n\n`;
 
         // Use enriched description if available, otherwise extract and clean from MDX
         let description = enrichment && enrichment.description ? enrichment.description : null;
@@ -438,22 +839,15 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             functionsContent += `${description}\n\n`;
         }
 
-        // Add TypeScript signature if available (no heading, just the code block)
-        // Prefer enrichment signature if available (for manual overrides)
+        // Add Signature section - ALWAYS from source code (never enrichment)
+        // Enrichment cannot override TypeScript source
         let signature = func.signature;
-        if (enrichment && enrichment.signature) {
-            signature = enrichment.signature;
-        }
 
         if (signature) {
-            // Keep the full signature as-is from the source code
-            // The source already has it formatted nicely with proper indentation
-            // Remove trailing => from arrow function syntax for cleaner display
             let returnType = signature.returnType.replace(/\s*=>\s*$/, '');
             let params = signature.params;
 
             // Format all signatures with parameters on separate lines for consistency and readability
-            // Split on commas that are at depth 0 (not inside braces/brackets)
             let formattedParams = '';
             let currentParam = '';
             let depth = 0;
@@ -473,56 +867,62 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 }
             }
 
-            // Add the last parameter (without trailing comma)
             if (currentParam.trim()) {
                 formattedParams += '\n  ' + currentParam.trim();
             }
 
-            // Format signature: functionName(\n  params\n): ReturnType
-            // Use formatted version for multi-param, or single-line for single param
+            // Format signature (without export const for cleaner documentation)
+            // Note: returnType already includes Promise<> from extraction, don't wrap again
             if (hasMultipleParams || params.trim().length > 50) {
-                // Multi-param or long single param: use formatted style
-                functionsContent += `\`\`\`ts\n`;
-                functionsContent += `${func.name}(${formattedParams}\n): ${returnType}\n`;
-                functionsContent += `\`\`\`\n\n`;
+                functionsContent += `\`\`\`ts\nconst ${func.name} = async (${formattedParams}\n): ${returnType}\n\`\`\`\n\n`;
             } else if (params.trim().length > 0) {
-                // Short single param: still use formatted style for consistency
-                functionsContent += `\`\`\`ts\n`;
-                functionsContent += `${func.name}(\n  ${params.trim()}\n): ${returnType}\n`;
-                functionsContent += `\`\`\`\n\n`;
+                functionsContent += `\`\`\`ts\nconst ${func.name} = async (\n  ${params.trim()}\n): ${returnType}\n\`\`\`\n\n`;
             } else {
-                // No params: keep simple
-                functionsContent += `\`\`\`ts\n`;
-                functionsContent += `${func.name}(): ${returnType}\n`;
-                functionsContent += `\`\`\`\n\n`;
+                functionsContent += `\`\`\`ts\nconst ${func.name} = async (): ${returnType}\n\`\`\`\n\n`;
             }
         }
 
-        // Add Parameters table from enrichment data (no heading, follows signature)
-        if (enrichment && enrichment.parameters && Array.isArray(enrichment.parameters) && enrichment.parameters.length > 0) {
-            functionsContent += `<TableWrapper nowrap={[0]}>\n\n`;
+        // Add Parameters table (extracted from TypeScript signature)
+        // No heading - parameters go directly under signature
+        if (signature && signature.params && signature.params.trim().length > 0) {
+            const parameters = parseTypeScriptParameters(signature.params);
 
-            // Convert array format to markdown table
-            enrichment.parameters.forEach((row, index) => {
-                if (index === 0) {
-                    // Header row
-                    functionsContent += `| ${row.join(' | ')} |\n`;
-                    // Separator row
-                    functionsContent += `|${row.map(() => '---').join('|')}|\n`;
-                } else {
-                    // Data rows - escape curly braces in MDX by wrapping in backticks
-                    const escapedRow = row.map((cell) => {
-                        // In MDX, { and } are special characters - wrap any cell containing them in backticks
-                        if ((cell.includes('{') || cell.includes('}')) && !cell.startsWith('`')) {
-                            return `\`${cell}\``;
+            if (parameters.length > 0) {
+                functionsContent += `<TableWrapper nowrap={[0, 1]}>\n\n`;
+
+                // Header row
+                functionsContent += `| Parameter | Type | Req? | Description |\n`;
+                functionsContent += `|---|---|---|---|\n`;
+
+                // Parameter rows
+                parameters.forEach(param => {
+                    const required = param.optional ? 'No' : 'Yes';
+
+                    // Simplify complex types for table display
+                    let type = param.type;
+
+                    // If type contains newlines or is very long, simplify it
+                    if (type.includes('\n') || type.length > 80) {
+                        // For object types, just show "object" or "object[]"
+                        if (type.includes('{') && type.includes('}')) {
+                            type = type.endsWith('[]') ? 'object[]' : 'object';
                         }
-                        return cell;
-                    });
-                    functionsContent += `| ${escapedRow.join(' | ')} |\n`;
-                }
-            });
+                        // For other long types, truncate
+                        else if (type.length > 80) {
+                            type = type.substring(0, 77) + '...';
+                        }
+                    }
 
-            functionsContent += `\n</TableWrapper>\n\n`;
+                    // Wrap type in backticks for inline code
+                    type = `\`${type}\``;
+
+                    // Get description from enrichment if available
+                    const description = 'See function signature above'; // Point to full signature
+                    functionsContent += `| \`${param.name}\` | ${type} | ${required} | ${description} |\n`;
+                });
+
+                functionsContent += `\n</TableWrapper>\n\n`;
+            }
         }
 
         // Determine if we should generate Usage section or keep the original
@@ -613,7 +1013,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
         }
 
         if (shouldGenerateUsage && examplesForOutput.length > 0) {
-            functionsContent += `#### Usage\n\n`;
+            functionsContent += `### Examples\n\n`;
 
             // Generate import statement to include in each code block
             const importStatement = `import { ${func.name} } from '@dropins/storefront-${repoName}/api';`;
@@ -687,7 +1087,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             });
 
             // Auto-link model names to their definitions (first occurrence only)
-            for (const modelName of sharedModels) {
+            for (const modelName of Array.from(modelDefinitions.keys())) {
                 const modelAnchor = modelName.toLowerCase();
                 // Match `ModelName` but only if not already linked
                 const modelPattern = new RegExp(`\`${modelName}\`(?!\\])`, '');
@@ -697,50 +1097,117 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 }
             }
 
-            functionsContent += `#### Events\n\n${eventsContent}\n\n`;
+            functionsContent += `### Events\n\n${eventsContent}\n\n`;
         }
 
-        // Add Returns section from enrichment data (comes after Events)
-        if (enrichment && enrichment.returns) {
-            let returnsContent = enrichment.returns;
+        // Add Returns section from TypeScript return type
+        if (signature && signature.returnType) {
+            let returnType = signature.returnType;
 
-            // Check if this function's returns contains a shared model definition
-            // If so, replace the full definition with a reference
-            for (const modelName of sharedModels) {
-                const codeBlockPattern = new RegExp(`\`\`\`(?:ts|typescript)\\n[\\s\\S]*?(?:type|interface|export (?:type|interface))\\s+${modelName}[\\s\\S]*?\`\`\``, 'g');
-                if (codeBlockPattern.test(returnsContent)) {
-                    // Replace the full code block with a reference
-                    // Starlight generates anchors as all lowercase, no special chars
+            // Extract the actual type from Promise<Type>
+            const promiseMatch = returnType.match(/^Promise<(.+)>$/);
+            const actualType = promiseMatch ? promiseMatch[1] : returnType;
+
+            // Check if this is a shared model that should be referenced
+            let returnsContent = '';
+            let isSharedModel = false;
+
+            for (const modelName of Array.from(modelDefinitions.keys())) {
+                // Check if actualType contains this model name
+                // Handle cases like "CartModel", "CartModel | null", "CartModel[]"
+                const modelPattern = new RegExp(`\\b${modelName}\\b`);
+                if (modelPattern.test(actualType)) {
+                    isSharedModel = true;
                     const modelAnchor = modelName.toLowerCase();
-                    returnsContent = returnsContent.replace(
-                        codeBlockPattern,
-                        `See [\`${modelName}\`](#${modelAnchor}) structure below.`
-                    );
 
-                    // Remove redundant sentences now that we have a reference link
-                    // Remove "The X object has the following shape:"
-                    returnsContent = returnsContent.replace(
-                        /\.\s+The\s+`?\w+`?\s+object\s+has\s+the\s+following\s+shape:\s*/gi,
-                        '. '
-                    );
-
-                    // Remove "Returns a promise that resolves to a X object or null." when followed by "See"
-                    // This makes it just "See [`ModelName`](#modelname) structure below."
-                    returnsContent = returnsContent.replace(
-                        new RegExp(`Returns a promise that resolves to (?:a |an )?\`?${modelName}\`? object(?: or null)?\\. See`, 'i'),
-                        'See'
-                    );
+                    // Create a friendly reference
+                    if (actualType === modelName) {
+                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}) (see structure below).`;
+                    } else if (actualType === `${modelName} | null`) {
+                        returnsContent = `Returns [\`${modelName}\`](#${modelAnchor}) or \`null\` (see structure below).`;
+                    } else if (actualType === `${modelName}[]`) {
+                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects (see structure below).`;
+                    } else if (actualType === `${modelName}[] | null` || actualType === `${modelName}[] | undefined`) {
+                        returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects or \`null\` (see structure below).`;
+                    } else {
+                        // For other complex types with the model
+                        returnsContent = `Returns \`${actualType}\` (see [\`${modelName}\`](#${modelAnchor}) structure below).`;
+                    }
+                    break;
                 }
             }
 
-            functionsContent += `#### Returns\n\n${returnsContent}\n\n`;
+            // If not a shared model, just show the return type
+            if (!isSharedModel) {
+                if (actualType === 'void') {
+                    returnsContent = 'This function does not return a value.';
+                } else if (actualType.includes('any') || actualType.includes('unknown')) {
+                    // For unhelpful generic types (any, unknown, any | null, etc.), try to extract from source
+                    // Check if enrichment provides a returns_source hint
+                    let extractedType = null;
+                    if (enrichment && enrichment.returns_source) {
+                        extractedType = extractTypeFromSource(enrichment.returns_source, repoPath, func.name);
+                    }
+
+                    if (extractedType) {
+                        // Successfully extracted type from source - use it
+                        const description = enrichment.returns || '';
+                        if (extractedType.source === 'model') {
+                            // For models, reference the Data Models section
+                            returnsContent = `Returns ${description}: [\`${extractedType.type}\`](#${extractedType.type.toLowerCase()})`;
+
+                            // Also extract and track the full model definition
+                            if (extractedType.fullDefinition) {
+                                if (!modelDefinitions.has(extractedType.type)) {
+                                    modelDefinitions.set(extractedType.type, { definition: extractedType.fullDefinition, count: 0, functions: [] });
+                                }
+                                const modelData = modelDefinitions.get(extractedType.type);
+                                modelData.count++;
+                                modelData.functions.push(func.name);
+                            }
+                        } else {
+                            // For state/graphql, show the definition inline
+                            returnsContent = `Returns ${description}: \`${extractedType.definition}\``;
+                        }
+                    } else if (enrichment && enrichment.returns) {
+                        // Fallback to enrichment returns field (legacy format)
+                        returnsContent = enrichment.returns;
+                    } else {
+                        // No enrichment - rely on description instead
+                        returnsContent = null;
+                    }
+                } else if (actualType === 'string') {
+                    returnsContent = 'Returns `string`.';
+                } else if (actualType === 'number') {
+                    returnsContent = 'Returns `number`.';
+                } else if (actualType === 'boolean') {
+                    returnsContent = 'Returns `boolean`.';
+                } else if (actualType.length < 100) {
+                    returnsContent = `Returns \`${actualType}\`.`;
+                } else {
+                    // For very long types, show in code block
+                    returnsContent = 'Returns:\n\n```ts\n' + actualType + '\n```';
+                }
+            }
+
+            // Only add Returns section if we have meaningful content
+            if (returnsContent) {
+                functionsContent += `### Returns\n\n${returnsContent}\n\n`;
+            }
         }
+
+        // Add separator between functions
+        functionsContent += `---\n\n`;
 
         // Note: We don't append funcContent here anymore
         // The description from original MDX is already extracted via cleanFunctionDescription()
         // or overridden by enrichment.description
         // funcContent at this point would just be duplicate descriptive text
     });
+
+    // Show ALL models (not just those used 2+ times)
+    // IMPORTANT: This must be AFTER the functions loop since enrichment models are added during processing
+    const sharedModels = Array.from(modelDefinitions.keys()).sort();
 
     // Add Data Models section if there are shared models
     let dataModelsSection = '';
@@ -757,7 +1224,11 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             dataModelsSection += modelData.functions.map(fn => `[\`${fn}\`](#${fn.toLowerCase()})`).join(', ');
             dataModelsSection += '.\n\n';
             dataModelsSection += '```ts\n';
-            dataModelsSection += modelData.definition;
+            // Clean the definition: remove "export" but keep "interface" or "type" for syntax highlighting
+            const cleanedDefinition = modelData.definition
+                .replace(/^export\s+(interface\s+)/m, '$1')
+                .replace(/^export\s+(type\s+)/m, '$1');
+            dataModelsSection += cleanedDefinition;
             dataModelsSection += '\n```\n\n';
         }
     }

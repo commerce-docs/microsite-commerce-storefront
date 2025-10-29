@@ -96,35 +96,112 @@ Enrichment files preserve your manual improvements while:
 
 ## What to Enrich
 
+### 🎯 Core Principle: Descriptions Only
+
+**Enrichment files should ONLY contain:**
+- ✅ **Descriptions** - Contextual explanations, usage guidance, GraphQL/REST API links
+- ✅ **Events** - Event names and payloads (not extracted from code)
+- ✅ **Examples/Usage** - Supplemental examples not found in source code
+
+**Enrichment files should NEVER contain:**
+- ❌ **Signatures** - Always extracted from TypeScript source
+- ❌ **Parameters** - Always extracted from TypeScript types
+- ❌ **Returns** - Always extracted from TypeScript return types
+
+### Why This Matters
+
+**The Problem:**
+When enrichment files duplicate technical data (signatures, parameters, returns), they can become stale and inaccurate as source code evolves. This creates:
+- ❌ Outdated parameter types in docs
+- ❌ Incorrect return types 
+- ❌ Mismatched function signatures
+- ❌ Documentation drift from actual code
+
+**The Solution:**
+By extracting technical details directly from TypeScript source code, we guarantee:
+- ✅ Documentation always matches actual code
+- ✅ Type changes automatically reflected in docs
+- ✅ No manual synchronization needed
+- ✅ Single source of truth = the code
+
 ### Always Enrich
 
 - **Description**: When auto-generated is generic or has errors
   - Replace "A function that adds products to cart"." 
   - With: "The `addProductsToCart` function adds products to a cart. You must supply a `sku` and `quantity` for each product. The other parameters are specified for complex product types. The function calls the [`addProductsToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/) mutation."
 
-- **Parameters**: When function has multiple parameters
-  - Provide table with: Parameter | Type | Required? | Description
-  - Helps developers understand each parameter's purpose
-
-- **Returns**: When return type is complex
-  - Explain what the promise resolves to
-  - Show structure of returned objects
-
-- **Usage Examples**: Always add realistic examples
-  - Multiple examples for different scenarios
-  - Use real-looking data (not "foo", "bar")
-  - Each example should be self-contained
-
 - **Events**: When function emits events
   - List which events are emitted
   - Explain when they're emitted
   - Mention data payloads
+  - Example: "Emits the `cart/updated` and `cart/data` events."
+
+- **Usage Examples**: When source examples are insufficient
+  - Add realistic, copy-paste ready examples
+  - Multiple examples for different scenarios
+  - Use real-looking data (not "foo", "bar")
+  - Each example should be self-contained
 
 ### Sometimes Enrich
 
 - **Simple getters** with obvious behavior → May not need enrichment
 - **Internal functions** not meant for end users → Skip
 - **Well-documented in source** → May be fine as-is
+
+## Reference Documentation System
+
+The project includes a reference documentation system for linking to external docs (e.g., AEM.live documentation).
+
+### Available Reference Docs
+
+- **AEM.live Documentation** - Official Adobe Experience Manager Edge Delivery Services documentation covering authoring, blocks, architecture, and more.
+- **Adobe Commerce Documentation** - Official Adobe Commerce merchant and developer documentation from Experience League, covering APIs, services, merchant guides, and system management.
+
+### Using Reference Links in Enrichment
+
+You can reference AEM.live documentation topics in your enrichment descriptions:
+
+```json
+{
+  "functionName": {
+    "description": "This function works with [AEM blocks](https://www.aem.live/developer/block-collection) to render content and integrates with [GraphQL APIs](https://developer.adobe.com/commerce/webapi/graphql/) for data fetching."
+  }
+}
+```
+
+### Finding Reference URLs
+
+```bash
+# List all available reference documentation
+npm run list-reference-docs
+
+# Search for specific topics
+npm run list-reference-docs -- search authoring
+npm run list-reference-docs -- search blocks
+
+# List all topics in a source
+npm run list-reference-docs -- list aem-live
+```
+
+### Programmatic Access
+
+In generator scripts, you can use the reference-docs helper:
+
+```javascript
+import { getReferenceUrl, createReferenceLink } from './lib/reference-docs.js';
+
+// Get a URL
+const url = getReferenceUrl('aem-live', 'block-collection');
+
+// Create a markdown link
+const link = createReferenceLink('aem-live', 'authoring', 'Learn about authoring');
+```
+
+**Available Topics:**
+- **AEM.live**: `authoring`, `block-collection`, `spreadsheets`, `indexing`, `sidekick`, `architecture`, `security`, and more
+- **Adobe Commerce**: `graphql`, `rest-api`, `payment-services`, `live-search`, `b2b`, `catalog`, `security`, `performance`, and more
+
+See `reference-docs.json` for the complete list of topics across all sources.
 
 ## Enrichment File Format
 
@@ -133,14 +210,8 @@ Enrichment files preserve your manual improvements while:
 ```json
 {
   "functionName": {
-    "description": "Detailed description with [links](https://example.com) and context.",
-    "parameters": [
-      ["Parameter", "Type", "Req?", "Description"],
-      ["sku", "string", "Yes", "The SKU of the product."],
-      ["quantity", "number", "Yes", "The amount to add."]
-    ],
-    "returns": "Returns a promise that resolves to a `CartModel` object or null.",
-    "events": "The event bus emits the `cart/updated` and `cart/data` events.",
+    "description": "Detailed description with [links](https://example.com) and context about when/why to use this function.",
+    "events": "Emits the `cart/updated` and `cart/data` events.",
     "examples": [
       {
         "title": "To add a simple product",
@@ -157,62 +228,227 @@ Enrichment files preserve your manual improvements while:
 
 ### Field Details
 
-| Field | Type | Purpose | Auto-Generated? |
-|-------|------|---------|-----------------|
-| `description` | string | Main function description with context | ✅ Yes, but adds import automatically |
-| `parameters` | array | Table of parameters (markdown table format) | ❌ No |
-| `returns` | string | Return value description (can include code blocks) | ❌ No |
-| `events` | string | Events emitted by function | ❌ No |
-| `examples` | array | Usage examples with titles | ❌ No |
+| Field | Type | Purpose | Extracted from Source? |
+|-------|------|---------|------------------------|
+| `description` | string | Main function description with context | ❌ No - enrichment only |
+| `events` | string | Events emitted by function | ❌ No - not in TypeScript |
+| `returns` | string | Return value description (optional) | ⚠️ Only when TypeScript type is `any` or `unknown` |
+| `returns_source` | string | Hint for extracting return type (`state.field`, `model.Type`, `graphql.mutation`) | ⚠️ Source-first type extraction |
+| `examples` or `usage` | array/string | Usage examples with titles | ⚠️ Partially - enrichment as fallback |
+
+### Fields Extracted from Source Code
+
+| Field | Extracted From | Why Source? |
+|-------|---------------|-------------|
+| **Signature** | TypeScript function declaration | Guaranteed accuracy, auto-updates with code changes |
+| **Parameters** | TypeScript parameter types | Type-safe, always current with actual implementation |
+| **Returns** | TypeScript return type annotation | Reflects actual return values, can't drift from code |
 
 **Notes:**
 - **Usage examples are automatically extracted from source code** (HTML examples, boilerplate blocks, JSDoc). Manual enrichment examples are used only as fallback.
 - Generator automatically adds imports to examples. You don't need to include `import` statements in enrichment.
-- For `returns` field, use standard markdown code blocks: \`\`\`ts\ntype MyModel = {...}\n\`\`\`
-- If multiple functions return the same model, the generator will automatically extract it to a "Data Models" section
+- **Do NOT add parameters or signature fields** - they will be ignored in favor of source code extraction
+- **Exception for `returns`**: Only add a `returns` field when TypeScript shows `any` or `unknown`. This provides clarity when source types are unhelpful.
+
+### Source-First Type Extraction for `returns` Field
+
+**🎯 NEW APPROACH:** The generator automatically extracts return types from source code. Enrichment provides only human context.
+
+When a function has unhelpful return types (`any`, `unknown`), use the `returns_source` field to tell the generator where to find the actual type:
+
+**Format:**
+```json
+{
+  "functionName": {
+    "returns": "Human-readable description of what's returned",
+    "returns_source": "source_type.field_name"
+  }
+}
+```
+
+**Supported Source Types:**
+
+1. **`state.fieldName`** - Extract from state definition
+   - Generator looks in `src/lib/state.ts`
+   - Finds `fieldName: Type`
+   - Auto-generates: "Returns [description]: `fieldName: Type`"
+
+2. **`graphql.mutationName`** - Extract from GraphQL file
+   - Generator looks in `src/api/[function]/graphql/`
+   - Extracts structure from GraphQL query/mutation
+   - Auto-generates verification with structure
+
+**Benefits:**
+- ✅ Types always stay current with source code
+- ✅ No manual sync needed when types change
+- ✅ Enrichment only contains human context
+- ✅ Generator fails if source file changes/moves (forcing update)
+
+**Example 1: State definition auto-extraction:**
+```json
+{
+  "createGuestCart": {
+    "returns": "the cart ID for the newly created guest cart",
+    "returns_source": "state.cartId"
+  }
+}
+```
+*Generator output:* "Returns the cart ID for the newly created guest cart: `cartId: string | null`"
+
+**Example 2: GraphQL type auto-extraction:**
+```json
+{
+  "getEstimateShipping": {
+    "returns": "A raw shipping method object from GraphQL, or null if no valid shipping method is available.",
+    "returns_source": "graphql.estimateShippingMethodsMutation"
+  }
+}
+```
+*Generator output:* "Returns `object` - A raw shipping method object from GraphQL, or null if no valid shipping method is available. \*GraphQL definition: [structure]\*"
+
+## Event Validation
+
+**🎯 Keeping Events Current with Automated Validation**
+
+While events are manually documented in enrichment files (for developer-friendly, linkable documentation), the audit script automatically validates them against source code to prevent staleness.
+
+### How Event Validation Works
+
+The `audit-enrichments` script:
+
+1. **Extracts events from source code** - Scans for `events.emit()`, `eventBus.emit()`, `publish()`, `.emit()` patterns
+2. **Extracts events from enrichment** - Parses event names from enrichment `events` field
+3. **Compares both ways**:
+   - ❌ **Events in enrichment but NOT in source** → Stale/removed from code
+   - ⚠️ **Events in source but NOT in enrichment** → Missing documentation
+
+### Example Output
+
+```bash
+npm run audit-enrichments cart
+
+🔍 initializeCart
+   ⚠️  [Events] Emitted in source but NOT documented: `cart/merged`
+      💡 Add to enrichment `events` field
+```
+
+### When to Update Events
+
+**Always update enrichment when:**
+- ✅ Adding new event emissions to function code
+- ✅ Removing event emissions from function code
+- ✅ Renaming event names
+- ✅ During code review if events changed
+
+**How to Verify:**
+```bash
+# Check specific drop-in
+npm run audit-enrichments cart
+
+# Check all drop-ins
+npm run audit-enrichments
+```
+
+### Best Practices
+
+1. **Run audit before committing** enrichment changes
+2. **Fix warnings immediately** - they indicate documentation/code mismatch
+3. **Update enrichment first**, then verify with audit
+4. **Include event context** - explain payload data, special behaviors, side effects
+
+This approach gives you the **best of both worlds**:
+- ✅ Developer-friendly, linkable event documentation
+- ✅ Automated validation against source code
+- ✅ Immediate feedback on staleness
+- ✅ No silent drift between code and docs
 
 ## Source-First Principle
 
-**ALL generators prioritize data from source repositories over manual enrichment files.**
+**🎯 Core Rule: Source Code is the Single Source of Truth**
 
-### Automatic Example Extraction
+The generator **always** extracts technical data directly from TypeScript source code:
 
-Usage examples are automatically extracted from:
+### Automatically Extracted from Source
 
-1. **Drop-in HTML Examples** (`examples/html-host/index.html`)
-   - Real working demonstrations
-   - Multiple product type examples
-   - Edge cases and advanced usage
+1. **Function Signatures** (from drop-in repos)
+   - Extracted from `.ts` files in `src/api/{functionName}/`
+   - Parameter names and types
+   - Return types
+   - Async/Promise patterns
+   - Optional parameters
 
-2. **Boilerplate Project Blocks** (`.temp-repos/boilerplate/blocks/`)
-   - Real-world production usage
-   - Integration patterns
-   - Best practices
+2. **Usage Examples** (from multiple repositories)
+   - **JSDoc comments** - from drop-in repo TypeScript files
+   - **HTML examples** - from drop-in repo (`examples/html-host/index.html`)
+   - **Boilerplate blocks** - from boilerplate repo (`blocks/*/*.js`)
+   - **Reference repos** - from dropin-template, StorefrontSDK, storefront-tools
 
-3. **JSDoc Comments** (function source files)
-   - Developer-documented examples
-   - Inline code documentation
+### Example Extraction Priority Order
 
-### Priority Order
+**🚨 CRITICAL:** Examples are **NEVER** stored in enrichment files. They are **ALWAYS** extracted from live source code to prevent staleness.
 
 ```
-JSDoc Examples (highest priority)
-  ↓
-HTML Example Files
-  ↓
-Boilerplate Blocks
-  ↓
-Enrichment Examples (fallback only)
+1. JSDoc Examples (highest priority)
+   ↳ Source: Drop-in repo (src/api/{functionName}/*.ts)
+   ↳ Why: Developer-documented, always current with code
+   
+2. HTML Example Files
+   ↳ Source: Drop-in repo (examples/html-host/index.html)
+   ↳ Why: Real integration examples
+   
+3. Boilerplate Blocks
+   ↳ Source: Boilerplate repo (blocks/*/*.js)
+   ↳ Why: Production usage patterns
+   
+4. Reference Repository Examples
+   ↳ Source: dropin-template, StorefrontSDK, storefront-tools repos
+   ↳ Searched in: examples/, src/, docs/ directories
+   ↳ Why: Additional context and patterns
+
+⚠️  If no examples found: Docs generate WITHOUT examples rather than using static code
+
+❌ Test files are NEVER used as example sources because:
+   • Tests focus on edge cases and error scenarios ("should not", "throws error")
+   • Tests use mock data (mockItemUid, testData) instead of real values
+   • Tests include test assertions (.rejects.toThrow(), expect())
+   • Test titles are often misleading for documentation purposes
 ```
 
-### When to Add Manual Examples
+### Reference Repositories
 
-Only add examples to enrichment files when:
-- **No source examples exist** for the function
-- **Source examples are inadequate** (too complex, missing key use cases)
-- **Specific business context** is needed that doesn't exist in source
+The documentation system uses four additional repositories as reference sources:
 
-**Important:** Even when adding manual examples, they should be verified against working code, not invented.
+- **[dropin-template](https://github.com/adobe-commerce/dropin-template)** - Official template for creating custom drop-ins with Elsie CLI. Contains working examples of components, containers, and API usage patterns.
+- **[StorefrontSDK](https://github.com/adobe-commerce/StorefrontSDK)** - Core SDK for storefront functionality with shared utilities and type definitions.
+- **[storefront-tools](https://github.com/adobe-commerce/storefront-tools)** - Development tools and utilities with build configurations and testing examples.
+- **[da-live](https://github.com/adobe/da-live)** - Edge Delivery Authoring experience with merchant-facing UI patterns, blocks, and authoring workflows. Useful for merchant documentation and UI examples.
+
+These repositories are automatically searched for usage examples during documentation generation.
+
+### Enrichment as Supplement, Not Replacement
+
+Enrichment files **supplement** source code with:
+- ✅ Human-readable descriptions
+- ✅ Business context and usage guidance
+- ✅ Links to GraphQL/REST API documentation
+- ✅ Event bus information
+
+Enrichment files **never contain**:
+- ❌ Function signatures (always from source)
+- ❌ Parameter types (always from source)
+- ❌ Return types (always from source)
+- ❌ **Code examples** (always from source - see priority order above)
+
+### What If No Examples Are Found?
+
+**Do NOT add examples to enrichment files!**
+
+Instead:
+1. **Add JSDoc @example** to the source code (contributes upstream!)
+2. **Add test cases** with real usage (improves code quality!)
+3. **Accept missing examples** - better than stale code
+
+**Philosophy:** Missing examples → Contribute upstream. Static examples → Technical debt.
 
 ## Best Practices
 
@@ -331,41 +567,61 @@ The extraction tool (`scripts/extract-enrichments.js`) is helpful but not perfec
 
 ### Issue: Description has extra quote
 
-**Problem:** Source MDX has: `A function that adds products to cart".`  
-**Solution:** Add to enrichment with fixed description
+**Problem:** Auto-generated description has typo: `A function that adds products to cart".`  
+**Solution:** Add corrected description to enrichment file
 
-### Issue: Parameters not showing
+### Issue: Parameters not showing in generated docs
 
-**Problem:** Parameters array not formatted correctly  
-**Solution:** Verify array structure matches OptionsTable format:
-```json
-[
-  ["Parameter", "Type", "Req?", "Description"],
-  ["param1", "type1", "Yes", "Description"]
-]
-```
+**Problem:** No parameters table in output  
+**Diagnosis:** Generator extracts parameters from TypeScript signature  
+**Solution:** Verify the TypeScript source file exists and has proper type annotations. Do NOT add parameters to enrichment.
+
+### Issue: Return type is missing or wrong
+
+**Problem:** Generated docs show incorrect or missing return type  
+**Diagnosis:** Generator extracts return type from TypeScript  
+**Solution:** Check TypeScript source has explicit return type annotation (`: Promise<CartModel>`). Do NOT add returns to enrichment.
 
 ### Issue: Examples don't have imports
 
 **Problem:** Examples missing import statements  
 **Solution:** Generator auto-adds imports - don't include in enrichment
 
+### Issue: Old enrichment fields not working
+
+**Problem:** Added `parameters`, `returns`, or `signature` to enrichment but they're not showing  
+**Solution:** These fields are now ignored. The generator only uses source code for technical data. Remove these fields from enrichment.
+
 ## Summary
 
-**Golden Rule:** Use enrichment for content that adds value beyond auto-generation. Don't enrich just to enrich.
+**Golden Rule:** Enrichment is for human context, not technical data. Source code is always the source of truth.
+
+**✅ DO Enrich:**
+- Function descriptions with business context
+- Links to GraphQL mutations/queries or REST APIs
+- Event bus information
+- Supplemental usage examples
+
+**❌ DON'T Enrich:**
+- Function signatures (use TypeScript source)
+- Parameter types (use TypeScript source)
+- Return types (use TypeScript source)
+- Any technical data that exists in code
 
 **When to Extract:**
 - Mature drop-ins with existing manual docs
-- Want to preserve work but move to automated system
+- Want to preserve contextual descriptions
+- Want to move to automated system
 
 **When to Write Fresh:**
 - New drop-ins with minimal docs
 - Want clean, structured approach from start
 
 **Always Remember:**
-- Enrichment is optional but powerful
-- Focus on high-value functions
-- Keep descriptions concise but informative
-- Link to related documentation
+- Source code is the single source of truth for technical data
+- Enrichment adds human context, not duplicates code
+- Focus on high-value descriptions and examples
+- Link to related documentation (GraphQL, REST, events)
 - Test after every change
+- Remove any old `parameters`, `returns`, `signature` fields from enrichment
 
