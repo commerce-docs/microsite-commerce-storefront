@@ -1,144 +1,102 @@
 ---
-title: PDP initialization
-description: Learn about the configuration options for the PDP initializer.
+title: Product Details initialization
+description: Learn how to configure the initializer for the Product Details drop-in component.
+sidebar:
+  label: Initialization
+  order: 3
 ---
 
-import Diagram from '@components/Diagram.astro';
-import Callouts from '@components/Callouts.astro';
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-Customizing the product details page (PDP) drop-in component initializers can help you meet your project requirements and use cases.
+<Aside type="note" title="Auto-generated on GENERATION_DATE. Do not edit this page directly." />
+
+{/* 
+TEMPLATE INSTRUCTIONS:
+This template is used by scripts/@generate-initialization-docs.js to generate initialization documentation.
+
+PLACEHOLDERS:
+- DROPIN_NAME: Display name (e.g., "Cart", "Checkout")
+- DROPIN_PACKAGE: Package name (e.g., "storefront-cart", "storefront-checkout")
+- GENERATION_DATE: ISO date of generation
+- ModelName: Primary model name (e.g., "CartModel", "CheckoutModel")
+- OptionsTable options array: Dynamically generated from ConfigProps
+
+TO MODIFY:
+- Structure changes: Edit this template
+- Config options: Extracted automatically from source code ConfigProps
+- Model names: Extracted automatically from data/models directory
+*/}
+
+{/* DESCRIBE what the DROPIN_NAME initializer provides. Include information about global options, language definitions, and model extensions. */}
 
 ## Configuration options
 
-The PDP drop-in component initializers allow you to define the language definitions, default locale, and models that your project will use.
+{/* DESCRIBE the configuration options available for the DROPIN_NAME initializer. */}
 
-<OptionsTable
-  options={[
-    ['Option', 'Type', 'Req?', 'Description'],
-    [
-      'langDefinitions',
-      'object',
-      'No',
-      'Provides language definitions for internationalization (i18n).',
-    ],
-    [
-      'defaultLocale',
-      'string',
-      'No',
-      'Specifies the default locale. If not provided, defaults to en-US.',
-    ],
-    [
-      'models',
-      'object',
-      'No',
-      'Defines the data structure and initial data. Options include initialData, transform, and fallBackData.',
-    ],
-    [
-      'scope',
-      'string',
-      'No',
-      'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.',
-    ],
-  ]}
-/>
+<TableWrapper nowrap={[0]}>
 
-:::note
-Models are used to define the data structure and initial data for the PDP drop-in. The `initialData` object contains product details, options, and attributes.
-:::
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| langDefinitions | object | No | Provides language definitions for internationalization (i18n). |
+| models | object | No | Extend the default model with new fields and transform them as needed. |
 
-## Example
-
-The following code shows the default implementation of the PDP drop-in component initializer in the Commerce boilerplate:
-
-```typescript
-// Define the models object with a ProductDetails property
-const models = {
-  ProductDetails: {
-    initialData: { ...product },
-  },
-};
-
-// Initialize drop-in components
-initializers.mountImmediately(initialize, {
-  langDefinitions,
-  models,
-});
-```
-
-## Scope Configuration
-
-The `scope` option enables **scoped contexts** for the PDP drop-in. When provided, the component runs in an isolated context. This allows multiple independent PDP instances on the same page without conflicts.
-
-**Use cases for scoped PDP initialization:**
-- **Product Comparison**: Initialize multiple PDP instances for side-by-side product comparison
-- **Quick View**: Initialize PDP instances for modal or overlay product previews
+</TableWrapper>
 
 ### Example
 
-The following example demonstrates how to initialize multiple scoped PDP instances:
+{/* DESCRIBE the DROPIN_NAME initializer configuration implementation. */}
 
 ```ts
-// Initialize PDP
-initializers.mountImmediately(initialize, {
-  sku: 'SKU-001',
-  langDefinitions,
-});
+// Initialize Product Details 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models,
+  });
+})();
+```
 
-// Initialize PDP with different scope
-initializers.mountImmediately(initialize, {
-  sku: 'SKU-002',
+### Set language definitions
+
+{/* DESCRIBE how the langDefinitions property works for the DROPIN_NAME. Include information about dictionary files and internationalization. */}
+
+```ts
+// Fetch the dictionary files for your application
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+
+// Register the component with language definitions
+const langDefinitions = {
+  default: fr_FR,
+};
+
+// Register initializers
+initializers.register(api.initialize, {
   langDefinitions,
-  scope: 'modal',
 });
 ```
 
-## Set default product options
+### Set models
 
-When a user navigates to the product detail page (PDP) on your site, you can set certain options as preselected defaults for complex products. This use case allows merchandisers to set default options through the Adobe Commerce Admin, which provides a more customized and streamlined shopping experience.
+{/* DESCRIBE how to extend default models in the DROPIN_NAME component. Include information about transformers and new fields. */}
 
-Default option selection is _not_ supported out-of-the-box for complex products. Instead, you must use [product attributes](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/product-attributes/product-attributes) and customize the PDP drop-in component initializers to define which attribute and value is used by default.
+{/* DESCRIBE the models property structure for the DROPIN_NAME. Include information about default models and transformers. */}
 
-<Steps>
+{/* DESCRIBE how to extend default models with new fields and transformers for the DROPIN_NAME. */}
 
-1. Log in to the Adobe Commerce Admin.
-
-1. Create a custom attribute (`default_options`) to define default options for each product.
-
-   :::note
-   Be sure to set **Visible on Catalog Pages on Storefront** to _Yes_.
-   :::
-
-1. Ensure that the `default_options` attribute has been [exported](https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview) to the Catalog Service _and_ that the attribute's `roles` field includes `visible_in_pdp`. See the [`ProductViewAttribute`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#productviewattribute-type) type documentation for details.
-
-1. Use the [`products`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-complex-product) query to find the `id` of the `default_options` attribute for each product.
-
-1. Add the `id` of the `default_options` attribute to the `initialData` object for each complex product.
-
-1. Use the `id` to set the `optionsUIDs` in the `initialData` object.
-
-   ```ts
-   // Define the models object with a ProductDetails property
-   const models = {
-     ProductDetails: {
-       initialData: {
-         ...initialData,
-         // Set the optionsUIDs for each product
-         optionsUIDs: [
-           '<id>', // Use the id of the default_options attribute for product 1
-           '<id>', // Use the id of the default_options attribute for product 2
-         ],
-       },
-     },
-   };
-
-   // Register Initializers
-   initializers.mountImmediately(initialize, {
-     langDefinitions,
-     models,
-   });
-   ```
-
-</Steps>
+```ts
+// Initialize Product Details
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models: {
+      ModelName: {
+        transformer: (data) => ({
+          customField1: data?.custom_field_1,
+          customField2: data?.custom_field_2,
+        }),
+      },
+    },
+  });
+})();
+```

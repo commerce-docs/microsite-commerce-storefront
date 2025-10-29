@@ -9,7 +9,34 @@ tableOfContents:
   maxHeadingLevel: 2
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
 The Recommendations drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
@@ -19,58 +46,40 @@ The Recommendations drop-in provides API functions that enable you to programmat
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getRecommendations`](#getrecommendations) | The getRecommendations function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. |
+| [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | Publishes analytics or tracking events for monitoring and reporting.. |
+
+</TableWrapper>
+
 ## getRecommendations
 
 The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format.
 
-### Signature
-
 ```ts
-export const getRecommendations = async (
+const getRecommendations = async (
   params: GetRecommendationsProps
 ): Promise<RecommendationUnitModel[] | null>
 ```
 
-### Returns
+<TableWrapper nowrap={[0, 1]}>
 
-Returns a promise that resolves to a `RecommendationUnitModel` object or null. The recommendations data is transformed into a standardized format before being returned.
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetRecommendationsProps` | Yes | See function signature above |
+
+</TableWrapper>
 
 ### Events
 
-The event bus emits the `recommendations/data` event with the transformed recommendations data as the payload.
+Emits the [`recommendations/data`](../events#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
 
-### Usage
+### Returns
 
-To get recommendations for a product page:
-
-```ts
-import { getRecommendations } from '@/recommendations/api/getRecommendations';
-
-getRecommendations({
-  pageType: 'Product',
-  currentSku: 'VA19-GO-NA',
-  cartSkus: ['VT02-PE-M', 'VA19-GO-NA'],
-  userPurchaseHistory: [],
-  userViewHistory: []
-});
-```
-
-To get recommendations with user history:
-
-```ts
-import { getRecommendations } from '@/recommendations/api/getRecommendations';
-
-getRecommendations({
-  pageType: 'Product',
-  currentSku: 'VA19-GO-NA',
-  userPurchaseHistory: [
-    { sku: 'VT02-PE-M', timestamp: '2024-03-20T10:00:00Z' }
-  ],
-  userViewHistory: [
-    { sku: 'VA19-GO-NA', timestamp: '2024-03-20T09:00:00Z' }
-  ]
-});
-```
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null` (see structure below).
 
 ---
 
@@ -78,14 +87,60 @@ getRecommendations({
 
 Publishes analytics or tracking events for monitoring and reporting.
 
-### Usage
-
 ```ts
-publishRecsItemAddToCartClick();
+const publishRecsItemAddToCartClick = async (
+  params: PublishParams
+): any
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `PublishParams` | Yes | See function signature above |
+
+</TableWrapper>
+
+### Examples
+
+From product recommendations block:
+
+```js
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api';
+
+publishRecsItemAddToCartClick({
+  recommendationUnit,
+  pagePlacement: 'product-list',
+  yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+  yOffsetBottom:
+  addToCart.getBoundingClientRect().bottom ?? 0,
+  productId: ctx.index,
+})
 ```
 
 ---
 
+## Data Models
+
+The following data models are returned by multiple functions in this drop-in.
+
+### RecommendationUnitModel
+
+The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendations`](#getrecommendations).
+
+```ts
+interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
+}
+```
 
 
-{/* This documentation is auto-generated from the drop-in source repository: https://github.com/adobe-commerce/storefront-recommendations */}
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

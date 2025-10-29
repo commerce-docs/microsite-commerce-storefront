@@ -241,43 +241,6 @@ async function config() {
               content: 'NwoVbL9MrtJAa4vdfMC0vJmKV3Hvuc4L_UHlv4Uzjgk',
             },
           },
-          {
-            tag: 'script',
-            content: `
-              const initializeAutoSelectFirstTopic = () => {
-                const sidebar = document.querySelector("#starlight__sidebar");
-                if (!sidebar) {
-                  setTimeout(initializeAutoSelectFirstTopic, 100);
-                  return;
-                }
-                const processedSections = new Set();
-                const handleSectionToggle = (event) => {
-                  if (event.target.tagName === "DETAILS") {
-                    const detailsElement = event.target;
-                    setTimeout(() => {
-                      if (detailsElement.open) {
-                        const sectionId = detailsElement.outerHTML.substring(0, 100);
-                        if (processedSections.has(sectionId)) return;
-                        const firstLink = detailsElement.querySelector("ul a[href]");
-                        if (firstLink?.href) {
-                          processedSections.add(sectionId);
-                          setTimeout(() => processedSections.delete(sectionId), 2000);
-                          window.location.href = firstLink.href;
-                        }
-                      }
-                    }, 50);
-                  }
-                };
-                sidebar.addEventListener("toggle", handleSectionToggle, true);
-              };
-              if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", initializeAutoSelectFirstTopic);
-              } else {
-                initializeAutoSelectFirstTopic();
-              }
-              window.addEventListener("load", () => setTimeout(initializeAutoSelectFirstTopic, 100));
-            `,
-          },
         ],
 
         title: 'Adobe Commerce Storefront',
@@ -538,6 +501,8 @@ async function config() {
                           { label: 'Personalization overview', link: '/dropins/personalization/' },
                           { label: 'Personalization initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
+                          { label: 'Slots', link: '/dropins/personalization/slots/' },
+                          { label: 'Events', link: '/dropins/personalization/events/' },
                           {
                             label: 'Containers',
                             collapsed: false,
@@ -586,6 +551,7 @@ async function config() {
                           { label: 'Discovery installation', link: '/dropins/product-discovery/installation/' },
                           { label: 'Discovery styling', link: '/dropins/product-discovery/styles/' },
                           { label: 'Functions', link: '/dropins/product-discovery/functions/' },
+                          { label: 'Slots', link: '/dropins/product-discovery/slots/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
                           { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
