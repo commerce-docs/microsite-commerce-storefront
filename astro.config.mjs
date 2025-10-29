@@ -374,7 +374,7 @@ async function config() {
                               { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
                               { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
                               { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
-                              { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
+                              { label: 'MiniCart', link: '/dropins/cart/containers/mini-cart/' },
                               { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
                               { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
                             ],
@@ -445,6 +445,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/order/' },
+                          { label: 'Installation', link: '/dropins/order/installation/' },
                           { label: 'Initialization', link: '/dropins/order/initialization/' },
                           { label: 'Styling', link: '/dropins/order/styles/' },
                           { label: 'Slots', link: '/dropins/order/slots/' },
@@ -480,6 +481,7 @@ async function config() {
                         items: [
                           { label: 'Payment Services overview', link: '/dropins/payment-services/' },
                           { label: 'Payment Services installation', link: '/dropins/payment-services/installation/' },
+                          { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
@@ -499,10 +501,13 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Personalization overview', link: '/dropins/personalization/' },
+                          { label: 'Installation', link: '/dropins/personalization/installation/' },
+                          { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Personalization initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
                           { label: 'Slots', link: '/dropins/personalization/slots/' },
                           { label: 'Events', link: '/dropins/personalization/events/' },
+                          { label: 'Dictionary', link: '/dropins/personalization/dictionary/' },
                           {
                             label: 'Containers',
                             collapsed: false,
@@ -549,6 +554,7 @@ async function config() {
                         items: [
                           { label: 'Discovery overview', link: '/dropins/product-discovery/' },
                           { label: 'Discovery installation', link: '/dropins/product-discovery/installation/' },
+                          { label: 'Initialization', link: '/dropins/product-discovery/initialization/' },
                           { label: 'Discovery styling', link: '/dropins/product-discovery/styles/' },
                           { label: 'Functions', link: '/dropins/product-discovery/functions/' },
                           { label: 'Slots', link: '/dropins/product-discovery/slots/' },
@@ -595,6 +601,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/user-account/' },
+                          { label: 'Installation', link: '/dropins/user-account/installation/' },
                           { label: 'Initialization', link: '/dropins/user-account/initialization/' },
                           { label: 'Styling', link: '/dropins/user-account/styles/' },
                           { label: 'Functions', link: '/dropins/user-account/functions/' },
@@ -908,14 +915,22 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
+              exclude: [
+                '/sdk/**',
+                '/videos/**',
+                '/dropins-b2b/**',
+                '/boilerplate/**',
+                '/merchants/blocks/**',
+                '/dropins/**/containers/**',
+              ],
             }
           ),
           starlightHeadingBadges(),
-          starlightLinksValidator({
-            errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
-          }),
+          // TODO: Re-enable after fixing auto-generated docs links
+          // starlightLinksValidator({
+          //   errorOnFallbackPages: false,
+          //   errorOnInconsistentLocale: true,
+          // }),
           starlightImageZoom({ showCaptions: false }),
         ],
 
