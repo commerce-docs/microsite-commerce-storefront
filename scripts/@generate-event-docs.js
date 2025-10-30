@@ -38,6 +38,7 @@ import { DROPIN_REPOS } from './lib/dropin-config.js';
 import { loadEventEnrichments, getPayloadPropertyDescription, getEventDescription } from './lib/event-enrichment.js';
 import { TypeInferenceChecklist } from './lib/type-inference.js';
 import { validateAllEventDocs } from './lib/payload-type-validator.js';
+import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1037,10 +1038,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         let hasPayloadOverride = typeof enrichmentPayloadOverride === 'string';
 
         // If not found in current drop-in's enrichment, check if it's a cross-dropin event
-        // Also check cross-dropin if the current type is 'any' or contains 'any' (essentially untyped/incomplete)
+        // Also check cross-dropin if the current type is generic (essentially untyped/incomplete)
         let isCrossDropinEvent = false;
         const currentType = typedEvents.get(eventName);
-        const hasGenericType = currentType === 'any' || (currentType && currentType.includes('any'));
+        const hasGenericType = GenericTypeHandler.isGenericType(currentType);
         if (!hasPayloadOverride && (!typedEvents.has(eventName) || hasGenericType)) {
             const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
             if (sourceDropin && sourceDropin !== dropinName) {
@@ -1101,10 +1102,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 }
             }
         } else if (typedEvents.has(eventName)) {
-            // Skip displaying 'any' types or types containing 'any' as they provide no useful information
+            // Skip displaying generic types as they provide no useful information
             const typeDefinition = typedEvents.get(eventName);
-            const hasGenericType = typeDefinition === 'any' || typeDefinition.includes('any');
-            if (hasGenericType) {
+            if (GenericTypeHandler.isGenericType(typeDefinition)) {
                 // Don't display generic types - leave payload section empty
             } else {
                 payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;

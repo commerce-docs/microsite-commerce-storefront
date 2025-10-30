@@ -7,6 +7,7 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { GenericTypeHandler } from './core/generic-type-handler.js';
 
 /**
  * Extract and validate function signatures from generated MDX files
@@ -48,7 +49,7 @@ function extractFunctionSignatures(mdxContent, filePath) {
                 // Check for 'any' in function signature (excluding legitimate uses)
                 if (signature.includes(': any') || signature.includes('): any')) {
                     // Skip if it's a legitimate any (Record<string, any>, etc.)
-                    if (!isLegitimateAnyUsage(signature)) {
+                    if (!GenericTypeHandler.isLegitimateAnyUsage(signature)) {
                         issues.push({
                             file: filePath,
                             function: currentFunction,
@@ -85,31 +86,7 @@ function extractFunctionSignatures(mdxContent, filePath) {
     return issues;
 }
 
-/**
- * Check if 'any' usage is legitimate
- * Legitimate cases:
- * - Dynamic object keys: { [key: string]: any }
- * - Record types: Record<string, any>
- * - Complex mapped types
- */
-function isLegitimateAnyUsage(typeString) {
-    // Allow index signatures
-    if (typeString.match(/\[key:\s*string\]:\s*any/)) {
-        return true;
-    }
-
-    // Allow Record<string, any>
-    if (typeString.match(/Record<string,\s*any>/)) {
-        return true;
-    }
-
-    // Allow Record<K, any> patterns
-    if (typeString.match(/Record<[^,]+,\s*any>/)) {
-        return true;
-    }
-
-    return false;
-}
+// Removed: isLegitimateAnyUsage - now using GenericTypeHandler.isLegitimateAnyUsage()
 
 /**
  * Validate all function documentation files
