@@ -1,17 +1,11 @@
 /**
  * Event Enrichment Utilities
  * 
- * Similar to function enrichments, but for event payloads and descriptions
+ * Similar to function enrichments, but for event payloads and descriptions.
+ * Uses the shared EnrichmentLoader for loading enrichment files.
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '../..');
+import { EnrichmentLoader } from './core/enrichment-loader.js';
 
 /**
  * Load event enrichments for a specific drop-in
@@ -19,19 +13,8 @@ const projectRoot = join(__dirname, '../..');
  * @returns {Object|null} Event enrichment data or null if not found
  */
 export function loadEventEnrichments(dropinName) {
-    const enrichmentPath = join(projectRoot, '_dropin-enrichments', dropinName, 'events.json');
-
-    if (!existsSync(enrichmentPath)) {
-        return null;
-    }
-
-    try {
-        const content = readFileSync(enrichmentPath, 'utf-8');
-        return JSON.parse(content);
-    } catch (error) {
-        console.warn(`  ⚠️  Could not load event enrichments for ${dropinName}:`, error.message);
-        return null;
-    }
+    const enrichment = EnrichmentLoader.load(dropinName, 'events');
+    return Object.keys(enrichment).length > 0 ? enrichment : null;
 }
 
 /**
