@@ -7,6 +7,7 @@
 
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { GenericTypeHandler } from './core/generic-type-handler.js';
 
 /**
  * Types that should never appear as standalone payload types
@@ -75,7 +76,7 @@ function extractPayloadTypes(mdxContent, filePath) {
                 }
 
                 // Check for 'any' within complex types (excluding legitimate uses)
-                if (payloadType.includes('any') && !isLegitimateAnyUsage(payloadType)) {
+                if (payloadType.includes('any') && !GenericTypeHandler.isLegitimateAnyUsage(payloadType)) {
                     issues.push({
                         file: filePath,
                         event: currentEvent,
@@ -110,25 +111,7 @@ function extractPayloadTypes(mdxContent, filePath) {
     return issues;
 }
 
-/**
- * Check if 'any' usage is legitimate
- * Legitimate cases:
- * - Dynamic object keys: { [key: string]: any }
- * - Descriptive text (not in type definitions)
- */
-function isLegitimateAnyUsage(typeString) {
-    // Allow index signatures like { [key: string]: any }
-    if (typeString.match(/\{\s*\[key:\s*string\]:\s*any/)) {
-        return true;
-    }
-
-    // Allow Record<string, any> patterns
-    if (typeString.match(/Record<string,\s*any>/)) {
-        return true;
-    }
-
-    return false;
-}
+// Removed: isLegitimateAnyUsage - now using GenericTypeHandler.isLegitimateAnyUsage()
 
 /**
  * Validate all event documentation files
