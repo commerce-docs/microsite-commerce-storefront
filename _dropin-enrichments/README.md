@@ -2,6 +2,13 @@
 
 This directory contains enrichment data for auto-generated drop-in documentation. Enrichment files allow you to preserve manually written, high-quality documentation while still benefiting from automated generation.
 
+## 📚 Documentation Resources
+
+- **[ENRICHMENT-STRATEGY.md](./ENRICHMENT-STRATEGY.md)** - Core principles for code-first documentation extraction
+- **[PARAMETER-PATTERNS-README.md](./PARAMETER-PATTERNS-README.md)** - Guide to using reusable parameter description templates
+- **[GRAPHQL-SCHEMA-INTEGRATION.md](./GRAPHQL-SCHEMA-INTEGRATION.md)** - How to integrate GraphQL schemas for better type information
+- **[parameter-patterns.json](./parameter-patterns.json)** - Reusable templates for common parameter descriptions
+
 ## How It Works
 
 The functions generator (`scripts/@generate-function-docs.js`) automatically looks for enrichment files in this directory. If found, it merges the enriched content with auto-generated content, giving priority to the enriched versions.
@@ -12,6 +19,7 @@ The functions generator (`scripts/@generate-function-docs.js`) automatically loo
 _dropin-enrichments/
   {dropin-name}/
     functions.json
+    events.json
 ```
 
 Example:
@@ -19,8 +27,10 @@ Example:
 _dropin-enrichments/
   user-auth/
     functions.json
+    events.json
   cart/
     functions.json
+    events.json
 ```
 
 ## Enrichment File Format
@@ -166,11 +176,88 @@ Consider enriching when:
 - Usage examples need realistic data instead of placeholders
 - Business context is important (e.g., "use this to build custom flows")
 
+## Event Enrichments
+
+Similar to function enrichments, you can enrich event documentation with `events.json` files.
+
+### Event Enrichment Structure
+
+```json
+{
+  "models": {
+    "ModelName": {
+      "description": "Editorial description of the data model"
+    }
+  },
+  "event/name": {
+    "description": "Enhanced event description explaining when and why it fires",
+    "payload": {
+      "propertyName": {
+        "description": "Description of this payload property"
+      }
+    }
+  }
+}
+```
+
+**Models Section**: The optional `models` section provides editorial descriptions for TypeScript types/interfaces used in event payloads. The type definitions are extracted from source code, while descriptions come from enrichment.
+
+### Complete Event Example
+
+```json
+{
+  "models": {
+    "CartModel": {
+      "description": "The `CartModel` represents the complete state of a shopping cart, including items, pricing, discounts, shipping estimates, and gift options."
+    },
+    "Item": {
+      "description": "The `Item` interface represents a single product in the cart, including product details, pricing, quantity, customization options, and inventory status."
+    }
+  },
+  "cart/merged": {
+    "description": "Emitted when a guest cart is merged with a customer cart after login. This typically happens when an unauthenticated user adds items to their cart, then signs in, and their guest cart items are combined with any existing items in their customer cart.",
+    "payload": {
+      "oldCartItems": {
+        "description": "The items from the guest cart before merging. Returns `null` if the guest cart was empty. This allows you to track which items came from the guest session."
+      },
+      "newCart": {
+        "description": "The merged cart containing all items from both the guest cart and the existing customer cart. This is the complete cart state after the merge operation. Returns `null` if the merge operation failed."
+      }
+    }
+  }
+}
+```
+
+### Event Enrichment Benefits
+
+✅ **Payload Tables** - Event payloads get parameter-style tables with Property, Type, Req?, and Description columns  
+✅ **Smart Descriptions** - Uses enrichments, patterns, or inferred descriptions (never generic "See type definition")  
+✅ **Data Models Section** - All TypeScript types/interfaces used in event payloads are documented with full definitions at the bottom of each events page  
+✅ **Consistent Style** - Same quality as function parameter tables and function Data Models sections  
+✅ **Pattern Fallbacks** - Common payload properties (like `cart`, `items`, `address`) get reasonable default descriptions
+
+### ✅ All Drop-ins Have Event Enrichments
+
+All 11 drop-ins now have `events.json` files:
+- `cart/events.json` ✅
+- `checkout/events.json` ✅
+- `order/events.json` ✅
+- `payment-services/events.json` ✅
+- `personalization/events.json` ✅
+- `product-details/events.json` ✅
+- `product-discovery/events.json` ✅
+- `recommendations/events.json` ✅
+- `user-account/events.json` ✅
+- `user-auth/events.json` ✅
+- `wishlist/events.json` ✅
+
+See [EVENTS-ENRICHMENTS-SUMMARY.md](./EVENTS-ENRICHMENTS-SUMMARY.md) for complete details.
+
 ## Notes
 
 - Enrichment files are **not** required - the generator works fine without them
-- You can enrich **some** functions and leave others auto-generated
+- You can enrich **some** functions/events and leave others auto-generated
 - Enrichment data is **merged** with generated data (enriched takes precedence)
-- Function signatures are **always** extracted from source code (not enriched)
+- Function signatures and event types are **always** extracted from source code (not enriched)
 - Changes to enrichment files require **regeneration** to take effect
 
