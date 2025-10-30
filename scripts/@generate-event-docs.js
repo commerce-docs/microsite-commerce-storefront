@@ -39,6 +39,7 @@ import { loadEventEnrichments, getPayloadPropertyDescription, getEventDescriptio
 import { TypeInferenceChecklist } from './lib/type-inference.js';
 import { validateAllEventDocs } from './lib/payload-type-validator.js';
 import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
+import { TypeExtractor } from './lib/core/type-extractor.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -182,95 +183,9 @@ function scanForEvents(repoPath) {
         console.error(`  ⚠️  Error scanning files: ${error.message}`);
     }
 
-    // Read TypeScript event definitions
-    const typedEvents = new Map();
-    // Check for both possible event type file names
-    const possibleEventsPaths = [
-        join(repoPath, 'src/types/events.d.ts'),
-        join(repoPath, 'src/types/event-bus.d.ts')
-    ];
-
-    let eventsTypePath = null;
-    for (const path of possibleEventsPaths) {
-        if (existsSync(path)) {
-            eventsTypePath = path;
-            break;
-        }
-    }
-
-    if (eventsTypePath) {
-        const eventsTypeFile = readFileSync(eventsTypePath, 'utf8');
-
-        // Match event names and extract their type definitions with proper brace matching
-        const eventNamePattern = /['"`]([^'"`]+)['"`]\s*:/g;
-        let nameMatch;
-
-        while ((nameMatch = eventNamePattern.exec(eventsTypeFile)) !== null) {
-            const eventName = nameMatch[1];
-            let startIndex = nameMatch.index + nameMatch[0].length;
-
-            // Skip whitespace
-            while (startIndex < eventsTypeFile.length && /\s/.test(eventsTypeFile[startIndex])) {
-                startIndex++;
-            }
-
-            // Extract the type definition by matching balanced braces
-            let typeDef = '';
-            let braceCount = 0;
-            let inBraces = false;
-            let i = startIndex;
-
-            while (i < eventsTypeFile.length) {
-                const char = eventsTypeFile[i];
-
-                if (char === '{') {
-                    braceCount++;
-                    inBraces = true;
-                    typeDef += char;
-                } else if (char === '}') {
-                    braceCount--;
-                    typeDef += char;
-                    if (braceCount === 0 && inBraces) {
-                        // Found matching closing brace, now look for semicolon
-                        i++;
-                        while (i < eventsTypeFile.length && /\s/.test(eventsTypeFile[i])) {
-                            i++;
-                        }
-                        if (eventsTypeFile[i] === ';') {
-                            break; // Complete type definition found
-                        }
-                    }
-                } else if (char === ';' && !inBraces) {
-                    // Simple type (no braces), stop at semicolon
-                    break;
-                } else {
-                    typeDef += char;
-                }
-                i++;
-            }
-
-            // Clean up and normalize indentation
-            typeDef = typeDef.trim();
-            if (typeDef.includes('\n') && typeDef.startsWith('{')) {
-                // For inline object types, preserve structure with proper indentation
-                const lines = typeDef.split('\n');
-                typeDef = lines.map((line, index) => {
-                    const trimmed = line.trim();
-                    // First line (opening brace) and last line (closing brace) - no indent
-                    if (index === 0 || trimmed === '}' || trimmed === '};') {
-                        return trimmed.replace(/;$/, '');
-                    }
-                    // Property lines - indent with 2 spaces
-                    return '  ' + trimmed;
-                }).join('\n');
-            } else if (typeDef.includes('\n')) {
-                // For multi-line non-object types, just trim each line
-                typeDef = typeDef.split('\n').map(line => line.trim()).join('\n');
-            }
-
-            typedEvents.set(eventName, typeDef);
-        }
-    }
+    // Read TypeScript event definitions using TypeExtractor
+    const typeExtractor = new TypeExtractor(repoPath);
+    const typedEvents = typeExtractor.extractEventTypes();
 
     console.log(`  ✓ Found ${eventEmits.size} emitted events`);
     console.log(`  ✓ Found ${eventListeners.size} listened events`);
@@ -652,58 +567,11 @@ function generateEventDescription(eventName, emits, listeners) {
  * @param {string} dropinName - Name of the dropin (e.g., 'cart', 'checkout')
  * @returns {string|null} The full type definition or null if not found
  */
+// Replaced with TypeExtractor.extractModelDefinition()
 function extractModelDefinition(modelName, dropinName) {
-    try {
-        const repoPath = join(projectRoot, '.temp-repos', dropinName);
-
-        // Common locations for model definitions
-        const possiblePaths = [
-            join(repoPath, 'src/data/models'),
-            join(repoPath, 'src/models'),
-            join(repoPath, 'src/types'),
-        ];
-
-        for (const searchPath of possiblePaths) {
-            if (!existsSync(searchPath)) continue;
-
-            const files = readdirSync(searchPath, { recursive: true });
-            for (const file of files) {
-                if (!file.endsWith('.ts') && !file.endsWith('.d.ts')) continue;
-
-                const filePath = join(searchPath, file);
-                const content = readFileSync(filePath, 'utf8');
-
-                // Try to extract interface definition
-                const interfacePattern = new RegExp(`export\\s+interface\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
-                const interfaceMatch = content.match(interfacePattern);
-
-                if (interfaceMatch) {
-                    return interfaceMatch[0].replace(/^export\s+/, '');
-                }
-
-                // Try to extract type definition
-                const typePattern = new RegExp(`export\\s+type\\s+${modelName}\\s*=\\s*[\\s\\S]*?;`, 'm');
-                const typeMatch = content.match(typePattern);
-
-                if (typeMatch) {
-                    return typeMatch[0].replace(/^export\s+/, '');
-                }
-
-                // Try to extract enum definition
-                const enumPattern = new RegExp(`export\\s+declare\\s+enum\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
-                const enumMatch = content.match(enumPattern);
-
-                if (enumMatch) {
-                    return enumMatch[0].replace(/^export\\s+declare\\s+/, '');
-                }
-            }
-        }
-
-        return null;
-    } catch (error) {
-        console.warn(`  ⚠️  Failed to extract ${modelName}:`, error.message);
-        return null;
-    }
+    const repoPath = join(projectRoot, '.temp-repos', dropinName);
+    const extractor = new TypeExtractor(repoPath);
+    return extractor.extractModelDefinition(modelName);
 }
 
 /**
@@ -750,23 +618,9 @@ function detectSourceDropin(eventName, eventEmits, currentDropin) {
  * @param {string} typeDefinition - The type definition string
  * @returns {Set<string>} Set of type names referenced
  */
+// Replaced with TypeExtractor.extractReferencedTypes()
 function extractReferencedTypes(typeDefinition) {
-    const types = new Set();
-
-    // Match type references that look like model names (capitalized, alphanumeric)
-    // Examples: CartModel, Item[], ShippingMethod | null
-    const typePattern = /\b([A-Z][A-Za-z0-9]*)\b/g;
-    let match;
-
-    while ((match = typePattern.exec(typeDefinition)) !== null) {
-        const typeName = match[1];
-        // Exclude TypeScript built-in types
-        if (!['Promise', 'Array', 'Record', 'Partial', 'Pick', 'Omit', 'Readonly', 'Required'].includes(typeName)) {
-            types.add(typeName);
-        }
-    }
-
-    return types;
+    return TypeExtractor.extractReferencedTypes(typeDefinition);
 }
 
 function updateSidebarNavigation(dropinName, repoConfig) {
