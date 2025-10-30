@@ -671,15 +671,24 @@ function parseParameter(paramStr) {
 /**
  * Extract nested properties from an inline object type
  * 
- * @param {string} objectType - Object type string like "{ sku: string; quantity: number }[]"
- * @returns {Array<{name: string, type: string, optional: boolean}>} Nested properties
+ * @param {string} objectType - Object type string like "{ sku: string; quantity: number }[]" or "[{ ... }]"
+ * @returns {Array<{name: string, type: string, optional: boolean, comment?: string}>} Nested properties
  */
 function extractNestedProperties(objectType) {
     const properties = [];
 
-    // Remove array brackets if present
-    const isArray = objectType.trim().endsWith('[]');
-    let cleanType = isArray ? objectType.trim().slice(0, -2).trim() : objectType.trim();
+    // Remove array brackets if present (handle both formats: {...}[] and [{...}])
+    let cleanType = objectType.trim();
+
+    // Handle array notation at the end: { ... }[]
+    if (cleanType.endsWith('[]')) {
+        cleanType = cleanType.slice(0, -2).trim();
+    }
+
+    // Handle tuple/array notation at the beginning: [{ ... }]
+    if (cleanType.startsWith('[') && cleanType.endsWith(']')) {
+        cleanType = cleanType.slice(1, -1).trim();
+    }
 
     // Extract content between braces
     const match = cleanType.match(/^\{([\s\S]*)\}$/);
@@ -701,8 +710,31 @@ function extractNestedProperties(objectType) {
 
         if (char === ';' && depth === 0) {
             if (current.trim()) {
-                const param = parseParameter(current.trim());
-                if (param) properties.push(param);
+                // Look ahead to check if there's a comment on the same line after the semicolon
+                let comment = null;
+                let j = i + 1;
+                let lookAhead = '';
+                while (j < content.length && content[j] !== '\n') {
+                    lookAhead += content[j];
+                    j++;
+                }
+                // Check if the look-ahead contains a comment
+                const commentMatch = lookAhead.match(/^\s*\/\/(.*)$/);
+                if (commentMatch) {
+                    comment = commentMatch[1].trim();
+                    // Skip the characters we've looked ahead (including the comment)
+                    i = j - 1; // -1 because the loop will increment i
+                }
+
+                // Parse the current property
+                const cleanCurrent = current.trim();
+                const param = parseParameter(cleanCurrent);
+                if (param) {
+                    if (comment) {
+                        param.comment = comment;
+                    }
+                    properties.push(param);
+                }
             }
             current = '';
         } else {
@@ -712,8 +744,19 @@ function extractNestedProperties(objectType) {
 
     // Don't forget the last property
     if (current.trim()) {
-        const param = parseParameter(current.trim());
-        if (param) properties.push(param);
+        // Extract inline comment before removing it
+        const commentMatch = current.match(/\/\/(.*)$/m);
+        const comment = commentMatch ? commentMatch[1].trim() : null;
+
+        // Remove inline comments before parsing
+        const cleanCurrent = current.replace(/\/\/.*$/m, '').trim();
+        const param = parseParameter(cleanCurrent);
+        if (param) {
+            if (comment) {
+                param.comment = comment;
+            }
+            properties.push(param);
+        }
     }
 
     return properties;
@@ -1158,10 +1201,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                                 const nestedRequired = nestedProp.optional ? 'No' : 'Yes';
                                 let nestedType = `\`${nestedProp.type}\``;
 
-                                // Get description from enrichment
+                                // Get description from enrichment, inline comment, or default
                                 let description = 'See function signature above';
+
+                                // Priority 1: Enrichment data (manually curated)
                                 if (enrichment && enrichment.parameters && enrichment.parameters[nestedProp.name]) {
                                     description = enrichment.parameters[nestedProp.name].description || description;
+                                }
+                                // Priority 2: Inline TypeScript comment
+                                else if (nestedProp.comment) {
+                                    // Capitalize first letter and ensure it ends with a period
+                                    description = nestedProp.comment.charAt(0).toUpperCase() + nestedProp.comment.slice(1);
+                                    if (!description.endsWith('.')) {
+                                        description += '.';
+                                    }
                                 }
 
                                 functionsContent += `| \`${nestedProp.name}\` | ${nestedType} | ${nestedRequired} | ${description} |\n`;
