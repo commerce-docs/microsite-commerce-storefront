@@ -35,6 +35,7 @@ import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
 import { getAllExamples } from './lib/example-extractor.js';
 import { validateAndMerge, validateFunctionSignature, createValidationReport } from './lib/source-validator.js';
+import { getParameterDescription } from './lib/parameter-patterns.js';
 
 const projectRoot = getProjectRoot();
 
@@ -641,7 +642,33 @@ function parseParameter(paramStr) {
     // Standard parameter: name: type or name?: type
     const colonIndex = paramStr.indexOf(':');
     if (colonIndex === -1) {
-        // No type annotation found
+        // No type annotation found - might be param with default value only
+        // Example: authType = 'Authorization'
+        const equalsIndex = paramStr.indexOf('=');
+        if (equalsIndex > -1) {
+            // Has default value but no type annotation
+            const name = paramStr.substring(0, equalsIndex).trim();
+            const defaultValue = paramStr.substring(equalsIndex + 1).trim();
+
+            // Infer type from default value
+            let inferredType = 'any';
+            if (defaultValue.startsWith("'") || defaultValue.startsWith('"') || defaultValue.startsWith('`')) {
+                inferredType = 'string';
+            } else if (defaultValue === 'true' || defaultValue === 'false') {
+                inferredType = 'boolean';
+            } else if (!isNaN(defaultValue)) {
+                inferredType = 'number';
+            }
+
+            return {
+                name: name,
+                type: inferredType,
+                optional: true, // Has default value, so it's optional
+                inferredType: true // Flag to indicate type was inferred
+            };
+        }
+
+        // No type annotation and no default value - skip this parameter
         return null;
     }
 
@@ -1201,21 +1228,14 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                                 const nestedRequired = nestedProp.optional ? 'No' : 'Yes';
                                 let nestedType = `\`${nestedProp.type}\``;
 
-                                // Get description from enrichment, inline comment, or default
-                                let description = 'See function signature above';
-
-                                // Priority 1: Enrichment data (manually curated)
-                                if (enrichment && enrichment.parameters && enrichment.parameters[nestedProp.name]) {
-                                    description = enrichment.parameters[nestedProp.name].description || description;
-                                }
-                                // Priority 2: Inline TypeScript comment
-                                else if (nestedProp.comment) {
-                                    // Capitalize first letter and ensure it ends with a period
-                                    description = nestedProp.comment.charAt(0).toUpperCase() + nestedProp.comment.slice(1);
-                                    if (!description.endsWith('.')) {
-                                        description += '.';
-                                    }
-                                }
+                                // Get description using parameter patterns with fallback hierarchy
+                                const description = getParameterDescription(
+                                    nestedProp.name,
+                                    enrichment,
+                                    nestedProp.comment,
+                                    repoName,
+                                    func.name
+                                );
 
                                 functionsContent += `| \`${nestedProp.name}\` | ${nestedType} | ${nestedRequired} | ${description} |\n`;
                             });
@@ -1239,11 +1259,14 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     // Wrap type in backticks for inline code
                     type = `\`${type}\``;
 
-                    // Get description from enrichment if available
-                    let description = 'See function signature above';
-                    if (enrichment && enrichment.parameters && enrichment.parameters[param.name]) {
-                        description = enrichment.parameters[param.name].description || description;
-                    }
+                    // Get description using parameter patterns with fallback hierarchy
+                    const description = getParameterDescription(
+                        param.name,
+                        enrichment,
+                        null, // No inline comment for top-level params
+                        repoName,
+                        func.name
+                    );
                     functionsContent += `| \`${param.name}\` | ${type} | ${required} | ${description} |\n`;
                 });
 

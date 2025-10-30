@@ -30,15 +30,11 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Personalization** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+The **Personalization** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.1</strong>
 </div>
-
-<Aside type="tip">
-**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
-</Aside>
 
 ## Events reference
 
@@ -57,18 +53,20 @@ The **Personalization** drop-in uses the [event bus](/dropins/all/events/) to em
 
 ## Event details
 
-The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
 ### `cart/initialized` (listens)
 
 Fired by Cart (`cart`) when the component completes initialization
 
-#### Data payload
+#### Event payload
 
 ```typescript
 CartModel | null
 ```
+
+See [`CartModel`](#cartmodel) for full type definition.
 
 
 
@@ -92,11 +90,13 @@ cartInitializedListener.off();
 
 Fired by Cart (`cart`) when the component state is updated
 
-#### Data payload
+#### Event payload
 
 ```typescript
 CartModel | null
 ```
+
+See [`CartModel`](#cartmodel) for full type definition.
 
 
 
@@ -120,11 +120,13 @@ cartUpdatedListener.off();
 
 Fired by Order (`order`) when an order is placed
 
-#### Data payload
+#### Event payload
 
 ```typescript
 OrderDataModel
 ```
+
+See [`OrderDataModel`](#orderdatamodel) for full type definition.
 
 
 
@@ -148,13 +150,15 @@ orderPlacedListener.off();
 
 Triggered when the component state is updated
 
-#### Data payload
+#### Event payload
 
 ```typescript
 PersonalizationData,
 'personalization/type-matched': string,
 'cart/initialized': CartModel | null
 ```
+
+See [`PersonalizationData`](#personalizationdata), [`CartModel`](#cartmodel) for full type definitions.
 
 
 
@@ -172,5 +176,53 @@ const personalizationUpdatedListener = events.on('personalization/updated', (dat
 
 // Later, when you want to stop listening
 personalizationUpdatedListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### CartModel
+
+Used in: [`cart/initialized`](#cartinitialized-listens), [`cart/updated`](#cartupdated-listens), [`personalization/updated`](#personalizationupdated-emits-and-listens).
+
+```ts
+interface CartModel {
+  id: string;
+}
+```
+
+### OrderDataModel
+
+Used in: [`order/placed`](#orderplaced-listens).
+
+```ts
+interface OrderDataModel {
+  id: string;
+}
+```
+
+### PersonalizationData
+
+Used in: [`personalization/updated`](#personalizationupdated-emits-and-listens).
+
+```ts
+interface PersonalizationData {
+    segments: string[],
+    groups: string[],
+    cartRules: string[]
+}
 ```
 

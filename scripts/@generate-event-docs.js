@@ -30,11 +30,14 @@
  * This ensures accuracy in type definitions, API patterns, and code examples.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, execFileSync } from 'child_process';
 import { DROPIN_REPOS } from './lib/dropin-config.js';
+import { loadEventEnrichments, getPayloadPropertyDescription, getEventDescription } from './lib/event-enrichment.js';
+import { TypeInferenceChecklist } from './lib/type-inference.js';
+import { validateAllEventDocs } from './lib/payload-type-validator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -180,8 +183,21 @@ function scanForEvents(repoPath) {
 
     // Read TypeScript event definitions
     const typedEvents = new Map();
-    const eventsTypePath = join(repoPath, 'src/types/events.d.ts');
-    if (existsSync(eventsTypePath)) {
+    // Check for both possible event type file names
+    const possibleEventsPaths = [
+        join(repoPath, 'src/types/events.d.ts'),
+        join(repoPath, 'src/types/event-bus.d.ts')
+    ];
+
+    let eventsTypePath = null;
+    for (const path of possibleEventsPaths) {
+        if (existsSync(path)) {
+            eventsTypePath = path;
+            break;
+        }
+    }
+
+    if (eventsTypePath) {
         const eventsTypeFile = readFileSync(eventsTypePath, 'utf8');
 
         // Match event names and extract their type definitions with proper brace matching
@@ -234,7 +250,20 @@ function scanForEvents(repoPath) {
 
             // Clean up and normalize indentation
             typeDef = typeDef.trim();
-            if (typeDef.includes('\n')) {
+            if (typeDef.includes('\n') && typeDef.startsWith('{')) {
+                // For inline object types, preserve structure with proper indentation
+                const lines = typeDef.split('\n');
+                typeDef = lines.map((line, index) => {
+                    const trimmed = line.trim();
+                    // First line (opening brace) and last line (closing brace) - no indent
+                    if (index === 0 || trimmed === '}' || trimmed === '};') {
+                        return trimmed.replace(/;$/, '');
+                    }
+                    // Property lines - indent with 2 spaces
+                    return '  ' + trimmed;
+                }).join('\n');
+            } else if (typeDef.includes('\n')) {
+                // For multi-line non-object types, just trim each line
                 typeDef = typeDef.split('\n').map(line => line.trim()).join('\n');
             }
 
@@ -249,6 +278,192 @@ function scanForEvents(repoPath) {
     return { eventEmits, eventListeners, typedEvents };
 }
 
+/**
+ * Find and parse an interface/type definition from source files
+ * @param {string} typeName - The name of the type to find (e.g., "Item", "CartModel")
+ * @param {string} dropinSourcePath - Path to the drop-in source code
+ * @returns {Array|null} Array of properties or null if not found
+ */
+function resolveTypeDefinition(typeName, dropinSourcePath) {
+    try {
+        // Common locations for type definitions
+        const possiblePaths = [
+            join(dropinSourcePath, 'data', 'models'),
+            join(dropinSourcePath, 'types'),
+            join(dropinSourcePath, 'api', 'types'),
+        ];
+
+        let interfaceContent = null;
+
+        // Search for the interface definition
+        for (const searchPath of possiblePaths) {
+            if (!existsSync(searchPath)) continue;
+
+            const files = readdirSync(searchPath, { recursive: true });
+            for (const file of files) {
+                if (!file.endsWith('.ts') && !file.endsWith('.d.ts')) continue;
+
+                const filePath = join(searchPath, file);
+                const content = readFileSync(filePath, 'utf8');
+
+                // Look for interface or type definition - find the start
+                const startRegex = new RegExp(
+                    `export\\s+(interface|type)\\s+${typeName}\\s*\\{`,
+                    'm'
+                );
+                const startMatch = content.match(startRegex);
+
+                if (startMatch) {
+                    // Find the matching closing brace
+                    const startIndex = startMatch.index + startMatch[0].length;
+                    let braceCount = 1;
+                    let endIndex = startIndex;
+
+                    for (let i = startIndex; i < content.length && braceCount > 0; i++) {
+                        if (content[i] === '{') braceCount++;
+                        if (content[i] === '}') braceCount--;
+                        if (braceCount === 0) {
+                            endIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (braceCount === 0) {
+                        interfaceContent = content.substring(startIndex, endIndex);
+                        break;
+                    }
+                }
+            }
+
+            if (interfaceContent) break;
+        }
+
+        if (!interfaceContent) {
+            return null;
+        }
+
+        // Parse the interface properties
+        const properties = [];
+        const lines = interfaceContent.split('\n');
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) continue;
+
+            // Match property definitions: name: type or name?: type
+            const propMatch = trimmed.match(/^(\w+)(\?)?:\s*([^;]+);?/);
+            if (propMatch) {
+                const [, name, optionalMarker, type] = propMatch;
+                properties.push({
+                    name: name.trim(),
+                    type: type.trim(),
+                    optional: !!optionalMarker
+                });
+            }
+        }
+
+        return properties.length > 0 ? properties : null;
+    } catch (error) {
+        // Silent failure - type resolution is a best-effort feature
+        return null;
+    }
+}
+
+/**
+ * Parse a single parameter for event payloads (similar to function parameter parsing)
+ * @param {string} paramStr - Parameter string
+ * @returns {object|null} Parsed parameter object
+ */
+function parseEventParameter(paramStr) {
+    // Enhanced parsing to handle default values
+    // Matches: name?: type = default, name: type = default, name?: type, name: type
+    const propMatch = paramStr.match(/^\s*(\w+)(\?)?\s*:\s*([^=]+)(=\s*(.+))?$/);
+    if (propMatch) {
+        const [, name, optionalMarker, type, , defaultValue] = propMatch;
+        const hasDefault = !!defaultValue;
+        const isOptional = !!optionalMarker || hasDefault;
+
+        return {
+            name: name.trim(),
+            type: type.trim(),
+            optional: isOptional,
+            defaultValue: defaultValue ? defaultValue.trim() : undefined
+        };
+    }
+
+    // Fallback to simpler parsing if enhanced parsing fails
+    const simplePropMatch = paramStr.match(/^\s*(\w+)\??\s*:\s*(.+)$/);
+    if (simplePropMatch) {
+        const [, name, type] = simplePropMatch;
+        return {
+            name: name.trim(),
+            type: type.trim(),
+            optional: paramStr.includes('?')
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Extract nested properties from an inline object type in event payloads
+ * @param {string} objectType - Object type string like "{ sku: string; quantity: number }[]"
+ * @returns {Array} Nested properties
+ */
+function extractNestedEventProperties(objectType) {
+    const properties = [];
+
+    // Remove array brackets if present
+    let cleanType = objectType.trim();
+    if (cleanType.endsWith('[]')) {
+        cleanType = cleanType.slice(0, -2).trim();
+    }
+    if (cleanType.startsWith('[') && cleanType.endsWith(']')) {
+        cleanType = cleanType.slice(1, -1).trim();
+    }
+
+    // Extract content between braces
+    const match = cleanType.match(/^\{([\s\S]*)\}$/);
+    if (!match) return properties;
+
+    const content = match[1];
+    let current = '';
+    let depth = 0;
+
+    // Split on semicolons at depth 0
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+
+        if (char === '{' || char === '[' || char === '<') {
+            depth++;
+        } else if (char === '}' || char === ']' || char === '>') {
+            depth--;
+        }
+
+        if (char === ';' && depth === 0) {
+            if (current.trim()) {
+                const param = parseEventParameter(current.trim());
+                if (param) {
+                    properties.push(param);
+                }
+            }
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Don't forget the last property
+    if (current.trim()) {
+        const param = parseEventParameter(current.trim());
+        if (param) {
+            properties.push(param);
+        }
+    }
+
+    return properties;
+}
+
 function parseTypeScriptProperties(typeDefinition) {
     // Try to parse properties from TypeScript type definitions
     const properties = [];
@@ -261,14 +476,9 @@ function parseTypeScriptProperties(typeDefinition) {
         const propertyMatches = propertiesStr.split(/[,;]\s*/).filter(p => p.trim());
 
         propertyMatches.forEach(prop => {
-            const propMatch = prop.match(/^\s*(\w+)\??\s*:\s*(.+)$/);
-            if (propMatch) {
-                const [, name, type] = propMatch;
-                properties.push({
-                    name: name.trim(),
-                    type: type.trim(),
-                    optional: prop.includes('?')
-                });
+            const param = parseEventParameter(prop);
+            if (param) {
+                properties.push(param);
             }
         });
     }
@@ -435,6 +645,129 @@ function generateEventDescription(eventName, emits, listeners) {
 }
 
 
+/**
+ * Extract model definition from source files for event payload types
+ * @param {string} modelName - Name of the type/interface to extract
+ * @param {string} dropinName - Name of the dropin (e.g., 'cart', 'checkout')
+ * @returns {string|null} The full type definition or null if not found
+ */
+function extractModelDefinition(modelName, dropinName) {
+    try {
+        const repoPath = join(projectRoot, '.temp-repos', dropinName);
+
+        // Common locations for model definitions
+        const possiblePaths = [
+            join(repoPath, 'src/data/models'),
+            join(repoPath, 'src/models'),
+            join(repoPath, 'src/types'),
+        ];
+
+        for (const searchPath of possiblePaths) {
+            if (!existsSync(searchPath)) continue;
+
+            const files = readdirSync(searchPath, { recursive: true });
+            for (const file of files) {
+                if (!file.endsWith('.ts') && !file.endsWith('.d.ts')) continue;
+
+                const filePath = join(searchPath, file);
+                const content = readFileSync(filePath, 'utf8');
+
+                // Try to extract interface definition
+                const interfacePattern = new RegExp(`export\\s+interface\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+                const interfaceMatch = content.match(interfacePattern);
+
+                if (interfaceMatch) {
+                    return interfaceMatch[0].replace(/^export\s+/, '');
+                }
+
+                // Try to extract type definition
+                const typePattern = new RegExp(`export\\s+type\\s+${modelName}\\s*=\\s*[\\s\\S]*?;`, 'm');
+                const typeMatch = content.match(typePattern);
+
+                if (typeMatch) {
+                    return typeMatch[0].replace(/^export\s+/, '');
+                }
+
+                // Try to extract enum definition
+                const enumPattern = new RegExp(`export\\s+declare\\s+enum\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`, 'm');
+                const enumMatch = content.match(enumPattern);
+
+                if (enumMatch) {
+                    return enumMatch[0].replace(/^export\\s+declare\\s+/, '');
+                }
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.warn(`  ⚠️  Failed to extract ${modelName}:`, error.message);
+        return null;
+    }
+}
+
+/**
+ * Detect which drop-in is the source (emitter) of an event
+ * @param {string} eventName - Event name (e.g., 'checkout/initialized')
+ * @param {Map} eventEmits - Map of all events emitted by current drop-in
+ * @param {string} currentDropin - Current drop-in name
+ * @returns {string|null} Source drop-in name or null
+ */
+function detectSourceDropin(eventName, eventEmits, currentDropin) {
+    // If current drop-in emits it, return current
+    if (eventEmits.has(eventName)) {
+        return currentDropin;
+    }
+
+    // Try to infer from event name prefix (e.g., 'checkout/initialized' -> 'checkout')
+    const parts = eventName.split('/');
+    if (parts.length >= 2) {
+        const prefix = parts[0];
+        // Map common prefixes to drop-in names
+        const prefixMap = {
+            'cart': 'cart',
+            'checkout': 'checkout',
+            'order': 'order',
+            'pdp': 'product-details',
+            'product': 'product-details',
+            'auth': 'user-auth',
+            'account': 'user-account',
+            'user': 'user-account',
+            'wishlist': 'wishlist',
+            'personalization': 'personalization',
+            'recommendations': 'recommendations',
+            'payment': 'payment-services'
+        };
+
+        return prefixMap[prefix] || null;
+    }
+
+    return null;
+}
+
+/**
+ * Extract types referenced in an event payload definition
+ * @param {string} typeDefinition - The type definition string
+ * @returns {Set<string>} Set of type names referenced
+ */
+function extractReferencedTypes(typeDefinition) {
+    const types = new Set();
+
+    // Match type references that look like model names (capitalized, alphanumeric)
+    // Examples: CartModel, Item[], ShippingMethod | null
+    const typePattern = /\b([A-Z][A-Za-z0-9]*)\b/g;
+    let match;
+
+    while ((match = typePattern.exec(typeDefinition)) !== null) {
+        const typeName = match[1];
+        // Exclude TypeScript built-in types
+        if (!['Promise', 'Array', 'Record', 'Partial', 'Pick', 'Omit', 'Readonly', 'Required'].includes(typeName)) {
+            types.add(typeName);
+        }
+    }
+
+    return types;
+}
+
 function updateSidebarNavigation(dropinName, repoConfig) {
     const configPath = join(projectRoot, 'astro.config.mjs');
     const config = readFileSync(configPath, 'utf8');
@@ -473,6 +806,17 @@ function updateSidebarNavigation(dropinName, repoConfig) {
 
 function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     const { eventEmits, eventListeners, typedEvents, implementationStatus, documentedDescriptions } = eventsData;
+
+    // Load event enrichments for this drop-in
+    const enrichments = loadEventEnrichments(dropinName);
+
+    // Construct the drop-in source path for type resolution
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const dropinSourcePath = join(boilerplatePath, 'node_modules', `@dropins/storefront-${dropinName}`);
+
+    // Track all models used in event payloads for Data Models section
+    const modelDefinitions = new Map(); // Map<modelName, {definition, events, description}>
+
     const allEvents = new Set([
         ...eventEmits.keys(),
         ...eventListeners.keys(),
@@ -666,12 +1010,14 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         const eventHeading = `### \`${eventName}\` (${directionText.toLowerCase()})`;
         eventSection = eventSection.replace(/EVENT_HEADING/g, eventHeading);
 
-        // Replace EVENT_DESCRIPTION - use documented description if available
+        // Replace EVENT_DESCRIPTION - use enrichment, documented description, or generate
+        const eventEnrichment = enrichments?.[eventName];
         let description;
         if (documentedDescriptions && documentedDescriptions.has(eventName)) {
             description = documentedDescriptions.get(eventName);
         } else {
-            description = generateEventDescription(eventName, emits, listeners);
+            const generatedDescription = generateEventDescription(eventName, emits, listeners);
+            description = getEventDescription(eventName, eventEnrichment, generatedDescription);
         }
 
         // Add implementation status note for documented-only events
@@ -686,29 +1032,153 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         // Check if this is a documented-only event
         const isDocumentedOnly = implementationStatus && implementationStatus.get(eventName) === 'documented-only';
 
-        if (typedEvents.has(eventName)) {
-            const typeDefinition = typedEvents.get(eventName);
+        // Check for enrichment payload type override (when payload is a string instead of object)
+        let enrichmentPayloadOverride = enrichments?.[eventName]?.payload;
+        let hasPayloadOverride = typeof enrichmentPayloadOverride === 'string';
+
+        // If not found in current drop-in's enrichment, check if it's a cross-dropin event
+        // Also check cross-dropin if the current type is 'any' or contains 'any' (essentially untyped/incomplete)
+        let isCrossDropinEvent = false;
+        const currentType = typedEvents.get(eventName);
+        const hasGenericType = currentType === 'any' || (currentType && currentType.includes('any'));
+        if (!hasPayloadOverride && (!typedEvents.has(eventName) || hasGenericType)) {
+            const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
+            if (sourceDropin && sourceDropin !== dropinName) {
+                // Load enrichment from the source drop-in
+                const sourceEnrichments = loadEventEnrichments(sourceDropin);
+                const sourcePayload = sourceEnrichments?.[eventName]?.payload;
+                if (typeof sourcePayload === 'string') {
+                    enrichmentPayloadOverride = sourcePayload;
+                    hasPayloadOverride = true;
+                    isCrossDropinEvent = true;
+                }
+            }
+        }
+
+        if (hasPayloadOverride) {
+            // Use enrichment override for payload type
+            const typeDefinition = enrichmentPayloadOverride;
             payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;
 
-            // Check if this is a simple type reference (no braces, likely references another interface)
-            const hasObjectStructure = typeDefinition.includes('{');
+            const referencedTypes = extractReferencedTypes(typeDefinition);
 
-            const properties = parseTypeScriptProperties(typeDefinition);
-
-            if (hasObjectStructure && properties.length > 0) {
-                // This is an inline object type with properties we can list
-                payloadSection += `| Property | Type | Description |\n`;
-                payloadSection += `|----------|------|-------------|\n`;
-
-                properties.forEach(prop => {
-                    const optionalMark = prop.optional ? ' (optional)' : '';
-                    const escapedType = prop.type.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
-                    payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
+            // For cross-dropin events, link to the source dropin's events page
+            // For same-dropin events, extract and track models locally
+            if (isCrossDropinEvent) {
+                // Generate external links to source drop-in's events page
+                if (referencedTypes.size > 0) {
+                    const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](/dropins/${sourceDropin}/events#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            } else {
+                // Same-dropin event: extract and track models locally
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: '' // Will be populated from enrichment if available
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
                 });
+
+                // Generate links to Data Models section for referenced types
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            }
+        } else if (typedEvents.has(eventName)) {
+            // Skip displaying 'any' types or types containing 'any' as they provide no useful information
+            const typeDefinition = typedEvents.get(eventName);
+            const hasGenericType = typeDefinition === 'any' || typeDefinition.includes('any');
+            if (hasGenericType) {
+                // Don't display generic types - leave payload section empty
+            } else {
+                payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;
+
+                // Extract and track model types referenced in this event payload
+                const referencedTypes = extractReferencedTypes(typeDefinition);
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: '' // Will be populated from enrichment if available
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
+                });
+
+                // Generate links to Data Models section for referenced types
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
             }
         } else {
-            // No TypeScript definition available
-            payloadSection += `This event's data payload structure is not documented in the source code.\n\n`;
+            // No TypeScript definition available - use comprehensive type inference
+            const dropinPath = join(projectRoot, '.temp-repos', dropinName);
+            const checker = new TypeInferenceChecklist(dropinName, dropinPath);
+            const result = checker.inferEventPayloadType(eventName);
+
+            // Log the inference process (optional - only in verbose mode)
+            if (process.env.VERBOSE_INFERENCE) {
+                console.log(`  📋 Type inference for ${eventName}:`);
+                result.log.forEach(line => console.log(`    ${line}`));
+            }
+
+            if (result.type) {
+                // Found an inferred type - display it
+                payloadSection += `\`\`\`typescript\n${result.type}\n\`\`\`\n\n`;
+
+                // Extract and track any model types from the inferred type
+                const referencedTypes = extractReferencedTypes(result.type);
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: ''
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
+                });
+
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            }
+            // If no type found (neither defined nor inferred), leave payload section empty
         }
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
@@ -758,8 +1228,43 @@ For information about common events like \`locale\`, \`error\`, and \`authentica
         return simplifiedContent;
     }
 
-    // Assemble final content
-    return beforeRepeat + eventsContent + afterRepeat;
+    // Generate Data Models section
+    let dataModelsSection = '';
+    if (modelDefinitions.size > 0) {
+        dataModelsSection += '\n\n## Data Models\n\n';
+        dataModelsSection += 'The following data models are used in event payloads for this drop-in.\n\n';
+
+        // Sort models alphabetically
+        const sortedModels = Array.from(modelDefinitions.keys()).sort();
+
+        for (const modelName of sortedModels) {
+            const modelData = modelDefinitions.get(modelName);
+
+            dataModelsSection += `### ${modelName}\n\n`;
+
+            // Add description if available from enrichment
+            if (enrichments?.models?.[modelName]?.description) {
+                dataModelsSection += `${enrichments.models[modelName].description}\n\n`;
+            }
+
+            // List events that use this model
+            if (modelData.events.length > 0) {
+                dataModelsSection += `Used in: `;
+                dataModelsSection += modelData.events
+                    .map(eventName => `[\`${eventName}\`](#${eventName.replace(/\//g, '')}-${eventEmits.has(eventName) && eventListeners.has(eventName) ? 'emits-and-listens' : eventEmits.has(eventName) ? 'emits' : 'listens'})`)
+                    .join(', ');
+                dataModelsSection += '.\n\n';
+            }
+
+            // Add the TypeScript definition
+            dataModelsSection += '```ts\n';
+            dataModelsSection += modelData.definition;
+            dataModelsSection += '\n```\n\n';
+        }
+    }
+
+    // Assemble final content with Data Models section
+    return beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
 }
 
 async function main() {
@@ -849,6 +1354,14 @@ async function main() {
     }
 
     console.log('✨ Event documentation generation complete!');
+
+    // Validate generated documentation for generic types
+    const validationSuccess = validateAllEventDocs(projectRoot);
+    if (!validationSuccess) {
+        console.error('\n⚠️  WARNING: Generic type issues detected in generated documentation.');
+        console.error('   Please update enrichment files to provide proper type overrides.');
+        process.exit(1);
+    }
 }
 
 main();
