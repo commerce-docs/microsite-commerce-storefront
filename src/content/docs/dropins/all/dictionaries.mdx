@@ -1,0 +1,374 @@
+---
+title: Dictionary Customization Guide
+description: Learn how to customize drop-in dictionaries for localization, branding, and multi-language support.
+sidebar:
+  label: Dictionaries
+  order: 9
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Every drop-in includes a **dictionary** containing all user-facing text, labels, and messages. By customizing dictionaries, you can:
+
+- **Localize** drop-ins for different languages and regions
+- **Customize** labels and messages to match your brand voice
+- **Override** default text without modifying the drop-in's source code
+
+Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path (e.g., `Cart.MiniCart.heading`).
+
+## Quick start
+
+<Steps>
+
+1. **Find the dictionary keys** you want to customize
+
+   Visit your drop-in's dictionary page (e.g., [Cart Dictionary](/dropins/cart/dictionary/), [Checkout Dictionary](/dropins/checkout/dictionary/)) to see all available keys and their default values.
+
+2. **Create a custom dictionary file**
+
+   Create a JavaScript or JSON file in your project. Common locations:
+   
+   - `src/config/custom-dictionary.js` (recommended for modular projects)
+   - `src/i18n/en_US.js` (if you have an i18n folder)
+   - `config/dictionaries/cart.js` (organized by drop-in)
+   - Anywhere that makes sense for your project structure
+
+3. **Export your custom keys**
+
+   Include only the keys you want to override. The drop-in will deep-merge your values with the defaults:
+
+   ```javascript title="src/config/custom-dictionary.js"
+   export const customDictionary = {
+     Cart: {
+       MiniCart: {
+         heading: "Shopping Basket ({count})",
+         cartLink: "View Basket",
+         checkoutLink: "Proceed to Checkout"
+       }
+     }
+   };
+   ```
+
+4. **Load your custom dictionary**
+
+   Pass your dictionary to the drop-in's `initialize()` function using the `langDefinitions` option:
+
+   ```javascript title="src/main.js"
+   import { initialize } from '@dropins/storefront-cart';
+   import { customDictionary } from './config/custom-dictionary.js';
+
+   await initialize({
+     langDefinitions: {
+       en_US: customDictionary
+     }
+   });
+   ```
+
+5. **Test your changes**
+
+   Your custom values will now appear in the UI instead of the defaults. The drop-in automatically merges your overrides with the default dictionary.
+
+</Steps>
+
+<Aside type="tip">
+**Partial overrides**: You don't need to copy the entire dictionary! Only include keys you're changing. The drop-in will deep-merge your custom values with all the default values.
+</Aside>
+
+---
+
+## Multi-language support
+
+To support multiple languages, create dictionary files for each locale and load them dynamically based on the user's language preference.
+
+### Example: English and French
+
+**Step 1: Create language-specific dictionaries**
+
+```javascript title="src/i18n/en_US.js"
+export const en_US = {
+  Cart: {
+    MiniCart: {
+      heading: "Shopping Cart ({count})",
+      cartLink: "View Cart",
+      checkoutLink: "Checkout"
+    }
+  }
+};
+```
+
+```javascript title="src/i18n/fr_FR.js"
+export const fr_FR = {
+  Cart: {
+    MiniCart: {
+      heading: "Panier ({count})",
+      cartLink: "Voir le panier",
+      checkoutLink: "Commander"
+    }
+  }
+};
+```
+
+**Step 2: Load based on user's locale**
+
+```javascript title="src/main.js"
+import { initialize } from '@dropins/storefront-cart';
+import { en_US } from './i18n/en_US.js';
+import { fr_FR } from './i18n/fr_FR.js';
+
+// Get user's locale (from browser, URL, user profile, etc.)
+const userLocale = navigator.language.replace('-', '_'); // e.g., "en_US" or "fr_FR"
+
+// Map of all available translations
+const translations = {
+  en_US,
+  fr_FR
+};
+
+await initialize({
+  langDefinitions: translations[userLocale] || en_US // Fallback to English
+});
+```
+
+**Step 3: Dynamic locale switching**
+
+You can also switch languages dynamically after initialization:
+
+```javascript
+import { setLang } from '@dropins/storefront-cart/api.js';
+import { fr_FR } from './i18n/fr_FR.js';
+
+// User clicks language selector
+document.getElementById('lang-fr').addEventListener('click', () => {
+  setLang({
+    locale: 'fr_FR',
+    langDefinitions: fr_FR
+  });
+});
+```
+
+---
+
+## Advanced patterns
+
+### Organizing by drop-in
+
+For projects using multiple drop-ins, organize dictionaries by drop-in:
+
+```
+src/
+  config/
+    dictionaries/
+      cart.js
+      checkout.js
+      user-auth.js
+```
+
+```javascript title="src/config/dictionaries/cart.js"
+export const cartDictionary = {
+  Cart: {
+    // Cart drop-in customizations
+  }
+};
+```
+
+```javascript title="src/config/dictionaries/checkout.js"
+export const checkoutDictionary = {
+  Checkout: {
+    // Checkout drop-in customizations
+  }
+};
+```
+
+```javascript title="src/main.js"
+import { initialize as initCart } from '@dropins/storefront-cart';
+import { initialize as initCheckout } from '@dropins/storefront-checkout';
+import { cartDictionary } from './config/dictionaries/cart.js';
+import { checkoutDictionary } from './config/dictionaries/checkout.js';
+
+await initCart({ langDefinitions: { en_US: cartDictionary } });
+await initCheckout({ langDefinitions: { en_US: checkoutDictionary } });
+```
+
+### Loading from JSON files
+
+If you prefer JSON over JavaScript:
+
+```json title="src/i18n/en_US.json"
+{
+  "Cart": {
+    "MiniCart": {
+      "heading": "Shopping Cart ({count})",
+      "cartLink": "View Cart"
+    }
+  }
+}
+```
+
+```javascript title="src/main.js"
+import { initialize } from '@dropins/storefront-cart';
+import enUS from './i18n/en_US.json';
+
+await initialize({
+  langDefinitions: {
+    en_US: enUS
+  }
+});
+```
+
+### Loading from API/CMS
+
+For enterprise scenarios where translations are managed in a CMS:
+
+```javascript title="src/main.js"
+import { initialize } from '@dropins/storefront-cart';
+
+// Fetch translations from your CMS
+const translations = await fetch('/api/translations/cart/en_US')
+  .then(res => res.json());
+
+await initialize({
+  langDefinitions: {
+    en_US: translations
+  }
+});
+```
+
+---
+
+## Deep merge behavior
+
+The drop-in's dictionary system uses **deep merge** to combine your custom dictionary with the default dictionary. This means:
+
+✅ **You only override what you specify**
+```javascript
+// You provide:
+{ Cart: { MiniCart: { heading: "My Cart" } } }
+
+// Drop-in merges with defaults:
+{ 
+  Cart: { 
+    MiniCart: { 
+      heading: "My Cart",           // Your custom value
+      cartLink: "View Cart",        // Default value (kept)
+      checkoutLink: "Checkout"      // Default value (kept)
+    }
+  }
+}
+```
+
+✅ **Nested objects are merged recursively**
+```javascript
+// You can override individual error messages:
+{
+  Cart: {
+    PriceSummary: {
+      promoCode: {
+        errors: {
+          invalid: "Custom error message"
+          // All other error messages remain at default values
+        }
+      }
+    }
+  }
+}
+```
+
+❌ **Arrays are replaced, not merged**
+```javascript
+// If a key contains an array, you must provide the entire array
+// (This is rare in dictionaries, which typically use objects)
+```
+
+---
+
+## Finding dictionary keys
+
+Each drop-in has a dictionary page showing all available keys:
+
+- [Cart Dictionary](/dropins/cart/dictionary/)
+- [Checkout Dictionary](/dropins/checkout/dictionary/)
+- [Order Dictionary](/dropins/order/dictionary/)
+- [Product Details Dictionary](/dropins/product-details/dictionary/)
+- [Product Discovery Dictionary](/dropins/product-discovery/dictionary/)
+- [User Account Dictionary](/dropins/user-account/dictionary/)
+- [User Auth Dictionary](/dropins/user-auth/dictionary/)
+- [Wishlist Dictionary](/dropins/wishlist/dictionary/)
+
+You can also find dictionary files in each drop-in's source repository:
+
+```
+node_modules/@dropins/storefront-cart/src/i18n/en_US.json
+```
+
+Or view them on GitHub:
+
+- [Cart en_US.json](https://github.com/adobe-commerce/storefront-cart/blob/main/src/i18n/en_US.json)
+- [Checkout en_US.json](https://github.com/adobe-commerce/storefront-checkout/blob/main/src/i18n/en_US.json)
+- And so on...
+
+---
+
+## Best practices
+
+<Aside type="tip">
+**Use version control**: Store your custom dictionaries in version control so your team can track changes and maintain consistency across environments.
+</Aside>
+
+<Aside type="caution">
+**Test all languages**: When adding multi-language support, test each language thoroughly. Text length varies significantly between languages and may affect your UI layout.
+</Aside>
+
+<Aside type="note">
+**Placeholder syntax**: Some dictionary values include placeholders like `{count}`, `{price}`, `{name}`. Keep these placeholders in your custom values so the drop-in can inject dynamic data.
+</Aside>
+
+### Recommended workflow
+
+1. **Start small** - Override just a few keys initially
+2. **Test thoroughly** - Verify custom values appear correctly in the UI
+3. **Document** - Add comments explaining why certain values were customized
+4. **Iterate** - Add more customizations as needed
+5. **Maintain** - When drop-ins release new versions, check for new dictionary keys
+
+---
+
+## Troubleshooting
+
+### Custom values not appearing
+
+**Problem**: You've set custom dictionary values but they're not showing in the UI.
+
+**Solutions**:
+- Verify `langDefinitions` is passed to `initialize()`
+- Check that your locale key matches exactly (e.g., `en_US` not `en-US`)
+- Ensure your custom dictionary structure matches the default structure
+- Check browser console for errors during initialization
+
+### Missing placeholders
+
+**Problem**: Dynamic values like counts or prices aren't showing.
+
+**Solution**: Make sure you keep placeholders like `{count}`, `{price}` in your custom strings:
+
+```javascript
+// ❌ Bad - placeholder removed
+heading: "Shopping Cart"
+
+// ✅ Good - placeholder kept
+heading: "Shopping Cart ({count})"
+```
+
+### Language not switching
+
+**Problem**: `setLang()` doesn't update the UI.
+
+**Solution**: Some components need to re-render. Try refreshing the page or re-initializing the drop-in after language change.
+
+---
+
+## Related resources
+
+- [Drop-in Initialization](/dropins/cart/initialization/) - Learn about the `initialize()` function
+- [Labeling](/dropins/all/labeling/) - Customize ARIA labels for accessibility
+- [Branding](/dropins/all/branding/) - Customize visual styles and themes
+
