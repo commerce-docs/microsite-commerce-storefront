@@ -102,11 +102,14 @@ export function generateDictionaryTable(keys, maxRows = 0) {
     const keysToShow = maxRows > 0 ? keys.slice(0, maxRows) : keys;
 
     for (const { key, value } of keysToShow) {
-        // Sanitize value for markdown
+        // Sanitize value for markdown and MDX
         const sanitizedValue = value
-            .replace(/\|/g, '\\|')
-            .replace(/\n/g, ' ')
-            .replace(/\s+/g, ' ')
+            .replace(/\\/g, '\\\\')        // Escape backslashes first
+            .replace(/\{/g, '\\{')         // Escape curly braces (MDX expressions)
+            .replace(/\}/g, '\\}')         // Escape curly braces (MDX expressions)
+            .replace(/\|/g, '\\|')         // Escape pipes
+            .replace(/\n/g, ' ')           // Remove line breaks
+            .replace(/\s+/g, ' ')          // Collapse spaces
             .trim();
 
         table += `| \`${key}\` | ${sanitizedValue} |\n`;
