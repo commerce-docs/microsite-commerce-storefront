@@ -41,6 +41,7 @@ import { validateAllEventDocs } from './lib/payload-type-validator.js';
 import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { CrossDropinResolver } from './lib/core/cross-dropin-resolver.js';
+import { generateNoEventsPage } from './lib/markdown/empty-state-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1011,40 +1012,11 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         const hasNoEmits = emitsOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
         const hasNoListens = listensOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
 
-        // Generate explanation based on what's missing
-        let explanation = '';
-        if (hasNoEmits && hasNoListens) {
-            explanation = 'This drop-in focuses on UI presentation and data display, relying on function calls rather than event-driven communication for its core functionality. It uses only common events for standard cross-component functionality like localization and error handling.';
-        } else if (hasNoEmits) {
-            explanation = 'This drop-in does not emit any drop-in-specific events because it primarily responds to external state changes and user interactions without needing to broadcast its own state to other components. It uses only common events for standard functionality.';
-        } else if (hasNoListens) {
-            explanation = 'This drop-in does not listen to any drop-in-specific events because it operates independently, managing its own state without requiring coordination with other drop-ins. It uses only common events for standard functionality.';
-        }
-
-        // Generate simplified content for drop-ins that only use common events
-        const simplifiedContent = `---
-title: ${repoConfig.displayName} Data & Events
-description: Learn about the events used by the ${repoConfig.displayName} and the data available within the events.
-sidebar:
-  label: Events
-  order: 5
----
-
-import { Aside } from '@astrojs/starlight/components';
-
-The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version.replace(/^[\^~]/, '')}</strong>
-</div>
-
-## Events
-
-This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
-
-For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [common events reference](/dropins/all/events/#common-events-reference).
-`;
-        return simplifiedContent;
+        // Use shared empty state generator for clean, consistent output
+        return generateNoEventsPage({
+            dropinDisplayName: repoConfig.displayName,
+            version
+        });
     }
 
     // Generate Data Models section
