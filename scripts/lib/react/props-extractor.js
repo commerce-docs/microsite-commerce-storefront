@@ -108,11 +108,15 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 
     const props = [];
 
+    // Remove JSDoc comments from interface content to avoid parsing them as properties
+    // Keep the original for JSDoc extraction later
+    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
+
     // Match property definitions (property: type, property?: type, property?: type | null)
     const propertyPattern = /(\w+)\??\s*:\s*([^;,]+)/g;
     let match;
 
-    while ((match = propertyPattern.exec(interfaceContent)) !== null) {
+    while ((match = propertyPattern.exec(cleanedContent)) !== null) {
         const propertyName = match[1];
         const propertyType = match[2].trim();
 
@@ -166,11 +170,14 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 export function extractSlotsFromInterface(interfaceContent) {
     const slots = [];
 
+    // Remove JSDoc comments to avoid parsing them
+    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
+
     // Match slot definitions (property containing "Slot" in name)
     const slotPattern = /(\w*[Ss]lot\w*)\??\s*:\s*([^;,]+)/g;
     let match;
 
-    while ((match = slotPattern.exec(interfaceContent)) !== null) {
+    while ((match = slotPattern.exec(cleanedContent)) !== null) {
         const slotName = match[1];
         const slotType = match[2].trim();
 

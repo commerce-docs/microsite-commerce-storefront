@@ -32,6 +32,11 @@ export function sanitizeText(text) {
         .replace(/\n/g, ' ')           // Remove line breaks
         .replace(/\r/g, '')            // Remove carriage returns
         .replace(/\|/g, '\\|')         // Escape pipes
+        .replace(/`/g, '\\`')          // Escape backticks
+        .replace(/\{/g, '\\{')         // Escape curly braces (MDX expressions)
+        .replace(/\}/g, '\\}')         // Escape curly braces (MDX expressions)
+        .replace(/</g, '&lt;')         // Escape less-than (HTML/JSX tags)
+        .replace(/>/g, '&gt;')         // Escape greater-than (HTML/JSX tags)
         .replace(/\*/g, '\\*')         // Escape asterisks
         .replace(/\[/g, '\\[')         // Escape brackets
         .replace(/\]/g, '\\]')         // Escape brackets
