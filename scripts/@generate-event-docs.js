@@ -40,6 +40,7 @@ import { TypeInferenceChecklist } from './lib/type-inference.js';
 import { validateAllEventDocs } from './lib/payload-type-validator.js';
 import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
+import { CrossDropinResolver } from './lib/core/cross-dropin-resolver.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -574,43 +575,9 @@ function extractModelDefinition(modelName, dropinName) {
     return extractor.extractModelDefinition(modelName);
 }
 
-/**
- * Detect which drop-in is the source (emitter) of an event
- * @param {string} eventName - Event name (e.g., 'checkout/initialized')
- * @param {Map} eventEmits - Map of all events emitted by current drop-in
- * @param {string} currentDropin - Current drop-in name
- * @returns {string|null} Source drop-in name or null
- */
+// Replaced with CrossDropinResolver.detectSourceDropin()
 function detectSourceDropin(eventName, eventEmits, currentDropin) {
-    // If current drop-in emits it, return current
-    if (eventEmits.has(eventName)) {
-        return currentDropin;
-    }
-
-    // Try to infer from event name prefix (e.g., 'checkout/initialized' -> 'checkout')
-    const parts = eventName.split('/');
-    if (parts.length >= 2) {
-        const prefix = parts[0];
-        // Map common prefixes to drop-in names
-        const prefixMap = {
-            'cart': 'cart',
-            'checkout': 'checkout',
-            'order': 'order',
-            'pdp': 'product-details',
-            'product': 'product-details',
-            'auth': 'user-auth',
-            'account': 'user-account',
-            'user': 'user-account',
-            'wishlist': 'wishlist',
-            'personalization': 'personalization',
-            'recommendations': 'recommendations',
-            'payment': 'payment-services'
-        };
-
-        return prefixMap[prefix] || null;
-    }
-
-    return null;
+    return CrossDropinResolver.detectSourceDropin(eventName, eventEmits, currentDropin);
 }
 
 /**
@@ -923,9 +890,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 // Generate external links to source drop-in's events page
                 if (referencedTypes.size > 0) {
                     const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](/dropins/${sourceDropin}/events#${typeName.toLowerCase()})`)
-                        .join(', ');
+                    const typeLinks = CrossDropinResolver.generateExternalLinks(sourceDropin, referencedTypes, 'events');
                     payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
                 }
             } else {
