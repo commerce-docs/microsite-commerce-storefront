@@ -42,6 +42,7 @@ import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 import { EnrichmentLoader } from './lib/core/enrichment-loader.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { validateAllFunctionDocs } from './lib/function-type-validator.js';
+import { generateNoFunctionsPage } from './lib/markdown/empty-state-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -1616,20 +1617,11 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
  * @returns {string} Generated MDX content
  */
 function generateEmptyFunctionsDocs(repoName, repoConfig, version) {
-    const introText = `This drop-in currently has no functions defined.`;
-
-    const functionsContent = ``; // No additional content needed
-
-    // Use template with placeholder content
-    const template = readTemplate('dropin-functions.mdx');
-
-    return replacePlaceholders(template, {
-        DROPIN_NAME: repoConfig.displayName,
-        DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(version),
-        INTRO_TEXT: introText,
-        FUNCTIONS_TABLE: '', // No table needed for empty functions
-        FUNCTIONS_CONTENT: functionsContent
+    // Use shared empty state generator for clean, consistent output
+    return generateNoFunctionsPage({
+        dropinDisplayName: repoConfig.displayName,
+        version,
+        repoUrl: repoConfig.gitUrl.replace('.git', '')
     });
 }
 
