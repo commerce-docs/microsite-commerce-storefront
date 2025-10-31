@@ -284,15 +284,53 @@ Below are the default English (`en_US`) strings provided by the **Cart** drop-in
 
 ## How to customize
 
-To override these values for your storefront:
+### Step 1: Create a custom dictionary file
 
-1. **Create a custom dictionary file** in your project (for example, `config/en_US.json`)
-2. **Copy the keys** you want to customize from the default dictionary above
-3. **Modify the values** to match your requirements
-4. **Load your custom dictionary** during drop-in initialization
+Create a JavaScript or JSON file in your project to store your customizations. Common locations:
+
+- `src/config/custom-dictionary.js` (recommended for modular projects)
+- `scripts/i18n/en_US.json` (if you have an i18n folder)
+- Anywhere in your project that makes sense for your structure
+
+**Example: Only override specific keys you want to change**
+
+```javascript title="src/config/custom-dictionary.js"
+// You only need to include the keys you're customizing
+export const customDictionary = {
+    "Cart": {
+      "Cart": {
+        "heading": "Custom Shopping Cart ({count})",
+        "editCart": "Custom Edit"
+      }
+    }
+  };
+```
 
 <Aside type="tip">
-For complete instructions and examples, see the [localization guide](/customize/localize/).
+**Partial overrides**: You don't need to copy the entire dictionary! The drop-in will deep-merge your custom values with the defaults. Only include keys you want to change.
 </Aside>
+
+### Step 2: Import and load your custom dictionary
+
+Pass your custom dictionary to the drop-in's `initialize()` function using the `langDefinitions` option:
+
+```javascript title="src/main.js"
+import { initialize } from '@dropins/storefront-cart';
+import { customDictionary } from './config/custom-dictionary.js';
+
+await initialize({
+  langDefinitions: {
+    en_US: customDictionary
+  }
+});
+```
+
+### Step 3: Test your changes
+
+Your custom values will now appear in the UI instead of the defaults. The drop-in automatically merges your overrides with the default dictionary.
+
+---
+
+**For multi-language support and advanced patterns**, see the [localization guide](/customize/localize/).
 
 {/* This documentation is auto-generated from: REPO_URL */}
