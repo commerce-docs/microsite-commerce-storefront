@@ -37,6 +37,12 @@ import { getAllExamples } from './lib/example-extractor.js';
 import { validateAndMerge, validateFunctionSignature, createValidationReport } from './lib/source-validator.js';
 import { getParameterDescription } from './lib/parameter-patterns.js';
 
+// Import new core shared libraries
+import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
+import { EnrichmentLoader } from './lib/core/enrichment-loader.js';
+import { TypeExtractor } from './lib/core/type-extractor.js';
+import { validateAllFunctionDocs } from './lib/function-type-validator.js';
+
 const projectRoot = getProjectRoot();
 
 // ============================================================================
@@ -462,109 +468,8 @@ function extractFunctionSignature(tsContent, functionName) {
     return null;
 }
 
-/**
- * Extract type/model definition from TypeScript source files
- * 
- * @param {string} repoPath - Path to the repository
- * @param {string} typeName - Name of the type to find (e.g., "CartModel", "OrderData", "CustomerType")
- * @returns {string|null} Type definition or null if not found
- */
-function extractModelDefinitionFromSource(repoPath, typeName) {
-    // Convert PascalCase to kebab-case (ProductModel -> product-model, OrderData -> order-data)
-    const kebabCase = typeName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-    // Common directories where types/models are defined
-    const searchDirectories = [
-        join(repoPath, 'src', 'data', 'models'),
-        join(repoPath, 'src', 'types'),
-        join(repoPath, 'src'),
-    ];
-
-    // Also check specific files
-    const specificFiles = [
-        join(repoPath, 'src', 'data', 'models.ts'),
-        join(repoPath, 'src', 'types.ts'),
-        join(repoPath, 'src', 'models.ts'),
-        join(repoPath, 'src', 'api', 'types.ts'),
-    ];
-
-    // Search through directories first
-    for (const dir of searchDirectories) {
-        if (!existsSync(dir)) continue;
-
-        try {
-            const files = readdirSync(dir);
-            for (const file of files) {
-                if (!file.endsWith('.ts') || file.endsWith('.test.ts')) continue;
-
-                const filePath = join(dir, file);
-                if (!statSync(filePath).isFile()) continue;
-
-                const result = searchFileForType(filePath, typeName);
-                if (result) return result;
-            }
-        } catch (error) {
-            continue;
-        }
-    }
-
-    // Then search specific files
-    for (const filePath of specificFiles) {
-        if (!existsSync(filePath)) continue;
-
-        const result = searchFileForType(filePath, typeName);
-        if (result) return result;
-    }
-
-    return null;
-}
-
-/**
- * Search a single file for a type definition
- * 
- * @param {string} filePath - Path to the file to search
- * @param {string} typeName - Name of the type to find
- * @returns {string|null} Type definition or null if not found
- */
-function searchFileForType(filePath, typeName) {
-    try {
-        const content = readFileSync(filePath, 'utf8');
-
-        // Match type or interface definition
-        // Need to handle nested braces properly
-        const exportInterfaceMatch = content.match(new RegExp(`export\\s+interface\\s+${typeName}\\s*\\{`));
-        const exportTypeMatch = content.match(new RegExp(`export\\s+type\\s+${typeName}\\s*=\\s*\\{`));
-        const interfaceMatch = content.match(new RegExp(`interface\\s+${typeName}\\s*\\{`));
-        const typeMatch = content.match(new RegExp(`type\\s+${typeName}\\s*=\\s*\\{`));
-
-        let startMatch = exportInterfaceMatch || exportTypeMatch || interfaceMatch || typeMatch;
-
-        if (startMatch) {
-            const startIndex = startMatch.index;
-            const openBraceIndex = content.indexOf('{', startIndex);
-
-            // Find matching closing brace
-            let braceCount = 0;
-            let endIndex = openBraceIndex;
-
-            for (let i = openBraceIndex; i < content.length; i++) {
-                if (content[i] === '{') braceCount++;
-                if (content[i] === '}') braceCount--;
-                if (braceCount === 0) {
-                    endIndex = i + 1;
-                    break;
-                }
-            }
-
-            return content.substring(startIndex, endIndex).trim();
-        }
-    } catch (error) {
-        // File can't be read
-        return null;
-    }
-
-    return null;
-}
+// Note: extractModelDefinitionFromSource and searchFileForType have been replaced
+// by the shared TypeExtractor class from lib/core/type-extractor.js
 
 /**
  * Parse TypeScript parameters string into structured parameter objects
@@ -959,6 +864,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     // Calculate repository path
     const repoPath = join(getProjectRoot(), '.temp-repos', repoName);
 
+    // Create TypeExtractor instance for this repository
+    const typeExtractor = new TypeExtractor(repoPath);
+
     // Extract models from function return types
     functions.forEach(func => {
         if (func.signature && func.signature.returnType) {
@@ -982,8 +890,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 const uniqueTypes = [...new Set(typeMatches)].filter(type => !builtInTypes.includes(type));
 
                 uniqueTypes.forEach(typeName => {
-                    // Try to find the type definition in TypeScript source
-                    const typeDefinition = extractModelDefinitionFromSource(repoPath, typeName);
+                    // Try to find the type definition in TypeScript source using shared TypeExtractor
+                    const typeDefinition = typeExtractor.extractModelDefinition(typeName);
 
                     if (typeDefinition) {
                         if (!modelDefinitions.has(typeName)) {
@@ -1543,8 +1451,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             if (!isSharedModel) {
                 if (actualType === 'void' || actualType === 'undefined') {
                     returnsContent = 'Returns `void`.';
-                } else if (actualType.includes('any') || actualType.includes('unknown')) {
-                    // For unhelpful generic types (any, unknown, any | null, etc.), try to extract from source
+                } else if (GenericTypeHandler.isGenericType(actualType)) {
+                    // For unhelpful generic types (any, unknown, object, etc.), try to extract from source
                     // Check if enrichment provides a returns_source hint
                     let extractedType = null;
                     if (enrichment && enrichment.returns_source) {
@@ -1738,4 +1646,19 @@ await runGenerator({
     updateSidebar: updateSidebarForFunctions,
     outputFileName: 'functions.mdx'
 });
+
+// ============================================================================
+// POST-GENERATION VALIDATION
+// ============================================================================
+
+console.log('\n🔍 Running post-generation type validation...\n');
+const validationSuccess = validateAllFunctionDocs(projectRoot);
+
+if (!validationSuccess) {
+    console.warn('\n⚠️  WARNING: Generic type issues detected in generated documentation.');
+    console.warn('   These are pre-existing issues that should be fixed in the source code.');
+    console.warn('   For now, continuing with warnings only.\n');
+} else {
+    console.log('\n✅ All function documentation validated successfully!\n');
+}
 
