@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
 The **Payment Services dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. By customizing the dictionary, you can:
 
@@ -14,60 +15,83 @@ The **Payment Services dictionary** contains all user-facing text, labels, and m
 - **Customize** labels and messages to match your brand voice
 - **Override** default text without modifying the drop-in's source code
 
-Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
-
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.3</strong>
+<strong>Version: 1.0.3</strong> • <strong>14 keys</strong> in <strong>1 sections</strong>
 </div>
 
-## Default keys and values
+## Dictionary keys by section
 
-Below are the default English (`en_US`) strings provided by the **Payment Services** drop-in (21 keys):
+Below are the default English (`en_US`) strings organized by component:
 
-```json title="en_US.json"
-{
+### CreditCard
+
+**Namespace**: `PaymentServices.CreditCard`
+
+<TableWrapper nowrap={[0]}>
+
+| Key | Default Value |
+|-----|---------------|
+| `PaymentServices.CreditCard.formFields.cvv.invalidError` | Enter valid cvv. |
+| `PaymentServices.CreditCard.formFields.cvv.label` |  |
+| `PaymentServices.CreditCard.formFields.cvv.missingError` | This field is required. |
+| `PaymentServices.CreditCard.formFields.cvv.placeholder` | CVV* |
+| `PaymentServices.CreditCard.formFields.expirationDate.invalidError` | Enter valid expiration date. |
+| `PaymentServices.CreditCard.formFields.expirationDate.label` |  |
+| `PaymentServices.CreditCard.formFields.expirationDate.missingError` | This field is required. |
+| `PaymentServices.CreditCard.formFields.expirationDate.placeholder` | MM/YY* |
+| `PaymentServices.CreditCard.formFields.number.invalidError` | Enter valid card number. |
+| `PaymentServices.CreditCard.formFields.number.label` |  |
+| `PaymentServices.CreditCard.formFields.number.missingError` | This field is required. |
+| `PaymentServices.CreditCard.formFields.number.placeholder` | Card Number* |
+| `PaymentServices.CreditCard.messages.methodNotAvailable` | Payment method not available. Please contact support. |
+| `PaymentServices.CreditCard.messages.methodNotLoaded` | Failed to load payment method. Please try again later. |
+
+</TableWrapper>
+
+
+
+## How to override keys
+
+To customize dictionary values for your storefront:
+
+1. **Create a custom dictionary file** in your project (for example, `config/custom-dict.js`)
+2. **Copy the keys** you want to customize from the tables above
+3. **Modify the values** to match your requirements
+4. **Load your custom dictionary** during drop-in initialization
+
+### Example: Custom dictionary
+
+```javascript title="custom-dictionary.js"
+// Create your custom dictionary file
+export const customDictionary = {
   "PaymentServices": {
     "CreditCard": {
       "formFields": {
         "cvv": {
-          "invalidError": "Enter valid cvv.",
-          "label": "",
-          "missingError": "This field is required.",
-          "placeholder": "CVV*"
-        },
-        "expirationDate": {
-          "invalidError": "Enter valid expiration date.",
-          "label": "",
-          "missingError": "This field is required.",
-          "placeholder": "MM/YY*"
-        },
-        "number": {
-          "invalidError": "Enter valid card number.",
-          "label": "",
-          "missingError": "This field is required.",
-          "placeholder": "Card Number*"
+          "invalidError": "Custom Enter valid cvv.",
+          "label": "Custom ",
+          "missingError": "Custom This field is requir..."
         }
-      },
-      "messages": {
-        "methodNotAvailable": "Payment method not available. Please contact support.",
-        "methodNotLoaded": "Failed to load payment method. Please try again later."
       }
     }
   }
-}
+};
 ```
 
-## How to customize
+```javascript title="initialize-dropin.js"
+import { initialize } from '@dropins/storefront-payment-services';
+import { customDictionary } from './custom-dictionary';
 
-To override these values for your storefront:
-
-1. **Create a custom dictionary file** in your project (for example, `config/en_US.json`)
-2. **Copy the keys** you want to customize from the default dictionary above
-3. **Modify the values** to match your requirements
-4. **Load your custom dictionary** during drop-in initialization
+// Initialize with custom dictionary
+await initialize({
+  langDefinitions: {
+    en_US: customDictionary
+  }
+});
+```
 
 <Aside type="tip">
-For complete instructions and examples, see the [localization guide](/customize/localize/).
+For complete instructions, advanced patterns, and multi-language support, see the [localization guide](/customize/localize/).
 </Aside>
 
 {/* This documentation is auto-generated from: REPO_URL */}

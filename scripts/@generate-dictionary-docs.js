@@ -27,6 +27,8 @@ import { loadDictionaryEnrichments } from './lib/enrichment.js';
 import { updateSidebarForDictionary } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
+import { generateNoDictionaryPage } from './lib/markdown/empty-state-generator.js';
+import { groupBySections, generateDictionaryTable, generateUsageExample, getDictionaryStats } from './lib/dictionary-processor.js';
 
 const projectRoot = getProjectRoot();
 
@@ -103,24 +105,48 @@ function scanForDictionary(repoPath) {
  * @returns {string} Generated MDX content
  */
 function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, enrichmentData = null) {
-    const template = readTemplate('dropin-dictionary.mdx');
-
-    // If no dictionary found, generate placeholder page
-    let dictionaryJson = '';
+    // If no dictionary found, use empty state generator
     if (!dictionaryData || !dictionaryData.content) {
-        dictionaryJson = '{\n  "placeholder": "No dictionary file found in this drop-in"\n}';
-    } else {
-        dictionaryJson = dictionaryData.content;
+        return generateNoDictionaryPage({
+            dropinDisplayName: repoConfig.displayName,
+            version
+        });
     }
+
+    // Parse the JSON
+    const json = JSON.parse(dictionaryData.content);
+
+    // Group into sections
+    const sections = groupBySections(json);
+    const stats = getDictionaryStats(json);
+
+    // Generate sections content
+    let sectionsContent = '';
+
+    for (const section of sections) {
+        sectionsContent += `### ${section.displayName}\n\n`;
+        sectionsContent += `**Namespace**: \`${section.name}\`\n\n`;
+        sectionsContent += generateDictionaryTable(section.keys);
+        sectionsContent += '\n\n';
+    }
+
+    // Generate usage example using first section's keys
+    const usageExample = sections.length > 0
+        ? generateUsageExample(repoConfig.packageName, sections[0].keys)
+        : '';
+
+    const template = readTemplate('dropin-dictionary.mdx');
 
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
-        'DICTIONARY_JSON': dictionaryJson,
+        'SECTIONS_CONTENT': sectionsContent,
+        'USAGE_EXAMPLE': usageExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
-        'KEY_COUNT': dictionaryData?.keyCount?.toString() || '0'
+        'KEY_COUNT': stats.totalKeys.toString(),
+        'SECTION_COUNT': stats.totalSections.toString()
     });
 }
 

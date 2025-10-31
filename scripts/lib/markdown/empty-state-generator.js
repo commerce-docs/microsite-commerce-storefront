@@ -168,6 +168,34 @@ For information about slots in general, see the [slots documentation](/customize
 }
 
 /**
+ * Generate simple "no dictionary" page
+ * 
+ * @param {Object} config - Configuration object
+ * @param {string} config.dropinDisplayName - Display name
+ * @param {string} config.version - Version string
+ * @returns {string} Complete MDX content for dictionary page
+ */
+export function generateNoDictionaryPage(config) {
+    const { dropinDisplayName, version } = config;
+    const cleanVersion = version.replace(/^[\^~]/, '');
+
+    return `---
+title: ${dropinDisplayName} Dictionary
+description: Customize user-facing text and labels in the ${dropinDisplayName} drop-in for localization and branding.
+sidebar:
+  label: Dictionary
+  order: 8
+---
+
+This drop-in currently has no dictionary defined.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: ${cleanVersion}</strong>
+</div>
+`;
+}
+
+/**
  * Format version string by removing npm version prefixes
  * 
  * @param {string} version - Raw version string (e.g., "^1.0.3" or "1.0.3")
