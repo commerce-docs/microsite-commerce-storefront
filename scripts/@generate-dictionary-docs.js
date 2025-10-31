@@ -135,6 +135,20 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, en
         ? generateUsageExample(repoConfig.packageName, sections[0].keys)
         : '';
 
+    // Generate full JSON block for download option
+    // Escape curly braces to prevent MDX interpretation
+    const escapedJson = dictionaryData.content
+        .replace(/\{/g, '\\{')
+        .replace(/\}/g, '\\}');
+
+    const fullJsonBlock = `\`\`\`json title="en_US.json" showLineNumbers
+${escapedJson}
+\`\`\`
+
+<Aside type="note">
+**Download tip**: Copy the entire JSON above, save it as \`custom-en_US.json\`, then modify the values you need. You can also [view this file in the source repository](${repoConfig.gitUrl.replace('.git', '')}/blob/main/src/i18n/en_US.json).
+</Aside>`;
+
     const template = readTemplate('dropin-dictionary.mdx');
 
     // Replace placeholders
@@ -144,6 +158,7 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, en
         'DROPIN_VERSION': cleanVersion(version),
         'SECTIONS_CONTENT': sectionsContent,
         'USAGE_EXAMPLE': usageExample,
+        'FULL_JSON_BLOCK': fullJsonBlock,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'KEY_COUNT': stats.totalKeys.toString(),
         'SECTION_COUNT': stats.totalSections.toString()
