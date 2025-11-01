@@ -48,7 +48,7 @@ function getVersion(dropinKey) {
             return '1.0.0'; // Fallback
         }
         const packageJson = JSON.parse(
-            readFileSync(join(boilerplatePath, 'package.json'), { encoding: 'utf8' })
+            readFileSync(join(boilerplatePath, 'package.json'), 'utf8')
         );
         const packageName = `@dropins/storefront-${dropinKey}`;
         const version = packageJson.dependencies?.[packageName] || '1.0.0';
