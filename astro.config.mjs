@@ -399,13 +399,13 @@ async function config() {
                           { label: 'Cart slots', link: '/dropins/cart/slots/' },
                           { label: 'Cart functions', link: '/dropins/cart/functions/' },
                           { label: 'Events', link: '/dropins/cart/events/' },
-                          { label: 'Containers', link: '/dropins/cart/containers/' },
                           { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
                           { label: 'Cart dictionary', link: '/dropins/cart/dictionary/' },
                           {
                             label: 'Cart Containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/cart/containers/' },
                               { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
                               { label: 'CartSummaryList', link: '/dropins/cart/containers/cart-summary-list/' },
                               { label: 'CartSummaryTable', link: '/dropins/cart/containers/cart-summary-table/' },
@@ -448,13 +448,13 @@ async function config() {
                           { label: 'Checkout slots', link: '/dropins/checkout/slots/' },
                           { label: 'Checkout functions', link: '/dropins/checkout/functions/' },
                           { label: 'Events', link: '/dropins/checkout/events/' },
-                          { label: 'Containers', link: '/dropins/checkout/containers/' },
                           { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
                           { label: 'Checkout dictionary', link: '/dropins/checkout/dictionary/' },
                           {
                             label: 'Checkout Containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/checkout/containers/' },
                               { label: 'Checkout overview', link: '/dropins/checkout/containers/overview/' },
                               { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
                               { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
@@ -492,13 +492,13 @@ async function config() {
                           { label: 'Order slots', link: '/dropins/order/slots/' },
                           { label: 'Order functions', link: '/dropins/order/functions/' },
                           { label: 'Events', link: '/dropins/order/events/' },
-                          { label: 'Containers', link: '/dropins/order/containers/' },
                           { label: 'Dictionary', link: '/dropins/order/dictionary/' },
                           { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
                           {
                             label: 'Order containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/order/containers/' },
                               { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
                               { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
                               { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
@@ -525,12 +525,14 @@ async function config() {
                           { label: 'Payment Services installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
-                          { label: 'Containers', link: '/dropins/payment-services/containers/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Payment containers',
                             collapsed: false,
-                            items: [{ label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }],
+                            items: [
+                              { label: 'Overview', link: '/dropins/payment-services/containers/' },
+                              { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
+                            ],
                           },
                         ],
                       },
@@ -544,7 +546,10 @@ async function config() {
                           {
                             label: 'Personalization containers',
                             collapsed: false,
-                            items: [{ label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' }],
+                            items: [
+                              { label: 'Overview', link: '/dropins/personalization/containers/' },
+                              { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' }
+                            ],
                           },
                         ],
                       },
@@ -560,6 +565,7 @@ async function config() {
                             label: 'Containers',
                             collapsed: true,
                             items: [
+                              { label: 'Overview', link: '/dropins/product-details/containers/' },
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                               { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                               { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
@@ -574,7 +580,6 @@ async function config() {
                           { label: 'Functions', link: '/dropins/product-details/functions/' },
                           { label: 'Slots', link: '/dropins/product-details/slots/' },
                           { label: 'Events', link: '/dropins/product-details/events/' },
-                          { label: 'Containers', link: '/dropins/product-details/containers/' },
                           { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
                         ],
                       },
@@ -612,14 +617,16 @@ async function config() {
                           { label: 'Recommendations styling', link: '/dropins/recommendations/styles/' },
                           { label: 'Recommendations functions', link: '/dropins/recommendations/functions/' },
                           { label: 'Events', link: '/dropins/recommendations/events/' },
-                          { label: 'Containers', link: '/dropins/recommendations/containers/' },
                           { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
                           { label: 'Recommendations slots', link: '/dropins/recommendations/slots/' },
                           { label: 'Recommendations dictionary', link: '/dropins/recommendations/dictionary/' },
                           {
                             label: 'Recommendation containers',
                             collapsed: false,
-                            items: [{ label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' }],
+                            items: [
+                              { label: 'Overview', link: '/dropins/recommendations/containers/' },
+                              { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' }
+                            ],
                           },
                         ],
                       },
@@ -632,7 +639,6 @@ async function config() {
                           { label: 'Account styling', link: '/dropins/user-account/styles/' },
                           { label: 'Account functions', link: '/dropins/user-account/functions/' },
                           { label: 'Events', link: '/dropins/user-account/events/' },
-                          { label: 'Containers', link: '/dropins/user-account/containers/' },
                           { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
@@ -648,6 +654,7 @@ async function config() {
                             label: 'Account containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/user-account/containers/' },
                               { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
                               { label: 'AddressForm', link: '/dropins/user-account/containers/address-form/' },
                               { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
@@ -666,13 +673,13 @@ async function config() {
                           { label: 'Auth slots', link: '/dropins/user-auth/slots/' },
                           { label: 'Auth functions', link: '/dropins/user-auth/auth-functions/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
-                          { label: 'Containers', link: '/dropins/user-auth/containers/' },
                           { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                           { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
                             label: 'Authentication containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/user-auth/containers/' },
                               { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
                               { label: 'ResetPassword', link: '/dropins/user-auth/containers/reset-password/' },
                               { label: 'SignIn', link: '/dropins/user-auth/containers/sign-in/' },
@@ -692,13 +699,13 @@ async function config() {
                           { label: 'Wishlist dictionary', link: '/dropins/wishlist/dictionary/' },
                           { label: 'Wishlist functions', link: '/dropins/wishlist/functions/' },
                           { label: 'Events', link: '/dropins/wishlist/events/' },
-                          { label: 'Containers', link: '/dropins/wishlist/containers/' },
                           { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
                           { label: 'Wishlist styling', link: '/dropins/wishlist/styles/' },
                           {
                             label: 'Wishlist containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/wishlist/containers/' },
                               { label: 'Wishlist Container', link: '/dropins/wishlist/containers/wishlist/' },
                               { label: 'WishlistAlert', link: '/dropins/wishlist/containers/wishlist-alert/' },
                               { label: 'WishlistItem', link: '/dropins/wishlist/containers/wishlist-item/' },
