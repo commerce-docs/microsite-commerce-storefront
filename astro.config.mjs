@@ -452,6 +452,7 @@ async function config() {
                             collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/checkout/containers/' },
+                              { label: 'Checkout overview', link: '/dropins/checkout/containers/overview/' },
                               { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
                               { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                               { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
