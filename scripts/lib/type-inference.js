@@ -106,7 +106,7 @@ export class TypeInferenceChecklist {
                 const content = readFileSync(filePath, 'utf-8');
 
                 // Find where our event is emitted
-                const emitPattern = new RegExp(`emit\\(['"\`]${eventName.replace(/\//g, '\\/')}['"\`],\\s*([\\w]+)\\)`, 'g');
+                const emitPattern = new RegExp(`emit\\(['"\`]${this.escapeRegExp(eventName)}['"\`],\\s*([\\w]+)\\)`, 'g');
                 const match = emitPattern.exec(content);
 
                 if (match) {
@@ -175,7 +175,7 @@ export class TypeInferenceChecklist {
                 const content = readFileSync(filePath, 'utf-8');
 
                 // Find event.on() calls for this event
-                const listenerPattern = new RegExp(`on\\(['"\`]${eventName.replace(/\//g, '\\/')}['"\`],\\s*\\(([^)]+)\\)\\s*=>`, 'g');
+                const listenerPattern = new RegExp(`on\\(['"\`]${this.escapeRegExp(eventName)}['"\`],\\s*\\(([^)]+)\\)\\s*=>`, 'g');
                 const match = listenerPattern.exec(content);
 
                 if (match) {
@@ -227,7 +227,7 @@ export class TypeInferenceChecklist {
                 const content = readFileSync(filePath, 'utf-8');
 
                 // Look for emit calls in tests with example data
-                const emitPattern = new RegExp(`emit\\(['"\`]${eventName.replace(/\//g, '\\/')}['"\`],\\s*\\{([^}]+)\\}\\)`, 'g');
+                const emitPattern = new RegExp(`emit\\(['"\`]${this.escapeRegExp(eventName)}['"\`],\\s*\\{([^}]+)\\}\\)`, 'g');
                 const match = emitPattern.exec(content);
 
                 if (match) {
@@ -237,7 +237,7 @@ export class TypeInferenceChecklist {
                 }
 
                 // Look for type assertions in tests
-                const assertPattern = new RegExp(`expect\\(events\\.emit\\).*['"\`]${eventName.replace(/\//g, '\\/')}['"\`]`, 'g');
+                const assertPattern = new RegExp(`expect\\(events\\.emit\\).*['"\`]${this.escapeRegExp(eventName)}['"\`]`, 'g');
                 if (assertPattern.test(content)) {
                     this.addLog(`  📝 Found test assertions for this event`);
                 }
@@ -316,7 +316,7 @@ export class TypeInferenceChecklist {
                 const content = readFileSync(filePath, 'utf-8');
 
                 // Find emit for this event
-                const emitPattern = new RegExp(`emit\\(['"\`]${eventName.replace(/\//g, '\\/')}['"\`],\\s*([\\w]+)\\)`, 'g');
+                const emitPattern = new RegExp(`emit\\(['"\`]${this.escapeRegExp(eventName)}['"\`],\\s*([\\w]+)\\)`, 'g');
                 const match = emitPattern.exec(content);
 
                 if (match) {
@@ -485,7 +485,7 @@ export class TypeInferenceChecklist {
                 const content = readFileSync(filePath, 'utf-8');
 
                 // Find if event is emitted in this file
-                const emitPattern = new RegExp(`emit\\(['"\`]${eventName.replace(/\//g, '\\/')}['"\`]`, 'g');
+                const emitPattern = new RegExp(`emit\\(['"\`]${this.escapeRegExp(eventName)}['"\`]`, 'g');
                 if (!emitPattern.test(content)) continue;
 
                 // Look for function signature with return type
