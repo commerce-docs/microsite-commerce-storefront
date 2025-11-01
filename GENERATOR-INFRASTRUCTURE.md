@@ -138,8 +138,26 @@ node scripts/validate-function-types.js
   "generate:all": "node scripts/generate-all-docs.js",
   "validate:types": "node scripts/validate-all-types.js",
   "test:generators": "node scripts/test-generators.js",
-  "upstream:issues": "node scripts/generate-upstream-issues.js"
+  "upstream:issues": "node scripts/generate-upstream-issues.js",
+  "rollback:docs": "node scripts/rollback-generated-docs.js"
 }
+```
+
+### Generator Workflow
+
+```bash
+# 1. Generate documentation
+npm run generate:all
+
+# 2. Review generated files
+# (check git status, review MDX files)
+
+# 3. If needed, rollback and iterate
+npm run rollback:docs
+
+# 4. When satisfied, commit
+git add src/content/docs/dropins/
+git commit -m "docs: Update generated documentation"
 ```
 
 ## Metrics
