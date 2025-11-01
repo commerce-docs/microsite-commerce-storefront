@@ -74,7 +74,9 @@ export class TypeInferenceChecklist {
         }
 
         const content = readFileSync(eventsTypePath, 'utf-8');
-        const pattern = new RegExp(`['"\`]${eventName.replace(/\//g, '\\/')}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
+        // Escape all regex special characters in eventName
+        const escapedEventName = eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(`['"\`]${escapedEventName}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
         const match = content.match(pattern);
 
         if (match) {
