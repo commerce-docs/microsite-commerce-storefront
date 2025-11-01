@@ -70,7 +70,6 @@ async function config() {
       '/customize': `${basePath}/dropins/all/introduction`,
       '/dropins': `${basePath}/dropins/all/introduction`,
       '/dropins/cart/cart-introduction': `${basePath}/dropins/cart`,
-      '/dropins/cart/cart-containers': `${basePath}/dropins/cart/`,
       '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
       '/dropins/user-account/useraccount-introduction': `${basePath}/dropins/user-account`,
       '/dropins/user-auth/userauth-introduction': `${basePath}/dropins/user-auth`,
@@ -453,7 +452,6 @@ async function config() {
                             collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/checkout/containers/' },
-                              { label: 'Checkout overview', link: '/dropins/checkout/containers/overview/' },
                               { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
                               { label: 'BillToShippingAddress', link: '/dropins/checkout/containers/bill-to-shipping-address/' },
                               { label: 'Checkout EstimateShipping', link: '/dropins/checkout/containers/estimate-shipping/' },
