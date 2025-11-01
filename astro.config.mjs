@@ -587,7 +587,6 @@ async function config() {
                           { label: 'Discovery styling', link: '/dropins/product-discovery/styles/' },
                           { label: 'Discovery functions', link: '/dropins/product-discovery/functions/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
-                          { label: 'Containers', link: '/dropins/product-discovery/containers/' },
                           { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
@@ -595,6 +594,7 @@ async function config() {
                             label: 'Product Discovery containers',
                             collapsed: false,
                             items: [
+                              { label: 'Overview', link: '/dropins/product-discovery/containers/' },
                               { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
                               { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
                               { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
