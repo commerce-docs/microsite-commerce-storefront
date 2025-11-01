@@ -135,6 +135,7 @@ async function config() {
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
       '/dropins/all/eventbus': `${basePath}/dropins/all/events`,
       '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
+      '/dropins/checkout/event-handling': `${basePath}/dropins/all/events`,
       '/dropins/other/recommendations': `${basePath}/dropins/recommendations`,
       '/dropins/other/search': `${basePath}/dropins/product-discovery`,
       '/dropins/all/localizing': `${basePath}/dropins/all/labeling`,
