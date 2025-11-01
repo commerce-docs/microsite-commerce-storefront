@@ -397,7 +397,6 @@ async function config() {
                           { label: 'Cart functions', link: '/dropins/cart/functions/' },
                           { label: 'Events', link: '/dropins/cart/events/' },
                           { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
-                          { label: 'Cart dictionary', link: '/dropins/cart/dictionary/' },
                           {
                             label: 'Cart Containers',
                             collapsed: false,
