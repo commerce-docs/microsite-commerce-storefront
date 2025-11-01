@@ -35,258 +35,37 @@ import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion, toKebabCase, capitalize } from './lib/utils.js';
 import { logger } from './lib/logger.js';
 
+// Import Phase 2 shared libraries
+import { extractPropsFromComponent } from './lib/react/props-extractor.js';
+import { generatePropertyDescription } from './lib/description-generator.js';
+import { generatePropertyTable, generateSlotsTable } from './lib/markdown/table-generator.js';
+import { generateReactExample } from './lib/markdown/example-generator.js';
+
 const projectRoot = getProjectRoot();
 
 // ============================================================================
 // UNIQUE SCANNING LOGIC
 // ============================================================================
-
-/**
- * Extract JSDoc description from a comment block
- */
-function extractJSDocDescription(text, propertyName) {
-    // Find the property position first
-    const propIndex = text.indexOf(propertyName);
-    if (propIndex === -1) return '';
-
-    // Look backwards from the property for the closest JSDoc comment (within 500 chars)
-    const searchStart = Math.max(0, propIndex - 500);
-    const searchText = text.substring(searchStart, propIndex);
-
-    // Find the last JSDoc comment before the property
-    const jsDocPattern = /\/\*\*([\s\S]*?)\*\//g;
-    let lastMatch = null;
-    let match;
-
-    while ((match = jsDocPattern.exec(searchText)) !== null) {
-        lastMatch = match;
-    }
-
-    if (lastMatch) {
-        // Clean up JSDoc comment
-        const comment = lastMatch[1]
-            .split('\n')
-            .map(line => {
-                // Remove leading * and whitespace
-                return line.replace(/^\s*\*\s?/, '').trim();
-            })
-            .filter(line => {
-                // Remove JSDoc tags like @param, @returns, etc.
-                return line && !line.startsWith('@');
-            })
-            .join(' ')
-            .trim();
-
-        return comment || '';
-    }
-
-    return '';
-}
-
-/**
- * Generate a description for a property based on its name and type
- */
-function generatePropertyDescription(propertyName, propertyType) {
-    // Common prop patterns
-    if (propertyName === 'className') {
-        return 'Additional CSS classes to apply to the container';
-    }
-    if (propertyName === 'children') {
-        return 'Child elements to render within the container';
-    }
-    if (propertyName === 'testId') {
-        return 'Test ID for automated testing';
-    }
-
-    // Action handlers
-    if (propertyName.startsWith('on')) {
-        const action = propertyName.substring(2);
-        return `Callback function triggered when ${action.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    }
-
-    // Boolean flags
-    if (propertyType.includes('boolean')) {
-        if (propertyName.startsWith('is')) {
-            const state = propertyName.substring(2);
-            return `Whether the ${state.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} state is active`;
-        }
-        if (propertyName.startsWith('show')) {
-            const element = propertyName.substring(4);
-            return `Controls visibility of ${element.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-        }
-        if (propertyName.startsWith('enable')) {
-            const feature = propertyName.substring(6);
-            return `Enables or disables ${feature.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-        }
-    }
-
-    // Text/content props
-    if (propertyType.includes('string')) {
-        if (propertyName.endsWith('Text')) {
-            const context = propertyName.replace(/Text$/, '');
-            return `Text content for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-        }
-        if (propertyName.endsWith('Label')) {
-            const context = propertyName.replace(/Label$/, '');
-            return `Label text for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-        }
-        if (propertyName.endsWith('Placeholder')) {
-            const context = propertyName.replace(/Placeholder$/, '');
-            return `Placeholder text for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-        }
-    }
-
-    // URL/link props
-    if (propertyName.endsWith('Url') || propertyName.endsWith('Href')) {
-        const context = propertyName.replace(/(Url|Href)$/, '');
-        return `URL for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    }
-
-    // Data props
-    if (propertyName.endsWith('Data')) {
-        const context = propertyName.replace(/Data$/, '');
-        return `Data object for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    }
-
-    // Configuration props
-    if (propertyName.endsWith('Config')) {
-        const context = propertyName.replace(/Config$/, '');
-        return `Configuration options for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    }
-
-    // Options/items props
-    if (propertyName.endsWith('Options') || propertyName.endsWith('Items')) {
-        const context = propertyName.replace(/(Options|Items)$/, '');
-        return `Available options for ${context.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`;
-    }
-
-    // Generic fallback
-    const readable = propertyName
-        .replace(/([A-Z])/g, ' $1')
-        .toLowerCase()
-        .trim();
-
-    return `Configuration for ${readable}`;
-}
-
-/**
- * Parse Props interface to extract properties
- */
-function parsePropsInterface(interfaceContent, fullText) {
-    const props = [];
-
-    // Match property definitions (property: type, property?: type, property?: type | null)
-    const propertyPattern = /(\w+)\??\s*:\s*([^;,]+)/g;
-    let match;
-
-    while ((match = propertyPattern.exec(interfaceContent)) !== null) {
-        const propertyName = match[1];
-        const propertyType = match[2].trim();
-
-        // Skip slots (we handle those separately)
-        if (propertyName.toLowerCase().includes('slot')) {
-            continue;
-        }
-
-        // Check if property is required (no ? after name)
-        const required = !interfaceContent.includes(`${propertyName}?`);
-
-        // Try to get JSDoc description
-        let description = extractJSDocDescription(fullText, propertyName);
-
-        // If no JSDoc, generate a description
-        if (!description) {
-            description = generatePropertyDescription(propertyName, propertyType);
-        }
-
-        props.push({
-            name: propertyName,
-            type: propertyType,
-            required,
-            description
-        });
-    }
-
-    return props;
-}
-
-/**
- * Extract slots from Props interface
- */
-function extractSlotsFromInterface(interfaceContent) {
-    const slots = [];
-
-    // Match slot definitions (property containing "Slot" in name)
-    const slotPattern = /(\w*[Ss]lot\w*)\??\s*:\s*([^;,]+)/g;
-    let match;
-
-    while ((match = slotPattern.exec(interfaceContent)) !== null) {
-        const slotName = match[1];
-        const slotType = match[2].trim();
-
-        // Check if slot is required
-        const required = !interfaceContent.includes(`${slotName}?`);
-
-        slots.push({
-            name: slotName,
-            type: slotType,
-            required
-        });
-    }
-
-    return slots;
-}
-
-/**
- * Find Props interface in external type files
- */
-function findPropsInTypeFiles(repoPath, containerName) {
-    const possiblePaths = [
-        join(repoPath, 'src', 'containers', containerName, 'types.ts'),
-        join(repoPath, 'src', 'containers', containerName, `${containerName}.types.ts`),
-        join(repoPath, 'src', 'types', 'containers.ts'),
-        join(repoPath, 'src', 'types', `${containerName}.ts`)
-    ];
-
-    for (const path of possiblePaths) {
-        if (existsSync(path)) {
-            const content = readFileSync(path, 'utf8');
-            const propsInterfaceMatch = content.match(/export interface \w*Props\s*{([^}]+)}/);
-            if (propsInterfaceMatch) {
-                return { content: propsInterfaceMatch[1], fullText: content };
-            }
-        }
-    }
-
-    return null;
-}
+// Note: Most extraction logic has been moved to shared Phase 2 libraries:
+// - extractPropsFromComponent() - from lib/react/props-extractor.js
+// - generatePropertyDescription() - from lib/description-generator.js
 
 /**
  * Extract container information from a file
+ * Uses shared props-extractor library
  */
 function extractContainerInfo(filePath, containerName, repoPath) {
     try {
-        const content = readFileSync(filePath, 'utf8');
-
-        // Try to find Props interface in the same file
-        let propsInterfaceContent = '';
-        let fullText = content;
-
-        const propsInterfaceMatch = content.match(/interface \w*Props\s*{([^}]+)}/);
-        if (propsInterfaceMatch) {
-            propsInterfaceContent = propsInterfaceMatch[1];
-        } else {
-            // Look in external type files
-            const externalProps = findPropsInTypeFiles(repoPath, containerName);
-            if (externalProps) {
-                propsInterfaceContent = externalProps.content;
-                fullText = externalProps.fullText;
+        // Use shared library to extract props and slots
+        const { props, slots } = extractPropsFromComponent(
+            filePath,
+            containerName,
+            repoPath,
+            {
+                includeSlots: false,  // We extract slots separately
+                descriptionGenerator: generatePropertyDescription
             }
-        }
-
-        // Parse props and slots
-        const props = propsInterfaceContent ? parsePropsInterface(propsInterfaceContent, fullText) : [];
-        const slots = propsInterfaceContent ? extractSlotsFromInterface(propsInterfaceContent) : [];
+        );
 
         // Generate a basic description
         const description = `The ${containerName} container component for the drop-in.`;
@@ -346,98 +125,30 @@ function scanForContainers(repoPath) {
 // ============================================================================
 // UNIQUE GENERATION LOGIC
 // ============================================================================
+// Note: Most generation logic has been moved to shared Phase 2 libraries:
+// - generatePropertyTable() - from lib/markdown/table-generator.js
+// - generateSlotsTable() - from lib/markdown/table-generator.js
+// - generateReactExample() - from lib/markdown/example-generator.js
 
 /**
- * Sanitize text for markdown table cells
- */
-function sanitizeForMarkdown(text) {
-    return text
-        .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
-        .replace(/\n/g, ' ')           // Remove line breaks
-        .replace(/\r/g, '')            // Remove carriage returns
-        .replace(/\|/g, '\\|')         // Escape pipes
-        .replace(/\*/g, '\\*')         // Escape asterisks
-        .replace(/\[/g, '\\[')         // Escape brackets
-        .replace(/\]/g, '\\]')         // Escape brackets
-        .replace(/\s+/g, ' ')          // Collapse multiple spaces
-        .trim();
-}
-
-/**
- * Generate configurations table
- */
-function generateConfigurationsTable(configurations) {
-    if (configurations.length === 0) {
-        return '| No configurations | - | - | - |';
-    }
-
-    return configurations.map(prop => {
-        const required = prop.required ? 'Yes' : 'No';
-        const type = sanitizeForMarkdown(prop.type);
-        const description = sanitizeForMarkdown(prop.description);
-        return `| \`${prop.name}\` | \`${type}\` | ${required} | ${description} |`;
-    }).join('\n');
-}
-
-/**
- * Generate slots content
+ * Generate slots content section
+ * Uses shared table generator for slots table
  */
 function generateSlotsContent(containerName, slots) {
     if (slots.length === 0) {
         return 'This container does not currently expose any customizable slots.';
     }
 
-    let content = 'This container exposes the following slots for customization:\n\n';
+    // Add descriptions to slots for the table
+    const slotsWithDescriptions = slots.map(slot => ({
+        ...slot,
+        description: `Custom slot for rendering ${slot.name.replace(/Slot$/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`
+    }));
 
-    slots.forEach(slot => {
-        content += `### \`${slot.name}\`\n\n`;
-        content += `**Type**: \`${slot.type}\`\n\n`;
-        content += `**Required**: ${slot.required ? 'Yes' : 'No'}\n\n`;
-        content += `Custom slot for rendering ${slot.name.replace(/Slot$/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}.\n\n`;
-    });
+    let content = 'This container exposes the following slots for customization:\n\n';
+    content += generateSlotsTable(slotsWithDescriptions);
 
     return content;
-}
-
-/**
- * Generate usage example
- */
-function generateUsageExample(containerName, configurations, repoConfig) {
-    const kebabName = toKebabCase(containerName);
-
-    let example = `\`\`\`jsx
-import { ${containerName} } from '${repoConfig.packageName}';
-
-export default function MyComponent() {
-  return (
-    <${containerName}`;
-
-    // Add example props
-    if (configurations.length > 0) {
-        // Show first 3 required props as examples
-        const requiredProps = configurations.filter(c => c.required).slice(0, 3);
-        if (requiredProps.length > 0) {
-            example += '\n';
-            requiredProps.forEach(prop => {
-                if (prop.type.includes('string')) {
-                    example += `      ${prop.name}="example"\n`;
-                } else if (prop.type.includes('boolean')) {
-                    example += `      ${prop.name}={true}\n`;
-                } else if (prop.type.includes('number')) {
-                    example += `      ${prop.name}={123}\n`;
-                } else if (prop.type.includes('()')) {
-                    example += `      ${prop.name}={() => console.log('${prop.name}')}\n`;
-                } else {
-                    example += `      ${prop.name}={data}\n`;
-                }
-            });
-            example += '    ';
-        }
-    }
-
-    example += '/>\n  );\n}\n\`\`\`';
-
-    return example;
 }
 
 /**
@@ -457,18 +168,23 @@ function generateContainersMDX(repoName, repoConfig, containers, version, enrich
     for (const containerInfo of containers) {
         const enrichment = enrichmentData?.[containerInfo.containerName] || null;
 
-        // Build configurations table
-        const configurationsTable = generateConfigurationsTable(containerInfo.props);
+        // Build configurations table using shared library
+        const configurationsTable = generatePropertyTable(containerInfo.props, {
+            nowrapColumns: [0, 1],
+            emptyMessage: 'No configurations'
+        });
 
         // Build slots content
         const slotsContent = generateSlotsContent(containerInfo.containerName, containerInfo.slots);
 
-        // Build usage example
-        const usageExample = generateUsageExample(
-            containerInfo.containerName,
-            containerInfo.props,
-            repoConfig
-        );
+        // Build usage example using shared library
+        const usageExample = generateReactExample({
+            componentName: containerInfo.containerName,
+            packageName: repoConfig.packageName,
+            props: containerInfo.props,
+            selfClosing: true,
+            maxProps: 3
+        });
 
         // Use enriched description if available
         const description = enrichment?.description || containerInfo.description;
