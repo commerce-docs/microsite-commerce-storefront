@@ -240,43 +240,6 @@ async function config() {
               content: 'NwoVbL9MrtJAa4vdfMC0vJmKV3Hvuc4L_UHlv4Uzjgk',
             },
           },
-          {
-            tag: 'script',
-            content: `
-              const initializeAutoSelectFirstTopic = () => {
-                const sidebar = document.querySelector("#starlight__sidebar");
-                if (!sidebar) {
-                  setTimeout(initializeAutoSelectFirstTopic, 100);
-                  return;
-                }
-                const processedSections = new Set();
-                const handleSectionToggle = (event) => {
-                  if (event.target.tagName === "DETAILS") {
-                    const detailsElement = event.target;
-                    setTimeout(() => {
-                      if (detailsElement.open) {
-                        const sectionId = detailsElement.outerHTML.substring(0, 100);
-                        if (processedSections.has(sectionId)) return;
-                        const firstLink = detailsElement.querySelector("ul a[href]");
-                        if (firstLink?.href) {
-                          processedSections.add(sectionId);
-                          setTimeout(() => processedSections.delete(sectionId), 2000);
-                          window.location.href = firstLink.href;
-                        }
-                      }
-                    }, 50);
-                  }
-                };
-                sidebar.addEventListener("toggle", handleSectionToggle, true);
-              };
-              if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", initializeAutoSelectFirstTopic);
-              } else {
-                initializeAutoSelectFirstTopic();
-              }
-              window.addEventListener("load", () => setTimeout(initializeAutoSelectFirstTopic, 100));
-            `,
-          },
         ],
 
         title: 'Adobe Commerce Storefront',
