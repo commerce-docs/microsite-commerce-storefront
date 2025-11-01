@@ -533,7 +533,6 @@ async function config() {
                             ],
                           },
                           { label: 'Functions', link: '/dropins/product-details/functions/' },
-                          { label: 'Slots', link: '/dropins/product-details/slots/' },
                           { label: 'Events', link: '/dropins/product-details/events/' },
                           { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
                         ],
