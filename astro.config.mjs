@@ -479,7 +479,6 @@ async function config() {
                         items: [
                           { label: 'Payment Services overview', link: '/dropins/payment-services/' },
                           { label: 'Payment Services installation', link: '/dropins/payment-services/installation/' },
-                          { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
