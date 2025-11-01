@@ -74,7 +74,7 @@ export class TypeInferenceChecklist {
         }
 
         const content = readFileSync(eventsTypePath, 'utf-8');
-        const pattern = new RegExp(`['"\`]${eventName.replace(/\//g, '\\/')}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
+        const pattern = new RegExp(`['"\`]${this.escapeRegExp(eventName)}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
         const match = content.match(pattern);
 
         if (match) {
@@ -134,7 +134,7 @@ export class TypeInferenceChecklist {
                             const eventsTypePath = join(this.dropinPath, 'src/types/events.d.ts');
                             if (existsSync(eventsTypePath)) {
                                 const eventsContent = readFileSync(eventsTypePath, 'utf-8');
-                                const typePattern = new RegExp(`['"\`]${otherEventName.replace(/\//g, '\\/')}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
+                                const typePattern = new RegExp(`['"\`]${this.escapeRegExp(otherEventName)}['"\`]\\s*:\\s*([^;,}]+[^;,}\\n]*)`);
                                 const typeMatch = eventsContent.match(typePattern);
 
                                 if (typeMatch) {
@@ -598,6 +598,16 @@ export class TypeInferenceChecklist {
             this.addLog(`  ⚠️  Ternary inference error: ${error.message}`);
             return null;
         }
+    }
+    /**
+     * Escape string for use in RegExp constructor
+     * (escapes all regex special characters)
+     * @param {string} s
+     * @returns {string}
+     */
+    escapeRegExp(s) {
+        // From MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }
 
