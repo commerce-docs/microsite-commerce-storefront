@@ -402,6 +402,7 @@ async function config() {
                           { label: 'Styling', link: '/dropins/checkout/styles/' },
                           { label: 'Extending', link: '/dropins/checkout/extending/' },
                           { label: 'Error handling', link: '/dropins/checkout/error-handling/' },
+                          { label: 'Event handling', link: '/dropins/checkout/event-handling/' },
                           { label: 'Utility functions', link: '/dropins/checkout/utilities/' },
                           { label: 'Slots', link: '/dropins/checkout/slots/' },
                           { label: 'Functions', link: '/dropins/checkout/functions/' },
