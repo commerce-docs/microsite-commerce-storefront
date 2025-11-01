@@ -12,9 +12,16 @@
  * USAGE:
  * - Run all generators: npm run generate-all-docs
  * - Test mode (dry run): npm run generate-all-docs -- --dry-run
+ * - Skip link verification: npm run generate-all-docs -- --skip-link-check
  */
 
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, '..');
 
 const generators = [
     {
@@ -74,6 +81,7 @@ const generators = [
 ];
 
 const isDryRun = process.argv.includes('--dry-run');
+const skipLinkCheck = process.argv.includes('--skip-link-check');
 
 console.log('\n' + '='.repeat(70));
 console.log('  MASTER DOCUMENTATION GENERATOR');
@@ -85,12 +93,40 @@ if (isDryRun) {
     console.log('🔍 DRY RUN MODE - No generators will be executed\n');
 }
 
+if (skipLinkCheck) {
+    console.log('⚠️  Link verification will be SKIPPED\n');
+}
+
 console.log('Generators to run:\n');
 generators.forEach((gen, index) => {
     console.log(`  ${index + 1}. ${gen.name}`);
     console.log(`     ${gen.description}`);
     console.log(`     Estimated: ${gen.estimatedTime}\n`);
 });
+
+// Pre-flight check: Verify enrichment file links
+if (!isDryRun && !skipLinkCheck) {
+    console.log('─'.repeat(70));
+    console.log('\n🔍 PRE-FLIGHT CHECK: Verifying enrichment file links...\n');
+    console.log('   This ensures all GraphQL documentation URLs are valid.');
+    console.log('   (Skip with --skip-link-check if needed)\n');
+
+    try {
+        execSync('node scripts/verify-enrichment-links.js', {
+            stdio: 'inherit',
+            cwd: projectRoot
+        });
+        console.log('\n✅ All enrichment file links are valid!\n');
+    } catch (error) {
+        console.error('\n❌ Link verification failed!');
+        console.error('\n⚠️  Some URLs in enrichment files are broken.');
+        console.error('   Please fix the broken links before generating documentation.\n');
+        console.error('   Options:');
+        console.error('   1. Fix the URLs in enrichment files and try again');
+        console.error('   2. Run with --skip-link-check to generate anyway (not recommended)\n');
+        process.exit(1);
+    }
+}
 
 if (!isDryRun) {
     console.log('Starting generation in 3 seconds...');
