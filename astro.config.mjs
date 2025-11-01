@@ -445,7 +445,6 @@ async function config() {
                           { label: 'Checkout functions', link: '/dropins/checkout/functions/' },
                           { label: 'Events', link: '/dropins/checkout/events/' },
                           { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
-                          { label: 'Checkout dictionary', link: '/dropins/checkout/dictionary/' },
                           {
                             label: 'Checkout Containers',
                             collapsed: false,
@@ -488,7 +487,6 @@ async function config() {
                           { label: 'Order functions', link: '/dropins/order/functions/' },
                           { label: 'Events', link: '/dropins/order/events/' },
                           { label: 'Dictionary', link: '/dropins/order/dictionary/' },
-                          { label: 'Order dictionary', link: '/dropins/order/dictionary/' },
                           {
                             label: 'Order containers',
                             collapsed: false,
@@ -588,7 +586,6 @@ async function config() {
                           { label: 'Discovery functions', link: '/dropins/product-discovery/functions/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
                           { label: 'Dictionary', link: '/dropins/product-discovery/dictionary/' },
-                          { label: 'Discovery dictionary', link: '/dropins/product-discovery/dictionary/' },
                           { label: 'Discovery slots', link: '/dropins/product-discovery/slots/' },
                           {
                             label: 'Product Discovery containers',
@@ -614,7 +611,6 @@ async function config() {
                           { label: 'Events', link: '/dropins/recommendations/events/' },
                           { label: 'Dictionary', link: '/dropins/recommendations/dictionary/' },
                           { label: 'Recommendations slots', link: '/dropins/recommendations/slots/' },
-                          { label: 'Recommendations dictionary', link: '/dropins/recommendations/dictionary/' },
                           {
                             label: 'Recommendation containers',
                             collapsed: false,
@@ -635,7 +631,6 @@ async function config() {
                           { label: 'Account functions', link: '/dropins/user-account/functions/' },
                           { label: 'Events', link: '/dropins/user-account/events/' },
                           { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
-                          { label: 'Account dictionary', link: '/dropins/user-account/dictionary/' },
                           { label: 'Account sidebar', link: '/dropins/user-account/sidebar/' },
                           {
                             label: 'Account tutorials',
@@ -669,7 +664,6 @@ async function config() {
                           { label: 'Auth functions', link: '/dropins/user-auth/auth-functions/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
                           { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
-                          { label: 'Auth dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
                             label: 'Authentication containers',
                             collapsed: false,
@@ -691,7 +685,6 @@ async function config() {
                         items: [
                           { label: 'Wishlist overview', link: '/dropins/wishlist/' },
                           { label: 'Wishlist installation', link: '/dropins/wishlist/installation/' },
-                          { label: 'Wishlist dictionary', link: '/dropins/wishlist/dictionary/' },
                           { label: 'Wishlist functions', link: '/dropins/wishlist/functions/' },
                           { label: 'Events', link: '/dropins/wishlist/events/' },
                           { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
