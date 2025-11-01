@@ -559,7 +559,7 @@ async function config() {
                           { label: 'Styles', link: '/dropins/product-details/styles/' },
                           {
                             label: 'Containers',
-                            collapsed: true,
+                            collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/product-details/containers/' },
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
