@@ -17,10 +17,9 @@
  * - Called automatically by prebuild hook
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -49,7 +48,7 @@ function getVersion(dropinKey) {
             return '1.0.0'; // Fallback
         }
         const packageJson = JSON.parse(
-            execSync(`cat ${boilerplatePath}/package.json`, { encoding: 'utf8' })
+            readFileSync(join(boilerplatePath, 'package.json'), { encoding: 'utf8' })
         );
         const packageName = `@dropins/storefront-${dropinKey}`;
         const version = packageJson.dependencies?.[packageName] || '1.0.0';
