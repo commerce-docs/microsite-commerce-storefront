@@ -106,12 +106,18 @@ export function updateSidebarForSlots(dropinName, repoConfig) {
 /**
  * Update sidebar navigation for containers
  * 
+ * Note: Container entries are manually maintained in the collapsible groups
+ * within astro.config.mjs. We don't auto-add a standalone "Containers" link
+ * to avoid duplicates.
+ * 
  * @param {string} dropinName - Name of the drop-in
  * @param {Object} repoConfig - Repository configuration
  * @returns {boolean} True if successful
  */
 export function updateSidebarForContainers(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Containers', 'Events');
+    // Don't add standalone Containers link - it's part of the collapsible groups
+    console.log(`  ℹ️  Sidebar entry for ${repoConfig.displayName} Containers is manually maintained`);
+    return true;
 }
 
 /**
