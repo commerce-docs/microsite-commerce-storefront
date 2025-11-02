@@ -26,8 +26,12 @@ import { join } from 'path';
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadInitializationEnrichments } from './lib/enrichment.js';
 import { updateSidebarForInitialization } from './lib/sidebar.js';
-import { readTemplate, replacePlaceholders, escapeMDX } from './lib/markdown.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
+
+// Import Phase 2 shared libraries
+import { generateConfigDescription } from './lib/description-generator.js';
+import { generateConfigTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -78,7 +82,7 @@ function extractConfigProps(repoPath) {
             customOptions.push({
                 name: propName.trim(),
                 type: propType.trim(),
-                description: generateDescription(propName.trim(), propType.trim())
+                description: generateConfigDescription(propName.trim(), propType.trim())
             });
         }
     }
@@ -86,33 +90,8 @@ function extractConfigProps(repoPath) {
     return customOptions;
 }
 
-/**
- * Generate description for a config property
- * 
- * @param {string} propName - Property name
- * @param {string} propType - Property type
- * @returns {string} Generated description
- */
-function generateDescription(propName, propType) {
-    const name = propName.toLowerCase();
-
-    if (name.includes('model')) return 'Custom data models for type transformations';
-    if (name.includes('lang')) return 'Language definitions for internationalization';
-    if (name.includes('endpoint')) return 'API endpoint configuration';
-    if (name.includes('url')) return 'Service URL configuration';
-    if (name.includes('token')) return 'Authentication token';
-    if (name.includes('auth')) return 'Authentication configuration';
-    if (name.includes('header')) return 'Custom HTTP headers';
-    if (name.includes('timeout')) return 'Request timeout in milliseconds';
-    if (name.includes('retry')) return 'Retry configuration for failed requests';
-    if (name.includes('cache')) return 'Caching configuration';
-
-    if (propType.includes('boolean')) return `Enable or disable ${propName}`;
-    if (propType.includes('number')) return `Numeric value for ${propName}`;
-    if (propType.includes('string')) return `String value for ${propName}`;
-
-    return `Configuration for ${propName}`;
-}
+// Note: Description generation has been moved to shared Phase 2 library:
+// - generateConfigDescription() - from lib/description-generator.js
 
 /**
  * Extract model names from data/models directory
@@ -137,32 +116,8 @@ function extractModelNames(repoPath) {
     }
 }
 
-/**
- * Generate options table markdown
- * 
- * @param {Array} customOptions - Array of custom config options
- * @returns {string} Markdown table
- */
-function generateOptionsTable(customOptions) {
-    const standardOptions = [
-        { name: 'langDefinitions', type: 'LangDefinitions', description: 'Language definitions for internationalization' },
-        { name: 'models', type: 'Record<string, any>', description: 'Custom data models for type transformations' }
-    ];
-
-    const allOptions = [...standardOptions, ...customOptions];
-
-    let table = '| Option | Type | Description |\n';
-    table += '|--------|------|-------------|\n';
-
-    for (const option of allOptions) {
-        const name = escapeMDX(option.name);
-        const type = escapeMDX(option.type);
-        const desc = escapeMDX(option.description);
-        table += `| \`${name}\` | \`${type}\` | ${desc} |\n`;
-    }
-
-    return table;
-}
+// Note: Table generation has been moved to shared Phase 2 library:
+// - generateConfigTable() - from lib/markdown/table-generator.js
 
 /**
  * Scan repository for initialization data
@@ -200,8 +155,13 @@ function generateInitializationMDX(repoName, repoConfig, initData, version, enri
 
     const { configProps, models } = initData;
 
-    // Generate options table
-    const optionsTable = generateOptionsTable(configProps);
+    // Generate options table using shared library
+    const standardOptions = [
+        { name: 'langDefinitions', type: 'LangDefinitions', description: 'Language definitions for internationalization' },
+        { name: 'models', type: 'Record<string, any>', description: 'Custom data models for type transformations' }
+    ];
+    const allOptions = [...standardOptions, ...configProps];
+    const optionsTable = generateConfigTable(allOptions);
 
     // Pick first model for example, or use a generic placeholder
     const modelExample = models.length > 0 ? models[0] : 'CustomModel';
