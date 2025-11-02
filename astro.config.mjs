@@ -338,6 +338,7 @@ async function config() {
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Events', link: '/dropins/all/events/' },
+                      { label: 'Common events', link: '/dropins/all/common-events/' },
                       { label: 'Extending', link: '/dropins/all/extending/' },
                       { label: 'Creating', link: '/dropins/all/creating/' },
                     ],
@@ -478,6 +479,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/payment-services/' },
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
+                          { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
@@ -497,6 +499,7 @@ async function config() {
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
+                          { label: 'Events', link: '/dropins/personalization/events/' },
                           {
                             label: 'Containers',
                             collapsed: false,
@@ -621,7 +624,7 @@ async function config() {
                           { label: 'Overview', link: '/dropins/user-auth/' },
                           { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
                           { label: 'Slots', link: '/dropins/user-auth/slots/' },
-                          { label: 'Functions', link: '/dropins/user-auth/auth-functions/' },
+                          { label: 'Functions', link: '/dropins/user-auth/functions/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
                           { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
