@@ -338,6 +338,7 @@ async function config() {
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Events', link: '/dropins/all/events/' },
+                      { label: 'Common events', link: '/dropins/all/common-events/' },
                       { label: 'Extending', link: '/dropins/all/extending/' },
                       { label: 'Creating', link: '/dropins/all/creating/' },
                     ],
@@ -498,6 +499,7 @@ async function config() {
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
+                          { label: 'Events', link: '/dropins/personalization/events/' },
                           {
                             label: 'Containers',
                             collapsed: false,
