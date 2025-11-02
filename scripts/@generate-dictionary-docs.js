@@ -102,15 +102,100 @@ function scanForDictionary(repoPath) {
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
+/**
+ * Extract a realistic example from the dictionary for the customization guide
+ * Recursively finds string values to create a meaningful example
+ */
+function generateCustomizationExample(dictionaryJson) {
+    try {
+        const parsed = JSON.parse(dictionaryJson);
+        const topLevelKey = Object.keys(parsed)[0]; // e.g., "Cart", "PaymentServices"
+
+        if (!topLevelKey || !parsed[topLevelKey]) {
+            return null;
+        }
+
+        const componentKey = Object.keys(parsed[topLevelKey])[0]; // e.g., "MiniCart", "CreditCard"
+        if (!componentKey || !parsed[topLevelKey][componentKey]) {
+            return null;
+        }
+
+        // Recursively find string values to create example
+        const exampleObj = {};
+        exampleObj[topLevelKey] = {};
+        exampleObj[topLevelKey][componentKey] = {};
+
+        const componentData = parsed[topLevelKey][componentKey];
+        let foundCount = 0;
+        const maxKeys = 2;
+
+        // Helper to recursively find string values
+        function findStringValues(obj, path = []) {
+            if (foundCount >= maxKeys) return;
+
+            for (const key of Object.keys(obj)) {
+                if (foundCount >= maxKeys) break;
+
+                const value = obj[key];
+
+                if (typeof value === 'string' && value.trim() !== '') {
+                    // Build nested structure in example
+                    let target = exampleObj[topLevelKey][componentKey];
+                    for (const pathKey of path) {
+                        if (!target[pathKey]) target[pathKey] = {};
+                        target = target[pathKey];
+                    }
+                    target[key] = `Custom ${value}`;
+                    foundCount++;
+                } else if (typeof value === 'object' && value !== null) {
+                    // Recurse into nested objects
+                    findStringValues(value, [...path, key]);
+                }
+            }
+        }
+
+        findStringValues(componentData);
+
+        // Return formatted JSON if we found any values
+        if (foundCount > 0) {
+            return JSON.stringify(exampleObj, null, 2)
+                .split('\n')
+                .map(line => '  ' + line) // Indent for code block
+                .join('\n')
+                .trim();
+        }
+
+        return null;
+
+    } catch (error) {
+        return null;
+    }
+}
+
 function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, enrichmentData = null) {
     const template = readTemplate('dropin-dictionary.mdx');
 
     // If no dictionary found, generate placeholder page
     let dictionaryJson = '';
+    let customExample = null;
+
     if (!dictionaryData || !dictionaryData.content) {
         dictionaryJson = '{\n  "placeholder": "No dictionary file found in this drop-in"\n}';
     } else {
         dictionaryJson = dictionaryData.content;
+        customExample = generateCustomizationExample(dictionaryJson);
+    }
+
+    // If we couldn't generate a realistic example, use a generic one
+    if (!customExample) {
+        customExample = `{
+    "${repoConfig.displayName}": {
+      "Component": {
+        "heading": "My Custom Heading",
+        "buttonText": "Click Me"
+      }
+    }
+  }`;
     }
 
     // Replace placeholders
@@ -119,6 +204,7 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, en
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
         'DICTIONARY_JSON': dictionaryJson,
+        'CUSTOM_EXAMPLE': customExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'KEY_COUNT': dictionaryData?.keyCount?.toString() || '0'
     });
