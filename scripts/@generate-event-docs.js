@@ -21,6 +21,11 @@
  * - Uses: Section text, imports, REPEAT_FOR_EACH_EVENT block, placeholders
  * - Generates independently: Table contents (between START/END markers), event data
  * 
+ * ENRICHMENT FILES:
+ * - Location: _dropin-enrichments/{dropin}/events.json
+ * - Can include "overview" field for drop-in-specific introductions
+ * - Falls back to generic overview if not specified
+ * 
  * TO MODIFY TABLE STRUCTURE:
  * - Update table generation code in this script (search for "Generate emits table")
  * - Update template example rows to match (for documentation purposes)
@@ -62,6 +67,8 @@ function cloneOrUpdateBoilerplate() {
         execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
     } else {
         console.log(`  Updating boilerplate...`);
+        // Reset any local changes before pulling
+        execFileSync('git', ['reset', '--hard', 'HEAD'], { cwd: boilerplatePath, stdio: 'pipe' });
         execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
 
         console.log(`  Updating dependencies...`);
@@ -105,7 +112,12 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
         } catch (error) {
             // If tag with 'v' doesn't exist, try without
             console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            try {
+                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            } catch (secondError) {
+                console.error(`  ⚠️  Warning: Could not checkout ${cleanVersion}, repository may be at outdated version`);
+                // Continue anyway - the repo might already be at the correct version
+            }
         }
     }
 
@@ -484,82 +496,82 @@ function generateEventDescription(eventName, emits, listeners) {
 
     // Common patterns we can safely infer from naming conventions
     if (name.includes('/initialized')) {
-        return `${verb} the component completes initialization`;
+        return `${verb} the component completes initialization.`;
     }
     if (name.includes('/updated')) {
-        return `${verb} the component state is updated`;
+        return `${verb} the component state is updated.`;
     }
     if (name.includes('/added')) {
-        return `${verb} an item is added`;
+        return `${verb} an item is added.`;
     }
     if (name.includes('/removed')) {
-        return `${verb} an item is removed`;
+        return `${verb} an item is removed.`;
     }
     if (name.includes('/merged')) {
-        return `${verb} data is merged`;
+        return `${verb} data is merged.`;
     }
     if (name.includes('/reset')) {
-        return `${verb} the component state is reset`;
+        return `${verb} the component state is reset.`;
     }
     if (name.includes('/changed')) {
-        return `${verb} a change occurs`;
+        return `${verb} a change occurs.`;
     }
     if (name.includes('/data')) {
-        return `${verb} data is available or changes`;
+        return `${verb} data is available or changes.`;
     }
     if (name.includes('/values')) {
-        return `${verb} form or configuration values change`;
+        return `${verb} form or configuration values change.`;
     }
     if (name.includes('/error')) {
-        return `${verb} an error occurs`;
+        return `${verb} an error occurs.`;
     }
     if (name.includes('/placed')) {
-        return `${verb} an order is placed`;
+        return `${verb} an order is placed.`;
     }
     if (name.includes('/alert')) {
-        return `${verb} an alert or notification is triggered`;
+        return `${verb} an alert or notification is triggered.`;
     }
     if (name.includes('/permissions')) {
-        return `${verb} permissions are updated`;
+        return `${verb} permissions are updated.`;
     }
     if (name.includes('/loading')) {
-        return `${verb} loading state changes`;
+        return `${verb} loading state changes.`;
     }
     if (name.includes('/result')) {
-        return `${verb} results are available`;
+        return `${verb} results are available.`;
     }
     if (name.includes('/valid')) {
-        return `${verb} validation state changes`;
+        return `${verb} validation state changes.`;
     }
     if (name.includes('/estimate')) {
-        return `${verb} an estimate is calculated`;
+        return `${verb} an estimate is calculated.`;
     }
     if (name.includes('setvalues')) {
-        return `${verb} values are set programmatically`;
+        return `${verb} values are set programmatically.`;
     }
     if (name === 'authenticated') {
-        return `${verb} authentication state changes`;
+        return `${verb} authentication state changes.`;
     }
     if (name === 'locale') {
-        return `${verb} locale/language changes`;
+        return `${verb} locale/language changes.`;
     }
     if (name === 'error') {
-        return `${verb} an error occurs`;
+        return `${verb} an error occurs.`;
     }
 
     // Default description if no pattern matches - use neutral, conservative language
     if (isEmitter && !isListener) {
-        return 'Emitted by this drop-in when a specific condition or state change occurs';
+        return `Emitted when a specific condition or state change occurs.`;
     } else if (isListener && !isEmitter) {
         const sourceComponent = extractSourceComponent(eventName);
         const componentName = sourceComponent.original
             ? `${sourceComponent.formatted} (\`${sourceComponent.original}\`)`
             : sourceComponent.formatted;
-        return `Fired by ${componentName} when a specific condition or state change occurs`;
+        return `Fired by ${componentName} when a specific condition or state change occurs.`;
     } else if (isBoth) {
-        return 'Emitted and consumed by this drop-in for internal and external communication';
+        return `Emitted and consumed for internal and external communication.`;
     }
-    return 'Event for component communication and state management';
+    return 'Event for component communication and state management.';
 }
 
 
@@ -710,6 +722,11 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''));
+
+    // Replace overview with enriched content or fallback to generic
+    const dropinOverview = enrichments.overview ||
+        `The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.`;
+    template = template.replace(/DROPIN_OVERVIEW/g, dropinOverview);
 
     // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
