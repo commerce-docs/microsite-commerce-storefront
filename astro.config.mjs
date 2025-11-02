@@ -498,6 +498,7 @@ async function config() {
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
+                          { label: 'Events', link: '/dropins/personalization/events/' },
                           {
                             label: 'Containers',
                             collapsed: false,
