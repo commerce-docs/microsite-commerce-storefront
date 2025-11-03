@@ -43,6 +43,7 @@ import { EnrichmentLoader } from './lib/core/enrichment-loader.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { validateAllFunctionDocs } from './lib/function-type-validator.js';
 import { generateNoFunctionsPage } from './lib/markdown/empty-state-generator.js';
+import { generatePropertyTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -1203,15 +1204,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             const parameters = parseTypeScriptParameters(signature.params);
 
             if (parameters.length > 0) {
-                functionsContent += `<TableWrapper nowrap={[0, 1]}>\n\n`;
+                // Transform parameters into format expected by generatePropertyTable
+                const tableItems = [];
 
-                // Header row
-                functionsContent += `| Parameter | Type | Req? | Description |\n`;
-                functionsContent += `|---|---|---|---|\n`;
-
-                // Parameter rows
                 parameters.forEach(param => {
-                    const required = param.optional ? 'No' : 'Yes';
                     let type = param.type;
 
                     // Check if this is an inline object type with nested properties
@@ -1224,10 +1220,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         if (nestedProps.length > 0) {
                             // Show each nested property as a separate row
                             nestedProps.forEach(nestedProp => {
-                                const nestedRequired = nestedProp.optional ? 'No' : 'Yes';
-                                let nestedType = `\`${nestedProp.type}\``;
-
-                                // Get description using parameter patterns with fallback hierarchy
                                 const description = getParameterDescription(
                                     nestedProp.name,
                                     enrichment,
@@ -1236,7 +1228,12 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                                     func.name
                                 );
 
-                                functionsContent += `| \`${nestedProp.name}\` | ${nestedType} | ${nestedRequired} | ${description} |\n`;
+                                tableItems.push({
+                                    name: nestedProp.name,
+                                    type: nestedProp.type,
+                                    required: !nestedProp.optional,
+                                    description: description
+                                });
                             });
                             return; // Skip the default handling for this parameter
                         }
@@ -1255,9 +1252,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         }
                     }
 
-                    // Wrap type in backticks for inline code
-                    type = `\`${type}\``;
-
                     // Get description using parameter patterns with fallback hierarchy
                     const description = getParameterDescription(
                         param.name,
@@ -1266,10 +1260,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         repoName,
                         func.name
                     );
-                    functionsContent += `| \`${param.name}\` | ${type} | ${required} | ${description} |\n`;
+
+                    tableItems.push({
+                        name: param.name,
+                        type: type,
+                        required: !param.optional,
+                        description: description
+                    });
                 });
 
-                functionsContent += `\n</TableWrapper>\n\n`;
+                // Use shared library to generate table
+                functionsContent += generatePropertyTable(tableItems, {
+                    nowrapColumns: [0, 1]
+                });
+                functionsContent += '\n\n';
             }
         }
 
