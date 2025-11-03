@@ -334,7 +334,8 @@ async function config() {
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
-                      { label: 'Labeling', link: '/dropins/all/labeling/' },
+                      { label: 'Labels', link: '/dropins/all/labeling/' },
+                      { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
                       { label: 'Linking', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
@@ -499,7 +500,6 @@ async function config() {
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
-                          { label: 'Events', link: '/dropins/personalization/events/' },
                           {
                             label: 'Containers',
                             collapsed: false,
@@ -892,12 +892,6 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/releases/' },
                       { label: 'Changelog', link: '/releases/changelog/' },
-                    ],
-                  },
-                  {
-                    label: 'Hot fixes',
-                    items: [
-                      { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
                     ],
                   },
                 ],
