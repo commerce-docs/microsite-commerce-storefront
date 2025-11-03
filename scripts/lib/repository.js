@@ -83,7 +83,13 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
         } catch (error) {
             // If tag doesn't exist, try without 'v' prefix
             console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            try {
+                execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            } catch (fallbackError) {
+                // If neither tag exists, clone main branch
+                console.log(`  Tag ${cleanVersion} not found, cloning main branch...`);
+                execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            }
         }
     } else {
         console.log(`  Checking out ${tag}...`);
@@ -95,7 +101,13 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
         } catch (error) {
             // If tag with 'v' doesn't exist, try without
             console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            try {
+                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            } catch (fallbackError) {
+                // If neither tag exists, fall back to main branch
+                console.log(`  Tag ${cleanVersion} not found, falling back to main branch...`);
+                execFileSync('git', ['checkout', 'main'], { cwd: dropinPath, stdio: 'pipe' });
+            }
         }
     }
 

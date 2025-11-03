@@ -274,10 +274,30 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
 
         // Match both "interface Props" and "export interface Props"
         // Also handle interfaces that extend other interfaces
-        const propsInterfaceMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{([\s\S]*?)^\s*}/m);
+        const propsInterfaceStartMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{/);
 
-        if (propsInterfaceMatch) {
-            propsInterfaceContent = propsInterfaceMatch[1];
+        if (propsInterfaceStartMatch) {
+            // Find the position right after the opening brace
+            const startPos = propsInterfaceStartMatch.index + propsInterfaceStartMatch[0].length;
+
+            // Use balanced brace matching to find the closing brace
+            let braceCount = 1;
+            let endPos = startPos;
+
+            while (endPos < content.length && braceCount > 0) {
+                const char = content[endPos];
+                if (char === '{') {
+                    braceCount++;
+                } else if (char === '}') {
+                    braceCount--;
+                }
+                endPos++;
+            }
+
+            if (braceCount === 0) {
+                // Successfully found matching closing brace
+                propsInterfaceContent = content.substring(startPos, endPos - 1);
+            }
         } else {
             // Look in external type files
             const externalProps = findPropsInTypeFiles(repoPath, componentName);
@@ -332,15 +352,38 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
  * // Returns: 'header?: SlotProps;\n    footer?: SlotProps;'
  */
 export function extractSlotsSection(interfaceContent) {
-    // Extract the slots section (handles both }; and }, endings)
-    const slotsPattern = /slots\?:\s*{([\s\S]*?)}[,;]/;
-    const slotsMatch = interfaceContent.match(slotsPattern);
+    // Find the start of the slots section
+    const slotsStartPattern = /slots\?:\s*{/;
+    const slotsStartMatch = interfaceContent.match(slotsStartPattern);
 
-    if (!slotsMatch) {
+    if (!slotsStartMatch) {
         return null;
     }
 
-    let slotsContent = slotsMatch[1].trim();
+    // Find the position right after "slots?: {"
+    const startPos = slotsStartMatch.index + slotsStartMatch[0].length;
+
+    // Use balanced brace matching to find the closing brace
+    let braceCount = 1;
+    let endPos = startPos;
+
+    while (endPos < interfaceContent.length && braceCount > 0) {
+        const char = interfaceContent[endPos];
+        if (char === '{') {
+            braceCount++;
+        } else if (char === '}') {
+            braceCount--;
+        }
+        endPos++;
+    }
+
+    if (braceCount !== 0) {
+        // Didn't find matching closing brace
+        return null;
+    }
+
+    // Extract the content between the braces (excluding the closing brace)
+    let slotsContent = interfaceContent.substring(startPos, endPos - 1).trim();
 
     // Clean up the content - keep only the slot definitions
     // Remove comments
