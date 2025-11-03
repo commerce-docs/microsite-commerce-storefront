@@ -163,6 +163,21 @@ function generateSlotsContent(containerName, slots) {
  */
 function generateContainersMDX(repoName, repoConfig, containers, version, enrichmentData = null) {
     const template = readTemplate('dropin-container.mdx');
+
+    // Validate template: Check if it contains TableWrapper around CONFIGURATIONS_TABLE
+    // This would cause nested wrappers since generatePropertyTable() already adds them
+    if (template.includes('<TableWrapper') && template.includes('CONFIGURATIONS_TABLE')) {
+        const configSection = template.substring(
+            template.indexOf('## Configuration'),
+            template.indexOf('## Slots')
+        );
+        if (configSection.includes('<TableWrapper') && configSection.includes('CONFIGURATIONS_TABLE')) {
+            logger.warn('⚠️  Template contains TableWrapper in Configuration section!');
+            logger.warn('   This will cause nested wrappers. Remove wrapper from template.');
+            logger.warn('   The generatePropertyTable() function already includes the wrapper.');
+        }
+    }
+
     const containerDocs = new Map();
 
     for (const containerInfo of containers) {
