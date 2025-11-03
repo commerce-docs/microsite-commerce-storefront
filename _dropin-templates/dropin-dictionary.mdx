@@ -6,15 +6,7 @@ sidebar:
   order: 8
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
-The **DROPIN_NAME dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. By customizing the dictionary, you can:
-
-- **Localize** the drop-in for different languages and regions
-- **Customize** labels and messages to match your brand voice
-- **Override** default text without modifying the drop-in's source code
-
-Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+The **DROPIN_NAME dictionary** contains all user-facing text and labels for localization and branding.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: DROPIN_VERSION</strong>
@@ -30,24 +22,28 @@ DICTIONARY_JSON
 
 ## How to customize
 
-You can override any of these dictionary values by creating a custom dictionary file and loading it during drop-in initialization. The drop-in will automatically deep-merge your custom values with these defaults.
+Override any keys above by creating a custom dictionary file:
 
-**For complete step-by-step instructions**, see the [Dictionary customization guide](/dropins/all/dictionaries/).
-
-**Quick example:**
-
-```javascript
-import { initialize } from 'DROPIN_PACKAGE';
-
-await initialize({
-  langDefinitions: {
-    en_US: CUSTOM_EXAMPLE
-  }
-});
+```javascript title="scripts/config/dictionaries/DROPIN_KEY-dictionary.js"
+export const DROPIN_VAR = CUSTOM_EXAMPLE;
 ```
 
-<Aside type="tip">
-You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [customization guide](/dropins/all/dictionaries/).
-</Aside>
+Then import it in your initializer:
+
+```javascript title="scripts/initializers/DROPIN_KEY.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from 'DROPIN_PACKAGE';
+import { DROPIN_VAR } from '../config/dictionaries/DROPIN_KEY-dictionary.js';
+
+const langDefinitions = {
+  default: {
+    ...DROPIN_VAR,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+**Need more?** See the [Dictionary customization guide](/dropins/all/dictionaries/) for multi-language support and deep-merge behavior, or [Labels](/dropins/all/labeling/) for the boilerplate placeholder system.
 
 {/* This documentation is auto-generated from: REPO_URL */}
