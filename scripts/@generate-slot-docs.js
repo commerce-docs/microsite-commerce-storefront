@@ -76,6 +76,7 @@ function extractContainerSlots(filePath, containerName, repoPath) {
             count: 1 // For logging
         };
     } catch (error) {
+        console.log(`    ❌ Error extracting slots from ${containerName}: ${error.message}`);
         return null;
     }
 }
