@@ -187,29 +187,108 @@ export class TypeExtractor {
                     const filePath = join(searchPath, file);
                     const content = readFileSync(filePath, 'utf8');
 
-                    // Look for interface or type definition
-                    const interfacePattern = new RegExp(
-                        `export\\s+interface\\s+${modelName}\\s*\\{[\\s\\S]*?\\n\\}`,
-                        'g'
-                    );
-                    const typePattern = new RegExp(
-                        `export\\s+type\\s+${modelName}\\s*=\\s*[\\s\\S]*?;`,
-                        'g'
-                    );
-
-                    const interfaceMatch = content.match(interfacePattern);
-                    if (interfaceMatch) {
-                        return this.cleanModelDefinition(interfaceMatch[0]);
-                    }
-
-                    const typeMatch = content.match(typePattern);
-                    if (typeMatch) {
-                        return this.cleanModelDefinition(typeMatch[0]);
+                    // Try to find and extract the type/interface with proper brace matching
+                    const extracted = this.extractTypeWithBalancedBraces(content, modelName);
+                    if (extracted) {
+                        return this.cleanModelDefinition(extracted);
                     }
                 }
             } catch (error) {
                 // Continue searching other paths
                 continue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract a type or interface definition with proper brace matching
+     * Handles nested braces correctly
+     * 
+     * @param {string} content - File content to search
+     * @param {string} typeName - Name of the type/interface to extract
+     * @returns {string|null} Complete type definition or null
+     * 
+     * @private
+     */
+    extractTypeWithBalancedBraces(content, typeName) {
+        // Look for "export type TypeName =" or "export interface TypeName {"
+        const typeStartPattern = new RegExp(`export\\s+(type|interface)\\s+${typeName}\\s*[={]`, 'g');
+        const match = typeStartPattern.exec(content);
+
+        if (!match) {
+            return null;
+        }
+
+        const isInterface = match[1] === 'interface';
+        const startIndex = match.index;
+
+        // Find where the actual definition starts (after '=' for type, at '{' for interface)
+        let defStartIndex = startIndex + match[0].length;
+
+        // For types, we need to check if it's an object type or a simple type
+        if (!isInterface) {
+            // Back up to find the '=' sign
+            defStartIndex = content.indexOf('=', startIndex) + 1;
+
+            // Skip whitespace after '='
+            while (defStartIndex < content.length && /\s/.test(content[defStartIndex])) {
+                defStartIndex++;
+            }
+
+            // Check if it's an object type (starts with '{')
+            if (content[defStartIndex] !== '{') {
+                // Simple type - find the semicolon
+                const semicolonIndex = content.indexOf(';', defStartIndex);
+                if (semicolonIndex === -1) return null;
+                return content.substring(startIndex, semicolonIndex + 1);
+            }
+        }
+
+        // For object types and interfaces, match balanced braces
+        let braceCount = 0;
+        let i = isInterface ? defStartIndex - 1 : defStartIndex;
+        let inString = false;
+        let stringChar = '';
+
+        // Start from the opening brace
+        for (; i < content.length; i++) {
+            const char = content[i];
+            const prevChar = i > 0 ? content[i - 1] : '';
+
+            // Handle string literals
+            if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+                if (!inString) {
+                    inString = true;
+                    stringChar = char;
+                } else if (char === stringChar) {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (inString) continue;
+
+            // Count braces
+            if (char === '{') {
+                braceCount++;
+            } else if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    // Found matching closing brace, now find the semicolon
+                    let j = i + 1;
+                    while (j < content.length && /\s/.test(content[j])) {
+                        j++;
+                    }
+                    if (content[j] === ';') {
+                        return content.substring(startIndex, j + 1);
+                    }
+                    // For interfaces, semicolon is optional
+                    if (isInterface) {
+                        return content.substring(startIndex, i + 1);
+                    }
+                }
             }
         }
 
