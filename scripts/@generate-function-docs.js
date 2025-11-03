@@ -432,37 +432,127 @@ function scanForFunctions(repoPath) {
  * @returns {string|null} Function signature or null if not found
  */
 function extractFunctionSignature(tsContent, functionName) {
-    // Match: export const functionName = async (...) => { or with explicit return type
-    // or: export function functionName(...) { or with explicit return type
+    // Debug logging
+    if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
+        console.log(`\n🔍 DEBUG: extractFunctionSignature called for ${functionName}`);
+    }
+
+    // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
-        // With return type annotation - capture until => { (arrow function body)
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*=>\\s*\\{`, 's'),
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*=>\\s*\\{`, 's'),
-        new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*\\{`, 's'),
-        new RegExp(`export\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*\\{`, 's'),
-        // Without return type annotation (implicit)
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(([^)]*)\\)\\s*=>`, 's'),
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(([^)]*)\\)\\s*=>`, 's'),
-        new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*\\{`, 's'),
-        new RegExp(`export\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*\\{`, 's'),
+        { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(`, 's'), isAsync: true, isArrow: true },
+        { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(`, 's'), isAsync: false, isArrow: true },
+        { regex: new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: true, isArrow: false },
+        { regex: new RegExp(`export\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: false, isArrow: false },
     ];
 
-    for (let i = 0; i < patterns.length; i++) {
-        const pattern = patterns[i];
-        const match = tsContent.match(pattern);
+    for (const { regex, isAsync, isArrow } of patterns) {
+        const match = tsContent.match(regex);
         if (match) {
-            const params = match[1].trim();
+            const startIndex = match.index + match[0].length - 1; // Position of opening paren
 
-            // First 4 patterns have explicit return type
-            if (i < 4) {
-                const returnType = match[2].trim();
-                return { params, returnType };
-            } else {
-                // Last 4 patterns don't have explicit return type - infer it
-                const isAsync = i === 4 || i === 6; // async arrow function or async function
-                const returnType = isAsync ? 'Promise<any>' : 'any';
-                return { params, returnType };
+            // Extract parameters with balanced parenthesis matching
+            let parenCount = 0;
+            let i = startIndex;
+            let paramsStr = '';
+            let inString = false;
+            let stringChar = '';
+
+            for (; i < tsContent.length; i++) {
+                const char = tsContent[i];
+                const prevChar = i > 0 ? tsContent[i - 1] : '';
+
+                // Handle string literals
+                if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar) {
+                        inString = false;
+                    }
+                }
+
+                if (inString) {
+                    if (parenCount > 0) paramsStr += char;
+                    continue;
+                }
+
+                // Count parentheses
+                if (char === '(') {
+                    parenCount++;
+                    if (parenCount > 1) paramsStr += char;
+                } else if (char === ')') {
+                    parenCount--;
+                    if (parenCount === 0) {
+                        // Found the matching closing paren
+                        i++; // Move past the closing paren
+                        break;
+                    }
+                    paramsStr += char;
+                } else if (parenCount > 0) {
+                    paramsStr += char;
+                }
             }
+
+            // Now extract the return type if present
+            let returnType = null;
+
+            // Skip whitespace after closing paren
+            while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                i++;
+            }
+
+            // Check for explicit return type annotation ": Type"
+            if (tsContent[i] === ':') {
+                i++; // Skip the colon
+                // Skip whitespace
+                while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                    i++;
+                }
+
+                // Extract return type until we find => or {
+                let returnTypeStr = '';
+                let angleCount = 0;
+                let braceCount = 0;
+
+                while (i < tsContent.length) {
+                    const char = tsContent[i];
+                    const nextChar = i + 1 < tsContent.length ? tsContent[i + 1] : '';
+
+                    if (char === '<') angleCount++;
+                    else if (char === '>') angleCount--;
+                    else if (char === '{') braceCount++;
+                    else if (char === '}') braceCount--;
+
+                    // Stop at => or { (function body) when not inside brackets
+                    if (angleCount === 0 && braceCount === 0) {
+                        if ((char === '=' && nextChar === '>') || char === '{') {
+                            returnType = returnTypeStr.trim();
+                            break;
+                        }
+                    }
+
+                    returnTypeStr += char;
+                    i++;
+                }
+            }
+
+            // If no explicit return type, infer based on async
+            if (!returnType) {
+                returnType = isAsync ? 'Promise<any>' : 'any';
+            }
+
+            // Clean up params string (remove extra whitespace, normalize line breaks)
+            const params = paramsStr.trim().replace(/\s+/g, ' ');
+
+            // Debug logging
+            if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
+                console.log(`\n🔍 DEBUG: Extracted ${functionName}:`);
+                console.log('  Raw params:', JSON.stringify(paramsStr));
+                console.log('  Cleaned params:', JSON.stringify(params));
+                console.log('  Return type:', returnType);
+            }
+
+            return { params, returnType };
         }
     }
 
@@ -1355,21 +1445,18 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
 
                 // Known event types based on common patterns
-                // Most cart events are bidirectional (emits-and-listens)
-                const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged', 'cart/reset', 'shipping/estimate'];
-                const emitsOnlyEvents = ['cart/initialized', 'cart/product/added', 'cart/product/removed', 'cart/product/updated'];
+                // Most events only emit (emits), some are bidirectional (emits-and-listens)
+                const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged'];
 
-                let anchorSuffix = '-emits-and-listens'; // Default
+                // Default to -emits since most events only have an "Emits" section
+                let anchorSuffix = '-emits';
 
-                if (emitsOnlyEvents.includes(eventName)) {
-                    anchorSuffix = '-emits';
-                } else if (emitsAndListensEvents.includes(eventName)) {
+                if (emitsAndListensEvents.includes(eventName)) {
                     anchorSuffix = '-emits-and-listens';
                 }
-                // Otherwise use default (emits-and-listens)
 
-                // Link to the events page with full anchor (use relative path without trailing slash)
-                return `[\`${eventName}\`](../events#${baseAnchor}${anchorSuffix})`;
+                // Link to the events page with full anchor (use absolute path for proper link validation)
+                return `[\`${eventName}\`](/dropins/${repoName}/events#${baseAnchor}${anchorSuffix})`;
             });
 
             // Auto-link model names to their definitions (first occurrence only)
@@ -1394,15 +1481,14 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                 // Still auto-link any event names in the enrichment (if any)
                 eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
                     const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
-                    const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged', 'cart/reset', 'shipping/estimate'];
-                    const emitsOnlyEvents = ['cart/initialized', 'cart/product/added', 'cart/product/removed', 'cart/product/updated'];
-                    let anchorSuffix = '-emits-and-listens';
-                    if (emitsOnlyEvents.includes(eventName)) {
-                        anchorSuffix = '-emits';
-                    } else if (emitsAndListensEvents.includes(eventName)) {
+                    const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged'];
+
+                    // Default to -emits since most events only have an "Emits" section
+                    let anchorSuffix = '-emits';
+                    if (emitsAndListensEvents.includes(eventName)) {
                         anchorSuffix = '-emits-and-listens';
                     }
-                    return `[\`${eventName}\`](../events#${baseAnchor}${anchorSuffix})`;
+                    return `[\`${eventName}\`](/dropins/${repoName}/events#${baseAnchor}${anchorSuffix})`;
                 });
             }
         }
