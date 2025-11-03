@@ -676,7 +676,7 @@ async function config() {
                     label: 'Drop-ins for B2B',
                     collapsed: true,
                     items: [
-                      { label: 'Overview', link: '/dropins-b2b/overview/' },
+                      { label: 'Overview', link: '/dropins-b2b/' },
                       {
                         label: 'B2B Containers',
                         collapsed: true,
@@ -921,7 +921,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
             }
           ),
           starlightHeadingBadges(),
