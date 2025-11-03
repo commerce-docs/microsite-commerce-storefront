@@ -1,54 +1,144 @@
 ---
-title: Product Recommendations functions
-description: Learn about the API functions provided by the product recommendations drop-in component.
+title: Recommendations Functions
+description: API functions provided by the Recommendations drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 2
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
 
-This topic provides the details and instructions you need to use the functions provided by the product recommendations drop-in component.
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Recommendations drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.1.1</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getRecommendations`](#getrecommendations) | The getRecommendations function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. |
+| [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | The publishRecsItemAddToCartClick function publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.. |
+
+</TableWrapper>
 
 ## getRecommendations
 
 The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format.
 
 ```ts
-export const getRecommendations = async (params: {
-  pageType: string;
-  currentSku: string;
-  cartSkus?: string[];
-  userPurchaseHistory?: any[];
-  userViewHistory?: any[];
-}): Promise<RecommendationUnitModel | null>
+const getRecommendations = async (
+  params: GetRecommendationsProps
+): Promise<RecommendationUnitModel[] | null>
 ```
 
-<OptionsTable
-  compact
-  options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
-    ['pageType', 'string', 'Yes', 'The type of page where recommendations are being displayed.'],
-    ['currentSku', 'string', 'Yes', 'The SKU of the current product being viewed.'],
-    ['cartSkus', 'string[]', 'No', 'An array of SKUs currently in the user\'s cart.'],
-    ['userPurchaseHistory', 'any[]', 'No', 'An array containing the user\'s purchase history.'],
-    ['userViewHistory', 'any[]', 'No', 'An array containing the user\'s view history.'],
-  ]}
-/>
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including `pageType` (where recommendations are shown), `currentSku` (product being viewed), `cartSkus` (items in cart), `userPurchaseHistory` (previous purchases), and `userViewHistory` (previously viewed products). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`recommendations/data`](/dropins/recommendations/events#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
 
 ### Returns
 
-Returns a promise that resolves to a `RecommendationUnitModel` object or null. The recommendations data is transformed into a standardized format before being returned.
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+
+---
+
+## publishRecsItemAddToCartClick
+
+The `publishRecsItemAddToCartClick` function publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.
+
+```ts
+const publishRecsItemAddToCartClick = async (
+  params: PublishParams
+): any
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `PublishParams` | Yes | Parameters for the add-to-cart event including the recommended product details and recommendation unit information. |
+
+</TableWrapper>
+
+### Examples
+
+From product recommendations block:
+
+```js
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api';
+
+publishRecsItemAddToCartClick({
+  recommendationUnit,
+  pagePlacement: 'product-list',
+  yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+  yOffsetBottom:
+  addToCart.getBoundingClientRect().bottom ?? 0,
+  productId: ctx.index,
+})
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
 
 ### RecommendationUnitModel
 
-The `RecommendationUnitModel` object has the following shape:
+The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendations`](#getrecommendations).
 
 ```ts
-export type PageType = 'Product'; // Always hardcoded to 'Product' per requirements
-
-export interface RecommendationUnitModel {
+interface RecommendationUnitModel {
   displayOrder: number;
   pageType: PageType;
   title: string;
@@ -58,86 +148,8 @@ export interface RecommendationUnitModel {
   unitId: string;
   unitName: string;
 }
-
-export interface Item {
-  uid: string;
-  sku: string;
-  name: string;
-  urlKey: string;
-  images: ItemImage[];
-  price: FinalPrice;
-  priceRange?: {
-    minimum?: FinalPrice;
-    maximum?: FinalPrice;
-  };
-  visibility: string;
-  queryType: string;
-  itemType: string;
-}
-
-interface ItemImage {
-  label: string;
-  roles: string[];
-  url: string;
-}
-
-export interface Price {
-  value: number | null;
-  currency: string | null;
-}
-
-export interface FinalPrice {
-  final?: {
-    amount?: Price;
-  };
-}
-
-export interface RecommendationsResponse {
-  results: RecommendationUnitModel[];
-  totalResults: number;
-}
-
-export interface GraphQLResponse {
-  errors?: Array<{ message: string }>;
-  data?: {
-    recommendations: RecommendationsResponse;
-  };
-}
 ```
 
-### Events
 
-The event bus emits the `recommendations/data` event with the transformed recommendations data as the payload.
 
-### Usage
-
-To get recommendations for a product page:
-
-```js
-import { getRecommendations } from '@/recommendations/api/getRecommendations';
-
-getRecommendations({
-  pageType: 'Product',
-  currentSku: 'VA19-GO-NA',
-  cartSkus: ['VT02-PE-M', 'VA19-GO-NA'],
-  userPurchaseHistory: [],
-  userViewHistory: []
-});
-```
-
-To get recommendations with user history:
-
-```js
-import { getRecommendations } from '@/recommendations/api/getRecommendations';
-
-getRecommendations({
-  pageType: 'Product',
-  currentSku: 'VA19-GO-NA',
-  userPurchaseHistory: [
-    { sku: 'VT02-PE-M', timestamp: '2024-03-20T10:00:00Z' }
-  ],
-  userViewHistory: [
-    { sku: 'VA19-GO-NA', timestamp: '2024-03-20T09:00:00Z' }
-  ]
-});
-```
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

@@ -1,47 +1,353 @@
 ---
-title: PDP functions
-description: Learn about the API functions provided by the product details drop-in component.
+title: Product Details Functions
+description: API functions provided by the Product Details drop-in for programmatic control and customization.
 sidebar:
-  order: 5
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
 ---
 
-import Aside from '@components/Aside.astro';
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
 
-The product details page (PDP) drop-in component provides two functions for retrieving the product details data to display: `getProductData` and `getRefinedProduct`.
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Product Details drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.3.5</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`fetchProductData`](#fetchproductdata) | The fetchProductData function fetches product data for a given SKU. |
+| [`getFetchedProductData`](#getfetchedproductdata) | The getFetchedProductData function returns previously fetched product data from cache.. |
+| [`getProductConfigurationValues`](#getproductconfigurationvalues) | The getProductConfigurationValues function returns the current product configuration values.. |
+| [`getProductData`](#getproductdata) | The getProductData function returns the product data for a given product SKU. |
+| [`getRefinedProduct`](#getrefinedproduct) | The getRefinedProduct function returns refined product data with specific options selected. |
+| [`isProductConfigurationValid`](#isproductconfigurationvalid) | The isProductConfigurationValid function checks if the current product configuration is valid.. |
+| [`setProductConfigurationValid`](#setproductconfigurationvalid) | The setProductConfigurationValid function sets a callback to be called when product configuration validity changes.. |
+| [`setProductConfigurationValues`](#setproductconfigurationvalues) | The setProductConfigurationValues function sets a callback to be called when product configuration values change.. |
+
+</TableWrapper>
+
+## fetchProductData
+
+The `fetchProductData` function fetches product data for a given SKU. It can fetch either simple product data or refined product data with selected options.
+
+```ts
+const fetchProductData = async (
+  sku: string,
+  options?: Options
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `options` | `Options` | No | Optional configuration including `anchors` (anchor options), `optionsUIDs` (selected option IDs), `preselectFirstOption` (whether to preselect first option), `isBundle` (whether product is a bundle), and `skipTransform` (whether to skip data transformation). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## getFetchedProductData
+
+The `getFetchedProductData` function returns previously fetched product data from cache.
+
+```ts
+const getFetchedProductData = async (
+  { scope, }: { scope?: string } = {}
+): Promise<ProductModel | null>
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `string } = {}` | Yes | Optional configuration for retrieving cached product data. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+---
+
+## getProductConfigurationValues
+
+The `getProductConfigurationValues` function returns the current product configuration values.
+
+```ts
+const getProductConfigurationValues = async (
+  { scope, }: { scope?: string } = {}
+): ValuesModel | null
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `string } = {}` | Yes | Optional configuration for retrieving product configuration values. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ValuesModel`](#valuesmodel) or `null`.
+
+---
 
 ## getProductData
 
-This function returns the product data for a given product `sku`. It takes `sku` as a parameter.
+The `getProductData` function returns the product data for a given product SKU. It fetches data from Adobe Commerce and optionally preselects the first available option.
 
-```javascript
-import { getProductData } from '@/pdp/api/getProductData';
-
-getProductData(sku: string);
+```ts
+const getProductData = async (
+  sku: string,
+  options?: { preselectFirstOption?: boolean; optionsUIDs?: string[]; },
+  raw?: boolean
+): Promise<ProductModel | null>
 ```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `preselectFirstOption` | `boolean` | No | Whether to automatically preselect the first available option for configurable products. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs to preselect for the product. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+---
 
 ## getRefinedProduct
 
-A function that returns refined product's data. It takes `sku`, `optionUIDs`, and `isBundle?` as parameters.
+The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen.
 
-```js
-import { getRefinedProduct } from '@/pdp/api/getRefinedProduct';
-
-getRefinedProduct(sku: string, optionUIDs: string, isBundle?: boolean[]);
+```ts
+const getRefinedProduct = async (
+  sku: string,
+  optionUIDs: string[],
+  anchorOptions?: string[],
+  raw?: boolean
+): Promise<ProductModel | null>
 ```
 
-## Example usage
+<TableWrapper nowrap={[0, 1]}>
 
-<div style="overflow:hidden;margin-left:auto;margin-right:auto;border-radius:10px;width:100%;max-width:960px;position:relative">
-  <div style="width:100%;padding-bottom:59%"></div>
-  <iframe
-    width="960"
-    height="560"
-    title="Self-paced video/slideshows for understanding drop-in component coding options."
-    src="https://snappify.com/embed/50e6e9b1-68ef-4089-a336-a8992b513f91?responsive=1&p=1&b=1"
-    allow="clipboard-write"
-    allowfullscreen=""
-    loading="lazy"
-    style="background:#eee;position:absolute;left:0;top:0;bottom:15pxwidth:100%"
-    frameborder="0"
-  ></iframe>
-</div>
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `optionUIDs` | `string[]` | Yes | An array of option UIDs representing the selected variant. |
+| `anchorOptions` | `string[]` | No | Anchor options for the product selection. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ProductModel`](#productmodel) or `null`.
+
+---
+
+## isProductConfigurationValid
+
+The `isProductConfigurationValid` function checks if the current product configuration is valid.
+
+```ts
+const isProductConfigurationValid = async (
+  { scope, }: { scope?: string } = {}
+): boolean | null
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `string } = {}` | Yes | Configuration options to validate. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `boolean | null`.
+
+---
+
+## setProductConfigurationValid
+
+The `setProductConfigurationValid` function sets a callback to be called when product configuration validity changes.
+
+```ts
+const setProductConfigurationValid = async (
+  callback: (prev: boolean) => boolean,
+  options?: { scope?: string }
+): any
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `callback` | `prev: boolean` | No | A callback function that receives the validity status of the product configuration. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`pdp/valid`](/dropins/product-details/events#pdpvalid-emits) event.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## setProductConfigurationValues
+
+The `setProductConfigurationValues` function sets a callback to be called when product configuration values change.
+
+```ts
+const setProductConfigurationValues = async (
+  callback: (prev: ValuesModel) => ValuesModel,
+  options?: { scope?: string }
+): any
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `callback` | `prev: ValuesModel` | No | A callback function that receives the updated product configuration values. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`pdp/values`](/dropins/product-details/events#pdpvalues-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### ProductModel
+
+The `ProductModel` object is returned by the following functions: [`getFetchedProductData`](#getfetchedproductdata), [`getProductData`](#getproductdata), [`getRefinedProduct`](#getrefinedproduct).
+
+```ts
+interface ProductModel {
+  name: string;
+  sku: string;
+  isBundle: boolean;
+  addToCartAllowed: boolean;
+  inStock: boolean | null;
+  shortDescription?: string;
+  metaDescription?: string;
+  metaKeyword?: string;
+  metaTitle?: string;
+  description?: string;
+  images?: Image[];
+  prices: Prices;
+  attributes?: Attribute[];
+  options?: Option[];
+  optionUIDs?: string[];
+  url?: string;
+  urlKey?: string;
+  externalId?: string;
+  externalParentId?: string;
+  variantSku?: string;
+  productType?: ProductType | undefined;
+}
+```
+
+### ValuesModel
+
+The `ValuesModel` object is returned by the following functions: [`getProductConfigurationValues`](#getproductconfigurationvalues).
+
+```ts
+interface ValuesModel {
+  sku: string;
+  quantity: number;
+  optionsUIDs?: string[];
+  enteredOptions?: Array<{ uid: string; value: string }>;
+}
+```
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
