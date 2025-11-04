@@ -65,7 +65,7 @@ export function getBoilerplatePackageVersions(boilerplatePath) {
  * @param {string} repoName - Name of the drop-in (e.g., 'cart', 'checkout')
  * @param {Object} repoConfig - Repository configuration object with gitUrl
  * @param {string} version - Version to checkout (e.g., '1.0.0', '^1.2.3')
- * @returns {string} Path to the cloned repository
+ * @returns {Object} Object with { path: string, actualVersion: string, isExactMatch: boolean }
  */
 export function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
@@ -76,14 +76,34 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
 
     console.log(`  Using version: ${cleanVersion}`);
 
+    let actualVersion = cleanVersion;
+    let isExactMatch = false;
+
     if (!existsSync(dropinPath)) {
         console.log(`  Cloning repository at ${tag}...`);
         try {
             execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            actualVersion = tag;
+            isExactMatch = true;
         } catch (error) {
             // If tag doesn't exist, try without 'v' prefix
             console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            try {
+                execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+                actualVersion = cleanVersion;
+                isExactMatch = true;
+            } catch (fallbackError) {
+                // If neither tag exists, clone the default branch (no --branch flag)
+                console.log(`  ⚠️  Tag ${cleanVersion} not found, cloning default branch...`);
+                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersion}`);
+                execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+
+                // Determine what we actually checked out
+                const currentRef = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
+                    { cwd: dropinPath, encoding: 'utf8' }).trim();
+                actualVersion = currentRef;
+                isExactMatch = false;
+            }
         }
     } else {
         console.log(`  Checking out ${tag}...`);
@@ -92,14 +112,47 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
             execFileSync('git', ['fetch', '--tags'], { cwd: dropinPath, stdio: 'pipe' });
             // Then checkout the specific tag
             execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
+            actualVersion = tag;
+            isExactMatch = true;
         } catch (error) {
             // If tag with 'v' doesn't exist, try without
             console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            try {
+                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+                actualVersion = cleanVersion;
+                isExactMatch = true;
+            } catch (fallbackError) {
+                // If neither tag exists, fetch and checkout the default branch
+                console.log(`  ⚠️  Tag ${cleanVersion} not found, fetching default branch...`);
+                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersion}`);
+                try {
+                    // Fetch the default branch
+                    execFileSync('git', ['fetch', 'origin'], { cwd: dropinPath, stdio: 'pipe' });
+                    // Get the default branch name from the remote
+                    const defaultBranch = execFileSync('git', ['symbolic-ref', 'refs/remotes/origin/HEAD'],
+                        { cwd: dropinPath, encoding: 'utf8' }).trim().replace('refs/remotes/origin/', '');
+                    console.log(`  Checking out default branch: ${defaultBranch}...`);
+                    execFileSync('git', ['checkout', defaultBranch], { cwd: dropinPath, stdio: 'pipe' });
+                    actualVersion = defaultBranch;
+                    isExactMatch = false;
+                } catch (fetchError) {
+                    console.warn(`  ⚠️  Could not determine or checkout default branch, staying on current ref`);
+                    // Try to get the current ref
+                    try {
+                        const currentRef = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                            { cwd: dropinPath, encoding: 'utf8' }).trim();
+                        actualVersion = `commit-${currentRef}`;
+                        isExactMatch = false;
+                    } catch {
+                        actualVersion = 'unknown';
+                        isExactMatch = false;
+                    }
+                }
+            }
         }
     }
 
-    return dropinPath;
+    return { path: dropinPath, actualVersion, isExactMatch };
 }
 
 /**
