@@ -221,7 +221,7 @@ export async function runGenerator(options) {
     const { dropins, isSingleDropin } = parseAndFilterDropins(name);
 
     // Setup boilerplate (once for all drop-ins)
-    const boilerplatePath = cloneOrUpdateBoilerplate();
+    const { path: boilerplatePath, tag: boilerplateTag } = cloneOrUpdateBoilerplate();
     const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
     logger.boilerplateLoaded();
 
