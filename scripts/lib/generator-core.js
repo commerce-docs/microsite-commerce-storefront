@@ -89,7 +89,18 @@ async function processSingleDropin(config) {
     }
 
     // Clone repository at version
-    const repoPath = cloneDropinAtVersion(repoName, repoConfig, version);
+    const cloneResult = cloneDropinAtVersion(repoName, repoConfig, version);
+    const repoPath = cloneResult.path;
+    const actualVersion = cloneResult.actualVersion;
+    const isExactMatch = cloneResult.isExactMatch;
+
+    // Warn if version mismatch
+    if (!isExactMatch) {
+        logger.warn(
+            `Documentation generated from ${actualVersion} instead of requested version ${version.replace(/^[\^~]/, '')}`,
+            'Version mismatch may cause documentation inaccuracies'
+        );
+    }
 
     // Load enrichment data
     const enrichmentData = loadEnrichments(repoName);
@@ -99,7 +110,7 @@ async function processSingleDropin(config) {
 
     // Scan repository
     logger.scanning(itemType);
-    const scannedData = await scanRepo(repoPath);
+    const scannedData = await scanRepo(repoPath, repoConfig);
 
     // Handle different return types from scanRepo
     let itemCount;
@@ -120,13 +131,18 @@ async function processSingleDropin(config) {
         logger.noneFound(itemType);
     }
 
-    // Generate content
-    const mdxContent = await generateContent(repoName, repoConfig, scannedData, version, enrichmentData);
+    // Generate content - pass actual version info
+    const versionInfo = {
+        requested: version,
+        actual: actualVersion,
+        isExactMatch: isExactMatch
+    };
+    const mdxContent = await generateContent(repoName, repoConfig, scannedData, versionInfo, enrichmentData);
 
     // Write output (use custom handler if provided, otherwise use default)
     if (writeOutput) {
         // Custom write handler (e.g., for multi-file output like containers)
-        await writeOutput(repoName, repoConfig, mdxContent, version);
+        await writeOutput(repoName, repoConfig, mdxContent, versionInfo);
     } else {
         // Default single-file write
         const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
