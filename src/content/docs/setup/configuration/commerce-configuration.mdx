@@ -259,7 +259,7 @@ For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use 
 
 <TabItem label="Adobe Commerce Optimizer (ACO)">
 
-For Adobe Commerce Optimizer environments, note the use of hardcoded values for `store-code` and `website-code`.
+For Adobe Commerce Optimizer environments, use a simplified analytics configuration structure:
 
 ```json
 {
@@ -267,16 +267,11 @@ For Adobe Commerce Optimizer environments, note the use of hardcoded values for 
     "base-currency-code": "{{CURRENCY_CODE}}",
     "environment": "{{ENVIRONMENT_TYPE}}",
     "environment-id": "{{YOUR_TENANT_ID}}",
-    "store-code": "STORE_CODE",
-    "store-id": {{STORE_ID}},
-    "store-name": "{{STORE_NAME}}",
+    "locale": "{{LOCALE}}",
     "store-url": "{{STORE_URL}}",
-    "store-view-code": "{{YOUR_AC-SOURCE-LOCALE_HEADER}}",
-    "store-view-id": {{STORE_VIEW_ID}},
-    "store-view-name": "{{STORE_VIEW_NAME}}",
-    "website-code": "WEBSITE_CODE",
-    "website-id": {{WEBSITE_ID}},
-    "website-name": "{{WEBSITE_NAME}}"
+    "store-view-currency-code": "{{CURRENCY_CODE}}",
+    "storefront-template": "{{TEMPLATE_TYPE}}",
+    "view-id": "{{CATALOG_VIEW_ID}}"
   }
 }
 ```
@@ -286,16 +281,11 @@ For Adobe Commerce Optimizer environments, note the use of hardcoded values for 
 - **`base-currency-code`** - The base currency code for the store (e.g., "USD", "EUR")
 - **`environment`** - Environment type ("Production", "Testing")
 - **`environment-id`** - The tenant ID for the Adobe Commerce Optimizer instance
+- **`locale`** - Catalog source locale (language or geography) for the store view, for example `en-US`
 - **`store-url`** - Base URL for the store
-- **`store-code`** - Hardcoded value **STORE_CODE** for ACO environments
-- **`store-id`** - Numeric ID for the store
-- **`store-name`** - Display name for the store
-- **`store-view-code`** - Matches the **AC-Source-Locale** header value
-- **`store-view-id`** - Numeric ID for the store view
-- **`store-view-name`** - Display name for the store view
-- **`website-code`** - Hardcoded value **WEBSITE_CODE** for ACO environments
-- **`website-id`** - Numeric ID for the website
-- **`website-name`** - Display name for the website
+- **`store-view-currency-code`** - Currency code for the store view (e.g., "USD", "EUR")
+- **`storefront-template`** - (Optional) Storefront template type (e.g., "Other")
+- **`view-id`** - The unique ID assigned to the catalog view from the Adobe Commerce Optimizer UI
 
 </TabItem>
 
@@ -496,16 +486,11 @@ This example shows the configuration for Adobe Commerce Optimizer, which uses di
         "base-currency-code": "USD",
         "environment": "Testing",
         "environment-id": "8idEEDDiVwjCEJAyB5kjfi",
-        "store-code": "STORE_CODE",
-        "store-id": 1,
-        "store-name": "ACO Store",
-        "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live",
-        "store-view-code": "en-US",
-        "store-view-id": 1,
-        "store-view-name": "Default Store View",
-        "website-code": "WEBSITE_CODE",
-        "website-id": 1,
-        "website-name": "Main Website"
+        "locale": "en-US",
+        "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live/",
+        "store-view-currency-code": "USD",
+        "storefront-template": "Other",
+        "view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"
       },
       "plugins": {
         "picker": {
@@ -588,13 +573,14 @@ Use `getConfigValue` to access any configuration value using dot notation, inclu
 ```javascript
 export default async function decorate(block) {
   // Get analytics configuration
-  const storeName = await getConfigValue('analytics.store-name');
+  const storeUrl = await getConfigValue('analytics.store-url');
   const currency = await getConfigValue('analytics.base-currency-code');
+  const environment = await getConfigValue('analytics.environment');
 
   // Get plugin configuration
   const rootCategory = await getConfigValue('plugins.picker.rootCategory');
 
-  console.log('Store:', storeName, 'Currency:', currency);
+  console.log('Store URL:', storeUrl, 'Currency:', currency, 'Environment:', environment);
   console.log('Root category:', rootCategory);
 }
 ```
