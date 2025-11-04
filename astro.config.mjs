@@ -479,6 +479,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/payment-services/' },
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
+                          { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
@@ -544,6 +545,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/product-discovery/' },
                           { label: 'Installation', link: '/dropins/product-discovery/installation/' },
+                          { label: 'Initialization', link: '/dropins/product-discovery/initialization/' },
                           { label: 'Styling', link: '/dropins/product-discovery/styles/' },
                           { label: 'Functions', link: '/dropins/product-discovery/functions/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
@@ -568,6 +570,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/recommendations/' },
                           { label: 'Installation', link: '/dropins/recommendations/installation/' },
+                          { label: 'Initialization', link: '/dropins/recommendations/initialization/' },
                           { label: 'Styling', link: '/dropins/recommendations/styles/' },
                           { label: 'Functions', link: '/dropins/recommendations/functions/' },
                           { label: 'Events', link: '/dropins/recommendations/events/' },
@@ -621,6 +624,8 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/user-auth/' },
+                          { label: 'Installation', link: '/dropins/user-auth/installation/' },
+                          { label: 'Initialization', link: '/dropins/user-auth/initialization/' },
                           { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
                           { label: 'Slots', link: '/dropins/user-auth/slots/' },
                           { label: 'Functions', link: '/dropins/user-auth/functions/' },
@@ -647,6 +652,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/wishlist/' },
                           { label: 'Installation', link: '/dropins/wishlist/installation/' },
+                          { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
                           { label: 'Functions', link: '/dropins/wishlist/functions/' },
                           { label: 'Events', link: '/dropins/wishlist/events/' },
                           { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
