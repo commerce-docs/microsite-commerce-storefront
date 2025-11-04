@@ -898,6 +898,12 @@ async function config() {
                       { label: 'Changelog', link: '/releases/changelog/' },
                     ],
                   },
+                  {
+                    label: 'Hot fixes',
+                    items: [
+                      { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
+                    ],
+                  },
                 ],
               },
             ],
