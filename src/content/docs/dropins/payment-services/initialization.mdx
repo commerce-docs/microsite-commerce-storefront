@@ -4,6 +4,7 @@ description: Learn about the configuration options for the Payment Services drop
 ---
 
 import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 
 The Payment Services drop-in component initializer provides options for setting the backend endpoint and configuring language definitions.
 
@@ -26,17 +27,16 @@ The Payment Services drop-in initializer is fully asynchronous. Even if mounted 
 
 ## Payment method availability
 
-During asynchronous initialization, the Payment Services drop-in emits a series of events to signal payment method availability on different 'locations'. For each of these events, the event payload is a single string containing the payment method code.
+During asynchronous initialization, the Payment Services drop-in emits a series of events to signal drop-in readiness in different 'locations'. For each of these events, the event payload is an `{ availablePaymentMethods: string[] }` object containing the available payment method codes.
 
 The following table contains the current available event names and their descriptions:
 
-<OptionsTable
-  options={[
-    ['Event name', 'Description'],
-    ['payment-services/method-available/checkout', 'Payment method available for checkout page.'],
-    ['payment-services/method-available/product-detail', 'Payment method available for product detail page.'],
-  ]}
-/>
+<TableWrapper nowrap={[0]}>
+| Event name                                    | Description                                                                                                                                                |
+|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `payment-services/initialized/checkout`       | Drop-in initialized for the `CHECKOUT` location, with `event.availablePaymentMethods` determining the payment methods available for the checkout page.     |
+| `payment-services/initialized/product-detail` | Drop-in initialized for the `PRODUCT_DETAIL`, with `event.availablePaymentMethods` determining the payment methods available for the product details page. |
+</TableWrapper>
 
 The following code shows an example implementation of payment method availability event handlers for the checkout page.
 
@@ -44,19 +44,14 @@ The following code shows an example implementation of payment method availabilit
 import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
 import { events } from '@dropins/tools/event-bus.js';
 
-events.on(
-  'payment-services/method-available/checkout',
-  (code) => {
-    switch (code) {
-      case PaymentMethodCode.APPLE_PAY:
-        console.log("Apple Pay available for checkout page.");
-        break
-      case PaymentMethodCode.CREDIT_CARD:
-        console.log("Credit Card available for checkout page.");
-        break
-    }
-  },
-);
+events.on('payment-services/initialized/checkout', ({ availablePaymentMethods }) => {
+  if (availablePaymentMethods.contains(PaymentMethodCode.APPLE_PAY)) {
+    console.log("Apple Pay available for checkout page.");
+  }
+  if (availablePaymentMethods.contains(PaymentMethodCode.CREDIT_CARD)) {
+    console.log("Credit Card available for checkout page.");
+  }
+});
 ```
 
 ## Initialization example
