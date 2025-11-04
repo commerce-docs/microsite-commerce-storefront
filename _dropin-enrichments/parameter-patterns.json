@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Reusable parameter description patterns for consistent, developer-friendly documentation across all drop-ins",
+  "version": "1.0.0",
+  "patterns": {
+    "sku": {
+      "description_template": "The product identifier (SKU) {context}. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (e.g., `{example}`).",
+      "contexts": {
+        "cart": "to add to the cart",
+        "wishlist": "to add to the wishlist",
+        "query": "to fetch details for",
+        "default": "for the product"
+      },
+      "examples": {
+        "configurable": "MS09-M-Blue for a medium blue shirt",
+        "simple": "24-MB01",
+        "bundle": "24-WG080"
+      },
+      "see_also": [
+        "graphql-reference",
+        "product-options"
+      ]
+    },
+    "parentSku": {
+      "description_template": "For configurable products, this is the SKU of the parent (base) product. For example, if adding a specific variant like `{child_example}` (child SKU), the `parentSku` would be `{parent_example}` (the base configurable product). This helps Commerce track the relationship between the variant and its parent product.",
+      "contexts": {
+        "cart": "to add to the cart",
+        "default": "for tracking"
+      },
+      "examples": {
+        "child_example": "MS09-M-Blue",
+        "parent_example": "MS09"
+      },
+      "see_also": [
+        "graphql-reference",
+        "catalog-management"
+      ]
+    },
+    "quantity": {
+      "description_template": "{base_description} {constraint} {example}",
+      "base_descriptions": {
+        "cart": "The number of items to add to the cart.",
+        "wishlist": "The number of items to add to the wishlist. Typically set to `1` for wishlist items, as users usually save products for later rather than specifying quantities.",
+        "update": "The new quantity for the item. This replaces the current quantity (it does not increment). For example, setting this to `2` will change the quantity to 2, regardless of the previous value.",
+        "default": "The number of items."
+      },
+      "constraints": {
+        "positive": "This value must be a positive number.",
+        "default": ""
+      },
+      "examples": {
+        "single": "For example, `1` to add a single item, or `3` to add three units of the product.",
+        "default": ""
+      }
+    },
+    "optionsUIDs": {
+      "description_template": "An array of option UIDs for configurable products. These are the UIDs of the selected product options (such as color or size) that {action}. {example} Use the product query to retrieve available option UIDs for a product.",
+      "actions": {
+        "define": "define which product variant the customer wants",
+        "selected": "the customer chose",
+        "default": "are selected"
+      },
+      "examples": {
+        "cart": "For example, if a customer selects **Medium** and **Blue** for a configurable shirt, you would include the UIDs for those specific options.",
+        "wishlist": "For example, if a customer selects **Medium** and **Blue** for a configurable shirt, you would include the UIDs for those specific options.",
+        "default": "These represent the selected product variant."
+      },
+      "see_also": [
+        "product-options",
+        "graphql-catalog-service"
+      ]
+    },
+    "enteredOptions": {
+      "description_template": "An array of custom options that allow text input for customizable products. Each object contains a `uid` (the unique identifier for the custom option field from the product data) and a `value` (the text the customer entered). {example}",
+      "examples": {
+        "engraving": "For example, if a product has a personalization field for engraving, you would provide the field's UID and the customer's entered text like `{ uid: 'Y3VzdG9tLW9wdGlvbi8x', value: 'John Smith' }`.",
+        "monogram": "For example, if a product offers monogram personalization, you would provide the field's UID and the customer's text like `{ uid: 'Y3VzdG9tLW9wdGlvbi8x', value: 'ABC' }`.",
+        "custom": "For example, if a product has a customization field, you would provide the field's UID and the customer's input.",
+        "default": "These are typically used for personalization like engravings or custom messages."
+      },
+      "see_also": [
+        "product-options",
+        "graphql-reference"
+      ]
+    },
+    "selectedOptions": {
+      "description_template": "An array of option UIDs to update the selected product options for configurable products. For example, if a customer wants to change the size from **Medium** to **Large**, you would provide the UID for the Large option. These are the same type of option UIDs used when {context}.",
+      "contexts": {
+        "cart": "adding products to the cart",
+        "wishlist": "adding products to the wishlist",
+        "default": "selecting product options"
+      },
+      "see_also": [
+        "product-options"
+      ]
+    },
+    "customFields": {
+      "description_template": "An optional object for passing additional custom data or attributes to associate with the {entity}. This can include any key-value pairs needed for your implementation, such as {examples}. The structure and usage of this field depends on your Commerce backend configuration and any custom extensions you have installed.",
+      "entities": {
+        "cart_item": "cart item",
+        "wishlist_item": "wishlist item",
+        "order_item": "order item",
+        "default": "item"
+      },
+      "example_sets": {
+        "cart": "gift messages, special handling instructions, or custom metadata",
+        "order": "purchase order numbers, project codes, or delivery instructions",
+        "default": "additional metadata or custom attributes"
+      }
+    },
+    "email": {
+      "description_template": "{context}",
+      "contexts": {
+        "guest_checkout": "The guest customer's email address for order confirmation and communication.",
+        "account_creation": "The email address for the new customer account. This will be used for login and communication.",
+        "update": "The new email address for the customer account.",
+        "lookup": "The email address to check for availability or lookup.",
+        "default": "The email address."
+      }
+    },
+    "password": {
+      "description_template": "{context}",
+      "contexts": {
+        "current": "The current password of the customer for verification.",
+        "new": "The new password for the customer account.",
+        "login": "The password for authentication.",
+        "default": "The password."
+      }
+    },
+    "address": {
+      "description_template": "The {address_type} address {action}, including street, city, region, country, and postal code{optional_fields}.",
+      "address_types": {
+        "shipping": "shipping",
+        "billing": "billing",
+        "customer": "customer",
+        "default": ""
+      },
+      "actions": {
+        "set": "to set on the cart",
+        "create": "to create",
+        "update": "to update",
+        "default": ""
+      },
+      "optional_field_sets": {
+        "full": ", and optional fields like company name and phone number",
+        "minimal": "",
+        "default": ""
+      }
+    },
+    "wishlistItemId": {
+      "description_template": "The unique identifier of the {context} wishlist item {action}. This ID is returned in the wishlist data structure when you retrieve a wishlist (not the product SKU). Each item in a wishlist has its own unique ID, even if multiple items reference the same product.",
+      "contexts": {
+        "existing": "existing",
+        "default": ""
+      },
+      "actions": {
+        "update": "to update",
+        "remove": "to remove",
+        "default": ""
+      }
+    },
+    "description": {
+      "description_template": "{context}",
+      "contexts": {
+        "wishlist": "An optional note or comment about the wishlist item. This is free-form text that the customer can use to add personal notes, like **Buy for anniversary** or **Check if available in stores**.",
+        "product": "A description of the product or item.",
+        "default": "A text description."
+      }
+    },
+    "items": {
+      "description_template": "An array of {item_type} {action}.",
+      "item_types": {
+        "cart": "cart items",
+        "wishlist": "wishlist items",
+        "products": "products",
+        "default": "items"
+      },
+      "actions": {
+        "add": "to add",
+        "update": "to update",
+        "remove": "to remove",
+        "default": ""
+      }
+    },
+    "couponCodes": {
+      "description_template": "An array of coupon codes to apply to the cart. Each code is a string representing a valid promotional code configured in Adobe Commerce."
+    },
+    "couponCode": {
+      "description_template": "A coupon code to {action} to the cart. This is a string representing a valid promotional code configured in Adobe Commerce.",
+      "actions": {
+        "apply": "apply",
+        "remove": "remove",
+        "default": "apply"
+      }
+    },
+    "giftCardCode": {
+      "description_template": "The code assigned to a gift card. This is typically a alphanumeric string that represents the value and balance of the gift card."
+    },
+    "cartId": {
+      "description_template": "The unique identifier for the shopping cart. This ID is used to track and persist cart data across sessions."
+    },
+    "wishlistId": {
+      "description_template": "The unique identifier of the wishlist. This ID is used to retrieve, update, or manage a specific wishlist."
+    },
+    "authenticated": {
+      "description_template": "A boolean indicating whether the customer is authenticated. Set to `true` for logged-in customers, `false` for guests."
+    },
+    "shippingMethods": {
+      "description_template": "The shipping methods to apply to the cart. Each method contains a `carrier_code` (the shipping carrier identifier) and `method_code` (the specific shipping method identifier)."
+    },
+    "cart": {
+      "description_template": "{context}",
+      "contexts": {
+        "initialize": "The cart data to initialize the checkout process, or `null` to retrieve the cart from internal state.",
+        "synchronize": "The cart data to synchronize with the checkout state, or `null` to retrieve the cart from internal state.",
+        "default": "The cart data object."
+      }
+    },
+    "input": {
+      "description_template": "{context}",
+      "contexts": {
+        "address": "The address information to {action}, including street, city, region, country, and postal code.",
+        "payment": "The payment method code and additional payment data required by the selected payment processor.",
+        "shipping": "Shipping method information including carrier and method codes.",
+        "estimate": "An object containing address criteria for estimating shipping methods and costs.",
+        "quote": "Input parameters for retrieving or managing quotes.",
+        "default": "Input parameters for the operation."
+      }
+    },
+    "formCode": {
+      "description_template": "The form code identifier. Must be one of the following: `customer_account_create`, `customer_account_edit`, `customer_address_create`, or `customer_address_edit`. This determines which EAV attributes are returned."
+    },
+    "forms": {
+      "description_template": "{context}",
+      "contexts": {
+        "customer": "Customer account data including email, password, firstName, lastName, and optional custom attributes.",
+        "address": "Address data including street, city, region, country, postal code, and optional fields like company name and phone number.",
+        "default": "Form data for the operation."
+      }
+    },
+    "options": {
+      "description_template": "{context}",
+      "contexts": {
+        "login": "An object containing `userName` (customer's email or username) and `password` (customer's password).",
+        "confirm": "An object containing `customerEmail` (customer's email address) and `customerConfirmationKey` (confirmation key sent by Adobe Commerce).",
+        "password": "An object containing `currentPassword` (the password before it is changed) and `newPassword` (the new password).",
+        "default": "Configuration options for the operation."
+      }
+    },
+    "customerEmail": {
+      "description_template": "The email address of the customer {context}.",
+      "contexts": {
+        "resend": "who needs the confirmation email resent",
+        "confirm": "requesting account confirmation",
+        "default": ""
+      }
+    },
+    "userName": {
+      "description_template": "The customer's email address or username used for authentication."
+    },
+    "resetPasswordToken": {
+      "description_template": "The password reset token sent to the customer's email. This token verifies that the password reset request is legitimate and has not expired."
+    },
+    "newPassword": {
+      "description_template": "The new password for the customer account. Must meet the store's password requirements (minimum length, character types, etc.)."
+    },
+    "user_token": {
+      "description_template": "The customer authentication token, typically from the `auth_dropin_user_token` cookie. This token authenticates the customer for API requests."
+    },
+    "apiVersion2": {
+      "description_template": "A boolean flag indicating whether to use the v2 API endpoint. When `true`, uses `createCustomerV2` mutation; when `false` or omitted, uses the original `createCustomer` mutation."
+    },
+    "type": {
+      "description_template": "{context}",
+      "contexts": {
+        "coupon_strategy": "The strategy for applying coupons. See the type definition for available values (e.g., `APPEND` to add to existing coupons, `REPLACE` to remove all existing coupons).",
+        "enum": "The type or strategy to use for this operation. Refer to the type definition for available values.",
+        "default": "The type identifier for this operation."
+      }
+    },
+    "callback": {
+      "description_template": "A callback function that is called when {event}. The callback receives {data} as its parameter.",
+      "events": {
+        "config_valid": "product configuration validity changes",
+        "config_values": "product configuration values change",
+        "default": "the event occurs"
+      },
+      "data_types": {
+        "validity": "the validity status (boolean)",
+        "values": "the updated configuration values",
+        "default": "the event data"
+      }
+    }
+  },
+  "usage_notes": {
+    "template_variables": "Templates use {variable} syntax. Replace with actual context-specific values.",
+    "combining_patterns": "Multiple patterns can be combined by referencing the appropriate template sections.",
+    "see_also_references": "The see_also array references keys from reference-docs.json topics.",
+    "context_selection": "Choose the most specific context available, falling back to 'default' if no specific match exists."
+  }
+}
+
