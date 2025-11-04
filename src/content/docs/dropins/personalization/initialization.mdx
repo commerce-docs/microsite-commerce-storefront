@@ -1,31 +1,113 @@
 ---
 title: Personalization initialization
-description: Learn about the initializer for the personalization drop-in component.
+description: Configure the Personalization drop-in with language definitions, custom data models, and drop-in-specific options.
+sidebar:
+  label: Initialization
+  order: 3
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-You must include the personalization initializer on all pages by adding it to the `header.js` file.
+The **Personalization initializer** configures personalized content and recommendations based on customer behavior and preferences. Use initialization to customize language definitions for personalized content displayed throughout your storefront.
 
-The initialization code resides in the `/scripts/initializers/personalization.js` file within the boilerplate.
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.1</strong>
+</div>
 
-## Functionality
 
-The initialization sets up the following listeners:
 
-<OptionsTable
-  options={[
-    ['Event', 'Handling'],
-    ['cart/updated', 'Requests the applied customer groups, segments, and cart rules from Adobe Commerce and saves them to a cookie.'],
-    ['authenticated', 'Enables cart/initialized event processing when a customer logs in and clears the personalization cookie when a customer logs out.'],
-    ['cart/initialized', 'When a customer has just logged in, requests the applied customer groups, segments, and cart rules from Adobe Commerce and saves them to a cookie.'],
-  ]}
-/>
+## Configuration options
 
-## Initialization example
+The following table describes the configuration options available for the **Personalization** initializer:
 
-Add the following line to the `blocks/header/header.js` file in the boilerplate (or any other file included for all pages):
+<TableWrapper nowrap={[0,1]}>
 
-```js
-import '../../scripts/initializers/personalization.js';
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | `LangDefinitions` | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | `Record<string, any>` | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+
+</TableWrapper>
+
+## Basic initialization
+
+Initialize the drop-in with default settings:
+
+```javascript title="scripts/initializers/personalization.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-personalization';
+
+await initializers.mountImmediately(initialize, {});
 ```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+
+```javascript title="scripts/initializers/personalization.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-personalization';
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+<Aside type="tip">
+For complete dictionary customization including all available keys and multi-language support, see the [Personalization Dictionary](/dropins/personalization/dictionary/) page.
+</Aside>
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+The following example shows how to customize the `CustomModel` model for the **Personalization** drop-in:
+
+```javascript title="scripts/initializers/personalization.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-personalization';
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
+
+
+
+
+
+## Related resources
+
+- [Personalization Dictionary](/dropins/personalization/dictionary/) - Customize user-facing text and labels
+- [Personalization overview](/dropins/personalization/) - Learn about Personalization features and capabilities
+- [Installation guide](/dropins/personalization/installation/) - Install and set up the Personalization drop-in
+
+{/* This documentation is auto-generated from: REPO_URL */}
