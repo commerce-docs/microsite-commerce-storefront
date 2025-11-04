@@ -1,6 +1,6 @@
 ---
-title: Checkout initialization
-description: Configure the Checkout drop-in with language definitions, custom data models, and drop-in-specific options.
+title: User Auth initialization
+description: Configure the User Auth drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
@@ -9,17 +9,17 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.
+The **User Auth initializer** configures authentication and authorization features including login, registration, password management, and session handling. Use initialization to customize authentication flows and user data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.1.0</strong>
+<strong>Version: 2.1.5</strong>
 </div>
 
 
 
 ## Configuration options
 
-The following table describes the configuration options available for the **Checkout** initializer:
+The following table describes the configuration options available for the **User Auth** initializer:
 
 <TableWrapper nowrap={[0,1]}>
 
@@ -27,9 +27,7 @@ The following table describes the configuration options available for the **Chec
 |---|---|---|---|
 | `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `defaults` | [`defaults`](#defaults) | No | Default checkout settings including billing/shipping address matching and pre-selected shipping method. |
-| `shipping` | [`shipping`](#shipping) | No | Shipping configuration including filters for available shipping methods based on cart contents or customer attributes. |
-| `features` | [`features`](#features) | No | Feature flags for optional checkout functionality including B2B quotes support and custom login routing. |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | Yes | Configuration for authHeaderConfig. |
 
 </TableWrapper>
 
@@ -37,9 +35,9 @@ The following table describes the configuration options available for the **Chec
 
 Initialize the drop-in with default settings:
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {});
 ```
@@ -48,9 +46,9 @@ await initializers.mountImmediately(initialize, {});
 
 Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-auth';
 
 const customStrings = {
   'AddToCart': 'Add to Bag',
@@ -66,21 +64,21 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 ```
 
 <Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [Checkout Dictionary](/dropins/checkout/dictionary/) page.
+For complete dictionary customization including all available keys and multi-language support, see the [User Auth Dictionary](/dropins/user-auth/dictionary/) page.
 </Aside>
 
 ## Customizing data models
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
-The following example shows how to customize the `CartModel` model for the **Checkout** drop-in:
+The following example shows how to customize the `CustomerModel` model for the **User Auth** drop-in:
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-auth';
 
 const models = {
-  CartModel: {
+  CustomerModel: {
     transformer: (data) => ({
       // Add custom fields from backend data
       customField: data?.custom_field,
@@ -103,24 +101,21 @@ The following models can be customized through the `models` configuration option
 
 | Model | Description |
 |---|---|
-| [`CartModel`](#cartmodel) | Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow. |
-| [`CustomerModel`](#customermodel) | Transforms CustomerModel data from GraphQL. |
+| [`CustomerModel`](#customermodel) | Transforms customer authentication data including profile information, addresses, and account settings. Use this to add custom fields or modify user data structures. |
 
 </TableWrapper>
 
 ## Drop-in-specific configuration
 
-The **Checkout** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **User Auth** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {
   // Drop-in-specific configuration
-  defaults: {},
-  shipping: {},
-  features: {},
+  authHeaderConfig: {},
 });
 ```
 
@@ -153,31 +148,12 @@ models?: {
 };
 ```
 
-### defaults
+### authHeaderConfig
 
 ```typescript
-defaults?: {
-    isBillToShipping?: boolean;
-    selectedShippingMethod?: Selector<ShippingMethod>;
-  };
-```
-
-### shipping
-
-```typescript
-shipping?: {
-    filterOptions?: Filter<ShippingMethod>;
-  };
-```
-
-### features
-
-```typescript
-features?: {
-    b2b?: {
-      quotes?: boolean;
-      routeLogin?: () => string | void;
-    };
+authHeaderConfig: {
+    header: string;
+    tokenPrefix: string;
   };
 ```
 
@@ -186,21 +162,17 @@ features?: {
 
 The following TypeScript definitions show the structure of each customizable model:
 
-### CartModel
-
-```typescript
-export interface CartAddress extends Address {}
-
-```
-
 ### CustomerModel
 
 ```typescript
-export interface Customer {
+export interface CustomerModel {
   firstName: string;
   lastName: string;
   email: string;
+  groupUid: string;
+  customAttributes?: Record<string, string>[];
+  errors?: { message: string }[];
 }
 ```
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-checkout */}
+{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-auth */}
