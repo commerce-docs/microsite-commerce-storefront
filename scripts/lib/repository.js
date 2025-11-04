@@ -19,9 +19,31 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
 
 /**
- * Clone or update the boilerplate repository
+ * Get the latest release tag from the boilerplate repository
  * 
- * @returns {string} Path to the boilerplate repository
+ * @param {string} boilerplatePath - Path to the boilerplate repository
+ * @returns {string} Latest tag name
+ */
+function getLatestBoilerplateTag(boilerplatePath) {
+    try {
+        // Fetch all tags
+        execFileSync('git', ['fetch', '--tags'], { cwd: boilerplatePath, stdio: 'pipe' });
+
+        // Get the latest tag (sorted by version)
+        const latestTag = execFileSync('git', ['describe', '--tags', '--abbrev=0'],
+            { cwd: boilerplatePath, encoding: 'utf8' }).trim();
+
+        return latestTag;
+    } catch (error) {
+        console.warn(`  ⚠️  Could not determine latest tag, falling back to main branch`);
+        return 'main';
+    }
+}
+
+/**
+ * Clone or update the boilerplate repository at the latest release tag
+ * 
+ * @returns {Object} Object with path and tag
  */
 export function cloneOrUpdateBoilerplate() {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
@@ -32,19 +54,27 @@ export function cloneOrUpdateBoilerplate() {
     if (!existsSync(boilerplatePath)) {
         console.log(`  Cloning boilerplate...`);
         mkdirSync(dirname(boilerplatePath), { recursive: true });
-        execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', boilerplateUrl, boilerplatePath], { stdio: 'inherit' });
-
-        console.log(`  Installing boilerplate dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+        // Clone without specifying a branch to get all tags
+        execFileSync('git', ['clone', boilerplateUrl, boilerplatePath], { stdio: 'pipe' });
     } else {
-        console.log(`  Updating boilerplate...`);
-        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
-
-        console.log(`  Updating dependencies...`);
-        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+        console.log(`  Fetching latest boilerplate changes...`);
+        execFileSync('git', ['fetch', '--all', '--tags'], { cwd: boilerplatePath, stdio: 'pipe' });
     }
 
-    return boilerplatePath;
+    // Get and checkout the latest release tag
+    const latestTag = getLatestBoilerplateTag(boilerplatePath);
+    console.log(`  Using boilerplate release: ${latestTag}`);
+
+    try {
+        execFileSync('git', ['checkout', latestTag], { cwd: boilerplatePath, stdio: 'pipe' });
+    } catch (error) {
+        console.warn(`  ⚠️  Could not checkout ${latestTag}, staying on current branch`);
+    }
+
+    console.log(`  Installing boilerplate dependencies...`);
+    execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+
+    return { path: boilerplatePath, tag: latestTag };
 }
 
 /**
