@@ -181,43 +181,12 @@ function generateSlotsContent(containers) {
 
     for (const container of containers) {
         content += `## ${container.containerName} slots\n\n`;
-        content += `The slots for the \`${container.containerName}\` container allow you to customize its appearance and behavior.\n\n`;
         content += '```js\n';
         content += `interface ${container.containerName}Props\n\n`;
         content += 'slots?: {\n';
         content += container.slotsInterface;
         content += '\n};\n';
         content += '```\n\n';
-
-        // Parse individual slots for detailed documentation sections
-        const slotPattern = /(\w+)\??\s*:\s*SlotProps(?:<[^>]+>)?;/g;
-        let match;
-        const slots = [];
-
-        while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
-            slots.push(match[1]);
-        }
-
-        // Generate placeholder sections for each slot
-        if (slots.length > 0) {
-            for (const slotName of slots) {
-                content += `### ${slotName} slot\n\n`;
-                content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
-                content += '```js\n';
-                content += ` provider.render(${container.containerName}, {\n`;
-                content += '  slots: {\n';
-                content += `    ${slotName}: (ctx) => {\n`;
-                content += '      // Your custom implementation\n';
-                content += '      const element = document.createElement(\'div\');\n';
-                content += `      element.innerText = 'Custom ${slotName}';\n`;
-                content += '      ctx.appendChild(element);\n';
-                content += '    }\n';
-                content += '  }\n';
-                content += '});\n';
-                content += '```\n\n';
-            }
-        }
-
         content += '---\n\n';
     }
 
