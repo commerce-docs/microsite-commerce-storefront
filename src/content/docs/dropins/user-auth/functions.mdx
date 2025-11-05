@@ -1,0 +1,477 @@
+---
+title: User Auth Functions
+description: API functions provided by the User Auth drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The User Auth drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.5</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`confirmEmail`](#confirmemail) | The confirmEmail function completes the customer activation process using the supplied customerEmail and customerConfirmationKey parameters. |
+| [`createCustomer`](#createcustomer) | The createCustomer function creates a customer account based on the data supplied in the forms parameter. |
+| [`createCustomerAddress`](#createcustomeraddress) | The createCustomerAddress function defines a new customer address. |
+| [`getAttributesForm`](#getattributesform) | The getAttributesForm function retrieves EAV attributes associated with customer and customer address frontend forms. |
+| [`getCustomerData`](#getcustomerdata) | The getCustomerData function retrieves data about the customer represented by the value of the auth_dropin_user_token parameter. |
+| [`getCustomerToken`](#getcustomertoken) | The getCustomerToken function handles the sign-in operation. |
+| [`getStoreConfig`](#getstoreconfig) | The getStoreConfig function calls the storeConfig query to retrieve store configuration data.. |
+| [`requestPasswordResetEmail`](#requestpasswordresetemail) | The requestPasswordResetEmail function initiates the process of resetting a customer's password. |
+| [`resendConfirmationEmail`](#resendconfirmationemail) | The resendConfirmationEmail function resends the email confirmation to the customer using the supplied customerEmail parameter. |
+| [`resetPassword`](#resetpassword) | The resetPassword function resets a customer's password using the supplied email, resetPasswordToken, and newPassword parameters. |
+| [`revokeCustomerToken`](#revokecustomertoken) | The revokeCustomerToken function revokes the customer's token and clears cookie. |
+| [`verifyToken`](#verifytoken) | The verifyToken function checks the validity of the provided authentication token. |
+
+</TableWrapper>
+
+## confirmEmail
+
+The `confirmEmail` function completes the customer activation process using the supplied `customerEmail` and `customerConfirmationKey` parameters. Adobe Commerce sends the confirmation key to the customer when they request to create an account. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/confirm-email/" text="confirmEmail mutation" />.
+
+```ts
+const confirmEmail = async (
+  { customerEmail, customerConfirmationKey, }: confirmEmailProps
+): Promise<confirmEmailResponse | undefined>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `confirmEmailProps` | Yes | An object containing \`customerEmail\` (customer's email address) and \`customerConfirmationKey\` (confirmation key sent by Adobe Commerce). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `confirmEmailResponse | undefined`.
+
+---
+
+## createCustomer
+
+The `createCustomer` function creates a customer account based on the data supplied in the `forms` parameter. By default, the function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create/" text="createCustomer mutation" />. If the `apiVersion2` parameter is set to `true`, the function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-v2/" text="createCustomerV2 mutation" />.
+
+```ts
+const createCustomer = async (
+  forms: Customer,
+  apiVersion2: boolean
+): Promise<CustomerModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `forms` | `Customer` | Yes | Customer account data including email, password, firstName, lastName, and optional custom attributes. |
+| `apiVersion2` | `boolean` | Yes | Whether to use the v2 API (createCustomerV2 mutation) instead of the original createCustomer mutation. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CustomerModel`](#customermodel).
+
+---
+
+## createCustomerAddress
+
+The `createCustomerAddress` function defines a new customer address. The customer can subsequently designate the address for billing or shipping orders. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-address/" text="createCustomerAddress mutation" />.
+
+```ts
+const createCustomerAddress = async (
+  address: AddressFormProps
+): Promise<string>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `AddressFormProps` | Yes | The new customer address including street, city, region, country, postal code, and optional fields like company name and phone number. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `string`.
+
+---
+
+## getAttributesForm
+
+The `getAttributesForm` function retrieves EAV attributes associated with customer and customer address frontend forms. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/" text="attributesForm query" />.
+
+```ts
+const getAttributesForm = async (
+  formCode: string
+): Promise<AttributesFormModel[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `formCode` | `string` | Yes | The form code, one of: customer_account_create, customer_account_edit, customer_address_create, or customer_address_edit. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `AttributesFormModel[]`.
+
+---
+
+## getCustomerData
+
+The `getCustomerData` function retrieves data about the customer represented by the value of the `auth_dropin_user_token` parameter. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/" text="customer query" />.
+
+```ts
+const getCustomerData = async (
+  user_token: string
+): Promise<CustomerModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `user_token` | `string` | Yes | The customer authentication token from the auth_dropin_user_token cookie. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CustomerModel`](#customermodel).
+
+---
+
+## getCustomerToken
+
+The `getCustomerToken` function handles the sign-in operation. It requires `userName` and `password` parameters and performs the following actions under the hood:
+
+1. Retrieves the customer token.
+2. Fetches customer data using the token.
+3. Sets the `auth_dropin_firstname` and `auth_dropin_user_token` cookies.
+4. Publishes an <Link href="https://github.com/adobe/adobe-client-data-layer" text="Adobe Client Data Layer (ACDL)" /> event.
+5. Emits an "authenticated" event.
+
+You can use the `getCustomerToken` function to build a custom authentication flow that remains fully integrated with other drop-in components. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/generate-token/" text="generateCustomerToken mutation" />.
+
+```ts
+const getCustomerToken = async (
+  { email, password, translations, onErrorCallback, handleSetInLineAlertProps, }: getCustomerTokenProps
+): Promise<{
+  errorMessage: string;
+  userName: string;
+  userEmail: string;
+}>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `options` | `getCustomerTokenProps` | Yes | An object containing \`userName\` (customer's email or username) and \`password\` (customer's password). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Promise<{
+  errorMessage: string;
+  userName: string;
+  userEmail: string;
+}>`.
+
+---
+
+## getStoreConfig
+
+The `getStoreConfig` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/" text="storeConfig query" /> to retrieve store configuration data.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel).
+
+---
+
+## requestPasswordResetEmail
+
+The `requestPasswordResetEmail` function initiates the process of resetting a customer's password. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/request-password-reset-email/" text="requestPasswordResetEmail mutation" />.
+
+```ts
+const requestPasswordResetEmail = async (
+  email: string
+): Promise<PasswordResetEmailModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | The email address of the customer requesting a password reset. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`PasswordResetEmailModel`](#passwordresetemailmodel).
+
+---
+
+## resendConfirmationEmail
+
+The `resendConfirmationEmail` function resends the email confirmation to the customer using the supplied `customerEmail` parameter. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/resend-confirmation-email/" text="resendConfirmationEmail mutation" />, which is included in the Storefront Compatibility Package.
+
+```ts
+const resendConfirmationEmail = async (
+  customerEmail: string
+): Promise<resendConfirmationEmailResponse>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `customerEmail` | `string` | Yes | The email address of the customer who needs the confirmation email resent. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `resendConfirmationEmailResponse`.
+
+---
+
+## resetPassword
+
+The `resetPassword` function resets a customer's password using the supplied `email`, `resetPasswordToken`, and `newPassword` parameters. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/reset-password/" text="resetPassword mutation" />.
+
+```ts
+const resetPassword = async (
+  email: string,
+  resetPasswordToken: string,
+  newPassword: string
+): Promise<ResetPasswordModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `email` | `string` | Yes | The email address of the customer resetting their password. |
+| `resetPasswordToken` | `string` | Yes | The password reset token sent to the customer's email. |
+| `newPassword` | `string` | Yes | The new password for the customer account. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`ResetPasswordModel`](#resetpasswordmodel).
+
+---
+
+## revokeCustomerToken
+
+The `revokeCustomerToken` function revokes the customer's token and clears cookie. It then publishes an ACDL event and emits an "authenticated" event. This API can also be used to build a custom sign-out flow that stays fully integrated with other drop-in components. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/revoke-token/" text="revokeCustomerToken mutation" />.
+
+```ts
+const revokeCustomerToken = async (): Promise<RevokeCustomerTokenModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`RevokeCustomerTokenModel`](#revokecustomertokenmodel).
+
+---
+
+## verifyToken
+
+The `verifyToken` function checks the validity of the provided authentication token. It verifies the token by making a GraphQL request to validate the customer. If valid, it emits an `authenticated` event with `true` and the customer's group ID. If invalid or missing, it emits an `authenticated` event with `false`, removes the token cookie, and clears the authentication header.
+
+```ts
+const verifyToken = async (
+  authType = 'Authorization',
+  type = 'Bearer'
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `authType` | `string` | No | The HTTP header name to use for authentication. Defaults to \`Authorization\`. This allows customization of the authentication header if your backend uses a different header name. |
+| `type` | `string` | No | The authentication scheme type to use. Defaults to \`Bearer\`. This is prepended to the token value in the authentication header (e.g., \`Bearer &lt;token&gt;\`). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### CustomerModel
+
+The `CustomerModel` object is returned by the following functions: [`createCustomer`](#createcustomer), [`getCustomerData`](#getcustomerdata).
+
+```ts
+interface CustomerModel {
+  firstName: string;
+  lastName: string;
+  email: string;
+  groupUid: string;
+  customAttributes?: Record<string, string>[];
+  errors?: { message: string }[];
+}
+```
+
+### PasswordResetEmailModel
+
+The `PasswordResetEmailModel` object is returned by the following functions: [`requestPasswordResetEmail`](#requestpasswordresetemail).
+
+```ts
+interface PasswordResetEmailModel {
+  message: string | '';
+  success: boolean;
+}
+```
+
+### ResetPasswordModel
+
+The `ResetPasswordModel` object is returned by the following functions: [`resetPassword`](#resetpassword).
+
+```ts
+interface ResetPasswordModel {
+  message: string | '';
+  success: boolean;
+}
+```
+
+### RevokeCustomerTokenModel
+
+The `RevokeCustomerTokenModel` object is returned by the following functions: [`revokeCustomerToken`](#revokecustomertoken).
+
+```ts
+interface RevokeCustomerTokenModel {
+  message: string | '';
+  success: boolean;
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  autocompleteOnStorefront: boolean;
+  minLength: number;
+  requiredCharacterClasses: number;
+  createAccountConfirmation: boolean;
+  customerAccessTokenLifetime: number;
+}
+```
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

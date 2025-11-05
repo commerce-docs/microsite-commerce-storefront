@@ -352,15 +352,15 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
  * // Returns: 'header?: SlotProps;\n    footer?: SlotProps;'
  */
 export function extractSlotsSection(interfaceContent) {
-    // Find the start of the slots section
-    const slotsStartPattern = /slots\?:\s*{/;
+    // Find the start of the slots section (matches both "slots?:" and "slots:")
+    const slotsStartPattern = /slots\??:\s*{/;
     const slotsStartMatch = interfaceContent.match(slotsStartPattern);
 
     if (!slotsStartMatch) {
         return null;
     }
 
-    // Find the position right after "slots?: {"
+    // Find the position right after "slots?: {" or "slots: {"
     const startPos = slotsStartMatch.index + slotsStartMatch[0].length;
 
     // Use balanced brace matching to find the closing brace
