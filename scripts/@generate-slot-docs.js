@@ -132,8 +132,14 @@ function generateSummaryTable(containers) {
         return '';
     }
 
-    let table = '| Container | Slots |\n';
-    table += '|-----------|-------|\n';
+    let table = '<table>\n';
+    table += '<thead>\n';
+    table += '<tr>\n';
+    table += '<th style="white-space: nowrap;">Container</th>\n';
+    table += '<th>Slots</th>\n';
+    table += '</tr>\n';
+    table += '</thead>\n';
+    table += '<tbody>\n';
 
     for (const container of containers) {
         // Parse slot names from the interface
@@ -142,12 +148,23 @@ function generateSummaryTable(containers) {
         const slots = [];
 
         while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
-            slots.push(`\`${match[1]}\``);
+            slots.push(`<code>${match[1]}</code>`);
         }
 
         const slotsList = slots.length > 0 ? slots.join(', ') : 'None';
-        table += `| \`${container.containerName}\` | ${slotsList} |\n`;
+
+        // Create anchor link to the container's section
+        const anchorId = `${container.containerName.toLowerCase()}-slots`;
+        const containerLink = `<a href="#${anchorId}"><code>${container.containerName}</code></a>`;
+
+        table += '<tr>\n';
+        table += `<td style="white-space: nowrap;">${containerLink}</td>\n`;
+        table += `<td>${slotsList}</td>\n`;
+        table += '</tr>\n';
     }
+
+    table += '</tbody>\n';
+    table += '</table>\n';
 
     return table;
 }
