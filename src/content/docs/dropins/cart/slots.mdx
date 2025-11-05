@@ -85,6 +85,54 @@ provider.render(CartSummaryGrid, {
 ```
 
 
+
+This example customizes the `Footer` slot to demonstrate rendering multiple nested containers:
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+
+provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Render edit button for configurable items
+      if (ctx.item?.itemType === 'ConfigurableCartItem') {
+        const editLink = document.createElement('div');
+        editLink.className = 'cart-item-edit-link';
+        
+        UI.render(Button, {
+          children: 'Edit',
+          variant: 'tertiary',
+          size: 'medium',
+          icon: Icon({ source: 'Edit' }),
+          onClick: () => {
+            console.log('Edit item:', ctx.item);
+          },
+        })(editLink);
+        
+        ctx.appendChild(editLink);
+      }
+      
+      // Render nested GiftOptions container with its own slots
+      const giftOptions = document.createElement('div');
+      provider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'cart',
+        handleItemsLoading: ctx.handleItemsLoading,
+        handleItemsError: ctx.handleItemsError,
+        onItemUpdate: ctx.onItemUpdate,
+      })(giftOptions);
+      
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.cart-summary-list'));
+```
+
+
 ## CartSummaryGrid slots
 
 ```js {4}

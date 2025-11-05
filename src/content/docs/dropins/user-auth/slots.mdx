@@ -54,15 +54,87 @@ The User Auth drop-in exposes **5 slots** in **6 containers** for customizing sp
 </table>
 
 
+## Using slots
+
+This example customizes the `SuccessNotification` slot in `SignIn`:
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import SignIn from '@dropins/storefront-auth/containers/SignIn.js';
+
+provider.render(SignIn, {
+  slots: {
+    SuccessNotification: (ctx) => {
+      const div = document.createElement('div');
+      div.className = 'sign-in__success-notification';
+      div.textContent = 'Custom SuccessNotification';
+      ctx.appendChild(div);
+    }
+  }
+})(document.querySelector('.sign-in'));
+```
+
+
+
+This example customizes the `SuccessNotification` slot to demonstrate rendering a nested container with its own slots:
+
+```js
+import { render as authRenderer } from '@dropins/storefront-auth/render.js';
+import { SignIn } from '@dropins/storefront-auth/containers/SignIn.js';
+import { SuccessNotification } from '@dropins/storefront-auth/containers/SuccessNotification.js';
+import { Button, provider as UI } from '@dropins/tools/components.js';
+
+authRenderer.render(SignIn, {
+  slots: {
+    SuccessNotification: (ctx) => {
+      const elem = document.createElement('div');
+      
+      // Render nested SuccessNotification container with its own slots
+      authRenderer.render(SuccessNotification, {
+        labels: {
+          headingText: 'Welcome back!',
+          messageText: 'You have successfully signed in.',
+        },
+        slots: {
+          SuccessNotificationActions: (innerCtx) => {
+            const primaryBtn = document.createElement('div');
+            UI.render(Button, {
+              children: 'My Account',
+              onClick: () => {
+                window.location.href = '/customer/account';
+              },
+            })(primaryBtn);
+            innerCtx.appendChild(primaryBtn);
+            
+            const secondaryBtn = document.createElement('div');
+            secondaryBtn.style.marginTop = 'var(--spacing-xsmall)';
+            
+            UI.render(Button, {
+              children: 'Continue Shopping',
+              variant: 'tertiary',
+              onClick: () => {
+                window.location.href = '/';
+              },
+            })(secondaryBtn);
+            innerCtx.appendChild(secondaryBtn);
+          },
+        },
+      })(elem);
+      
+      ctx.appendChild(elem);
+    },
+  },
+})(document.querySelector('.sign-in'));
+```
 
 
 ## Form slots
 
-```js
+```js {4}
 interface FormProps
 
 slots?: {
-    [key: string]: SlotProps;
+  [key: string]: SlotProps;
 };
 ```
 
@@ -70,11 +142,11 @@ slots?: {
 
 ## FormInputs slots
 
-```js
+```js {4}
 interface FormInputsProps
 
 slots?: {
-    [key: string]: SlotProps;
+  [key: string]: SlotProps;
 };
 ```
 

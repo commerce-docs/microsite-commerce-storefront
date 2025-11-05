@@ -95,6 +95,35 @@ provider.render(CreateReturn, {
 ```
 
 
+
+This example customizes the `Footer` slot to demonstrate rendering nested containers from other drop-ins:
+
+```js
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+
+orderRenderer.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      // Render GiftOptions from Cart drop-in with order data source
+      const giftOptions = document.createElement('div');
+      
+      CartProvider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'order',
+        isEditable: false,
+      })(giftOptions);
+      
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.order-product-list'));
+```
+
+
 ## CreateReturn slots
 
 ```js {4,5,6,9,13}

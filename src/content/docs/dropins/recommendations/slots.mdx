@@ -55,6 +55,71 @@ provider.render(ProductList, {
 ```
 
 
+
+This example customizes the `Footer` slot to demonstrate conditional rendering and event publishing:
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
+
+provider.render(ProductList, {
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  recId: 'product-recs',
+  currentSku: 'MT01',
+  slots: {
+    Footer: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'footer__wrapper';
+      
+      const addToCart = document.createElement('div');
+      addToCart.className = 'footer__button--add-to-cart';
+      wrapper.appendChild(addToCart);
+      
+      // Conditional rendering based on product type
+      if (ctx.item.itemType === 'SimpleProductView') {
+        // Simple product - show add to cart button
+        UI.render(Button, {
+          children: 'Add to Cart',
+          icon: Icon({ source: 'Cart' }),
+          onClick: (event) => {
+            // Add to cart
+            cartApi.addProductsToCart([
+              { sku: ctx.item.sku, quantity: 1 }
+            ]);
+            
+            // Stop event propagation to prevent parent click handlers
+            event.stopPropagation();
+            
+            // Publish analytics event
+            publishRecsItemAddToCartClick({
+              recommendationUnit: ctx.recommendationUnit,
+              pagePlacement: 'product-list',
+              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+              yOffsetBottom: addToCart.getBoundingClientRect().bottom ?? 0,
+              productId: ctx.index,
+            });
+          },
+          variant: 'primary',
+        })(addToCart);
+      } else {
+        // Complex product - show select options button
+        UI.render(Button, {
+          children: 'Select Options',
+          href: `/products/${ctx.item.urlKey}`,
+          variant: 'tertiary',
+        })(addToCart);
+      }
+      
+      ctx.replaceWith(wrapper);
+    }
+  }
+})(document.querySelector('.recommendations'));
+```
+
+
 ## ProductList slots
 
 ```js {4,5,6,10,13,16}
