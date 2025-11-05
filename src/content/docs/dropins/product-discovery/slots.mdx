@@ -60,6 +60,67 @@ provider.render(Facets, {
 ```
 
 
+
+This example customizes the `ProductActions` slot to demonstrate building action wrappers with multiple components:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+
+provider.render(SearchResults, {
+  routeProduct: (product) => `/products/${product.urlKey}`,
+  slots: {
+    ProductActions: (ctx) => {
+      // Create wrapper for multiple actions
+      const actionsWrapper = document.createElement('div');
+      actionsWrapper.className = 'product-discovery-product-actions';
+      
+      // Add to cart button (conditional based on product type)
+      const addToCartBtn = document.createElement('div');
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      
+      if (ctx.product.typename === 'ComplexProductView') {
+        UI.render(Button, {
+          children: 'Select Options',
+          icon: Icon({ source: 'Cart' }),
+          href: `/products/${ctx.product.urlKey}`,
+          variant: 'primary',
+        })(addToCartBtn);
+      } else {
+        UI.render(Button, {
+          children: 'Add to Cart',
+          icon: Icon({ source: 'Cart' }),
+          onClick: () => cartApi.addProductsToCart([
+            { sku: ctx.product.sku, quantity: 1 }
+          ]),
+          variant: 'primary',
+        })(addToCartBtn);
+      }
+      
+      // Wishlist toggle from another drop-in
+      const wishlistToggle = document.createElement('div');
+      wishlistToggle.className = 'product-discovery-product-actions__wishlist-toggle';
+      
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.product,
+        variant: 'tertiary',
+      })(wishlistToggle);
+      
+      // Assemble the wrapper
+      actionsWrapper.appendChild(addToCartBtn);
+      actionsWrapper.appendChild(wishlistToggle);
+      
+      ctx.replaceWith(actionsWrapper);
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+
 ## Facets slots
 
 ```js {4,5,6,7,8}

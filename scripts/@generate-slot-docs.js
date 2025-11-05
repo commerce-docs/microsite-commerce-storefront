@@ -283,8 +283,8 @@ function generateSlotsContent(containers) {
 
             // Determine indentation based on content - all 2-space increments
             let indentedLine;
-            if (/^\w+\??\s*:\s*SlotProps/.test(trimmedLine)) {
-                // Slot definition - indent with 2 spaces
+            if (/^(\w+\??\s*:\s*SlotProps|\[.+?\]\s*:\s*SlotProps)/.test(trimmedLine)) {
+                // Slot definition (named or index signature) - indent with 2 spaces
                 indentedLine = '  ' + trimmedLine;
                 // Track for highlighting (add 4 for header lines)
                 slotLineNumbers.push(normalizedLines.length + 4);
@@ -372,12 +372,20 @@ function generateSimpleExample(containers, repoConfig) {
         return '';
     }
 
-    // Use the first container
-    const container = containers[0];
+    // Find the first container with a named slot (not just index signatures)
+    let container = null;
+    let slotMatch = null;
 
-    // Parse to find the first slot name
-    const slotMatch = container.slotsInterface.match(/(\w+)\??\s*:\s*SlotProps/);
-    if (!slotMatch) {
+    for (const cont of containers) {
+        slotMatch = cont.slotsInterface.match(/(\w+)\??\s*:\s*SlotProps/);
+        if (slotMatch) {
+            container = cont;
+            break;
+        }
+    }
+
+    // If no container has named slots, return empty
+    if (!container || !slotMatch) {
         return '';
     }
 
@@ -497,6 +505,550 @@ ${exampleContent}
 }
 
 /**
+ * Generate a complex slot example demonstrating callbacks
+ * 
+ * @param {Array} containers - Array of containers with slots
+ * @param {Object} repoConfig - Repository configuration
+ * @returns {string|null} Complex example markdown or null if no suitable slot found
+ */
+function generateComplexExample(containers, repoConfig) {
+    // Find a slot with callbacks/methods (functions in context properties)
+    for (const container of containers) {
+        const { containerName, slotsInterface } = container;
+        const containerKebab = containerName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+
+        // Look for Agreements slot (Checkout drop-in)
+        const agreementsPattern = /Agreements\??:\s*SlotProps<\{[^}]*appendAgreement[^}]*\}>/;
+        const agreementsMatch = slotsInterface.match(agreementsPattern);
+
+        if (agreementsMatch) {
+            return `
+This example customizes the \`Agreements\` slot to demonstrate using slot methods:
+
+\`\`\`js
+import { render as provider } from '${repoConfig.packageName}/render.js';
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+    Agreements: (ctx) => {
+      // Use the appendAgreement method to add custom terms
+      ctx.appendAgreement(() => ({
+        name: 'privacy-policy',
+        mode: 'manual',
+        translationId: 'Checkout.PrivacyPolicy.label',
+      }));
+      
+      // You can add multiple agreements
+      ctx.appendAgreement(() => ({
+        name: 'newsletter',
+        mode: 'auto',
+        text: 'I agree to receive marketing emails',
+      }));
+    }
+  }
+})(document.querySelector('.${containerKebab}'));
+\`\`\`
+`;
+        }
+
+        // Look for Actions slot with appendButton (Product Details drop-in)
+        const actionsPattern = /Actions\??:\s*SlotProps<[^>]*appendButton[^>]*>/;
+        const actionsMatch = slotsInterface.match(actionsPattern);
+
+        if (actionsMatch) {
+            return `
+This example customizes the \`Actions\` slot to demonstrate using slot methods to add custom buttons:
+
+\`\`\`js
+import { render as provider } from '${repoConfig.packageName}/render.js';
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+    Actions: (ctx) => {
+      // Use appendButton method to add custom action buttons
+      ctx.appendButton({
+        text: 'Add to Wishlist',
+        icon: 'Heart',
+        variant: 'secondary',
+        onClick: () => {
+          console.log('Added to wishlist');
+        },
+      });
+      
+      // Add another custom button
+      ctx.appendButton({
+        text: 'Compare',
+        icon: 'Scale',
+        variant: 'tertiary',
+        onClick: () => {
+          console.log('Added to compare');
+        },
+      });
+    }
+  }
+})(document.querySelector('.${containerKebab}'));
+\`\`\`
+`;
+        }
+
+        // Look for Breadcrumbs slot with multiple methods (Product Details drop-in)
+        const breadcrumbsPattern = /Breadcrumbs\??:\s*SlotProps<[^>]*appendLink[^>]*>/;
+        const breadcrumbsMatch = slotsInterface.match(breadcrumbsPattern);
+
+        if (breadcrumbsMatch) {
+            return `
+This example customizes the \`Breadcrumbs\` slot to demonstrate using multiple slot methods:
+
+\`\`\`js
+import { render as provider } from '${repoConfig.packageName}/render.js';
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+    Breadcrumbs: (ctx) => {
+      // Set a custom separator
+      ctx.setSeparator('ChevronRight');
+      
+      // Add custom breadcrumb links
+      ctx.appendLink({
+        text: 'Custom Category',
+        href: '/category/custom',
+      });
+      
+      ctx.appendLink({
+        text: 'Subcategory',
+        href: '/category/custom/sub',
+      });
+      
+      // Add a custom HTML element
+      const badge = document.createElement('span');
+      badge.className = 'breadcrumb-badge';
+      badge.textContent = 'New';
+      ctx.appendHTMLElement(badge);
+    }
+  }
+})(document.querySelector('.${containerKebab}'));
+\`\`\`
+`;
+        }
+
+        // Look for Footer slot in CartSummaryList (Cart drop-in - nested containers)
+        // Check this before UndoBanner to prioritize the more complex example
+        if (containerName === 'CartSummaryList') {
+            const footerPattern = /Footer\??:\s*SlotProps/;
+            const footerMatch = slotsInterface.match(footerPattern);
+
+            if (footerMatch) {
+                return `
+This example customizes the \`Footer\` slot to demonstrate rendering multiple nested containers:
+
+\`\`\`js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+
+provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Render edit button for configurable items
+      if (ctx.item?.itemType === 'ConfigurableCartItem') {
+        const editLink = document.createElement('div');
+        editLink.className = 'cart-item-edit-link';
+        
+        UI.render(Button, {
+          children: 'Edit',
+          variant: 'tertiary',
+          size: 'medium',
+          icon: Icon({ source: 'Edit' }),
+          onClick: () => {
+            console.log('Edit item:', ctx.item);
+          },
+        })(editLink);
+        
+        ctx.appendChild(editLink);
+      }
+      
+      // Render nested GiftOptions container with its own slots
+      const giftOptions = document.createElement('div');
+      provider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'cart',
+        handleItemsLoading: ctx.handleItemsLoading,
+        handleItemsError: ctx.handleItemsError,
+        onItemUpdate: ctx.onItemUpdate,
+      })(giftOptions);
+      
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.cart-summary-list'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for Footer slot in OrderProductList (Order drop-in - nested containers)
+        if (containerName === 'OrderProductList') {
+            const footerPattern = /Footer\??:\s*SlotProps/;
+            const footerMatch = slotsInterface.match(footerPattern);
+
+            if (footerMatch) {
+                return `
+This example customizes the \`Footer\` slot to demonstrate rendering nested containers from other drop-ins:
+
+\`\`\`js
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+
+orderRenderer.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      // Render GiftOptions from Cart drop-in with order data source
+      const giftOptions = document.createElement('div');
+      
+      CartProvider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'order',
+        isEditable: false,
+      })(giftOptions);
+      
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.order-product-list'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for Footer slot in ProductList (Recommendations drop-in - conditional rendering with events)
+        if (containerName === 'ProductList' && repoConfig.packageName === '@dropins/storefront-recommendations') {
+            const footerPattern = /Footer\??:\s*SlotProps/;
+            const footerMatch = slotsInterface.match(footerPattern);
+
+            if (footerMatch) {
+                return `
+This example customizes the \`Footer\` slot to demonstrate conditional rendering and event publishing:
+
+\`\`\`js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
+
+provider.render(ProductList, {
+  routeProduct: (item) => \`/products/\${item.urlKey}\`,
+  recId: 'product-recs',
+  currentSku: 'MT01',
+  slots: {
+    Footer: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'footer__wrapper';
+      
+      const addToCart = document.createElement('div');
+      addToCart.className = 'footer__button--add-to-cart';
+      wrapper.appendChild(addToCart);
+      
+      // Conditional rendering based on product type
+      if (ctx.item.itemType === 'SimpleProductView') {
+        // Simple product - show add to cart button
+        UI.render(Button, {
+          children: 'Add to Cart',
+          icon: Icon({ source: 'Cart' }),
+          onClick: (event) => {
+            // Add to cart
+            cartApi.addProductsToCart([
+              { sku: ctx.item.sku, quantity: 1 }
+            ]);
+            
+            // Stop event propagation to prevent parent click handlers
+            event.stopPropagation();
+            
+            // Publish analytics event
+            publishRecsItemAddToCartClick({
+              recommendationUnit: ctx.recommendationUnit,
+              pagePlacement: 'product-list',
+              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+              yOffsetBottom: addToCart.getBoundingClientRect().bottom ?? 0,
+              productId: ctx.index,
+            });
+          },
+          variant: 'primary',
+        })(addToCart);
+      } else {
+        // Complex product - show select options button
+        UI.render(Button, {
+          children: 'Select Options',
+          href: \`/products/\${ctx.item.urlKey}\`,
+          variant: 'tertiary',
+        })(addToCart);
+      }
+      
+      ctx.replaceWith(wrapper);
+    }
+  }
+})(document.querySelector('.recommendations'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for ProductActions slot (Product Discovery drop-in - action wrappers)
+        if (containerName === 'SearchResults') {
+            const productActionsPattern = /ProductActions\??:\s*SlotProps/;
+            const productActionsMatch = slotsInterface.match(productActionsPattern);
+
+            if (productActionsMatch) {
+                return `
+This example customizes the \`ProductActions\` slot to demonstrate building action wrappers with multiple components:
+
+\`\`\`js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+
+provider.render(SearchResults, {
+  routeProduct: (product) => \`/products/\${product.urlKey}\`,
+  slots: {
+    ProductActions: (ctx) => {
+      // Create wrapper for multiple actions
+      const actionsWrapper = document.createElement('div');
+      actionsWrapper.className = 'product-discovery-product-actions';
+      
+      // Add to cart button (conditional based on product type)
+      const addToCartBtn = document.createElement('div');
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      
+      if (ctx.product.typename === 'ComplexProductView') {
+        UI.render(Button, {
+          children: 'Select Options',
+          icon: Icon({ source: 'Cart' }),
+          href: \`/products/\${ctx.product.urlKey}\`,
+          variant: 'primary',
+        })(addToCartBtn);
+      } else {
+        UI.render(Button, {
+          children: 'Add to Cart',
+          icon: Icon({ source: 'Cart' }),
+          onClick: () => cartApi.addProductsToCart([
+            { sku: ctx.product.sku, quantity: 1 }
+          ]),
+          variant: 'primary',
+        })(addToCartBtn);
+      }
+      
+      // Wishlist toggle from another drop-in
+      const wishlistToggle = document.createElement('div');
+      wishlistToggle.className = 'product-discovery-product-actions__wishlist-toggle';
+      
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.product,
+        variant: 'tertiary',
+      })(wishlistToggle);
+      
+      // Assemble the wrapper
+      actionsWrapper.appendChild(addToCartBtn);
+      actionsWrapper.appendChild(wishlistToggle);
+      
+      ctx.replaceWith(actionsWrapper);
+    }
+  }
+})(document.querySelector('.search-results'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for SuccessNotificationActions slot (User Auth drop-in - nested actions)
+        if (containerName === 'SuccessNotification') {
+            const successNotificationActionsPattern = /SuccessNotificationActions\??:\s*SlotProps/;
+            const successNotificationActionsMatch = slotsInterface.match(successNotificationActionsPattern);
+
+            if (successNotificationActionsMatch) {
+                return `
+This example customizes the \`SuccessNotificationActions\` slot to demonstrate rendering custom action buttons:
+
+\`\`\`js
+import { render as authRenderer } from '@dropins/storefront-auth/render.js';
+import { SuccessNotification } from '@dropins/storefront-auth/containers/SuccessNotification.js';
+import { Button, provider as UI } from '@dropins/tools/components.js';
+
+authRenderer.render(SuccessNotification, {
+  labels: {
+    headingText: 'Success!',
+    messageText: 'Your account has been updated.',
+  },
+  slots: {
+    SuccessNotificationActions: (ctx) => {
+      // Primary action button
+      const primaryBtn = document.createElement('div');
+      UI.render(Button, {
+        children: 'My Account',
+        onClick: () => {
+          window.location.href = '/customer/account';
+        },
+      })(primaryBtn);
+      ctx.appendChild(primaryBtn);
+      
+      // Secondary action button with custom styling
+      const secondaryBtn = document.createElement('div');
+      secondaryBtn.style.display = 'flex';
+      secondaryBtn.style.justifyContent = 'center';
+      secondaryBtn.style.marginTop = 'var(--spacing-xsmall)';
+      
+      UI.render(Button, {
+        children: 'Continue Shopping',
+        variant: 'tertiary',
+        onClick: () => {
+          window.location.href = '/';
+        },
+      })(secondaryBtn);
+      ctx.appendChild(secondaryBtn);
+    },
+  },
+})(document.querySelector('.success-notification'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for SuccessNotification slot in SignIn (User Auth drop-in - nested container rendering)
+        if (containerName === 'SignIn') {
+            const successNotificationPattern = /SuccessNotification\??:\s*SlotProps/;
+            const successNotificationMatch = slotsInterface.match(successNotificationPattern);
+
+            if (successNotificationMatch) {
+                return `
+This example customizes the \`SuccessNotification\` slot to demonstrate rendering a nested container with its own slots:
+
+\`\`\`js
+import { render as authRenderer } from '@dropins/storefront-auth/render.js';
+import { SignIn } from '@dropins/storefront-auth/containers/SignIn.js';
+import { SuccessNotification } from '@dropins/storefront-auth/containers/SuccessNotification.js';
+import { Button, provider as UI } from '@dropins/tools/components.js';
+
+authRenderer.render(SignIn, {
+  slots: {
+    SuccessNotification: (ctx) => {
+      const elem = document.createElement('div');
+      
+      // Render nested SuccessNotification container with its own slots
+      authRenderer.render(SuccessNotification, {
+        labels: {
+          headingText: 'Welcome back!',
+          messageText: 'You have successfully signed in.',
+        },
+        slots: {
+          SuccessNotificationActions: (innerCtx) => {
+            const primaryBtn = document.createElement('div');
+            UI.render(Button, {
+              children: 'My Account',
+              onClick: () => {
+                window.location.href = '/customer/account';
+              },
+            })(primaryBtn);
+            innerCtx.appendChild(primaryBtn);
+            
+            const secondaryBtn = document.createElement('div');
+            secondaryBtn.style.marginTop = 'var(--spacing-xsmall)';
+            
+            UI.render(Button, {
+              children: 'Continue Shopping',
+              variant: 'tertiary',
+              onClick: () => {
+                window.location.href = '/';
+              },
+            })(secondaryBtn);
+            innerCtx.appendChild(secondaryBtn);
+          },
+        },
+      })(elem);
+      
+      ctx.appendChild(elem);
+    },
+  },
+})(document.querySelector('.sign-in'));
+\`\`\`
+`;
+            }
+        }
+
+        // Look for UndoBanner slot (Cart drop-in) - fallback if Footer wasn't matched
+        const undoBannerPattern = /UndoBanner\??:\s*SlotProps<\{[^}]*onUndo[^}]*onDismiss[^}]*\}>/;
+        const undoBannerMatch = slotsInterface.match(undoBannerPattern);
+
+        if (undoBannerMatch) {
+            return `
+This example customizes the \`UndoBanner\` slot to demonstrate handling callbacks and state:
+
+\`\`\`js
+import { render as provider } from '${repoConfig.packageName}/render.js';
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+    UndoBanner: (ctx) => {
+      const { item, loading, error, onUndo, onDismiss } = ctx;
+      
+      const banner = document.createElement('div');
+      banner.className = '${containerKebab}__undo-banner';
+      
+      // Show loading state
+      if (loading) {
+        banner.textContent = 'Processing...';
+        ctx.appendChild(banner);
+        return;
+      }
+      
+      // Display item name
+      const message = document.createElement('p');
+      message.textContent = \`Removed \${item.name}\`;
+      banner.appendChild(message);
+      
+      // Show error if present
+      if (error) {
+        const errorText = document.createElement('span');
+        errorText.className = '${containerKebab}__undo-banner-error';
+        errorText.textContent = error;
+        banner.appendChild(errorText);
+      }
+      
+      // Wire up undo callback
+      const undoBtn = document.createElement('button');
+      undoBtn.textContent = 'Undo';
+      undoBtn.onclick = onUndo;
+      banner.appendChild(undoBtn);
+      
+      // Wire up dismiss callback
+      const dismissBtn = document.createElement('button');
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.onclick = onDismiss;
+      banner.appendChild(dismissBtn);
+      
+      ctx.appendChild(banner);
+    }
+  }
+})(document.querySelector('.${containerKebab}'));
+\`\`\`
+`;
+        }
+    }
+
+    return null; // No complex slot found
+}
+
+/**
  * Generate slots MDX documentation
  * 
  * @param {string} repoName - Drop-in name
@@ -509,9 +1061,10 @@ ${exampleContent}
 function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-slots.mdx');
 
-    // Generate summary table, example, and detailed content
+    // Generate summary table, examples, and detailed content
     const summaryTable = generateSummaryTable(containers);
     const simpleExample = generateSimpleExample(containers, repoConfig);
+    const complexExample = generateComplexExample(containers, repoConfig);
     const slotsContent = generateSlotsContent(containers);
 
     // Generate intro text based on whether slots exist
@@ -550,6 +1103,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
         'SIMPLE_EXAMPLE': simpleExample,
+        'COMPLEX_EXAMPLE': complexExample || '', // Empty string if no complex slot found
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
