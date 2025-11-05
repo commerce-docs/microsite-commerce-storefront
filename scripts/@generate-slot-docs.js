@@ -125,6 +125,34 @@ function scanForSlots(repoPath) {
 // ============================================================================
 
 /**
+ * Generate summary table of all containers and their slots
+ */
+function generateSummaryTable(containers) {
+    if (containers.length === 0) {
+        return '';
+    }
+
+    let table = '| Container | Slots |\n';
+    table += '|-----------|-------|\n';
+
+    for (const container of containers) {
+        // Parse slot names from the interface
+        const slotPattern = /(\w+)\??\s*:\s*SlotProps(?:<[^>]+>)?;/g;
+        let match;
+        const slots = [];
+
+        while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
+            slots.push(`\`${match[1]}\``);
+        }
+
+        const slotsList = slots.length > 0 ? slots.join(', ') : 'None';
+        table += `| \`${container.containerName}\` | ${slotsList} |\n`;
+    }
+
+    return table;
+}
+
+/**
  * Generate slots content for documentation
  */
 function generateSlotsContent(containers) {
@@ -192,7 +220,8 @@ function generateSlotsContent(containers) {
 function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-slots.mdx');
 
-    // Generate slots content
+    // Generate summary table and detailed content
+    const summaryTable = generateSummaryTable(containers);
     const slotsContent = generateSlotsContent(containers);
 
     // Generate intro text based on whether slots exist
@@ -213,6 +242,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'INTRO_TEXT': introText,
+        'SUMMARY_TABLE': summaryTable,
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
