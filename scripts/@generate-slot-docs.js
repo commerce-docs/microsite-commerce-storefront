@@ -195,7 +195,7 @@ function generateSlotsContent(containers) {
                 return;
             }
 
-            // Determine indentation based on content
+            // Determine indentation based on content - all 2-space increments
             let indentedLine;
             if (/^\w+\??\s*:\s*SlotProps/.test(trimmedLine)) {
                 // Slot definition - indent with 2 spaces
@@ -203,11 +203,11 @@ function generateSlotsContent(containers) {
                 // Track for highlighting (add 4 for header lines)
                 slotLineNumbers.push(normalizedLines.length + 4);
             } else if (trimmedLine.startsWith('}')) {
-                // Closing brace for nested type - indent with 4 spaces
-                indentedLine = '    ' + trimmedLine;
+                // Closing brace for nested type - indent with 2 spaces
+                indentedLine = '  ' + trimmedLine;
             } else {
-                // Property inside nested type - indent with 6 spaces
-                indentedLine = '      ' + trimmedLine;
+                // Property inside nested type - indent with 4 spaces (2 levels)
+                indentedLine = '    ' + trimmedLine;
             }
 
             normalizedLines.push(indentedLine);
