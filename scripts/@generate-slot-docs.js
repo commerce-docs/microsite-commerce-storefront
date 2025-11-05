@@ -180,20 +180,37 @@ function generateSlotsContent(containers) {
     let content = '';
 
     for (const container of containers) {
-        // Find line numbers for slot definitions to highlight
+        // Normalize indentation of the slots interface
         const lines = container.slotsInterface.split('\n');
+        const normalizedLines = [];
         const slotLineNumbers = [];
 
         lines.forEach((line, index) => {
-            // Match lines that define slots (e.g., "SlotName?: SlotProps...")
-            if (/^\s*\w+\??\s*:\s*SlotProps/.test(line)) {
-                // Add 4 because:
-                // Line 1: interface Name
-                // Line 2: (blank)
-                // Line 3: slots?: {
-                // Line 4+: slot definitions start here
-                slotLineNumbers.push(index + 4);
+            // Remove all leading whitespace
+            const trimmedLine = line.trimStart();
+
+            if (!trimmedLine) {
+                // Keep blank lines as-is
+                normalizedLines.push('');
+                return;
             }
+
+            // Determine indentation based on content
+            let indentedLine;
+            if (/^\w+\??\s*:\s*SlotProps/.test(trimmedLine)) {
+                // Slot definition - indent with 2 spaces
+                indentedLine = '  ' + trimmedLine;
+                // Track for highlighting (add 4 for header lines)
+                slotLineNumbers.push(normalizedLines.length + 4);
+            } else if (trimmedLine.startsWith('}')) {
+                // Closing brace for nested type - indent with 4 spaces
+                indentedLine = '    ' + trimmedLine;
+            } else {
+                // Property inside nested type - indent with 6 spaces
+                indentedLine = '      ' + trimmedLine;
+            }
+
+            normalizedLines.push(indentedLine);
         });
 
         // Generate highlight syntax for expressive-code
@@ -205,7 +222,7 @@ function generateSlotsContent(containers) {
         content += `\`\`\`js${highlightSyntax}\n`;
         content += `interface ${container.containerName}Props\n\n`;
         content += 'slots?: {\n';
-        content += container.slotsInterface;
+        content += normalizedLines.join('\n');
         content += '\n};\n';
         content += '```\n\n';
         content += '---\n\n';
