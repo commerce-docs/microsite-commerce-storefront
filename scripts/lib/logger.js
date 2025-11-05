@@ -145,6 +145,18 @@ export const logger = {
     },
 
     /**
+     * Log warning message
+     * @param {string} message - Warning message
+     * @param {string} detail - Optional detail message
+     */
+    warn(message, detail = null) {
+        console.log(`  ⚠️  ${message}`);
+        if (detail) {
+            console.log(`     ${detail}`);
+        }
+    },
+
+    /**
      * Log a blank line (for spacing)
      */
     blank() {
