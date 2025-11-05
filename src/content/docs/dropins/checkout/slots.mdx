@@ -1,6 +1,6 @@
 ---
 title: Checkout Slots
-description: Learn about the slots provided in the Checkout drop-in for customization.
+description: Customize UI sections in the Checkout drop-in using slots.
 sidebar:
   label: Slots
   order: 5
@@ -9,9 +9,10 @@ tableOfContents:
   maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Checkout drop-in exposes slots in 4 containers, allowing you to customize specific sections of the UI. Slots let you replace or extend parts of a container with your own implementations. For details on default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The Checkout drop-in exposes **3 slots** in **4 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 2.1.0</strong>
@@ -45,23 +46,25 @@ The Checkout drop-in exposes slots in 4 containers, allowing you to customize sp
 </table>
 
 
-## Example
+## Using slots
 
-Here's how to customize the `Heading` slot in the `LoginForm` container:
+This example customizes the `Heading` slot in `LoginForm`:
 
 ```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
 import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
 
 provider.render(LoginForm, {
   slots: {
     Heading: (ctx) => {
+      const { authenticated } = ctx;
       const div = document.createElement('div');
-      div.className = 'custom-heading';
-      div.textContent = 'Custom Heading';
+      div.className = 'login-form__heading';
+      div.textContent = authenticated ? 'Welcome Back!' : 'Sign In';
       ctx.appendChild(div);
     }
   }
-});
+})(document.querySelector('.login-form'));
 ```
 
 
@@ -80,6 +83,8 @@ slots?: {
 ---
 
 ## PaymentMethods slots
+
+The `PaymentMethodsSlot` type uses an index signature where keys dynamically become slot names. Unlike standard slots with fixed names at compile time, this pattern determines slot names at runtime. You configure each slot with an object containing specific properties and render functions.
 
 ```js
 interface PaymentMethodsProps

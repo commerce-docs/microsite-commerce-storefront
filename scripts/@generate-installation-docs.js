@@ -120,11 +120,11 @@ function scanForInstallation(repoPath) {
  * @param {string} repoName - Drop-in name
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} installationData - Installation data with containers
- * @param {string} version - Drop-in version
+ * @param {Object} versionInfo - Version information object with requested, actual, and isExactMatch properties
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateInstallationMDX(repoName, repoConfig, installationData, version, enrichmentData = null) {
+function generateInstallationMDX(repoName, repoConfig, installationData, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-installation.mdx');
 
     const { containers, packageInfo } = installationData;
@@ -143,7 +143,7 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': packageName,
-        'DROPIN_VERSION': cleanVersion(version),
+        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'CONTAINER_EXAMPLE': containerExample,
         'IMPORT_EXAMPLE': importExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),

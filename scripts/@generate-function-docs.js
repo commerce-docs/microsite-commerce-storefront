@@ -931,15 +931,15 @@ function cleanFunctionDescription(mdxContent, functionName) {
  * @param {string} repoName - Repository name (e.g., 'cart')
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} scannedData - Scanned function data
- * @param {string} version - Package version
+ * @param {Object} versionInfo - Version information object with requested, actual, and isExactMatch properties
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrichmentData = null) {
+function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, enrichmentData = null) {
     const { functions } = scannedData;
 
     if (functions.length === 0) {
-        return generateEmptyFunctionsDocs(repoName, repoConfig, version);
+        return generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo.requested);
     }
 
     // Create validation report for source-first validation
@@ -1691,7 +1691,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(version),
+        DROPIN_VERSION: cleanVersion(versionInfo.requested),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
         FUNCTIONS_CONTENT: functionsContent + dataModelsSection

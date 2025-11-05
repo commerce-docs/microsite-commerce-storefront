@@ -1,6 +1,6 @@
 ---
 title: Cart Slots
-description: Learn about the slots provided in the Cart drop-in for customization.
+description: Customize UI sections in the Cart drop-in using slots.
 sidebar:
   label: Slots
   order: 5
@@ -9,9 +9,10 @@ tableOfContents:
   maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Cart drop-in exposes slots in 6 containers, allowing you to customize specific sections of the UI. Slots let you replace or extend parts of a container with your own implementations. For details on default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The Cart drop-in exposes **49 slots** in **6 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.5.1</strong>
@@ -31,11 +32,11 @@ The Cart drop-in exposes slots in 6 containers, allowing you to customize specif
 </tr>
 <tr>
 <td style="white-space: nowrap;"><a href="#cartsummarylist-slots"><code>CartSummaryList</code></a></td>
-<td><code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>Thumbnail</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemTotal</code>, <code>ItemSku</code></td>
+<td><code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>Thumbnail</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>UndoBanner</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemQuantity</code>, <code>ItemTotal</code>, <code>ItemSku</code>, <code>ItemRemoveAction</code></td>
 </tr>
 <tr>
 <td style="white-space: nowrap;"><a href="#cartsummarytable-slots"><code>CartSummaryTable</code></a></td>
-<td><code>Item</code>, <code>Price</code>, <code>Subtotal</code>, <code>Thumbnail</code>, <code>ProductTitle</code>, <code>Sku</code>, <code>Configurations</code>, <code>ItemAlert</code>, <code>ItemWarning</code>, <code>Actions</code>, <code>EmptyCart</code></td>
+<td><code>Item</code>, <code>Price</code>, <code>Quantity</code>, <code>Subtotal</code>, <code>Thumbnail</code>, <code>ProductTitle</code>, <code>Sku</code>, <code>Configurations</code>, <code>ItemAlert</code>, <code>ItemWarning</code>, <code>Actions</code>, <code>UndoBanner</code>, <code>EmptyCart</code></td>
 </tr>
 <tr>
 <td style="white-space: nowrap;"><a href="#giftoptions-slots"><code>GiftOptions</code></a></td>
@@ -43,7 +44,7 @@ The Cart drop-in exposes slots in 6 containers, allowing you to customize specif
 </tr>
 <tr>
 <td style="white-space: nowrap;"><a href="#minicart-slots"><code>MiniCart</code></a></td>
-<td><code>ProductList</code>, <code>ProductListFooter</code>, <code>PreCheckoutSection</code>, <code>Thumbnail</code>, <code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemTotal</code>, <code>ItemSku</code></td>
+<td><code>ProductList</code>, <code>ProductListFooter</code>, <code>PreCheckoutSection</code>, <code>Thumbnail</code>, <code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>UndoBanner</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemQuantity</code>, <code>ItemTotal</code>, <code>ItemSku</code>, <code>ItemRemoveAction</code></td>
 </tr>
 <tr>
 <td style="white-space: nowrap;"><a href="#ordersummary-slots"><code>OrderSummary</code></a></td>
@@ -53,23 +54,34 @@ The Cart drop-in exposes slots in 6 containers, allowing you to customize specif
 </table>
 
 
-## Example
+## Using slots
 
-Here's how to customize the `Thumbnail` slot in the `CartSummaryGrid` container:
+This example customizes the `Thumbnail` slot in `CartSummaryGrid`:
 
 ```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
 import CartSummaryGrid from '@dropins/storefront-cart/containers/CartSummaryGrid.js';
 
 provider.render(CartSummaryGrid, {
   slots: {
     Thumbnail: (ctx) => {
-      const div = document.createElement('div');
-      div.className = 'custom-thumbnail';
-      div.textContent = 'Custom Thumbnail';
-      ctx.appendChild(div);
+      const { item, defaultImageProps } = ctx;
+      
+      const link = document.createElement('a');
+      link.href = `/products/${item.sku}`;
+      link.className = 'cart-summary-grid__thumbnail';
+      
+      const img = document.createElement('img');
+      img.src = defaultImageProps.src;
+      img.alt = item.name || 'Product image';
+      img.width = defaultImageProps.width;
+      img.height = defaultImageProps.height;
+      
+      link.appendChild(img);
+      ctx.appendChild(link);
     }
   }
-});
+})(document.querySelector('.cart-summary-grid'));
 ```
 
 
@@ -146,15 +158,12 @@ slots?: {
 
 ## CartSummaryTable slots
 
-```js {5,7,9,17,19,25,27,29,31,33,35,41,49}
+```js {4,5,6,13,14,19,20,21,22,23,24,30,37}
 interface CartSummaryTableProps
 
 slots?: {
-
   Item?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Price?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Quantity?: SlotProps<{
     item: CartModel['items'][number];
     isUpdating: boolean;
@@ -162,25 +171,17 @@ slots?: {
     handleInputChange: (e: Event) => void;
     itemUpdateErrors: Map<string, string>;
   }>;
-
   Subtotal?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Thumbnail?: SlotProps<{
     item: CartModel['items'][number];
     defaultImageProps: ImageProps;
     index: number;
   }>;
-
   ProductTitle?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Sku?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Configurations?: SlotProps<{ item: CartModel['items'][number] }>;
-
   ItemAlert?: SlotProps<{ item: CartModel['items'][number] }>;
-
   ItemWarning?: SlotProps<{ item: CartModel['items'][number] }>;
-
   Actions?: SlotProps<{
     item: CartModel['items'][number];
     itemsUpdating: Map<string, { isUpdating: boolean; updatedValue: number }>;
@@ -194,7 +195,6 @@ slots?: {
     onUndo: () => void;
     onDismiss: () => void;
   }>;
-
   EmptyCart?: SlotProps;
 };
 ```
