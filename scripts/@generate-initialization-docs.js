@@ -19,7 +19,7 @@
  * OUTPUT: Single initialization.mdx file per drop-in
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 // Import shared utilities
@@ -106,8 +106,11 @@ function extractConfigProps(repoPath) {
 
     // Track brace depth to avoid extracting nested properties
     let braceDepth = 0;
+    let currentProp = null;
+    let inlineObjectDef = [];
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         const trimmed = line.trim();
 
         // Skip empty lines and comments
@@ -122,29 +125,64 @@ function extractConfigProps(repoPath) {
         // Match property definition: propName?: type
         // Only extract if we're at the top level (braceDepth === 0)
         if (braceDepth === 0) {
-            const propMatch = trimmed.match(/^(\w+)(\?)?:\s*([^;,{]+)/);
+            const propMatch = trimmed.match(/^(\w+)(\?)?:\s*(.+)/);
             if (propMatch) {
-                const [, propName, optional, propType] = propMatch;
+                const [, propName, optional, rest] = propMatch;
                 const name = propName.trim();
 
                 // Skip standard options (langDefinitions, models)
                 if (standardOptionNames.includes(name)) {
-                    // Still need to track if it opens a brace
                     braceDepth += openBraces - closeBraces;
                     continue;
                 }
 
-                customOptions.push({
-                    name: name,
-                    type: propType.trim(),
-                    required: !optional, // If no ?, then required
-                    description: '' // Will be enriched later
-                });
+                // Check if this is an inline object type definition
+                if (rest.trim().startsWith('{')) {
+                    currentProp = {
+                        name: name,
+                        type: 'object',
+                        required: !optional,
+                        description: '',
+                        inlineDefinition: null
+                    };
+                    inlineObjectDef = [line];
+                    braceDepth += openBraces - closeBraces;
+
+                    // If it closes on the same line, capture it
+                    if (braceDepth === 0) {
+                        currentProp.inlineDefinition = inlineObjectDef.join('\n');
+                        customOptions.push(currentProp);
+                        currentProp = null;
+                        inlineObjectDef = [];
+                    }
+                } else {
+                    // Regular type (not inline object)
+                    customOptions.push({
+                        name: name,
+                        type: rest.replace(/[;,]$/, '').trim(),
+                        required: !optional,
+                        description: ''
+                    });
+                }
+                continue;
             }
+        }
+
+        // If we're inside an inline object definition, collect lines
+        if (braceDepth > 0 && currentProp) {
+            inlineObjectDef.push(line);
         }
 
         // Update brace depth after processing the line
         braceDepth += openBraces - closeBraces;
+
+        // If we just closed the inline object, save it
+        if (braceDepth === 0 && currentProp) {
+            currentProp.inlineDefinition = inlineObjectDef.join('\n');
+            customOptions.push(currentProp);
+            currentProp = null;
+            inlineObjectDef = [];
+        }
     }
 
     return customOptions;
@@ -210,6 +248,12 @@ function extractModelNames(repoPath) {
                 const files = readdirSync(modelsDir);
                 for (const file of files) {
                     const filePath = join(modelsDir, file);
+
+                    // Skip directories (like __fixtures__)
+                    if (statSync(filePath).isDirectory()) {
+                        continue;
+                    }
+
                     const fileContent = readFileSync(filePath, 'utf8');
 
                     // Check if this file exports the actual interface
@@ -318,9 +362,14 @@ function scanForInitialization(repoPath, repoConfig) {
  * @returns {string} Generated MDX content
  */
 function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, enrichmentData = null) {
-    const template = readTemplate('dropin-initialization.mdx');
-
     const { configProps, models } = initData;
+
+    // Use simplified template for drop-ins with no custom configuration
+    if (configProps.length === 0 && models.length === 0) {
+        return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo);
+    }
+
+    const template = readTemplate('dropin-initialization.mdx');
 
     // Always include standard options
     const standardOptions = [
@@ -341,14 +390,56 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Merge with drop-in specific options
     const allOptions = [...standardOptions];
 
+    // Track configuration types that need full definitions at the bottom
+    const configTypesWithDefinitions = [];
+
+    // Extract model names for linking
+    const modelNames = models.map(m => m.name);
+
     // Add drop-in specific config props if they exist
     configProps.forEach(prop => {
         // Check if enrichment has a description for this property
         const enrichedDesc = enrichmentData?.configOptions?.[prop.name]?.description;
 
+        let displayType = prop.type;
+
+        // If this property has an inline object definition, save it for the Configuration types section
+        if (prop.inlineDefinition) {
+            const anchor = prop.name.toLowerCase();
+            // Extract the actual type definition for display
+            const typeDefMatch = prop.inlineDefinition.match(/:\s*(\{[\s\S]*\})/);
+            const typeDef = typeDefMatch ? typeDefMatch[1] : prop.inlineDefinition;
+
+            configTypesWithDefinitions.push({
+                name: prop.name,
+                definition: `${prop.name}${prop.required ? '' : '?'}: ${typeDef.trim()}`,
+                description: enrichedDesc || `Configuration object for ${prop.name}.`
+            });
+
+            // Link to the definition
+            displayType = `__LINK__[\`${prop.name}\`](#${anchor})`;
+        } else {
+            // Check if the type references a model and create a link to it
+            let hasModelLink = false;
+            modelNames.forEach(modelName => {
+                if (prop.type.includes(modelName)) {
+                    const anchor = modelName.toLowerCase();
+                    // Replace model name with a link, preserving surrounding syntax (like | null)
+                    displayType = displayType.replace(modelName, `[\`${modelName}\`](#${anchor})`);
+                    hasModelLink = true;
+                }
+            });
+            // If we added a link, mark the whole type with __LINK__ marker and escape pipes
+            if (hasModelLink) {
+                // Escape pipe characters so they don't break markdown table columns
+                displayType = displayType.replace(/\s*\|\s*/g, ' \\| ');
+                displayType = `__LINK__${displayType}`;
+            }
+        }
+
         allOptions.push({
             name: prop.name,
-            type: prop.type,
+            type: displayType,
             required: prop.required,
             description: enrichedDesc || `Configuration for ${prop.name}.`
         });
@@ -451,6 +542,44 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 `;
     }
 
+    // Add standard type definitions for langDefinitions and models
+    configTypesWithDefinitions.push({
+        name: 'langDefinitions',
+        definition: `langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};`,
+        description: 'Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.'
+    });
+
+    configTypesWithDefinitions.push({
+        name: 'models',
+        definition: `models?: {
+  [modelName: string]: Model<any>;
+};`,
+        description: 'Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.'
+    });
+
+    // Generate Configuration types section
+    let configTypeDefinitions = '';
+    if (configTypesWithDefinitions.length > 0) {
+        configTypeDefinitions = `## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+${configTypesWithDefinitions.map(configType => {
+            const anchor = configType.name.toLowerCase();
+            return `### ${configType.name}
+
+${configType.description}
+
+\`\`\`typescript
+${configType.definition}
+\`\`\``;
+        }).join('\n\n')}`;
+    }
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
@@ -463,9 +592,56 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
         'MODEL_NAME': primaryModel,
         'MODEL_LIST': modelList,
         'MODEL_DEFINITIONS': modelDefinitions,
+        'CONFIG_TYPE_DEFINITIONS': configTypeDefinitions,
         'CUSTOM_CONFIG_SECTION': customConfigSection,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
+}
+
+/**
+ * Generate simplified initialization documentation for drop-ins without custom config options
+ * 
+ * @param {string} repoName - Repository name (kebab-case)
+ * @param {Object} repoConfig - Repository configuration
+ * @param {Object} versionInfo - Version info object
+ * @returns {string} Generated MDX content
+ */
+function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo) {
+    const versionDisplay = cleanVersion(versionInfo.requested);
+
+    return `---
+title: ${repoConfig.displayName} initialization
+description: Configure the ${repoConfig.displayName} drop-in with language definitions and custom data models.
+sidebar:
+  label: Initialization
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: ${versionDisplay}</strong>
+</div>
+
+## Basic initialization
+
+Initialize the drop-in with default settings:
+
+\`\`\`javascript title="scripts/initializers/${repoName}.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '${repoConfig.packageName}';
+
+await initializers.mountImmediately(initialize, {});
+\`\`\`
+
+<Aside type="note" title="Standard options">
+You can customize text and labels using the standard \`langDefinitions\` option. See other drop-in initialization pages for examples.
+</Aside>
+
+{/* This documentation is auto-generated from: ${repoConfig.gitUrl.replace('.git', '')} */}
+`;
 }
 
 /**

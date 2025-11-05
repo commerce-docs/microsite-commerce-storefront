@@ -1,6 +1,6 @@
 ---
-title: Cart initialization
-description: Configure the Cart drop-in with language definitions, custom data models, and drop-in-specific options.
+title: User Auth initialization
+description: Configure the User Auth drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
@@ -9,17 +9,17 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Cart initializer** configures how the cart manages shopping cart data, including items, pricing, discounts, and customer information. Use initialization to customize cart behavior, enable guest cart features, and transform cart data models to match your storefront requirements.
+The **User Auth initializer** configures authentication and authorization features including login, registration, password management, and session handling. Use initialization to customize authentication flows and user data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.5.1</strong>
+<strong>Version: 2.1.5</strong>
 </div>
 
 
 
 ## Configuration options
 
-The following table describes the configuration options available for the **Cart** initializer:
+The following table describes the configuration options available for the **User Auth** initializer:
 
 <TableWrapper nowrap={[0,1]}>
 
@@ -27,7 +27,7 @@ The following table describes the configuration options available for the **Cart
 |---|---|---|---|
 | `langDefinitions` | `LangDefinitions` | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | `Record<string, any>` | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `disableGuestCart` | `boolean` | No | Configuration for disableGuestCart. |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | Yes | Configuration for authHeaderConfig. |
 
 </TableWrapper>
 
@@ -35,9 +35,9 @@ The following table describes the configuration options available for the **Cart
 
 Initialize the drop-in with default settings:
 
-```javascript title="scripts/initializers/cart.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-cart';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {});
 ```
@@ -46,9 +46,9 @@ await initializers.mountImmediately(initialize, {});
 
 Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
 
-```javascript title="scripts/initializers/cart.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-cart';
+import { initialize } from '@dropins/storefront-auth';
 
 const customStrings = {
   'AddToCart': 'Add to Bag',
@@ -64,21 +64,21 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 ```
 
 <Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [Cart Dictionary](/dropins/cart/dictionary/) page.
+For complete dictionary customization including all available keys and multi-language support, see the [User Auth Dictionary](/dropins/user-auth/dictionary/) page.
 </Aside>
 
 ## Customizing data models
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
-The following example shows how to customize the `CartModel` model for the **Cart** drop-in:
+The following example shows how to customize the `CustomerModel` model for the **User Auth** drop-in:
 
-```javascript title="scripts/initializers/cart.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-cart';
+import { initialize } from '@dropins/storefront-auth';
 
 const models = {
-  CartModel: {
+  CustomerModel: {
     transformer: (data) => ({
       // Add custom fields from backend data
       customField: data?.custom_field,
@@ -101,21 +101,21 @@ The following models can be customized through the `models` configuration option
 
 | Model | Description |
 |---|---|
-| [`CartModel`](#cartmodel) | Transforms cart data from GraphQL including items, totals, discounts, taxes, gift options, addresses, and payment methods. Use this to add custom fields or modify existing cart data structures. |
+| [`CustomerModel`](#customermodel) | Transforms customer authentication data including profile information, addresses, and account settings. Use this to add custom fields or modify user data structures. |
 
 </TableWrapper>
 
 ## Drop-in-specific configuration
 
-The **Cart** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **User Auth** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
 
-```javascript title="scripts/initializers/cart.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-cart';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {
   // Drop-in-specific configuration
-  disableGuestCart: true,
+  authHeaderConfig: {},
 });
 ```
 
@@ -128,6 +128,17 @@ Refer to the [Configuration options](#configuration-options) table for descripti
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
+
+### authHeaderConfig
+
+Configuration object for authHeaderConfig.
+
+```typescript
+authHeaderConfig: {
+    header: string;
+    tokenPrefix: string;
+  }
+```
 
 ### langDefinitions
 
@@ -156,65 +167,16 @@ models?: {
 
 The following TypeScript definitions show the structure of each customizable model:
 
-### CartModel
+### CustomerModel
 
 ```typescript
-export interface CartModel {
-  totalGiftOptions: {
-    giftWrappingForItems: Price;
-    giftWrappingForItemsInclTax: Price;
-    giftWrappingForOrder: Price;
-    giftWrappingForOrderInclTax: Price;
-    printedCard: Price;
-    printedCardInclTax: Price;
-  };
-  cartGiftWrapping: {
-    uid: string;
-    design: string;
-    selected: boolean;
-    image: WrappingImage;
-    price: Price;
-  }[];
-  giftReceiptIncluded: boolean;
-  printedCardIncluded: boolean;
-  giftMessage: {
-    recipientName: string;
-    senderName: string;
-    message: string;
-  };
-  appliedGiftCards: AppliedGiftCardProps[];
-  id: string;
-  totalQuantity: number;
-  totalUniqueItems: number;
-  errors?: ItemError[];
-  items: Item[];
-  miniCartMaxItems: Item[];
-  total: {
-    includingTax: Price;
-    excludingTax: Price;
-  };
-  discount?: Price;
-  subtotal: {
-    excludingTax: Price;
-    includingTax: Price;
-    includingDiscountOnly: Price;
-  };
-  appliedTaxes: TotalPriceModifier[];
-  totalTax?: Price;
-  appliedDiscounts: TotalPriceModifier[];
-  shipping?: Price;
-  isVirtual?: boolean;
-  addresses: {
-    shipping?: {
-      countryCode: string;
-      zipCode?: string;
-      regionCode?: string;
-    }[];
-  };
-  isGuestCart?: boolean;
-  hasOutOfStockItems?: boolean;
-  hasFullyOutOfStockItems?: boolean;
-  appliedCoupons?: Coupon[];
+export interface CustomerModel {
+  firstName: string;
+  lastName: string;
+  email: string;
+  groupUid: string;
+  customAttributes?: Record<string, string>[];
+  errors?: { message: string }[];
 }
 ```
 
