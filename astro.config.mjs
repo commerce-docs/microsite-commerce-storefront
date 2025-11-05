@@ -55,7 +55,7 @@ async function config() {
       remarkPlugins: [remarkBasePathLinks],
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
     },
-    trailingSlash: 'ignore',
+    trailingSlash: 'always',
     outDir: './dist',
     build: {
       inlineStylesheets: 'always',
@@ -259,7 +259,7 @@ async function config() {
                     collapsed: false,
                     items: [
                       { label: 'Overview', link: '/get-started/' },
-                      { label: 'Create a storefront', link: '/get-started/create-storefront' },
+                      { label: 'Create a storefront', link: '/get-started/create-storefront/' },
                       { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
