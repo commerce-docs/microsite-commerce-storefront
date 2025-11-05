@@ -399,7 +399,7 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Add drop-in specific config props if they exist
     configProps.forEach(prop => {
         // Check if enrichment has a description for this property
-        const enrichedDesc = enrichmentData?.configOptions?.[prop.name]?.description;
+        const enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
 
         let displayType = prop.type;
 
