@@ -180,8 +180,29 @@ function generateSlotsContent(containers) {
     let content = '';
 
     for (const container of containers) {
+        // Find line numbers for slot definitions to highlight
+        const lines = container.slotsInterface.split('\n');
+        const slotLineNumbers = [];
+
+        lines.forEach((line, index) => {
+            // Match lines that define slots (e.g., "SlotName?: SlotProps...")
+            if (/^\s*\w+\??\s*:\s*SlotProps/.test(line)) {
+                // Add 4 because:
+                // Line 1: interface Name
+                // Line 2: (blank)
+                // Line 3: slots?: {
+                // Line 4+: slot definitions start here
+                slotLineNumbers.push(index + 4);
+            }
+        });
+
+        // Generate highlight syntax for expressive-code
+        const highlightSyntax = slotLineNumbers.length > 0
+            ? ` {${slotLineNumbers.join(',')}}`
+            : '';
+
         content += `## ${container.containerName} slots\n\n`;
-        content += '```js\n';
+        content += `\`\`\`js${highlightSyntax}\n`;
         content += `interface ${container.containerName}Props\n\n`;
         content += 'slots?: {\n';
         content += container.slotsInterface;
