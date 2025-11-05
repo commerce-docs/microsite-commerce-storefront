@@ -371,17 +371,17 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
     const template = readTemplate('dropin-initialization.mdx');
 
-    // Always include standard options
+    // Always include standard options with links to their definitions
     const standardOptions = [
         {
             name: 'langDefinitions',
-            type: 'LangDefinitions',
+            type: '__LINK__[`LangDefinitions`](#langdefinitions)',
             required: false,
             description: 'Language definitions for internationalization (i18n). Override dictionary keys for localization or branding.'
         },
         {
             name: 'models',
-            type: 'Record<string, any>',
+            type: '__LINK__[`Record<string, any>`](#models)',
             required: false,
             description: 'Custom data models for type transformations. Extend or modify default models with custom fields and transformers.'
         }
