@@ -1,6 +1,6 @@
 ---
-title: Checkout initialization
-description: Configure the Checkout drop-in with language definitions, custom data models, and drop-in-specific options.
+title: Recommendations initialization
+description: Configure the Recommendations drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
@@ -9,17 +9,17 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.
+The **Recommendations initializer** configures product recommendation features including personalized suggestions, frequently bought together, and related products. Use initialization to customize recommendation algorithms and data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.1.0</strong>
+<strong>Version: 1.1.1</strong>
 </div>
 
 
 
 ## Configuration options
 
-The following table describes the configuration options available for the **Checkout** initializer:
+The following table describes the configuration options available for the **Recommendations** initializer:
 
 <TableWrapper nowrap={[0,1]}>
 
@@ -27,9 +27,6 @@ The following table describes the configuration options available for the **Chec
 |---|---|---|---|
 | `langDefinitions` | `LangDefinitions` | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | `Record<string, any>` | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `defaults` | [`defaults`](#defaults) | No | Configuration for defaults. |
-| `shipping` | [`shipping`](#shipping) | No | Configuration for shipping. |
-| `features` | [`features`](#features) | No | Configuration for features. |
 
 </TableWrapper>
 
@@ -37,9 +34,9 @@ The following table describes the configuration options available for the **Chec
 
 Initialize the drop-in with default settings:
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/recommendations.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-recommendations';
 
 await initializers.mountImmediately(initialize, {});
 ```
@@ -48,9 +45,9 @@ await initializers.mountImmediately(initialize, {});
 
 Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/recommendations.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-recommendations';
 
 const customStrings = {
   'AddToCart': 'Add to Bag',
@@ -66,21 +63,21 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 ```
 
 <Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [Checkout Dictionary](/dropins/checkout/dictionary/) page.
+For complete dictionary customization including all available keys and multi-language support, see the [Recommendations Dictionary](/dropins/recommendations/dictionary/) page.
 </Aside>
 
 ## Customizing data models
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
-The following example shows how to customize the `CartModel` model for the **Checkout** drop-in:
+The following example shows how to customize the `RecommendationUnitModel` model for the **Recommendations** drop-in:
 
-```javascript title="scripts/initializers/checkout.js"
+```javascript title="scripts/initializers/recommendations.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
+import { initialize } from '@dropins/storefront-recommendations';
 
 const models = {
-  CartModel: {
+  RecommendationUnitModel: {
     transformer: (data) => ({
       // Add custom fields from backend data
       customField: data?.custom_field,
@@ -103,70 +100,15 @@ The following models can be customized through the `models` configuration option
 
 | Model | Description |
 |---|---|
-| [`CartModel`](#cartmodel) | Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow. |
-| [`CustomerModel`](#customermodel) | Transforms CustomerModel data from GraphQL. |
+| [`RecommendationUnitModel`](#recommendationunitmodel) | Transforms RecommendationUnitModel data from GraphQL. |
 
 </TableWrapper>
-
-## Drop-in-specific configuration
-
-The **Checkout** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
-
-```javascript title="scripts/initializers/checkout.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-checkout';
-
-await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-  defaults: {},
-  shipping: {},
-  features: {},
-});
-```
-
-<Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
-</Aside>
 
 
 
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
-
-### defaults
-
-Configuration object for defaults.
-
-```typescript
-defaults?: {
-    isBillToShipping?: boolean;
-    selectedShippingMethod?: Selector<ShippingMethod>;
-  }
-```
-
-### shipping
-
-Configuration object for shipping.
-
-```typescript
-shipping?: {
-    filterOptions?: Filter<ShippingMethod>;
-  }
-```
-
-### features
-
-Configuration object for features.
-
-```typescript
-features?: {
-    b2b?: {
-      quotes?: boolean;
-      routeLogin?: () => string | void;
-    };
-  }
-```
 
 ### langDefinitions
 
@@ -195,20 +137,18 @@ models?: {
 
 The following TypeScript definitions show the structure of each customizable model:
 
-### CartModel
+### RecommendationUnitModel
 
 ```typescript
-export interface CartAddress extends Address {}
-
-```
-
-### CustomerModel
-
-```typescript
-export interface Customer {
-  firstName: string;
-  lastName: string;
-  email: string;
+export interface RecommendationUnitModel {
+  displayOrder: number;
+  pageType: PageType;
+  title: string;
+  items: Item[];
+  totalProducts: number;
+  typeId: string;
+  unitId: string;
+  unitName: string;
 }
 ```
 
