@@ -185,11 +185,11 @@ function generateSlotsContent(containers) {
  * @param {string} repoName - Drop-in name
  * @param {Object} repoConfig - Repository configuration
  * @param {Array} containers - Array of containers with slots
- * @param {string} version - Drop-in version
+ * @param {Object} versionInfo - Version information object with requested, actual, isExactMatch
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateSlotsMDX(repoName, repoConfig, containers, version, enrichmentData = null) {
+function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-slots.mdx');
 
     // Generate slots content
@@ -219,7 +219,7 @@ Slots are customization points that allow you to replace or extend parts of a co
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(version),
+        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'INTRO_TEXT': introText,
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
