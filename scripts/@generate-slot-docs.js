@@ -232,6 +232,47 @@ function generateSlotsContent(containers) {
 }
 
 /**
+ * Generate a simple example using the first container with slots
+ */
+function generateSimpleExample(containers, repoConfig) {
+    if (containers.length === 0) {
+        return '';
+    }
+
+    // Use the first container
+    const container = containers[0];
+
+    // Parse to find the first slot name
+    const slotMatch = container.slotsInterface.match(/(\w+)\??\s*:\s*SlotProps/);
+    if (!slotMatch) {
+        return '';
+    }
+
+    const slotName = slotMatch[1];
+    const containerName = container.containerName;
+
+    return `## Example
+
+Here's how to customize the \`${slotName}\` slot in the \`${containerName}\` container:
+
+\`\`\`js
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+    ${slotName}: (ctx) => {
+      const div = document.createElement('div');
+      div.className = 'custom-${slotName.toLowerCase()}';
+      div.textContent = 'Custom ${slotName}';
+      ctx.appendChild(div);
+    }
+  }
+});
+\`\`\`
+`;
+}
+
+/**
  * Generate slots MDX documentation
  * 
  * @param {string} repoName - Drop-in name
@@ -244,8 +285,9 @@ function generateSlotsContent(containers) {
 function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-slots.mdx');
 
-    // Generate summary table and detailed content
+    // Generate summary table, example, and detailed content
     const summaryTable = generateSummaryTable(containers);
+    const simpleExample = generateSimpleExample(containers, repoConfig);
     const slotsContent = generateSlotsContent(containers);
 
     // Generate intro text based on whether slots exist
@@ -267,6 +309,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
+        'SIMPLE_EXAMPLE': simpleExample,
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
