@@ -199,20 +199,12 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
     let introText;
     if (containers.length === 0) {
         // Concise intro for drop-ins with no slots
-        introText = `This drop-in currently has no slots defined.`;
+        introText = `The ${repoConfig.displayName} drop-in does not currently expose any slots for customization.`;
     } else {
-        // Full intro with explanation for drop-ins with slots
-        introText = `## Overview
-
-Learn about the slots provided in the **${repoConfig.displayName}** drop-in component for customizing container appearance and behavior.
-
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
-
-## What are Slots?
-
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.`;
+        // Brief, focused intro for drop-ins with slots
+        const containerCount = containers.length;
+        const containerWord = containerCount === 1 ? 'container' : 'containers';
+        introText = `The ${repoConfig.displayName} drop-in exposes slots in ${containerCount} ${containerWord}, allowing you to customize specific sections of the UI. Slots let you replace or extend parts of a container with your own implementations. For details on default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
     }
 
     // Replace placeholders
