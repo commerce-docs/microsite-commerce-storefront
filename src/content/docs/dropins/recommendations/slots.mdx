@@ -1,151 +1,21 @@
 ---
 title: Recommendations Slots
-description: Customize UI sections in the Recommendations drop-in using slots.
+description: Learn about the slots provided in the Recommendations drop-in for customization.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 2
+  maxHeadingLevel: 3
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Recommendations drop-in exposes **6 slots** in **1 container** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+This drop-in currently has no slots defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.1.1</strong>
 </div>
-
-<table>
-<thead>
-<tr>
-<th style="white-space: nowrap;">Container</th>
-<th>Slots</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="white-space: nowrap;"><a href="#productlist-slots"><code>ProductList</code></a></td>
-<td><code>Heading</code>, <code>Footer</code>, <code>Title</code>, <code>Sku</code>, <code>Price</code>, <code>Thumbnail</code></td>
-</tr>
-</tbody>
-</table>
-
-
-## Using slots
-
-This example customizes the `Heading` slot in `ProductList`:
-
-```js
-import { render as provider } from '@dropins/storefront-recommendations/render.js';
-import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
-
-provider.render(ProductList, {
-  slots: {
-    Heading: (ctx) => {
-      const div = document.createElement('div');
-      div.className = 'product-list__heading';
-      div.textContent = 'Custom Heading';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.product-list'));
-```
-
-
-
-This example customizes the `Footer` slot to demonstrate conditional rendering and event publishing:
-
-```js
-import { render as provider } from '@dropins/storefront-recommendations/render.js';
-import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
-import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
-import * as cartApi from '@dropins/storefront-cart/api.js';
-import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
-
-provider.render(ProductList, {
-  routeProduct: (item) => `/products/${item.urlKey}`,
-  recId: 'product-recs',
-  currentSku: 'MT01',
-  slots: {
-    Footer: (ctx) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'footer__wrapper';
-      
-      const addToCart = document.createElement('div');
-      addToCart.className = 'footer__button--add-to-cart';
-      wrapper.appendChild(addToCart);
-      
-      // Conditional rendering based on product type
-      if (ctx.item.itemType === 'SimpleProductView') {
-        // Simple product - show add to cart button
-        UI.render(Button, {
-          children: 'Add to Cart',
-          icon: Icon({ source: 'Cart' }),
-          onClick: (event) => {
-            // Add to cart
-            cartApi.addProductsToCart([
-              { sku: ctx.item.sku, quantity: 1 }
-            ]);
-            
-            // Stop event propagation to prevent parent click handlers
-            event.stopPropagation();
-            
-            // Publish analytics event
-            publishRecsItemAddToCartClick({
-              recommendationUnit: ctx.recommendationUnit,
-              pagePlacement: 'product-list',
-              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
-              yOffsetBottom: addToCart.getBoundingClientRect().bottom ?? 0,
-              productId: ctx.index,
-            });
-          },
-          variant: 'primary',
-        })(addToCart);
-      } else {
-        // Complex product - show select options button
-        UI.render(Button, {
-          children: 'Select Options',
-          href: `/products/${ctx.item.urlKey}`,
-          variant: 'tertiary',
-        })(addToCart);
-      }
-      
-      ctx.replaceWith(wrapper);
-    }
-  }
-})(document.querySelector('.recommendations'));
-```
-
-
-## ProductList slots
-
-```js {4,5,6,10,13,16}
-interface ProductListProps
-
-slots?: {
-  Heading?: SlotProps;
-  Footer?: SlotProps;
-  Title?: SlotProps<{
-    item: Item;
-    productUrl: string;
-  }>;
-  Sku?: SlotProps<{
-    item: Item;
-  }>;
-  Price?: SlotProps<{
-    item: Item;
-  }>;
-  Thumbnail?: SlotProps<{
-    item: any;
-    defaultImageProps: ImageProps;
-  }>;
-};
-```
-
----
 
 
 

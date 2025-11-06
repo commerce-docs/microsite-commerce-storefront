@@ -2,17 +2,24 @@
 
 This directory contains enrichment data for auto-generated drop-in documentation. Enrichment files allow you to preserve manually written, high-quality documentation while still benefiting from automated generation.
 
+## 📚 Documentation Resources
+
+- **[ENRICHMENT-STRATEGY.md](./ENRICHMENT-STRATEGY.md)** - Core principles for code-first documentation extraction
+- **[PARAMETER-PATTERNS-README.md](./PARAMETER-PATTERNS-README.md)** - Guide to using reusable parameter description templates
+- **[GRAPHQL-SCHEMA-INTEGRATION.md](./GRAPHQL-SCHEMA-INTEGRATION.md)** - How to integrate GraphQL schemas for better type information
+- **[parameter-patterns.json](./parameter-patterns.json)** - Reusable templates for common parameter descriptions
+
 ## How It Works
 
-The documentation generators (`scripts/@generate-function-docs.js` and `scripts/@generate-event-docs.js`) automatically look for enrichment files in this directory. If found, they merge the enriched content with auto-generated content, giving priority to the enriched versions.
+The functions generator (`scripts/@generate-function-docs.js`) automatically looks for enrichment files in this directory. If found, it merges the enriched content with auto-generated content, giving priority to the enriched versions.
 
 ## Directory Structure
 
 ```
 _dropin-enrichments/
   {dropin-name}/
-    functions.json   # Enriched function documentation
-    events.json      # Enriched event documentation
+    functions.json
+    events.json
 ```
 
 Example:
@@ -26,13 +33,11 @@ _dropin-enrichments/
     events.json
 ```
 
-## Enrichment File Formats
-
-### functions.json
+## Enrichment File Format
 
 Each `functions.json` file is a JSON object where:
 - **Keys** = function names (must match exactly)
-- **Values** = enrichment objects with optional fields like `description`, `usage`, `parameters`, `returns`, `events`, etc.
+- **Values** = enrichment objects with optional `description` and `usage` fields
 
 ### Basic Structure
 
@@ -84,8 +89,6 @@ Each `functions.json` file is a JSON object where:
 
 All fields are **optional** - use only what you need:
 
-> **⚠️ Important:** Do NOT use JSX components (like `<CodeInclude>`, `<Aside>`, etc.) with variable references in enrichment data. Use plain Markdown/text instead. See examples below for recommended approaches.
-
 - **description** (string): Enhanced function description
   - Provide context, explain behavior, link to GraphQL docs
   - Supports Markdown formatting including links
@@ -102,12 +105,7 @@ All fields are **optional** - use only what you need:
 - **returns** (string): Return value documentation
   - Describe what the function returns
   - Can include type information and structure
-  - Supports Markdown formatting (including code blocks)
-  - **Do NOT use JSX components** (like `<CodeInclude>`) with variable references
-  - **Recommended approaches:**
-    - Simple reference: `"Returns a CartModel object. See [types](link) for details."`
-    - Inline code block: Use `\n\n\`\`\`typescript\ninterface Type {...}\n\`\`\``
-    - Structured description: List key fields with descriptions
+  - Supports Markdown formatting
   - If omitted, no returns section is shown
 
 - **events** (string): Events emitted by this function
@@ -128,91 +126,6 @@ All fields are **optional** - use only what you need:
   - Automatically wrapped in TypeScript code block
   - Use `\n` for line breaks
   - If omitted, auto-generated example is used
-
-### Documenting Return Types - Best Practices
-
-There are three recommended ways to document complex return types without using JSX components:
-
-#### Approach 1: Simple Reference with Link (Recommended)
-
-```json
-{
-  "returns": "Returns a promise that resolves to an `OrderDataModel` object. See the [Order types](https://github.com/adobe-commerce/storefront-order/blob/main/src/types/index.ts) for the complete type definition."
-}
-```
-
-**Pros:** Clean, maintainable, links to source of truth  
-**Cons:** Requires external navigation
-
-#### Approach 2: Inline TypeScript Code Block
-
-```json
-{
-  "returns": "Returns a promise that resolves to an `OrderDataModel` object with the following structure:\n\n```typescript\ninterface OrderDataModel {\n  id: string;\n  status: string;\n  items: OrderItem[];\n  total: number;\n}\n```"
-}
-```
-
-**Pros:** Complete information in one place  
-**Cons:** Verbose, needs manual updates if types change
-
-#### Approach 3: Structured Field Description
-
-```json
-{
-  "returns": "Returns a promise that resolves to an `OrderDataModel` object containing:\n- `id` (string) - The order identifier\n- `status` (string) - Current order status\n- `items` (array) - Array of order items\n- `total` (number) - Order total amount"
-}
-```
-
-**Pros:** Readable, highlights important fields  
-**Cons:** May not show complete structure
-
-#### ❌ What NOT to Do
-
-```json
-{
-  "returns": "Returns CartModel:\n\n<CodeInclude code={cartModel} lang=\"ts\" />"
-}
-```
-
-**Why it fails:** The `{cartModel}` variable is not defined in the MDX scope, causing runtime errors.
-
-### events.json
-
-Each `events.json` file is a JSON object where:
-- **Keys** = event names (must match exactly, including slashes like `cart/updated`)
-- **Values** = enrichment objects with `description` field
-
-#### Basic Structure
-
-```json
-{
-  "eventName": {
-    "description": "Detailed description explaining when the event is emitted/listened, what data it carries, and common use cases"
-  }
-}
-```
-
-#### Complete Example
-
-```json
-{
-  "cart/data": {
-    "description": "Triggered when cart data is available or changes. This event carries the full cart state including items, totals, and applied discounts. External code can emit this event to update the cart programmatically or subscribe to it to react to cart changes."
-  },
-  "cart/initialized": {
-    "description": "Emitted after the Cart drop-in completes its initialization sequence. This event signals that the cart is ready to accept user interactions and process cart operations."
-  }
-}
-```
-
-#### Fields
-
-- **description** (string): Enhanced event description
-  - Explain when the event fires and what triggers it
-  - Describe the data payload and its purpose
-  - Provide use cases for listening/emitting
-  - Supports Markdown formatting
-  - If omitted, auto-generated description is used
 
 ## Benefits
 
@@ -263,11 +176,88 @@ Consider enriching when:
 - Usage examples need realistic data instead of placeholders
 - Business context is important (e.g., "use this to build custom flows")
 
+## Event Enrichments
+
+Similar to function enrichments, you can enrich event documentation with `events.json` files.
+
+### Event Enrichment Structure
+
+```json
+{
+  "models": {
+    "ModelName": {
+      "description": "Editorial description of the data model"
+    }
+  },
+  "event/name": {
+    "description": "Enhanced event description explaining when and why it fires",
+    "payload": {
+      "propertyName": {
+        "description": "Description of this payload property"
+      }
+    }
+  }
+}
+```
+
+**Models Section**: The optional `models` section provides editorial descriptions for TypeScript types/interfaces used in event payloads. The type definitions are extracted from source code, while descriptions come from enrichment.
+
+### Complete Event Example
+
+```json
+{
+  "models": {
+    "CartModel": {
+      "description": "The `CartModel` represents the complete state of a shopping cart, including items, pricing, discounts, shipping estimates, and gift options."
+    },
+    "Item": {
+      "description": "The `Item` interface represents a single product in the cart, including product details, pricing, quantity, customization options, and inventory status."
+    }
+  },
+  "cart/merged": {
+    "description": "Emitted when a guest cart is merged with a customer cart after login. This typically happens when an unauthenticated user adds items to their cart, then signs in, and their guest cart items are combined with any existing items in their customer cart.",
+    "payload": {
+      "oldCartItems": {
+        "description": "The items from the guest cart before merging. Returns `null` if the guest cart was empty. This allows you to track which items came from the guest session."
+      },
+      "newCart": {
+        "description": "The merged cart containing all items from both the guest cart and the existing customer cart. This is the complete cart state after the merge operation. Returns `null` if the merge operation failed."
+      }
+    }
+  }
+}
+```
+
+### Event Enrichment Benefits
+
+✅ **Payload Tables** - Event payloads get parameter-style tables with Property, Type, Req?, and Description columns  
+✅ **Smart Descriptions** - Uses enrichments, patterns, or inferred descriptions (never generic "See type definition")  
+✅ **Data Models Section** - All TypeScript types/interfaces used in event payloads are documented with full definitions at the bottom of each events page  
+✅ **Consistent Style** - Same quality as function parameter tables and function Data Models sections  
+✅ **Pattern Fallbacks** - Common payload properties (like `cart`, `items`, `address`) get reasonable default descriptions
+
+### ✅ All Drop-ins Have Event Enrichments
+
+All 11 drop-ins now have `events.json` files:
+- `cart/events.json` ✅
+- `checkout/events.json` ✅
+- `order/events.json` ✅
+- `payment-services/events.json` ✅
+- `personalization/events.json` ✅
+- `product-details/events.json` ✅
+- `product-discovery/events.json` ✅
+- `recommendations/events.json` ✅
+- `user-account/events.json` ✅
+- `user-auth/events.json` ✅
+- `wishlist/events.json` ✅
+
+See [EVENTS-ENRICHMENTS-SUMMARY.md](./EVENTS-ENRICHMENTS-SUMMARY.md) for complete details.
+
 ## Notes
 
 - Enrichment files are **not** required - the generator works fine without them
-- You can enrich **some** functions and leave others auto-generated
+- You can enrich **some** functions/events and leave others auto-generated
 - Enrichment data is **merged** with generated data (enriched takes precedence)
-- Function signatures are **always** extracted from source code (not enriched)
+- Function signatures and event types are **always** extracted from source code (not enriched)
 - Changes to enrichment files require **regeneration** to take effect
 

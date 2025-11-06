@@ -1,165 +1,102 @@
 ---
 title: Product Details initialization
-description: Configure the Product Details drop-in with language definitions, custom data models, and drop-in-specific options.
+description: Learn how to configure the initializer for the Product Details drop-in component.
 sidebar:
   label: Initialization
   order: 3
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-The **Product Details initializer** configures how product information is displayed and managed, including images, descriptions, pricing, and options. Use initialization to customize product data models and enhance product presentation.
+<Aside type="note" title="Auto-generated on GENERATION_DATE. Do not edit this page directly." />
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.3.5</strong>
-</div>
+{/* 
+TEMPLATE INSTRUCTIONS:
+This template is used by scripts/@generate-initialization-docs.js to generate initialization documentation.
 
+PLACEHOLDERS:
+- DROPIN_NAME: Display name (e.g., "Cart", "Checkout")
+- DROPIN_PACKAGE: Package name (e.g., "storefront-cart", "storefront-checkout")
+- GENERATION_DATE: ISO date of generation
+- ModelName: Primary model name (e.g., "CartModel", "CheckoutModel")
+- OptionsTable options array: Dynamically generated from ConfigProps
 
+TO MODIFY:
+- Structure changes: Edit this template
+- Config options: Extracted automatically from source code ConfigProps
+- Model names: Extracted automatically from data/models directory
+*/}
+
+{/* DESCRIBE what the DROPIN_NAME initializer provides. Include information about global options, language definitions, and model extensions. */}
 
 ## Configuration options
 
-The following table describes the configuration options available for the **Product Details** initializer:
+{/* DESCRIBE the configuration options available for the DROPIN_NAME initializer. */}
 
-<TableWrapper nowrap={[0,1]}>
+<TableWrapper nowrap={[0]}>
 
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `scope` | `string` | No | GraphQL API scope identifier for the store view or website. Used to fetch product data from the correct store context. |
-| `defaultLocale` | `string` | No | Default locale code for product content when user's preferred language is unavailable. |
-| `globalLocale` | `string` | No | Global locale code that overrides all product content language settings. |
-| `sku` | `string` | No | Default product SKU to display when no SKU is specified in the URL or component configuration. |
-| `acdl` | `boolean` | No | Enable Adobe Client Data Layer integration for product analytics and tracking. Set to \`true\` to push product events to ACDL. |
-| `anchors` | `string[]` | No | Array of DOM element IDs to use as anchor points for scrolling to product sections (e.g., reviews, specifications). |
-| `persistURLParams` | `boolean` | No | Preserve URL query parameters when updating product options. Set to \`true\` to maintain UTM codes and tracking parameters. |
-| `preselectFirstOption` | `boolean` | No | Automatically select the first available option for each configurable attribute. Set to \`true\` for faster product selection. |
-| `optionsUIDs` | `string[]` | No | Array of option UIDs to pre-select for configurable products. Use to deep-link to specific product variants. |
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| langDefinitions | object | No | Provides language definitions for internationalization (i18n). |
+| models | object | No | Extend the default model with new fields and transform them as needed. |
 
 </TableWrapper>
 
-## Basic initialization
+### Example
 
-Initialize the drop-in with default settings:
+{/* DESCRIBE the DROPIN_NAME initializer configuration implementation. */}
 
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-await initializers.mountImmediately(initialize, {});
+```ts
+// Initialize Product Details 
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models,
+  });
+})();
 ```
 
-## Language definitions
+### Set language definitions
 
-Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+{/* DESCRIBE how the langDefinitions property works for the DROPIN_NAME. Include information about dictionary files and internationalization. */}
 
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
+```ts
+// Fetch the dictionary files for your application
+const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
 
-const customStrings = {
-  'AddToCart': 'Add to Bag',
-  'Checkout': 'Complete Purchase',
-  'Price': 'Cost',
-};
-
+// Register the component with language definitions
 const langDefinitions = {
-  default: customStrings,
+  default: fr_FR,
 };
 
-await initializers.mountImmediately(initialize, { langDefinitions });
-```
-
-<Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [Product Details Dictionary](/dropins/product-details/dictionary/) page.
-</Aside>
-
-## Customizing data models
-
-Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
-
-The following example shows how to customize the `CustomModel` model for the **Product Details** drop-in:
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-const models = {
-  CustomModel: {
-    transformer: (data) => ({
-      // Add custom fields from backend data
-      customField: data?.custom_field,
-      promotionBadge: data?.promotion?.label,
-      // Transform existing fields
-      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
-    }),
-  },
-};
-
-await initializers.mountImmediately(initialize, { models });
-```
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<Aside type="note">
-No customizable models are available for this drop-in.
-</Aside>
-
-## Drop-in-specific configuration
-
-The **Product Details** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-  scope: 'value',
-  defaultLocale: 'value',
-  globalLocale: 'value',
-  sku: 'value',
-  acdl: true,
-  anchors: 'value',
-  persistURLParams: true,
-  preselectFirstOption: true,
-  optionsUIDs: 'value',
+// Register initializers
+initializers.register(api.initialize, {
+  langDefinitions,
 });
 ```
 
-<Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
-</Aside>
+### Set models
 
+{/* DESCRIBE how to extend default models in the DROPIN_NAME component. Include information about transformers and new fields. */}
 
+{/* DESCRIBE the models property structure for the DROPIN_NAME. Include information about default models and transformers. */}
 
+{/* DESCRIBE how to extend default models with new fields and transformers for the DROPIN_NAME. */}
 
-## Configuration types
-
-The following TypeScript definitions show the structure of each configuration object:
-
-### langDefinitions
-
-```typescript
-langDefinitions?: {
-  [locale: string]: {
-    [key: string]: string;
-  };
-};
+```ts
+// Initialize Product Details
+initializeDropin(async () => {
+  await initializers.mountImmediately(initialize, {
+    langDefinitions,
+    models: {
+      ModelName: {
+        transformer: (data) => ({
+          customField1: data?.custom_field_1,
+          customField2: data?.custom_field_2,
+        }),
+      },
+    },
+  });
+})();
 ```
-
-### models
-
-```typescript
-models?: {
-  [modelName: string]: Model<any>;
-};
-```
-
-
-
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-pdp */}

@@ -30,15 +30,11 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Cart** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+The **Cart** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.5.1</strong>
 </div>
-
-<Aside type="tip">
-**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
-</Aside>
 
 ## Events reference
 
@@ -47,34 +43,38 @@ The **Cart** drop-in uses the [event bus](/dropins/all/events/) to emit and list
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [cart/initialized](#cartinitialized-emits) | Emits | Emitted after the Cart drop-in completes its initialization sequence. This event signals that the cart is ready to accept user interactions and process cart operations. |
-| [cart/product/added](#cartproductadded-emits) | Emits | Emitted when a new product is added to the cart. Contains details about the added product including SKU, quantity, and selected options. |
-| [cart/product/removed](#cartproductremoved-emits) | Emits | Emitted when a product is removed from the cart. Contains information about the removed item to allow tracking and analytics integration. |
-| [cart/product/updated](#cartproductupdated-emits) | Emits | Emitted when an existing cart item is modified, such as when its quantity is changed or product options are updated. |
+| [cart/initialized](#cartinitialized-emits) | Emits | Emitted when the component completes initialization |
+| [cart/product/added](#cartproductadded-emits) | Emits | Emitted when an item is added |
+| [cart/product/removed](#cartproductremoved-emits) | Emits | Emitted when an item is removed |
+| [cart/product/updated](#cartproductupdated-emits) | Emits | Emitted when the component state is updated |
 | [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization |
 | [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs |
-| [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when cart data is available or changes. This event carries the full cart state including items, totals, and applied discounts. External code can emit this event to update the cart programmatically or subscribe to it to react to cart changes. |
-| [cart/merged](#cartmerged-emits-and-listens) | Emits and listens | Triggered when two cart instances are merged, typically occurring when a guest user logs in and their guest cart is merged with their authenticated cart. This event allows external code to respond to cart consolidation scenarios. |
-| [cart/reset](#cartreset-emits-and-listens) | Emits and listens | Triggered when the cart is reset to its initial empty state. This can occur after a successful checkout, when switching storefronts, or when explicitly cleared by user action or external code. |
-| [cart/updated](#cartupdated-emits-and-listens) | Emits and listens | Triggered when the cart state is updated, such as when quantities change, items are added or removed, or discounts are applied. Both the drop-in and external code can emit or listen to this event to maintain cart state synchronization. |
-| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and listens | Triggered when a shipping cost estimate is calculated based on the destination address and selected shipping method. Both the drop-in and external integrations can emit or consume this event to coordinate shipping calculations across the storefront. |
+| [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes |
+| [cart/merged](#cartmerged-emits-and-listens) | Emits and listens | Triggered when data is merged |
+| [cart/reset](#cartreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset |
+| [cart/updated](#cartupdated-emits-and-listens) | Emits and listens | Triggered when the component state is updated |
+| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and listens | Triggered when an estimate is calculated |
 
 </TableWrapper>
 {/* EVENTS_TABLE_END */}
 
 ## Event details
 
-The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
 ### `cart/data` (emits and listens)
 
-Triggered when cart data is available or changes. This event carries the full cart state including items, totals, and applied discounts. External code can emit this event to update the cart programmatically or subscribe to it to react to cart changes.
+Emitted when cart data is available or changes. This event is triggered during cart initialization and updates to provide the current cart state.
 
-#### Data payload
+#### Event payload
 
-This event's data payload structure is not documented in the source code.
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
 
 
 
@@ -96,13 +96,15 @@ cartDataListener.off();
 
 ### `cart/initialized` (emits)
 
-Emitted after the Cart drop-in completes its initialization sequence. This event signals that the cart is ready to accept user interactions and process cart operations.
+Emitted when the component completes initialization
 
-#### Data payload
+#### Event payload
 
 ```typescript
 CartModel | null
 ```
+
+See [`CartModel`](#cartmodel) for full type definition.
 
 
 
@@ -124,21 +126,19 @@ cartInitializedListener.off();
 
 ### `cart/merged` (emits and listens)
 
-Triggered when two cart instances are merged, typically occurring when a guest user logs in and their guest cart is merged with their authenticated cart. This event allows external code to respond to cart consolidation scenarios.
+Emitted when a guest cart is merged with a customer cart after login. This typically happens when an unauthenticated user adds items to their cart, then signs in, and their guest cart items are combined with any existing items in their customer cart.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 {
-oldCartItems: Item[] | null;
-newCart: CartModel | null;
+  oldCartItems: Item[] | null;
+  newCart: CartModel | null;
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `oldCartItems` | `Item[] \| null` | See type definition in source code |
-| `newCart` | `CartModel \| null` | See type definition in source code |
+See [`Item`](#item), [`CartModel`](#cartmodel) for full type definitions.
+
 
 
 #### Usage
@@ -159,13 +159,15 @@ cartMergedListener.off();
 
 ### `cart/product/added` (emits)
 
-Emitted when a new product is added to the cart. Contains details about the added product including SKU, quantity, and selected options.
+Emitted when new products are added to the cart. This event fires for genuinely new items, not quantity updates of existing items.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 Item[] | null
 ```
+
+See [`Item`](#item) for full type definition.
 
 
 
@@ -187,11 +189,9 @@ cartProductAddedListener.off();
 
 ### `cart/product/removed` (emits)
 
-Emitted when a product is removed from the cart. Contains information about the removed item to allow tracking and analytics integration.
+Emitted when an item is removed
 
-#### Data payload
-
-This event's data payload structure is not documented in the source code.
+#### Event payload
 
 
 
@@ -213,13 +213,15 @@ cartProductRemovedListener.off();
 
 ### `cart/product/updated` (emits)
 
-Emitted when an existing cart item is modified, such as when its quantity is changed or product options are updated.
+Emitted when the quantity of existing cart items is increased. This event fires when adding more of a product that's already in the cart, as opposed to adding a brand new product.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 Item[] | null
 ```
+
+See [`Item`](#item) for full type definition.
 
 
 
@@ -241,9 +243,9 @@ cartProductUpdatedListener.off();
 
 ### `cart/reset` (emits and listens)
 
-Triggered when the cart is reset to its initial empty state. This can occur after a successful checkout, when switching storefronts, or when explicitly cleared by user action or external code.
+Triggered when the component state is reset
 
-#### Data payload
+#### Event payload
 
 ```typescript
 void
@@ -269,13 +271,15 @@ cartResetListener.off();
 
 ### `cart/updated` (emits and listens)
 
-Triggered when the cart state is updated, such as when quantities change, items are added or removed, or discounts are applied. Both the drop-in and external code can emit or listen to this event to maintain cart state synchronization.
+Triggered when the component state is updated
 
-#### Data payload
+#### Event payload
 
 ```typescript
 CartModel | null
 ```
+
+See [`CartModel`](#cartmodel) for full type definition.
 
 
 
@@ -299,9 +303,13 @@ cartUpdatedListener.off();
 
 Fired by Checkout (`checkout`) when the component completes initialization
 
-#### Data payload
+#### Event payload
 
-This event's data payload structure is not documented in the source code.
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
 
 
 
@@ -325,11 +333,13 @@ checkoutInitializedListener.off();
 
 Fired by Checkout (`checkout`) when the component state is updated
 
-#### Data payload
+#### Event payload
 
 ```typescript
-any
+Cart | NegotiableQuote | null
 ```
+
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
 
 
 
@@ -353,9 +363,7 @@ checkoutUpdatedListener.off();
 
 Fired by Company Context (`companyContext`) when a change occurs
 
-#### Data payload
-
-This event's data payload structure is not documented in the source code.
+#### Event payload
 
 
 
@@ -377,21 +385,19 @@ companyContextChangedListener.off();
 
 ### `shipping/estimate` (emits and listens)
 
-Triggered when a shipping cost estimate is calculated based on the destination address and selected shipping method. Both the drop-in and external integrations can emit or consume this event to coordinate shipping calculations across the storefront.
+Emitted when shipping cost estimates are calculated for a given address. This event provides both the address used for estimation and the resulting shipping method with its cost.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 {
-address: PartialAddress;
-shippingMethod: ShippingMethod | null;
+  address: PartialAddress;
+  shippingMethod: ShippingMethod | null;
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `address` | `PartialAddress` | See type definition in source code |
-| `shippingMethod` | `ShippingMethod \| null` | See type definition in source code |
+See [`PartialAddress`](#partialaddress), [`ShippingMethod`](#shippingmethod) for full type definitions.
+
 
 
 #### Usage
@@ -408,5 +414,188 @@ const shippingEstimateListener = events.on('shipping/estimate', (data) => {
 
 // Later, when you want to stop listening
 shippingEstimateListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### CartModel
+
+The `CartModel` represents the complete state of a shopping cart, including items, pricing, discounts, shipping estimates, and gift options.
+
+Used in: [`cart/data`](#cartdata-emits-and-listens), [`cart/initialized`](#cartinitialized-emits), [`cart/merged`](#cartmerged-emits-and-listens), [`cart/updated`](#cartupdated-emits-and-listens).
+
+```ts
+interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+### Item
+
+The `Item` interface represents a single product in the cart, including product details, pricing, quantity, customization options, and inventory status.
+
+Used in: [`cart/merged`](#cartmerged-emits-and-listens), [`cart/product/added`](#cartproductadded-emits), [`cart/product/updated`](#cartproductupdated-emits).
+
+```ts
+interface Item {
+  giftWrappingAvailable: boolean;
+  giftWrappingPrice: {
+    currency: string;
+    value: number;
+  };
+  productGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  priceTiers: PriceTier[];
+  giftMessageAvailable: boolean | null;
+  taxedPrice: Price;
+  rowTotal: Price;
+  rowTotalIncludingTax: Price;
+  itemType: string;
+  uid: string;
+  url: ItemURL;
+  canonicalUrl: string;
+  categories: string[];
+  quantity: number;
+  sku: string;
+  topLevelSku: string;
+  name: string;
+  image: ItemImage;
+  links?: ItemLinks;
+  price: Price;
+  total: Price;
+  discountedTotal?: Price;
+  discount?: Price;
+  regularPrice: Price;
+  discounted: boolean;
+  bundleOptions?: { [key: string]: any };
+  bundleOptionsUIDs?: string[];
+  selectedOptions?: { [key: string]: any };
+  selectedOptionsUIDs?: { [key: string]: any };
+  customizableOptions?: { [key: string]: any };
+  message?: string;
+  recipient?: string;
+  recipientEmail?: string;
+  sender?: string;
+  senderEmail?: string;
+  lowInventory?: boolean;
+  insufficientQuantity?: boolean;
+  onlyXLeftInStock?: number | null;
+  outOfStock?: boolean;
+  notAvailableMessage?: string;
+  stockLevel?: String;
+  discountPercentage?: number;
+  savingsAmount?: Price;
+  productAttributes?: Attribute[];
+  fixedProductTaxes?: FixedProductTax[];
+}
+```
+
+### PartialAddress
+
+The `PartialAddress` interface represents a minimal address used for shipping estimates, containing country, postal code, and region information.
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface PartialAddress {
+  countryCode: string;
+  postCode?: string;
+  region?: string;
+  regionCode?: string;
+  regionId?: number;
+}
+```
+
+### ShippingMethod
+
+The `ShippingMethod` interface represents a shipping option with carrier and method codes, along with pricing information.
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface ShippingMethod {
+  carrierCode: string;
+  methodCode: string;
+  amountExclTax?: Price;
+  amountInclTax?: Price;
+}
 ```
 
