@@ -926,6 +926,61 @@ function cleanFunctionDescription(mdxContent, functionName) {
 }
 
 /**
+ * Normalize description to start with a verb for parallel structure in function tables
+ * 
+ * @param {string} description - Function description
+ * @param {string} functionName - Name of the function
+ * @returns {string} Description starting with a verb
+ */
+function normalizeDescriptionToVerb(description, functionName) {
+    if (!description) return description;
+
+    let normalized = description;
+
+    // Remove "The [functionName] query/mutation/function " prefix (handles GraphQL terminology)
+    const functionPrefixPattern = new RegExp(`^The \`?${functionName}\`? (query|mutation|function) `, 'i');
+    normalized = normalized.replace(functionPrefixPattern, '');
+
+    // Remove generic "The [functionName] " prefix (even without function/query/mutation)
+    const simpleFunctionPattern = new RegExp(`^The \`?${functionName}\`? `, 'i');
+    normalized = normalized.replace(simpleFunctionPattern, '');
+
+    // Remove generic "The function/query/mutation " prefix
+    normalized = normalized.replace(/^The (function|query|mutation) /i, '');
+
+    // Remove "A function that " prefix
+    normalized = normalized.replace(/^A function that /i, '');
+
+    // Remove "An API function that " prefix
+    normalized = normalized.replace(/^An API function that /i, '');
+
+    // Handle passive voice constructions (before capitalization)
+    // "is used to X" → "X"
+    normalized = normalized.replace(/^is used to /i, '');
+
+    // "can be used to X" → "X"
+    normalized = normalized.replace(/^can be used to /i, '');
+
+    // "allows you to X" → "X"
+    normalized = normalized.replace(/^allows you to /i, '');
+
+    // Handle "is simmilar/similar to" pattern - keep it but fix capitalization
+    normalized = normalized.replace(/^is (similar|simmilar) to/i, 'Is $1 to');
+
+    // Capitalize first letter (but preserve intentional uppercase patterns like "Is similar")
+    if (normalized.length > 0 && !normalized.match(/^[A-Z]/)) {
+        normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    // Ensure it ends with a period
+    if (normalized && !normalized.endsWith('.')) {
+        normalized += '.';
+    }
+
+    return normalized;
+}
+
+/**
  * Generate functions MDX content
  * 
  * @param {string} repoName - Repository name (e.g., 'cart')
@@ -1011,6 +1066,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
         if (!description) {
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
+
+        // Normalize description to start with a verb for parallel structure
+        description = normalizeDescriptionToVerb(description, func.name);
 
         // Use first sentence only for table
         let shortDesc = description || 'API function for the drop-in.';
@@ -1445,22 +1503,36 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             // Auto-link event names to events documentation
             // Match event names in backticks like `cart/data`, `cart/updated`, etc.
             eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
+                // Skip auto-linking for dropins without events pages
+                const dropinsWithoutEvents = ['personalization'];
+                if (dropinsWithoutEvents.includes(repoName)) {
+                    return match; // Return original backticked text without linking
+                }
+
                 // Create base anchor: cart/data -> cartdata
                 const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
 
-                // Known event types based on common patterns
-                // Most events only emit (emits), some are bidirectional (emits-and-listens)
-                const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged'];
+                // Per-dropin mapping of bidirectional events (emits-and-listens)
+                // Events can be bidirectional in one dropin but only emit in another
+                const emitsAndListensByDropin = {
+                    'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
+                    'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
+                    'order': ['order/data'],
+                    'product-details': ['pdp/data', 'pdp/values'],
+                    'recommendations': ['recommendations/data'],
+                    'product-discovery': ['search/error', 'search/loading', 'search/result'],
+                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                };
 
                 // Default to -emits since most events only have an "Emits" section
                 let anchorSuffix = '-emits';
-
-                if (emitsAndListensEvents.includes(eventName)) {
+                const dropinBidirectionalEvents = emitsAndListensByDropin[repoName] || [];
+                if (dropinBidirectionalEvents.includes(eventName)) {
                     anchorSuffix = '-emits-and-listens';
                 }
 
                 // Link to the events page with full anchor (use absolute path for proper link validation)
-                return `[\`${eventName}\`](/dropins/${repoName}/events#${baseAnchor}${anchorSuffix})`;
+                return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
             });
 
             // Auto-link model names to their definitions (first occurrence only)
@@ -1484,15 +1556,33 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
 
                 // Still auto-link any event names in the enrichment (if any)
                 eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
+                    // Skip auto-linking for dropins without events pages
+                    const dropinsWithoutEvents = ['personalization'];
+                    if (dropinsWithoutEvents.includes(repoName)) {
+                        return match; // Return original backticked text without linking
+                    }
+
                     const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
-                    const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged'];
+
+                    // Per-dropin mapping of bidirectional events (emits-and-listens)
+                    // Events can be bidirectional in one dropin but only emit in another
+                    const emitsAndListensByDropin = {
+                        'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
+                        'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
+                        'order': ['order/data'],
+                        'product-details': ['pdp/data', 'pdp/values'],
+                        'recommendations': ['recommendations/data'],
+                        'product-discovery': ['search/error', 'search/loading', 'search/result'],
+                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                    };
 
                     // Default to -emits since most events only have an "Emits" section
                     let anchorSuffix = '-emits';
-                    if (emitsAndListensEvents.includes(eventName)) {
+                    const dropinBidirectionalEvents = emitsAndListensByDropin[repoName] || [];
+                    if (dropinBidirectionalEvents.includes(eventName)) {
                         anchorSuffix = '-emits-and-listens';
                     }
-                    return `[\`${eventName}\`](/dropins/${repoName}/events#${baseAnchor}${anchorSuffix})`;
+                    return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
                 });
             }
         }
@@ -1734,13 +1824,5 @@ await runGenerator({
 // ============================================================================
 
 console.log('\n🔍 Running post-generation type validation...\n');
-const validationSuccess = validateAllFunctionDocs(projectRoot);
-
-if (!validationSuccess) {
-    console.warn('\n⚠️  WARNING: Generic type issues detected in generated documentation.');
-    console.warn('   These are pre-existing issues that should be fixed in the source code.');
-    console.warn('   For now, continuing with warnings only.\n');
-} else {
-    console.log('\n✅ All function documentation validated successfully!\n');
-}
+validateAllFunctionDocs(projectRoot);
 

@@ -101,7 +101,7 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
     // Clean version string (remove ~ ^ etc)
-    const cleanVersion = version.replace(/^[\^~]/, '');
+    const cleanVersion = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
     const tag = `v${cleanVersion}`;
 
     console.log(`  Using version: ${cleanVersion}`);

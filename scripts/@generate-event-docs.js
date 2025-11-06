@@ -88,7 +88,7 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
     // Clean version string (remove ~ ^ etc)
-    const cleanVersion = version.replace(/^[\^~]/, '');
+    const cleanVersion = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
     const tag = `v${cleanVersion}`;
 
     console.log(`  Using version: ${cleanVersion}`);
@@ -719,9 +719,10 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     let template = readFileSync(templatePath, 'utf8');
 
     // Replace global placeholders
+    const cleanVersionStr = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
-    template = template.replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''));
+    template = template.replace(/DROPIN_VERSION/g, cleanVersionStr);
 
     // Replace overview with enriched content or fallback to generic
     const dropinOverview = enrichments.overview ||
