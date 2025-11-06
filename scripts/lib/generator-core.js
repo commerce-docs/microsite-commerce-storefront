@@ -96,8 +96,9 @@ async function processSingleDropin(config) {
 
     // Warn if version mismatch
     if (!isExactMatch) {
+        const cleanRequestedVersion = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
         logger.warn(
-            `Documentation generated from ${actualVersion} instead of requested version ${version.replace(/^[\^~]/, '')}`,
+            `Documentation generated from ${actualVersion} instead of requested version ${cleanRequestedVersion}`,
             'Version mismatch may cause documentation inaccuracies'
         );
     }
