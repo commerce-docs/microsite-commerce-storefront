@@ -678,13 +678,6 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/dropins-b2b/' },
                       {
-                        label: 'B2B Containers',
-                        collapsed: true,
-                        items: [
-                          { label: 'RequestNegotiableQuoteForm', link: '/dropins-b2b/container/request-negotiable-quote-form/' },
-                        ],
-                      },
-                      {
                         label: 'Company Management',
                         collapsed: true,
                         items: [
@@ -695,14 +688,14 @@ async function config() {
                         label: 'Quote Management',
                         collapsed: true,
                         items: [
-                          { label: 'Quote Management overview', link: '/dropins-b2b/quote-management/' },
-                          { label: 'Quote Management installation', link: '/dropins-b2b/quote-management/installation/' },
-                          { label: 'Quote Management initialization', link: '/dropins-b2b/quote-management/initialization/' },
-                          { label: 'Quote Management containers', link: '/dropins-b2b/quote-management/containers/' },
-                          { label: 'Quote Management functions', link: '/dropins-b2b/quote-management/functions/' },
-                          { label: 'Quote Management events', link: '/dropins-b2b/quote-management/events/' },
-                          { label: 'Quote Management styles', link: '/dropins-b2b/quote-management/styles/' },
-                          { label: 'Quote Management dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
+                          { label: 'Overview', link: '/dropins-b2b/quote-management/' },
+                          { label: 'Installation', link: '/dropins-b2b/quote-management/installation/' },
+                          { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
+                          { label: 'Containers', link: '/dropins-b2b/quote-management/containers/' },
+                          { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/quote-management/events/' },
+                          { label: 'Styles', link: '/dropins-b2b/quote-management/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
                         ],
                       },
                     ],
