@@ -276,7 +276,7 @@ function generateDocumentAuthoringTable(blockName, configs) {
     }
 
     let output = `## Document Authoring Configuration\n\n`;
-    output += `Copy this table into your document to configure the \`${blockName}\` block. Modify the values in the second column to customize the block's behavior. You can remove any rows for properties you don't need to configure.\n\n`;
+    output += `Modify the values in the second column to customize the block's behavior. You can remove any rows for properties you don't need to configure.\n\n`;
 
     // Wrap table in a div with custom styling matching AEM format
     output += `<div style="width: 100%; overflow-x: auto;">\n`;
