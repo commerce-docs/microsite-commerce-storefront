@@ -480,14 +480,13 @@ async function config() {
                           { label: 'Overview', link: '/dropins/payment-services/' },
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
-                          { label: 'Functions', link: '/dropins/payment-services/functions/' },
-                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Containers',
                             collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/payment-services/containers/' },
+                              { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                               { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
                             ],
                           },
