@@ -134,7 +134,7 @@ Adobe Commerce PaaS environments use standard Adboe Commerce header naming conve
 
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
+<TabItem label="Adobe Commerce as a Cloud Service (SaaS)">
 
 Adobe Commerce as a Cloud Service uses standard Adobe Commerce header naming conventions but does not require API keys or environment IDs in the default configuration.
 
@@ -165,7 +165,7 @@ Adobe Commerce as a Cloud Service uses standard Adobe Commerce header naming con
 
 </TabItem>
 
-<TabItem label="Adobe Commerce Optimizer (ACO)">
+<TabItem label="Adobe Commerce Optimizer">
 
 Adobe Commerce Optimizer uses different header naming conventions and requires Commerce Optimizer-specific headers as defined in the [Merchandising Services API documentation](https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers).
 
@@ -190,15 +190,15 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
   - **`AC-Price-Book-ID`** - (Optional) Defines how prices are calculated for a specific catalog view. If not included, Merchandising Services provides a default price book with currency in US dollars.
   - **`AC-Policy-{{*}}`** - (Optional) Policy trigger for filtering products by attribute. The header should match the "name" of the trigger. For example, `AC-Policy-Brand:Cruz` for brand filtering using "Cruz". You can specify multiple policy headers per request.
 
-:::note[Troubleshooting ACO Headers]
-**Warning:** There is currently a bug (being resolved) that may require adding the `AC-Environment-ID` header in some ACO configurations. If you have all the requisite ACO headers configured correctly and are still experiencing problems, you may need to add this header:
+:::note[Troubleshooting Optimizer Headers]
+**Warning:** There is currently a bug (being resolved) that may require adding the `AC-Environment-ID` header in some Optimizer configurations. If you have all the requisite Optimizer headers configured correctly and are still experiencing problems, you may need to add this header:
 
 ```json
 {
   "headers": {
     "cs": {
       "AC-Environment-Id": "{{TENANT_ID}}",
-      // ... your other ACO headers
+      // ... your other Optimizer headers
     }
   }
 }
@@ -215,7 +215,7 @@ The analytics section contains store and environment metadata for tracking and r
 
 <Tabs>
 
-<TabItem label="Adobe Commerce (PaaS) / ACCS">
+<TabItem label="Adobe Commerce (PaaS) / SaaS">
 
 For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce Environment. You can obtain these values using a `storeConfig` query.
 
@@ -257,9 +257,9 @@ For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use 
 
 </TabItem>
 
-<TabItem label="Adobe Commerce Optimizer (ACO)">
+<TabItem label="Adobe Commerce Optimizer">
 
-For Adobe Commerce Optimizer environments, note the use of hardcoded values for `store-code` and `website-code`.
+For Adobe Commerce Optimizer environments, use a simplified analytics configuration structure:
 
 ```json
 {
@@ -267,16 +267,11 @@ For Adobe Commerce Optimizer environments, note the use of hardcoded values for 
     "base-currency-code": "{{CURRENCY_CODE}}",
     "environment": "{{ENVIRONMENT_TYPE}}",
     "environment-id": "{{YOUR_TENANT_ID}}",
-    "store-code": "STORE_CODE",
-    "store-id": {{STORE_ID}},
-    "store-name": "{{STORE_NAME}}",
+    "locale": "{{LOCALE}}",
     "store-url": "{{STORE_URL}}",
-    "store-view-code": "{{YOUR_AC-SOURCE-LOCALE_HEADER}}",
-    "store-view-id": {{STORE_VIEW_ID}},
-    "store-view-name": "{{STORE_VIEW_NAME}}",
-    "website-code": "WEBSITE_CODE",
-    "website-id": {{WEBSITE_ID}},
-    "website-name": "{{WEBSITE_NAME}}"
+    "store-view-currency-code": "{{CURRENCY_CODE}}",
+    "storefront-template": "{{TEMPLATE_TYPE}}",
+    "view-id": "{{CATALOG_VIEW_ID}}"
   }
 }
 ```
@@ -286,16 +281,11 @@ For Adobe Commerce Optimizer environments, note the use of hardcoded values for 
 - **`base-currency-code`** - The base currency code for the store (e.g., "USD", "EUR")
 - **`environment`** - Environment type ("Production", "Testing")
 - **`environment-id`** - The tenant ID for the Adobe Commerce Optimizer instance
+- **`locale`** - Catalog source locale (language or geography) for the store view, for example `en-US`
 - **`store-url`** - Base URL for the store
-- **`store-code`** - Hardcoded value **STORE_CODE** for ACO environments
-- **`store-id`** - Numeric ID for the store
-- **`store-name`** - Display name for the store
-- **`store-view-code`** - Matches the **AC-Source-Locale** header value
-- **`store-view-id`** - Numeric ID for the store view
-- **`store-view-name`** - Display name for the store view
-- **`website-code`** - Hardcoded value **WEBSITE_CODE** for ACO environments
-- **`website-id`** - Numeric ID for the website
-- **`website-name`** - Display name for the website
+- **`store-view-currency-code`** - Currency code for the store view (e.g., "USD", "EUR")
+- **`storefront-template`** - (Optional) Storefront template type (e.g., "Other")
+- **`view-id`** - The unique ID assigned to the catalog view from the Adobe Commerce Optimizer UI
 
 </TabItem>
 
@@ -428,7 +418,7 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
 ```
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
+<TabItem label="Adobe Commerce as a Cloud Service (SaaS)">
 
 This example shows the configuration for Adobe Commerce as a Cloud Service, which uses standard Adobe Commerce header naming conventions. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
 
@@ -475,11 +465,11 @@ This example shows the configuration for Adobe Commerce as a Cloud Service, whic
 
 </TabItem>
 
-<TabItem label="Adobe Commerce Optimizer (ACO)">
+<TabItem label="Adobe Commerce Optimizer">
 
-This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes Commerce Optimizer-specific settings. This configuration is used on this site: https://main--boilerplate-aco--adobe-commerce.aem.live/
+This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes Optimizer-specific settings. This configuration is used on this site: https://main--boilerplate-aco--adobe-commerce.aem.live/
 
-```json title="ACO config.json" showLineNumbers
+```json title="Optimizer config.json" showLineNumbers
 {
   "public": {
     "default": {
@@ -496,16 +486,11 @@ This example shows the configuration for Adobe Commerce Optimizer, which uses di
         "base-currency-code": "USD",
         "environment": "Testing",
         "environment-id": "8idEEDDiVwjCEJAyB5kjfi",
-        "store-code": "STORE_CODE",
-        "store-id": 1,
-        "store-name": "ACO Store",
-        "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live",
-        "store-view-code": "en-US",
-        "store-view-id": 1,
-        "store-view-name": "Default Store View",
-        "website-code": "WEBSITE_CODE",
-        "website-id": 1,
-        "website-name": "Main Website"
+        "locale": "en-US",
+        "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live/",
+        "store-view-currency-code": "USD",
+        "storefront-template": "Other",
+        "view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"
       },
       "plugins": {
         "picker": {
@@ -588,13 +573,14 @@ Use `getConfigValue` to access any configuration value using dot notation, inclu
 ```javascript
 export default async function decorate(block) {
   // Get analytics configuration
-  const storeName = await getConfigValue('analytics.store-name');
+  const storeUrl = await getConfigValue('analytics.store-url');
   const currency = await getConfigValue('analytics.base-currency-code');
+  const environment = await getConfigValue('analytics.environment');
 
   // Get plugin configuration
   const rootCategory = await getConfigValue('plugins.picker.rootCategory');
 
-  console.log('Store:', storeName, 'Currency:', currency);
+  console.log('Store URL:', storeUrl, 'Currency:', currency, 'Environment:', environment);
   console.log('Root category:', rootCategory);
 }
 ```
@@ -638,4 +624,4 @@ export default async function decorate(block) {
 
 ## Summary
 
-The Commerce configuration provides a structured approach to connecting your storefront to Adobe Commerce backends. By organizing settings into clear sections for endpoints, headers, analytics, plugins, and multistore configurations, you can easily customize your storefront for different Commerce environments. The configuration system supports Adobe Commerce (PaaS), Adobe Commerce as a Cloud Service (ACCS), and Adobe Commerce Optimizer (ACO), each with specific header requirements and authentication methods. Use the `getConfigValue` and `getHeaders` helper functions to access these settings in your Commerce blocks, ensuring consistent and maintainable integration with your Commerce backend.
+The Commerce configuration provides a structured approach to connecting your storefront to Adobe Commerce backends. By organizing settings into clear sections for endpoints, headers, analytics, plugins, and multistore configurations, you can easily customize your storefront for different Commerce environments. The configuration system supports Adobe Commerce (PaaS), Adobe Commerce as a Cloud Service (SaaS), and Adobe Commerce Optimizer, each with specific header requirements and authentication methods. Use the `getConfigValue` and `getHeaders` helper functions to access these settings in your Commerce blocks, ensuring consistent and maintainable integration with your Commerce backend.

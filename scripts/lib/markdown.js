@@ -42,8 +42,10 @@ export function replacePlaceholders(content, replacements) {
     let result = content;
 
     for (const [placeholder, value] of Object.entries(replacements)) {
-        // Create case-insensitive regex for the placeholder
-        const regex = new RegExp(placeholder, 'gi');
+        // Replace placeholders, but exclude those inside comments
+        // Match the placeholder but use negative lookbehind to exclude comment context
+        // Also use word boundaries to avoid partial matches
+        const regex = new RegExp(`\\b${placeholder}\\b(?![^{]*\\*/)`, 'g');
         result = result.replace(regex, value);
     }
 
@@ -132,6 +134,7 @@ export function toTitleCase(str) {
  */
 export function escapeMDX(text) {
     return text
+        .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
         .replace(/\{/g, '\\{')
         .replace(/\}/g, '\\}')
         .replace(/</g, '&lt;')
