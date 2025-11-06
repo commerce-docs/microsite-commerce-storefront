@@ -136,6 +136,20 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
             }
         }
     } else {
+        // Check if we're already at the correct version
+        try {
+            const currentRef = execFileSync('git', ['describe', '--tags', '--exact-match'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            if (currentRef === tag || currentRef === cleanVersion) {
+                console.log(`  Already at ${currentRef}`);
+                actualVersion = currentRef;
+                isExactMatch = true;
+                return { path: dropinPath, actualVersion, isExactMatch };
+            }
+        } catch {
+            // Not at an exact tag, continue with checkout
+        }
+
         console.log(`  Checking out ${tag}...`);
         try {
             // First fetch all tags
