@@ -1,316 +1,152 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - Recommendations → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-recommendations → Package name (e.g., "@dropins/storefront-cart")
-  - 1.1.1 → Version number (e.g., "1.5.1")
-  - 1 → Number of containers with slots
-  - ## ProductList slots
-
-The slots for the `ProductList` container allow you to customize its appearance and behavior.
-
-```js
-interface ProductListProps
-
-slots?: {
-Heading?: SlotProps;
-    Footer?: SlotProps;
-    Title?: SlotProps<{
-      item: Item;
-      productUrl: string;
-    }>;
-    Sku?: SlotProps<{
-      item: Item;
-    }>;
-    Price?: SlotProps<{
-      item: Item;
-    }>;
-    Thumbnail?: SlotProps<{
-      item: any;
-      defaultImageProps: ImageProps;
-    }>;
-};
-```
-
-### Heading slot
-
-The `Heading` slot allows you to customize the heading section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Heading: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Heading';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Footer slot
-
-The `Footer` slot allows you to customize the footer section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Footer: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Footer';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Title slot
-
-The `Title` slot allows you to customize the title section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Title: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Title';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Sku slot
-
-The `Sku` slot allows you to customize the sku section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Sku: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Sku';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Price slot
-
-The `Price` slot allows you to customize the price section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Price: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Price';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Thumbnail slot
-
-The `Thumbnail` slot allows you to customize the thumbnail section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Thumbnail: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Thumbnail';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
----
-
- → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-recommendations → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: Recommendations Slots
-description: Learn about the slots provided in the Recommendations drop-in for customization.
+description: Customize UI sections in the Recommendations drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **Recommendations** drop-in component for customizing container appearance and behavior.
+The Recommendations drop-in exposes **6 slots** in **1 container** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.1.1</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#productlist-slots"><code>ProductList</code></a></td>
+<td><code>Heading</code>, <code>Footer</code>, <code>Title</code>, <code>Sku</code>, <code>Price</code>, <code>Thumbnail</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
 
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
+## Using slots
+
+This example customizes the `Heading` slot in `ProductList`:
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+
+provider.render(ProductList, {
+  slots: {
+    Heading: (ctx) => {
+      const div = document.createElement('div');
+      div.className = 'product-list__heading';
+      div.textContent = 'Custom Heading';
+      ctx.appendChild(div);
+    }
+  }
+})(document.querySelector('.product-list'));
+```
+
+
+
+This example customizes the `Footer` slot to demonstrate conditional rendering and event publishing:
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
+
+provider.render(ProductList, {
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  recId: 'product-recs',
+  currentSku: 'MT01',
+  slots: {
+    Footer: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'footer__wrapper';
+      
+      const addToCart = document.createElement('div');
+      addToCart.className = 'footer__button--add-to-cart';
+      wrapper.appendChild(addToCart);
+      
+      // Conditional rendering based on product type
+      if (ctx.item.itemType === 'SimpleProductView') {
+        // Simple product - show add to cart button
+        UI.render(Button, {
+          children: 'Add to Cart',
+          icon: Icon({ source: 'Cart' }),
+          onClick: (event) => {
+            // Add to cart
+            cartApi.addProductsToCart([
+              { sku: ctx.item.sku, quantity: 1 }
+            ]);
+            
+            // Stop event propagation to prevent parent click handlers
+            event.stopPropagation();
+            
+            // Publish analytics event
+            publishRecsItemAddToCartClick({
+              recommendationUnit: ctx.recommendationUnit,
+              pagePlacement: 'product-list',
+              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+              yOffsetBottom: addToCart.getBoundingClientRect().bottom ?? 0,
+              productId: ctx.index,
+            });
+          },
+          variant: 'primary',
+        })(addToCart);
+      } else {
+        // Complex product - show select options button
+        UI.render(Button, {
+          children: 'Select Options',
+          href: `/products/${ctx.item.urlKey}`,
+          variant: 'tertiary',
+        })(addToCart);
+      }
+      
+      ctx.replaceWith(wrapper);
+    }
+  }
+})(document.querySelector('.recommendations'));
+```
+
 
 ## ProductList slots
 
-The slots for the `ProductList` container allow you to customize its appearance and behavior.
-
-```js
+```js {4,5,6,10,13,16}
 interface ProductListProps
 
 slots?: {
-Heading?: SlotProps;
-    Footer?: SlotProps;
-    Title?: SlotProps<{
-      item: Item;
-      productUrl: string;
-    }>;
-    Sku?: SlotProps<{
-      item: Item;
-    }>;
-    Price?: SlotProps<{
-      item: Item;
-    }>;
-    Thumbnail?: SlotProps<{
-      item: any;
-      defaultImageProps: ImageProps;
-    }>;
+  Heading?: SlotProps;
+  Footer?: SlotProps;
+  Title?: SlotProps<{
+    item: Item;
+    productUrl: string;
+  }>;
+  Sku?: SlotProps<{
+    item: Item;
+  }>;
+  Price?: SlotProps<{
+    item: Item;
+  }>;
+  Thumbnail?: SlotProps<{
+    item: any;
+    defaultImageProps: ImageProps;
+  }>;
 };
-```
-
-### Heading slot
-
-The `Heading` slot allows you to customize the heading section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Heading: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Heading';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Footer slot
-
-The `Footer` slot allows you to customize the footer section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Footer: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Footer';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Title slot
-
-The `Title` slot allows you to customize the title section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Title: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Title';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Sku slot
-
-The `Sku` slot allows you to customize the sku section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Sku: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Sku';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Price slot
-
-The `Price` slot allows you to customize the price section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Price: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Price';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
-### Thumbnail slot
-
-The `Thumbnail` slot allows you to customize the thumbnail section of the `ProductList` container.
-
-```js
- provider.render(ProductList, {
-  slots: {
-    Thumbnail: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Thumbnail';
-      ctx.appendChild(element);
-    }
-  }
-});
 ```
 
 ---
 
 
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-recommendations */}
+{/* This documentation is auto-generated from: REPO_URL */}

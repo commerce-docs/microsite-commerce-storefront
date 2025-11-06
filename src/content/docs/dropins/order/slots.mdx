@@ -1,58 +1,325 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - Order → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-order → Package name (e.g., "@dropins/storefront-cart")
-  - 1.4.0 → Version number (e.g., "1.5.1")
-  - 0 → Number of containers with slots
-  - <Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside> → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-order → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: Order Slots
-description: Learn about the slots provided in the Order drop-in for customization.
+description: Customize UI sections in the Order drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **Order** drop-in component for customizing container appearance and behavior.
+The Order drop-in exposes **30 slots** in **11 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.4.0</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#createreturn-slots"><code>CreateReturn</code></a></td>
+<td><code>Footer</code>, <code>ReturnOrderItem</code>, <code>ReturnFormActions</code>, <code>ReturnReasonFormImage</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#returnorderproductlist-slots"><code>ReturnOrderProductList</code></a></td>
+<td><code>Footer</code>, <code>ReturnOrderItem</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#returnreasonform-slots"><code>ReturnReasonForm</code></a></td>
+<td><code>ReturnFormActions</code>, <code>ReturnReasonFormImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#keyssortorder-slots"><code>KeysSortOrder</code></a></td>
+<td><code>OrderReturnInformation</code>, <code>PaymentMethodIcon</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderproductlist-slots"><code>OrderProductList</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#cartsummaryitem-slots"><code>CartSummaryItem</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderstatus-slots"><code>OrderStatus</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderactions-slots"><code>OrderActions</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#returnslist-slots"><code>ReturnsList</code></a></td>
+<td><code>ReturnItemsDetails</code>, <code>DetailsActionParams</code>, <code>ReturnListImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#usereturnslist-slots"><code>UseReturnsList</code></a></td>
+<td><code>ReturnItemsDetails</code>, <code>DetailsActionParams</code>, <code>ReturnListImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#useshippingstatus-slots"><code>UseShippingStatus</code></a></td>
+<td><code>DeliveryTimeLine</code>, <code>DeliveryTrackActions</code>, <code>ReturnItemsDetails</code>, <code>ShippingStatusCardImage</code>, <code>NotYetShippedProductImage</code>, <code>ShippingStatusReturnCardImage</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
 
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
+## Using slots
 
-<Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside>
+This example customizes the `Footer` slot in `CreateReturn`:
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-order */}
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import CreateReturn from '@dropins/storefront-order/containers/CreateReturn.js';
+
+provider.render(CreateReturn, {
+  slots: {
+    Footer: (ctx) => {
+      const div = document.createElement('div');
+      div.className = 'create-return__footer';
+      div.textContent = 'Custom Footer';
+      ctx.appendChild(div);
+    }
+  }
+})(document.querySelector('.create-return'));
+```
+
+
+
+This example customizes the `Footer` slot to demonstrate rendering nested containers from other drop-ins:
+
+```js
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+
+orderRenderer.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      // Render GiftOptions from Cart drop-in with order data source
+      const giftOptions = document.createElement('div');
+      
+      CartProvider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'order',
+        isEditable: false,
+      })(giftOptions);
+      
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.order-product-list'));
+```
+
+
+## CreateReturn slots
+
+```js {4,5,6,9,13}
+interface CreateReturnProps
+
+slots?: {
+  Footer: SlotProps;
+  ReturnOrderItem: SlotProps;
+  ReturnFormActions: SlotProps<{
+    handleChangeStep: (value: StepsTypes) => void;
+  }>;
+  ReturnReasonFormImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## ReturnOrderProductList slots
+
+```js {4,5,6}
+interface ReturnOrderProductListProps
+
+slots?: {
+  Footer: SlotProps;
+  ReturnOrderItem: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## ReturnReasonForm slots
+
+```js {4,7}
+interface ReturnReasonFormProps
+
+slots?: {
+  ReturnFormActions: SlotProps<{
+    handleChangeStep: (value: StepsTypes) => void;
+  }>;
+  ReturnReasonFormImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## KeysSortOrder slots
+
+```js {4,5}
+interface KeysSortOrderProps
+
+slots?: {
+  OrderReturnInformation: SlotProps<OrdersReturnPropsModel | undefined>;
+  PaymentMethodIcon: SlotProps<Record<string, string>>;
+};
+```
+
+---
+
+## OrderProductList slots
+
+```js {4,5}
+interface OrderProductListProps
+
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## CartSummaryItem slots
+
+```js {4,5}
+interface CartSummaryItemProps
+
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## OrderStatus slots
+
+```js {4}
+interface OrderStatusProps
+
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
+```
+
+---
+
+## OrderActions slots
+
+```js {4}
+interface OrderActionsProps
+
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
+```
+
+---
+
+## ReturnsList slots
+
+```js {4,7,10}
+interface ReturnsListProps
+
+slots?: {
+  ReturnItemsDetails?: SlotProps<{
+    items: OrdersReturnItemsPropsModel[];
+  }>;
+  DetailsActionParams?: SlotProps<{
+    returnOrderItem: OrdersReturnPropsModel;
+  }>;
+  ReturnListImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## UseReturnsList slots
+
+```js {4,7,10}
+interface UseReturnsListProps
+
+slots?: {
+  ReturnItemsDetails?: SlotProps<{
+    items: OrdersReturnItemsPropsModel[];
+  }>;
+  DetailsActionParams?: SlotProps<{
+    returnOrderItem: OrdersReturnPropsModel;
+  }>;
+  ReturnListImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## UseShippingStatus slots
+
+```js {4,5,6,7,11,15}
+interface UseShippingStatusProps
+
+slots?: {
+  DeliveryTimeLine?: SlotProps;
+  DeliveryTrackActions?: SlotProps;
+  ReturnItemsDetails?: SlotProps;
+  ShippingStatusCardImage?: SlotProps<{
+    data: ShipmentItemsModel;
+    defaultImageProps: ImageProps;
+  }>;
+  NotYetShippedProductImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+  ShippingStatusReturnCardImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}
