@@ -217,31 +217,72 @@ function generateTips(blockName, configs) {
 }
 
 /**
- * Generate document authoring table with ALL configuration properties
+ * Convert kebab-case to Title Case (matching AEM document authoring format)
+ * e.g., "enable-item-quantity-update" -> "Enable Item Quantity Update"
  */
-function generateExampleTable(blockName, configs) {
+function toTitleCase(str) {
+    return str.split('-').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+/**
+ * Format value for AEM document authoring (add quotes to boolean strings)
+ */
+function formatValueForAEM(value) {
+    if (value === '' || value === 'undefined') {
+        return '';
+    }
+    if (value === 'true' || value === 'false') {
+        return `"${value}"`;
+    }
+    if (value === "''") {
+        return '';
+    }
+    return value;
+}
+
+/**
+ * Generate document authoring configuration table
+ * Matches exact AEM format: Title Case properties, quoted booleans
+ */
+function generateDocumentAuthoringTable(blockName, configs) {
     if (configs.length === 0) {
         return '';
     }
 
-    const displayName = blockName.replace('commerce-', '').split('-').map(w =>
-        w.charAt(0).toUpperCase() + w.slice(1)
-    ).join(' ');
+    let output = `## Document Authoring Configuration\n\n`;
+    output += `Copy this table into your document to configure the \`${blockName}\` block:\n\n`;
 
-    let table = `### Document Authoring Format\n\n`;
-    table += `Copy this table format into your document to configure the \`${blockName}\` block:\n\n`;
-    table += `| ${displayName} |\n`;
-    table += `| --- |\n`;
+    // Wrap table in a div with custom styling matching AEM format
+    output += `<div style="width: 100%; overflow-x: auto;">\n`;
+    output += `<table style="width: 100%; border-collapse: collapse; border: 1px solid var(--sl-color-gray-5);">\n`;
+    output += `<tbody>\n`;
 
-    // Show ALL configs (not just first 3)
+    // First row: block name only (single cell, centered)
+    output += `<tr>\n`;
+    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">${blockName}</td>\n`;
+    output += `</tr>\n`;
+
+    // Property rows: Title Case names and formatted values
     for (const config of configs) {
-        const defaultValue = config.default === 'undefined' ? '' : config.default;
-        table += `| ${config.key}: ${defaultValue} |\n`;
+        const titleCaseName = toTitleCase(config.key);
+        const formattedValue = formatValueForAEM(config.default);
+        output += `<tr>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${titleCaseName}</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${formattedValue}</td>\n`;
+        output += `</tr>\n`;
     }
 
-    table += `\n<Aside type="tip">\nYou can add or remove any of these configuration options based on your needs. All options are optional unless marked as required.\n</Aside>\n`;
+    output += `</tbody>\n`;
+    output += `</table>\n`;
+    output += `</div>\n\n`;
 
-    return table;
+    output += `<Aside type="tip">\n`;
+    output += `Modify the values in the second column to customize the block's behavior. You can remove any rows for properties you don't need to configure.\n`;
+    output += `</Aside>\n\n`;
+
+    return output;
 }
 
 // ============================================================================
@@ -309,7 +350,7 @@ function generateMerchantBlockDoc(block, outputDir) {
     const generationDate = formatDate(new Date());
     const description = generateMerchantDescription(block.name);
     const tips = generateTips(block.name, block.configs);
-    const exampleTable = generateExampleTable(block.name, block.configs);
+    const documentAuthoringTable = generateDocumentAuthoringTable(block.name, block.configs);
 
     let content = `---
 title: ${block.displayName}
@@ -318,7 +359,8 @@ sidebar:
   label: ${block.displayName}
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
 <Aside type="note">
 Auto-generated on ${generationDate}. This block is part of the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce).
@@ -332,15 +374,18 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
 
 `;
 
-    // Add configuration section if available
+    // Add document authoring table (most useful for merchants)
     if (block.configs.length > 0) {
-        content += `## Configuration Options
+        content += documentAuthoringTable;
+    }
 
-The following configuration options are available for this block:
-
-| Option | Type | Default | Description | Required | Side Effects |
-|--------|------|---------|-------------|----------|--------------|
-`;
+    // Add detailed configuration options reference table
+    if (block.configs.length > 0) {
+        content += `## Configuration Properties Reference\n\n`;
+        content += `The table below describes each configuration property in detail:\n\n`;
+        content += `<TableWrapper>\n\n`;
+        content += `| Property | Type | Default | Description | Required | Side Effects |\n`;
+        content += `|----------|------|---------|-------------|----------|-------------|\n`;
 
         for (const config of block.configs) {
             const key = config.key.replace(/`/g, '');
@@ -352,12 +397,7 @@ The following configuration options are available for this block:
             content += `| \`${key}\` | ${type} | ${defaultVal} | ${desc} | ${req} | ${side} |\n`;
         }
 
-        content += '\n';
-
-        // Add document authoring table with ALL properties
-        if (exampleTable) {
-            content += exampleTable + '\n';
-        }
+        content += `\n</TableWrapper>\n\n`;
     } else {
         content += `## Configuration
 
