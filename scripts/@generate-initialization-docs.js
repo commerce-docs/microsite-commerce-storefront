@@ -6,7 +6,7 @@
  * Generates comprehensive initialization documentation for each drop-in by:
  * 1. Extracting ConfigProps from initialize.ts files
  * 2. Identifying available models from data/models directories
- * 3. Parsing TypeScript types and JSDoc comments
+ * 3. Using enrichment files for custom descriptions
  * 4. Creating accurate configuration examples
  *
  * USAGE:
@@ -14,7 +14,7 @@
  * - Generate single drop-in: npm run generate-initialization-docs cart
  * - Available drop-ins: cart, checkout, order, product-details, product-discovery,
  *                       recommendations, user-account, user-auth, wishlist,
- *                       payment-services, personalization, company-management
+ *                       payment-services, personalization
  *
  * OUTPUT: Single initialization.mdx file per drop-in
  */
@@ -26,8 +26,9 @@ import { join } from 'path';
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadInitializationEnrichments } from './lib/enrichment.js';
 import { updateSidebarForInitialization } from './lib/sidebar.js';
-import { readTemplate, replacePlaceholders, escapeMDX } from './lib/markdown.js';
+import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
+import { generatePropertyTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -38,8 +39,11 @@ const projectRoot = getProjectRoot();
 /**
  * Extract configuration properties from initialize.ts
  * 
+ * Searches for ConfigProps type definition in initialize.ts and extracts
+ * all configuration options with their types.
+ * 
  * @param {string} repoPath - Path to the repository
- * @returns {Array} Array of config property objects
+ * @returns {Array} Array of config property objects with name, type, required
  */
 function extractConfigProps(repoPath) {
     // Try common locations for initialize.ts
@@ -50,9 +54,12 @@ function extractConfigProps(repoPath) {
     ];
 
     let initializeContent = null;
+    let foundPath = null;
+
     for (const path of possiblePaths) {
         if (existsSync(path)) {
             initializeContent = readFileSync(path, 'utf8');
+            foundPath = path;
             break;
         }
     }
@@ -61,116 +68,231 @@ function extractConfigProps(repoPath) {
         return [];
     }
 
-    // Extract ConfigProps type definition
-    const configPropsMatch = initializeContent.match(/type\s+ConfigProps\s*=\s*\{([^}]*)\}/s);
-    if (!configPropsMatch) {
+    // Extract ConfigProps type definition with balanced braces
+    const configPropsPattern = /type\s+ConfigProps\s*=\s*\{/;
+    const match = initializeContent.match(configPropsPattern);
+
+    if (!match) {
         return [];
     }
 
-    const propsContent = configPropsMatch[1];
-    const propLines = propsContent.split('\n').filter(line => line.trim() && !line.trim().startsWith('//'));
+    // Find the complete type definition using balanced brace matching
+    const startPos = match.index + match[0].length;
+    let braceCount = 1;
+    let endPos = startPos;
 
-    const customOptions = [];
-    for (const line of propLines) {
-        const propMatch = line.match(/(\w+)\??:\s*([^;,]+)/);
-        if (propMatch) {
-            const [, propName, propType] = propMatch;
-            customOptions.push({
-                name: propName.trim(),
-                type: propType.trim(),
-                description: generateDescription(propName.trim(), propType.trim())
-            });
+    while (endPos < initializeContent.length && braceCount > 0) {
+        const char = initializeContent[endPos];
+        if (char === '{') {
+            braceCount++;
+        } else if (char === '}') {
+            braceCount--;
         }
+        endPos++;
+    }
+
+    if (braceCount !== 0) {
+        return [];
+    }
+
+    const propsContent = initializeContent.substring(startPos, endPos - 1);
+
+    // Parse individual properties (only top-level, not nested)
+    const customOptions = [];
+    const lines = propsContent.split('\n');
+
+    // Standard options that should be excluded (they're added separately)
+    const standardOptionNames = ['langDefinitions', 'models'];
+
+    // Track brace depth to avoid extracting nested properties
+    let braceDepth = 0;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+            continue;
+        }
+
+        // Count braces to track nesting depth
+        const openBraces = (line.match(/\{/g) || []).length;
+        const closeBraces = (line.match(/\}/g) || []).length;
+
+        // Match property definition: propName?: type
+        // Only extract if we're at the top level (braceDepth === 0)
+        if (braceDepth === 0) {
+            const propMatch = trimmed.match(/^(\w+)(\?)?:\s*([^;,{]+)/);
+            if (propMatch) {
+                const [, propName, optional, propType] = propMatch;
+                const name = propName.trim();
+
+                // Skip standard options (langDefinitions, models)
+                if (standardOptionNames.includes(name)) {
+                    // Still need to track if it opens a brace
+                    braceDepth += openBraces - closeBraces;
+                    continue;
+                }
+
+                customOptions.push({
+                    name: name,
+                    type: propType.trim(),
+                    required: !optional, // If no ?, then required
+                    description: '' // Will be enriched later
+                });
+            }
+        }
+
+        // Update brace depth after processing the line
+        braceDepth += openBraces - closeBraces;
     }
 
     return customOptions;
 }
 
 /**
- * Generate description for a config property
+ * Extract customizable model information from ConfigProps.models definition
  * 
- * @param {string} propName - Property name
- * @param {string} propType - Property type
- * @returns {string} Generated description
- */
-function generateDescription(propName, propType) {
-    const name = propName.toLowerCase();
-
-    if (name.includes('model')) return 'Custom data models for type transformations';
-    if (name.includes('lang')) return 'Language definitions for internationalization';
-    if (name.includes('endpoint')) return 'API endpoint configuration';
-    if (name.includes('url')) return 'Service URL configuration';
-    if (name.includes('token')) return 'Authentication token';
-    if (name.includes('auth')) return 'Authentication configuration';
-    if (name.includes('header')) return 'Custom HTTP headers';
-    if (name.includes('timeout')) return 'Request timeout in milliseconds';
-    if (name.includes('retry')) return 'Retry configuration for failed requests';
-    if (name.includes('cache')) return 'Caching configuration';
-
-    if (propType.includes('boolean')) return `Enable or disable ${propName}`;
-    if (propType.includes('number')) return `Numeric value for ${propName}`;
-    if (propType.includes('string')) return `String value for ${propName}`;
-
-    return `Configuration for ${propName}`;
-}
-
-/**
- * Extract model names from data/models directory
+ * Only extracts models that are explicitly exposed in the initialize ConfigProps,
+ * not all models in the data/models directory (many are internal).
  * 
  * @param {string} repoPath - Path to the repository
- * @returns {Array} Array of model names
+ * @returns {Array} Array of model objects with name, description, and definition
  */
 function extractModelNames(repoPath) {
-    const modelsDir = join(repoPath, 'data', 'models');
+    const initializePath = join(repoPath, 'src', 'api', 'initialize', 'initialize.ts');
 
-    if (!existsSync(modelsDir)) {
+    if (!existsSync(initializePath)) {
         return [];
     }
 
     try {
-        const files = readdirSync(modelsDir);
-        return files
-            .filter(file => file.endsWith('.ts') && !file.includes('index'))
-            .map(file => file.replace('.ts', ''));
+        const content = readFileSync(initializePath, 'utf8');
+
+        // Extract imports to map aliases to actual interface names
+        // e.g., "Cart as CartModel" maps CartModel -> Cart
+        const aliasMap = {};
+        const importMatches = content.matchAll(/import\s+\{([^}]+)\}/g);
+
+        for (const importMatch of importMatches) {
+            const imports = importMatch[1];
+            // Match "Cart as CartModel" or "Customer as CustomerModel"
+            const aliases = imports.matchAll(/(\w+)\s+as\s+(\w+)/g);
+            for (const aliasMatch of aliases) {
+                const [, original, alias] = aliasMatch;
+                aliasMap[alias] = original;
+            }
+        }
+
+        // Extract the models property from ConfigProps type
+        const modelsMatch = content.match(/models\?:\s*\{([^}]+)\}/s);
+        if (!modelsMatch) {
+            return [];
+        }
+
+        const modelsContent = modelsMatch[1];
+
+        // Extract model names (e.g., "CartModel?: Model<CartModel>")
+        const modelMatches = [...modelsContent.matchAll(/(\w+)\?:\s*Model</g)];
+
+        return modelMatches.map(match => {
+            const modelName = match[1];
+
+            // Check if this is an alias, if so, use the original interface name for searching
+            const actualInterfaceName = aliasMap[modelName] || modelName;
+
+            // Find the corresponding model file and extract definitions
+            const modelsDir = join(repoPath, 'src', 'data', 'models');
+            let modelDefinition = '';
+
+            if (existsSync(modelsDir)) {
+                // Try to find the model definition file
+                const files = readdirSync(modelsDir);
+                for (const file of files) {
+                    const filePath = join(modelsDir, file);
+                    const fileContent = readFileSync(filePath, 'utf8');
+
+                    // Check if this file exports the actual interface
+                    if (fileContent.includes(`export interface ${actualInterfaceName}`) ||
+                        fileContent.includes(`export type ${actualInterfaceName}`)) {
+                        modelDefinition = extractTypeDefinitions(fileContent, actualInterfaceName);
+                        break;
+                    }
+                }
+            }
+
+            return {
+                name: modelName, // Use the ConfigProps name (e.g., CartModel) for documentation
+                description: '', // Will be enriched later
+                definition: modelDefinition
+            };
+        });
     } catch (error) {
         return [];
     }
 }
 
 /**
- * Generate options table markdown
+ * Extract a specific TypeScript type definition from file content
  * 
- * @param {Array} customOptions - Array of custom config options
- * @returns {string} Markdown table
+ * @param {string} content - TypeScript file content
+ * @param {string} interfaceName - The interface or type name to extract
+ * @returns {string} Extracted type definition
  */
-function generateOptionsTable(customOptions) {
-    const standardOptions = [
-        { name: 'langDefinitions', type: 'LangDefinitions', description: 'Language definitions for internationalization' },
-        { name: 'models', type: 'Record<string, any>', description: 'Custom data models for type transformations' }
-    ];
+function extractTypeDefinitions(content, interfaceName) {
+    // Remove copyright header
+    const withoutCopyright = content.replace(/\/\*+[\s\S]*?\*+\//m, '').trim();
 
-    const allOptions = [...standardOptions, ...customOptions];
+    // Remove import statements
+    const withoutImports = withoutCopyright.replace(/^import\s+.*?;?\s*$/gm, '').trim();
 
-    let table = '| Option | Type | Description |\n';
-    table += '|--------|------|-------------|\n';
+    // Extract only the specific interface
+    const lines = withoutImports.split('\n');
+    let inExport = false;
+    let braceDepth = 0;
+    let currentBlock = [];
 
-    for (const option of allOptions) {
-        const name = escapeMDX(option.name);
-        const type = escapeMDX(option.type);
-        const desc = escapeMDX(option.description);
-        table += `| \`${name}\` | \`${type}\` | ${desc} |\n`;
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        // Start of export - check if it's the interface we're looking for
+        if (trimmed.startsWith('export ') &&
+            (trimmed.includes(`interface ${interfaceName}`) ||
+                trimmed.includes(`type ${interfaceName}`))) {
+            inExport = true;
+            currentBlock = [line];
+            braceDepth = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+
+            // Single-line export
+            if (braceDepth === 0 && trimmed.endsWith(';')) {
+                return currentBlock.join('\n');
+            }
+            continue;
+        }
+
+        // Continue collecting export block
+        if (inExport) {
+            currentBlock.push(line);
+            braceDepth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+
+            // End of export block
+            if (braceDepth === 0) {
+                return currentBlock.join('\n');
+            }
+        }
     }
 
-    return table;
+    return '';
 }
 
 /**
  * Scan repository for initialization data
  * 
  * @param {string} repoPath - Path to the repository
+ * @param {Object} repoConfig - Repository configuration (not currently used)
  * @returns {Object} Initialization data with config options and models
  */
-function scanForInitialization(repoPath) {
+function scanForInitialization(repoPath, repoConfig) {
     const configProps = extractConfigProps(repoPath);
     const models = extractModelNames(repoPath);
 
@@ -188,35 +310,180 @@ function scanForInitialization(repoPath) {
 /**
  * Generate initialization MDX documentation
  * 
- * @param {string} repoName - Drop-in name
+ * @param {string} repoName - Drop-in name (kebab-case)
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} initData - Initialization data
- * @param {string} version - Drop-in version
+ * @param {Object} versionInfo - Version info object with { requested, actual, isExactMatch }
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateInitializationMDX(repoName, repoConfig, initData, version, enrichmentData = null) {
+function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-initialization.mdx');
 
     const { configProps, models } = initData;
 
-    // Generate options table
-    const optionsTable = generateOptionsTable(configProps);
+    // Always include standard options
+    const standardOptions = [
+        {
+            name: 'langDefinitions',
+            type: 'LangDefinitions',
+            required: false,
+            description: 'Language definitions for internationalization (i18n). Override dictionary keys for localization or branding.'
+        },
+        {
+            name: 'models',
+            type: 'Record<string, any>',
+            required: false,
+            description: 'Custom data models for type transformations. Extend or modify default models with custom fields and transformers.'
+        }
+    ];
 
-    // Pick first model for example, or use a generic placeholder
-    const modelExample = models.length > 0 ? models[0] : 'CustomModel';
+    // Merge with drop-in specific options
+    const allOptions = [...standardOptions];
+
+    // Add drop-in specific config props if they exist
+    configProps.forEach(prop => {
+        // Check if enrichment has a description for this property
+        const enrichedDesc = enrichmentData?.configOptions?.[prop.name]?.description;
+
+        allOptions.push({
+            name: prop.name,
+            type: prop.type,
+            required: prop.required,
+            description: enrichedDesc || `Configuration for ${prop.name}.`
+        });
+    });
+
+    // Generate table using shared library
+    const optionsTable = generatePropertyTable(allOptions, {
+        nowrapColumns: [0, 1]
+    });
+
+    // Pick first model for example, or use a generic placeholder  
+    const primaryModel = models.length > 0 ? models[0].name : 'CustomModel';
+
+    // Merge enrichment descriptions with extracted models
+    const enrichedModels = models.map(model => {
+        const enrichedDesc = enrichmentData?.models?.[model.name]?.description;
+        return {
+            ...model,
+            description: enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`
+        };
+    });
+
+    // Generate models table with links to definitions
+    let modelList;
+    let modelDefinitions = '';
+
+    if (enrichedModels.length > 0) {
+        const modelRows = enrichedModels.map(model => {
+            const anchor = model.name.toLowerCase();
+            return `| [\`${model.name}\`](#${anchor}) | ${model.description} |`;
+        }).join('\n');
+
+        modelList = `
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+${modelRows}
+
+</TableWrapper>`;
+
+        // Generate model definitions section
+        modelDefinitions = `
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+${enrichedModels.map(model => {
+            return `### ${model.name}
+
+\`\`\`typescript
+${model.definition}
+\`\`\``;
+        }).join('\n\n')}`;
+    } else {
+        modelList = `
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>`;
+    }
+
+    // Generate custom config section if there are drop-in specific options
+    let customConfigSection = '';
+    if (configProps.length > 0) {
+        customConfigSection = `## Drop-in-specific configuration
+
+The **${repoConfig.displayName}** drop-in provides additional configuration options beyond the standard \`langDefinitions\` and \`models\`. These options customize drop-in-specific behaviors and features.
+
+\`\`\`javascript title="scripts/initializers/${repoName}.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '${repoConfig.packageName}';
+
+await initializers.mountImmediately(initialize, {
+  // Drop-in-specific configuration
+${configProps.map(prop => `  ${prop.name}: ${getExampleValue(prop.type)},`).join('\n')}
+});
+\`\`\`
+
+<Aside type="note">
+Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
+</Aside>
+
+`;
+    }
+
+    // Get intro paragraph from enrichment or use default
+    const introParagraph = enrichmentData?.intro ||
+        `The **${repoConfig.displayName} initializer** configures the drop-in with global settings. Pass configuration options to the \`initialize()\` function during drop-in setup to customize language definitions, data models, and drop-in-specific behaviors.`;
+
+    // Create version display with warning if mismatch
+    let versionDisplay = cleanVersion(versionInfo.requested);
+    let versionWarning = '';
+
+    if (!versionInfo.isExactMatch) {
+        versionDisplay = `${cleanVersion(versionInfo.requested)} (documented from ${versionInfo.actual})`;
+        versionWarning = `
+<Aside type="caution" title="Version Mismatch">
+The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, but this documentation was generated from **${versionInfo.actual}** because the specific version tag was not found in the repository. The documented configuration may differ from the published package version.
+</Aside>
+`;
+    }
 
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_KEY': repoName,  // kebab-case for URLs
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(version),
-        'CONFIG_OPTIONS': optionsTable,
-        'MODEL_NAME': modelExample,
-        'MODEL_COUNT': models.length.toString(),
-        'CONFIG_COUNT': configProps.length.toString(),
+        'DROPIN_VERSION': versionDisplay,
+        'VERSION_WARNING': versionWarning,
+        'INTRO_PARAGRAPH': introParagraph,
+        'CONFIG_OPTIONS_TABLE': optionsTable,
+        'MODEL_NAME': primaryModel,
+        'MODEL_LIST': modelList,
+        'MODEL_DEFINITIONS': modelDefinitions,
+        'CUSTOM_CONFIG_SECTION': customConfigSection,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
+}
+
+/**
+ * Generate example value based on TypeScript type
+ * 
+ * @param {string} type - TypeScript type string
+ * @returns {string} Example value
+ */
+function getExampleValue(type) {
+    const lowerType = type.toLowerCase();
+
+    if (lowerType.includes('string')) return "'value'";
+    if (lowerType.includes('number')) return '123';
+    if (lowerType.includes('boolean')) return 'true';
+    if (lowerType.includes('[]') || lowerType.includes('array')) return '[]';
+    if (lowerType.includes('function') || lowerType.includes('=>')) return '() => {}';
+
+    return '{}'; // Default for objects
 }
 
 // ============================================================================

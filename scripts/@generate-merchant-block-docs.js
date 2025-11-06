@@ -20,7 +20,7 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 // Import shared utilities
 import { getProjectRoot } from './lib/generator-core.js';
@@ -42,7 +42,7 @@ function cloneBoilerplate() {
 
     if (!existsSync(boilerplatePath)) {
         console.log('  Cloning boilerplate repository...');
-        execSync('git clone --depth 1 https://github.com/hlxsites/aem-boilerplate-commerce.git ' + boilerplatePath, { stdio: 'inherit' });
+        execFileSync('git', ['clone', '--depth', '1', 'https://github.com/hlxsites/aem-boilerplate-commerce.git', boilerplatePath], { stdio: 'inherit' });
     } else {
         console.log('  Updating boilerplate repository...');
         execSync(`cd ${boilerplatePath} && git pull`, { stdio: 'inherit' });

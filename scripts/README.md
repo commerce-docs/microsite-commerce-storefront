@@ -297,6 +297,7 @@ npm run generate-all-docs -- --dry-run
 ✨ All generators completed successfully!
 ```
 
+>>>>>>> origin/develop
 ## Available Generators
 
 ### Function Documentation Generator
@@ -509,6 +510,7 @@ npm run generate-merchant-block-docs
 - Multi-file output (29+ block pages)
 - Complements technical boilerplate documentation
 
+>>>>>>> origin/develop
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -692,6 +694,7 @@ content = normalizeWhitespace(content);
 - Reusable transformation logic
 - Cleaner generated output
 
+>>>>>>> origin/develop
 ### `dropin-config.js`
 
 Centralized configuration for all drop-in repositories.

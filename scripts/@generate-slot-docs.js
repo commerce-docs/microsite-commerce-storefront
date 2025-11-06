@@ -34,88 +34,37 @@ import { updateSidebarForSlots } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion } from './lib/utils.js';
 
+// Import Phase 2 shared libraries
+import { extractPropsFromComponent, extractSlotsSection } from './lib/react/props-extractor.js';
+
 const projectRoot = getProjectRoot();
 
 // ============================================================================
 // UNIQUE SCANNING LOGIC
 // ============================================================================
-
-/**
- * Extract slots from an interface definition
- */
-function extractSlotsFromInterface(interfaceContent) {
-    // Extract the slots section (handles both }; and }, endings)
-    const slotsPattern = /slots\?:\s*{([\s\S]*?)}[,;]/;
-    const slotsMatch = interfaceContent.match(slotsPattern);
-
-    if (!slotsMatch) {
-        return null;
-    }
-
-    let slotsContent = slotsMatch[1].trim();
-
-    // Clean up the content - keep only the slot definitions
-    // Remove comments
-    slotsContent = slotsContent.replace(/\/\*[\s\S]*?\*\//g, '');
-    slotsContent = slotsContent.replace(/\/\/.*/g, '');
-
-    return slotsContent;
-}
-
-/**
- * Find Props interface in external type files
- */
-function findPropsInTypeFiles(repoPath, containerName) {
-    const possiblePaths = [
-        join(repoPath, 'src', 'containers', containerName, 'types.ts'),
-        join(repoPath, 'src', 'containers', containerName, `${containerName}.types.ts`),
-        join(repoPath, 'src', 'types', 'containers.ts'),
-        join(repoPath, 'src', 'types', `${containerName}.ts`)
-    ];
-
-    for (const path of possiblePaths) {
-        if (existsSync(path)) {
-            const content = readFileSync(path, 'utf8');
-
-            // Look for Props interface
-            const propsInterfaceMatch = content.match(/export interface \w*Props\s*{([\s\S]*?)}\s*;/);
-            if (propsInterfaceMatch) {
-                return { content: propsInterfaceMatch[1], fullFile: content };
-            }
-        }
-    }
-
-    return null;
-}
+// Note: Most extraction logic has been moved to shared Phase 2 libraries:
+// - extractPropsFromComponent() - from lib/react/props-extractor.js
+// - extractSlotsSection() - from lib/react/props-extractor.js
 
 /**
  * Extract slots from a container file
+ * Uses shared props-extractor library
  */
 function extractContainerSlots(filePath, containerName, repoPath) {
     try {
-        const content = readFileSync(filePath, 'utf8');
+        // Use shared library to extract props interface
+        const { interfaceContent } = extractPropsFromComponent(
+            filePath,
+            containerName,
+            repoPath
+        );
 
-        // Try to find Props interface in the same file
-        let propsInterfaceContent = '';
-
-        // Match both "interface Props" and "export interface Props"
-        const propsInterfaceMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{([\s\S]*?)^}\s*;?/m);
-        if (propsInterfaceMatch) {
-            propsInterfaceContent = propsInterfaceMatch[1];
-        } else {
-            // Look in external type files
-            const externalProps = findPropsInTypeFiles(repoPath, containerName);
-            if (externalProps) {
-                propsInterfaceContent = externalProps.content;
-            }
-        }
-
-        if (!propsInterfaceContent) {
+        if (!interfaceContent) {
             return null;
         }
 
-        // Extract slots section
-        const slotsContent = extractSlotsFromInterface(propsInterfaceContent);
+        // Extract slots section using shared function
+        const slotsContent = extractSlotsSection(interfaceContent);
 
         if (!slotsContent) {
             return null;
@@ -179,7 +128,7 @@ function scanForSlots(repoPath) {
  */
 function generateSlotsContent(containers) {
     if (containers.length === 0) {
-        return '<Aside type="note">\nThis drop-in does not currently expose customizable slots.\n</Aside>';
+        return ''; // No additional content needed for empty slots
     }
 
     let content = '';
@@ -245,11 +194,32 @@ function generateSlotsMDX(repoName, repoConfig, containers, version, enrichmentD
     // Generate slots content
     const slotsContent = generateSlotsContent(containers);
 
+    // Generate intro text based on whether slots exist
+    let introText;
+    if (containers.length === 0) {
+        // Concise intro for drop-ins with no slots
+        introText = `This drop-in currently has no slots defined.`;
+    } else {
+        // Full intro with explanation for drop-ins with slots
+        introText = `## Overview
+
+Learn about the slots provided in the **${repoConfig.displayName}** drop-in component for customizing container appearance and behavior.
+
+<Aside type="tip">
+[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
+</Aside>
+
+## What are Slots?
+
+Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.`;
+    }
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
+        'INTRO_TEXT': introText,
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
