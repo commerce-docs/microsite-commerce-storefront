@@ -1,159 +1,21 @@
 ---
 title: Product Discovery Slots
-description: Customize UI sections in the Product Discovery drop-in using slots.
+description: Learn about the slots provided in the Product Discovery drop-in for customization.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 2
+  maxHeadingLevel: 3
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Product Discovery drop-in exposes **12 slots** in **2 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+This drop-in currently has no slots defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 2.1.0</strong>
 </div>
-
-<table>
-<thead>
-<tr>
-<th style="white-space: nowrap;">Container</th>
-<th>Slots</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="white-space: nowrap;"><a href="#facets-slots"><code>Facets</code></a></td>
-<td><code>Facet</code>, <code>SelectedFacets</code>, <code>Facets</code>, <code>FacetBucket</code>, <code>FacetBucketLabel</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#searchresults-slots"><code>SearchResults</code></a></td>
-<td><code>ProductActions</code>, <code>ProductPrice</code>, <code>ProductName</code>, <code>ProductImage</code>, <code>NoResults</code>, <code>Header</code>, <code>Footer</code></td>
-</tr>
-</tbody>
-</table>
-
-
-## Using slots
-
-This example customizes the `Facet` slot in `Facets`:
-
-```js
-import { render as provider } from '@dropins/storefront-product-discovery/render.js';
-import Facets from '@dropins/storefront-product-discovery/containers/Facets.js';
-
-provider.render(Facets, {
-  slots: {
-    Facet: (ctx) => {
-      const { data } = ctx;
-      const div = document.createElement('div');
-      div.className = 'facets__facet';
-      div.textContent = 'Custom Facet';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.facets'));
-```
-
-
-
-This example customizes the `ProductActions` slot to demonstrate building action wrappers with multiple components:
-
-```js
-import { render as provider } from '@dropins/storefront-product-discovery/render.js';
-import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
-import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
-import * as cartApi from '@dropins/storefront-cart/api.js';
-import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
-import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
-
-provider.render(SearchResults, {
-  routeProduct: (product) => `/products/${product.urlKey}`,
-  slots: {
-    ProductActions: (ctx) => {
-      // Create wrapper for multiple actions
-      const actionsWrapper = document.createElement('div');
-      actionsWrapper.className = 'product-discovery-product-actions';
-      
-      // Add to cart button (conditional based on product type)
-      const addToCartBtn = document.createElement('div');
-      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
-      
-      if (ctx.product.typename === 'ComplexProductView') {
-        UI.render(Button, {
-          children: 'Select Options',
-          icon: Icon({ source: 'Cart' }),
-          href: `/products/${ctx.product.urlKey}`,
-          variant: 'primary',
-        })(addToCartBtn);
-      } else {
-        UI.render(Button, {
-          children: 'Add to Cart',
-          icon: Icon({ source: 'Cart' }),
-          onClick: () => cartApi.addProductsToCart([
-            { sku: ctx.product.sku, quantity: 1 }
-          ]),
-          variant: 'primary',
-        })(addToCartBtn);
-      }
-      
-      // Wishlist toggle from another drop-in
-      const wishlistToggle = document.createElement('div');
-      wishlistToggle.className = 'product-discovery-product-actions__wishlist-toggle';
-      
-      wishlistRender.render(WishlistToggle, {
-        product: ctx.product,
-        variant: 'tertiary',
-      })(wishlistToggle);
-      
-      // Assemble the wrapper
-      actionsWrapper.appendChild(addToCartBtn);
-      actionsWrapper.appendChild(wishlistToggle);
-      
-      ctx.replaceWith(actionsWrapper);
-    }
-  }
-})(document.querySelector('.search-results'));
-```
-
-
-## Facets slots
-
-```js {4,5,6,7,8}
-interface FacetsProps
-
-slots?: {
-  Facet?: SlotProps<{ data: SearchFacet }>;
-  SelectedFacets?: SlotProps<{ data: SearchFacet[] }>;
-  Facets?: SlotProps<{ data: SearchFacet[] }>;
-  FacetBucket?: SlotProps<{ data: FacetBucket }>;
-  FacetBucketLabel?: SlotProps<{ data: FacetBucket }>;
-};
-```
-
----
-
-## SearchResults slots
-
-```js {4,5,6,7,8,9,10}
-interface SearchResultsProps
-
-slots?: {
-  ProductActions?: SlotProps<SlotDefaultContext>;
-  ProductPrice?: SlotProps<SlotDefaultContext>;
-  ProductName?: SlotProps<SlotDefaultContext>;
-  ProductImage?: SlotProps<SlotDefaultContext & { defaultImageProps: ImageProps }>;
-  NoResults?: SlotProps<{ error: string | null; variables: SearchVariables | null }>;
-  Header?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
-  Footer?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
-};
-```
-
----
 
 
 
