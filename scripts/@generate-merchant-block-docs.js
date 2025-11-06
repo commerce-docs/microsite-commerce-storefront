@@ -56,17 +56,80 @@ function cloneBoilerplate() {
 // ============================================================================
 
 /**
- * Extract configuration from block README
+ * Extract configuration from block JavaScript source code
+ * Parses the readBlockConfig destructuring to get actual properties
  */
-function extractConfigFromReadme(readmePath) {
-    if (!existsSync(readmePath)) {
+function extractConfigFromSource(blockPath, blockName) {
+    const jsPath = join(blockPath, `${blockName}.js`);
+
+    if (!existsSync(jsPath)) {
+        console.log(`  ⚠️  JavaScript file not found: ${jsPath}`);
         return [];
     }
 
-    const readme = readFileSync(readmePath, 'utf8');
+    const source = readFileSync(jsPath, 'utf8');
     const configs = [];
 
-    // Extract configuration table
+    // Find the readBlockConfig destructuring pattern
+    const configPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\s*\(/s;
+    const match = source.match(configPattern);
+
+    if (match) {
+        const destructuring = match[1];
+
+        // Parse each property in the destructuring
+        // Pattern: 'config-key': variableName = 'default'
+        const propertyPattern = /'([^']+)':\s*(\w+)\s*=?\s*([^,}]+)?/g;
+        let propMatch;
+
+        while ((propMatch = propertyPattern.exec(destructuring)) !== null) {
+            const configKey = propMatch[1];
+            const variableName = propMatch[2];
+            let defaultValue = propMatch[3] ? propMatch[3].trim() : undefined;
+
+            // Clean up default value
+            if (defaultValue) {
+                defaultValue = defaultValue.replace(/['"`]/g, '').trim();
+                if (defaultValue === '') defaultValue = "''";
+            }
+
+            // Infer type from default value
+            let type = 'string';
+            if (defaultValue === 'true' || defaultValue === 'false') {
+                type = 'boolean (as string)';
+            } else if (defaultValue && !isNaN(defaultValue)) {
+                type = 'number (as string)';
+            } else if (!defaultValue || defaultValue === 'undefined') {
+                type = 'string';
+                defaultValue = defaultValue || 'undefined';
+            }
+
+            configs.push({
+                key: configKey,
+                variable: variableName,
+                type,
+                default: defaultValue,
+                description: '', // Will be enriched from README if available
+                required: defaultValue === 'undefined' ? 'Optional' : 'No',
+                sideEffects: '' // Will be enriched from README if available
+            });
+        }
+    }
+
+    return configs;
+}
+
+/**
+ * Enrich configuration with descriptions from README
+ */
+function enrichConfigFromReadme(configs, readmePath) {
+    if (!existsSync(readmePath) || configs.length === 0) {
+        return configs;
+    }
+
+    const readme = readFileSync(readmePath, 'utf8');
+
+    // Extract configuration table from README
     const tablePattern = /\|\s*Configuration Key[^|]*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|([\s\S]*?)(?=\n\n|\n#|$)/;
     const match = readme.match(tablePattern);
 
@@ -74,18 +137,34 @@ function extractConfigFromReadme(readmePath) {
         const tableContent = match[1];
         const rows = tableContent.split('\n').filter(line => line.trim().startsWith('|'));
 
+        const readmeConfigs = new Map();
         rows.forEach(row => {
             const cells = row.split('|').map(cell => cell.trim()).filter(cell => cell);
             if (cells.length >= 4) {
-                const [key, type, defaultValue, description] = cells;
-                if (key && key !== '---' && !key.includes('---')) {
-                    configs.push({
-                        key: key.replace(/`/g, '').trim(),
-                        type: type.replace(/`/g, '').trim(),
-                        default: defaultValue.replace(/`/g, '').trim(),
-                        description: description.trim()
+                const [key, , , description, required, sideEffects] = cells;
+                const cleanKey = key.replace(/`/g, '').trim();
+                if (cleanKey && cleanKey !== '---' && !cleanKey.includes('---')) {
+                    readmeConfigs.set(cleanKey, {
+                        description: description?.trim() || '',
+                        required: required?.replace(/`/g, '').trim() || 'No',
+                        sideEffects: sideEffects?.trim() || ''
                     });
                 }
+            }
+        });
+
+        // Enrich source configs with README data
+        configs.forEach(config => {
+            const readmeData = readmeConfigs.get(config.key);
+            if (readmeData) {
+                config.description = readmeData.description || `Configuration for ${config.key}`;
+                config.sideEffects = readmeData.sideEffects || '';
+                if (readmeData.required && readmeData.required !== '-') {
+                    config.required = readmeData.required;
+                }
+            } else {
+                // Generate basic description from key if not in README
+                config.description = `Configuration for ${config.key.replace(/-/g, ' ')}`;
             }
         });
     }
@@ -138,7 +217,7 @@ function generateTips(blockName, configs) {
 }
 
 /**
- * Generate example configuration table
+ * Generate document authoring table with ALL configuration properties
  */
 function generateExampleTable(blockName, configs) {
     if (configs.length === 0) {
@@ -149,16 +228,18 @@ function generateExampleTable(blockName, configs) {
         w.charAt(0).toUpperCase() + w.slice(1)
     ).join(' ');
 
-    let table = `### Example Configuration\n\n`;
-    table += `Create a \`${blockName}\` block in your document with this configuration:\n\n`;
+    let table = `### Document Authoring Format\n\n`;
+    table += `Copy this table format into your document to configure the \`${blockName}\` block:\n\n`;
     table += `| ${displayName} |\n`;
     table += `| --- |\n`;
 
-    // Show first few configs as examples
-    const exampleConfigs = configs.slice(0, Math.min(3, configs.length));
-    for (const config of exampleConfigs) {
-        table += `| ${config.key}: ${config.default || 'value'} |\n`;
+    // Show ALL configs (not just first 3)
+    for (const config of configs) {
+        const defaultValue = config.default === 'undefined' ? '' : config.default;
+        table += `| ${config.key}: ${defaultValue} |\n`;
     }
+
+    table += `\n<Aside type="tip">\nYou can add or remove any of these configuration options based on your needs. All options are optional unless marked as required.\n</Aside>\n`;
 
     return table;
 }
@@ -198,7 +279,9 @@ function extractCommerceBlocks(boilerplatePath) {
         const blockPath = join(blocksDir, blockName);
         const readmePath = join(blockPath, 'README.md');
 
-        const configs = extractConfigFromReadme(readmePath);
+        // Extract from source code (source of truth) then enrich with README
+        let configs = extractConfigFromSource(blockPath, blockName);
+        configs = enrichConfigFromReadme(configs, readmePath);
 
         blocks.push({
             name: blockName,
@@ -255,8 +338,8 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
 
 The following configuration options are available for this block:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| Option | Type | Default | Description | Required | Side Effects |
+|--------|------|---------|-------------|----------|--------------|
 `;
 
         for (const config of block.configs) {
@@ -264,12 +347,14 @@ The following configuration options are available for this block:
             const type = config.type.replace(/`/g, '');
             const defaultVal = config.default || '-';
             const desc = config.description;
-            content += `| \`${key}\` | ${type} | ${defaultVal} | ${desc} |\n`;
+            const req = config.required || '-';
+            const side = config.sideEffects || '-';
+            content += `| \`${key}\` | ${type} | ${defaultVal} | ${desc} | ${req} | ${side} |\n`;
         }
 
         content += '\n';
 
-        // Add example table
+        // Add document authoring table with ALL properties
         if (exampleTable) {
             content += exampleTable + '\n';
         }
