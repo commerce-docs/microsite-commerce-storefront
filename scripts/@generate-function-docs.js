@@ -1683,6 +1683,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     returnsContent = 'Returns `number`.';
                 } else if (actualType === 'boolean') {
                     returnsContent = 'Returns `boolean`.';
+                } else if (actualType.includes('any') && enrichment && enrichment.returns) {
+                    // Type contains 'any' but wasn't caught by GenericTypeHandler (e.g., 'any | null')
+                    // Use enrichment text if available
+                    returnsContent = `Returns ${enrichment.returns}.`;
                 } else if (actualType.length < 100) {
                     returnsContent = `Returns \`${actualType}\`.`;
                 } else {
