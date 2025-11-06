@@ -93,14 +93,26 @@ function extractConfigFromSource(blockPath, blockName) {
                 if (defaultValue === '') defaultValue = "''";
             }
 
-            // Infer type from default value
+            // Infer type from default value (author-friendly types)
             let type = 'string';
             if (defaultValue === 'true' || defaultValue === 'false') {
-                type = 'boolean (as string)';
+                type = 'boolean';  // Authors enter: true or false (no quotes)
             } else if (defaultValue && !isNaN(defaultValue)) {
-                type = 'number (as string)';
+                type = 'number';  // Authors enter: numbers (no quotes)
             } else if (!defaultValue || defaultValue === 'undefined') {
-                type = 'string';
+                // Check variable name patterns for better type inference
+                if (variableName.toLowerCase().includes('enable') ||
+                    variableName.toLowerCase().includes('hide') ||
+                    variableName.toLowerCase().includes('show')) {
+                    type = 'boolean';
+                } else if (variableName.toLowerCase().includes('max') ||
+                    variableName.toLowerCase().includes('min') ||
+                    variableName.toLowerCase().includes('count') ||
+                    variableName.toLowerCase().includes('items')) {
+                    type = 'number';
+                } else {
+                    type = 'string';
+                }
                 defaultValue = defaultValue || 'undefined';
             }
 
@@ -227,24 +239,36 @@ function toTitleCase(str) {
 }
 
 /**
- * Format value for AEM document authoring (add quotes to boolean strings)
+ * Format value for AEM document authoring
+ * Shows example values for empty properties
  */
-function formatValueForAEM(value) {
-    if (value === '' || value === 'undefined') {
-        return '';
-    }
-    if (value === 'true' || value === 'false') {
-        return `"${value}"`;
-    }
-    if (value === "''") {
-        return '';
+function formatValueForAEM(value, type, propertyKey) {
+    if (value === '' || value === 'undefined' || value === "''") {
+        // Show example values based on property name and type
+        let example = '';
+
+        if (propertyKey.includes('url') || propertyKey.includes('link')) {
+            example = '/path/to/page';
+        } else if (propertyKey.includes('attributes')) {
+            example = 'color, size';
+        } else if (propertyKey.includes('name') || propertyKey.includes('title')) {
+            example = 'Example Name';
+        } else if (type === 'number') {
+            example = '10';
+        } else if (type === 'boolean') {
+            example = 'true';
+        } else {
+            example = 'value';
+        }
+
+        return `<em style="color: var(--sl-color-gray-3); font-style: italic;">${example} <span style="font-size: 0.85em;">(example)</span></em>`;
     }
     return value;
 }
 
 /**
  * Generate document authoring configuration table
- * Matches exact AEM format: Title Case properties, quoted booleans
+ * Matches exact AEM format: Title Case properties
  */
 function generateDocumentAuthoringTable(blockName, configs) {
     if (configs.length === 0) {
@@ -256,7 +280,7 @@ function generateDocumentAuthoringTable(blockName, configs) {
 
     // Wrap table in a div with custom styling matching AEM format
     output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 100%; border-collapse: collapse; border: 1px solid var(--sl-color-gray-5);">\n`;
+    output += `<table style="width: 100%; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: block name only (single cell, centered)
@@ -264,10 +288,10 @@ function generateDocumentAuthoringTable(blockName, configs) {
     output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">${blockName}</td>\n`;
     output += `</tr>\n`;
 
-    // Property rows: Title Case names and formatted values
+    // Property rows: Title Case names and formatted values with examples
     for (const config of configs) {
         const titleCaseName = toTitleCase(config.key);
-        const formattedValue = formatValueForAEM(config.default);
+        const formattedValue = formatValueForAEM(config.default, config.type, config.key);
         output += `<tr>\n`;
         output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${titleCaseName}</td>\n`;
         output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${formattedValue}</td>\n`;
@@ -383,18 +407,47 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
     if (block.configs.length > 0) {
         content += `## Configuration Properties Reference\n\n`;
         content += `The table below describes each configuration property in detail:\n\n`;
-        content += `<TableWrapper>\n\n`;
-        content += `| Property | Type | Default | Description | Required | Side Effects |\n`;
-        content += `|----------|------|---------|-------------|----------|-------------|\n`;
+        content += `<TableWrapper nowrap={[0]}>\n\n`;
+        content += `| Property | Default | Req? | Description |\n`;
+        content += `|----------|---------|------|-------------|\n`;
 
         for (const config of block.configs) {
             const key = config.key.replace(/`/g, '');
-            const type = config.type.replace(/`/g, '');
-            const defaultVal = config.default || '-';
+            // Show blank for undefined or empty string defaults
+            const defaultVal = (config.default && config.default !== 'undefined' && config.default !== "''") ? config.default : '';
             const desc = config.description;
             const req = config.required || '-';
             const side = config.sideEffects || '-';
-            content += `| \`${key}\` | ${type} | ${defaultVal} | ${desc} | ${req} | ${side} |\n`;
+
+            // Ensure description ends with a period
+            let descText = desc.trim();
+            if (descText && !descText.match(/[.!?]$/)) {
+                descText += '.';
+            }
+
+            // Only combine with side effects if they provide different information
+            let combinedDesc = descText;
+            if (side && side !== '-') {
+                let sideText = side.trim();
+                // Check if side effects are substantially different from description
+                // (not just a rewording of the same information)
+                const descWords = new Set(descText.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/));
+                const sideWords = new Set(sideText.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/));
+
+                // Count unique words in side effects
+                const uniqueSideWords = [...sideWords].filter(word => !descWords.has(word) && word.length > 3);
+
+                // Only add side effects if they contain substantial new information (5+ unique meaningful words)
+                // This stricter threshold helps avoid semantic redundancy
+                if (uniqueSideWords.length >= 5) {
+                    if (sideText && !sideText.match(/[.!?]$/)) {
+                        sideText += '.';
+                    }
+                    combinedDesc = `${descText} ${sideText}`;
+                }
+            }
+
+            content += `| \`${key}\` | ${defaultVal} | ${req} | ${combinedDesc} |\n`;
         }
 
         content += `\n</TableWrapper>\n\n`;
