@@ -240,6 +240,64 @@ The CLI has been extensively tested and improved to ensure:
 
 Automated generators for creating function and event documentation from drop-in source repositories.
 
+## Master Command - Generate All Documentation ⭐
+
+**Run all 9 generators at once** to regenerate the entire documentation site (500+ pages):
+
+```bash
+# Run all generators sequentially
+npm run generate-all-docs
+
+# Dry run (preview what will be generated without running)
+npm run generate-all-docs -- --dry-run
+```
+
+**What it does:**
+- ✅ Runs all 9 generators in sequence
+- ✅ Provides progress updates for each generator
+- ✅ Shows timing for each generator
+- ✅ Handles errors gracefully (asks to continue on failure)
+- ✅ Displays comprehensive summary at the end
+
+**Generated documentation:**
+- **70+ drop-in pages** (functions, events, containers, slots, dictionaries, installation, initialization)
+- **33 boilerplate pages** (technical documentation)
+- **29 merchant block pages** (business user documentation)
+- **500+ total pages**
+
+**Estimated time:** 15-20 minutes
+
+**Use cases:**
+- Testing all generators after framework changes
+- Regenerating all docs after drop-in updates
+- Verifying complete documentation pipeline
+- CI/CD integration for automated doc updates
+
+**Example output:**
+```
+======================================================================
+  MASTER DOCUMENTATION GENERATOR
+======================================================================
+
+📚 This will regenerate ALL documentation (500+ pages)
+⏱️  Estimated total time: 15-20 minutes
+
+[1/9] Running Functions Generator...
+✅ Functions completed in 134.2s
+
+[2/9] Running Events Generator...
+✅ Events completed in 128.5s
+
+...
+
+📊 SUMMARY:
+   ✅ Successful: 9/9
+   ⏱️  Total time: 18.4 minutes
+
+✨ All generators completed successfully!
+```
+
+>>>>>>> origin/develop
 ## Available Generators
 
 ### Function Documentation Generator
@@ -379,6 +437,80 @@ npm run generate-installation-docs cart
 - Provides usage examples with actual container names
 - Supports enrichment data for custom instructions
 
+### Initialization Documentation Generator
+
+Generates initialization documentation by parsing TypeScript configuration from initialize.ts files.
+
+```bash
+# Generate for all drop-ins
+npm run generate-initialization-docs
+
+# Generate for specific drop-in
+npm run generate-initialization-docs cart
+```
+
+**Output**: `src/content/docs/dropins/{dropin-name}/initialization.mdx`
+
+**Features**:
+- Parses TypeScript ConfigProps from initialize.ts files
+- Extracts property names, types, and generates descriptions
+- Identifies available models from data/models directories
+- Generates configuration options tables
+- Creates examples with actual model names
+- Supports enrichment data for detailed configuration documentation
+
+### Boilerplate Documentation Generator
+
+Generates comprehensive documentation for the AEM Commerce boilerplate by analyzing the repository structure and blocks.
+
+```bash
+# Generate all boilerplate documentation
+npm run generate-boilerplate-docs
+```
+
+**Output**: Multiple MDX files in `src/content/docs/boilerplate/`
+
+**Features**:
+- Analyzes commerce blocks from the boilerplate repository
+- Generates overview page with CardGrid of all blocks
+- Creates individual documentation pages for each block (30+ pages)
+- Extracts drop-in usage, containers, events, and API calls
+- Generates project structure documentation
+- Generates build process documentation
+- Generates configuration documentation
+- Auto-updates sidebar navigation
+
+**Unique Characteristics**:
+- Multi-file output (unlike other generators)
+- Analyzes a single repository (AEM boilerplate)
+- Uses content transformation utilities for cleanup
+
+### Merchant Block Documentation Generator
+
+Generates merchant-focused documentation for commerce blocks, emphasizing document authoring and business user perspective.
+
+```bash
+# Generate all merchant block documentation
+npm run generate-merchant-block-docs
+```
+
+**Output**: Multiple MDX files in `src/content/docs/merchants/blocks/`
+
+**Features**:
+- Generates merchant-friendly documentation (non-technical language)
+- Extracts configuration options from block README files
+- Creates practical examples and configuration tables
+- Provides merchant-specific tips and best practices
+- Links to related technical documentation
+- Focuses on document-based authoring approach
+
+**Unique Characteristics**:
+- Business user perspective (not developer)
+- Emphasizes AEM document authoring
+- Multi-file output (29+ block pages)
+- Complements technical boilerplate documentation
+
+>>>>>>> origin/develop
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
@@ -392,6 +524,7 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 - `slots.json` - Slot descriptions and customization examples
 - `dictionary.json` - Additional documentation for i18n keys
 - `installation.json` - Custom installation instructions and requirements
+- `initialization.json` - Additional configuration documentation
 
 ### Example: Event Enrichment
 
@@ -525,6 +658,43 @@ logger.complete('My Generator');
 - Easy to test
 - Centralized updates
 
+### `content-transforms.js`
+
+Content transformation utilities for cleaning and formatting generated documentation.
+
+```javascript
+import { applyStandardTransforms, formatPackageNames } from './lib/content-transforms.js';
+
+// Apply all standard transformations
+let content = generateContent();
+content = applyStandardTransforms(content);
+
+// Or use individual transformations
+content = formatPackageNames(content);
+content = boldContainerNames(content);
+content = normalizeWhitespace(content);
+```
+
+**Available functions:**
+- `formatPackageNames(text)` - Wrap @dropins/package names in backticks
+- `boldContainerNames(text)` - Bold container names in text
+- `normalizeWhitespace(content)` - Remove excess blank lines
+- `wrapTablesWithTableWrapper(content)` - Wrap markdown tables in TableWrapper
+- `removeEmptyContainerHeadings(content)` - Remove headings with no content
+- `promoteHeadingsToH2(content)` - Promote H3 to H2
+- `splitConfigurationTables(content)` - Split large tables
+- `applyStandardTransforms(content)` - Apply all standard transformations
+
+**Used by:**
+- Boilerplate generator (primary user)
+- Any generator needing content cleanup
+
+**Benefits:**
+- Consistent content formatting
+- Reusable transformation logic
+- Cleaner generated output
+
+>>>>>>> origin/develop
 ### `dropin-config.js`
 
 Centralized configuration for all drop-in repositories.

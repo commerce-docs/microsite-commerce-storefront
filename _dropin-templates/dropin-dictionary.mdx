@@ -1,24 +1,3 @@
-{/*
-  Template for Drop-in Dictionary Documentation
-  
-  This template is used by scripts/@generate-dictionary-docs.js to generate dictionary documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_PACKAGE → Package name (e.g., "@dropins/storefront-cart")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - KEY_COUNT → Number of dictionary keys
-  - DICTIONARY_JSON → Formatted JSON content from source repository
-  - REPO_URL → Source repository URL
-  
-  The script handles:
-  - Reading i18n/en_US.json files from source repositories
-  - Formatting JSON content for display
-  - Generating complete documentation with usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: DROPIN_NAME Dictionary
 description: Customize user-facing text and labels in the DROPIN_NAME drop-in for localization and branding.
@@ -27,17 +6,7 @@ sidebar:
   order: 8
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
-## Overview
-
-The **DROPIN_NAME dictionary** contains all user-facing text, labels, and messages displayed by this drop-in. By customizing the dictionary, you can:
-
-- **Localize** the drop-in for different languages and regions
-- **Customize** labels and messages to match your brand voice
-- **Override** default text without modifying the drop-in's source code
-
-Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
+The **DROPIN_NAME dictionary** contains all user-facing text and labels for localization and branding.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: DROPIN_VERSION</strong>
@@ -53,15 +22,28 @@ DICTIONARY_JSON
 
 ## How to customize
 
-To override these values for your storefront:
+Override any keys above by creating a custom dictionary file:
 
-1. **Create a custom dictionary file** in your project (for example, `config/en_US.json`)
-2. **Copy the keys** you want to customize from the default dictionary above
-3. **Modify the values** to match your requirements
-4. **Load your custom dictionary** during drop-in initialization
+```javascript title="scripts/config/dictionaries/DROPIN_KEY-dictionary.js"
+export const DROPIN_VAR = CUSTOM_EXAMPLE;
+```
 
-<Aside type="tip">
-For complete instructions and examples, see the [localization guide](/customize/localize/).
-</Aside>
+Then import it in your initializer:
+
+```javascript title="scripts/initializers/DROPIN_KEY.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from 'DROPIN_PACKAGE';
+import { DROPIN_VAR } from '../config/dictionaries/DROPIN_KEY-dictionary.js';
+
+const langDefinitions = {
+  default: {
+    ...DROPIN_VAR,
+  },
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+**Need more?** See the [Dictionary customization guide](/dropins/all/dictionaries/) for multi-language support and deep-merge behavior, or [Labels](/dropins/all/labeling/) for the boilerplate placeholder system.
 
 {/* This documentation is auto-generated from: REPO_URL */}

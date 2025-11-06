@@ -21,6 +21,11 @@
  * - Uses: Section text, imports, REPEAT_FOR_EACH_EVENT block, placeholders
  * - Generates independently: Table contents (between START/END markers), event data
  * 
+ * ENRICHMENT FILES:
+ * - Location: _dropin-enrichments/{dropin}/events.json
+ * - Can include "overview" field for drop-in-specific introductions
+ * - Falls back to generic overview if not specified
+ * 
  * TO MODIFY TABLE STRUCTURE:
  * - Update table generation code in this script (search for "Generate emits table")
  * - Update template example rows to match (for documentation purposes)
@@ -30,23 +35,98 @@
  * This ensures accuracy in type definitions, API patterns, and code examples.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execFileSync } from 'child_process';
-
-// Import shared utilities
-import { loadEventEnrichments } from './lib/enrichment.js';
-import { updateSidebarForEvents } from './lib/sidebar.js';
-import { runGenerator, getProjectRoot } from './lib/generator-core.js';
-import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { execSync, execFileSync } from 'child_process';
+import { DROPIN_REPOS } from './lib/dropin-config.js';
+import { loadEventEnrichments, getPayloadPropertyDescription, getEventDescription } from './lib/event-enrichment.js';
+import { TypeInferenceChecklist } from './lib/type-inference.js';
+import { validateAllEventDocs } from './lib/payload-type-validator.js';
+import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
+import { TypeExtractor } from './lib/core/type-extractor.js';
+import { CrossDropinResolver } from './lib/core/cross-dropin-resolver.js';
+import { generateNoEventsPage } from './lib/markdown/empty-state-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = getProjectRoot();
+const projectRoot = join(__dirname, '..');
+
+function cloneOrUpdateBoilerplate() {
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
+
+    console.log(`\n📦 Setting up boilerplate repository...`);
+
+    if (!existsSync(boilerplatePath)) {
+        console.log(`  Cloning boilerplate...`);
+        mkdirSync(dirname(boilerplatePath), { recursive: true });
+        execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', boilerplateUrl, boilerplatePath], { stdio: 'inherit' });
+
+        console.log(`  Installing boilerplate dependencies...`);
+        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+    } else {
+        console.log(`  Updating boilerplate...`);
+        // Reset any local changes before pulling
+        execFileSync('git', ['reset', '--hard', 'HEAD'], { cwd: boilerplatePath, stdio: 'pipe' });
+        execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
+
+        console.log(`  Updating dependencies...`);
+        execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+    }
+
+    return boilerplatePath;
+}
+
+function getBoilerplatePackageVersions(boilerplatePath) {
+    const packageJsonPath = join(boilerplatePath, 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    return packageJson.dependencies || {};
+}
+
+function cloneDropinAtVersion(repoName, repoConfig, version) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    // Clean version string (remove ~ ^ etc)
+    const cleanVersion = version.replace(/^[\^~]/, '');
+    const tag = `v${cleanVersion}`;
+
+    console.log(`  Using version: ${cleanVersion}`);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Cloning repository at ${tag}...`);
+        try {
+            execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        } catch (error) {
+            // If tag doesn't exist, try without 'v' prefix
+            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        }
+    } else {
+        console.log(`  Checking out ${tag}...`);
+        try {
+            // First fetch all tags
+            execFileSync('git', ['fetch', '--tags'], { cwd: dropinPath, stdio: 'pipe' });
+            // Then checkout the specific tag
+            execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
+        } catch (error) {
+            // If tag with 'v' doesn't exist, try without
+            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            try {
+                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+            } catch (secondError) {
+                console.error(`  ⚠️  Warning: Could not checkout ${cleanVersion}, repository may be at outdated version`);
+                // Continue anyway - the repo might already be at the correct version
+            }
+        }
+    }
+
+    return dropinPath;
+}
 
 function scanForEvents(repoPath) {
+    console.log(`  🔍 Scanning for events...`);
+
     const eventEmits = new Map();
     const eventListeners = new Map();
 
@@ -117,83 +197,201 @@ function scanForEvents(repoPath) {
         console.error(`  ⚠️  Error scanning files: ${error.message}`);
     }
 
-    // Read TypeScript event definitions
-    const typedEvents = new Map();
-    const eventsTypePath = join(repoPath, 'src/types/events.d.ts');
-    if (existsSync(eventsTypePath)) {
-        const eventsTypeFile = readFileSync(eventsTypePath, 'utf8');
+    // Read TypeScript event definitions using TypeExtractor
+    const typeExtractor = new TypeExtractor(repoPath);
+    const typedEvents = typeExtractor.extractEventTypes();
 
-        // Match event names and extract their type definitions with proper brace matching
-        const eventNamePattern = /['"`]([^'"`]+)['"`]\s*:/g;
-        let nameMatch;
+    console.log(`  ✓ Found ${eventEmits.size} emitted events`);
+    console.log(`  ✓ Found ${eventListeners.size} listened events`);
+    console.log(`  ✓ Found ${typedEvents.size} typed events`);
 
-        while ((nameMatch = eventNamePattern.exec(eventsTypeFile)) !== null) {
-            const eventName = nameMatch[1];
-            let startIndex = nameMatch.index + nameMatch[0].length;
+    return { eventEmits, eventListeners, typedEvents };
+}
 
-            // Skip whitespace
-            while (startIndex < eventsTypeFile.length && /\s/.test(eventsTypeFile[startIndex])) {
-                startIndex++;
-            }
+/**
+ * Find and parse an interface/type definition from source files
+ * @param {string} typeName - The name of the type to find (e.g., "Item", "CartModel")
+ * @param {string} dropinSourcePath - Path to the drop-in source code
+ * @returns {Array|null} Array of properties or null if not found
+ */
+function resolveTypeDefinition(typeName, dropinSourcePath) {
+    try {
+        // Common locations for type definitions
+        const possiblePaths = [
+            join(dropinSourcePath, 'data', 'models'),
+            join(dropinSourcePath, 'types'),
+            join(dropinSourcePath, 'api', 'types'),
+        ];
 
-            // Extract the type definition by matching balanced braces
-            let typeDef = '';
-            let braceCount = 0;
-            let inBraces = false;
-            let i = startIndex;
+        let interfaceContent = null;
 
-            while (i < eventsTypeFile.length) {
-                const char = eventsTypeFile[i];
+        // Search for the interface definition
+        for (const searchPath of possiblePaths) {
+            if (!existsSync(searchPath)) continue;
 
-                if (char === '{') {
-                    braceCount++;
-                    inBraces = true;
-                    typeDef += char;
-                } else if (char === '}') {
-                    braceCount--;
-                    typeDef += char;
-                    if (braceCount === 0 && inBraces) {
-                        // Found matching closing brace, now look for semicolon
-                        i++;
-                        while (i < eventsTypeFile.length && /\s/.test(eventsTypeFile[i])) {
-                            i++;
-                        }
-                        if (eventsTypeFile[i] === ';') {
-                            break; // Complete type definition found
+            const files = readdirSync(searchPath, { recursive: true });
+            for (const file of files) {
+                if (!file.endsWith('.ts') && !file.endsWith('.d.ts')) continue;
+
+                const filePath = join(searchPath, file);
+                const content = readFileSync(filePath, 'utf8');
+
+                // Look for interface or type definition - find the start
+                const startRegex = new RegExp(
+                    `export\\s+(interface|type)\\s+${typeName}\\s*\\{`,
+                    'm'
+                );
+                const startMatch = content.match(startRegex);
+
+                if (startMatch) {
+                    // Find the matching closing brace
+                    const startIndex = startMatch.index + startMatch[0].length;
+                    let braceCount = 1;
+                    let endIndex = startIndex;
+
+                    for (let i = startIndex; i < content.length && braceCount > 0; i++) {
+                        if (content[i] === '{') braceCount++;
+                        if (content[i] === '}') braceCount--;
+                        if (braceCount === 0) {
+                            endIndex = i;
+                            break;
                         }
                     }
-                } else if (char === ';' && !inBraces) {
-                    // Simple type (no braces), stop at semicolon
-                    break;
-                } else {
-                    typeDef += char;
+
+                    if (braceCount === 0) {
+                        interfaceContent = content.substring(startIndex, endIndex);
+                        break;
+                    }
                 }
-                i++;
             }
 
-            // Clean up and normalize indentation
-            typeDef = typeDef.trim();
-            if (typeDef.includes('\n')) {
-                typeDef = typeDef.split('\n').map(line => line.trim()).join('\n');
-            }
+            if (interfaceContent) break;
+        }
 
-            typedEvents.set(eventName, typeDef);
+        if (!interfaceContent) {
+            return null;
+        }
+
+        // Parse the interface properties
+        const properties = [];
+        const lines = interfaceContent.split('\n');
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) continue;
+
+            // Match property definitions: name: type or name?: type
+            const propMatch = trimmed.match(/^(\w+)(\?)?:\s*([^;]+);?/);
+            if (propMatch) {
+                const [, name, optionalMarker, type] = propMatch;
+                properties.push({
+                    name: name.trim(),
+                    type: type.trim(),
+                    optional: !!optionalMarker
+                });
+            }
+        }
+
+        return properties.length > 0 ? properties : null;
+    } catch (error) {
+        // Silent failure - type resolution is a best-effort feature
+        return null;
+    }
+}
+
+/**
+ * Parse a single parameter for event payloads (similar to function parameter parsing)
+ * @param {string} paramStr - Parameter string
+ * @returns {object|null} Parsed parameter object
+ */
+function parseEventParameter(paramStr) {
+    // Enhanced parsing to handle default values
+    // Matches: name?: type = default, name: type = default, name?: type, name: type
+    const propMatch = paramStr.match(/^\s*(\w+)(\?)?\s*:\s*([^=]+)(=\s*(.+))?$/);
+    if (propMatch) {
+        const [, name, optionalMarker, type, , defaultValue] = propMatch;
+        const hasDefault = !!defaultValue;
+        const isOptional = !!optionalMarker || hasDefault;
+
+        return {
+            name: name.trim(),
+            type: type.trim(),
+            optional: isOptional,
+            defaultValue: defaultValue ? defaultValue.trim() : undefined
+        };
+    }
+
+    // Fallback to simpler parsing if enhanced parsing fails
+    const simplePropMatch = paramStr.match(/^\s*(\w+)\??\s*:\s*(.+)$/);
+    if (simplePropMatch) {
+        const [, name, type] = simplePropMatch;
+        return {
+            name: name.trim(),
+            type: type.trim(),
+            optional: paramStr.includes('?')
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Extract nested properties from an inline object type in event payloads
+ * @param {string} objectType - Object type string like "{ sku: string; quantity: number }[]"
+ * @returns {Array} Nested properties
+ */
+function extractNestedEventProperties(objectType) {
+    const properties = [];
+
+    // Remove array brackets if present
+    let cleanType = objectType.trim();
+    if (cleanType.endsWith('[]')) {
+        cleanType = cleanType.slice(0, -2).trim();
+    }
+    if (cleanType.startsWith('[') && cleanType.endsWith(']')) {
+        cleanType = cleanType.slice(1, -1).trim();
+    }
+
+    // Extract content between braces
+    const match = cleanType.match(/^\{([\s\S]*)\}$/);
+    if (!match) return properties;
+
+    const content = match[1];
+    let current = '';
+    let depth = 0;
+
+    // Split on semicolons at depth 0
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+
+        if (char === '{' || char === '[' || char === '<') {
+            depth++;
+        } else if (char === '}' || char === ']' || char === '>') {
+            depth--;
+        }
+
+        if (char === ';' && depth === 0) {
+            if (current.trim()) {
+                const param = parseEventParameter(current.trim());
+                if (param) {
+                    properties.push(param);
+                }
+            }
+            current = '';
+        } else {
+            current += char;
         }
     }
 
-    // Calculate total unique events for reporting
-    const allEvents = new Set([
-        ...eventEmits.keys(),
-        ...eventListeners.keys(),
-        ...typedEvents.keys()
-    ]);
+    // Don't forget the last property
+    if (current.trim()) {
+        const param = parseEventParameter(current.trim());
+        if (param) {
+            properties.push(param);
+        }
+    }
 
-    return {
-        eventEmits,
-        eventListeners,
-        typedEvents,
-        count: allEvents.size
-    };
+    return properties;
 }
 
 function parseTypeScriptProperties(typeDefinition) {
@@ -208,14 +406,9 @@ function parseTypeScriptProperties(typeDefinition) {
         const propertyMatches = propertiesStr.split(/[,;]\s*/).filter(p => p.trim());
 
         propertyMatches.forEach(prop => {
-            const propMatch = prop.match(/^\s*(\w+)\??\s*:\s*(.+)$/);
-            if (propMatch) {
-                const [, name, type] = propMatch;
-                properties.push({
-                    name: name.trim(),
-                    type: type.trim(),
-                    optional: prop.includes('?')
-                });
+            const param = parseEventParameter(prop);
+            if (param) {
+                properties.push(param);
             }
         });
     }
@@ -303,87 +496,162 @@ function generateEventDescription(eventName, emits, listeners) {
 
     // Common patterns we can safely infer from naming conventions
     if (name.includes('/initialized')) {
-        return `${verb} the component completes initialization`;
+        return `${verb} the component completes initialization.`;
     }
     if (name.includes('/updated')) {
-        return `${verb} the component state is updated`;
+        return `${verb} the component state is updated.`;
     }
     if (name.includes('/added')) {
-        return `${verb} an item is added`;
+        return `${verb} an item is added.`;
     }
     if (name.includes('/removed')) {
-        return `${verb} an item is removed`;
+        return `${verb} an item is removed.`;
     }
     if (name.includes('/merged')) {
-        return `${verb} data is merged`;
+        return `${verb} data is merged.`;
     }
     if (name.includes('/reset')) {
-        return `${verb} the component state is reset`;
+        return `${verb} the component state is reset.`;
     }
     if (name.includes('/changed')) {
-        return `${verb} a change occurs`;
+        return `${verb} a change occurs.`;
     }
     if (name.includes('/data')) {
-        return `${verb} data is available or changes`;
+        return `${verb} data is available or changes.`;
     }
     if (name.includes('/values')) {
-        return `${verb} form or configuration values change`;
+        return `${verb} form or configuration values change.`;
     }
     if (name.includes('/error')) {
-        return `${verb} an error occurs`;
+        return `${verb} an error occurs.`;
     }
     if (name.includes('/placed')) {
-        return `${verb} an order is placed`;
+        return `${verb} an order is placed.`;
     }
     if (name.includes('/alert')) {
-        return `${verb} an alert or notification is triggered`;
+        return `${verb} an alert or notification is triggered.`;
     }
     if (name.includes('/permissions')) {
-        return `${verb} permissions are updated`;
+        return `${verb} permissions are updated.`;
     }
     if (name.includes('/loading')) {
-        return `${verb} loading state changes`;
+        return `${verb} loading state changes.`;
     }
     if (name.includes('/result')) {
-        return `${verb} results are available`;
+        return `${verb} results are available.`;
     }
     if (name.includes('/valid')) {
-        return `${verb} validation state changes`;
+        return `${verb} validation state changes.`;
     }
     if (name.includes('/estimate')) {
-        return `${verb} an estimate is calculated`;
+        return `${verb} an estimate is calculated.`;
     }
     if (name.includes('setvalues')) {
-        return `${verb} values are set programmatically`;
+        return `${verb} values are set programmatically.`;
     }
     if (name === 'authenticated') {
-        return `${verb} authentication state changes`;
+        return `${verb} authentication state changes.`;
     }
     if (name === 'locale') {
-        return `${verb} locale/language changes`;
+        return `${verb} locale/language changes.`;
     }
     if (name === 'error') {
-        return `${verb} an error occurs`;
+        return `${verb} an error occurs.`;
     }
 
     // Default description if no pattern matches - use neutral, conservative language
     if (isEmitter && !isListener) {
-        return 'Emitted by this drop-in when a specific condition or state change occurs';
+        return `Emitted when a specific condition or state change occurs.`;
     } else if (isListener && !isEmitter) {
         const sourceComponent = extractSourceComponent(eventName);
         const componentName = sourceComponent.original
             ? `${sourceComponent.formatted} (\`${sourceComponent.original}\`)`
             : sourceComponent.formatted;
-        return `Fired by ${componentName} when a specific condition or state change occurs`;
+        return `Fired by ${componentName} when a specific condition or state change occurs.`;
     } else if (isBoth) {
-        return 'Emitted and consumed by this drop-in for internal and external communication';
+        return `Emitted and consumed for internal and external communication.`;
     }
-    return 'Event for component communication and state management';
+    return 'Event for component communication and state management.';
 }
 
 
-function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichmentData = null) {
+/**
+ * Extract model definition from source files for event payload types
+ * @param {string} modelName - Name of the type/interface to extract
+ * @param {string} dropinName - Name of the dropin (e.g., 'cart', 'checkout')
+ * @returns {string|null} The full type definition or null if not found
+ */
+// Replaced with TypeExtractor.extractModelDefinition()
+function extractModelDefinition(modelName, dropinName) {
+    const repoPath = join(projectRoot, '.temp-repos', dropinName);
+    const extractor = new TypeExtractor(repoPath);
+    return extractor.extractModelDefinition(modelName);
+}
+
+// Replaced with CrossDropinResolver.detectSourceDropin()
+function detectSourceDropin(eventName, eventEmits, currentDropin) {
+    return CrossDropinResolver.detectSourceDropin(eventName, eventEmits, currentDropin);
+}
+
+/**
+ * Extract types referenced in an event payload definition
+ * @param {string} typeDefinition - The type definition string
+ * @returns {Set<string>} Set of type names referenced
+ */
+// Replaced with TypeExtractor.extractReferencedTypes()
+function extractReferencedTypes(typeDefinition) {
+    return TypeExtractor.extractReferencedTypes(typeDefinition);
+}
+
+function updateSidebarNavigation(dropinName, repoConfig) {
+    const configPath = join(projectRoot, 'astro.config.mjs');
+    const config = readFileSync(configPath, 'utf8');
+
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const sidebarEntry = `{ label: 'Events', link: '/${basePath}/${dropinName}/events/' },`;
+
+    // Find the Functions entry for this dropin and add events after it
+    // Order: Functions → Events → Dictionary
+    const functionsPattern = new RegExp(
+        `(\\{\\s*label:\\s*'Functions',\\s*link:\\s*'/${basePath}/${dropinName}/functions/'\\s*\\},)`,
+        'i'
+    );
+
+    const match = config.match(functionsPattern);
+    if (match) {
+        // Check if the events entry already exists
+        const eventsPattern = new RegExp(`label:\\s*'Events',\\s*link:\\s*'/${basePath}/${dropinName}/events/'`);
+        if (!eventsPattern.test(config)) {
+            const updated = config.replace(
+                functionsPattern,
+                `$1\n                          ${sidebarEntry}`
+            );
+            writeFileSync(configPath, updated);
+            console.log(`  ✅ Added sidebar entry for ${repoConfig.displayName} events`);
+            return true;
+        } else {
+            console.log(`  ℹ️  Sidebar entry already exists for ${repoConfig.displayName} events`);
+            return false;
+        }
+    } else {
+        console.log(`  ⚠️  Could not find Functions entry to insert after`);
+        return false;
+    }
+}
+
+function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     const { eventEmits, eventListeners, typedEvents, implementationStatus, documentedDescriptions } = eventsData;
+
+    // Load event enrichments for this drop-in
+    const enrichments = loadEventEnrichments(dropinName);
+
+    // Construct the drop-in source path for type resolution
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const dropinSourcePath = join(boilerplatePath, 'node_modules', `@dropins/storefront-${dropinName}`);
+
+    // Track all models used in event payloads for Data Models section
+    const modelDefinitions = new Map(); // Map<modelName, {definition, events, description}>
+
     const allEvents = new Set([
         ...eventEmits.keys(),
         ...eventListeners.keys(),
@@ -446,13 +714,19 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
     // For Event Details section: pure alphabetical order for easier scanning
     const sortedEvents = [...emitsOnlyFiltered, ...listensOnlyFiltered, ...bidirectionalFiltered].sort(sortByTypeAndName);
 
-    // Read template and replace global placeholders using shared utilities
-    let template = readTemplate('dropin-events.mdx');
-    template = replacePlaceholders(template, {
-        'DROPIN_NAME': repoConfig.displayName,
-        'DROPIN_DISPLAY_NAME': repoConfig.displayName,
-        'DROPIN_VERSION': cleanVersion(version)
-    });
+    // Read the template file
+    const templatePath = join(projectRoot, '_dropin-templates', 'dropin-events.mdx');
+    let template = readFileSync(templatePath, 'utf8');
+
+    // Replace global placeholders
+    template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
+    template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
+    template = template.replace(/DROPIN_VERSION/g, version.replace(/^[\^~]/, ''));
+
+    // Replace overview with enriched content or fallback to generic
+    const dropinOverview = enrichments.overview ||
+        `The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.`;
+    template = template.replace(/DROPIN_OVERVIEW/g, dropinOverview);
 
     // Generate combined events table sorted by direction, then alphabetically
     // NOTE: This table structure is built independently (not read from template)
@@ -471,10 +745,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
         // Add events in order: Emits, Listens, Emits and Listens
         emitsOnlyFiltered.forEach(eventName => {
             let description;
-            // Check enrichment data first, then documented descriptions, then generate
-            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
-                description = enrichmentData[eventName].description;
-            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), null);
@@ -490,10 +761,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
 
         listensOnlyFiltered.forEach(eventName => {
             let description;
-            // Check enrichment data first, then documented descriptions, then generate
-            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
-                description = enrichmentData[eventName].description;
-            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, null, eventListeners.get(eventName));
@@ -509,10 +777,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
 
         bidirectionalFiltered.forEach(eventName => {
             let description;
-            // Check enrichment data first, then documented descriptions, then generate
-            if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
-                description = enrichmentData[eventName].description;
-            } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+            if (documentedDescriptions && documentedDescriptions.has(eventName)) {
                 description = documentedDescriptions.get(eventName);
             } else {
                 description = generateEventDescription(eventName, eventEmits.get(eventName), eventListeners.get(eventName));
@@ -585,14 +850,14 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
         const eventHeading = `### \`${eventName}\` (${directionText.toLowerCase()})`;
         eventSection = eventSection.replace(/EVENT_HEADING/g, eventHeading);
 
-        // Replace EVENT_DESCRIPTION - check enrichment, documented, then generate
+        // Replace EVENT_DESCRIPTION - use enrichment, documented description, or generate
+        const eventEnrichment = enrichments?.[eventName];
         let description;
-        if (enrichmentData && enrichmentData[eventName] && enrichmentData[eventName].description) {
-            description = enrichmentData[eventName].description;
-        } else if (documentedDescriptions && documentedDescriptions.has(eventName)) {
+        if (documentedDescriptions && documentedDescriptions.has(eventName)) {
             description = documentedDescriptions.get(eventName);
         } else {
-            description = generateEventDescription(eventName, emits, listeners);
+            const generatedDescription = generateEventDescription(eventName, emits, listeners);
+            description = getEventDescription(eventName, eventEnrichment, generatedDescription);
         }
 
         // Add implementation status note for documented-only events
@@ -607,29 +872,150 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
         // Check if this is a documented-only event
         const isDocumentedOnly = implementationStatus && implementationStatus.get(eventName) === 'documented-only';
 
-        if (typedEvents.has(eventName)) {
-            const typeDefinition = typedEvents.get(eventName);
+        // Check for enrichment payload type override (when payload is a string instead of object)
+        let enrichmentPayloadOverride = enrichments?.[eventName]?.payload;
+        let hasPayloadOverride = typeof enrichmentPayloadOverride === 'string';
+
+        // If not found in current drop-in's enrichment, check if it's a cross-dropin event
+        // Also check cross-dropin if the current type is generic (essentially untyped/incomplete)
+        let isCrossDropinEvent = false;
+        const currentType = typedEvents.get(eventName);
+        const hasGenericType = GenericTypeHandler.isGenericType(currentType);
+        if (!hasPayloadOverride && (!typedEvents.has(eventName) || hasGenericType)) {
+            const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
+            if (sourceDropin && sourceDropin !== dropinName) {
+                // Load enrichment from the source drop-in
+                const sourceEnrichments = loadEventEnrichments(sourceDropin);
+                const sourcePayload = sourceEnrichments?.[eventName]?.payload;
+                if (typeof sourcePayload === 'string') {
+                    enrichmentPayloadOverride = sourcePayload;
+                    hasPayloadOverride = true;
+                    isCrossDropinEvent = true;
+                }
+            }
+        }
+
+        if (hasPayloadOverride) {
+            // Use enrichment override for payload type
+            const typeDefinition = enrichmentPayloadOverride;
             payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;
 
-            // Check if this is a simple type reference (no braces, likely references another interface)
-            const hasObjectStructure = typeDefinition.includes('{');
+            const referencedTypes = extractReferencedTypes(typeDefinition);
 
-            const properties = parseTypeScriptProperties(typeDefinition);
-
-            if (hasObjectStructure && properties.length > 0) {
-                // This is an inline object type with properties we can list
-                payloadSection += `| Property | Type | Description |\n`;
-                payloadSection += `|----------|------|-------------|\n`;
-
-                properties.forEach(prop => {
-                    const optionalMark = prop.optional ? ' (optional)' : '';
-                    const escapedType = prop.type.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
-                    payloadSection += `| \`${prop.name}\` | \`${escapedType}\`${optionalMark} | See type definition in source code |\n`;
+            // For cross-dropin events, link to the source dropin's events page
+            // For same-dropin events, extract and track models locally
+            if (isCrossDropinEvent) {
+                // Generate external links to source drop-in's events page
+                if (referencedTypes.size > 0) {
+                    const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
+                    const typeLinks = CrossDropinResolver.generateExternalLinks(sourceDropin, referencedTypes, 'events');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            } else {
+                // Same-dropin event: extract and track models locally
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: '' // Will be populated from enrichment if available
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
                 });
+
+                // Generate links to Data Models section for referenced types
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            }
+        } else if (typedEvents.has(eventName)) {
+            // Skip displaying generic types as they provide no useful information
+            const typeDefinition = typedEvents.get(eventName);
+            if (GenericTypeHandler.isGenericType(typeDefinition)) {
+                // Don't display generic types - leave payload section empty
+            } else {
+                payloadSection += `\`\`\`typescript\n${typeDefinition}\n\`\`\`\n\n`;
+
+                // Extract and track model types referenced in this event payload
+                const referencedTypes = extractReferencedTypes(typeDefinition);
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: '' // Will be populated from enrichment if available
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
+                });
+
+                // Generate links to Data Models section for referenced types
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
             }
         } else {
-            // No TypeScript definition available
-            payloadSection += `This event's data payload structure is not documented in the source code.\n\n`;
+            // No TypeScript definition available - use comprehensive type inference
+            const dropinPath = join(projectRoot, '.temp-repos', dropinName);
+            const checker = new TypeInferenceChecklist(dropinName, dropinPath);
+            const result = checker.inferEventPayloadType(eventName);
+
+            // Log the inference process (optional - only in verbose mode)
+            if (process.env.VERBOSE_INFERENCE) {
+                console.log(`  📋 Type inference for ${eventName}:`);
+                result.log.forEach(line => console.log(`    ${line}`));
+            }
+
+            if (result.type) {
+                // Found an inferred type - display it
+                payloadSection += `\`\`\`typescript\n${result.type}\n\`\`\`\n\n`;
+
+                // Extract and track any model types from the inferred type
+                const referencedTypes = extractReferencedTypes(result.type);
+                referencedTypes.forEach(typeName => {
+                    const definition = extractModelDefinition(typeName, dropinName);
+                    if (definition) {
+                        if (!modelDefinitions.has(typeName)) {
+                            modelDefinitions.set(typeName, {
+                                definition,
+                                events: [],
+                                description: ''
+                            });
+                        }
+                        const modelData = modelDefinitions.get(typeName);
+                        if (!modelData.events.includes(eventName)) {
+                            modelData.events.push(eventName);
+                        }
+                    }
+                });
+
+                if (referencedTypes.size > 0) {
+                    const typeLinks = Array.from(referencedTypes)
+                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                        .join(', ');
+                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                }
+            }
+            // If no type found (neither defined nor inferred), leave payload section empty
         }
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
@@ -643,53 +1029,147 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version, enrichme
         const hasNoEmits = emitsOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
         const hasNoListens = listensOnlyFiltered.length === 0 && bidirectionalFiltered.length === 0;
 
-        // Generate explanation based on what's missing
-        let explanation = '';
-        if (hasNoEmits && hasNoListens) {
-            explanation = 'This drop-in focuses on UI presentation and data display, relying on function calls rather than event-driven communication for its core functionality. It uses only common events for standard cross-component functionality like localization and error handling.';
-        } else if (hasNoEmits) {
-            explanation = 'This drop-in does not emit any drop-in-specific events because it primarily responds to external state changes and user interactions without needing to broadcast its own state to other components. It uses only common events for standard functionality.';
-        } else if (hasNoListens) {
-            explanation = 'This drop-in does not listen to any drop-in-specific events because it operates independently, managing its own state without requiring coordination with other drop-ins. It uses only common events for standard functionality.';
-        }
-
-        // Generate simplified content for drop-ins that only use common events
-        const simplifiedContent = `---
-title: ${repoConfig.displayName} Data & Events
-description: Learn about the events used by the ${repoConfig.displayName} and the data available within the events.
-sidebar:
-  label: Events
-  order: 5
----
-
-import { Aside } from '@astrojs/starlight/components';
-
-The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events/) for communication between drop-ins and external integrations.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion(version)}</strong>
-</div>
-
-## Events
-
-This drop-in does not emit or listen to any drop-in-specific events. ${explanation}
-
-For information about common events like \`locale\`, \`error\`, and \`authenticated\`, see the [common events reference](/dropins/all/events/#common-events-reference).
-`;
-        return simplifiedContent;
+        // Use shared empty state generator for clean, consistent output
+        return generateNoEventsPage({
+            dropinDisplayName: repoConfig.displayName,
+            version
+        });
     }
 
-    // Assemble final content
-    return beforeRepeat + eventsContent + afterRepeat;
+    // Generate Data Models section
+    let dataModelsSection = '';
+    if (modelDefinitions.size > 0) {
+        dataModelsSection += '\n\n## Data Models\n\n';
+        dataModelsSection += 'The following data models are used in event payloads for this drop-in.\n\n';
+
+        // Sort models alphabetically
+        const sortedModels = Array.from(modelDefinitions.keys()).sort();
+
+        for (const modelName of sortedModels) {
+            const modelData = modelDefinitions.get(modelName);
+
+            dataModelsSection += `### ${modelName}\n\n`;
+
+            // Add description if available from enrichment
+            if (enrichments?.models?.[modelName]?.description) {
+                dataModelsSection += `${enrichments.models[modelName].description}\n\n`;
+            }
+
+            // List events that use this model
+            if (modelData.events.length > 0) {
+                dataModelsSection += `Used in: `;
+                dataModelsSection += modelData.events
+                    .map(eventName => `[\`${eventName}\`](#${eventName.replace(/\//g, '')}-${eventEmits.has(eventName) && eventListeners.has(eventName) ? 'emits-and-listens' : eventEmits.has(eventName) ? 'emits' : 'listens'})`)
+                    .join(', ');
+                dataModelsSection += '.\n\n';
+            }
+
+            // Add the TypeScript definition
+            dataModelsSection += '```ts\n';
+            dataModelsSection += modelData.definition;
+            dataModelsSection += '\n```\n\n';
+        }
+    }
+
+    // Assemble final content with Data Models section
+    return beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
 }
 
-// Main execution using shared generator framework
-runGenerator({
-    name: 'Event',
-    itemType: 'events',
-    loadEnrichments: loadEventEnrichments,
-    scanRepo: scanForEvents,
-    generateContent: generateEventsMDX,
-    updateSidebar: updateSidebarForEvents,
-    outputFileName: 'events.mdx'
-});
+async function main() {
+    console.log('🚀 Event Documentation Generator');
+    console.log('================================\n');
+
+    // Parse command-line arguments
+    const targetDropin = process.argv[2];
+
+    // Filter drop-ins based on target
+    let dropinsToProcess = DROPIN_REPOS;
+
+    if (targetDropin) {
+        if (!DROPIN_REPOS[targetDropin]) {
+            console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
+            console.log('Available drop-ins:');
+            Object.keys(DROPIN_REPOS).forEach(name => {
+                console.log(`  - ${name}`);
+            });
+            process.exit(1);
+        }
+        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
+        console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
+    } else {
+        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
+    }
+
+    // Clone/update boilerplate once for all drop-ins
+    const boilerplatePath = cloneOrUpdateBoilerplate();
+
+    // Get package versions from boilerplate
+    const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
+    console.log(`\n📦 Loaded package versions from boilerplate\n`);
+
+    // Process each drop-in
+    for (const [repoName, repoConfig] of Object.entries(dropinsToProcess)) {
+        try {
+            console.log(`\n📦 Processing ${repoConfig.displayName}...`);
+
+            // Get version from boilerplate package.json
+            const version = packageVersions[repoConfig.packageName];
+
+            if (!version) {
+                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
+                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
+                continue;
+            }
+
+            // Clone git repo at specific version
+            const dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
+            const eventsData = scanForEvents(dropinPath);
+            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, version);
+
+            // Write to the appropriate location in docs
+            const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+            const outputDir = join(
+                projectRoot,
+                'src/content/docs',
+                basePath,
+                repoName
+            );
+            const outputPath = join(outputDir, 'events.mdx');
+
+            // Create directory if it doesn't exist
+            if (!existsSync(outputDir)) {
+                mkdirSync(outputDir, { recursive: true });
+                console.log(`  📁 Created directory ${outputDir}`);
+            }
+
+            writeFileSync(outputPath, mdxContent);
+            console.log(`  ✅ Generated ${outputPath}`);
+
+            // Show preview link for single drop-in generation
+            if (targetDropin) {
+                const urlPath = `/${basePath}/${repoName}/events`;
+                console.log(`  📄 View at: ${urlPath}`);
+                console.log(`     (Start dev server with 'npm run dev' if not already running)`);
+            }
+
+            // Update sidebar navigation
+            updateSidebarNavigation(repoName, repoConfig);
+            console.log('');
+
+        } catch (error) {
+            console.error(`  ❌ Error processing ${repoName}: ${error.message}\n`);
+        }
+    }
+
+    console.log('✨ Event documentation generation complete!');
+
+    // Validate generated documentation for generic types
+    const validationSuccess = validateAllEventDocs(projectRoot);
+    if (!validationSuccess) {
+        console.error('\n⚠️  WARNING: Generic type issues detected in generated documentation.');
+        console.error('   Please update enrichment files to provide proper type overrides.');
+        process.exit(1);
+    }
+}
+
+main();
