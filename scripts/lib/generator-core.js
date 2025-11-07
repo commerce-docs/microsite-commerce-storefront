@@ -18,7 +18,7 @@ import {
     getBoilerplatePackageVersions,
     cloneDropinAtVersion
 } from './repository.js';
-import { ensureParentDirectoryExists } from './utils.js';
+import { ensureParentDirectoryExists, cleanVersion } from './utils.js';
 import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -96,7 +96,7 @@ async function processSingleDropin(config) {
 
     // Warn if version mismatch
     if (!isExactMatch) {
-        const cleanRequestedVersion = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
+        const cleanRequestedVersion = cleanVersion(version);
         logger.warn(
             `Documentation generated from ${actualVersion} instead of requested version ${cleanRequestedVersion}`,
             'Version mismatch may cause documentation inaccuracies'
