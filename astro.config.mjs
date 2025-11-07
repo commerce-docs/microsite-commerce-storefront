@@ -826,7 +826,14 @@ async function config() {
                       { label: 'Overview', link: '/merchants/get-started/' },
                       { label: 'Enrichment', link: '/merchants/get-started/enrichment/' },
                       { label: 'Experiments', link: '/merchants/get-started/experiments/' },
-                      { label: 'Localization', link: '/merchants/multistore/content-localization/' },
+                      {
+                        label: 'Localization',
+                        collapsed: true,
+                        items: [
+                          { label: 'Document Authoring Tool', link: '/merchants/multistore/content-localization/' },
+                          { label: 'Universal Editor', link: '/merchants/multistore/content-localization-universal-editor/' },
+                        ],
+                      },
                       { label: 'Terms and conditions', link: '/merchants/get-started/terms-and-conditions/' },
                     ],
                   },
