@@ -34,30 +34,6 @@ The Wishlist drop-in exposes **1 slot** in **1 container** for customizing speci
 </table>
 
 
-## Using slots
-
-This example customizes the `image` slot in `Wishlist`:
-
-```js
-import { render as provider } from '@dropins/storefront-wishlist/render.js';
-import Wishlist from '@dropins/storefront-wishlist/containers/Wishlist.js';
-
-provider.render(Wishlist, {
-  slots: {
-    image: (ctx) => {
-      const { defaultImageProps } = ctx;
-      const div = document.createElement('div');
-      div.className = 'wishlist__image';
-      div.textContent = 'Custom image';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.wishlist'));
-```
-
-
-
-
 ## Wishlist slots
 
 ```js {4}
@@ -69,6 +45,33 @@ slots?: {
     item: Item;
   }>;
 };
+```
+
+### image example
+
+This example from the Commerce Wishlist block shows how to customize the `image` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-wishlist/render.js';
+import Wishlist from '@dropins/storefront-wishlist/containers/Wishlist.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+// Note: `WISHLIST_IMAGE_DIMENSIONS` should be defined in your block context (object with `width` and `height` properties)
+
+provider.render(Wishlist, {
+  slots: {
+    image: (ctx) => {
+      const { item, defaultImageProps } = ctx;
+      tryRenderAemAssetsImage(ctx, {
+        alias: item.product.sku,
+        imageProps: defaultImageProps,
+        params: {
+          width: defaultImageProps.width || WISHLIST_IMAGE_DIMENSIONS.width,
+          height: defaultImageProps.height || WISHLIST_IMAGE_DIMENSIONS.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.wishlist'));
 ```
 
 ---

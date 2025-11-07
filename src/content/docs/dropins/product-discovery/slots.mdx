@@ -38,89 +38,6 @@ The Product Discovery drop-in exposes **12 slots** in **2 containers** for custo
 </table>
 
 
-## Using slots
-
-This example customizes the `Facet` slot in `Facets`:
-
-```js
-import { render as provider } from '@dropins/storefront-product-discovery/render.js';
-import Facets from '@dropins/storefront-product-discovery/containers/Facets.js';
-
-provider.render(Facets, {
-  slots: {
-    Facet: (ctx) => {
-      const { data } = ctx;
-      const div = document.createElement('div');
-      div.className = 'facets__facet';
-      div.textContent = 'Custom Facet';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.facets'));
-```
-
-
-
-This example customizes the `ProductActions` slot to demonstrate building action wrappers with multiple components:
-
-```js
-import { render as provider } from '@dropins/storefront-product-discovery/render.js';
-import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
-import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
-import * as cartApi from '@dropins/storefront-cart/api.js';
-import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
-import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
-
-provider.render(SearchResults, {
-  routeProduct: (product) => `/products/${product.urlKey}`,
-  slots: {
-    ProductActions: (ctx) => {
-      // Create wrapper for multiple actions
-      const actionsWrapper = document.createElement('div');
-      actionsWrapper.className = 'product-discovery-product-actions';
-      
-      // Add to cart button (conditional based on product type)
-      const addToCartBtn = document.createElement('div');
-      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
-      
-      if (ctx.product.typename === 'ComplexProductView') {
-        UI.render(Button, {
-          children: 'Select Options',
-          icon: Icon({ source: 'Cart' }),
-          href: `/products/${ctx.product.urlKey}`,
-          variant: 'primary',
-        })(addToCartBtn);
-      } else {
-        UI.render(Button, {
-          children: 'Add to Cart',
-          icon: Icon({ source: 'Cart' }),
-          onClick: () => cartApi.addProductsToCart([
-            { sku: ctx.product.sku, quantity: 1 }
-          ]),
-          variant: 'primary',
-        })(addToCartBtn);
-      }
-      
-      // Wishlist toggle from another drop-in
-      const wishlistToggle = document.createElement('div');
-      wishlistToggle.className = 'product-discovery-product-actions__wishlist-toggle';
-      
-      wishlistRender.render(WishlistToggle, {
-        product: ctx.product,
-        variant: 'tertiary',
-      })(wishlistToggle);
-      
-      // Assemble the wrapper
-      actionsWrapper.appendChild(addToCartBtn);
-      actionsWrapper.appendChild(wishlistToggle);
-      
-      ctx.replaceWith(actionsWrapper);
-    }
-  }
-})(document.querySelector('.search-results'));
-```
-
-
 ## Facets slots
 
 ```js {4,5,6,7,8}
@@ -151,6 +68,102 @@ slots?: {
   Header?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
   Footer?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
 };
+```
+
+### ProductActions example
+
+This example from the Product List Page block shows how to customize the `ProductActions` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+// Note: `getAddToCartButton` should be defined in your block context (helper function to create add to cart button)
+
+provider.render(SearchResults, {
+  slots: {
+    ProductActions: (ctx) => {
+      const actionsWrapper = document.createElement('div');
+      actionsWrapper.className = 'product-discovery-product-actions';
+      // Add to Cart Button
+      const addToCartBtn = getAddToCartButton(ctx.product);
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      // Wishlist Button
+      const $wishlistToggle = document.createElement('div');
+      $wishlistToggle.classList.add('product-discovery-product-actions__wishlist-toggle');
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.product,
+        variant: 'tertiary',
+      })($wishlistToggle);
+      actionsWrapper.appendChild(addToCartBtn);
+      actionsWrapper.appendChild($wishlistToggle);
+      ctx.replaceWith(actionsWrapper);
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+### ProductImage example
+
+This example from the Product List Page block shows how to customize the `ProductImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+
+provider.render(SearchResults, {
+  slots: {
+    ProductImage: (ctx) => {
+      const { product, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = getProductLink(product.urlKey, product.sku);
+      tryRenderAemAssetsImage(ctx, {
+        alias: product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+### Footer example
+
+This example from the Header block shows how to customize the `Footer` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { rootLink } from '../../scripts/commerce.js';
+// Note: `labels` and `recommendationsData` should be defined in your block context
+
+provider.render(SearchResults, {
+  slots: {
+    Footer: async (ctx) => {
+      // View all results button
+      const viewAllResultsWrapper = document.createElement('div');
+      const viewAllResultsButton = await UI.render(Button, {
+        children: labels.Global?.SearchViewAll,
+        variant: 'secondary',
+        href: rootLink('/search'),
+      })(viewAllResultsWrapper);
+      ctx.appendChild(viewAllResultsWrapper);
+      ctx.onChange((next) => {
+        viewAllResultsButton?.setProps((prev) => ({
+          ...prev,
+          href: `${rootLink('/search')}?q=${encodeURIComponent(next.variables?.phrase || '')}`,
+        }));
+      });
+    }
+  }
+})(document.querySelector('.search-results'));
 ```
 
 ---

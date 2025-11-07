@@ -34,92 +34,6 @@ The Recommendations drop-in exposes **6 slots** in **1 container** for customizi
 </table>
 
 
-## Using slots
-
-This example customizes the `Heading` slot in `ProductList`:
-
-```js
-import { render as provider } from '@dropins/storefront-recommendations/render.js';
-import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
-
-provider.render(ProductList, {
-  slots: {
-    Heading: (ctx) => {
-      const div = document.createElement('div');
-      div.className = 'product-list__heading';
-      div.textContent = 'Custom Heading';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.product-list'));
-```
-
-
-
-This example customizes the `Footer` slot to demonstrate conditional rendering and event publishing:
-
-```js
-import { render as provider } from '@dropins/storefront-recommendations/render.js';
-import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
-import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
-import * as cartApi from '@dropins/storefront-cart/api.js';
-import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
-
-provider.render(ProductList, {
-  routeProduct: (item) => `/products/${item.urlKey}`,
-  recId: 'product-recs',
-  currentSku: 'MT01',
-  slots: {
-    Footer: (ctx) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'footer__wrapper';
-      
-      const addToCart = document.createElement('div');
-      addToCart.className = 'footer__button--add-to-cart';
-      wrapper.appendChild(addToCart);
-      
-      // Conditional rendering based on product type
-      if (ctx.item.itemType === 'SimpleProductView') {
-        // Simple product - show add to cart button
-        UI.render(Button, {
-          children: 'Add to Cart',
-          icon: Icon({ source: 'Cart' }),
-          onClick: (event) => {
-            // Add to cart
-            cartApi.addProductsToCart([
-              { sku: ctx.item.sku, quantity: 1 }
-            ]);
-            
-            // Stop event propagation to prevent parent click handlers
-            event.stopPropagation();
-            
-            // Publish analytics event
-            publishRecsItemAddToCartClick({
-              recommendationUnit: ctx.recommendationUnit,
-              pagePlacement: 'product-list',
-              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
-              yOffsetBottom: addToCart.getBoundingClientRect().bottom ?? 0,
-              productId: ctx.index,
-            });
-          },
-          variant: 'primary',
-        })(addToCart);
-      } else {
-        // Complex product - show select options button
-        UI.render(Button, {
-          children: 'Select Options',
-          href: `/products/${ctx.item.urlKey}`,
-          variant: 'tertiary',
-        })(addToCart);
-      }
-      
-      ctx.replaceWith(wrapper);
-    }
-  }
-})(document.querySelector('.recommendations'));
-```
-
-
 ## ProductList slots
 
 ```js {4,5,6,10,13,16}
@@ -143,6 +57,115 @@ slots?: {
     defaultImageProps: ImageProps;
   }>;
 };
+```
+
+### Footer example
+
+This example from the Product Recommendations block shows how to customize the `Footer` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+// Note: `labels` and `recommendationsData` should be defined in your block context
+
+provider.render(ProductList, {
+  slots: {
+    Footer: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'footer__wrapper';
+      const addToCart = document.createElement('div');
+      addToCart.className = 'footer__button--add-to-cart';
+      wrapper.appendChild(addToCart);
+      if (ctx.item.itemType === 'SimpleProductView') {
+        // Add to Cart Button
+        UI.render(Button, {
+          children: labels.Global?.AddProductToCart,
+          icon: h(Icon, { source: 'Cart' }),
+          onClick: (event) => {
+            cartApi.addProductsToCart([
+            { sku: ctx.item.sku, quantity: 1 },
+            ]);
+            // Prevent the click event from bubbling up to the parent span
+            // to avoid triggering the recs-item-click event
+            event.stopPropagation();
+            // Publish ACDL event for add to cart click
+            const recommendationUnit = recommendationsData?.find(
+            (unit) => unit.items?.some(
+            (unitItem) => unitItem.sku === ctx.item.sku,
+            ),
+            );
+            publishRecsItemAddToCartClick({
+              recommendationUnit,
+              pagePlacement: 'product-list',
+              yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+              yOffsetBottom:
+              addToCart.getBoundingClientRect().bottom ?? 0,
+              productId: ctx.index,
+            });
+          },
+          variant: 'primary',
+        })(addToCart);
+        } else {
+        // Select Options Button
+        UI.render(Button, {
+          children:
+          labels.Global?.SelectProductOptions,
+          href: createProductLink(ctx.item),
+          variant: 'tertiary',
+        })(addToCart);
+      }
+      // Wishlist Button
+      const $wishlistToggle = document.createElement('div');
+      $wishlistToggle.classList.add('footer__button--wishlist-toggle');
+      // Render Icon
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.item,
+      })($wishlistToggle);
+      // Append to Cart Item
+      wrapper.appendChild($wishlistToggle);
+      ctx.replaceWith(wrapper);
+    }
+  }
+})(document.querySelector('.product-list'));
+```
+
+### Thumbnail example
+
+This example from the Product Recommendations block shows how to customize the `Thumbnail` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import ProductList from '@dropins/storefront-recommendations/containers/ProductList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+
+provider.render(ProductList, {
+  slots: {
+    Thumbnail: (ctx) => {
+      const { item, defaultImageProps } = ctx;
+      const wrapper = document.createElement('a');
+      wrapper.href = createProductLink(item);
+      tryRenderAemAssetsImage(ctx, {
+        alias: item.sku,
+        imageProps: defaultImageProps,
+        wrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.product-list'));
 ```
 
 ---
