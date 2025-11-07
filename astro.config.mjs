@@ -334,6 +334,7 @@ async function config() {
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
                       { label: 'Labeling', link: '/dropins/all/labeling/' },
+                      { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
                       { label: 'Linking', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
