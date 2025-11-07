@@ -986,11 +986,13 @@ function normalizeDescriptionToVerb(description, functionName) {
  * @param {string} repoName - Repository name (e.g., 'cart')
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} scannedData - Scanned function data
- * @param {string} version - Package version
+ * @param {Object|string} versionInfo - Version info object or version string
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrichmentData = null) {
+function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const { functions } = scannedData;
 
     if (functions.length === 0) {
@@ -1800,7 +1802,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
  * @param {string} version - Package version
  * @returns {string} Generated MDX content
  */
-function generateEmptyFunctionsDocs(repoName, repoConfig, version) {
+function generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     // Use shared empty state generator for clean, consistent output
     return generateNoFunctionsPage({
         dropinDisplayName: repoConfig.displayName,

@@ -47,6 +47,7 @@ import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { CrossDropinResolver } from './lib/core/cross-dropin-resolver.js';
 import { generateNoEventsPage } from './lib/markdown/empty-state-generator.js';
+import { cleanVersion } from './lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -88,10 +89,10 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
     // Clean version string (remove ~ ^ etc)
-    const cleanVersion = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
-    const tag = `v${cleanVersion}`;
+    const cleanVersionStr = cleanVersion(version);
+    const tag = `v${cleanVersionStr}`;
 
-    console.log(`  Using version: ${cleanVersion}`);
+    console.log(`  Using version: ${cleanVersionStr}`);
 
     if (!existsSync(dropinPath)) {
         console.log(`  Cloning repository at ${tag}...`);
@@ -99,8 +100,8 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
             execFileSync('git', ['clone', '--depth', '1', '--branch', tag, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
         } catch (error) {
             // If tag doesn't exist, try without 'v' prefix
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
-            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+            console.log(`  Tag ${tag} not found, trying ${cleanVersionStr}...`);
+            execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersionStr, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
         }
     } else {
         console.log(`  Checking out ${tag}...`);
@@ -111,11 +112,11 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
             execFileSync('git', ['checkout', tag], { cwd: dropinPath, stdio: 'pipe' });
         } catch (error) {
             // If tag with 'v' doesn't exist, try without
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            console.log(`  Tag ${tag} not found, trying ${cleanVersionStr}...`);
             try {
-                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
+                execFileSync('git', ['checkout', cleanVersionStr], { cwd: dropinPath, stdio: 'pipe' });
             } catch (secondError) {
-                console.error(`  ⚠️  Warning: Could not checkout ${cleanVersion}, repository may be at outdated version`);
+                console.error(`  ⚠️  Warning: Could not checkout ${cleanVersionStr}, repository may be at outdated version`);
                 // Continue anyway - the repo might already be at the correct version
             }
         }
@@ -719,10 +720,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     let template = readFileSync(templatePath, 'utf8');
 
     // Replace global placeholders
-    const cleanVersionStr = (version && typeof version === 'string') ? version.replace(/^[\^~]/, '') : 'unknown';
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
-    template = template.replace(/DROPIN_VERSION/g, cleanVersionStr);
+    template = template.replace(/DROPIN_VERSION/g, cleanVersion(version));
 
     // Replace overview with enriched content or fallback to generic
     const dropinOverview = enrichments.overview ||

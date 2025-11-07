@@ -10,6 +10,8 @@
  * - Other generators that need empty state pages
  */
 
+import { cleanVersion } from '../utils.js';
+
 /**
  * Generate simple "no functions" page
  * 
@@ -193,18 +195,5 @@ This drop-in currently has no dictionary defined.
 <strong>Version: ${cleanVersionStr}</strong>
 </div>
 `;
-}
-
-/**
- * Format version string by removing npm version prefixes
- * 
- * @param {string} version - Raw version string (e.g., "^1.0.3" or "1.0.3")
- * @returns {string} Clean version string (e.g., "1.0.3")
- */
-export function cleanVersion(version) {
-  if (!version || typeof version !== 'string') {
-    return 'unknown';
-  }
-  return version.replace(/^[\^~]/, '');
 }
 
