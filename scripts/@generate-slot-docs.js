@@ -188,7 +188,9 @@ function generateSlotsContent(containers) {
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateSlotsMDX(repoName, repoConfig, containers, version, enrichmentData = null) {
+function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-slots.mdx');
 
     // Generate slots content

@@ -333,8 +333,7 @@ async function config() {
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
-                      { label: 'Labels', link: '/dropins/all/labeling/' },
-                      { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
+                      { label: 'Labeling', link: '/dropins/all/labeling/' },
                       { label: 'Linking', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
@@ -479,14 +478,14 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/payment-services/' },
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
-                          { label: 'Functions', link: '/dropins/payment-services/functions/' },
-                          { label: 'Events', link: '/dropins/payment-services/events/' },
+                          { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Containers',
                             collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/payment-services/containers/' },
+                              { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                               { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
                             ],
                           },
@@ -624,7 +623,6 @@ async function config() {
                           { label: 'Overview', link: '/dropins/user-auth/' },
                           { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
                           { label: 'Slots', link: '/dropins/user-auth/slots/' },
-                          { label: 'Functions', link: '/dropins/user-auth/functions/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
                           { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
@@ -894,7 +892,7 @@ async function config() {
                     ],
                   },
                   {
-                    label: 'Hot fixes',
+                    label: 'Hotfixes',
                     items: [
                       { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
                     ],
