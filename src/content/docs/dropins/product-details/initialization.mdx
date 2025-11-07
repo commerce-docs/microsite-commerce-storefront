@@ -1,165 +1,144 @@
 ---
-title: Product Details initialization
-description: Configure the Product Details drop-in with language definitions, custom data models, and drop-in-specific options.
-sidebar:
-  label: Initialization
-  order: 3
+title: PDP initialization
+description: Learn about the configuration options for the PDP initializer.
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
-import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-The **Product Details initializer** configures how product information is displayed and managed, including images, descriptions, pricing, and options. Use initialization to customize product data models and enhance product presentation.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.3.5</strong>
-</div>
-
-
+Customizing the product details page (PDP) drop-in component initializers can help you meet your project requirements and use cases.
 
 ## Configuration options
 
-The following table describes the configuration options available for the **Product Details** initializer:
+The PDP drop-in component initializers allow you to define the language definitions, default locale, and models that your project will use.
 
-<TableWrapper nowrap={[0,1]}>
+<OptionsTable
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    [
+      'langDefinitions',
+      'object',
+      'No',
+      'Provides language definitions for internationalization (i18n).',
+    ],
+    [
+      'defaultLocale',
+      'string',
+      'No',
+      'Specifies the default locale. If not provided, defaults to en-US.',
+    ],
+    [
+      'models',
+      'object',
+      'No',
+      'Defines the data structure and initial data. Options include initialData, transform, and fallBackData.',
+    ],
+    [
+      'scope',
+      'string',
+      'No',
+      'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.',
+    ],
+  ]}
+/>
 
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `scope` | `string` | No | GraphQL API scope identifier for the store view or website. Used to fetch product data from the correct store context. |
-| `defaultLocale` | `string` | No | Default locale code for product content when user's preferred language is unavailable. |
-| `globalLocale` | `string` | No | Global locale code that overrides all product content language settings. |
-| `sku` | `string` | No | Default product SKU to display when no SKU is specified in the URL or component configuration. |
-| `acdl` | `boolean` | No | Enable Adobe Client Data Layer integration for product analytics and tracking. Set to \`true\` to push product events to ACDL. |
-| `anchors` | `string[]` | No | Array of DOM element IDs to use as anchor points for scrolling to product sections (e.g., reviews, specifications). |
-| `persistURLParams` | `boolean` | No | Preserve URL query parameters when updating product options. Set to \`true\` to maintain UTM codes and tracking parameters. |
-| `preselectFirstOption` | `boolean` | No | Automatically select the first available option for each configurable attribute. Set to \`true\` for faster product selection. |
-| `optionsUIDs` | `string[]` | No | Array of option UIDs to pre-select for configurable products. Use to deep-link to specific product variants. |
+:::note
+Models are used to define the data structure and initial data for the PDP drop-in. The `initialData` object contains product details, options, and attributes.
+:::
 
-</TableWrapper>
+## Example
 
-## Basic initialization
+The following code shows the default implementation of the PDP drop-in component initializer in the Commerce boilerplate:
 
-Initialize the drop-in with default settings:
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-await initializers.mountImmediately(initialize, {});
-```
-
-## Language definitions
-
-Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-const customStrings = {
-  'AddToCart': 'Add to Bag',
-  'Checkout': 'Complete Purchase',
-  'Price': 'Cost',
-};
-
-const langDefinitions = {
-  default: customStrings,
-};
-
-await initializers.mountImmediately(initialize, { langDefinitions });
-```
-
-<Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [Product Details Dictionary](/dropins/product-details/dictionary/) page.
-</Aside>
-
-## Customizing data models
-
-Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
-
-The following example shows how to customize the `CustomModel` model for the **Product Details** drop-in:
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
+```typescript
+// Define the models object with a ProductDetails property
 const models = {
-  CustomModel: {
-    transformer: (data) => ({
-      // Add custom fields from backend data
-      customField: data?.custom_field,
-      promotionBadge: data?.promotion?.label,
-      // Transform existing fields
-      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
-    }),
+  ProductDetails: {
+    initialData: { ...product },
   },
 };
 
-await initializers.mountImmediately(initialize, { models });
-```
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<Aside type="note">
-No customizable models are available for this drop-in.
-</Aside>
-
-## Drop-in-specific configuration
-
-The **Product Details** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
-
-```javascript title="scripts/initializers/product-details.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-pdp';
-
-await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-  scope: 'value',
-  defaultLocale: 'value',
-  globalLocale: 'value',
-  sku: 'value',
-  acdl: true,
-  anchors: 'value',
-  persistURLParams: true,
-  preselectFirstOption: true,
-  optionsUIDs: 'value',
+// Initialize drop-in components
+initializers.mountImmediately(initialize, {
+  langDefinitions,
+  models,
 });
 ```
 
-<Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
-</Aside>
+## Scope Configuration
 
+The `scope` option enables **scoped contexts** for the PDP drop-in. When provided, the component runs in an isolated context. This allows multiple independent PDP instances on the same page without conflicts.
 
+**Use cases for scoped PDP initialization:**
+- **Product Comparison**: Initialize multiple PDP instances for side-by-side product comparison
+- **Quick View**: Initialize PDP instances for modal or overlay product previews
 
+### Example
 
-## Configuration types
+The following example demonstrates how to initialize multiple scoped PDP instances:
 
-The following TypeScript definitions show the structure of each configuration object:
+```ts
+// Initialize PDP
+initializers.mountImmediately(initialize, {
+  sku: 'SKU-001',
+  langDefinitions,
+});
 
-### langDefinitions
-
-```typescript
-langDefinitions?: {
-  [locale: string]: {
-    [key: string]: string;
-  };
-};
+// Initialize PDP with different scope
+initializers.mountImmediately(initialize, {
+  sku: 'SKU-002',
+  langDefinitions,
+  scope: 'modal',
+});
 ```
 
-### models
+## Set default product options
 
-```typescript
-models?: {
-  [modelName: string]: Model<any>;
-};
-```
+When a user navigates to the product detail page (PDP) on your site, you can set certain options as preselected defaults for complex products. This use case allows merchandisers to set default options through the Adobe Commerce Admin, which provides a more customized and streamlined shopping experience.
 
+Default option selection is _not_ supported out-of-the-box for complex products. Instead, you must use [product attributes](https://experienceleague.adobe.com/en/docs/commerce-admin/catalog/product-attributes/product-attributes) and customize the PDP drop-in component initializers to define which attribute and value is used by default.
 
+<Steps>
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-pdp */}
+1. Log in to the Adobe Commerce Admin.
+
+1. Create a custom attribute (`default_options`) to define default options for each product.
+
+   :::note
+   Be sure to set **Visible on Catalog Pages on Storefront** to _Yes_.
+   :::
+
+1. Ensure that the `default_options` attribute has been [exported](https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview) to the Catalog Service _and_ that the attribute's `roles` field includes `visible_in_pdp`. See the [`ProductViewAttribute`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#productviewattribute-type) type documentation for details.
+
+1. Use the [`products`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-complex-product) query to find the `id` of the `default_options` attribute for each product.
+
+1. Add the `id` of the `default_options` attribute to the `initialData` object for each complex product.
+
+1. Use the `id` to set the `optionsUIDs` in the `initialData` object.
+
+   ```ts
+   // Define the models object with a ProductDetails property
+   const models = {
+     ProductDetails: {
+       initialData: {
+         ...initialData,
+         // Set the optionsUIDs for each product
+         optionsUIDs: [
+           '<id>', // Use the id of the default_options attribute for product 1
+           '<id>', // Use the id of the default_options attribute for product 2
+         ],
+       },
+     },
+   };
+
+   // Register Initializers
+   initializers.mountImmediately(initialize, {
+     langDefinitions,
+     models,
+   });
+   ```
+
+</Steps>
