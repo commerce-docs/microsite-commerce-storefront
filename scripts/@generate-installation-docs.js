@@ -119,8 +119,7 @@ function scanForInstallation(repoPath) {
  * 
  * @param {string} repoName - Drop-in name
  * @param {Object} repoConfig - Repository configuration
- * @param {Object} installationData - Installation data with containers
- * @param {Object} versionInfo - Version information object with requested, actual, and isExactMatch properties
+ * @param {Object|string} versionInfo - Version info object or version string
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
@@ -129,6 +128,9 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
 
     const { containers, packageInfo } = installationData;
     const packageName = repoConfig.packageName;
+
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
 
     // Pick first container for example, or use a generic placeholder
     let containerExample = 'Container';
