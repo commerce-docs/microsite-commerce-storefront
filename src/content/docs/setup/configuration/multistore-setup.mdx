@@ -1,6 +1,6 @@
 ---
-title: Multi-store implementation walkthrough
-description: Learn how to set up a multi-store configuration from file structure creation to store switcher configuration.
+title: Multistore setup
+description: Learn how to set up a multistore configuration for multiple languages, regions, or brands from a single codebase.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
@@ -9,46 +9,93 @@ import Task from '@components/Task.astro';
 import { Code } from '@astrojs/starlight/components';
 import Aside from '@components/Aside.astro';
 import Link from '@components/Link.astro';
+import FileTree from '@components/FileTree.astro';
 
-This tutorial provides a comprehensive walkthrough of setting up multi-store functionality for an Adobe Commerce storefront using Edge Delivery Services. It demonstrates the complete process from initial planning to final validation, using a real-world scenario where the Acme brand expands from the United States to the Canadian market.
+**Multistore** enables you to run multiple storefronts from a single codebase and content repository. Each storefront can serve different languages, currencies, regions, or brands while sharing core code and maintaining unified content delivery.
 
-## Overview
+## What is multistore?
 
-In this walkthrough, we'll demonstrate how to:
-- Set up the necessary file structures for multi-store views
-- Configure store views in Adobe Commerce Admin
-- Update storefront configuration files
-- Preview and publish localized content
-- Configure the store switcher for proper store view display
+Multistore is useful for:
 
-## Scenario
+- **Localization**: Serving different languages and currencies (for example, English/US, French/Canada) from the same site, with localized content and Commerce data.
+- **Multiple Brands or Regions**: Operating several brands or regional storefronts, each with their own configuration, but sharing core code and content.
 
-The Acme brand is expanding its international presence and wants to target the Canadian market with two new locales:
-- **Canadian English** (en-ca)
-- **Canadian French** (fr-ca)
+There are two main approaches to multistore:
+
+1. **Multiple Domains**: Each domain points to a different commerce backend or configuration, but shares the same code and content.
+2. **Subfolders (Root Folders)**: A single domain with subfolders (such as `/en/`, `/fr/`) for each locale or store. Each subfolder can have its own localized content and Commerce configuration.
+
+**Key features:**
+- **Editorial and Commerce Localization**: Editorial content (pages, blocks) and commerce data (products, prices, currencies) are both localized.
+- **Automated Translation Tools**: Tools are provided to automate translation of content and manage updates across languages.
+- **Configurable Headers**: Storefronts can send different headers to the commerce backend to select the correct store, language, and currency.
+- **Store Switcher**: Out-of-the-box UI enables users to switch between stores and locales.
+- **Automatic Link Management**: Links are automatically updated to point to the correct localized version as users navigate.
+
+---
+
+## How it works
+
+Adobe Commerce uses a [hierarchical structure](https://experienceleague.adobe.com/en/docs/commerce-admin/start/setup/websites-stores-views) to manage multiple stores within a single instance. This structure consists of three levels: websites, stores, and store views. Localization is managed at the store view level, allowing merchants to present the store in different languages and apply the proper currency.
+
+Each store or locale is defined in configuration files, specifying which headers to send to the commerce backend, which content folders to use, and how to structure localized content. The content hierarchy follows [Edge Delivery Services](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/overview) best practices, emphasizing a single-tier structure.
+
+### Content organization
+
+Content is organized primarily by language. US English files should be placed in the `en` directory of the project root. All other language- and region-specific files should be placed in a directory that is named in the format `*region-code_language-code*`. For example, the `/en/` directory contains data for the US market, while the `/en_ca/` directory contains data for Canada. French content should be placed in directories with names like `fr_fr` for France and `fr_ca` for Canada.
+
+<FileTree>
+- **/en/** _-- English store (Default root language)_
+  - placeholders/ _-- Stores JSON files for text and UI components for the English US store._
+  - index _-- The home page of the English US store._
+  - store-switcher _-- Manages the list of stores and their URL for the English US store._
+- **/en_ca/** _-- English Canadian Store_
+  - placeholders/ _-- Defines JSON files for text and UI components for the Canadian store._
+  - index _-- The home page of the English Canadian store._
+  - store-switcher _-- Manages the list of stores and their URL for the Canadian store._
+</FileTree>
+
+### Store-specific files
+
+Each store view requires specific files to define the customer experience:
+
+**Store switcher**: Each store view has its own `store-switcher` document file (called a fragment). This fragment provides the list of stores to select from by language. The store-switcher component renders a button in the footer that opens a modal containing the stores listed in this document.
+
+**Content files**: The content files provide the structure of the pages served to your shoppers. They are located in the store view directories and contain the content for each store view. These files are documents hosted on da.live (Document Authoring environment), SharePoint, or Google Docs that are used to generate the store view pages.
+
+**Placeholders**: JSON files that define reusable variables for text and UI components. Each drop-in component has its own placeholders file—`cart.json`, `checkout.json`, `pdp.json`. These files replace variables in your content files with text values. For translating these placeholder files and other content, see [Content localization](/merchants/multistore/content-localization/).
+
+---
 
 ## Prerequisites
 
-Before beginning this implementation, ensure:
-- Your storefront repository is linked to Document Authoring environment (da.live) via Edge Delivery Services
-- You have access to Adobe Commerce Admin for [store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views)
-- Your `fstab.yaml` file is properly configured
-- Your `config.json` file is linked to the Adobe Commerce instance
+Before implementing multistore functionality, ensure you have:
 
-## Implementation Steps
+- Your storefront repository linked to Document Authoring environment (da.live) via Edge Delivery Services
+- Access to Adobe Commerce Admin for [store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views)
+- Your `fstab.yaml` file properly configured for [folder mapping](https://www.aem.live/developer/folder-mapping)
+- Your `config.json` file linked to the Adobe Commerce instance
+- Familiarity with [Authoring and Publishing Content](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/document-authoring/authoring)
+- Understanding of [Storefront Configuration](/setup/configuration/commerce-configuration)
+- Knowledge of [Adobe Commerce Configuration Scope](https://experienceleague.adobe.com/en/docs/commerce-admin/config/scope-change)
+
+---
+
+## Implementation walkthrough
+
+This walkthrough demonstrates the complete process from initial planning to final validation, using a real-world scenario where the Acme brand expands from the United States to the Canadian market with two new locales: Canadian English (`en-ca`) and Canadian French (`fr-ca`).
 
 <Tasks>
 
 <Task>
-### Verify Environment Setup
+### Verify environment setup
 
-Before implementing multi-store functionality, confirm your environment is properly configured.
+Before implementing multistore functionality, confirm your environment is properly configured.
 
 <Steps>
-1. **Check the `fstab.yaml` file** in your repository to ensure it's linked to the Document Authoring environment at da.live, as described in <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/get-started/multistore/#folder-mapping" text="multistore/#folder-mapping" />
+1. **Check the `fstab.yaml` file** in your repository to ensure it's linked to the Document Authoring environment at da.live.
 
-2. **Verify the `config.json` file** is connected to your Adobe Commerce instance to enable content preview, publishing, and editing as described in <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/get-started/multistore/#site-config" text="multistore/#site-config" />
-
+2. **Verify the `config.json` file** is connected to your Adobe Commerce instance to enable content preview, publishing, and editing.
 </Steps>
 
 <Aside type="caution" title="Environment setup">
@@ -58,7 +105,7 @@ This verification step is crucial as it ensures you can properly preview and pub
 </Task>
 
 <Task>
-### Create Content Folder Structure
+### Create the content folder structure
 
 Set up the folder structure in your Document Authoring environment to support the new store views.
 
@@ -67,32 +114,32 @@ Set up the folder structure in your Document Authoring environment to support th
 
 2. **Create the Canadian English folder**:
    - Select "New folder"
-   - Name it `en-ca`
+   - Name it `en-ca` (or your preferred naming convention like `en_ca`)
 
-3. **Create the French folder**:
+3. **Create the Canadian French folder**:
    - Select "New folder"  
    - Name it `fr-ca`
 
-4. **Copy content from the main root folder** into each new store view folder:
-   - Select all content from the main root folder
+4. **Copy content from the default root folder** into each new store view folder:
+   - Select all content from the `/en/` folder
    - Copy the content
    - Navigate to the `en-ca` folder and paste
    - Repeat for the `fr-ca` folder
 </Steps>
 
-<Aside type="note" title="Copying content">
-Exclude the newly created store view folders when copying content to avoid nested duplicates.
+<Aside type="note" title="Folder naming">
+You can name folders anything you want, as long as they're unique and can be used in web addresses. Choose between hyphens (`en-ca`) or underscores (`en_ca`) and be consistent. Exclude the newly created store view folders when copying content to avoid nested duplicates.
 </Aside>
 
 </Task>
 
 <Task>
-### Configure Adobe Commerce Store Views
+### Configure Adobe Commerce store views
 
 Create the corresponding store views in Adobe Commerce Admin to match your content folder structure.
 
 <Steps>
-1. **Access Adobe Commerce Admin** and navigate to Stores > Settings > All Stores.
+1. **Access Adobe Commerce Admin** and navigate to Stores → Settings → All Stores.
 
 2. **Create the Canadian English store view**:
    - Follow the store view creation process
@@ -104,72 +151,130 @@ Create the corresponding store views in Adobe Commerce Admin to match your conte
    - Set the store view code to match your folder name (`fr-ca`)
 </Steps>
 
-<Aside type="note" title="Store view codes">
+<Aside type="caution" title="Store view codes">
 The store view codes in Adobe Commerce Admin must exactly match the folder names created in da.live for proper integration.
 </Aside>
 
 </Task>
 
 <Task>
-### Update Storefront Configuration
+### Update folder mapping
 
-Modify your project's configuration files to support the new store views.
+Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you'll need to add a corresponding folder mapping for the new URLs.
 
-<Steps>
-1. **Update the `fstab.yaml` file** to include new folder mappings:
+#### Using fstab.yaml
 
-    ```yaml
-    mountpoints:
-    /: https://example.mountpoint.com/:f:/r/sites/myproject
+If your project uses a `fstab.yaml` file, add the new store view mapping under the `folders:` section:
 
-    folders:
-    /en-ca/products/: /en-ca/products/default
-    /fr-ca/products/: /fr-ca/products/default
-    ```
+```yaml
+mountpoints:
+  /: https://example.mountpoint.com/:f:/r/sites/myproject
 
-2. **Update the `config.json` file** to include new entries under the public object:
+folders:
+  /en/products/: /en/products/default
+  /en-ca/products/: /en-ca/products/default
+  /fr-ca/products/: /fr-ca/products/default
+```
 
-    ```json
-    {
-      "public": {
-        "default": {
-        // default configuration
-        },
-        "/en-ca/": {
-            "headers": {
-               "all": {
-                  "Store": "en-ca"
-               },
-               "cs": {
-                  "Magento-Store-Code": "ca-store",
-                  "Magento-Website-Code": "base",
-                  "Magento-Store-View-Code": "fr-ca"
-               }
-            }
-         },
-          "/ca-en/": {
-            "headers": {
-               "all": {
-                  "Store": "ca-en"
-               },
-               "cs": {
-                  "Magento-Store-Code": "ca-store",
-                  "Magento-Website-Code": "base",
-                  "Magento-Store-View-Code": "en-ca"
-               }
-            }
-         }
-      }
-    }
-    ```
+#### Using Configuration Service
 
-3. **Ensure header values match** what was created in Adobe Commerce Admin store settings to properly connect store views to file structures.
-</Steps>
+If your project uses the Configuration Service, update the configuration to add the new store view mapping under the `folders:` section:
+
+```json
+{
+  "folders": {
+    "/en/products/": "/en/products/default",
+    "/en-ca/products/": "/en-ca/products/default",
+    "/fr-ca/products/": "/fr-ca/products/default"
+  }
+}
+```
+
+To learn more about the Config Service, see [aem.live's documentation](https://www.aem.live/docs/config-service-setup) or read the [API documentation](https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite) to learn how to publish your updates.
 
 </Task>
 
 <Task>
-### Preview and Validate Content
+### Update site configuration
+
+You must update your [storefront config](/setup/configuration/commerce-configuration/) to include configuration overrides for the new store view. In this file, you'll define store-view specific settings, such as service headers and analytics values.
+
+The `key` of each overridden object must match the root folder path of the corresponding store view. These values will be merged into the default configuration.
+
+```json
+{
+  "public": {
+    "default": {
+      // default configuration
+    },
+    "/en/": {}, // inherits the default
+    "/en-ca/": {
+      "headers": {
+        "all": {
+          "Store": "en-ca"
+        },
+        "cs": {
+          "Magento-Store-Code": "ca-store",
+          "Magento-Website-Code": "base",
+          "Magento-Store-View-Code": "en-ca"
+        }
+      },
+      "analytics": {
+        // overrides values from the default analytics configuration
+      }
+    },
+    "/fr-ca/": {
+      "headers": {
+        "all": {
+          "Store": "fr-ca"
+        },
+        "cs": {
+          "Magento-Store-Code": "ca-store",
+          "Magento-Website-Code": "base",
+          "Magento-Store-View-Code": "fr-ca"
+        }
+      }
+    }
+  }
+}
+```
+
+**Headers configuration details:**
+- **`Magento-Store-Code`**: Must match the store code from the Commerce Admin
+- **`Magento-Website-Code`**: Typically "base" for single-website setups
+- **`Magento-Store-View-Code`**: Must match the store view code from the Admin
+
+The `analytics` section contains the Adobe Commerce environment variables for the store view. These variables are used by the Analytics API. For more details, see [Analytics](/setup/analytics/instrumentation).
+
+<Aside type="note" title="Configuration Service">
+If you are using the Config Service, read the [API documentation](https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite) to learn how to publish your updates to the Config Service for your site.
+</Aside>
+
+</Task>
+
+<Task>
+### Configure store switcher
+
+Create a `store-switcher` file in each store view root folder containing a bulleted list. Each line must define the display name of your store with an active link to the store.
+
+```text
+**Select a store:**
+
+- Canada (CAD)
+  - [Canada (EN)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/en-ca/#nolocal)
+  - [Canada (FR)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/fr-ca/#nolocal)
+- United States (USD)
+  - [United States (USD)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/en/#nolocal)
+```
+
+**Important:** The storefront will automatically update links relative to the storefront's root path. For links you don't want to be localized (such as store switcher links), add the hash `#nolocal` to ensure these remain absolute to the site.
+
+**Best practice:** Prioritize the current store view in the display order for better user experience. For example, in the `en-ca` folder's store switcher, list "Canada (EN)" first.
+
+</Task>
+
+<Task>
+### Preview and validate content
 
 Test your new store views to ensure proper functionality before publishing.
 
@@ -184,13 +289,20 @@ Test your new store views to ensure proper functionality before publishing.
    - Click "Preview" to test the store view
 
 4. **Verify configuration in browser**:
-   - Check the URL structure includes the store view path
+   - Check that the URL structure includes the store view path
    - Open browser Developer Tools
-   - Navigate to Application > Session Storage
-   - Verify the config shows the correct headers you added:
-     - `magento-store-code`
-     - `magento-website-code` 
-     - `magento-store-view-code`
+   - Navigate to Application → Session Storage
+   - Look for the `config` key and expand the JSON object
+   - Navigate to `public` → `[your store path]` → `headers` → `cs`
+   - Verify the correct header values:
+     - `Magento-Store-Code`
+     - `Magento-Website-Code` 
+     - `Magento-Store-View-Code`
+
+5. **Test the store switcher**:
+   - Verify the store switcher correctly shows the current store view
+   - Confirm customers can see and select other available stores
+   - Check that switching stores navigates to the correct URLs
 </Steps>
 
 <Aside type="note" title="Session storage verification">
@@ -200,39 +312,22 @@ The session storage verification confirms that your configuration is properly lo
 </Task>
 
 <Task>
-### Configure Store Switcher
+### Localize and translate content
 
-Update the store switcher to properly reflect the current store view for customers.
+Once your infrastructure is set up, prepare content for each locale.
 
 <Steps>
-1. **Navigate to the store switcher file** in the `en-ca` content folder.
+1. **Translate or localize content files** in the `/en-ca/` and `/fr-ca/` folders.
 
-2. **Update the store switcher structure** to prioritize the current store view:
-   - Move "Canada English" to the top of the list
-   - Ensure proper formatting and links
-   - Example structure:
-   ```
-   - Canada (CAD)
-     - [Canada (EN)](https://your-site.com/en-ca/)
-     - [Canada (FR)](https://your-site.com/fr-ca/)
-   - United States (USD)
-     - [United States (USD)](https://your-site.com/en/)
-   ```
+2. **Update placeholder JSON files** with correctly translated labels. Update each component's placeholders file as needed—`cart.json`, `checkout.json`, `pdp.json`.
 
-3. **Publish the updated store switcher**:
-   - Click "Publish" on the store switcher file
-   - This updates the footer display for customers
-
-4. **Verify the store switcher display**:
-   - Return to your preview of the Canadian English store
-   - Check that the store switcher now correctly shows the customer is on the Canadian English store view
-   - Confirm customers can see and select other available stores
+3. **Use automated translation tools**: For guidance on using da.live's Translation app to automate content translation, see [Content localization](/merchants/multistore/content-localization/).
 </Steps>
 
 </Task>
 
 <Task>
-### Final Validation and Handoff
+### Final validation and publishing
 
 Complete the implementation with thorough testing and team coordination.
 
@@ -242,54 +337,65 @@ Complete the implementation with thorough testing and team coordination.
    - Correct content loading
    - Functional store switcher
    - Accurate header configuration
+   - Proper currency and pricing display
 
-2. **Prepare for localization**:
-   - Inform the marketing team that content folders are ready for translation
+2. **Preview all files** in the updated folders (`/en-ca/`, `/fr-ca/`) with [AEM Sidekick](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/resources/sidekick/sidekick).
+
+3. **Validate the storefront experience** by accessing each new language/region and testing the rendering, navigation, and data accuracy.
+
+4. **Publish the store views**:
+   - Publish the updated folders using AEM Sidekick when ready
+   - Update all `store-switcher` content documents to include links to the new store views
+
+5. **Prepare for marketing handoff**:
+   - Inform the marketing team that content folders are ready
    - Provide directory structure documentation
-   - Share access to the `fr-ca` folder for French translations
-
-3. **Document the implementation** for future reference and team knowledge sharing.
+   - Share access to content folders for ongoing management
 </Steps>
 
 <Aside type="tip" title="Success!">
-Your multi-store infrastructure is now ready to support multiple locales with proper content management and customer experience.
+Your multistore infrastructure is now ready to support multiple locales with proper content management and customer experience.
 </Aside>
 
 </Task>
 
 </Tasks>
 
-## Key Configuration Details
+---
 
-### Headers Configuration
+## Best practices
 
-The headers section in your `config.json` is critical for proper store view functionality:
-
-- **`magento-store-code`**: Must match the store code from Adobe Commerce Admin
-- **`magento-website-code`**: Typically "base" for single-website setups
-- **`magento-store-view-code`**: Must match the store view code from Adobe Commerce Admin
-
-### Folder Structure Best Practices
-
-- Use clear, consistent naming conventions (e.g., `en-ca`, `fr-ca`)
+### Folder structure
+- Use clear, consistent naming conventions (`en-ca`, `fr-ca` or `en_ca`, `fr_ca`)
 - Ensure folder names can be used in web URLs
 - Match folder names exactly with Adobe Commerce store view codes
 - Maintain the same content structure across all store views
 
-### Store Switcher Configuration
+### Configuration management
+- Keep header values synchronized between `config.json` and Adobe Commerce Admin
+- Document all store view codes and their corresponding folders
+- Test configuration changes in preview before publishing
+- Use version control for all configuration files
 
-- Each store view should have its own `store-switcher` file
-- Prioritize the current store view in the display order
-- Ensure all links point to the correct store view URLs
-- Test the switcher functionality across all store views
+### Content management
+- Maintain separate content folders for each locale
+- Use automated translation tools where possible
+- Keep placeholder files synchronized across store views
+- Test all localized content before publishing
 
-## Next Steps
+### Performance considerations
+- Monitor site performance across all store views
+- Optimize images and assets for each locale
+- Consider CDN configuration for different regions
+- Test loading times from target markets
 
-After completing this implementation:
+---
 
-1. **Marketing Team Handoff**: Share the content folders with your marketing team for localization and translation work
-2. **Content Translation**: Begin translating content in the `fr-ca` folder for the French Canadian market
-3. **Testing**: Conduct thorough testing across all store views and customer scenarios
-4. **Launch Planning**: Coordinate the launch of new store views with marketing and business teams
+## Related resources
 
-This multi-store setup provides a solid foundation for international expansion while maintaining a unified codebase and streamlined content management process.
+- [Content localization](/merchants/multistore/content-localization/) - Automated translation using da.live
+- [Storefront Configuration](/setup/configuration/commerce-configuration) - Complete config.json reference
+- [Analytics](/setup/analytics/instrumentation) - Analytics configuration for store views
+- [Store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) - Adobe Commerce Admin guide
+- [Folder Mapping](https://www.aem.live/developer/folder-mapping) - Edge Delivery Services documentation
+- [Config Service Setup](https://www.aem.live/docs/config-service-setup) - Configuration Service documentation

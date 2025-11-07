@@ -78,7 +78,9 @@ async function config() {
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-project`,
-      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
+      '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
+      '/merchants/multistore': `${basePath}/setup/configuration/multistore-setup`,
+      '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
       '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
       '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
       '/product-details/pdp-installation': `${basePath}/dropins/product-details/installation`,
@@ -834,6 +836,7 @@ async function config() {
                     items: [
                       { label: 'Setup', link: '/merchants/multistore/' },
                       { label: 'Localization', link: '/merchants/multistore/content-localization/' },
+                      { label: 'Terms and conditions', link: '/merchants/get-started/terms-and-conditions/' },
                     ],
                   },
                 ],
