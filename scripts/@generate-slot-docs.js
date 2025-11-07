@@ -356,8 +356,11 @@ function generateSlotsContent(containers, repoConfig = null, repoPath = null) {
         // Check if example code uses h() function (either directly or for Icon)
         const exampleCode = example.code;
         const usesH = /\bh\s*\(/.test(exampleCode);
-        const needsHImport = usesH || (/Icon\s*\(\s*\{/.test(exampleCode) && !/h\s*\(\s*Icon/.test(exampleCode));
-        const needsIconImport = /Icon\s*\(/.test(exampleCode) || /h\s*\(\s*Icon/.test(exampleCode);
+        // Detect Icon usage: direct Icon( calls OR getAddToCartButton (which uses Icon internally)
+        const hasIconUsage = /Icon\s*\(\s*\{/.test(exampleCode);
+        const hasGetAddToCartButton = /\bgetAddToCartButton\b/.test(exampleCode);
+        const needsHImport = usesH || (hasIconUsage && !/h\s*\(\s*Icon/.test(exampleCode)) || hasGetAddToCartButton;
+        const needsIconImport = hasIconUsage || /h\s*\(\s*Icon/.test(exampleCode) || hasGetAddToCartButton;
 
         // Detect what other imports are needed based on code usage
         const needsCartApi = /\bcartApi\b/.test(exampleCode);
