@@ -261,7 +261,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 
 4. **Obtain required credentials**:
    - **AEM Admin API token**: Generate from your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" /> (the setup wizard exchanges your temporary token for a long-lived token automatically)
-   - **App Builder credentials**: Automatically configured when you authenticate via the setup wizard
+   - **App Builder credentials**: Automatically configured when you authenticate via the setup wizard. After authentication completes, download the App Builder configuration file (typically a `.json` file) from your Adobe Developer Console App Builder workspace, then run `aio app use <file_name>` in the root directory of the prerender project to activate the credentials.
    - **Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> for environment and API configuration
    - **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details on configuring Optimizer headers and endpoints.
    
@@ -274,7 +274,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    This deploys all actions and schedules to your selected workspace (Stage or Production).
 
 6. **Test the deployment**:
-   - Manually invoke actions using the Management UI or `aio rt action invoke`
+   - Manually invoke actions using the Management UI or via CLI commands such as `aio rt:action:invoke <action-name>` (replace `<action-name>` with the specific action you want to test, for example `pdp-renderer`)
    - Verify product markup generation for sample SKUs
    - Check that pages publish successfully to your AEM project
 
@@ -320,7 +320,7 @@ The prerender solution involves two separate codebases that work together:
    - Needs code modifications to properly consume the prerendered HTML
    - This repository is where you make the integration changes described below
 
-**How they connect:** The App Builder app publishes prerendered HTML to Edge Delivery Services at URLs matching your product pages (for example, `/products/acme-widget/SKU123`). When a visitor (or crawler) requests a product page, Edge Delivery Services serves this prerendered HTML. Your storefront JavaScript then enhances the page by replacing the static HTML with the interactive PDP drop-in.
+**How they connect:** The App Builder app publishes prerendered HTML to its own storage bucket. The AEM Admin API configures the link to that bucket in your Edge Delivery Services configuration file as an overlay. The prerendered HTML is then served at URLs matching your product pages (for example, `/products/acme-widget/sku123` - note that SKUs must be lowercase in URLs). When a visitor (or crawler) requests a product page, Edge Delivery Services serves this prerendered HTML from the overlay. Your storefront JavaScript then enhances the page by replacing the static HTML with the interactive PDP drop-in.
 
 <Diagram 
   type="mermaid" 
@@ -408,21 +408,21 @@ flowchart LR
 
 ### How Prerendered HTML Reaches Your Storefront
 
-The prerendered HTML flows from the App Builder app to your storefront through the AEM Admin API:
+The prerendered HTML flows from the App Builder app to your storefront through App Builder storage and Edge Delivery Services overlay configuration:
 
 **Publishing mechanism:**
 
 <Steps>
 
 1. **The App Builder app generates HTML** → Creates complete HTML files with prerendered product markup
-2. **API call to AEM Admin** → The App Builder app makes authenticated API calls using your `AEM_ADMIN_API_KEY`
-3. **Content published to EDS** → The AEM Admin API publishes the HTML files to Edge Delivery Services at the specified product URLs
+2. **HTML stored in App Builder bucket** → The App Builder app stores the HTML files in its own storage bucket
+3. **Overlay configured in EDS** → The AEM Admin API configures the link to the App Builder bucket in your Edge Delivery Services configuration file as an overlay
 4. **Sitemap updated** → The AEM Admin API also updates your sitemap to include the new and updated product pages
-5. **Content available** → Edge Delivery Services now has the HTML files stored and ready to serve
+5. **Content available** → Edge Delivery Services now serves the prerendered HTML from the overlay when product page URLs are requested
 
 </Steps>
 
-The Commerce Prerender app is a direct API integration. It is **not an event-based system**. Each time the App Builder app detects a product change and generates HTML, it immediately publishes that HTML to Edge Delivery Services via API calls. When files are published, they are exposed at the product URLs automatically; the storefront does not need to perform any additional fetching or configuration.
+The Commerce Prerender app uses App Builder storage and Edge Delivery Services overlay configuration. It is **not an event-based system**. Each time the App Builder app detects a product change and generates HTML, it stores the HTML in its bucket and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically; the storefront does not need to perform any additional fetching or configuration.
 
 ### How the Storefront Serves Prerendered HTML
 
@@ -524,15 +524,15 @@ The prerender solution provides these customization options:
 
 | Customization | Purpose and Configuration |
 |---------------|---------------------------|
-| **Templates** | Control HTML markup structure and styling by modifying `tools/templates/pdp.handlebars` |
-| **Structured Data** | Customize JSON-LD schemas in `tools/structured-data/product.js` to optimize product rich snippets for search engines |
-| **GraphQL Queries** | Extend product data by adjusting Catalog Service queries in `actions/pdp-renderer/index.js` to fetch additional attributes |
+| **Templates** | Control HTML markup structure and styling. By default, markup is handled on the client side at `{store_url}/product/default`. If the default template is not available, you can edit the template at <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/templates/product-details.hbs" text="`actions/pdp-renderer/templates/product-details.hbs`" /> |
+| **Structured Data** | Customize JSON-LD schemas in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/ldJson.js" text="`actions/pdp-renderer/ldJson.js`" /> to optimize product rich snippets for search engines |
+| **GraphQL Queries** | Extend product data by modifying GraphQL queries in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="`actions/queries.js`" />. The rendering logic that uses these queries is implemented in the `generateProductHtml` method in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/render.js" text="`actions/pdp-renderer/render.js`" /> |
 | **URL Patterns** | Match your storefront URL structure by configuring `PRODUCT_PAGE_URL_FORMAT` in the `.env` file |
 | **Rendering Logic** | Transform product data before markup generation by implementing custom logic in App Builder actions |
 
 </TableWrapper>
 
-For implementation details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" />, particularly the `actions/`, `tools/`, and repository root for templates and configuration files.
+For implementation details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" />, particularly the `actions/` directory and repository root for templates and configuration files.
 
 ## Troubleshooting
 
@@ -541,24 +541,25 @@ For troubleshooting during development and operations, consult the <Link href="h
 Common issues include:
 
 - **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year)
+  - To verify the token expiration, use <Link href="https://www.jwt.io/" text="jwt.io" /> — decode the token and check its expiration time
   - Check token expiration in your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" />
-  - Generate a new token if expired and update `AEM_ADMIN_API_KEY` in your `.env` file
+  - Generate a new token if expired (see <Link href="https://www.aem.live/docs/admin.html#tag/orgConfig/operation/createOrgApiKey" text="how to generate a new token" />) and update `AEM_ADMIN_API_KEY` in your `.env` file
   - Redeploy with `npm run deploy` after updating credentials
   
 - **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches
   - Query the Catalog Service directly using its <Link href="https://developer.adobe.com/commerce/services/graphql/catalog-service/products/" text="GraphQL Product API" /> to verify product data
   - Use the Management UI to view the product index and confirm that the SKU is listed
-  - Check the `pdp-renderer` action logs in App Builder for GraphQL errors: `aio rt activation list pdp-renderer`
+  - Check the `pdp-renderer` action logs in App Builder for GraphQL errors: `aio rt:activation:list pdp-renderer`
   
 - **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
-  - Check activation logs: `aio rt activation list product-change-detector`
-  - View detailed logs: `aio rt activation logs <ACTIVATION_ID>`
+  - Check activation logs: `aio rt:activation:list product-change-detector`
+  - View detailed logs: `aio rt:activation:logs <ACTIVATION_ID>`
   - Manually trigger the change detector from the Management UI to test functionality
   
 - **Storage errors**: Verify your App Builder workspace has sufficient storage quota
   - Check storage usage in the Adobe Developer Console under your App Builder workspace
-  - Review blob storage logs: `aio rt activation list blob-store`
+  - Review blob storage logs: `aio rt:activation:list blob-store`
   - Contact Adobe support to request quota increases if needed
 
 ## Additional resources
