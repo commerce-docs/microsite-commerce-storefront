@@ -12,7 +12,7 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The User Account drop-in exposes **5 slots** in **7 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The User Account drop-in exposes **10 slots** in **9 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.2.0</strong>
@@ -35,7 +35,7 @@ The User Account drop-in exposes **5 slots** in **7 containers** for customizing
 <td>None</td>
 </tr>
 <tr>
-<td style="white-space: nowrap;"><a href="#keyssortorder-slots"><code>KeysSortOrder</code></a></td>
+<td style="white-space: nowrap;"><a href="#addresseswrapper-slots"><code>AddressesWrapper</code></a></td>
 <td>None</td>
 </tr>
 <tr>
@@ -47,38 +47,23 @@ The User Account drop-in exposes **5 slots** in **7 containers** for customizing
 <td><code>CustomerData</code></td>
 </tr>
 <tr>
-<td style="white-space: nowrap;"><a href="#form-slots"><code>Form</code></a></td>
+<td style="white-space: nowrap;"><a href="#fields-slots"><code>Fields</code></a></td>
 <td><code>AddressFormInputs</code></td>
 </tr>
 <tr>
-<td style="white-space: nowrap;"><a href="#forminputs-slots"><code>FormInputs</code></a></td>
+<td style="white-space: nowrap;"><a href="#useform-slots"><code>useForm</code></a></td>
 <td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderslist-slots"><code>OrdersList</code></a></td>
+<td><code>OrdersListAction</code>, <code>OrdersListCard</code>, <code>OrderItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderslistwrapper-slots"><code>OrdersListWrapper</code></a></td>
+<td><code>OrdersListCard</code>, <code>OrderItemImage</code></td>
 </tr>
 </tbody>
 </table>
-
-
-## Using slots
-
-This example customizes the `AddressFormActions` slot in `AddressForm`:
-
-```js
-import { render as provider } from '@dropins/storefront-account/render.js';
-import AddressForm from '@dropins/storefront-account/containers/AddressForm.js';
-
-provider.render(AddressForm, {
-  slots: {
-    AddressFormActions: (ctx) => {
-      const div = document.createElement('div');
-      div.className = 'address-form__address-form-actions';
-      div.textContent = 'Custom AddressFormActions';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.address-form'));
-```
-
-
 
 
 ## AddressForm slots
@@ -106,10 +91,10 @@ slots?: {
 
 ---
 
-## KeysSortOrder slots
+## AddressesWrapper slots
 
 ```js {4}
-interface KeysSortOrderProps
+interface AddressesWrapperProps
 
 slots?: {
   [key: string]: SlotProps;
@@ -142,10 +127,10 @@ slots?: {
 
 ---
 
-## Form slots
+## Fields slots
 
 ```js {4}
-interface FormProps
+interface FieldsProps
 
 slots?: {
   AddressFormInputs?: SlotProps<AddressFormInputsContext>;
@@ -154,13 +139,77 @@ slots?: {
 
 ---
 
-## FormInputs slots
+## useForm slots
 
 ```js {4}
-interface FormInputsProps
+interface useFormProps
 
 slots?: {
   [key: string]: SlotProps;
+};
+```
+
+---
+
+## OrdersList slots
+
+```js {4,5,6}
+interface OrdersListProps
+
+slots?: {
+  OrdersListAction?: SlotProps<OrdersListActionContext>;
+  OrdersListCard?: SlotProps<OrdersListCardContext>;
+  OrderItemImage?: SlotProps<{
+    data: OrderItem;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+### OrderItemImage example
+
+This example from the Commerce Orders List block shows how to customize the `OrderItemImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-account/render.js';
+import OrdersList from '@dropins/storefront-account/containers/OrdersList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+
+provider.render(OrdersList, {
+  slots: {
+    OrderItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+      const anchor = document.createElement('a');
+      anchor.href = createProductLink(ctx.data);
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchor,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.orders-list'));
+```
+
+---
+
+## OrdersListWrapper slots
+
+```js {4,5}
+interface OrdersListWrapperProps
+
+slots?: {
+  OrdersListCard?: SlotProps<OrdersListCardContext>;
+  OrderItemImage?: SlotProps<{
+    data: OrderItem;
+    defaultImageProps: ImageProps;
+  }>;
 };
 ```
 

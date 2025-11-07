@@ -46,62 +46,6 @@ The Product Details drop-in exposes **19 slots** in **4 containers** for customi
 </table>
 
 
-## Using slots
-
-This example customizes the `Attributes` slot in `ProductAttributes`:
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import ProductAttributes from '@dropins/storefront-pdp/containers/ProductAttributes.js';
-
-provider.render(ProductAttributes, {
-  slots: {
-    Attributes: (ctx) => {
-      const div = document.createElement('div');
-      div.className = 'product-attributes__attributes';
-      div.textContent = 'Custom Attributes';
-      ctx.appendChild(div);
-    }
-  }
-})(document.querySelector('.product-attributes'));
-```
-
-
-
-This example customizes the `Actions` slot to demonstrate using slot methods to add custom buttons:
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import ProductDetails from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-provider.render(ProductDetails, {
-  slots: {
-    Actions: (ctx) => {
-      // Use appendButton method to add custom action buttons
-      ctx.appendButton({
-        text: 'Add to Wishlist',
-        icon: 'Heart',
-        variant: 'secondary',
-        onClick: () => {
-          console.log('Added to wishlist');
-        },
-      });
-      
-      // Add another custom button
-      ctx.appendButton({
-        text: 'Compare',
-        icon: 'Scale',
-        variant: 'tertiary',
-        onClick: () => {
-          console.log('Added to compare');
-        },
-      });
-    }
-  }
-})(document.querySelector('.product-details'));
-```
-
-
 ## ProductAttributes slots
 
 ```js {4}
@@ -171,6 +115,49 @@ slots?: {
 };
 ```
 
+### CarouselThumbnail example
+
+This example from the Product Details block shows how to customize the `CarouselThumbnail` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+// Note: `imageSlotConfig` should be defined in your block context (helper function for image slot configuration)
+
+provider.render(ProductGallery, {
+  slots: {
+    CarouselThumbnail: (ctx) => {
+      tryRenderAemAssetsImage(ctx, {
+        ...imageSlotConfig(ctx),
+        wrapper: document.createElement('span'),
+      });
+    }
+  }
+})(document.querySelector('.product-gallery'));
+```
+
+### CarouselMainImage example
+
+This example from the Product Details block shows how to customize the `CarouselMainImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+// Note: `imageSlotConfig` should be defined in your block context (helper function for image slot configuration)
+
+provider.render(ProductGallery, {
+  slots: {
+    CarouselMainImage: (ctx) => {
+      tryRenderAemAssetsImage(ctx, {
+        ...imageSlotConfig(ctx),
+      });
+    }
+  }
+})(document.querySelector('.product-gallery'));
+```
+
 ---
 
 ## ProductOptions slots
@@ -187,6 +174,28 @@ slots?: {
     defaultImageProps: ImageProps;
   }>;
 };
+```
+
+### SwatchImage example
+
+This example from the Product Details block shows how to customize the `SwatchImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+import ProductOptions from '@dropins/storefront-pdp/containers/ProductOptions.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+// Note: `imageSlotConfig` should be defined in your block context (helper function for image slot configuration)
+
+provider.render(ProductOptions, {
+  slots: {
+    SwatchImage: (ctx) => {
+      tryRenderAemAssetsImage(ctx, {
+        ...imageSlotConfig(ctx),
+        wrapper: document.createElement('span'),
+      });
+    }
+  }
+})(document.querySelector('.product-options'));
 ```
 
 ---
