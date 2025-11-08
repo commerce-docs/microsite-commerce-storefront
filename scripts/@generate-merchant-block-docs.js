@@ -349,6 +349,9 @@ function extractCommerceBlocks(boilerplatePath) {
             displayName: blockName.split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
             path: blockPath,
             configs,
             hasReadme: existsSync(readmePath)
@@ -372,11 +375,12 @@ function generateMerchantBlockDoc(block, outputDir) {
     const tips = generateTips(block.name, block.configs);
     const documentAuthoringTable = generateDocumentAuthoringTable(block.name, block.configs);
 
+    const sidebarLabel = block.sidebarLabel || block.displayName;
     let content = `---
 title: ${block.displayName}
 description: ${description}
 sidebar:
-  label: ${block.displayName}
+  label: ${sidebarLabel}
 ---
 
 import { Aside } from '@astrojs/starlight/components';
