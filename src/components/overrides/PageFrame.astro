@@ -3,10 +3,14 @@ import type { Props } from "@astrojs/starlight/props";
 import MobileMenuToggle from "virtual:starlight/components/MobileMenuToggle";
 import CascadingExpansion from "../CascadingExpansion.astro";
 
-const { hasSidebar } = Astro.props;
+const { hasSidebar, entry } = Astro.props;
+// Compute splash from entry frontmatter; fall back to locals entry in prod
+const routeEntry = entry ?? Astro.locals?.starlightRoute?.entry;
+const isSplash = routeEntry?.data?.template === "splash";
 ---
 
-<div class="page sl-flex">
+<div class:list={["page", "sl-flex", { "splash-page": isSplash }]}>
+  <a href="#_top" class="skip-link">Skip to content</a>
   <header class="header"><slot name="header" /></header>
   {
     hasSidebar && (
@@ -34,6 +38,40 @@ const { hasSidebar } = Astro.props;
     flex-direction: column;
     min-height: 100vh;
   }
+  .skip-link {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: -3rem;
+    z-index: 1000;
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
+    padding: 0.5rem 1rem;
+    border-radius: 0 0.25rem 0.25rem 0;
+    text-decoration: none;
+  }
+  .skip-link:focus {
+    inset-block-start: 0;
+  }
+
+  /* Full-page gradient background for splash pages */
+  .splash-page {
+    background: linear-gradient(
+      135deg,
+      hsl(240deg 90% 15%) 0%,
+      hsl(260deg 85% 18%) 25%,
+      hsl(280deg 80% 22%) 50%,
+      hsl(300deg 75% 25%) 75%,
+      hsl(320deg 70% 28%) 100%
+    );
+  }
+
+  .page.splash-page .main-frame {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    width: 100%;
+  }
 
   .header {
     z-index: var(--sl-z-index-navbar);
@@ -46,6 +84,12 @@ const { hasSidebar } = Astro.props;
     padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
     padding-inline-end: var(--sl-nav-pad-x);
     background-color: var(--sl-color-bg-nav);
+  }
+
+  /* Make header transparent for splash pages */
+  .splash-page .header {
+    background-color: transparent;
+    border-bottom: none;
   }
 
   :global([data-has-sidebar]) .header {
