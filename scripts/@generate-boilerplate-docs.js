@@ -655,7 +655,6 @@ import Aside from '@components/Aside.astro';
 
 ## Related documentation
 
-- [Commerce Blocks Configuration](/merchants/storefront-builder/commerce-blocks/) - Learn how to configure Commerce blocks using Document Authoring
 - [Boilerplate Reference](/boilerplate/) - Complete reference for all Commerce blocks
 - [Drop-in components](/dropins/all/introduction/) - Overview of all available drop-in components
 
