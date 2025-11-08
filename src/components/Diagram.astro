@@ -94,16 +94,18 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        // Convert enhanced SVG to data URI for instant zoom loading
+        // Convert enhanced SVG to blob URL for better plugin compatibility
+        // Blob URLs are treated as real URLs by the browser and may trigger
+        // plugin initialization more reliably than data URIs
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
-        // Encode as data URI instead of blob URL to eliminate fetch lag when zooming
-        const svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(enhancedSvg);
+        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
+        const svgBlobUrl = URL.createObjectURL(blob);
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = svgDataUri;
+        img.src = svgBlobUrl;
         img.alt = 'Mermaid diagram';
         
         // Set the calculated dimensions on the img element
@@ -139,13 +141,26 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Store the enhanced SVG content for modal use
         img.dataset.svgContent = enhancedSvg;
         
-        // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+        // Keep blob URL alive - don't revoke it immediately since the zoom modal needs it
+        // The blob URL will be garbage collected when the page unloads
+        // Blob URLs are treated as real URLs by the browser, which may help the plugin
+        // initialize faster than data URIs
+        
+        // Trigger plugin initialization - blob URLs may trigger faster than data URIs
+        // The plugin listens for 'astro:after-swap' and uses requestIdleCallback
+        // By ensuring the image is fully loaded first, the plugin may initialize faster
         img.onload = () => {
-          setTimeout(() => {
-            // Dispatch the same event the plugin listens to for re-scanning
+          requestAnimationFrame(() => {
             document.dispatchEvent(new CustomEvent('astro:after-swap'));
-          }, 100);
+          });
         };
+        
+        // If image is already loaded (shouldn't happen with blob URLs, but just in case)
+        if (img.complete) {
+          requestAnimationFrame(() => {
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+          });
+        }
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);
