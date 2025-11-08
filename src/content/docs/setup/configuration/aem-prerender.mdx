@@ -121,16 +121,15 @@ The prerender system operates as a continuous background process:
         C <--> D
     end
     
-    E["Publish Page"]:::action
-    F["Update Sitemap"]:::action
+    E["Store HTML in<br/>App Builder blob store"]:::action
+    F["AEM Admin API configures<br/>overlay & updates sitemap"]:::action
     G["Product Details Page<br/>With embedded JSON-LD<br/>Metadata and Semantic Markup"]:::output
     H["<span style='font-size:80px'>🛒</span><br/><span style='font-size:18px'>Store Customer</span>"]:::actor
 
     A --> B
     B --> subGraph0
-    subGraph0 -->|AEM Admin API| E
-    subGraph0 -->|AEM Admin API| F
-    E --> G
+    subGraph0 --> E
+    E -->|AEM Admin API| F
     F --> G
     G --> H
 
@@ -168,8 +167,8 @@ The solution consists of these components:
         C --> D
     end
 
-    E["public/ folder<br/>PDPs served publicly"]:::public
-    F["Edge Delivery Services<br/>fetches HTML from public blob store folder"]:::helix
+    E["AEM Admin API<br/>configures overlay link<br/>to App Builder blob store"]:::api
+    F["Edge Delivery Services<br/>serves HTML from overlay<br/>at product URLs"]:::helix
     
     subgraph subGraph1["<strong>Product Page</strong>"]
         direction TB
@@ -191,22 +190,20 @@ The solution consists of these components:
     P["Catalog service<br/>(high frequency data)"]:::api
     Q["API for price retrieval"]:::api
 
-    D -->|Order preview/publish/unpublish| E
-    E --> F
+    D -->|HTML stored in blob store| E
+    E -->|Overlay configured| F
     F -->|Edge Delivery serves the final page| subGraph1
     subGraph1 --> subGraph2
     G --> H
     G --> I
     H --> subGraph2
     I --> subGraph2
-    J --> P
-    J --> Q
-    K --> P
-    K --> Q
+    P -->|Provides data| J
+    Q -->|Provides data| J
+    P -->|Provides data| K
 
     classDef appBuilder fill:#e3f2fd,stroke:#2962FF,color:#2962FF
     classDef storage fill:#fff3e0,stroke:#f57c00
-    classDef public fill:#f3e5f5,stroke:#7b1fa2
     classDef helix fill:#e8f5e9,stroke:#388e3c
     classDef embedded fill:#fff9c4,stroke:#f57f17
     classDef prerendered fill:#c8e6c9,stroke:#388e3c
@@ -320,72 +317,91 @@ The prerender solution involves two separate codebases that work together:
    - Needs code modifications to properly consume the prerendered HTML
    - This repository is where you make the integration changes described below
 
-**How they connect:** The App Builder app publishes prerendered HTML to its own storage bucket. The AEM Admin API configures the link to that bucket in your Edge Delivery Services configuration file as an overlay. The prerendered HTML is then served at URLs matching your product pages (for example, `/products/acme-widget/sku123` - note that SKUs must be lowercase in URLs). When a visitor (or crawler) requests a product page, Edge Delivery Services serves this prerendered HTML from the overlay. Your storefront JavaScript then enhances the page by replacing the static HTML with the interactive PDP drop-in.
+**How they connect:** The App Builder app publishes prerendered HTML to its own blob store. The AEM Admin API configures the link to that blob store in your Edge Delivery Services configuration file as an overlay. The prerendered HTML is then served at URLs matching your product pages (for example, `/products/acme-widget/sku123` - note that SKUs must be lowercase in URLs). When a visitor (or crawler) requests a product page, Edge Delivery Services serves this prerendered HTML from the overlay. Your storefront JavaScript then enhances the page by replacing the static HTML with the interactive PDP drop-in.
 
 <Diagram 
   type="mermaid" 
   caption="Two-repository architecture showing how the App Builder prerender app publishes HTML that your storefront code consumes and enhances for visitors."
-  code={`%%{init: {'theme':'base', 'themeVariables': {'lineColor':'#333','edgeLabelBackground':'#ffffff'}, 'flowchart':{'curve':'basis','defaultRenderer':'dagre','rankSpacing':50,'nodeSpacing':50}}}%%
-flowchart LR
-    subgraph repos["<strong>Developer Repositories</strong>"]
-        direction TB
-        subgraph repo1[" "]
-            direction TB
-            A0["<strong>Repository 2</strong><br/>aem-commerce-prerender<br/>(App Builder Application)"]:::title
-            A1["<span style='font-size:60px'>👨‍💻</span><br/><span style='font-size:18px'>Developer Actions</span>"]:::icon
-            A2["Clone repo<br/>Configure .env<br/>Deploy to App Builder"]:::action
-            A0 -.-> A1
-            A1 --> A2
-        end
-        
-        subgraph repo2[" "]
-            direction TB
-            D0["<strong>Repository 1</strong><br/>Your Storefront<br/>(Commerce Boilerplate)"]:::title
-            D1["<span style='font-size:60px'>👨‍💻</span><br/><span style='font-size:18px'>Developer Actions</span>"]:::icon
-            D2["Modify product-details block<br/>to read prerendered HTML<br/>and enhance with PDP drop-in"]:::action
-            D0 -.-> D1
-            D1 --> D2
-        end
-    end
-    
-    subgraph appbuilder["<strong>App Builder Workspace</strong>"]
-        direction TB
-        B0["Runs Independently"]:::note
-        B1["Detect product changes"]:::process
-        B2["Generate prerendered HTML<br/>with semantic markup"]:::process
-        B3["Publish to Edge Delivery<br/>via AEM Admin API"]:::process
-        B0 -.-> B1
-        B1 --> B2 --> B3
-    end
-    
-    subgraph eds["<strong>Edge Delivery Services</strong>"]
-        direction TB
-        C0["Content Delivery Layer"]:::note
-        C1["Stores prerendered HTML<br/>at product URLs<br/>/products/{urlKey}/{sku}"]:::storage
-        C0 -.-> C1
-    end
-    
-    subgraph delivery["<strong>Page Delivery Flow</strong>"]
-        direction TB
-        E1["<span style='font-size:60px'>🤖</span><br/><span style='font-size:18px'>Crawler Request</span>"]:::icon
-        E2["<span style='font-size:60px'>👤</span><br/><span style='font-size:18px'>User Request</span>"]:::icon
-        E3["Edge Delivery serves<br/>prerendered HTML"]:::delivery
-        E4["Crawler reads<br/>static HTML"]:::crawlerEnd
-        E5["Browser executes<br/>storefront JavaScript"]:::delivery
-        E6["PDP drop-in replaces<br/>HTML with interactive UI"]:::delivery
-        
-        E1 --> E3
-        E2 --> E3
-        E3 --> E4
-        E3 --> E5
-        E5 --> E6
-    end
-    
-    repo1 -.->|<strong>npm run deploy</strong>| appbuilder
-    repo2 -.->|<strong>Deployed to</strong>| eds
-    appbuilder -->|<strong>Publishes HTML</strong>| eds
-    eds -->|<strong>Serves content</strong>| delivery
-    
+  code={`flowchart LR
+ subgraph repo1[" "]
+    direction TB
+        A0["<strong>Repository 2</strong><br>aem-commerce-prerender<br>(App Builder Application)"]
+        A1@{ label: "<span style=\"font-size:60px\">👨‍💻</span><br><span style=\"font-size:18px\">Developer Actions</span>" }
+        A2["Clone repo<br>Configure .env<br>Deploy to App Builder"]
+  end
+ subgraph repo2[" "]
+    direction TB
+        D0["<strong>Repository 1</strong><br>Your Storefront<br>(Commerce Boilerplate)"]
+        D1@{ label: "<span style=\"font-size:60px\">👨‍💻</span><br><span style=\"font-size:18px\">Developer Actions</span>" }
+        D2["Modify product-details block<br>to read prerendered HTML<br>and enhance with PDP drop-in"]
+  end
+ subgraph repos["<strong>Developer Repositories</strong>"]
+    direction TB
+        repo1
+        repo2
+  end
+ subgraph appbuilder["<strong>App Builder Workspace</strong>"]
+    direction TB
+        B0["Runs Independently"]
+        B1["Detect product changes"]
+        B2["Generate prerendered HTML<br>with semantic markup"]
+        B3["Store HTML in<br>App Builder bucket"]
+        B4["AEM Admin API configures<br>overlay link to bucket"]
+  end
+ subgraph eds["<strong>Edge Delivery Services</strong>"]
+    direction TB
+        C0["Content Delivery Layer"]
+        C1["Serves prerendered HTML<br>from overlay at product URLs<br>/products/{urlKey}/{sku}"]
+  end
+ subgraph delivery["<strong>Page Delivery Flow</strong>"]
+    direction TB
+        E1@{ label: "<span style=\"font-size:60px\">🤖</span><br><span style=\"font-size:18px\">Crawler Request</span>" }
+        E2@{ label: "<span style=\"font-size:60px\">👤</span><br><span style=\"font-size:18px\">User Request</span>" }
+        E3["Edge Delivery serves<br>prerendered HTML"]
+        E4["Crawler reads<br>static HTML"]
+        E5["Browser executes<br>storefront JavaScript"]
+        E6["PDP drop-in replaces<br>HTML with interactive UI"]
+  end
+    A0 -.-> A1
+    A1 --> A2
+    D0 -.-> D1
+    D1 --> D2
+    B0 L_B0_B1_0@--> B1
+    B1 L_B1_B2_0@--> B2
+    B2 L_B2_B3_0@--> B3
+    B3 L_B3_B4_0@--> B4
+    C0 -.-> C1
+    E1 --> E3
+    E2 --> E3
+    E3 --> E4 & E5
+    E5 --> E6
+    repo1 L_repo1_appbuilder_0@-. <strong>npm run deploy</strong> .-> appbuilder
+    repo2 == <strong>Deployed to</strong> ==> eds
+    B4 L_B4_eds_0@-. <strong>Overlay configured</strong> .-> eds
+    eds L_eds_delivery_0@-. <strong>Serves content</strong> .-> delivery
+    A1@{ shape: rect}
+    D1@{ shape: rect}
+    E1@{ shape: rect}
+    E2@{ shape: rect}
+     A0:::title
+     A1:::icon
+     A2:::action
+     D0:::title
+     D1:::icon
+     D2:::action
+     B0:::note
+     B1:::process
+     B2:::process
+     B3:::process
+     B4:::process
+     C0:::note
+     C1:::storage
+     E1:::icon
+     E2:::icon
+     E3:::delivery
+     E4:::crawlerEnd
+     E5:::delivery
+     E6:::delivery
     classDef title fill:#f5f5f5,stroke:#666,stroke-width:1px,color:#333
     classDef note fill:#fff,stroke:#999,stroke-width:1px,color:#666,font-style:italic
     classDef icon fill:none,stroke:none,color:#000000
@@ -394,15 +410,19 @@ flowchart LR
     classDef storage fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
     classDef delivery fill:#fff9c4,stroke:#f57f17,stroke-width:2px
     classDef crawlerEnd fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
-    
-    style repos fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style repo1 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px
     style repo2 fill:#fff3e0,stroke:#f57c00,stroke-width:1px
     style appbuilder fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
     style eds fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style delivery fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    
-    linkStyle default stroke-width:3px,stroke-dasharray:5
+    style repos fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    L_B0_B1_0@{ animation: slow } 
+    L_B1_B2_0@{ animation: slow } 
+    L_B2_B3_0@{ animation: slow } 
+    L_B3_B4_0@{ animation: slow } 
+    L_repo1_appbuilder_0@{ animation: slow } 
+    L_B4_eds_0@{ animation: slow } 
+    L_eds_delivery_0@{ animation: slow }
 `}
 />
 
@@ -415,14 +435,14 @@ The prerendered HTML flows from the App Builder app to your storefront through A
 <Steps>
 
 1. **The App Builder app generates HTML** → Creates complete HTML files with prerendered product markup
-2. **HTML stored in App Builder bucket** → The App Builder app stores the HTML files in its own storage bucket
-3. **Overlay configured in EDS** → The AEM Admin API configures the link to the App Builder bucket in your Edge Delivery Services configuration file as an overlay
+2. **HTML stored in App Builder blob store** → The App Builder app stores the HTML files in its own blob store
+3. **Overlay configured in EDS** → The AEM Admin API configures the link to the App Builder blob store in your Edge Delivery Services configuration file as an overlay
 4. **Sitemap updated** → The AEM Admin API also updates your sitemap to include the new and updated product pages
 5. **Content available** → Edge Delivery Services now serves the prerendered HTML from the overlay when product page URLs are requested
 
 </Steps>
 
-The Commerce Prerender app uses App Builder storage and Edge Delivery Services overlay configuration. It is **not an event-based system**. Each time the App Builder app detects a product change and generates HTML, it stores the HTML in its bucket and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically; the storefront does not need to perform any additional fetching or configuration.
+The Commerce Prerender app uses App Builder storage and Edge Delivery Services overlay configuration. It is **not an event-based system**. Each time the App Builder app detects a product change and generates HTML, it stores the HTML in its blob store and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically; the storefront does not need to perform any additional fetching or configuration.
 
 ### How the Storefront Serves Prerendered HTML
 
