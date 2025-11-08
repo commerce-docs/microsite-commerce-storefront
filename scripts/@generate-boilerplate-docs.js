@@ -141,8 +141,8 @@ function extractCommerceBlocks(boilerplatePath) {
         const cssPath = join(blockPath, `${blockName}.css`);
 
         // Only process commerce-related blocks
-        if (!blockName.startsWith('commerce-') && 
-            !blockName.includes('product') && 
+        if (!blockName.startsWith('commerce-') &&
+            !blockName.includes('product') &&
             !blockName.includes('cart') &&
             !blockName.includes('checkout')) {
             continue;
@@ -152,7 +152,10 @@ function extractCommerceBlocks(boilerplatePath) {
 
         blocks.push({
             name: blockName,
-            displayName: blockName.split('-').map(word => 
+            displayName: blockName.split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
             path: blockPath,
@@ -176,7 +179,7 @@ function extractInitializers(boilerplatePath) {
     const initializers = [];
 
     const initFiles = ['commerce.js', 'initializers.js'];
-    
+
     for (const file of initFiles) {
         const filePath = join(scriptsDir, file);
         if (existsSync(filePath)) {
@@ -205,7 +208,7 @@ function getDropinDocPath(packageName) {
     if (packageName === 'tools') {
         return null; // Skip linking to tools
     }
-    
+
     // Find the drop-in config entry that matches this package name
     for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
         // Extract package name without @dropins/ prefix
@@ -214,18 +217,18 @@ function getDropinDocPath(packageName) {
             return docPath;
         }
     }
-    
+
     return null;
 }
 
 /**
- * Generate overview page with CardGrid
+ * Generate overview page with table
  */
 function generateOverview(blocks, initializers, outputPath) {
     console.log('\n📝 Generating overview page...');
 
     const generationDate = formatDate(new Date());
-    
+
     let content = `---
 title: Boilerplate Reference
 description: Complete reference for the AEM Commerce boilerplate project, including all commerce blocks and configuration.
@@ -234,54 +237,42 @@ sidebar:
   order: 1
 ---
 
-import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}. This documentation is generated from the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) repository.
-</Aside>
+import TableWrapper from '@components/TableWrapper.astro';
 
 ## Commerce Blocks
 
 The boilerplate includes **${blocks.length} commerce blocks** that implement various e-commerce functionality using drop-in components.
 
-<CardGrid>
+<TableWrapper nowrap={[0]}>
+
+| Block | Drop-ins |
+|-------|----------|
 `;
 
-    // Add cards for each block
+    // Add table rows for each block
     for (const block of blocks) {
-        const dropinList = block.analysis.dropins.length > 0 
+        const sidebarLabel = block.sidebarLabel || block.displayName;
+        const dropinList = block.analysis.dropins.length > 0
             ? block.analysis.dropins.join(', ')
             : 'None';
-        
-        content += `  <Card title="${block.displayName}" icon="seti:html">
-    [View documentation](/boilerplate/blocks/${block.name}/)
-    
-    **Drop-ins**: ${dropinList}
-  </Card>
-`;
+
+        content += `| [${sidebarLabel}](/boilerplate/blocks/${block.name}/) | ${dropinList} |\n`;
     }
 
-    content += `</CardGrid>
+    content += `
+</TableWrapper>
 
 ## Additional Documentation
 
-<CardGrid>
-  <Card title="Project Structure" icon="seti:folder">
-    Learn about the boilerplate project structure and file organization.
-    
-    [View structure docs](/boilerplate/structure/)
-  </Card>
-  <Card title="Build Process" icon="seti:config">
-    Understand the build and deployment process for the boilerplate.
-    
-    [View build docs](/boilerplate/build-process/)
-  </Card>
-  <Card title="Configuration" icon="seti:json">
-    Learn about head configuration, importmaps, and initializers.
-    
-    [View config docs](/boilerplate/configuration/)
-  </Card>
-</CardGrid>
+<TableWrapper nowrap={[0]}>
+
+| Documentation | Description | Link |
+|---------------|-------------|------|
+| Project Structure | Learn about the boilerplate project structure and file organization. | [View structure docs](/boilerplate/structure/) |
+| Build Process | Understand the build and deployment process for the boilerplate. | [View build docs](/boilerplate/build-process/) |
+| Configuration | Learn about head configuration, importmaps, and initializers. | [View config docs](/boilerplate/configuration/) |
+
+</TableWrapper>
 
 ## Quick Links
 
@@ -296,7 +287,7 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
     // Write file
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -305,19 +296,16 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
  */
 function generateBlockDocs(block, outputDir) {
     const generationDate = formatDate(new Date());
-    
+
+    const sidebarLabel = block.sidebarLabel || block.displayName;
     let content = `---
 title: ${block.displayName}
 description: Documentation for the ${block.displayName} block in the AEM Commerce boilerplate.
 sidebar:
-  label: ${block.displayName}
+  label: ${sidebarLabel}
 ---
 
-import { Aside, Code } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}. This block is part of the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce).
-</Aside>
+import { Code } from '@astrojs/starlight/components';
 
 ## Overview
 
@@ -413,7 +401,7 @@ function generateStructureDocs(boilerplatePath, outputPath) {
     console.log('\n📝 Generating project structure documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Project Structure
 description: Understand the file and directory structure of the AEM Commerce boilerplate.
@@ -422,11 +410,7 @@ sidebar:
   order: 2
 ---
 
-import { Aside, FileTree } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
+import { FileTree } from '@astrojs/starlight/components';
 
 ## Directory Structure
 
@@ -472,7 +456,7 @@ Global CSS and design tokens that can be customized for branding.
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -483,7 +467,7 @@ function generateBuildDocs(outputPath) {
     console.log('\n📝 Generating build process documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Build Process
 description: Learn about the build and deployment process for the AEM Commerce boilerplate.
@@ -492,11 +476,7 @@ sidebar:
   order: 3
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
+import { Steps } from '@astrojs/starlight/components';
 
 ## Overview
 
@@ -555,7 +535,7 @@ Production deployment requires:
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -566,7 +546,7 @@ function generateConfigDocs(initializers, outputPath) {
     console.log('\n📝 Generating configuration documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Configuration
 description: Learn about configuration options for the AEM Commerce boilerplate.
@@ -575,11 +555,7 @@ sidebar:
   order: 4
 ---
 
-import { Aside, Code } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
+import { Code } from '@astrojs/starlight/components';
 
 ## Head Configuration
 
@@ -635,7 +611,81 @@ Configure your environment using:
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
+    console.log(`  ✅ Generated ${outputPath}`);
+}
+
+/**
+ * Generate commerce blocks and drop-ins mapping page
+ */
+function generateCommerceBlocksMapping(blocks, outputPath) {
+    console.log('\n📝 Generating commerce blocks and drop-ins mapping...');
+
+    // Create reverse mapping: drop-in -> blocks that use it
+    const dropinToBlocks = new Map();
+
+    for (const block of blocks) {
+        const sidebarLabel = block.sidebarLabel || block.displayName;
+
+        for (const dropin of block.analysis.dropins) {
+            // Skip 'tools' as it's a utility library, not a drop-in component
+            if (dropin === 'tools') {
+                continue;
+            }
+
+            if (!dropinToBlocks.has(dropin)) {
+                dropinToBlocks.set(dropin, []);
+            }
+            dropinToBlocks.get(dropin).push(sidebarLabel);
+        }
+    }
+
+    // Sort drop-ins alphabetically
+    const sortedDropins = Array.from(dropinToBlocks.keys()).sort();
+
+    let content = `---
+title: Commerce blocks and drop-ins
+description: Learn which drop-in components are used in the Commerce blocks from the AEM Commerce boilerplate.
+sidebar:
+  label: Commerce blocks
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Aside from '@components/Aside.astro';
+
+## Related documentation
+
+- [Commerce Blocks Configuration](/merchants/storefront-builder/commerce-blocks/) - Learn how to configure Commerce blocks using Document Authoring
+- [Boilerplate Reference](/boilerplate/) - Complete reference for all Commerce blocks
+- [Drop-in components](/dropins/all/introduction/) - Overview of all available drop-in components
+
+The [AEM Commerce boilerplate](/boilerplate/) includes ${blocks.length} Commerce blocks that wrap drop-in components to provide ready-to-use e-commerce functionality. These blocks integrate drop-ins with AEM Edge Delivery Services, making it easy to add commerce features to your storefront without writing custom code.
+
+## Drop-ins used in Commerce blocks
+
+The following table shows which drop-in components are used by each Commerce block:
+
+<TableWrapper nowrap={[0]}>
+
+| Drop-in | Commerce blocks |
+|---------|---------------------------|
+`;
+
+    for (const dropin of sortedDropins) {
+        const blockList = dropinToBlocks.get(dropin).join(', ');
+        content += `| **${dropin}** | ${blockList} |\n`;
+    }
+
+    content += `
+</TableWrapper>
+
+<Aside type="note">
+The \`@dropins/tools\` package is a utility library required by all drop-in components, providing shared functionality like \`fetch-graphql\`, \`event-bus\`, and \`initializer\` utilities. It is not a drop-in component itself, but rather a dependency used by Commerce blocks that integrate drop-ins.
+</Aside>
+`;
+
+    ensureParentDirectoryExists(outputPath);
+    writeFileSync(outputPath, content, 'utf8');
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -650,8 +700,8 @@ function updateSidebarNavigation(blocks) {
 
     // Find the boilerplate sidebar section
     const boilerplatePattern = /label:\s*['"]Boilerplate['"]\s*,\s*items:\s*\[[\s\S]*?\]/;
-    
-    const blockItems = blocks.map(block => 
+
+    const blockItems = blocks.map(block =>
         `{ label: '${block.displayName}', slug: 'boilerplate/blocks/${block.name}' }`
     ).join(',\n            ');
 
@@ -718,6 +768,9 @@ try {
     generateBuildDocs(join(outputDir, 'build-process.mdx'));
     generateConfigDocs(initializers, join(outputDir, 'configuration.mdx'));
 
+    // Generate commerce blocks and drop-ins mapping
+    generateCommerceBlocksMapping(blocks, join(projectRoot, 'src', 'content', 'docs', 'dropins', 'all', 'commerce-blocks.mdx'));
+
     // Update sidebar
     updateSidebarNavigation(blocks);
 
@@ -729,8 +782,9 @@ try {
     console.log(`✅ Structure docs: 1`);
     console.log(`✅ Build docs: 1`);
     console.log(`✅ Configuration docs: 1`);
+    console.log(`✅ Commerce blocks mapping: 1`);
     console.log(`✅ Sidebar navigation: Updated`);
-    console.log(`📄 Total: ${blocks.length + 4} pages`);
+    console.log(`📄 Total: ${blocks.length + 5} pages`);
 
     console.log('\n📝 Generated Documentation:\n');
     console.log(`   📂 /boilerplate/`);
@@ -742,6 +796,8 @@ try {
     blocks.forEach(block => {
         console.log(`         📄 ${block.name}.mdx`);
     });
+    console.log(`   📂 /dropins/all/`);
+    console.log(`      📄 commerce-blocks.mdx`);
 
     console.log('\n✨ Boilerplate documentation generation complete!\n');
 

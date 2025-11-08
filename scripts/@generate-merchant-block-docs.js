@@ -206,6 +206,9 @@ function extractCommerceBlocks(boilerplatePath) {
             displayName: blockName.split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
             path: blockPath,
             configs,
             hasReadme: existsSync(readmePath)
@@ -229,18 +232,15 @@ function generateMerchantBlockDoc(block, outputDir) {
     const tips = generateTips(block.name, block.configs);
     const exampleTable = generateExampleTable(block.name, block.configs);
 
+    const sidebarLabel = block.sidebarLabel || block.displayName;
     let content = `---
 title: ${block.displayName}
 description: ${description}
 sidebar:
-  label: ${block.displayName}
+  label: ${sidebarLabel}
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}. This block is part of the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce).
-</Aside>
+import { Steps } from '@astrojs/starlight/components';
 
 ## Overview
 
