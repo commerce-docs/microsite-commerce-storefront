@@ -1,282 +1,217 @@
 ---
-title: Order slots
-description: Learn about the slots provided in the order drop-in component.
+title: Order Slots
+description: Customize UI sections in the Order drop-in using slots.
+sidebar:
+  label: Slots
+  order: 5
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
 ---
 
-This topic describes the slots that are provided in the order drop-in component.
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-[Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
+The Order drop-in exposes **11 slots** in **6 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
-## CreateReturn slots
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.4.0</strong>
+</div>
 
-The `CreateReturn` container provides slots for customizing the process of initiating a return.
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#returnorderproductlist-slots"><code>ReturnOrderProductList</code></a></td>
+<td><code>Footer</code>, <code>ReturnOrderItem</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#keyssortorder-slots"><code>KeysSortOrder</code></a></td>
+<td><code>OrderReturnInformation</code>, <code>PaymentMethodIcon</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderproductlist-slots"><code>OrderProductList</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderproductlistcontent-slots"><code>OrderProductListContent</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderstatus-slots"><code>OrderStatus</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderstatuscontent-slots"><code>OrderStatusContent</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+</tbody>
+</table>
 
-### ReturnOrderItem
 
-The `ReturnOrderItem` slot renders additional information for return items.
+## ReturnOrderProductList slots
+
+```js {4,5,6}
+interface ReturnOrderProductListProps
+
+slots?: {
+  Footer: SlotProps;
+  ReturnOrderItem: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## KeysSortOrder slots
+
+```js {4,5}
+interface KeysSortOrderProps
+
+slots?: {
+  OrderReturnInformation: SlotProps<OrdersReturnPropsModel | undefined>;
+  PaymentMethodIcon: SlotProps<Record<string, string>>;
+};
+```
+
+---
+
+## OrderProductList slots
+
+```js {4,5}
+interface OrderProductListProps
+
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+### Footer example
+
+This example from the Commerce Order Product List block shows how to customize the `Footer` slot:
 
 ```js
-slots: {
- ReturnOrderItem: (ctx) => {
-   const container = document.createElement('div');
-   container.insertAdjacentHTML(
-     'afterbegin',
-     `
-       <div id="info-container" class="info-container">
-         <h2 class="info-heading">Product Details</h2>
-         <ul class="info-list">
-           <li class="info-item">Detail 1: Placeholder information about the product.</li>
-           <li class="info-item">Detail 2: Additional placeholder information about the product.</li>
-         </ul>
-       </div>
-     `
-   );
-   ctx.appendChild(container);
- }
-}
+import { render as provider } from '@dropins/storefront-order/render.js';
+import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+
+provider.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      const giftOptions = document.createElement('div');
+      CartProvider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'order',
+        isEditable: false,
+        slots: {
+          SwatchImage: (swatchCtx) => {
+            const { defaultImageProps, imageSwatchContext } = swatchCtx;
+            tryRenderAemAssetsImage(swatchCtx, {
+              alias: imageSwatchContext.label,
+              imageProps: defaultImageProps,
+              wrapper: document.createElement('span'),
+              params: {
+                width: defaultImageProps.width,
+                height: defaultImageProps.height,
+              },
+            });
+          },
+        },
+      })(giftOptions);
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.order-product-list'));
 ```
 
-### ReturnFormActions
+### CartSummaryItemImage example
 
-The `ReturnFormActions` slot renders custom return form actions.
+This example from the Commerce Order Product List block shows how to customize the `CartSummaryItemImage` slot:
 
 ```js
-slots: {
- ReturnFormActions: (ctx) => {
-   const container = document.createElement('div');
+import { render as provider } from '@dropins/storefront-order/render.js';
+import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
 
-   provider.render(Button, {
-     variant: 'secondary',
-     children: 'Get a Better Offer',
-     onClick: () => alert('Custom event listener!'),
-   })(container);
-   ctx.appendChild(container);
- },
-}
+provider.render(OrderProductList, {
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+      const anchor = document.createElement('a');
+      anchor.href = createProductLink(data);
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchor,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.order-product-list'));
 ```
 
-## CustomerDetails slots
+---
 
-The `CustomerDetails` container provides slots for customizing the customer details section on the order details page.
+## OrderProductListContent slots
 
-### OrderReturnInformation slot
+```js {4,5}
+interface OrderProductListContentProps
 
-The `OrderReturnInformation` slot renders custom elements in the return information section on the return details page.
-
-```js
-slots: {
- OrderReturnInformation: (ctx) => {
-   const container = document.createElement('div');
-
-   provider.render(TextArea, {
-     children: 'Custom Action Button',
-     required: true,
-     name: 'custom_text_area',
-     label: 'Custom User information',
-     disabled: true,
-     onChange: (event) => {
-       console.log('event', event);
-     },
-   })(container);
-
-   ctx.appendChild(container);
- }
-}
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
 ```
 
-### PaymentMethodIcon
+---
 
-The `PaymentMethodIcon` slot renders custom elements based on the selected payment method on the order details page.
+## OrderStatus slots
 
-```js
-slots: {
- PaymentMethodIcon: (ctx) => {
-   const { selectedPaymentMethodCode } = ctx;
+```js {4}
+interface OrderStatusProps
 
-   const container = document.createElement('div');
-
-   let iconMarkup = '';
-   switch (selectedPaymentMethodCode) {
-     case 'credit_card':
-       iconMarkup = `<div>Credit Card Icon</div>`;
-       break;
-     case 'paypal':
-       iconMarkup = `<div>PayPal Icon</div>`;
-       break;
-     case 'bank_transfer':
-       iconMarkup = `<div>Bank Transfer Icon</div>`;
-       break;
-     default:
-       iconMarkup = `<div>Default Icon</div>`;
-   }
-
-   container.insertAdjacentHTML(
-     'afterbegin',
-     `
-       <div class="payment-method-icon">
-         ${iconMarkup}
-       </div>
-     `
-   );
-
-   ctx.appendChild(container);
- }
-}
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
 ```
 
-## OrderReturns slots
+---
 
-The `OrderReturns` container provides slots that customize elements in the order returns section on the order details page.
+## OrderStatusContent slots
 
-### DetailsActionParams slot
+```js {4}
+interface OrderStatusContentProps
 
-The `DetailsActionParams` slot renders custom actions for each return in the order returns section of the order details page.
-
-```js
-slots: {
- DetailsActionParams: (ctx) => {
-   const {
-     returnOrderItem: { returnNumber },
-   } = ctx;
-
-   const container = document.createElement('div');
-
-   container.insertAdjacentHTML(
-     'afterbegin',
-     `
-       <div>
-         <a
-           href="https://example.com/returns/${returnNumber}"
-           class="details-link"
-         >Return Details</a>
-         <button
-           class="cancel-return-button"
-           onclick="console.log('Cancel return callback placeholder')"
-         >Cancel Return</button>
-       </div>
-     `
-   );
-
-   ctx.appendChild(container);
- }
-}
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
 ```
 
-### ReturnItemsDetails slot
+---
 
-The `ReturnItemsDetails` slot renders additional details for each return in the order returns section of the order details page.
 
-```js
-slots: {
- ReturnItemsDetails: (ctx) => {
-   const { items } = ctx;
-   const container = document.createElement('div');
 
-   const itemStatus = items?.[0]?.customStatus || 'No status available';
-
-   container.innerHTML = `Custom return status: ${itemStatus}`;
-   ctx.appendChild(container);
- }
-}
-```
-
-### OrderStatus slot
-
-The `OrderStatus` slot renders custom order status elements on the order details page.
-
-## DeliveryTimeLine
-
-The `DeliveryTimeLine` slot renders a custom stepper to track delivery progress.
-
-```js
-slots: {
- DeliveryTimeLine: (ctx) => {
-   const container = document.createElement('div');
-
-   container.insertAdjacentHTML(
-     'afterbegin',
-     `
-      <div class="shipping-stepper">
-        <div class="step">
-          <div class="step-marker"></div>
-          <span class="step-label">Order Placed</span>
-        </div>
-        <div class="step">
-          <div class="step-marker"></div>
-          <span class="step-label">Shipped</span>
-        </div>
-        <div class="step">
-          <div class="step-marker"></div>
-          <span class="step-label">Out for Delivery</span>
-        </div>
-        <div class="step">
-          <div class="step-marker"></div>
-          <span class="step-label">Delivered</span>
-        </div>
-      </div>
-    `
-   );
-
-   ctx.appendChild(container);
- }
-}
-```
-
-### DeliveryTrackActions slot
-
-The `DeliveryTrackActions` slot renders custom delivery tracking actions.
-
-```js
-slots: {
- DeliveryTrackActions: (ctx) => {
-   const {
-     trackInformation: { number, title },
-   } = ctx;
-
-   const container = document.createElement('div');
-
-   container.insertAdjacentHTML(
-     'afterbegin',
-     `
-       <button
-         type="button"
-         class="track-action-button"
-         data-track-number="${number}"
-       >
-         ${title}
-       </button>
-     `
-   );
-
-   ctx.appendChild(container);
- }
-}
-```
-
-### ReturnItemsDetails
-
-The `ReturnItemsDetails` slot renders additional return details in the shipping status container on the return details page.
-  
-  ```js
-slots: {
- ReturnItemsDetails: (ctx) => {
-   const { items } = ctx;
-   const container = document.createElement('div');
-   container.classList.add('return-items-details');
-
-   items.forEach(({ quantity, requestQuantity, status, uid }) => {
-     const html = `
-       <div class="return-item" id="return-${uid}">
-         <h3 class="return-status">${status}</h3>
-         <p class="return-request-quantity">Requested: ${requestQuantity}</p>
-         <p class="return-quantity">Quantity: ${quantity}</p>
-         <a href="#" class="return-info-link">More information about the return</a>
-       </div>
-     `;
-     container.insertAdjacentHTML('beforeend', html);
-   });
-
-   ctx.appendChild(container);
- }
-}
-```
+{/* This documentation is auto-generated from: REPO_URL */}
