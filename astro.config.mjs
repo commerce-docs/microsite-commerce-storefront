@@ -502,6 +502,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
+                          { label: 'Dictionary', link: '/dropins/personalization/dictionary/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
                           { label: 'Slots', link: '/dropins/personalization/slots/' },
                           {
