@@ -795,6 +795,21 @@ async function config() {
 
                   // ---------- OTHER ----------
                   {
+                    label: 'Boilerplate',
+                    collapsed: true,
+                    items: [
+                      { label: 'Overview', link: '/boilerplate/' },
+                      { label: 'Structure', link: '/boilerplate/structure/' },
+                      { label: 'Build Process', link: '/boilerplate/build-process/' },
+                      { label: 'Configuration', link: '/boilerplate/configuration/' },
+                      {
+                        label: 'Blocks',
+                        collapsed: true,
+                        autogenerate: { directory: '/boilerplate/blocks/' },
+                      },
+                    ],
+                  },
+                  {
                     label: 'Troubleshooting',
                     collapsed: true,
                     autogenerate: { directory: '/troubleshooting/' },
@@ -830,6 +845,11 @@ async function config() {
                       { label: 'Overview', link: '/merchants/storefront-builder/commerce-blocks/' },
                       { label: 'Personalization', link: '/merchants/get-started/personalization/' },
                       { label: 'Product recommendations', link: '/merchants/get-started/product-recommendations/' },
+                      {
+                        label: 'Block configuration',
+                        collapsed: true,
+                        autogenerate: { directory: '/merchants/blocks/' },
+                      },
                     ],
                   },
                   {

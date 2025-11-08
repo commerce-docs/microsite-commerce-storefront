@@ -83,7 +83,8 @@ function extractConfigFromReadme(readmePath) {
                         key: key.replace(/`/g, '').trim(),
                         type: type.replace(/`/g, '').trim(),
                         default: defaultValue.replace(/`/g, '').trim(),
-                        description: description.trim()
+                        description: description.trim(),
+                        required: cells[4]?.toLowerCase().includes('yes') || false
                     });
                 }
             }
@@ -255,16 +256,17 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
 
 The following configuration options are available for this block:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| Option | Type | Default | Required | Description |
+|--------|------|---------|----------|-------------|
 `;
 
         for (const config of block.configs) {
             const key = config.key.replace(/`/g, '');
             const type = config.type.replace(/`/g, '');
             const defaultVal = config.default || '-';
+            const required = config.required ? 'Yes' : 'No';
             const desc = config.description;
-            content += `| \`${key}\` | ${type} | ${defaultVal} | ${desc} |\n`;
+            content += `| \`${key}\` | ${type} | ${defaultVal} | ${required} | ${desc} |\n`;
         }
 
         content += '\n';
