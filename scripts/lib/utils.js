@@ -175,6 +175,10 @@ export function truncate(text, maxLength, suffix = '...') {
  * @returns {string} Clean version string (e.g., '1.0.0')
  */
 export function cleanVersion(version) {
+    // Handle non-string inputs gracefully
+    if (!version || typeof version !== 'string') {
+        return 'unknown';
+    }
     return version.replace(/^[\^~]/, '');
 }
 
