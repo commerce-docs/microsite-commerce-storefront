@@ -65,10 +65,19 @@ export function cloneOrUpdateBoilerplate() {
     const latestTag = getLatestBoilerplateTag(boilerplatePath);
     console.log(`  Using boilerplate release: ${latestTag}`);
 
+    // Clean working directory before checkout (discard uncommitted changes from npm install)
+    try {
+        execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
+    } catch (error) {
+        console.warn(`  ⚠️  Could not reset working directory: ${error.message}`);
+    }
+
     try {
         execFileSync('git', ['checkout', latestTag], { cwd: boilerplatePath, stdio: 'pipe' });
+        console.log(`  ✓ Checked out ${latestTag}`);
     } catch (error) {
         console.warn(`  ⚠️  Could not checkout ${latestTag}, staying on current branch`);
+        console.warn(`     Reason: ${error.message}`);
     }
 
     console.log(`  Installing boilerplate dependencies...`);

@@ -25,11 +25,11 @@ The following table describes the configuration options available for the **Orde
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `orderRef` | `string` | No | Reference identifier for the current order being viewed. Used to pre-populate order details when the page loads. |
-| `returnRef` | `string` | No | Reference identifier for a return request. Used to pre-populate return details when viewing or managing product returns. |
-| `orderData` | [`OrderDataModel`](#orderdatamodel) \| null | No | Pre-loaded order data to display immediately without fetching from the server. Useful for server-side rendering or caching scenarios. |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `orderRef` | `string` | No | Pre-loads a specific order by its reference ID or order number. Useful for direct access to order details from email links or confirmation pages. |
+| `returnRef` | `string` | No | Pre-loads a specific return request by its reference ID. Enables direct navigation to return request details and status tracking. |
+| `orderData` | [`OrderDataModel`](#orderdatamodel) \| null | No | Injects initial order data on page load. Useful for server-side rendering or hydrating order details without an additional GraphQL request. |
 
 </TableWrapper>
 
@@ -73,6 +73,21 @@ For complete dictionary customization including all available keys and multi-lan
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+| [`OrderDataModel`](#orderdatamodel) | Transforms order data from GraphQL including order details, items, shipping, billing, payment, and tracking information. Use this to add custom fields specific to your order management workflow. |
+| [`CustomerOrdersReturnModel`](#customerordersreturnmodel) | Transforms CustomerOrdersReturnModel data from GraphQL. |
+| [`RequestReturnModel`](#requestreturnmodel) | Transforms RequestReturnModel data from GraphQL. |
+
+</TableWrapper>
+
 The following example shows how to customize the `OrderDataModel` model for the **Order** drop-in:
 
 ```javascript title="scripts/initializers/order.js"
@@ -93,21 +108,6 @@ const models = {
 
 await initializers.mountImmediately(initialize, { models });
 ```
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<TableWrapper nowrap={[0]}>
-
-| Model | Description |
-|---|---|
-| [`OrderDataModel`](#orderdatamodel) | Transforms OrderDataModel data from GraphQL. |
-| [`CustomerOrdersReturnModel`](#customerordersreturnmodel) | Transforms CustomerOrdersReturnModel data from GraphQL. |
-| [`RequestReturnModel`](#requestreturnmodel) | Transforms RequestReturnModel data from GraphQL. |
-
-</TableWrapper>
 
 ## Drop-in-specific configuration
 
@@ -131,12 +131,13 @@ Refer to the [Configuration options](#configuration-options) table for descripti
 
 
 
-
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
 
 ### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
 
 ```typescript
 langDefinitions?: {
@@ -147,6 +148,8 @@ langDefinitions?: {
 ```
 
 ### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
 
 ```typescript
 models?: {
@@ -240,4 +243,4 @@ export interface RequestReturnModel {
 }
 ```
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-order */}
+{/* This documentation is auto-generated from: REPO_URL */}
