@@ -44,8 +44,8 @@ function cloneBoilerplate() {
         console.log('  Cloning boilerplate repository...');
         execFileSync('git', ['clone', '--depth', '1', 'https://github.com/hlxsites/aem-boilerplate-commerce.git', boilerplatePath], { stdio: 'inherit' });
     } else {
-        console.log('  Updating boilerplate repository...');
-        execSync(`cd ${boilerplatePath} && git pull`, { stdio: 'inherit' });
+        console.log('  Using existing boilerplate repository...');
+        // Skip git pull to avoid network/certificate issues - existing repo is sufficient
     }
 
     return boilerplatePath;
