@@ -27,6 +27,7 @@ import { execSync } from 'child_process';
 import { getProjectRoot } from './lib/generator-core.js';
 import { ensureParentDirectoryExists, formatDate } from './lib/utils.js';
 import { applyStandardTransforms } from './lib/content-transforms.js';
+import { DROPIN_REPOS } from './lib/dropin-config.js';
 
 const projectRoot = getProjectRoot();
 
@@ -51,6 +52,29 @@ function cloneBoilerplate() {
     }
 
     return boilerplatePath;
+}
+
+/**
+ * Map drop-in package name to documentation path
+ * @param {string} packageName - Package name (e.g., 'storefront-cart', 'tools')
+ * @returns {string|null} Documentation path (e.g., 'cart') or null if not found
+ */
+function getDropinDocPath(packageName) {
+    // Handle 'tools' package - it doesn't have its own documentation page
+    if (packageName === 'tools') {
+        return null; // Skip linking to tools
+    }
+    
+    // Find the drop-in config entry that matches this package name
+    for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
+        // Extract package name without @dropins/ prefix
+        const configPackageName = config.packageName.replace('@dropins/', '');
+        if (configPackageName === packageName) {
+            return docPath;
+        }
+    }
+    
+    return null;
 }
 
 // ============================================================================
@@ -262,7 +286,7 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
 ## Quick Links
 
 - [AEM Commerce Boilerplate Repository](https://github.com/hlxsites/aem-boilerplate-commerce)
-- [Drop-in Components Documentation](/dropins/all/)
+- [Drop-in Components Documentation](/dropins/all/introduction/)
 - [Edge Delivery Services Documentation](https://www.aem.live/docs/)
 `;
 
@@ -362,7 +386,7 @@ Block location: \`/blocks/${block.name}/\`
 
 ## Related Documentation
 
-- [All Drop-ins](/dropins/all/)
+- [All Drop-ins](/dropins/all/introduction/)
 - [Boilerplate Overview](/boilerplate/)
 - [View source code](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/${block.name})
 `;
