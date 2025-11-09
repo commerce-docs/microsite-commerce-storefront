@@ -1,82 +1,32 @@
 ---
 title: Payment Services initialization
-description: Learn about the configuration options for the Payment Services drop-in initializer.
+description: Configure the Payment Services drop-in with language definitions and custom data models.
+sidebar:
+  label: Initialization
+  order: 3
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-The Payment Services drop-in component initializer provides options for setting the backend endpoint and configuring language definitions.
+The **Payment Services** drop-in has no drop-in-specific configuration options or customizable models.
 
-## Configuration options
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.2</strong>
+</div>
 
-The Payment Services component initializer accepts the following configuration options:
+## Basic initialization
 
-<TableWrapper nowrap={[0, 1, 2]}>
-| Option             | Type     | Req? | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
-|--------------------|----------|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `apiUrl`           | string   | Yes  | The Adobe Commerce GraphQL endpoint URL, such as "https://example.com/graphql".                                                                                                                                                                                                                                                                                                                                                      |
-| `getCustomerToken` | function | Yes  | The Payment Services drop-in can send GraphQL requests on behalf of the shopper. This requires GraphQL authorization, which can be performed using authorization tokens or session cookies. For token-based authorization, the `getCustomerToken` function should return a customer token as a string, or null for guest customers. For session-based authorization, the `getCustomerToken` property must explicitly be set to null. |
-| `langDefinitions`  | object   | No   | Provides language definitions for internationalization (i18n).                                                                                                                                                                                                                                                                                                                                                                       |
-</TableWrapper>
+Initialize the drop-in with default settings:
 
-## Initialization is asynchronous
-
-The Payment Services drop-in initializer is fully asynchronous. Even if mounted immediately, it initializes in the background and emits initialization updates via custom events.
-
-## Payment method availability
-
-During asynchronous initialization, the Payment Services drop-in emits a series of events to signal drop-in readiness in different locations. For each of these events, the event payload is an `{ availablePaymentMethods: string[] }` object containing the available payment method codes.
-
-The following table contains the available event names and their descriptions:
-
-<TableWrapper nowrap={[0]}>
-| Event name                                    | Description                                                                                                                                                |
-|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `payment-services/initialized/checkout`       | Drop-in initialized for the `CHECKOUT` location, with `event.availablePaymentMethods` determining the payment methods available for the checkout page.     |
-| `payment-services/initialized/product-detail` | Drop-in initialized for the `PRODUCT_DETAIL` location, with `event.availablePaymentMethods` determining the payment methods available for the product details page. |
-</TableWrapper>
-
-The following code shows an example implementation of payment method availability event handlers for the checkout page.
-
-```javascript
-import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
-import { events } from '@dropins/tools/event-bus.js';
-
-events.on('payment-services/initialized/checkout', ({ availablePaymentMethods }) => {
-  if (availablePaymentMethods.contains(PaymentMethodCode.APPLE_PAY)) {
-    console.log("Apple Pay available for checkout page.");
-  }
-  if (availablePaymentMethods.contains(PaymentMethodCode.CREDIT_CARD)) {
-    console.log("Credit Card available for checkout page.");
-  }
-});
-```
-
-## Initialization example
-
-```javascript
-import { fetchPlaceholders } from '../commerce.js';
-import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
-import { getCookie } from '@dropins/tools/lib.js';
+```javascript title="scripts/initializers/payment-services.js"
 import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-payment-services';
 
-const initializeDropin = async () => {
-  const labels = await fetchPlaceholders('placeholders/payment-services.json');
-  const langDefinitions = {
-    default: {
-      ...labels,
-    },
-  };
-
-  const coreEndpoint = await getConfigValue('commerce-core-endpoint');
-  const getUserTokenCookie = () => getCookie('auth_dropin_user_token');
-
-  return initializers.mountImmediately(initialize, {
-    apiUrl: coreEndpoint,
-    getCustomerToken: getUserTokenCookie,
-    langDefinitions,
-  });
-};
-
-await initializeDropin();
+await initializers.mountImmediately(initialize, {});
 ```
+
+<Aside type="note" title="Standard options">
+You can customize text and labels using the standard `langDefinitions` option. See other drop-in initialization pages for examples.
+</Aside>
+
+{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-payment-services */}
