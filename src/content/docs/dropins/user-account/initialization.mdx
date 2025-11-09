@@ -25,9 +25,9 @@ The following table describes the configuration options available for the **User
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Authentication header configuration for API requests. Specify the header name and token prefix format (e.g., \`Bearer\`) for authorization tokens. |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
 
 </TableWrapper>
 
@@ -71,6 +71,20 @@ For complete dictionary customization including all available keys and multi-lan
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+| [`OrderHistoryModel`](#orderhistorymodel) | Transforms OrderHistoryModel data from GraphQL. |
+| [`CustomerDataModelShort`](#customerdatamodelshort) | Transforms CustomerDataModelShort data from GraphQL. |
+
+</TableWrapper>
+
 The following example shows how to customize the `OrderHistoryModel` model for the **User Account** drop-in:
 
 ```javascript title="scripts/initializers/user-account.js"
@@ -92,20 +106,6 @@ const models = {
 await initializers.mountImmediately(initialize, { models });
 ```
 
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<TableWrapper nowrap={[0]}>
-
-| Model | Description |
-|---|---|
-| [`OrderHistoryModel`](#orderhistorymodel) | Transforms OrderHistoryModel data from GraphQL. |
-| [`CustomerDataModelShort`](#customerdatamodelshort) | Transforms CustomerDataModelShort data from GraphQL. |
-
-</TableWrapper>
-
 ## Drop-in-specific configuration
 
 The **User Account** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
@@ -126,12 +126,24 @@ Refer to the [Configuration options](#configuration-options) table for descripti
 
 
 
-
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
 
+### authHeaderConfig
+
+Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token').
+
+```typescript
+authHeaderConfig?: {
+    header?: string;
+    tokenPrefix?: string;
+  }
+```
+
 ### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
 
 ```typescript
 langDefinitions?: {
@@ -143,19 +155,12 @@ langDefinitions?: {
 
 ### models
 
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
 ```typescript
 models?: {
   [modelName: string]: Model<any>;
 };
-```
-
-### authHeaderConfig
-
-```typescript
-authHeaderConfig?: {
-    header?: string;
-    tokenPrefix?: string;
-  };
 ```
 
 
@@ -191,4 +196,4 @@ export interface CustomerDataModelShort {
 }
 ```
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-account */}
+{/* This documentation is auto-generated from: REPO_URL */}

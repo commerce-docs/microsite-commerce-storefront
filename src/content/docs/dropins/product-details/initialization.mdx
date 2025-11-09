@@ -25,17 +25,17 @@ The following table describes the configuration options available for the **Prod
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `scope` | `string` | No | GraphQL API scope identifier for the store view or website. Used to fetch product data from the correct store context. |
-| `defaultLocale` | `string` | No | Default locale code for product content when user's preferred language is unavailable. |
-| `globalLocale` | `string` | No | Global locale code that overrides all product content language settings. |
-| `sku` | `string` | No | Default product SKU to display when no SKU is specified in the URL or component configuration. |
-| `acdl` | `boolean` | No | Enable Adobe Client Data Layer integration for product analytics and tracking. Set to \`true\` to push product events to ACDL. |
-| `anchors` | `string[]` | No | Array of DOM element IDs to use as anchor points for scrolling to product sections (e.g., reviews, specifications). |
-| `persistURLParams` | `boolean` | No | Preserve URL query parameters when updating product options. Set to \`true\` to maintain UTM codes and tracking parameters. |
-| `preselectFirstOption` | `boolean` | No | Automatically select the first available option for each configurable attribute. Set to \`true\` for faster product selection. |
-| `optionsUIDs` | `string[]` | No | Array of option UIDs to pre-select for configurable products. Use to deep-link to specific product variants. |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `scope` | `string` | No | Defines the store view scope for product data retrieval. Used in multi-store setups to fetch store-specific product information. |
+| `defaultLocale` | `string` | No | Sets the default locale for product content when no specific locale is detected. |
+| `globalLocale` | `string` | No | Overrides locale detection and forces all product content to use this specific locale regardless of user settings. |
+| `sku` | `string` | No | Pre-loads a specific product SKU on initialization. Useful for server-side rendering or direct product page access. |
+| `acdl` | `boolean` | No | Configuration for Adobe Client Data Layer (ACDL) integration to track product view events and user interactions for analytics. |
+| `anchors` | `string[]` | No | Controls hash navigation behavior for product page sections (e.g., #reviews, #specifications). Enables deep linking to specific content areas. |
+| `persistURLParams` | `boolean` | No | Determines which URL query parameters should persist when navigating between product variants. Useful for tracking campaigns or referral sources. |
+| `preselectFirstOption` | `boolean` | No | When \`true\`, automatically selects the first available option for each configurable attribute. Streamlines selection for products with default variants. |
+| `optionsUIDs` | `string[]` | No | Pre-selects specific product options by their unique identifiers. Useful for direct links to configured product variants (e.g., specific size/color combinations). |
 
 </TableWrapper>
 
@@ -79,6 +79,15 @@ For complete dictionary customization including all available keys and multi-lan
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
+
 The following example shows how to customize the `CustomModel` model for the **Product Details** drop-in:
 
 ```javascript title="scripts/initializers/product-details.js"
@@ -99,15 +108,6 @@ const models = {
 
 await initializers.mountImmediately(initialize, { models });
 ```
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<Aside type="note">
-No customizable models are available for this drop-in.
-</Aside>
 
 ## Drop-in-specific configuration
 
@@ -137,12 +137,13 @@ Refer to the [Configuration options](#configuration-options) table for descripti
 
 
 
-
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
 
 ### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
 
 ```typescript
 langDefinitions?: {
@@ -154,6 +155,8 @@ langDefinitions?: {
 
 ### models
 
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
 ```typescript
 models?: {
   [modelName: string]: Model<any>;
@@ -162,4 +165,4 @@ models?: {
 
 
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-pdp */}
+{/* This documentation is auto-generated from: REPO_URL */}

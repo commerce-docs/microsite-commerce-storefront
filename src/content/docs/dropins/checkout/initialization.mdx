@@ -25,11 +25,11 @@ The following table describes the configuration options available for the **Chec
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`langDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`models`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `defaults` | [`defaults`](#defaults) | No | Default checkout settings including billing/shipping address matching and pre-selected shipping method. |
-| `shipping` | [`shipping`](#shipping) | No | Shipping configuration including filters for available shipping methods based on cart contents or customer attributes. |
-| `features` | [`features`](#features) | No | Feature flags for optional checkout functionality including B2B quotes support and custom login routing. |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `defaults` | [`defaults`](#defaults) | No | Configures default checkout behaviors including whether billing address defaults to shipping address and which shipping method is pre-selected. |
+| `shipping` | [`shipping`](#shipping) | No | Configures shipping method filtering to control which shipping options are available to customers during checkout. |
+| `features` | [`features`](#features) | No | Enables or disables checkout features including B2B quote functionality and custom login routing. |
 
 </TableWrapper>
 
@@ -73,6 +73,20 @@ For complete dictionary customization including all available keys and multi-lan
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+| [`CartModel`](#cartmodel) | Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow. |
+| [`CustomerModel`](#customermodel) | Transforms CustomerModel data from GraphQL. |
+
+</TableWrapper>
+
 The following example shows how to customize the `CartModel` model for the **Checkout** drop-in:
 
 ```javascript title="scripts/initializers/checkout.js"
@@ -93,20 +107,6 @@ const models = {
 
 await initializers.mountImmediately(initialize, { models });
 ```
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<TableWrapper nowrap={[0]}>
-
-| Model | Description |
-|---|---|
-| [`CartModel`](#cartmodel) | Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow. |
-| [`CustomerModel`](#customermodel) | Transforms CustomerModel data from GraphQL. |
-
-</TableWrapper>
 
 ## Drop-in-specific configuration
 
@@ -130,12 +130,47 @@ Refer to the [Configuration options](#configuration-options) table for descripti
 
 
 
-
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
 
+### defaults
+
+Configures default checkout behaviors including whether billing address defaults to shipping address and which shipping method is pre-selected.
+
+```typescript
+defaults?: {
+    isBillToShipping?: boolean;
+    selectedShippingMethod?: Selector<ShippingMethod>;
+  }
+```
+
+### shipping
+
+Configures shipping method filtering to control which shipping options are available to customers during checkout.
+
+```typescript
+shipping?: {
+    filterOptions?: Filter<ShippingMethod>;
+  }
+```
+
+### features
+
+Enables or disables checkout features including B2B quote functionality and custom login routing.
+
+```typescript
+features?: {
+    b2b?: {
+      quotes?: boolean;
+      routeLogin?: () => string | void;
+    };
+  }
+```
+
 ### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
 
 ```typescript
 langDefinitions?: {
@@ -147,38 +182,12 @@ langDefinitions?: {
 
 ### models
 
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
 ```typescript
 models?: {
   [modelName: string]: Model<any>;
 };
-```
-
-### defaults
-
-```typescript
-defaults?: {
-    isBillToShipping?: boolean;
-    selectedShippingMethod?: Selector<ShippingMethod>;
-  };
-```
-
-### shipping
-
-```typescript
-shipping?: {
-    filterOptions?: Filter<ShippingMethod>;
-  };
-```
-
-### features
-
-```typescript
-features?: {
-    b2b?: {
-      quotes?: boolean;
-      routeLogin?: () => string | void;
-    };
-  };
 ```
 
 
@@ -203,4 +212,4 @@ export interface Customer {
 }
 ```
 
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-checkout */}
+{/* This documentation is auto-generated from: REPO_URL */}
