@@ -15,6 +15,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import escapeRegExp from 'lodash.escaperegexp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,11 +38,13 @@ function hasSidebarEntry(pagePath) {
 
     // Remove leading/trailing slashes and normalize
     const normalizedPath = pagePath.replace(/^\/|\/$/g, '');
+    // Sanitize user input for use in regex
+    const safePath = escapeRegExp(normalizedPath);
 
     // Create regex pattern to match sidebar entry
     // Matches: { label: '...', link: '/path/to/page/' }
     const pattern = new RegExp(
-        `link:\\s*['"]/${normalizedPath.replace(/\//g, '\\/')}/['"]`,
+        `link:\\s*['"]/${safePath}/['"]`,
         'i'
     );
 
