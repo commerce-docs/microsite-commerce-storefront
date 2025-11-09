@@ -534,6 +534,7 @@ async function config() {
                               { label: 'Overview', link: '/dropins/product-details/containers/' },
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                               { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                              { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                               { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
                               { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
                               { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
