@@ -471,7 +471,7 @@ function generateSectionMetadataTable() {
 
     // Wrap table in a div with custom styling matching AEM format
     output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 470px; border-collapse: collapse;">\n`;
+    output += `<table style="width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: section-metadata label
@@ -537,7 +537,7 @@ function generateMetadataTable(blockName, blockDisplayName) {
 
     // Wrap table in a div with custom styling matching AEM format
     output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 470px; border-collapse: collapse;">\n`;
+    output += `<table style="width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: metadata label
@@ -594,7 +594,7 @@ function generateDocumentAuthoringTable(blockName, configs) {
 
     // Wrap table in a div with custom styling matching AEM format
     output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 470px; border-collapse: collapse;">\n`;
+    output += `<table style="width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: block name only (single cell, centered)
