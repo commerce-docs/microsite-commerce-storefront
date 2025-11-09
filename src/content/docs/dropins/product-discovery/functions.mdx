@@ -1,133 +1,119 @@
 ---
-title: Product Discovery functions
-description: Learn about the API functions provided by the Product Discovery drop-in component.
+title: Product Discovery Functions
+description: API functions provided by the Product Discovery drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 2
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
-import Aside from '@components/Aside.astro';
-import CodeInclude from '@components/CodeInclude.astro';
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
 
-The Product Discovery drop-in component provides API functions to perform searches, update results, and keep connected containers in sync.
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Product Discovery drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: unknown</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`search`](#search) | Performs a product search based on the parameters. |
+
+</TableWrapper>
 
 ## search
 
 The `search` function performs a product search based on the parameters. It updates the search context and emits events consumed by containers such as `SearchResults`, `Facets`, `Pagination`, and `SortBy`.
 
-Passing `null` as the `variables` parameter clears the current search state and resets related containers.
+Passing `null` as the `request` parameter clears the current search state and resets related containers.
 
 ```ts
-export const search = async (
-  variables: {
-    phrase?: string;
-    pageSize?: number;
-    currentPage?: number;
-    filter?: Array<{
-      attribute: string;
-      contains?: string;
-      eq?: string;
-      in?: string[];
-      range?: { from?: number; to?: number };
-      startsWith?: string;
-    }>;
-    sort?: Array<{
-      attribute: string;
-      direction: 'ASC' | 'DESC';
-    }>;
-  } | null,
-  options?: {
-    scope?: string;
-  }
-): Promise<void>
+const search = async (
+  request: SearchVariables | null,
+  options: SearchOptions = {}
+): Promise<ProductSearchResult>
 ```
 
-### Variables
+<TableWrapper nowrap={[0,1]}>
 
-<OptionsTable
-  compact
-  options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
-    ['phrase', 'string', 'No', 'Search phrase. Use an empty string for category-only searches.'],
-    ['pageSize', 'number', 'No', 'Number of products to return per page.'],
-    ['currentPage', 'number', 'No', 'The current page of results.'],
-    ['filter', 'array', 'No', 'Array of filter objects. Each filter must specify an attribute and condition (`contains`, `eq`, `in`, `range`, or `startsWith`).'],
-    ['sort', 'array', 'No', 'Array of sort objects containing an attribute and direction (`ASC` or `DESC`).'],
-  ]}
-/>
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `request` | `SearchVariables \| null` | Yes | Search variables including \`phrase\` (search term), \`pageSize\` (results per page), \`currentPage\` (page number), \`filter\` (array of filter conditions), and \`sort\` (array of sort criteria). Pass \`null\` to clear the search state. |
+| `options` | `SearchOptions` | No | Optional search configuration options. |
 
-### Options
-
-<OptionsTable
-  compact
-  options={[
-    ['Parameter', 'Type', 'Req?', 'Description'],
-    ['scope', 'string', 'No', 'Unique identifier for the search context. Only containers rendered with this scope will respond to search events.'],
-  ]}
-/>
-
-### Returns
-
-Returns a promise that resolves when the search completes and related events have been emitted.   No direct return payload; containers update automatically based on the emitted events.
+</TableWrapper>
 
 ### Events
 
-The event bus emits the following events during the search lifecycle:
+Emits the [`search/loading`](/dropins/product-discovery/events/#searchloading-emits-and-listens), [`search/result`](/dropins/product-discovery/events/#searchresult-emits-and-listens), and [`search/error`](/dropins/product-discovery/events/#searcherror-emits-and-listens) events during the search lifecycle to update containers with search state and results.
 
-| Event name            | Payload                       | Description |
-|-----------------------|--------------------------------|-------------|
-| `search/loading`      | `boolean`                      | Emitted when a search request starts (`true`) or ends (`false`). |
-| `search/result`       | `{ request, result }`          | Emitted with the search variables and the search results. |
-| `search/error`        | `Error`                        | Emitted if the search request fails. |
+### Returns
 
-Events are scoped when a `scope` option is provided. Scoped events only update containers registered with the same scope.
+Returns [`ProductSearchResult`](#productsearchresult).
 
-### Usage
+---
 
-Perform a basic search:
+## Data Models
 
-```js
-import { search } from '@/plp/api.js';
+The following data models are used by functions in this drop-in.
 
-await search({
-  phrase: 'shirts',
-  pageSize: 12,
-  currentPage: 1,
-  filter: [],
-  sort: []
-});
+### ProductSearchResult
+
+The `ProductSearchResult` object is returned by the following functions: [`search`](#search).
+
+```ts
+interface ProductSearchResult {
+  facets: SearchFacet[];
+  items: Product[];
+  pageInfo: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+  };
+  suggestions?: string[];
+  totalCount: number;
+  metadata?: {
+    filterableAttributes: RefineOption[];
+    sortableAttributes: RefineOption[];
+  };
+}
 ```
 
-Perform a scoped quick search:
 
-```js
-await search({
-  phrase: 'sneakers',
-  pageSize: 6,
-  currentPage: 1,
-  filter: [],
-  sort: []
-}, { scope: 'popover' });
-```
 
-Search with filters and sorting:
-
-```js
-await search({
-  phrase: '',
-  pageSize: 12,
-  currentPage: 1,
-  filter: [
-    { attribute: 'categories', in: ['apparel'] },
-    { attribute: 'price', range: { from: 25, to: 75 } }
-  ],
-  sort: [{ attribute: 'price', direction: 'ASC' }]
-});
-```
-
-Clear search results:
-
-```js
-await search(null);
-```
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
