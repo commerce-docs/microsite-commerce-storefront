@@ -54,6 +54,29 @@ function cloneBoilerplate() {
     return boilerplatePath;
 }
 
+/**
+ * Map drop-in package name to documentation path
+ * @param {string} packageName - Package name (e.g., 'storefront-cart', 'tools')
+ * @returns {string|null} Documentation path (e.g., 'cart') or null if not found
+ */
+function getDropinDocPath(packageName) {
+    // Handle 'tools' package - it doesn't have its own documentation page
+    if (packageName === 'tools') {
+        return null; // Skip linking to tools
+    }
+
+    // Find the drop-in config entry that matches this package name
+    for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
+        // Extract package name without @dropins/ prefix
+        const configPackageName = config.packageName.replace('@dropins/', '');
+        if (configPackageName === packageName) {
+            return docPath;
+        }
+    }
+
+    return null;
+}
+
 // ============================================================================
 // CODE ANALYSIS
 // ============================================================================
@@ -141,8 +164,8 @@ function extractCommerceBlocks(boilerplatePath) {
         const cssPath = join(blockPath, `${blockName}.css`);
 
         // Only process commerce-related blocks
-        if (!blockName.startsWith('commerce-') && 
-            !blockName.includes('product') && 
+        if (!blockName.startsWith('commerce-') &&
+            !blockName.includes('product') &&
             !blockName.includes('cart') &&
             !blockName.includes('checkout')) {
             continue;
@@ -152,7 +175,7 @@ function extractCommerceBlocks(boilerplatePath) {
 
         blocks.push({
             name: blockName,
-            displayName: blockName.split('-').map(word => 
+            displayName: blockName.split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
             path: blockPath,
@@ -176,7 +199,7 @@ function extractInitializers(boilerplatePath) {
     const initializers = [];
 
     const initFiles = ['commerce.js', 'initializers.js'];
-    
+
     for (const file of initFiles) {
         const filePath = join(scriptsDir, file);
         if (existsSync(filePath)) {
@@ -225,7 +248,7 @@ function generateOverview(blocks, initializers, outputPath) {
     console.log('\n📝 Generating overview page...');
 
     const generationDate = formatDate(new Date());
-    
+
     let content = `---
 title: Boilerplate Reference
 description: Complete reference for the AEM Commerce boilerplate project, including all commerce blocks and configuration.
@@ -249,10 +272,10 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
 
     // Add cards for each block
     for (const block of blocks) {
-        const dropinList = block.analysis.dropins.length > 0 
+        const dropinList = block.analysis.dropins.length > 0
             ? block.analysis.dropins.join(', ')
             : 'None';
-        
+
         content += `  <Card title="${block.displayName}" icon="seti:html">
     [View documentation](/boilerplate/blocks/${block.name}/)
     
@@ -296,7 +319,7 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
     // Write file
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -305,7 +328,7 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
  */
 function generateBlockDocs(block, outputDir) {
     const generationDate = formatDate(new Date());
-    
+
     let content = `---
 title: ${block.displayName}
 description: Documentation for the ${block.displayName} block in the AEM Commerce boilerplate.
@@ -413,7 +436,7 @@ function generateStructureDocs(boilerplatePath, outputPath) {
     console.log('\n📝 Generating project structure documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Project Structure
 description: Understand the file and directory structure of the AEM Commerce boilerplate.
@@ -472,7 +495,7 @@ Global CSS and design tokens that can be customized for branding.
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -483,7 +506,7 @@ function generateBuildDocs(outputPath) {
     console.log('\n📝 Generating build process documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Build Process
 description: Learn about the build and deployment process for the AEM Commerce boilerplate.
@@ -555,7 +578,7 @@ Production deployment requires:
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -566,7 +589,7 @@ function generateConfigDocs(initializers, outputPath) {
     console.log('\n📝 Generating configuration documentation...');
 
     const generationDate = formatDate(new Date());
-    
+
     const content = `---
 title: Configuration
 description: Learn about configuration options for the AEM Commerce boilerplate.
@@ -635,7 +658,7 @@ Configure your environment using:
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
@@ -650,8 +673,8 @@ function updateSidebarNavigation(blocks) {
 
     // Find the boilerplate sidebar section
     const boilerplatePattern = /label:\s*['"]Boilerplate['"]\s*,\s*items:\s*\[[\s\S]*?\]/;
-    
-    const blockItems = blocks.map(block => 
+
+    const blockItems = blocks.map(block =>
         `{ label: '${block.displayName}', slug: 'boilerplate/blocks/${block.name}' }`
     ).join(',\n            ');
 

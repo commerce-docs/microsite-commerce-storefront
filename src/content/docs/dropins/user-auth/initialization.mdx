@@ -1,6 +1,6 @@
 ---
-title: User Account initialization
-description: Configure the User Account drop-in with language definitions, custom data models, and drop-in-specific options.
+title: User Auth initialization
+description: Configure the User Auth drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
@@ -9,17 +9,17 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **User Account initializer** configures user account management features including profile editing, address management, and account settings. Use initialization to customize account data models and user interface behaviors.
+The **User Auth initializer** configures authentication and authorization features including login, registration, password management, and session handling. Use initialization to customize authentication flows and user data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.2.0</strong>
+<strong>Version: 2.1.5</strong>
 </div>
 
 
 
 ## Configuration options
 
-The following table describes the configuration options available for the **User Account** initializer:
+The following table describes the configuration options available for the **User Auth** initializer:
 
 <TableWrapper nowrap={[0,1]}>
 
@@ -27,7 +27,7 @@ The following table describes the configuration options available for the **User
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | Yes | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
 
 </TableWrapper>
 
@@ -35,9 +35,9 @@ The following table describes the configuration options available for the **User
 
 Initialize the drop-in with default settings:
 
-```javascript title="scripts/initializers/user-account.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-account';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {});
 ```
@@ -46,9 +46,9 @@ await initializers.mountImmediately(initialize, {});
 
 Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
 
-```javascript title="scripts/initializers/user-account.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-account';
+import { initialize } from '@dropins/storefront-auth';
 
 const customStrings = {
   'AddToCart': 'Add to Bag',
@@ -64,7 +64,7 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 ```
 
 <Aside type="tip">
-For complete dictionary customization including all available keys and multi-language support, see the [User Account Dictionary](/dropins/user-account/dictionary/) page.
+For complete dictionary customization including all available keys and multi-language support, see the [User Auth Dictionary](/dropins/user-auth/dictionary/) page.
 </Aside>
 
 ## Customizing data models
@@ -80,19 +80,18 @@ The following models can be customized through the `models` configuration option
 
 | Model | Description |
 |---|---|
-| [`OrderHistoryModel`](#orderhistorymodel) | Transforms OrderHistoryModel data from GraphQL. |
-| [`CustomerDataModelShort`](#customerdatamodelshort) | Transforms CustomerDataModelShort data from GraphQL. |
+| [`CustomerModel`](#customermodel) | Transforms customer authentication data including profile information, addresses, and account settings. Use this to add custom fields or modify user data structures. |
 
 </TableWrapper>
 
-The following example shows how to customize the `OrderHistoryModel` model for the **User Account** drop-in:
+The following example shows how to customize the `CustomerModel` model for the **User Auth** drop-in:
 
-```javascript title="scripts/initializers/user-account.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-account';
+import { initialize } from '@dropins/storefront-auth';
 
 const models = {
-  OrderHistoryModel: {
+  CustomerModel: {
     transformer: (data) => ({
       // Add custom fields from backend data
       customField: data?.custom_field,
@@ -108,11 +107,11 @@ await initializers.mountImmediately(initialize, { models });
 
 ## Drop-in-specific configuration
 
-The **User Account** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **User Auth** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
 
-```javascript title="scripts/initializers/user-account.js"
+```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-account';
+import { initialize } from '@dropins/storefront-auth';
 
 await initializers.mountImmediately(initialize, {
   // Drop-in-specific configuration
@@ -135,9 +134,9 @@ The following TypeScript definitions show the structure of each configuration ob
 Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token').
 
 ```typescript
-authHeaderConfig?: {
-    header?: string;
-    tokenPrefix?: string;
+authHeaderConfig: {
+    header: string;
+    tokenPrefix: string;
   }
 ```
 
@@ -168,31 +167,16 @@ models?: {
 
 The following TypeScript definitions show the structure of each customizable model:
 
-### OrderHistoryModel
+### CustomerModel
 
 ```typescript
-export interface OrderHistoryModel {
-  items: OrderDetails[];
-  pageInfo: PaginationInfo;
-  totalCount: number;
-  dateOfFirstOrder: string;
-}
-```
-
-### CustomerDataModelShort
-
-```typescript
-export interface CustomerDataModelShort {
+export interface CustomerModel {
   firstName: string;
   lastName: string;
-  middleName: string;
-  dateOfBirth: string;
-  prefix: string;
-  gender: 1 | 2 | string;
-  suffix: string;
   email: string;
-  createdAt: string;
-  [key: string]: string | boolean | number;
+  groupUid: string;
+  customAttributes?: Record<string, string>[];
+  errors?: { message: string }[];
 }
 ```
 
