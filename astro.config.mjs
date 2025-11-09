@@ -323,6 +323,22 @@ async function config() {
                       },
                     ]
                   },
+                  // ---------- BOILERPLATE ----------
+                  {
+                    label: 'Boilerplate',
+                    collapsed: true,
+                    items: [
+                      { label: 'Overview', link: '/boilerplate/' },
+                      { label: 'Structure', link: '/boilerplate/structure/' },
+                      { label: 'Build Process', link: '/boilerplate/build-process/' },
+                      { label: 'Configuration', link: '/boilerplate/configuration/' },
+                      {
+                        label: 'Blocks',
+                        collapsed: true,
+                        autogenerate: { directory: '/boilerplate/blocks/' },
+                      },
+                    ],
+                  },
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
@@ -818,6 +834,8 @@ async function config() {
                       { label: 'Overview', link: '/merchants/storefront-builder/' },
                       { label: 'Create your content', link: '/merchants/storefront-builder/create-content/' },
                       { label: 'Using the Document Authoring tool', link: '/merchants/storefront-builder/document-authoring/' },
+                      { label: 'Page Metadata', link: '/merchants/storefront-builder/page-metadata/' },
+                      { label: 'Section Metadata', link: '/merchants/storefront-builder/section-metadata/' },
                       { label: 'Using the Visual Editor', link: '/merchants/storefront-builder/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/storefront-builder/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/storefront-builder/content-commerce-blocks/' },
