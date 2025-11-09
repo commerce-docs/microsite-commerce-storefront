@@ -475,7 +475,7 @@ function generateSectionMetadataTable() {
 
     // First row: section-metadata label
     output += `<tr>\n`;
-    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">Section Metadata</td>\n`;
+    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">section-metadata</td>\n`;
     output += `</tr>\n`;
 
     // Style row
