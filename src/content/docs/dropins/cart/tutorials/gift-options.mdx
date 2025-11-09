@@ -1,0 +1,256 @@
+---
+title: Add gift options to a product detail page
+description: Learn how to add gift options to a PDP.
+---
+
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The [`GiftOptions` container](/dropins/cart/containers/gift-options/) allows you to add gift options, such as gift wrapping or personalized messages, at various places on the storefront, including product detail pages. The gift option features enhance the shopping experience by enabling customers to select these options at multiple times during their shopping experience, such as when adding a product to the cart or during checkout.
+
+The code examples provided here demonstrate the general approach to building custom integrations with the `GiftOptions` container.
+
+<Aside>
+This tutorial is not a fully functional integration and should only be used as a reference.
+</Aside>
+
+## Step-by-step
+
+The following steps describe how to render the `GiftOptions` container on the PDP page and apply the selected gift options to the cart when the product is added.
+
+<Tasks>
+<Task>
+### Import required modules
+
+Import the `GiftOptions` container and `CartProvider`.
+
+```js
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+```
+
+</Task>
+<Task>
+### Define gift options configuration for an item
+
+In this step, we will define the gift options configuration for a specific item. This can be done in different ways, such as by fetching configurations from the backend using API methods or retrieving them from product data.
+
+#### Example 1: Use `cartItem` data
+
+Use this technique when the product has already been added to the cart, such as on the cart page:
+
+```js
+​​const cartItem = JSON.parse(
+ sessionStorage.getItem('DROPIN__CART__CART__DATA'),
+)?.items?.find((el) => el.sku === product.sku);
+```
+
+#### Example 2: Use a custom integration configuration
+
+This configuration can be composed using product data available on the PDP and a store configuration query.
+
+:::tip
+It is crucial that the manually-composed configuration matches the actual backend configurations. For example, the available gift wrappings must be fetched from the backend. Otherwise, they will not be applied correctly. The [`GiftOptions` container](/dropins/cart/containers/gift-options/) lists the relevant configuration screens in the Admin.
+:::
+
+```js
+type ProductGiftOptionsConfig = {
+ giftWrappingAvailable: boolean;
+ giftMessageAvailable: boolean;
+ giftWrappingPrice?: Price;
+ giftMessage?: {
+   recipientName?: string;
+   senderName?: string;
+   message?: string;
+ };
+ productGiftWrapping: GiftWrappingConfigProps[];
+};
+
+const predefinedConfig = {
+ giftWrappingAvailable: true,
+ giftMessageAvailable: true,
+ productGiftWrapping: [
+   {
+     design: 'Glossy Print Paper',
+     uid: 'Mg==',
+     selected: false,
+     image: {
+       url: 'https://aemshop.example.com/media/wrapping/glossy.png',
+       label: 'glossy.png',
+     },
+     price: {
+       currency: 'USD',
+       value: 25,
+     },
+   },
+   {
+     design: 'Foil Finish Paper',
+     uid: 'NQ==',
+     selected: false,
+     image: {
+       url: 'https://aemshop.example.com/media/wrapping/random-grid.jpg',
+       label: 'random-grid.jpg',
+     },
+     price: {
+       currency: 'USD',
+       value: 30,
+     },
+   },
+   {
+     design: 'Kraft Brown Paper',
+     uid: 'OA==',
+     selected: false,
+     image: {
+       url: 'https://mcstaging.aemshop.net/media/wrapping/brown-paper.jpg',
+       label: 'brown-paper.jpg',
+     },
+     price: {
+       currency: 'USD',
+       value: 45,
+     },
+   },
+ ],
+};
+```
+
+</Task>
+<Task>
+### Render the GiftOptions container
+
+For custom integration, we must pass an item prop, which can be either a `cartItem` or a manually-composed gift options configuration. In addition, we need to pass the `onGiftOptionsChange` callback. When provided, the container will not automatically save the gift options. Instead, the integration layer must handle this. The callback receives the updated gift options whenever they change.
+
+```js
+CartProvider.render(GiftOptions, {
+ item: cartItem ?? predefinedConfig,
+ view: 'product',
+ onGiftOptionsChange: async (data) => {
+   console.info('onGiftOptionsChange :>> ', data);
+   if (data) {
+     sessionStorage.setItem('updatedGiftOptions', JSON.stringify(data));
+   }
+ },
+})($giftOptions);
+```
+</Task>
+
+<Task>
+### Update the Add to Cart button
+
+At this stage, we extend the **Add to Cart** button functionality by calling the `updateProductsFromCart` API method provided by the cart drop-in component to apply gift options after adding the product to the cart.
+
+<Aside>
+Gift options must be applied after adding the product to the cart. Adobe Commerce does not support applying gift options before adding the product.
+</Aside>
+
+```js
+// Configuration - Button - Add to Cart
+UI.render(Button, {
+ children: labels.PDP?.Product?.AddToCart?.label,
+ icon: Icon({ source: 'Cart' }),
+ onClick: async () => {
+   try {
+     addToCart.setProps((prev) => ({
+       ...prev,
+       children: labels.Custom?.AddingToCart?.label,
+       disabled: true,
+     }));
+
+     // get the current selection values
+     const values = pdpApi.getProductConfigurationValues();
+     const valid = pdpApi.isProductConfigurationValid();
+
+     // add the product to the cart
+     if (valid) {
+       const { addProductsToCart, updateProductsFromCart } = await import(
+         '@dropins/storefront-cart/api.js'
+       );
+       await addProductsToCart([{ ...values }]).then(async (response) => {
+         const updatedGiftOptions = JSON.parse(
+           sessionStorage.getItem('updatedGiftOptions'),
+         );
+
+         if (!updatedGiftOptions) return;
+
+         const { items } = response;
+         const dropinCartData = items.find((el) => el.sku === values.sku);
+
+         const {
+           recipientName,
+           senderName,
+           message,
+           giftWrappingId,
+           isGiftWrappingSelected,
+         } = updatedGiftOptions;
+
+         const giftOptions = {
+           gift_message: {
+             to: recipientName,
+             from: senderName,
+             message,
+           },
+           gift_wrapping_id: isGiftWrappingSelected
+             ? giftWrappingId
+             : null,
+         };
+         await updateProductsFromCart([
+           {
+             uid: dropinCartData.uid,
+             quantity: dropinCartData.quantity,
+             giftOptions,
+           },
+         ]);
+       });
+     }
+
+     // reset any previous alerts if successful
+     inlineAlert?.remove();
+   } catch (error) {
+     // add alert message
+     inlineAlert = await UI.render(InLineAlert, {
+       heading: 'Error',
+       description: error.message,
+       icon: Icon({ source: 'Warning' }),
+       'aria-live': 'assertive',
+       role: 'alert',
+       onDismiss: () => {
+         inlineAlert.remove();
+       },
+     })($alert);
+
+     // Scroll the alertWrapper into view
+     $alert.scrollIntoView({
+       behavior: 'smooth',
+       block: 'center',
+     });
+   } finally {
+     addToCart.setProps((prev) => ({
+       ...prev,
+       children: labels.PDP?.Product?.AddToCart?.label,
+       disabled: false,
+     }));
+   }
+ },
+})($addToCart);
+```
+</Task>
+</Tasks>
+
+As a result of these customizations, the default `GiftOption` container is rendered as follows:
+
+<Diagram caption="Default GiftOption container">
+![Default GiftOption  container](@images/dropins/cart/pdp-gift-options-default.png)
+</Diagram>
+
+When the shopper makes a selection, the container is rendered as follows:
+
+<Diagram caption="Default GiftOption container">
+![Default GiftOption  container](@images/dropins/cart/pdp-gift-options-selected.png)
+</Diagram>
+
+After clicking **Add to Cart**, the product is added to the cart, and the selected gift options are applied. The cart page displays the applied gift options.
+
+<Diagram caption="Default GiftOption container">
+![Default GiftOption  container](@images/dropins/cart/pdp-gift-options-cart.png)
+</Diagram>

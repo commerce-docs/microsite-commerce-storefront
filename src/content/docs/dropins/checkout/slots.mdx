@@ -1,0 +1,178 @@
+---
+title: Checkout Slots
+description: Customize UI sections in the Checkout drop-in using slots.
+sidebar:
+  label: Slots
+  order: 5
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Checkout drop-in exposes **3 slots** in **4 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.0</strong>
+</div>
+
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#loginform-slots"><code>LoginForm</code></a></td>
+<td><code>Heading</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#paymentmethods-slots"><code>PaymentMethods</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#placeorder-slots"><code>PlaceOrder</code></a></td>
+<td><code>Content</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#termsandconditions-slots"><code>TermsAndConditions</code></a></td>
+<td><code>Agreements</code></td>
+</tr>
+</tbody>
+</table>
+
+
+## LoginForm slots
+
+```js {4}
+interface LoginFormProps
+
+slots?: {
+  Heading?: SlotProps<{
+    authenticated: boolean;
+  }>;
+};
+```
+
+---
+
+## PaymentMethods slots
+
+The `PaymentMethodsSlot` type uses an index signature where keys dynamically become slot names. Unlike standard slots with fixed names at compile time, this pattern determines slot names at runtime. You configure each slot with an object containing specific properties and render functions.
+
+```js
+interface PaymentMethodsProps
+
+slots?: {
+    Methods?: PaymentMethodsSlot;
+};
+```
+
+### Methods example
+
+This example from the Commerce Checkout block shows how to customize the `Methods` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+// Note: `commerceCoreEndpoint`, `getUserTokenCookie`, and `creditCardFormRef` should be defined in your block context
+
+provider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      [PaymentMethodCode.CREDIT_CARD]: {
+        render: (ctx) => {
+          const $creditCard = document.createElement('div');
+          PaymentServices.render(CreditCard, {
+            apiUrl: commerceCoreEndpoint,
+            getCustomerToken: getUserTokenCookie,
+            getCartId: () => ctx.cartId,
+            creditCardFormRef,
+          })($creditCard);
+          ctx.replaceHTML($creditCard);
+        },
+      },
+      [PaymentMethodCode.SMART_BUTTONS]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.APPLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.GOOGLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.VAULT]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.FASTLANE]: {
+        enabled: false,
+      },
+    }
+  }
+})(document.querySelector('.payment-methods'));
+```
+
+---
+
+## PlaceOrder slots
+
+```js {4}
+interface PlaceOrderProps
+
+slots?: {
+  Content?: SlotProps<ContentSlotContext>;
+};
+```
+
+---
+
+## TermsAndConditions slots
+
+```js {4}
+interface TermsAndConditionsProps
+
+slots?: {
+  Agreements?: SlotProps<{
+    appendAgreement: SlotMethod<{
+    name: string;
+    mode: AgreementMode;
+    translationId?: string;
+    text?: string;
+  }>;
+  }>;
+};
+```
+
+### Agreements example
+
+This example from the Commerce Checkout block shows how to customize the `Agreements` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
+
+provider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'default',
+        mode: 'manual',
+        translationId: 'Checkout.TermsAndConditions.label',
+      }));
+    }
+  }
+})(document.querySelector('.terms-and-conditions'));
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

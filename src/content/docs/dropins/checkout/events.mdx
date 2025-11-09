@@ -1,0 +1,462 @@
+---
+title: Checkout Data & Events
+description: Learn about the events used by the Checkout and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Checkout, Checkout, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Checkout** drop-in emits checkout state changes and listens to cart events, maintaining synchronization between the checkout flow and cart data throughout the order process.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.0</strong>
+</div>
+
+<Aside type="tip">
+For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
+</Aside>
+
+## Events reference
+
+Drop-ins communicate via the [event bus](/sdk/reference/events/).
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [checkout/values](#checkoutvalues-emits) | Emits | Emitted when form or configuration values change. |
+| [cart/initialized](#cartinitialized-listens) | Listens | Fired by Cart (`cart`) when the component completes initialization. |
+| [cart/merged](#cartmerged-listens) | Listens | Fired by Cart (`cart`) when data is merged. |
+| [cart/reset](#cartreset-listens) | Listens | Fired by Cart (`cart`) when the component state is reset. |
+| [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [checkout/error](#checkouterror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
+| [checkout/initialized](#checkoutinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-emits-and-listens) | Emits and listens | Triggered when the component state is updated. |
+| [shipping/estimate](#shippingestimate-emits-and-listens) | Emits and listens | Triggered when an estimate is calculated. |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+
+### `cart/data` (emits and listens)
+
+Triggered when cart data is available or changes. This event provides the current cart state including items, totals, and addresses.
+
+#### Event payload
+
+```typescript
+Cart | null
+```
+
+See [`Cart`](#cart) for full type definition.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartDataListener = events.on('cart/data', (data) => {
+  console.log('cart/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartDataListener.off();
+```
+
+### `cart/initialized` (listens)
+
+Fired by Cart (`cart`) when the component completes initialization.
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](#cartmodel) for full type definition.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartInitializedListener = events.on('cart/initialized', (data) => {
+  console.log('cart/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartInitializedListener.off();
+```
+
+### `cart/merged` (listens)
+
+Fired by Cart (`cart`) when data is merged.
+
+#### Event payload
+
+```typescript
+{
+  oldCartItems: Item[] | null;
+  newCart: CartModel | null;
+}
+```
+
+See [`Item`](/dropins/cart/events/#item), [`CartModel`](/dropins/cart/events/#cartmodel) for full type definitions.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartMergedListener = events.on('cart/merged', (data) => {
+  console.log('cart/merged event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartMergedListener.off();
+```
+
+### `cart/reset` (listens)
+
+Fired by Cart (`cart`) when the component state is reset.
+
+#### Event payload
+
+```typescript
+void
+```
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const cartResetListener = events.on('cart/reset', (data) => {
+  console.log('cart/reset event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+cartResetListener.off();
+```
+
+### `checkout/error` (emits and listens)
+
+Triggered when an error occurs during checkout operations such as address validation, payment processing, or order placement.
+
+#### Event payload
+
+```typescript
+CheckoutError
+```
+
+See [`CheckoutError`](#checkouterror) for full type definition.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutErrorListener = events.on('checkout/error', (data) => {
+  console.log('checkout/error event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutErrorListener.off();
+```
+
+### `checkout/initialized` (emits and listens)
+
+Triggered when the checkout component completes initialization with either cart or negotiable quote data. This indicates the checkout is ready for user interaction.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definitions.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
+  console.log('checkout/initialized event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutInitializedListener.off();
+```
+
+### `checkout/updated` (emits and listens)
+
+Triggered when the checkout state is updated, such as when shipping methods are selected, addresses are entered, or payment methods are chosen.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definitions.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
+  console.log('checkout/updated event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutUpdatedListener.off();
+```
+
+### `checkout/values` (emits)
+
+Emitted when form or configuration values change in the checkout. This event is useful for tracking user input, validating form fields, or synchronizing state across components.
+
+#### Event payload
+
+```typescript
+ValuesModel
+```
+
+See [`ValuesModel`](#valuesmodel) for full type definition.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const checkoutValuesListener = events.on('checkout/values', (data) => {
+  console.log('checkout/values event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+checkoutValuesListener.off();
+```
+
+### `shipping/estimate` (emits and listens)
+
+Triggered when shipping cost estimates are calculated for a given address. This event provides both the address used for estimation and the resulting shipping method with its cost.
+
+#### Event payload
+
+```typescript
+ShippingEstimate
+```
+
+See [`ShippingEstimate`](#shippingestimate) for full type definition.
+
+
+
+#### Usage
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const shippingEstimateListener = events.on('shipping/estimate', (data) => {
+  console.log('shipping/estimate event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+shippingEstimateListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### Cart
+
+The `Cart` interface represents a shopping cart including items, pricing, addresses, and shipping/payment methods.
+
+Used in: [`cart/data`](#cartdata-emits-and-listens), [`checkout/initialized`](#checkoutinitialized-emits-and-listens), [`checkout/updated`](#checkoutupdated-emits-and-listens).
+
+```ts
+interface Cart {
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: CartAddress;
+  email?: string;
+  id: string;
+  isEmpty: boolean;
+  isGuest: boolean;
+  isVirtual: boolean;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: CartShippingAddress[];
+}
+```
+
+### CartModel
+
+Used in: [`cart/initialized`](#cartinitialized-listens).
+
+```ts
+interface CartModel {
+  id: string;
+  totalQuantity: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+}
+```
+
+### CheckoutError
+
+Used in: [`checkout/error`](#checkouterror-emits-and-listens).
+
+```ts
+interface CheckoutError {
+  /**
+   * The primary, user-friendly error message. This should be safe to display
+   * directly in the UI.
+   * @example "Your card was declined."
+   */
+  message: string;
+
+  /**
+   * An optional, unique error code for programmatic handling. This allows the
+   * ServerError component to show specific icons, links, or actions.
+   * @example "payment_intent_declined"
+   */
+  code?: string;
+}
+```
+
+### NegotiableQuote
+
+The `NegotiableQuote` interface represents a B2B negotiable quote, which functions similarly to a cart but includes additional negotiation features like price adjustments and approval workflows.
+
+Used in: [`checkout/initialized`](#checkoutinitialized-emits-and-listens), [`checkout/updated`](#checkoutupdated-emits-and-listens).
+
+```ts
+interface NegotiableQuote {
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: Address;
+  email?: string;
+  isEmpty: boolean;
+  isVirtual: boolean;
+  name: string;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: ShippingAddress[];
+  status: NegotiableQuoteStatus;
+  uid: string;
+}
+```
+
+### ShippingEstimate
+
+Used in: [`shipping/estimate`](#shippingestimate-emits-and-listens).
+
+```ts
+interface ShippingEstimate {
+  address: PartialShippingAddress;
+  availableShippingMethods?: ShippingMethod[];
+  shippingMethod: ShippingEstimateShippingMethod | null;
+  success?: boolean;
+}
+```
+
+### ValuesModel
+
+Used in: [`checkout/values`](#checkoutvalues-emits).
+
+```ts
+interface ValuesModel {
+  email: string;
+  isBillToShipping: boolean | undefined;
+  selectedPaymentMethod: PaymentMethod | null;
+  selectedShippingMethod: ShippingMethod | null;
+}
+```
+
