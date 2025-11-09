@@ -1,0 +1,621 @@
+---
+title: Cart Functions
+description: API functions provided by the Cart drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
+  
+  Placeholders used in this template:
+  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
+  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
+  - DROPIN_VERSION → Version number (e.g., "1.5.1")
+  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
+  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
+  
+  The script handles:
+  - Reading function .mdx files from src/api directories in source repositories
+  - Cleaning Storybook imports and metadata
+  - Combining all functions into a single documentation page
+  
+  The template and script must be kept in sync.
+  
+  HEADING HIERARCHY:
+  H1: "DROPIN_NAME functions" (from title)
+  H2: Individual function names
+  H3: Examples, Events, Returns (subsection headings)
+  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
+*/}
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Cart drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: unknown</strong>
+</div>
+
+{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`addProductsToCart`](#addproductstocart) | Adds products to a cart. |
+| [`applyCouponsToCart`](#applycouponstocart) | Applies or replaces one or more coupons to the cart. |
+| [`applyGiftCardToCart`](#applygiftcardtocart) | Apply a gift card to the current shopping cart. |
+| [`createGuestCart`](#createguestcart) | Creates a new empty cart for a guest user. |
+| [`getCartData`](#getcartdata) | Is mainly used internally by the initializeCart() and refreshCart() functions. |
+| [`getEstimatedTotals`](#getestimatedtotals) | Returns estimated totals for cart based on an address. |
+| [`getEstimateShipping`](#getestimateshipping) | Returns the first available shipping method and its estimated cost, based on the provided address. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about a store's configuration. |
+| [`initializeCart`](#initializecart) | Initializes a guest or customer cart. |
+| [`publishShoppingCartViewEvent`](#publishshoppingcartviewevent) | Publishes a shopping cart view event to the ACDL. |
+| [`refreshCart`](#refreshcart) | Refreshes the cart data.. |
+| [`removeGiftCardFromCart`](#removegiftcardfromcart) | This function removes a single gift card from the cart. |
+| [`resetCart`](#resetcart) | This function resets the cart drop-in. |
+| [`setGiftOptionsOnCart`](#setgiftoptionsoncart) | setGiftOptionsOnCart is a function that sets gift options on the cart. |
+| [`updateProductsFromCart`](#updateproductsfromcart) | Updates cart items by either changing the quantity or removing and adding an item in one step. |
+
+</TableWrapper>
+
+## addProductsToCart
+
+The `addProductsToCart` function adds products to a cart. You must supply a `sku` and `quantity`for each product. The other parameters are specified for complex product types. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/" text="addProductsToCart" /> mutation.
+
+```ts
+const addProductsToCart = async (
+  items: { sku: string; parentSku?: string; quantity: number; optionsUIDs?: string[]; enteredOptions?: { uid: string; value: string }[]; customFields?: Record<string, any>; }[]
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The product identifier (SKU) to add to the cart. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (e.g., \`MS09-M-Blue\` for a medium blue shirt). |
+| `parentSku` | `string` | No | For configurable products, this is the SKU of the parent (base) product. For example, if adding a specific variant like \`MS09-M-Blue\` (child SKU), the \`parentSku\` would be \`MS09\` (the base configurable product). This helps Commerce track the relationship between the variant and its parent product. |
+| `quantity` | `number` | Yes | The number of items to add to the cart. For example, \`1\` to add a single item, or \`3\` to add three units of the product. This value must be a positive number. |
+| `optionsUIDs` | `string[]` | No | An array of option UIDs for configurable products. These are the UIDs of the selected product options (such as color or size) that define which product variant the customer wants. For example, if a customer selects \*\*Medium\*\* and \*\*Blue\*\* for a configurable shirt, you would include the UIDs for those specific options. Use the product query to retrieve available option UIDs for a product. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | An array of custom options that allow text input for customizable products. Each object contains a \`uid\` (the unique identifier for the custom option field from the product data) and a \`value\` (the text the customer entered). For example, if a product offers monogram personalization, you would provide the field's UID and the customer's text like \`\{ uid: 'Y3VzdG9tLW9wdGlvbi8x', value: 'ABC' \}\`. |
+| `customFields` | `Record<string, any>` | No | An optional object for passing additional custom data or attributes to associate with the cart item. This can include any key-value pairs needed for your implementation, such as gift messages, special handling instructions, or custom metadata. The structure and usage of this field depends on your Commerce backend configuration and any custom extensions you have installed. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events with the [`CartModel`](#cartmodel) as the data payload. Additionally, emits `cart/product/added` for new items and `cart/product/updated` for items with increased quantities. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## applyCouponsToCart
+
+A function that applies or replaces one or more coupons to the cart. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupons-to-cart/" text="applyCouponsToCart" /> mutation.
+
+```ts
+const applyCouponsToCart = async (
+  couponCodes: string[],
+  type: ApplyCouponsStrategy
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `couponCodes` | `string[]` | Yes | An array of coupon codes to apply to the cart. |
+| `type` | `ApplyCouponsStrategy` | Yes | The strategy for applying coupons. See \[\`ApplyCouponsStrategy\`\](#applycouponsstrategy). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events with the updated cart information after applying the coupons.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## applyGiftCardToCart
+
+The applyGiftCardToCart function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-gift-card-to-cart/" text="applyGiftCardToCart" /> mutation.
+
+```ts
+const applyGiftCardToCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftCardCode` | `string` | Yes | The code assigned to a gift card. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## createGuestCart
+
+The `createGuestCart` function creates a new empty cart for a guest user. This is typically used internally by the cart initialization process.
+
+```ts
+const createGuestCart = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the cart ID for the newly created guest cart: `cartId: string | null`
+
+---
+
+## getCartData
+
+The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `cart/data` or `cart/updated` events so that you do not need to make another network call.
+
+```ts
+const getCartData = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## getEstimatedTotals
+
+A function that returns estimated totals for cart based on an address. It takes an `address` parameter. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-totals/" text="estimateTotals" /> mutation.
+
+```ts
+const getEstimatedTotals = async (
+  address: EstimateAddressShippingInput
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `EstimateAddressShippingInput` | Yes | The shipping address used to calculate estimated cart totals, taxes, and shipping costs. See \[\`EstimateAddressShippingInput\`\](#estimateaddressshippinginput). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## getEstimateShipping
+
+The `getEstimateShipping` function returns the first available shipping method and its estimated cost, based on the provided address. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/" text="estimateShippingMethods" /> mutation. Note: This function returns raw GraphQL data. For a transformed `ShippingMethod` object, listen to the `shipping/estimate` event instead.
+
+```ts
+const getEstimateShipping = async (
+  address: EstimateAddressInput
+): Promise<any | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `EstimateAddressInput` | Yes | The address criteria used to determine available shipping methods. See \[\`EstimateAddressInput\`\](#estimateaddressinput). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`shipping/estimate`](/dropins/cart/events/#shippingestimate-emits-and-listens) event, which contains the transformed `ShippingMethod` data along with address information.
+
+### Returns
+
+Returns a [`RawShippingMethodGraphQL`](#rawshippingmethodgraphql) object with snake_case properties from the GraphQL response, or null if no valid shipping method is available.
+
+---
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about a store's configuration. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/" text="storeConfig" /> query.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+---
+
+## initializeCart
+
+The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a dropin's lifecycle. You do not need to call this manually. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/merge-carts/" text="mergeCarts" /> mutation.
+
+```ts
+const initializeCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/initialized`](/dropins/cart/events/#cartinitialized-emits), [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens), and [`cart/merged`](/dropins/cart/events/#cartmerged-emits-and-listens) events. The event payload contains data about the address and shipping method.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## publishShoppingCartViewEvent
+
+Publishes a shopping cart view event to the Adobe Client Data Layer (ACDL). This function sets the shopping cart context and triggers a `SHOPPING_CART_VIEW` event on the ACDL, typically used when a cart page loads.
+
+```ts
+const publishShoppingCartViewEvent = async (): any
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+Publishes the `SHOPPING_CART_VIEW` event to the ACDL with the current cart context.
+
+### Returns
+
+Returns `void`.
+
+---
+
+## refreshCart
+
+The `refreshCart` function refreshes the cart data.
+
+```ts
+const refreshCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) event with the updated cart information.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## removeGiftCardFromCart
+
+This function removes a single gift card from the cart. It function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/remove-giftcard/" text="removeGiftCardFromCart" /> mutation.
+
+```ts
+const removeGiftCardFromCart = async (
+  giftCardCode: string
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftCardCode` | `string` | Yes | Defines the gift card code to remove. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## resetCart
+
+This function resets the cart drop-in. As a result, the cart ID is set to null and the authenticated status is set to false.
+
+```ts
+const resetCart = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## setGiftOptionsOnCart
+
+The `setGiftOptionsOnCart` function sets options such as gift receipts and wrapping. It calls the  <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-gift-options/" text="setGiftOptionsOnCart" /> mutation.
+
+```ts
+const setGiftOptionsOnCart = async (
+  giftForm: GiftFormDataType
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `giftForm` | `GiftFormDataType` | Yes | Defines the gift options to set. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## updateProductsFromCart
+
+The `updateProductsFromCart` function updates cart items by either changing the quantity or removing and adding an item in one step. When passing a specified quantity, the function replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/" text="updateCartItems" /> mutation.
+
+When an `optionsUIDs` array is sent along with the cart item’s UID and quantity, the function adds the item with the specified options. It removes any pre-existing item with the same UID that lacks the newly provided `optionsUIDs`. In this process, the function invokes first the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/" text="addProductsToCart" />, and later the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/" text="updateCartItems" /> mutations.
+
+```ts
+const updateProductsFromCart = async (
+  items: UpdateProductsFromCart
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `UpdateProductsFromCart` | Yes | An input object that defines products to be updated. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events. Additionally, emits `cart/product/updated` event with the affected items when their quantities are changed. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+---
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### CartModel
+
+The `CartModel` object is returned by the following functions: [`addProductsToCart`](#addproductstocart), [`applyCouponsToCart`](#applycouponstocart), [`applyGiftCardToCart`](#applygiftcardtocart), [`getCartData`](#getcartdata), [`getEstimatedTotals`](#getestimatedtotals), [`initializeCart`](#initializecart), [`refreshCart`](#refreshcart), [`removeGiftCardFromCart`](#removegiftcardfromcart), [`resetCart`](#resetcart), [`setGiftOptionsOnCart`](#setgiftoptionsoncart), [`updateProductsFromCart`](#updateproductsfromcart).
+
+```ts
+interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  displayMiniCart: boolean;
+  miniCartMaxItemsDisplay: number;
+  cartExpiresInDays: number;
+  cartSummaryDisplayTotal: number;
+  cartSummaryMaxItems: number;
+  defaultCountry: string;
+  categoryFixedProductTaxDisplaySetting: string;
+  productFixedProductTaxDisplaySetting: string;
+  salesFixedProductTaxDisplaySetting: string;
+  shoppingCartDisplaySetting: {
+    fullSummary: boolean;
+    grandTotal: boolean;
+    price: number | string;
+    shipping: number | string;
+    subtotal: number | string;
+    taxGiftWrapping: number | string;
+    zeroTax: boolean;
+  };
+  useConfigurableParentThumbnail: boolean;
+  allowGiftWrappingOnOrder: boolean | null;
+  allowGiftWrappingOnOrderItems: boolean | null;
+  allowGiftMessageOnOrder: boolean | null;
+  allowGiftMessageOnOrderItems: boolean | null;
+  allowGiftReceipt: boolean;
+  allowPrintedCard: boolean;
+  printedCardPrice: Price;
+  cartGiftWrapping: string;
+  cartPrintedCard: string;
+}
+```
+
+### RawShippingMethodGraphQL
+
+The raw GraphQL response structure with snake_case properties returned by the estimateShippingMethods mutation.
+
+Returned by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface RawShippingMethodGraphQL {
+  amount: {
+    currency: string;
+    value: number;
+  };
+  carrier_code: string;
+  method_code: string;
+  error_message?: string;
+  price_excl_tax: {
+    currency: string;
+    value: number;
+  };
+  price_incl_tax: {
+    currency: string;
+    value: number;
+  };
+}
+```
+
+### ApplyCouponsStrategy
+
+Strategy for how coupons should be applied to the cart:
+
+- `APPEND`: Adds the specified coupons to any existing coupons already applied to the cart
+- `REPLACE`: Removes all existing coupons and applies only the specified coupons
+
+Used by: [`applyCouponsToCart`](#applycouponstocart).
+
+```ts
+enum ApplyCouponsStrategy {
+    APPEND = "APPEND",
+    REPLACE = "REPLACE"
+}
+```
+
+### EstimateAddressInput
+
+Defines the address criteria for estimating shipping methods.
+
+Used by: [`getEstimateShipping`](#getestimateshipping).
+
+```ts
+interface EstimateAddressInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        code?: string;
+        id?: number;
+    };
+}
+```
+
+### EstimateAddressShippingInput
+
+Defines the shipping address for calculating cart totals.
+
+Used by: [`getEstimatedTotals`](#getestimatedtotals).
+
+```ts
+interface EstimateAddressShippingInput {
+    countryCode: string;
+    postcode?: string;
+    region?: {
+        region?: string;
+        id?: number;
+    };
+    shipping_method?: {
+        carrier_code?: string;
+        method_code?: string;
+    };
+}
+```
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

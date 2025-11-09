@@ -1,0 +1,133 @@
+---
+title: Addresses container
+description: Learn about the Addresses container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `Addresses` container is a standalone component that creates, edits, and deletes customer addresses. It supports custom address attributes and configurable validation through the Adobe Commerce Admin.
+
+The `Addresses` container relies on the [`AddressForm`](https://experienceleague.adobe.com/developer/commerce/storefront/dropins/user-account/containers/address-form/) container for address creation and editing. It inherits all behaviors from the `AddressForm` container.
+
+## Container views
+The Addresses container can be implemented in several views.
+
+### Full-size view
+
+The full-size view is used when the `Addresses` component functions as a standalone page. This view displays all addresses, enables pagination (based on backend configurations), and provides full functionality for creating, editing, and deleting addresses. A **Create Address** button can be displayed below the list. Clicking the button opens the address creation form, which is configurable from the Commerce Admin.
+
+The following images illustrate the full-size view of the Addresses container with no addresses, all addresses, and an address being edited.
+
+<Diagram caption="Full size implementation of the Addresses container with no addresses">
+  ![Full size implementation of the Addresses container with no addresses](@images/dropins/user-account/addresses-full-empty.png)
+</Diagram>
+
+<Diagram caption="Full size implementation of the Addresses container with multiple addresses">
+  ![Full size implementation of the Addresses container with multiple addresses](@images/dropins/user-account/addresses-full-all.png)
+</Diagram>
+
+<Diagram caption="Full size implementation of the Addresses container being edited">
+  ![Full size implementation of the Addresses container being edited](@images/dropins/user-account/addresses-full-edit.png)
+</Diagram>
+
+### Minified view
+
+Use the minified view when the container is part of a page with other components, such as a user account dashboard. In this view, editing and deletion functionality is disabled, and the **Create New Address** button is replaced with a **View All Addresses** button. Only the default shipping and billing addresses are visible.
+
+The following images illustrate the minified view of the Addresses container with no addresses, and with multiple addresses (but only one is displayed).
+
+<Diagram caption="Empty minified Addresses container">
+  ![Empty minified Addresses container](@images/dropins/user-account/addresses-minified-multiple.png)
+</Diagram>
+
+<Diagram caption="Minified Addresses container with multiple addresses">
+  ![Minified Addresses container with multiple addresses](@images/dropins/user-account/addresses-minified-multiple.png)
+</Diagram>
+
+### Selectable view
+
+The selectable view is intended for scenarios that require address selection, such as during checkout. This view includes styling adjustments and represents each address card as a selectable radio button, facilitating address selection.
+
+The following images illustrate the selectable view of the Addresses container. In the first image an address has been selected. In the second, an address can be created.
+
+<Diagram caption="Selectable Addresses container with selection">
+  ![Selectable Addresses container with selection](@images/dropins/user-account/addresses-selectable-selected.png)
+</Diagram>
+
+<Diagram caption="Create an address in a selectable Addresses container">
+  ![Create an address in a selectable Addresses container](@images/dropins/user-account/addresses-selectable-new-address.png)
+</Diagram>
+
+<Aside type="tip" title="Tip">
+Custom address attributes and attribute validation are supported. See [Customer attribute properties](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/attributes/attribute-properties) in the _Customer Management Guide_ for more information.
+</Aside>
+
+## Configurations
+
+The Addresses container provides the following configuration options:
+
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['hideActionFormButtons', 'boolean', 'No', 'Controls the visibility of action buttons at the form\'s bottom. Useful for custom integrations where form submission is managed externally.'],
+        ['formName', 'string', 'No', 'Sets the "name" attribute for the form. Defaults to "addressesForm" if not provided. Useful for custom integrations.'],
+        ['slots.AddressCard', 'slot', 'No', 'Allows overriding address card content, such as rendering additional data or changing layout.'],
+        ['slots.AddressFormActions', 'AddressFormActionsContext', 'No', 'Provides an option to override the call-to-action buttons for the address form.'],
+        ['slots.AddressFormInputs', 'AddressFormInputsContext', 'No', 'Allows additional custom inputs or HTML elements at the form’s bottom.'],
+        ['slots\[`AddressFormInput_${attribute.code}`]', 'slot', 'No', 'Allows overriding input used for a particular form field. Example slot names: “AddressFormInput_firstname”, “AddressFormInput_street”.'],
+        ['title', 'string', 'No', 'Custom container header text overriding translations.'],
+        ['addressFormTitle', 'string', 'No', 'Custom address form header text overriding translations (optional).'],
+        ['defaultSelectAddressId', 'string', 'No', 'Used only in selectable view. Determines which address is selected by default.'],
+        ['showFormLoader', 'boolean', 'No', 'Determines if a shimmer loader displays instead of the form. Can be used to manage the form\’s loading state externally.'],
+        ['onAddressData', 'function', 'No', 'Callback executed on each form change, receiving form data as a parameter. Useful for custom integrations. This is the same as the onChange AddressForm callback.'],
+        ['forwardFormRef', 'HTMLInputElement', 'No', 'Provides a reference to the form\’s DOM element. Useful for custom integrations. This ref also grants access to the "handleValidationSubmit" method to validate form data.'],
+        ['selectShipping', 'boolean', 'No', 'Applicable only in the selectable view. When set to true, this configuration enables the container to handle the selection of an address as a shipping address (for example, selecting a shipping address during checkout).'],
+        ['selectBilling', 'boolean', 'No', 'Applicable only in the selectable view. When set to true, this configuration enables the container to handle the selection of an address as a billing address (for example, selecting a billing address during checkout). If both "selectShipping" and "selectBilling" are set to true, the container manages the address selection for both purposes, allowing one address to be used during checkout.'],
+        ['showSaveCheckBox', 'boolean', 'No', 'Controls visibility of the "Save in address book" checkbox. Useful for implementations where customers can choose to save the address, with form submission managed externally. Enabling this checkbox hides the action buttons automatically (equivalent to setting "hideActionFormButtons" to "true".)'],
+        ['saveCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Save in address book" checkbox.'],
+        ['selectable', 'boolean', 'No', 'Whether to enable/disable the selectable view.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the address container.'],
+        ['withHeader', 'boolean', 'No', 'Whether to show/hide the container header.'],
+        ['minifiedView', 'boolean', 'No', 'Whether to enable/disable the minified view.'],
+        ['withActionsInMinifiedView', 'boolean', 'No', 'Whether to show/hide address card actions in the minified view.'],
+        ['withActionsInFullSizeView', 'boolean', 'No', 'Whether to show/hide address card actions in the full-size view.'],
+        ['inputsDefaultValueSet', 'CustomerAddressesModel', 'No', 'Allows a set of default values for form inputs.'],
+        ['shippingCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Set as default shipping address" checkbox.'],
+        ['billingCheckBoxValue', 'boolean', 'No', 'Sets the initial value of the "Set as default billing address" checkbox.'],
+        ['showShippingCheckBox', 'boolean', 'No', 'Controls visibility of the "Set as default shipping address" checkbox. The checkbox remains in the form even if hidden, allowing shippingCheckBoxValue to set its value.'],
+        ['showBillingCheckBox', 'boolean', 'No', 'Controls visibility of the "Set as default billing address" checkbox. As with the shipping checkbox, it remains present even if hidden.'],
+        ['routeAddressesPage', 'function', 'No', 'Applicable only in the minified view. Determines where the “View all addresses” button redirects the customer.'],
+        ['onSuccess', 'function', 'No', 'Callback executed upon successful form submission.'],
+        ['onError', 'function', 'No', 'Callback executed if an error occurs during submission. Receives the error as a parameter.'],
+    ]}
+/>
+
+## Example
+
+The following example demonstrates how to use the Addresses container:
+
+```javascript
+export default async function decorate(block) {
+ const {
+   'minified-view': minifiedViewConfig = 'false',
+ } = readBlockConfig(block);
+
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(Addresses, {
+     minifiedView: minifiedViewConfig === 'true',
+     withActionsInMinifiedView: false,
+     withActionsInFullSizeView: true,
+     routeAddressesPage: () => CUSTOMER_ADDRESS_PATH,
+   })(block);
+ }
+}
+
+
+```

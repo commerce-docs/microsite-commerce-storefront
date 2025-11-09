@@ -1,0 +1,63 @@
+---
+title: OrderStatus container
+description: Learn about the OrderStatus container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `OrderStatus` container displays the current order status and a service message about the order’s condition. It supports three actions: Return, Cancel, and Reorder. The availability of these actions is defined by the backend, based on the order status, individual items, and global configurations.
+
+To display all information, you must enable the following features:
+
+- [Returns](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/returns/rma-configure)
+- [Allow reorders](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/shopper-tools/reorders-allow)
+- [Allow order cancellations](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/shopper-tools/cancel-allow)
+
+<Diagram caption="OrderStatus container">
+  ![OrderStatus  container](@images/dropins/order/order-status.png)
+</Diagram>
+
+## Configurations
+
+The `OrderStatus` container provides the following configuration options:
+
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots.OrderActions', 'slot', 'No', 'Provides the ability to customize / extend available order actions.'],
+        ['orderData', 'OrderDataModel', 'No', 'Contains order information, including the order ID and a list of items.'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form for styling.'],
+        ['statusTitle', 'string', 'No', 'Provides the ability to manually input a custom title for the status section.'],
+        ['status', 'StatusEnumProps', 'No', 'Displays one of the predefined statuses, such as Pending, Shipping, Complete, Processing, On Hold, Canceled, Suspected Fraud, or Payment Review.'],
+        ['routeCreateReturn', 'function', 'No', 'A function that returns the URL to redirect the user to create return page.'],
+        ['onError', 'function', 'No', 'A function executed when an error occurs. It receives an errorInformation object with details about the error.'],
+    ]}
+/>
+
+## Example
+
+The following example demonstrates how to render the `OrderStatus` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(OrderStatus, {
+    routeCreateReturn: ({ token, number: orderNumber }) => {
+      const isAuthenticated = checkIsAuthenticated();
+
+      const { searchParams } = new URL(window.location.href);
+      const orderRefFromUrl = searchParams.get('orderRef');
+      const newOrderRef = isAuthenticated ? orderNumber : token;
+
+      const encodedOrderRef = encodeURIComponent(orderRefFromUrl || newOrderRef);
+
+      return checkIsAuthenticated() ? `${CUSTOMER_CREATE_RETURN_PATH}?orderRef=${encodedOrderRef}` : `${CREATE_RETURN_PATH}?orderRef=${encodedOrderRef}`;
+    },
+    routeOnSuccess: () => '/cart',
+  })(block);
+}
+```

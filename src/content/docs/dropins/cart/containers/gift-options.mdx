@@ -1,0 +1,241 @@
+---
+title: GiftOptions container
+description: Learn about the GiftOptions container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `GiftOptions` container allows shoppers to personalize their orders by adding gift wrapping and a gift message for each cart item or by applying gift-related options to the entire order. It can be displayed in a product or order view, with each view supporting both editable and non-editable modes, controlled via props.
+
+Products can have the following gift options:
+
+* Gift wrapping
+* Gift message
+
+Orders can have the following gift options:
+
+* Gift receipt
+* Printed card
+* Gift wrapping
+* Gift message
+
+The following diagrams illustrate how gift options can be rendered.
+
+<Diagram caption="GiftOptions container with all available options">
+  ![GiftOptions container with all available options](@images/dropins/cart/gift-options-unset.png)
+</Diagram>
+
+<Diagram caption="GiftOptions container with options that have been set">
+  ![GiftOptions container with options that have been set](@images/dropins/cart/gift-options-set.png)
+</Diagram>
+
+## Admin configuration
+
+Gift options highly configurable, allowing merchants to manage gift options at both the global and product levels. This flexibility ensures that gift options can be tailored to meet the specific needs of the store and its products. These configurations determine how your frontend code will behave and what options will be available to customers during the shopping experience.
+
+### Global configuration
+
+The merchant can manage global gift option configurations from the Admin at **Stores** > Configuration > **Sales** > **Sales** > **Gift Options**. The following options are available:
+
+* **Allow Gift Messages on Order Level**
+* **Allow Gift Messages for Order Items**
+* **Allow Gift Wrapping on Order Level**
+* **Allow Gift Wrapping for Order Items**
+* **Allow Gift Receipt**
+* **Allow Printed Card**
+* **Default Price for Printed Card**
+
+Global configurations apply to all products unless overridden by product level configurations.
+
+### Product-level configuration
+
+Each product can have its own gift option configuration, which takes precedence over the global configurations. To manage product-level configurations, the administrator must ensure that the product is enabled for gift options. This can be done by setting the following options in the product configuration (**Catalog** > **Products** > _Product_ > **Gift Options**):
+
+**Allow Gift Message** - If enabled, customers can add a personalized gift message for this product even if gift messages are globally disabled. If disabled, gift messages will not be available for this product, even if globally enabled.
+
+**Allow Gift Wrapping** - If enabled, customers can select a gift wrapping for this product even if gift wrapping is globally disabled. If disabled, gift wrapping will not be available for this product, even if globally enabled. If gift wrapping is disabled at least for one product in cart, you cannot apply gift wrapping to the whole order, even if order-level gift wrapping is enabled globally.
+
+**Price for Gift Wrapping** - If set, overrides the pricing for all gift-wrapping options for this product.
+
+### Gift wrapping configuration
+
+Gift wrapping options can be configured and managed from **Stores** > Configuration > **Gift Wrapping**. Settings include a title, price, and image for each gift wrapping option.
+
+### Tax Display configuration
+
+Tax display settings define how taxes for gift options are shown on different pages, such as the cart and order summary. These settings can be configured under **Stores** > Configuration > **Sales** > **Tax**.
+
+## Container configurations
+
+The `GiftOptions` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['dataSource', 'cart | order', 'No', 'Coupon code input field.'],
+    ['view', 'product | order', 'No', 'Defines which view of the GiftOptions container should be rendered based on the insertion location.'],
+    ['isEditable', 'Boolean', 'No', 'Determines whether the GiftOptions container should be rendered in an editable mode.'],
+    ['item', 'Object', 'No', 'The item prop is required for initializing the product view. It is used to retrieve available gift options and product-level configurations.'],
+    ['initialLoading', 'Boolean', 'No', ' Indicates the initial state of the component, which can be used for UX purposes.'],
+    ['readOnlyFormOrderView', 'primary | secondary', 'No', 'Determines the styling of the GiftOptions container in order view - non-editable mode.'],
+    ['handleItemsLoading', 'Function', 'No', 'Used to integrate GiftOptions with the CartSummaryList container provided by cart drop-in.'],
+    ['handleItemsError', 'Function', 'No', 'Used to integrate GiftOptions with cart CartSummaryList container provided by cart drop-in.'],
+    ['onItemUpdate', 'Function', 'No', 'Used to integrate GiftOptions with cart CartSummaryList container provided by cart drop-in.'],
+    ['onGiftOptionsChange', 'Function', 'No', 'Used to build custom GiftOptions container integrations.'],
+  ]}
+/>
+
+For the `dataSource` prop, specify `cart` when the source of truth is the cart page, meaning gift options are applied at the cart level and the container should initialize with the currently selected gift options. Also, specify card on any other page where the cart drop-in fires a `cart/data` event. Specify `order` when the source of truth is a previously-placed order or if the page is controlled by the order drop-in and initialized by an `order/data` event.
+
+For the `view` prop, specify `product` when the `GiftOptions` container is rendered at the product level, allowing users to configure gift options for a specific product. Use `order` when the container is rendered at the order level, enabling users to configure gift options for the entire order.
+
+Set the `isEditable` prop to `true` when gift options should be editable, such as on the cart page, where users can modify options before placing an order. Use `false` when gift options should be non-editable, such as on the Order Details page, where users view gift options for an already placed order.
+
+The `items` prop accepts:
+
+* A cart item object (for seamless integration with the cart and checkout pages).
+* A custom-shaped object with the required fields:
+
+  ```js
+  export type ProductGiftOptionsConfig = {
+    giftWrappingAvailable: boolean;
+    giftMessageAvailable: boolean;
+    giftWrappingPrice?: Price;
+    giftMessage?: {
+        recipientName?: string;
+        senderName?: string;
+        message?: string;
+    };
+  productGiftWrapping: GiftWrappingConfigProps[];
+  };
+  ```
+
+## Example configurations
+
+The following examples demonstrate how to configure the `GiftOptions` container in different scenarios.
+
+### Product view: editable
+
+The following example demonstrates how to render the `GiftOptions` container in an editable mode at the product level:
+
+```js
+provider.render(CartSummaryList, {
+ hideHeading: hideHeading === 'true',
+ routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+ routeEmptyCartCTA: startShoppingURL ? () => rootLink(startShoppingURL) : undefined,
+ maxItems: parseInt(maxItems, 10) || undefined,
+ attributesToHide: hideAttributes
+   .split(',')
+   .map((attr) => attr.trim().toLowerCase()),
+ enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
+ enableRemoveItem: enableRemoveItem === 'true',
+ slots: {
+   Footer: (ctx) => {
+     const giftOptions = document.createElement('div');
+
+     provider.render(GiftOptions, {
+       item: ctx.item,
+       view: 'product',
+       dataSource: 'cart',
+       handleItemsLoading: ctx.handleItemsLoading,
+       handleItemsError: ctx.handleItemsError,
+       onItemUpdate: ctx.onItemUpdate,
+     })(giftOptions);
+
+     ctx.appendChild(giftOptions);
+   },
+ },
+})($list);
+```
+
+### Product View: non-editable
+
+The following example demonstrates how to render the `GiftOptions` container in a non-editable mode at the product level:
+
+```js
+CartProvider.render(CartSummaryList, {
+ variant: 'secondary',
+ slots: {
+   Heading: (headingCtx) => {
+     const title = 'Your Cart ({count})';
+
+     const cartSummaryListHeading = document.createElement('div');
+     cartSummaryListHeading.classList.add('cart-summary-list__heading');
+
+     const cartSummaryListHeadingText = document.createElement('div');
+     cartSummaryListHeadingText.classList.add(
+       'cart-summary-list__heading-text',
+     );
+
+     cartSummaryListHeadingText.innerText = title.replace(
+       '({count})',
+       headingCtx.count ? `(${headingCtx.count})` : '',
+     );
+     const editCartLink = document.createElement('a');
+     editCartLink.classList.add('cart-summary-list__edit');
+     editCartLink.href = rootLink('/cart');
+     editCartLink.rel = 'noreferrer';
+     editCartLink.innerText = 'Edit';
+
+     cartSummaryListHeading.appendChild(cartSummaryListHeadingText);
+     cartSummaryListHeading.appendChild(editCartLink);
+     headingCtx.appendChild(cartSummaryListHeading);
+
+     headingCtx.onChange((nextHeadingCtx) => {
+       cartSummaryListHeadingText.innerText = title.replace(
+         '({count})',
+         nextHeadingCtx.count ? `(${nextHeadingCtx.count})` : '',
+       );
+     });
+   },
+   Footer: (ctx) => {
+     const giftOptions = document.createElement('div');
+
+     CartProvider.render(GiftOptions, {
+       item: ctx.item,
+       view: 'product',
+       dataSource: 'cart',
+       isEditable: false,
+       handleItemsLoading: ctx.handleItemsLoading,
+       handleItemsError: ctx.handleItemsError,
+       onItemUpdate: ctx.onItemUpdate,
+     })(giftOptions);
+
+     ctx.appendChild(giftOptions);
+   },
+ },
+})($cartSummary);
+```
+
+### Order view: editable
+
+The following example demonstrates how to render the `GiftOptions` container in an editable mode at the order level:
+
+```js
+provider.render(GiftOptions, {
+ view: 'order',
+ dataSource: 'cart',
+})($giftOptions);
+```
+
+### Order view: non-editable
+
+The following example demonstrates how to render the `GiftOptions` container in a non-editable mode at the order level:
+
+```js
+CartProvider.render(GiftOptions, {
+ view: 'order',
+ dataSource: 'cart',
+ isEditable: false,
+})($giftOptions);
+```
+
+## Custom integrations
+
+You can build additional custom integrations for gift option functionality using the GiftOptions container.
+As an example, we can integrate the GiftOptions container on the Product Detail Page (PDP), allowing customers to select gift options for products before adding them to the cart. The code examples provided below demonstrate the general approach to building custom integrations with the GiftOptions container.

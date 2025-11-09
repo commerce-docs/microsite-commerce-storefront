@@ -1,0 +1,62 @@
+---
+title: ShippingStatus container
+description: Learn about the ShippingStatus container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The `ShippingStatus` container displays information about shipments, including product images, the delivery service used, and tracking numbers. A separate block is rendered for each shipment created for the order. It also lists products that have not yet been shipped, providing a clear overview of the shipping status for all items.
+
+<Diagram caption="ShippingStatus container">
+  ![ShippingStatus  container](@images/dropins/order/shipping-status.png)
+</Diagram>
+
+## Configurations
+
+The `ShippingStatus` container provides the following configuration options:
+
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['slots.DeliveryTimeLine', 'slot', 'No', 'Allows integration of the delivery process in a timeline format. Displays key events from dispatch to arrival, making it easier to track delivery progress and view the current stage in real-time.'],
+        ['slots.DeliveryTrackActions', 'slot', 'No', 'Enables integration of custom actions related to order and delivery tracking. Allows customization with parameters such as delivery type, status updates, and timestamps, providing flexibility and control over user interactions and tracking.'],
+        ['slots.ReturnItemsDetails', 'slot', 'No', 'Supports adding or customizing additional data for return items, enabling tailored content to meet specific requirements.'],
+        ['className', 'string', 'No', 'CSS class for additional styling customization of the container.'],
+        ['collapseThreshold', 'number', 'No', 'Sets the minimum number of elements required for images to be displayed in an accordion view.'],
+        ['orderData', 'OrderDataModel', 'No', 'Contains order data, including the order ID and a list of items.'],
+        ['routeOrderDetails', 'function', 'No', 'A function that returns the URL for the product details route.'],
+        ['routeTracking', 'function', 'No', 'Specifies the URL where the customer should be redirected when clicking the tracking number link.'],
+        ['routeProductDetails', 'function', 'No', 'A function that returns the URL for the product details page.'],
+    ]}
+/>
+
+## Example
+
+The following example demonstrates how to render the `ShippingStatus` container:
+
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(ShippingStatus, {
+    routeTracking: ({ carrier, number }) => {
+      if (carrier?.toLowerCase() === 'ups') {
+        return `${UPS_TRACKING_URL}?tracknum=${number}`;
+      }
+      return '';
+    },
+    routeProductDetails: (data) => {
+      if (data?.orderItem) {
+        return `/products/${data?.orderItem?.productUrlKey}/${data?.orderItem?.product?.sku}`;
+      }
+      if (data?.product) {
+        return `/products/${data?.product?.urlKey}/${data?.product?.sku}`;
+      }
+      return '#';
+    },
+  })(block);
+}
+```

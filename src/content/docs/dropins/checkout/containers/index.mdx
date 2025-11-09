@@ -1,0 +1,156 @@
+---
+title: Checkout containers
+description: Learn about the Checkout containers available for building checkout experiences.
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+
+Checkout containers handle address collection, payment, and order placement. The following containers provide the building blocks for complete checkout experiences.
+
+<TableWrapper nowrap={[0]}>
+
+| Container | Description |
+|-----------|-------------|
+| [AddressValidation](/dropins/checkout/containers/address-validation/) | Validate addresses for accurate delivery. |
+| [BillToShippingAddress](/dropins/checkout/containers/bill-to-shipping-address/) | Use shipping address as billing address. |
+| [EstimateShipping](/dropins/checkout/containers/estimate-shipping/) | Estimate shipping costs before entering full address. |
+| [LoginForm](/dropins/checkout/containers/login-form/) | Customer login for returning customers. |
+| [MergedCartBanner](/dropins/checkout/containers/merged-cart-banner/) | Notify when guest cart merges with logged-in cart. |
+| [OutOfStock](/dropins/checkout/containers/out-of-stock/) | Handle cart items unavailable during checkout. |
+| [PaymentMethods](/dropins/checkout/containers/payment-methods/) | Payment options and secure payment collection. |
+| [PlaceOrder](/dropins/checkout/containers/place-order/) | Submit order and complete checkout. |
+| [ServerError](/dropins/checkout/containers/server-error/) | Display errors when checkout operations fail. |
+| [ShippingMethods](/dropins/checkout/containers/shipping-methods/) | Shipping options with costs and delivery times. |
+| [TermsAndConditions](/dropins/checkout/containers/terms-and-conditions/) | Terms, conditions, and agreements for acceptance. |
+
+</TableWrapper>
+
+## Common container configuration
+
+The following sections describe common properties that can be applied to Checkout containers.
+
+### Title and heading customization
+
+Each container provides a title and a heading by default. If you want to hide the title or provide a customized title, you can use the `TitleProps` interface.
+
+#### TitleProps interface
+
+The `TitleProps` interface provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['displayTitle', 'boolean', 'No', 'Displays the title of the container.'],
+    ['slots', 'object', 'No', 'Object with the content to be displayed on the title.'],
+  ]}
+/>
+
+The container receives an object that implements the `TitleProps` interface with the following properties:
+
+```ts
+export interface TitleProps {
+  displayTitle?: boolean;
+  slots?: {
+    Title?: SlotProps;
+  };
+}
+```
+
+- The `displayTitle` property set to _true_ displays the title of the container; otherwise, the title will be hidden.
+- The `slots` property is an object containing the following properties:
+  - The `Title` property is a handler used to render a customized title content.
+
+:::note
+In the pages that follow, you will learn how to customize the `Title` and how to use it.
+:::
+
+### Active property
+
+The `active` property indicates whether the container is active. When set to _false_, the container becomes non-reactive, meaning it will not respond to system events, will not subscribe to them, and will not be displayed in the user interface.
+
+#### `active` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
+  ]}
+/>
+
+```ts
+active?: boolean;
+```
+
+#### Behavior:
+
+- When `active` is _true_:
+  - The container subscribes to system events
+  - It renders in the user interface and it is visible (shows a skeleton or renders the component in the UI)
+  - It executes its normal operations
+- When `active` is _false_:
+  - The container does not subscribe to system events
+  - It does not render in the user interface and its visibility is set to false
+  - Side effects and state updates are not executed
+
+#### Example of `active` prop definition
+
+In the following example, the `ShippingMethods` container will be deactivated; this means it will not be rendered to the UI and will not listen to system events.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  active: false,
+})($deliveryMethods),
+```
+
+### AutoSync property
+
+The `autoSync` property determines whether the container automatically synchronizes its state changes with the backend via API calls. When set to _false_, the container does not automatically synchronize its state, but still maintains local updates.
+
+#### `autoSync` prop declaration
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['autoSync', 'boolean', 'No', 'Synchronizes/does not synchronize the container local state with the backend (default value is true).'],
+  ]}
+/>
+
+```ts
+autoSync?: boolean;
+```
+
+#### Behavior:
+
+- When `autoSync` is _true_:
+  - Local changes are synchronized with the backend
+  - GraphQL mutations are executed when selection or local state changes
+  - The remote cart is automatically updated
+- When `autoSync` is _false_:
+  - Changes are only maintained locally
+  - No automatic GraphQL mutations are performed on the backend
+  - Control of mutations is passed to parent or external components
+
+#### Use cases:
+
+- In multi-step checkout flows where you want to control when data is sent to the backend
+- For nested containers where a parent container handles synchronization
+- In implementations that need additional validation before sending data
+
+#### Example of `autoSync` prop definition
+
+In the following example, the `ShippingMethods` container will not automatically synchronize its state changes with the backend; this means it will not automatically set the shipping method selected on the cart.
+
+```ts
+CheckoutProvider.render(ShippingMethods, {
+  UIComponentType: 'ToggleButton',
+  displayTitle: false,
+  autoSync: false,
+})($deliveryMethods),
+```
+

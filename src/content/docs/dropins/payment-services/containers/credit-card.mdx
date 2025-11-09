@@ -1,0 +1,51 @@
+---
+title: CreditCard container
+description: Use the CreditCard container to render a credit card form during checkout.
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+
+The `CreditCard` container allows a shopper to enter credit card details during the checkout process. You can configure it to manage and display the credit card fields.
+
+## CreditCard configurations
+
+The `CreditCard` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `getCartId` | function | Yes | Should return a promise that resolves to the shopper's cart ID. |
+| `creditCardFormRef` | object | Yes | Credit card form reference. Initially, `{ current: null }` should be passed. Once rendered, the credit card container will set the `current` property to an `{ validate: () => boolean; submit: () => Promise<void> }` object, which parent containers can use to (programmatically) validate and submit the credit card form. Any error that happens during the payment flow will not only propagate to `onError` but will also cause the promise returned by `submit()` to be rejected.  |
+| `onSuccess` | function | No | Called when the payment flow finishes successfully. The function receives an `{ cartId: string }` object as an argument. |
+| `onError` | function | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties: `{name: string, message: string}`, containing the localized error name and message. Both properties are user-facing and can be translated using the `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). |
+
+</TableWrapper>
+
+## Example
+
+The following example shows how to render and submit a credit card form.
+
+```js
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
+
+PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
+
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
+}
+```
