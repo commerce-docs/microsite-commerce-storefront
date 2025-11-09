@@ -571,8 +571,7 @@ function generateMetadataTable(blockName, blockDisplayName) {
     }
 
     output += `</tbody>\n`;
-    output += `</table>\n`;
-    output += `</div>\n\n`;
+    output += `</table>\n\n`;
 
     return output;
 }
@@ -609,8 +608,7 @@ function generateDocumentAuthoringTable(blockName, configs) {
     }
 
     output += `</tbody>\n`;
-    output += `</table>\n`;
-    output += `</div>\n\n`;
+    output += `</table>\n\n`;
 
     return output;
 }
