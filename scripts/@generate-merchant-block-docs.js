@@ -469,9 +469,8 @@ function generateSectionMetadataTable() {
     let output = `## Section Metadata\n\n`;
     output += `Control the section styling that wraps your commerce block using the section metadata table:\n\n`;
 
-    // Wrap table in a div with custom styling matching AEM format
-    output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 100%; min-width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: section-metadata label
@@ -486,8 +485,7 @@ function generateSectionMetadataTable() {
     output += `</tr>\n`;
 
     output += `</tbody>\n`;
-    output += `</table>\n`;
-    output += `</div>\n\n`;
+    output += `</table>\n\n`;
 
     output += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0 2rem 0;">\n`;
     output += `<strong>Learn more:</strong> See the <a href="/merchants/storefront-builder/section-metadata/">Section Metadata guide</a> for complete styling options and the <a href="/merchants/storefront-builder/page-metadata/">Page Metadata guide</a> for SEO, caching, and social sharing options.\n`;
@@ -535,9 +533,8 @@ function generateMetadataTable(blockName, blockDisplayName) {
     let output = `## Page Metadata\n\n`;
     output += `Configure page-level metadata in the document authoring table below:\n\n`;
 
-    // Wrap table in a div with custom styling matching AEM format
-    output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 100%; min-width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: metadata label
@@ -592,9 +589,8 @@ function generateDocumentAuthoringTable(blockName, configs) {
     let output = `## Document Authoring Configuration\n\n`;
     output += `Modify the values in the second column to customize the block's behavior. You can remove any rows for properties you don't need to configure.\n\n`;
 
-    // Wrap table in a div with custom styling matching AEM format
-    output += `<div style="width: 100%; overflow-x: auto;">\n`;
-    output += `<table style="width: 100%; min-width: 470px; table-layout: fixed; border-collapse: collapse;">\n`;
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
     // First row: block name only (single cell, centered)
