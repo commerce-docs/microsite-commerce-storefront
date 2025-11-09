@@ -288,7 +288,6 @@ This block uses default configuration. No additional configuration is required.
     // Add related links
     content += `## Related Resources
 
-- [Technical Documentation](/boilerplate/blocks/${block.name}/)
 - [AEM Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce)
 - [Edge Delivery Services](https://www.aem.live/docs/)
 `;
