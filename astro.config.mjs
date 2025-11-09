@@ -833,12 +833,14 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/merchants/storefront-builder/' },
                       { label: 'Create your content', link: '/merchants/storefront-builder/create-content/' },
-                      { label: 'Page metadata', link: '/merchants/storefront-builder/page-metadata/' },
-                      { label: 'Section metadata', link: '/merchants/storefront-builder/section-metadata/' },
                       { label: 'Using the Document Authoring tool', link: '/merchants/storefront-builder/document-authoring/' },
                       { label: 'Using the Visual Editor', link: '/merchants/storefront-builder/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/storefront-builder/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/storefront-builder/content-commerce-blocks/' },
+                      { label: 'Page metadata', link: '/merchants/storefront-builder/page-metadata/' },
+                      { label: 'Section metadata', link: '/merchants/storefront-builder/section-metadata/' },
+                      { label: 'Your first page', link: '/merchants/storefront-builder/your-first-page/' },
+                      { label: 'Commerce block reference', link: '/merchants/storefront-builder/commerce-block-reference/' },
                     ],
                   },
                   {
