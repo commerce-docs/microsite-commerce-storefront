@@ -24,7 +24,7 @@ import { execSync } from 'child_process';
 
 // Import shared utilities
 import { getProjectRoot } from './lib/generator-core.js';
-import { ensureParentDirectoryExists, formatDate } from './lib/utils.js';
+import { ensureParentDirectoryExists } from './lib/utils.js';
 
 const projectRoot = getProjectRoot();
 
@@ -223,7 +223,6 @@ function extractCommerceBlocks(boilerplatePath) {
  * Generate merchant documentation for a single block
  */
 function generateMerchantBlockDoc(block, outputDir) {
-    const generationDate = formatDate(new Date());
     const description = generateMerchantDescription(block.name);
     const tips = generateTips(block.name, block.configs);
     const exampleTable = generateExampleTable(block.name, block.configs);
@@ -235,11 +234,7 @@ sidebar:
   label: ${block.displayName}
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}. This block is part of the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce).
-</Aside>
+import { Steps } from '@astrojs/starlight/components';
 
 ## Overview
 
