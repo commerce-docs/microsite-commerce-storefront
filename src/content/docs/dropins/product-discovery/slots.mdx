@@ -1,21 +1,174 @@
 ---
 title: Product Discovery Slots
-description: Learn about the slots provided in the Product Discovery drop-in for customization.
+description: Customize UI sections in the Product Discovery drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-This drop-in currently has no slots defined.
+The Product Discovery drop-in exposes **12 slots** in **2 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 2.1.0</strong>
 </div>
+
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#facets-slots"><code>Facets</code></a></td>
+<td><code>Facet</code>, <code>SelectedFacets</code>, <code>Facets</code>, <code>FacetBucket</code>, <code>FacetBucketLabel</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#searchresults-slots"><code>SearchResults</code></a></td>
+<td><code>ProductActions</code>, <code>ProductPrice</code>, <code>ProductName</code>, <code>ProductImage</code>, <code>NoResults</code>, <code>Header</code>, <code>Footer</code></td>
+</tr>
+</tbody>
+</table>
+
+
+## Facets slots
+
+```js {4,5,6,7,8}
+interface FacetsProps
+
+slots?: {
+  Facet?: SlotProps<{ data: SearchFacet }>;
+  SelectedFacets?: SlotProps<{ data: SearchFacet[] }>;
+  Facets?: SlotProps<{ data: SearchFacet[] }>;
+  FacetBucket?: SlotProps<{ data: FacetBucket }>;
+  FacetBucketLabel?: SlotProps<{ data: FacetBucket }>;
+};
+```
+
+---
+
+## SearchResults slots
+
+```js {4,5,6,7,8,9,10}
+interface SearchResultsProps
+
+slots?: {
+  ProductActions?: SlotProps<SlotDefaultContext>;
+  ProductPrice?: SlotProps<SlotDefaultContext>;
+  ProductName?: SlotProps<SlotDefaultContext>;
+  ProductImage?: SlotProps<SlotDefaultContext & { defaultImageProps: ImageProps }>;
+  NoResults?: SlotProps<{ error: string | null; variables: SearchVariables | null }>;
+  Header?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
+  Footer?: SlotProps<{ products: Product[]; variables: SearchVariables | null }>;
+};
+```
+
+### ProductActions example
+
+This example from the Product List Page block shows how to customize the `ProductActions` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+// Note: `getAddToCartButton` should be defined in your block context (helper function to create add to cart button)
+
+provider.render(SearchResults, {
+  slots: {
+    ProductActions: (ctx) => {
+      const actionsWrapper = document.createElement('div');
+      actionsWrapper.className = 'product-discovery-product-actions';
+      // Add to Cart Button
+      const addToCartBtn = getAddToCartButton(ctx.product);
+      addToCartBtn.className = 'product-discovery-product-actions__add-to-cart';
+      // Wishlist Button
+      const $wishlistToggle = document.createElement('div');
+      $wishlistToggle.classList.add('product-discovery-product-actions__wishlist-toggle');
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.product,
+        variant: 'tertiary',
+      })($wishlistToggle);
+      actionsWrapper.appendChild(addToCartBtn);
+      actionsWrapper.appendChild($wishlistToggle);
+      ctx.replaceWith(actionsWrapper);
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+### ProductImage example
+
+This example from the Product List Page block shows how to customize the `ProductImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+
+provider.render(SearchResults, {
+  slots: {
+    ProductImage: (ctx) => {
+      const { product, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = getProductLink(product.urlKey, product.sku);
+      tryRenderAemAssetsImage(ctx, {
+        alias: product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+### Footer example
+
+This example from the Header block shows how to customize the `Footer` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { rootLink } from '../../scripts/commerce.js';
+// Note: `labels` and `recommendationsData` should be defined in your block context
+
+provider.render(SearchResults, {
+  slots: {
+    Footer: async (ctx) => {
+      // View all results button
+      const viewAllResultsWrapper = document.createElement('div');
+      const viewAllResultsButton = await UI.render(Button, {
+        children: labels.Global?.SearchViewAll,
+        variant: 'secondary',
+        href: rootLink('/search'),
+      })(viewAllResultsWrapper);
+      ctx.appendChild(viewAllResultsWrapper);
+      ctx.onChange((next) => {
+        viewAllResultsButton?.setProps((prev) => ({
+          ...prev,
+          href: `${rootLink('/search')}?q=${encodeURIComponent(next.variables?.phrase || '')}`,
+        }));
+      });
+    }
+  }
+})(document.querySelector('.search-results'));
+```
+
+---
 
 
 

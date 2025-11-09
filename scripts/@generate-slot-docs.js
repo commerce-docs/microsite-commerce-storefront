@@ -25,7 +25,7 @@
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 
 // Import shared utilities
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
@@ -100,7 +100,8 @@ function extractSlotsFromTypeFiles(repoPath) {
         const entries = readdirSync(typesDir);
 
         for (const entry of entries) {
-            if (!entry.endsWith('.types.ts')) {
+            // Check for both .types.ts and .types.d.ts files
+            if (!entry.endsWith('.types.ts') && !entry.endsWith('.types.d.ts')) {
                 continue;
             }
 
@@ -108,7 +109,8 @@ function extractSlotsFromTypeFiles(repoPath) {
             const fileContent = readFileSync(typeFilePath, 'utf-8');
 
             // Look for interfaces that end with "Props" and have slots (both optional and required)
-            const interfacePattern = /export\s+interface\s+(\w+Props)\s*\{[\s\S]*?slots\??\s*:\s*\{([\s\S]*?)\n\s*\};?[\s\S]*?\n\}/g;
+            // Updated pattern to handle multiline slots and extends clauses
+            const interfacePattern = /export\s+interface\s+(\w+Props)(?:\s+extends\s+[^{]+)?\s*\{[\s\S]*?slots\??\s*:\s*\{([\s\S]*?)\s*\};?[\s\S]*?\}/g;
             let match;
 
             while ((match = interfacePattern.exec(fileContent)) !== null) {
@@ -258,15 +260,34 @@ function detectNonStandardSlots(slotsInterface) {
 
 /**
  * Generate slots content for documentation
+ * Includes real examples from boilerplate and JSDoc when available
  */
-function generateSlotsContent(containers) {
+function generateSlotsContent(containers, repoConfig = null, repoPath = null) {
     if (containers.length === 0) {
         return ''; // No additional content needed for empty slots
     }
 
     let content = '';
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
 
     for (const container of containers) {
+        // Get container file content for JSDoc extraction
+        const containerFilePath = repoPath ? join(repoPath, 'src', 'containers', `${container.containerName}.tsx`) : null;
+        const containerFileContent = (containerFilePath && existsSync(containerFilePath))
+            ? readFileSync(containerFilePath, 'utf8')
+            : null;
+
+        // Extract all slot examples for this container (from multiple sources)
+        const slotExamples = repoConfig
+            ? extractAllSlotExamplesForContainer(
+                boilerplatePath,
+                container.containerName,
+                container.slotsInterface,
+                repoConfig.packageName,
+                containerFileContent // For JSDoc examples
+            )
+            : new Map();
+
         // Normalize indentation of the slots interface
         const lines = container.slotsInterface.split('\n');
         const normalizedLines = [];
@@ -320,6 +341,175 @@ function generateSlotsContent(containers) {
         content += normalizedLines.join('\n');
         content += '\n};\n';
         content += '```\n';
+
+        // Add examples for each slot that has a boilerplate example
+        if (slotExamples.size > 0 && repoConfig) {
+            const containerKebab = container.containerName
+                .replace(/([a-z])([A-Z])/g, '$1-$2')
+                .toLowerCase();
+
+            for (const [slotName, example] of slotExamples.entries()) {
+                content += `\n### ${slotName} example\n\n`;
+                content += `This example from the ${example.blockName} block shows how to customize the \`${slotName}\` slot:\n\n`;
+                content += `\`\`\`js\n`;
+
+                // Check if example code uses h() function (either directly or for Icon)
+                const exampleCode = example.code;
+                const usesH = /\bh\s*\(/.test(exampleCode);
+                // Detect Icon usage: direct Icon( calls OR getAddToCartButton (which uses Icon internally)
+                const hasIconUsage = /Icon\s*\(\s*\{/.test(exampleCode);
+                const hasGetAddToCartButton = /\bgetAddToCartButton\b/.test(exampleCode);
+                const needsHImport = usesH || (hasIconUsage && !/h\s*\(\s*Icon/.test(exampleCode)) || hasGetAddToCartButton;
+                const needsIconImport = hasIconUsage || /h\s*\(\s*Icon/.test(exampleCode) || hasGetAddToCartButton;
+
+                // Detect what other imports are needed based on code usage
+                const needsCartApi = /\bcartApi\b/.test(exampleCode);
+                const needsWishlistToggle = /\bWishlistToggle\b/.test(exampleCode);
+                const needsWishlistRender = /\bwishlistRender\b/.test(exampleCode);
+                const needsPublishRecsItemAddToCartClick = /\bpublishRecsItemAddToCartClick\b/.test(exampleCode);
+                const needsTryRenderAemAssetsImage = /\btryRenderAemAssetsImage\b/.test(exampleCode);
+                const needsCreateProductLink = /\bcreateProductLink\b/.test(exampleCode);
+                const needsGetProductLink = /\bgetProductLink\b/.test(exampleCode);
+                const needsPaymentMethodCode = /\bPaymentMethodCode\b/.test(exampleCode);
+                const needsPaymentServices = /\bPaymentServices\b/.test(exampleCode);
+                const needsCreditCard = /\bCreditCard\b/.test(exampleCode);
+                const needsRootLink = /\brootLink\b/.test(exampleCode);
+                const needsPrivacyPolicyPath = /\bPRIVACY_POLICY_PATH\b/.test(exampleCode);
+                const needsCartProvider = /\bCartProvider\b/.test(exampleCode);
+                const needsGiftOptions = /\bGiftOptions\b/.test(exampleCode);
+
+                // Build imports
+                let imports = `import { render as provider } from '${repoConfig.packageName}/render.js';\n`;
+                imports += `import ${container.containerName} from '${repoConfig.packageName}/containers/${container.containerName}.js';\n`;
+
+                if (needsIconImport || needsHImport) {
+                    imports += `import { Button, Icon, provider as UI } from '@dropins/tools/components.js';\n`;
+                }
+
+                if (needsHImport) {
+                    imports += `import { h } from '@dropins/tools/preact.js';\n`;
+                }
+
+                if (needsCartApi) {
+                    imports += `import * as cartApi from '@dropins/storefront-cart/api.js';\n`;
+                }
+
+                if (needsWishlistToggle) {
+                    imports += `import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';\n`;
+                }
+
+                if (needsWishlistRender) {
+                    imports += `import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';\n`;
+                }
+
+                if (needsPublishRecsItemAddToCartClick) {
+                    imports += `import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api.js';\n`;
+                }
+
+                if (needsTryRenderAemAssetsImage) {
+                    imports += `import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';\n`;
+                }
+
+                if (needsCreateProductLink || needsGetProductLink) {
+                    // createProductLink is typically a local wrapper, so import getProductLink instead
+                    imports += `import { getProductLink } from '../../scripts/commerce.js';\n`;
+                    if (needsCreateProductLink) {
+                        imports += `const createProductLink = (item) => getProductLink(item.urlKey, item.sku);\n`;
+                    }
+                }
+
+                if (needsPaymentMethodCode) {
+                    imports += `import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';\n`;
+                }
+
+                if (needsPaymentServices) {
+                    imports += `import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';\n`;
+                }
+
+                if (needsCreditCard) {
+                    imports += `import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';\n`;
+                }
+
+                if (needsRootLink) {
+                    imports += `import { rootLink } from '../../scripts/commerce.js';\n`;
+                }
+
+                if (needsPrivacyPolicyPath) {
+                    imports += `import { PRIVACY_POLICY_PATH } from '../../scripts/commerce.js';\n`;
+                }
+
+                if (needsCartProvider) {
+                    imports += `import { render as CartProvider } from '@dropins/storefront-cart/render.js';\n`;
+                }
+
+                if (needsGiftOptions) {
+                    imports += `import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';\n`;
+                }
+
+                // Add placeholder comment for undefined variables that might be needed
+                // (like labels, recommendationsData which are context-specific)
+                if (/\blabels\b/.test(exampleCode) || /\brecommendationsData\b/.test(exampleCode)) {
+                    // These are typically defined in the block context, so we'll add a comment
+                    imports += `// Note: \`labels\` and \`recommendationsData\` should be defined in your block context\n`;
+                }
+
+                // Add comment for payment services variables that are typically defined locally
+                if (/\bcommerceCoreEndpoint\b/.test(exampleCode) || /\bgetUserTokenCookie\b/.test(exampleCode) || /\bcreditCardFormRef\b/.test(exampleCode)) {
+                    imports += `// Note: \`commerceCoreEndpoint\`, \`getUserTokenCookie\`, and \`creditCardFormRef\` should be defined in your block context\n`;
+                }
+
+                // Add comments for other local variables/functions
+                if (/\bplaceholders\b/.test(exampleCode)) {
+                    imports += `// Note: \`placeholders\` should be defined in your block context (typically from \`fetchPlaceholders()\`)\n`;
+                }
+
+                if (/\benableUpdatingProduct\b/.test(exampleCode)) {
+                    imports += `// Note: \`enableUpdatingProduct\` should be defined in your block context\n`;
+                }
+
+                if (/\bhandleEditButtonClick\b/.test(exampleCode)) {
+                    imports += `// Note: \`handleEditButtonClick\` should be defined in your block context\n`;
+                }
+
+                if (/\bimageSlotConfig\b/.test(exampleCode)) {
+                    imports += `// Note: \`imageSlotConfig\` should be defined in your block context (helper function for image slot configuration)\n`;
+                }
+
+                if (/\bgetAddToCartButton\b/.test(exampleCode)) {
+                    imports += `// Note: \`getAddToCartButton\` should be defined in your block context (helper function to create add to cart button)\n`;
+                }
+
+                if (/\bWISHLIST_IMAGE_DIMENSIONS\b/.test(exampleCode)) {
+                    imports += `// Note: \`WISHLIST_IMAGE_DIMENSIONS\` should be defined in your block context (object with \`width\` and \`height\` properties)\n`;
+                }
+
+                if (/\bswatchImageSlot\b/.test(exampleCode)) {
+                    imports += `// Note: \`swatchImageSlot\` should be defined in your block context (typically imported from a local utils file)\n`;
+                }
+
+                // Add comment for content variable used in Personalization examples
+                if (/\bcontainer\.append\(content\)/.test(exampleCode) || (/\bcontent\b/.test(exampleCode) && !/\bdefaultImageProps\b/.test(exampleCode) && !/\bctx\./.test(exampleCode))) {
+                    imports += `// Note: \`content\` should be defined in your block context (typically a DOM element or fragment to render)\n`;
+                }
+
+                content += imports + '\n';
+
+                // Fix Icon usage: replace Icon({ with h(Icon, {
+                let fixedCode = exampleCode;
+                if (needsHImport) {
+                    // Replace Icon({ source: ... }) with h(Icon, { source: ... })
+                    fixedCode = fixedCode.replace(/Icon\s*\(\s*\{/g, 'h(Icon, {');
+                }
+
+                content += `provider.render(${container.containerName}, {\n`;
+                content += `  slots: {\n`;
+                content += fixedCode.split('\n').map(line => '    ' + line).join('\n') + '\n';
+                content += `  }\n`;
+                content += `})(document.querySelector('.${containerKebab}'));\n`;
+                content += `\`\`\`\n`;
+            }
+        }
+
         content += '\n---\n\n';
     }
 
@@ -365,7 +555,1086 @@ function parseContextProperties(slotTypeDefinition) {
 }
 
 /**
+ * Extract slot examples from boilerplate blocks
+ * 
+ * @param {string} boilerplatePath - Path to boilerplate repository
+ * @param {string} containerName - Container name (e.g., "CartSummaryList")
+ * @param {string} slotName - Slot name (e.g., "Heading")
+ * @param {string} packageName - Package name (e.g., "@dropins/storefront-cart")
+ * @returns {Object|null} Example object with code and source, or null if not found
+ */
+function extractSlotExampleFromBoilerplate(boilerplatePath, containerName, slotName, packageName) {
+    const blocksPath = join(boilerplatePath, 'blocks');
+
+    if (!existsSync(blocksPath)) {
+        return null;
+    }
+
+    // Map container names from TypeScript interfaces to actual boilerplate container names
+    // Some containers have different names in the source vs boilerplate
+    const containerNameMap = {
+        'inputsDefaultValueSet': 'SignUp', // inputsDefaultValueSet is a prop name, but SignUp is the container
+    };
+
+    // Use mapped container name if available
+    const actualContainerName = containerNameMap[containerName] || containerName;
+
+    // Map package names to boilerplate block files that use them
+    const packageToBlocks = {
+        '@dropins/storefront-cart': [
+            'commerce-cart/commerce-cart.js',
+            'commerce-checkout/containers.js',
+            'commerce-mini-cart/commerce-mini-cart.js',
+            'commerce-gift-options/commerce-gift-options.js',
+            'commerce-order-product-list/commerce-order-product-list.js',
+            'commerce-wishlist/commerce-wishlist.js',
+            'header/header.js',
+            'product-details/product-details.js',
+            'product-recommendations/product-recommendations.js'
+        ],
+        '@dropins/storefront-checkout': [
+            'commerce-checkout/containers.js',
+            'commerce-checkout/commerce-checkout.js'
+        ],
+        '@dropins/storefront-order': [
+            'commerce-order-product-list/commerce-order-product-list.js',
+            'commerce-order-returns/commerce-order-returns.js',
+            'commerce-checkout/containers.js',
+            'commerce-create-return/commerce-create-return.js',
+            'commerce-customer-details/commerce-customer-details.js',
+            'commerce-order-cost-summary/commerce-order-cost-summary.js',
+            'commerce-returns-list/commerce-returns-list.js',
+            'commerce-search-order/commerce-search-order.js'
+        ],
+        '@dropins/storefront-product-details': [
+            'product-details/product-details.js',
+            'commerce-wishlist/commerce-wishlist.js'
+        ],
+        '@dropins/storefront-product-discovery': [
+            'product-list-page/product-list-page.js',
+            'header/header.js'
+        ],
+        '@dropins/storefront-personalization': [
+            'targeted-block/targeted-block.js'
+        ],
+        '@dropins/storefront-recommendations': [
+            'product-recommendations/product-recommendations.js'
+        ],
+        '@dropins/storefront-wishlist': [
+            'commerce-wishlist/commerce-wishlist.js',
+            'commerce-cart/commerce-cart.js',
+            'product-details/product-details.js',
+            'product-list-page/product-list-page.js',
+            'product-recommendations/product-recommendations.js'
+        ],
+        '@dropins/storefront-account': [
+            'commerce-account-header/commerce-account-header.js',
+            'commerce-account-sidebar/commerce-account-sidebar.js',
+            'commerce-addresses/commerce-addresses.js',
+            'commerce-customer-details/commerce-customer-details.js',
+            'commerce-orders-list/commerce-orders-list.js',
+            'commerce-checkout/containers.js',
+            'commerce-customer-information/commerce-customer-information.js'
+        ],
+        '@dropins/storefront-auth': [
+            'commerce-checkout/containers.js',
+            'commerce-login/commerce-login.js',
+            'commerce-create-account/commerce-create-account.js',
+            'commerce-confirm-account/commerce-confirm-account.js',
+            'commerce-create-password/commerce-create-password.js',
+            'commerce-forgot-password/commerce-forgot-password.js',
+            'commerce-search-order/commerce-search-order.js',
+            'commerce-wishlist/commerce-wishlist.js',
+            'header/header.js'
+        ]
+    };
+
+    const blockFiles = packageToBlocks[packageName] || [];
+
+    // Also search all commerce blocks if no specific mapping
+    if (blockFiles.length === 0) {
+        try {
+            const allBlocks = readdirSync(blocksPath);
+            blockFiles.push(...allBlocks
+                .filter(block => block.startsWith('commerce-') || block.includes('product'))
+                .map(block => {
+                    const blockPath = join(blocksPath, block);
+                    if (statSync(blockPath).isDirectory()) {
+                        const jsFile = join(blockPath, `${block}.js`);
+                        if (existsSync(jsFile)) {
+                            return `${block}/${block}.js`;
+                        }
+                        // Try containers.js for checkout
+                        const containersFile = join(blockPath, 'containers.js');
+                        if (existsSync(containersFile)) {
+                            return `${block}/containers.js`;
+                        }
+                    }
+                    return null;
+                })
+                .filter(Boolean));
+        } catch (error) {
+            // If directory read fails, continue with empty list
+        }
+    }
+
+    for (const blockFile of blockFiles) {
+        const filePath = join(blocksPath, blockFile);
+
+        if (!existsSync(filePath)) {
+            continue;
+        }
+
+        const content = readFileSync(filePath, 'utf8');
+
+        // Look for container render calls - pattern: Provider.render(ContainerName, { slots: { SlotName: ... } })
+        // Match patterns like: CartProvider.render(CartSummaryList, ...) or provider.render(CartSummaryList, ...)
+        // Also match: pdpRendered.render, cartRenderer.render, orderRenderer.render, etc.
+        const containerPattern = new RegExp(`(?:await\\s+)?(?:\\w+Provider\\.|provider\\.|\\w+Renderer\\.|\\w+Rendered\\.|render\\.)?render\\s*\\(\\s*${actualContainerName}\\s*,`, 'g');
+        const matches = [...content.matchAll(containerPattern)];
+
+        for (const match of matches) {
+            const startIndex = match.index;
+
+            // Find the opening brace of the options object
+            let braceStart = content.indexOf('{', startIndex);
+            if (braceStart === -1) continue;
+
+            // Find matching closing brace for the render() call
+            let depth = 0;
+            let braceEnd = -1;
+            for (let i = braceStart; i < content.length; i++) {
+                if (content[i] === '{') depth++;
+                if (content[i] === '}') depth--;
+                if (depth === 0 && content[i] === '}') {
+                    braceEnd = i + 1;
+                    break;
+                }
+            }
+
+            if (braceEnd === -1) continue;
+
+            const optionsBlock = content.substring(braceStart, braceEnd);
+
+            // Look for slots object within options - need to handle nested braces
+            const slotsStart = optionsBlock.indexOf('slots:');
+            if (slotsStart === -1) continue;
+
+            // Find the opening brace after 'slots:' OR check for direct variable assignment
+            let slotsBraceStart = optionsBlock.indexOf('{', slotsStart);
+            let slotsContent = '';
+            let isDirectVar = false;
+
+            if (slotsBraceStart === -1) {
+                // No opening brace - might be direct variable assignment (e.g., slots: gallerySlots)
+                const afterSlots = optionsBlock.substring(slotsStart + 6).trim();
+                const directVarPattern = /^(\w+)/;
+                const directVarMatch = afterSlots.match(directVarPattern);
+                if (directVarMatch) {
+                    // This is a direct variable assignment, handle it separately
+                    isDirectVar = true;
+                    const varName = directVarMatch[1];
+                    // Find the variable definition in the current file
+                    const varStartPattern = new RegExp(`(?:export\\s+)?(?:const|let|var)\\s+${varName}\\s*=\\s*\\{`, 's');
+                    const varStartMatch = content.match(varStartPattern);
+
+                    if (varStartMatch) {
+                        const startIndex = varStartMatch.index + varStartMatch[0].length;
+                        // Find matching closing brace by counting braces
+                        let depth = 1;
+                        let endIndex = startIndex;
+                        for (let i = startIndex; i < content.length; i++) {
+                            if (content[i] === '{') depth++;
+                            if (content[i] === '}') {
+                                depth--;
+                                if (depth === 0) {
+                                    // Check if next non-whitespace is semicolon, comma, or newline
+                                    let nextChar = i + 1;
+                                    while (nextChar < content.length && /\s/.test(content[nextChar])) {
+                                        nextChar++;
+                                    }
+                                    if (nextChar >= content.length || /[;,\n]/.test(content[nextChar])) {
+                                        endIndex = i;
+                                        break;
+                                    }
+                                    depth = 1; // Continue searching
+                                }
+                            }
+                        }
+
+                        if (endIndex > startIndex) {
+                            const varContent = content.substring(startIndex, endIndex);
+                            // Extract the specific slot we're looking for
+                            const slotPattern = new RegExp(`${slotName}\\s*:\\s*(?:(async)\\s+)?\\(([^)]*)\\)\\s*=>\\s*\\{`, 's');
+                            const slotMatch = varContent.match(slotPattern);
+
+                            if (slotMatch) {
+                                const isAsync = !!slotMatch[1];
+                                const paramName = slotMatch[2].trim() || 'ctx';
+                                const slotStartIndex = slotMatch.index + slotMatch[0].length;
+
+                                // Find matching closing brace - need to find the closing brace of the function
+                                let depth = 1;
+                                let slotEndIndex = slotStartIndex;
+                                for (let i = slotStartIndex; i < varContent.length; i++) {
+                                    if (varContent[i] === '{') depth++;
+                                    if (varContent[i] === '}') {
+                                        depth--;
+                                        if (depth === 0) {
+                                            // Found the closing brace of the function
+                                            // Check if next non-whitespace is comma (property separator) or end
+                                            let nextChar = i + 1;
+                                            while (nextChar < varContent.length && /\s/.test(varContent[nextChar])) {
+                                                nextChar++;
+                                            }
+                                            // If next char is comma or we're at the end, this is the function's closing brace
+                                            if (nextChar >= varContent.length || varContent[nextChar] === ',') {
+                                                slotEndIndex = i;
+                                                break;
+                                            }
+                                            // Otherwise, continue searching (this was a nested brace)
+                                            depth = 1;
+                                        }
+                                    }
+                                }
+
+                                if (slotEndIndex > slotStartIndex) {
+                                    let body = varContent.substring(slotStartIndex, slotEndIndex).trim();
+
+                                    // Normalize indentation - remove all existing indentation
+                                    const lines = body.split('\n');
+                                    const normalizedBody = lines.map(l => {
+                                        if (!l.trim()) return '';
+                                        return l.trim();
+                                    }).filter((l, i) => {
+                                        if (i === 0 && !l.trim()) return false;
+                                        return true;
+                                    }).join('\n').trim();
+
+                                    // Re-indent with proper structure based on brace depth
+                                    // Template adds 4 spaces for "slots: {"
+                                    // Function body should have 2 spaces relative (indentLevel 1)
+                                    const bodyLines = normalizedBody.split('\n').filter(line => line.trim()); // Remove blank lines
+                                    let indentLevel = 1; // Start at 1 for function body (2 spaces relative to template)
+                                    const indentedBody = bodyLines.map(line => {
+                                        const trimmed = line.trim();
+
+                                        // Handle special cases: } else {, } catch {, } finally {
+                                        // These should be at the same indent level as the opening brace
+                                        const isElseBlock = /^\}\s+else\s+\{/.test(trimmed);
+                                        const isCatchBlock = /^\}\s+catch\s*\(/.test(trimmed);
+                                        const isFinallyBlock = /^\}\s+finally\s+\{/.test(trimmed);
+
+                                        // Count braces in the line
+                                        const openBraces = (trimmed.match(/\{/g) || []).length;
+                                        const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+                                        // For lines that start with a closing brace (or are just a closing brace),
+                                        // indent at one level less than current (since we're closing a block)
+                                        const startsWithCloseBrace = /^\}/.test(trimmed);
+                                        const indentForLine = startsWithCloseBrace && !isElseBlock && !isCatchBlock && !isFinallyBlock
+                                            ? Math.max(0, indentLevel - 1)
+                                            : indentLevel;
+
+                                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                                            // Decrease indent for the closing brace, then the else/catch/finally stays at that level
+                                            indentLevel = Math.max(1, indentLevel - 1);
+                                        }
+
+                                        // Apply indentation BEFORE the line (based on calculated indent level)
+                                        // Use 2 spaces per indent level (template adds 4 spaces base)
+                                        const indent = ' '.repeat(indentForLine * 2);
+                                        const indented = indent + trimmed;
+
+                                        // Update indent level AFTER processing this line
+                                        // (for next line's indentation)
+                                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                                            // After } else {, the next line should be indented one more level
+                                            indentLevel += 1;
+                                        } else {
+                                            indentLevel += openBraces - closeBraces;
+                                        }
+
+                                        return indented;
+                                    }).join('\n');
+
+                                    const blockName = blockFile.split('/')[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                                    return {
+                                        code: `${slotName}: ${isAsync ? 'async ' : ''}(${paramName}) => {\n${indentedBody}\n}`,
+                                        source: 'boilerplate',
+                                        blockName: blockName
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                continue; // Skip to next match if we handled direct var assignment
+            }
+
+            // Find matching closing brace for slots object (handle nested braces)
+            let slotsDepth = 0;
+            let slotsBraceEnd = -1;
+            for (let i = slotsBraceStart; i < optionsBlock.length; i++) {
+                if (optionsBlock[i] === '{') slotsDepth++;
+                if (optionsBlock[i] === '}') slotsDepth--;
+                if (slotsDepth === 0 && optionsBlock[i] === '}') {
+                    slotsBraceEnd = i + 1;
+                    break;
+                }
+            }
+
+            if (slotsBraceEnd === -1) continue;
+
+            slotsContent = optionsBlock.substring(slotsBraceStart + 1, slotsBraceEnd - 1);
+
+            // Check for spread operators (e.g., ...authPrivacyPolicyConsentSlot)
+            // This needs to happen before direct slot matching since spread comes first in the slots object
+            const spreadPattern = new RegExp(`\\.\\.\\.(\\w+)`, 's');
+            const spreadMatch = slotsContent.match(spreadPattern);
+
+            if (spreadMatch) {
+                const spreadVarName = spreadMatch[1];
+                // Try to find the variable definition - check imports
+                // Import can be on multiple lines with curly braces, e.g.:
+                // import {
+                //   authPrivacyPolicyConsentSlot,
+                //   rootLink,
+                // } from '../../scripts/commerce.js';
+                const importPattern = new RegExp(`import[\\s\\S]*?${spreadVarName}[\\s\\S]*?from[\\s]*['"]([^'"]+)['"]`, 's');
+                const importMatch = content.match(importPattern);
+
+                let searchPath = filePath;
+
+                if (importMatch) {
+                    const importPath = importMatch[1];
+                    // Resolve relative import path
+                    if (importPath.includes('commerce.js')) {
+                        // Check if it's a relative path or absolute
+                        if (importPath.startsWith('../../')) {
+                            // Relative import like ../../scripts/commerce.js
+                            // Resolve from boilerplate root, not from current file
+                            searchPath = join(boilerplatePath, importPath.replace(/^\.\.\/\.\.\//, ''));
+                        } else if (importPath === 'scripts/commerce.js' || importPath.endsWith('/commerce.js')) {
+                            // Direct path to commerce.js
+                            searchPath = join(boilerplatePath, 'scripts', 'commerce.js');
+                        } else {
+                            // Try to find commerce.js in the path
+                            searchPath = join(boilerplatePath, 'scripts', 'commerce.js');
+                        }
+                    } else if (importPath.startsWith('../../')) {
+                        // Other relative import - resolve from current file
+                        const currentDir = dirname(filePath);
+                        searchPath = join(currentDir, importPath);
+                    }
+                }
+
+                // Try to read the file where the variable is defined
+                if (existsSync(searchPath)) {
+                    const varContent = readFileSync(searchPath, 'utf8');
+                    // Match the variable definition - need to find the opening brace and match braces properly
+                    const varStartPattern = new RegExp(`(?:export\\s+)?(?:const|let|var)\\s+${spreadVarName}\\s*=\\s*\\{`, 's');
+                    const varStartMatch = varContent.match(varStartPattern);
+
+                    if (varStartMatch) {
+                        const startIndex = varStartMatch.index + varStartMatch[0].length;
+                        // Find matching closing brace by counting braces
+                        let depth = 1;
+                        let endIndex = startIndex;
+                        for (let i = startIndex; i < varContent.length; i++) {
+                            if (varContent[i] === '{') depth++;
+                            if (varContent[i] === '}') {
+                                depth--;
+                                if (depth === 0) {
+                                    // Check if next non-whitespace is semicolon, comma, or newline
+                                    let nextChar = i + 1;
+                                    while (nextChar < varContent.length && /\s/.test(varContent[nextChar])) {
+                                        nextChar++;
+                                    }
+                                    if (nextChar >= varContent.length || /[;,\n]/.test(varContent[nextChar])) {
+                                        endIndex = i;
+                                        break;
+                                    }
+                                    depth = 1; // Continue searching
+                                }
+                            }
+                        }
+
+                        if (endIndex > startIndex) {
+                            const slotDefinitions = varContent.substring(startIndex, endIndex);
+                            // Extract the specific slot we're looking for
+                            const slotPattern = new RegExp(`${slotName}\\s*:\\s*(?:(async)\\s+)?\\(([^)]*)\\)\\s*=>\\s*\\{`, 's');
+                            const slotMatch = slotDefinitions.match(slotPattern);
+
+                            if (slotMatch) {
+                                const isAsync = !!slotMatch[1];
+                                const paramName = slotMatch[2].trim() || 'ctx';
+                                const slotStartIndex = slotMatch.index + slotMatch[0].length;
+
+                                // Find matching closing brace - need to find the closing brace of the function
+                                // The function is inside an object, so we need to find the }, that closes this property
+                                let depth = 1;
+                                let slotEndIndex = slotStartIndex;
+                                for (let i = slotStartIndex; i < slotDefinitions.length; i++) {
+                                    if (slotDefinitions[i] === '{') depth++;
+                                    if (slotDefinitions[i] === '}') {
+                                        depth--;
+                                        if (depth === 0) {
+                                            // Found the closing brace of the function
+                                            // Check if next non-whitespace is comma (property separator) or end
+                                            let nextChar = i + 1;
+                                            while (nextChar < slotDefinitions.length && /\s/.test(slotDefinitions[nextChar])) {
+                                                nextChar++;
+                                            }
+                                            // If next char is comma or we're at the end, this is the function's closing brace
+                                            if (nextChar >= slotDefinitions.length || slotDefinitions[nextChar] === ',') {
+                                                slotEndIndex = i;
+                                                break;
+                                            }
+                                            // Otherwise, continue searching (this was a nested brace)
+                                            depth = 1;
+                                        }
+                                    }
+                                }
+
+                                if (slotEndIndex > slotStartIndex) {
+                                    let body = slotDefinitions.substring(slotStartIndex, slotEndIndex).trim();
+
+                                    // Normalize indentation - remove all existing indentation
+                                    const lines = body.split('\n');
+                                    const normalizedBody = lines.map(l => {
+                                        if (!l.trim()) return '';
+                                        return l.trim();
+                                    }).filter((l, i) => {
+                                        if (i === 0 && !l.trim()) return false;
+                                        return true;
+                                    }).join('\n').trim();
+
+                                    // Re-indent with proper structure based on brace depth
+                                    // Template adds 4 spaces for "slots: {"
+                                    // Function body should have 2 spaces relative (indentLevel 1)
+                                    const bodyLines = normalizedBody.split('\n').filter(line => line.trim()); // Remove blank lines
+                                    let indentLevel = 1; // Start at 1 for function body (2 spaces relative to template)
+                                    const indentedBody = bodyLines.map(line => {
+                                        const trimmed = line.trim();
+
+                                        // Handle special cases: } else {, } catch {, } finally {
+                                        // These should be at the same indent level as the opening brace
+                                        const isElseBlock = /^\}\s+else\s+\{/.test(trimmed);
+                                        const isCatchBlock = /^\}\s+catch\s*\(/.test(trimmed);
+                                        const isFinallyBlock = /^\}\s+finally\s+\{/.test(trimmed);
+
+                                        // Count braces in the line
+                                        const openBraces = (trimmed.match(/\{/g) || []).length;
+                                        const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+                                        // For lines that start with a closing brace (or are just a closing brace),
+                                        // indent at one level less than current (since we're closing a block)
+                                        const startsWithCloseBrace = /^\}/.test(trimmed);
+                                        const indentForLine = startsWithCloseBrace && !isElseBlock && !isCatchBlock && !isFinallyBlock
+                                            ? Math.max(0, indentLevel - 1)
+                                            : indentLevel;
+
+                                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                                            // Decrease indent for the closing brace, then the else/catch/finally stays at that level
+                                            indentLevel = Math.max(1, indentLevel - 1);
+                                        }
+
+                                        // Apply indentation BEFORE the line (based on calculated indent level)
+                                        // Use 2 spaces per indent level (template adds 4 spaces base)
+                                        const indent = ' '.repeat(indentForLine * 2);
+                                        const indented = indent + trimmed;
+
+                                        // Update indent level AFTER processing this line
+                                        // (for next line's indentation)
+                                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                                            // After } else {, the next line should be indented one more level
+                                            indentLevel += 1;
+                                        } else {
+                                            indentLevel += openBraces - closeBraces;
+                                        }
+
+                                        return indented;
+                                    }).join('\n');
+
+                                    const blockName = searchPath.includes('commerce.js')
+                                        ? 'Commerce Scripts'
+                                        : blockFile.split('/')[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                                    return {
+                                        code: `${slotName}: ${isAsync ? 'async ' : ''}(${paramName}) => {\n${indentedBody}\n}`,
+                                        source: 'boilerplate',
+                                        blockName: blockName
+                                    };
+                                }
+                            } else {
+                                // Slot not found in slot definitions - continue to next source
+                            }
+                        } else {
+                            // Failed to extract slot definitions - continue to next source
+                        }
+                    } else {
+                        // Variable definition not found - continue to next source
+                    }
+                } else {
+                    // Search path does not exist - continue to next source
+                }
+            } else {
+                // No spread operator found - continue to direct slot matching
+            }
+
+            // Check for index signature slots first (e.g., Methods: { [PaymentMethodCode.CREDIT_CARD]: { ... } })
+            // These slots have a nested object structure instead of a direct function
+            const indexSignaturePattern = new RegExp(`${slotName}\\s*:\\s*\\{`, 's');
+            const indexSignatureMatch = slotsContent.match(indexSignaturePattern);
+
+            if (indexSignatureMatch) {
+                // This is an index signature slot - extract the entire object structure
+                const startIndex = indexSignatureMatch.index + indexSignatureMatch[0].length; // Start after opening brace
+
+                // Find matching closing brace for the entire Methods object
+                let depth = 1;
+                let endIndex = startIndex;
+                for (let i = startIndex; i < slotsContent.length; i++) {
+                    if (slotsContent[i] === '{') depth++;
+                    if (slotsContent[i] === '}') {
+                        depth--;
+                        if (depth === 0) {
+                            endIndex = i + 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (endIndex > startIndex) {
+                    let body = slotsContent.substring(startIndex, endIndex - 1).trim(); // Exclude closing brace
+
+                    // Normalize indentation
+                    const lines = body.split('\n');
+                    const normalizedBody = lines.map(l => {
+                        if (!l.trim()) return '';
+                        return l.trim();
+                    }).filter((l, i) => {
+                        if (i === 0 && !l.trim()) return false;
+                        return true;
+                    }).join('\n').trim();
+
+                    // Re-indent with proper structure
+                    const bodyLines = normalizedBody.split('\n').filter(line => line.trim());
+                    let indentLevel = 1; // Start at 1 for object body (2 spaces relative to template)
+                    const indentedBody = bodyLines.map(line => {
+                        const trimmed = line.trim();
+
+                        // Count braces in the line
+                        const openBraces = (trimmed.match(/\{/g) || []).length;
+                        const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+                        // For lines that start with a closing brace, indent at one level less
+                        const startsWithCloseBrace = /^\}/.test(trimmed);
+                        const indentForLine = startsWithCloseBrace
+                            ? Math.max(0, indentLevel - 1)
+                            : indentLevel;
+
+                        // Apply indentation
+                        const indent = ' '.repeat(indentForLine * 2);
+                        const indented = indent + trimmed;
+
+                        // Update indent level
+                        indentLevel += openBraces - closeBraces;
+
+                        return indented;
+                    }).join('\n');
+
+                    const blockName = blockFile.split('/')[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                    return {
+                        code: `${slotName}: {\n${indentedBody}\n}`,
+                        source: 'boilerplate',
+                        blockName: blockName
+                    };
+                }
+            }
+
+            // Look for the specific slot - Pattern: SlotName: (ctx) => { ... } or SlotName: async (ctx) => { ... }
+            // Need to properly match nested braces by finding the opening brace and matching closing brace
+            const slotStartPattern = new RegExp(`${slotName}\\s*:\\s*(?:(async)\\s+)?\\(([^)]*)\\)\\s*=>\\s*\\{`, 's');
+            const slotStartMatch = slotsContent.match(slotStartPattern);
+
+            if (slotStartMatch) {
+                const isAsync = !!slotStartMatch[1];
+                const paramName = slotStartMatch[2].trim() || 'ctx';
+                const startIndex = slotStartMatch.index + slotStartMatch[0].length;
+
+                // Find matching closing brace (handle nested braces)
+                let depth = 1;
+                let endIndex = startIndex;
+                for (let i = startIndex; i < slotsContent.length; i++) {
+                    if (slotsContent[i] === '{') depth++;
+                    if (slotsContent[i] === '}') depth--;
+                    if (depth === 0) {
+                        endIndex = i;
+                        break;
+                    }
+                }
+
+                if (endIndex === startIndex) {
+                    continue; // No matching brace found
+                }
+
+                let body = slotsContent.substring(startIndex, endIndex).trim();
+
+                // Normalize indentation - find minimum indent of non-empty lines
+                const lines = body.split('\n');
+                const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+                if (nonEmptyLines.length === 0) {
+                    continue; // Skip empty slot bodies
+                }
+
+                const minIndent = Math.min(...nonEmptyLines.map(l => {
+                    const match = l.match(/^(\s*)/);
+                    return match ? match[1].length : 0;
+                }));
+
+                // Normalize: remove ALL indentation, start everything at column 0
+                const normalizedBody = lines.map(l => {
+                    if (!l.trim()) return '';
+                    const match = l.match(/^(\s*)(.*)$/);
+                    if (match) {
+                        const content = match[2];
+                        // Remove all indentation - start everything at column 0
+                        // Then we'll add proper indentation based on structure
+                        return content;
+                    }
+                    return l;
+                }).filter((l, i) => {
+                    // Remove leading empty lines
+                    if (i === 0 && !l.trim()) return false;
+                    return true;
+                }).join('\n').trim();
+
+                // Re-indent with proper structure based on brace depth
+                // Template adds 4 spaces for "slots: {"
+                // Function body should have 2 spaces relative (indentLevel 1)
+                const bodyLines = normalizedBody.split('\n').filter(line => line.trim()); // Remove blank lines
+                let indentLevel = 1; // Start at 1 for function body (2 spaces relative to template)
+                const indentedBody = bodyLines.map(line => {
+                    const trimmed = line.trim();
+
+                    // Handle special cases: } else {, } catch {, } finally {
+                    // These should be at the same indent level as the opening brace
+                    const isElseBlock = /^\}\s+else\s+\{/.test(trimmed);
+                    const isCatchBlock = /^\}\s+catch\s*\(/.test(trimmed);
+                    const isFinallyBlock = /^\}\s+finally\s+\{/.test(trimmed);
+
+                    // Count braces in the line
+                    const openBraces = (trimmed.match(/\{/g) || []).length;
+                    const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+                    // For lines that start with a closing brace (or are just a closing brace),
+                    // indent at one level less than current (since we're closing a block)
+                    const startsWithCloseBrace = /^\}/.test(trimmed);
+                    const indentForLine = startsWithCloseBrace && !isElseBlock && !isCatchBlock && !isFinallyBlock
+                        ? Math.max(0, indentLevel - 1)
+                        : indentLevel;
+
+                    if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                        // Decrease indent for the closing brace, then the else/catch/finally stays at that level
+                        indentLevel = Math.max(1, indentLevel - 1);
+                    }
+
+                    // Apply indentation BEFORE the line (based on calculated indent level)
+                    // Use 2 spaces per indent level (template adds 4 spaces base)
+                    const indent = ' '.repeat(indentForLine * 2);
+                    const indented = indent + trimmed;
+
+                    // Update indent level AFTER processing this line
+                    // (for next line's indentation)
+                    if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                        // After } else {, the next line should be indented one more level
+                        indentLevel += 1;
+                    } else {
+                        indentLevel += openBraces - closeBraces;
+                    }
+
+                    return indented;
+                }).join('\n');
+
+                const exampleCode = `${slotName}: ${isAsync ? 'async ' : ''}(${paramName}) => {\n${indentedBody}\n}`;
+
+                // Extract block name for title
+                const blockName = blockFile.split('/')[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                return {
+                    code: exampleCode,
+                    source: 'boilerplate',
+                    blockName: blockName
+                };
+            }
+
+            // Also check for function references (e.g., Footer: renderCartGiftOptions)
+            const refPattern = new RegExp(`${slotName}\\s*:\\s*(\\w+)`, 'g');
+            const refMatch = slotsContent.match(refPattern);
+
+            if (refMatch) {
+                // Find the function definition
+                const funcName = refMatch[1];
+                const funcPattern = new RegExp(
+                    `(?:function\\s+${funcName}|const\\s+${funcName}\\s*=\\s*(?:async\\s+)?\\([^)]*\\)\\s*=>|${funcName}\\s*=\\s*(?:async\\s+)?\\([^)]*\\)\\s*=>)\\s*\\{([\\s\\S]*?)\\}(?=\\s*(?:;|,|\\n|$))`,
+                    's'
+                );
+                const funcMatch = content.match(funcPattern);
+
+                if (funcMatch) {
+                    const funcBody = funcMatch[1].trim();
+                    const paramMatch = funcMatch[0].match(/\(([^)]*)\)/);
+                    const paramName = paramMatch ? paramMatch[1].trim() : 'ctx';
+
+                    // Normalize indentation
+                    const lines = funcBody.split('\n');
+                    const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+                    if (nonEmptyLines.length === 0) {
+                        continue; // Skip empty function bodies
+                    }
+
+                    const minIndent = Math.min(...nonEmptyLines.map(l => {
+                        const match = l.match(/^(\s*)/);
+                        return match ? match[1].length : 0;
+                    }));
+
+                    // Normalize: remove ALL indentation, start everything at column 0
+                    const normalizedBody = lines.map(l => {
+                        if (!l.trim()) return '';
+                        const match = l.match(/^(\s*)(.*)$/);
+                        if (match) {
+                            return match[2]; // Just the content, no indentation
+                        }
+                        return l;
+                    }).filter((l, i) => {
+                        if (i === 0 && !l.trim()) return false;
+                        return true;
+                    }).join('\n').trim();
+
+                    // Re-indent with proper structure based on brace depth
+                    // Template adds 4 spaces for "slots: {"
+                    // Function body should have 2 spaces relative (indentLevel 1)
+                    const bodyLines = normalizedBody.split('\n').filter(line => line.trim()); // Remove blank lines
+                    let indentLevel = 1; // Start at 1 for function body (2 spaces relative to template)
+                    const indentedBody = bodyLines.map(line => {
+                        const trimmed = line.trim();
+
+                        // Handle special cases: } else {, } catch {, } finally {
+                        // These should be at the same indent level as the opening brace
+                        const isElseBlock = /^\}\s+else\s+\{/.test(trimmed);
+                        const isCatchBlock = /^\}\s+catch\s*\(/.test(trimmed);
+                        const isFinallyBlock = /^\}\s+finally\s+\{/.test(trimmed);
+
+                        // Count braces in the line
+                        const openBraces = (trimmed.match(/\{/g) || []).length;
+                        const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+                        // For lines that start with a closing brace (or are just a closing brace),
+                        // indent at one level less than current (since we're closing a block)
+                        const startsWithCloseBrace = /^\}/.test(trimmed);
+                        const indentForLine = startsWithCloseBrace && !isElseBlock && !isCatchBlock && !isFinallyBlock
+                            ? Math.max(0, indentLevel - 1)
+                            : indentLevel;
+
+                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                            // Decrease indent for the closing brace, then the else/catch/finally stays at that level
+                            indentLevel = Math.max(1, indentLevel - 1);
+                        }
+
+                        // Apply indentation BEFORE the line (based on calculated indent level)
+                        // Use 2 spaces per indent level (template adds 4 spaces base)
+                        const indent = ' '.repeat(indentForLine * 2);
+                        const indented = indent + trimmed;
+
+                        // Update indent level AFTER processing this line
+                        // (for next line's indentation)
+                        if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                            // After } else {, the next line should be indented one more level
+                            indentLevel += 1;
+                        } else {
+                            indentLevel += openBraces - closeBraces;
+                        }
+
+                        return indented;
+                    }).join('\n');
+
+                    const blockName = blockFile.split('/')[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                    return {
+                        code: `${slotName}: (${paramName}) => {\n${indentedBody}\n}`,
+                        source: 'boilerplate',
+                        blockName: blockName
+                    };
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Extract slot examples from HTML example files
+ * 
+ * @param {string} dropinPath - Path to drop-in repository
+ * @param {string} containerName - Container name
+ * @param {string} slotName - Slot name
+ * @returns {Object|null} Example object with code and source, or null if not found
+ */
+function extractSlotExampleFromHTML(dropinPath, containerName, slotName) {
+    const examplePath = join(dropinPath, 'examples', 'html-host', 'index.html');
+
+    if (!existsSync(examplePath)) {
+        return null;
+    }
+
+    const content = readFileSync(examplePath, 'utf8');
+
+    // Look for container render calls with slots
+    // Handle patterns like: provider.render(ContainerName, { slots: { ... } })
+    // or: render(ContainerName, { slots: { ... } })
+    const containerPattern = new RegExp(`(?:\\w+\\.)?render\\s*\\(\\s*${containerName}\\s*,`, 'g');
+    const matches = [...content.matchAll(containerPattern)];
+
+    if (matches.length === 0) {
+        return null;
+    }
+
+    // Find the render call that has slots
+    let slotsContent = null;
+    for (const match of matches) {
+        const startIndex = match.index;
+
+        // Find the opening brace of the options object
+        let braceStart = content.indexOf('{', startIndex);
+        if (braceStart === -1) continue;
+
+        // Find matching closing brace for the render() call using brace counting
+        let depth = 0;
+        let braceEnd = -1;
+        for (let i = braceStart; i < content.length; i++) {
+            if (content[i] === '{') depth++;
+            if (content[i] === '}') depth--;
+            if (depth === 0 && content[i] === '}') {
+                braceEnd = i + 1;
+                break;
+            }
+        }
+
+        if (braceEnd === -1) continue;
+
+        const optionsBlock = content.substring(braceStart, braceEnd);
+
+        // Look for slots object within options
+        const slotsStart = optionsBlock.indexOf('slots:');
+        if (slotsStart === -1) continue;
+
+        // Find the opening brace after 'slots:'
+        let slotsBraceStart = optionsBlock.indexOf('{', slotsStart);
+        if (slotsBraceStart === -1) continue;
+
+        // Extract slots content using brace counting
+        let slotsDepth = 0;
+        let slotsBraceEnd = -1;
+        for (let i = slotsBraceStart; i < optionsBlock.length; i++) {
+            if (optionsBlock[i] === '{') slotsDepth++;
+            if (optionsBlock[i] === '}') slotsDepth--;
+            if (slotsDepth === 0 && optionsBlock[i] === '}') {
+                slotsBraceEnd = i;
+                break;
+            }
+        }
+
+        if (slotsBraceEnd === -1) continue;
+
+        slotsContent = optionsBlock.substring(slotsBraceStart + 1, slotsBraceEnd);
+        break; // Found slots, stop searching
+    }
+
+    if (!slotsContent) {
+        return null;
+    }
+
+    // Look for the specific slot
+    const slotPattern = new RegExp(`${slotName}\\s*:\\s*(?:(async)\\s+)?\\(([^)]*)\\)\\s*=>\\s*\\{`, 's');
+    const slotMatch = slotsContent.match(slotPattern);
+
+    if (slotMatch) {
+        const isAsync = !!slotMatch[1];
+        const paramName = slotMatch[2].trim() || 'ctx';
+        const startIndex = slotMatch.index + slotMatch[0].length;
+
+        // Find matching closing brace
+        let depth = 1;
+        let endIndex = startIndex;
+        for (let i = startIndex; i < slotsContent.length; i++) {
+            if (slotsContent[i] === '{') depth++;
+            if (slotsContent[i] === '}') depth--;
+            if (depth === 0) {
+                endIndex = i;
+                break;
+            }
+        }
+
+        if (endIndex === startIndex) {
+            return null;
+        }
+
+        let body = slotsContent.substring(startIndex, endIndex).trim();
+
+        // Normalize indentation - remove all existing indentation
+        const lines = body.split('\n');
+        const normalizedBody = lines.map(l => {
+            if (!l.trim()) return '';
+            return l.trim();
+        }).filter((l, i) => {
+            if (i === 0 && !l.trim()) return false;
+            return true;
+        }).join('\n').trim();
+
+        // Re-indent with proper structure based on brace depth
+        // Template adds 4 spaces for "slots: {"
+        // Function body should have 2 spaces relative (indentLevel 1)
+        const bodyLines = normalizedBody.split('\n').filter(line => line.trim()); // Remove blank lines
+        let indentLevel = 1; // Start at 1 for function body (2 spaces relative to template)
+        const indentedBody = bodyLines.map(line => {
+            const trimmed = line.trim();
+
+            // Handle special cases: } else {, } catch {, } finally {
+            // These should be at the same indent level as the opening brace
+            const isElseBlock = /^\}\s+else\s+\{/.test(trimmed);
+            const isCatchBlock = /^\}\s+catch\s*\(/.test(trimmed);
+            const isFinallyBlock = /^\}\s+finally\s+\{/.test(trimmed);
+
+            // Count braces in the line
+            const openBraces = (trimmed.match(/\{/g) || []).length;
+            const closeBraces = (trimmed.match(/\}/g) || []).length;
+
+            // For lines that start with a closing brace (or are just a closing brace),
+            // indent at one level less than current (since we're closing a block)
+            const startsWithCloseBrace = /^\}/.test(trimmed);
+            const indentForLine = startsWithCloseBrace && !isElseBlock && !isCatchBlock && !isFinallyBlock
+                ? Math.max(0, indentLevel - 1)
+                : indentLevel;
+
+            if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                // Decrease indent for the closing brace, then the else/catch/finally stays at that level
+                indentLevel = Math.max(1, indentLevel - 1);
+            }
+
+            // Apply indentation BEFORE the line (based on calculated indent level)
+            // Use 2 spaces per indent level (template adds 4 spaces base)
+            const indent = ' '.repeat(indentForLine * 2);
+            const indented = indent + trimmed;
+
+            // Update indent level AFTER processing this line
+            // (for next line's indentation)
+            if (isElseBlock || isCatchBlock || isFinallyBlock) {
+                // After } else {, the next line should be indented one more level
+                indentLevel += 1;
+            } else {
+                indentLevel += openBraces - closeBraces;
+            }
+
+            return indented;
+        }).join('\n');
+
+        return {
+            code: `${slotName}: ${isAsync ? 'async ' : ''}(${paramName}) => {\n${indentedBody}\n}`,
+            source: 'html-example',
+            blockName: 'HTML Example'
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Extract slot examples from JSDoc comments in container files
+ * 
+ * @param {string} containerFileContent - Full content of container file
+ * @param {string} slotName - Slot name
+ * @returns {Object|null} Example object with code and source, or null if not found
+ */
+function extractSlotExampleFromJSDoc(containerFileContent, slotName) {
+    // Look for JSDoc comments that mention the slot
+    const jsdocPattern = new RegExp(`/\*\*[\\s\\S]*?@slot\\s+${slotName}[\\s\\S]*?@example\\s+([\\s\\S]*?)(?=\\s*\\*/)`, 's');
+    const match = containerFileContent.match(jsdocPattern);
+
+    if (match) {
+        let code = match[1]
+            .replace(/^\s*\*\s*/gm, '') // Remove JSDoc asterisks
+            .trim();
+
+        // Normalize indentation
+        const lines = code.split('\n');
+        const normalizedBody = lines.map(l => {
+            if (!l.trim()) return '';
+            return l.trim();
+        }).filter((l, i) => {
+            if (i === 0 && !l.trim()) return false;
+            return true;
+        }).join('\n').trim();
+
+        return {
+            code: normalizedBody,
+            source: 'jsdoc',
+            blockName: 'JSDoc Example'
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Extract all slot examples for a container from boilerplate
+ * 
+ * @param {string} boilerplatePath - Path to boilerplate repository
+ * @param {string} containerName - Container name
+ * @param {string} slotsInterface - Slots interface string
+ * @param {string} packageName - Package name
+ * @param {string} containerFileContent - Container file content (optional, for JSDoc examples)
+ * @returns {Map<string, Object>} Map of slot name to example object
+ */
+function extractAllSlotExamplesForContainer(boilerplatePath, containerName, slotsInterface, packageName, containerFileContent = null) {
+    const examples = new Map();
+
+    // Extract all slot names from the interface
+    // Match both SlotProps pattern and custom slot types (e.g., PaymentMethodsSlot)
+    const slotPattern = /(\w+)\??\s*:\s*(SlotProps|.*Slot)/g;
+    const slotMatches = [...slotsInterface.matchAll(slotPattern)];
+
+    for (const match of slotMatches) {
+        const slotName = match[1];
+        const slotType = match[2];
+
+        // Try sources in priority order: Boilerplate > JSDoc
+        // Boilerplate examples are real-world usage, so they take priority
+        let example = null;
+
+        // First priority: Real-world boilerplate examples
+        example = extractSlotExampleFromBoilerplate(boilerplatePath, containerName, slotName, packageName);
+
+        // Second priority: JSDoc examples from container files
+        if (!example && containerFileContent) {
+            example = extractSlotExampleFromJSDoc(containerFileContent, slotName);
+        }
+
+        if (example) {
+            examples.set(slotName, example);
+        }
+    }
+
+    return examples;
+}
+
+/**
  * Generate a simple example using the first container with slots
+ * Tries to use real boilerplate examples first, falls back to generated examples
  */
 function generateSimpleExample(containers, repoConfig) {
     if (containers.length === 0) {
@@ -391,6 +1660,33 @@ function generateSimpleExample(containers, repoConfig) {
 
     const slotName = slotMatch[1];
     const containerName = container.containerName;
+
+    // Try to get real example from boilerplate
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateExample = extractSlotExampleFromBoilerplate(boilerplatePath, containerName, slotName, repoConfig.packageName);
+
+    if (boilerplateExample) {
+        // Use real boilerplate example
+        const containerKebab = containerName
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .toLowerCase();
+
+        return `## Example usage
+
+This example customizes the \`${slotName}\` slot in \`${containerName}\` (from ${boilerplateExample.blockName} block):
+
+\`\`\`js
+import { render as provider } from '${repoConfig.packageName}/render.js';
+import ${containerName} from '${repoConfig.packageName}/containers/${containerName}.js';
+
+provider.render(${containerName}, {
+  slots: {
+${boilerplateExample.code.split('\n').map(line => '    ' + line).join('\n')}
+  }
+})(document.querySelector('.${containerKebab}'));
+\`\`\`
+`;
+    }
 
     // Convert container name to kebab-case for BEM
     const containerKebab = containerName
@@ -487,7 +1783,7 @@ function generateSimpleExample(containers, repoConfig) {
     }`;
     }
 
-    return `## Using slots
+    return `## Example usage
 
 This example customizes the \`${slotName}\` slot in \`${containerName}\`:
 
@@ -1059,13 +2355,17 @@ provider.render(${containerName}, {
  * @returns {string} Generated MDX content
  */
 function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-slots.mdx');
 
-    // Generate summary table, examples, and detailed content
+    // Get repo path for HTML and JSDoc extraction
+    const repoPath = join(projectRoot, '.temp-repos', repoName);
+
+    // Generate summary table and detailed content
+    // Note: We no longer generate top-level examples since each slot has its own example
     const summaryTable = generateSummaryTable(containers);
-    const simpleExample = generateSimpleExample(containers, repoConfig);
-    const complexExample = generateComplexExample(containers, repoConfig);
-    const slotsContent = generateSlotsContent(containers);
+    const slotsContent = generateSlotsContent(containers, repoConfig, repoPath);
 
     // Generate intro text based on whether slots exist
     let introText;
@@ -1102,8 +2402,8 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
-        'SIMPLE_EXAMPLE': simpleExample,
-        'COMPLEX_EXAMPLE': complexExample || '', // Empty string if no complex slot found
+        'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example
+        'COMPLEX_EXAMPLE': '', // Removed - each slot now has its own example
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()
