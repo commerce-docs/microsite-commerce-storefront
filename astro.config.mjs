@@ -482,6 +482,7 @@ async function config() {
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
+                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
@@ -500,8 +501,11 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/personalization/' },
+                          { label: 'Installation', link: '/dropins/personalization/installation/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
+                          { label: 'Events', link: '/dropins/personalization/events/' },
+                          { label: 'Dictionary', link: '/dropins/personalization/dictionary/' },
                           { label: 'Slots', link: '/dropins/personalization/slots/' },
                           {
                             label: 'Containers',
@@ -593,6 +597,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/user-account/' },
+                          { label: 'Installation', link: '/dropins/user-account/installation/' },
                           { label: 'Initialization', link: '/dropins/user-account/initialization/' },
                           { label: 'Styling', link: '/dropins/user-account/styles/' },
                           { label: 'Functions', link: '/dropins/user-account/functions/' },
