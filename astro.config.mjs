@@ -909,7 +909,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/boilerplate/**'],
             }
           ),
           starlightHeadingBadges(),
