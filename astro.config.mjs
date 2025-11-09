@@ -444,6 +444,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/order/' },
+                          { label: 'Installation', link: '/dropins/order/installation/' },
                           { label: 'Initialization', link: '/dropins/order/initialization/' },
                           { label: 'Styling', link: '/dropins/order/styles/' },
                           { label: 'Slots', link: '/dropins/order/slots/' },
