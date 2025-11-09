@@ -55,7 +55,7 @@ async function config() {
       remarkPlugins: [remarkBasePathLinks],
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
     },
-    trailingSlash: 'always',
+    trailingSlash: 'ignore',
     outDir: './dist',
     build: {
       inlineStylesheets: 'always',
@@ -259,7 +259,7 @@ async function config() {
                     collapsed: false,
                     items: [
                       { label: 'Overview', link: '/get-started/' },
-                      { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+                      { label: 'Create a storefront', link: '/get-started/create-storefront' },
                       { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
@@ -323,22 +323,6 @@ async function config() {
                       },
                     ]
                   },
-                  // ---------- BOILERPLATE ----------
-                  {
-                    label: 'Boilerplate',
-                    collapsed: true,
-                    items: [
-                      { label: 'Overview', link: '/boilerplate/' },
-                      { label: 'Structure', link: '/boilerplate/structure/' },
-                      { label: 'Build Process', link: '/boilerplate/build-process/' },
-                      { label: 'Configuration', link: '/boilerplate/configuration/' },
-                      {
-                        label: 'Blocks',
-                        collapsed: true,
-                        autogenerate: { directory: '/boilerplate/blocks/' },
-                      },
-                    ],
-                  },
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
@@ -349,7 +333,7 @@ async function config() {
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
-                      { label: 'Labels', link: '/dropins/all/labeling/' },
+                      { label: 'Labeling', link: '/dropins/all/labeling/' },
                       { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
                       { label: 'Linking', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
@@ -498,13 +482,13 @@ async function config() {
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
-                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                           {
                             label: 'Containers',
                             collapsed: false,
                             items: [
                               { label: 'Overview', link: '/dropins/payment-services/containers/' },
+                              { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                               { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
                             ],
                           },
@@ -564,7 +548,6 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/product-discovery/' },
                           { label: 'Installation', link: '/dropins/product-discovery/installation/' },
-                          { label: 'Initialization', link: '/dropins/product-discovery/initialization/' },
                           { label: 'Styling', link: '/dropins/product-discovery/styles/' },
                           { label: 'Functions', link: '/dropins/product-discovery/functions/' },
                           { label: 'Events', link: '/dropins/product-discovery/events/' },
@@ -589,7 +572,6 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/recommendations/' },
                           { label: 'Installation', link: '/dropins/recommendations/installation/' },
-                          { label: 'Initialization', link: '/dropins/recommendations/initialization/' },
                           { label: 'Styling', link: '/dropins/recommendations/styles/' },
                           { label: 'Functions', link: '/dropins/recommendations/functions/' },
                           { label: 'Events', link: '/dropins/recommendations/events/' },
@@ -645,11 +627,10 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/user-auth/' },
                           { label: 'Installation', link: '/dropins/user-auth/installation/' },
-                          { label: 'Initialization', link: '/dropins/user-auth/initialization/' },
                           { label: 'reCAPTCHA', link: '/dropins/user-auth/recaptcha/' },
                           { label: 'Slots', link: '/dropins/user-auth/slots/' },
-                          { label: 'Functions', link: '/dropins/user-auth/functions/' },
                           { label: 'Events', link: '/dropins/user-auth/events/' },
+                          { label: 'Functions', link: '/dropins/user-auth/functions/' },
                           { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                           {
                             label: 'Containers',
@@ -672,7 +653,6 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/dropins/wishlist/' },
                           { label: 'Installation', link: '/dropins/wishlist/installation/' },
-                          { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
                           { label: 'Functions', link: '/dropins/wishlist/functions/' },
                           { label: 'Slots', link: '/dropins/wishlist/slots/' },
                           { label: 'Events', link: '/dropins/wishlist/events/' },
@@ -834,8 +814,6 @@ async function config() {
                       { label: 'Overview', link: '/merchants/storefront-builder/' },
                       { label: 'Create your content', link: '/merchants/storefront-builder/create-content/' },
                       { label: 'Using the Document Authoring tool', link: '/merchants/storefront-builder/document-authoring/' },
-                      { label: 'Page Metadata', link: '/merchants/storefront-builder/page-metadata/' },
-                      { label: 'Section Metadata', link: '/merchants/storefront-builder/section-metadata/' },
                       { label: 'Using the Visual Editor', link: '/merchants/storefront-builder/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/storefront-builder/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/storefront-builder/content-commerce-blocks/' },
@@ -847,41 +825,6 @@ async function config() {
                       { label: 'Overview', link: '/merchants/storefront-builder/commerce-blocks/' },
                       { label: 'Personalization', link: '/merchants/get-started/personalization/' },
                       { label: 'Product recommendations', link: '/merchants/get-started/product-recommendations/' },
-                    ],
-                  },
-                  {
-                    label: 'Commerce block reference',
-                    collapsed: true,
-                    items: [
-                      { label: 'Commerce Account Header', link: '/merchants/blocks/commerce-account-header/' },
-                      { label: 'Commerce Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
-                      { label: 'Commerce Addresses', link: '/merchants/blocks/commerce-addresses/' },
-                      { label: 'Commerce Cart', link: '/merchants/blocks/commerce-cart/' },
-                      { label: 'Commerce Checkout', link: '/merchants/blocks/commerce-checkout/' },
-                      { label: 'Commerce Confirm Account', link: '/merchants/blocks/commerce-confirm-account/' },
-                      { label: 'Commerce Create Account', link: '/merchants/blocks/commerce-create-account/' },
-                      { label: 'Commerce Create Password', link: '/merchants/blocks/commerce-create-password/' },
-                      { label: 'Commerce Create Return', link: '/merchants/blocks/commerce-create-return/' },
-                      { label: 'Commerce Customer Details', link: '/merchants/blocks/commerce-customer-details/' },
-                      { label: 'Commerce Customer Information', link: '/merchants/blocks/commerce-customer-information/' },
-                      { label: 'Commerce Forgot Password', link: '/merchants/blocks/commerce-forgot-password/' },
-                      { label: 'Commerce Gift Options', link: '/merchants/blocks/commerce-gift-options/' },
-                      { label: 'Commerce Login', link: '/merchants/blocks/commerce-login/' },
-                      { label: 'Commerce Mini Cart', link: '/merchants/blocks/commerce-mini-cart/' },
-                      { label: 'Commerce Order Cost Summary', link: '/merchants/blocks/commerce-order-cost-summary/' },
-                      { label: 'Commerce Order Header', link: '/merchants/blocks/commerce-order-header/' },
-                      { label: 'Commerce Order Product List', link: '/merchants/blocks/commerce-order-product-list/' },
-                      { label: 'Commerce Order Returns', link: '/merchants/blocks/commerce-order-returns/' },
-                      { label: 'Commerce Order Status', link: '/merchants/blocks/commerce-order-status/' },
-                      { label: 'Commerce Orders List', link: '/merchants/blocks/commerce-orders-list/' },
-                      { label: 'Commerce Return Header', link: '/merchants/blocks/commerce-return-header/' },
-                      { label: 'Commerce Returns List', link: '/merchants/blocks/commerce-returns-list/' },
-                      { label: 'Commerce Search Order', link: '/merchants/blocks/commerce-search-order/' },
-                      { label: 'Commerce Shipping Status', link: '/merchants/blocks/commerce-shipping-status/' },
-                      { label: 'Commerce Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
-                      { label: 'Product Details', link: '/merchants/blocks/product-details/' },
-                      { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
-                      { label: 'Product Recommendations', link: '/merchants/blocks/product-recommendations/' },
                     ],
                   },
                   {
@@ -957,7 +900,7 @@ async function config() {
                     ],
                   },
                   {
-                    label: 'Hot fixes',
+                    label: 'Hotfixes',
                     items: [
                       { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
                     ],
