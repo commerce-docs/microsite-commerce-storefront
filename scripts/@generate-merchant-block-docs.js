@@ -764,7 +764,7 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
     if (block.configs.length > 0) {
         content += `## Configuration Properties Reference\n\n`;
         content += `The table below describes each configuration property in detail:\n\n`;
-        content += `<TableWrapper nowrap={[0]}>\n\n`;
+        content += `<TableWrapper nowrap={[0, 1]}>\n\n`;
         content += `| Property | Default | Req? | Description |\n`;
         content += `|----------|---------|------|-------------|\n`;
 
