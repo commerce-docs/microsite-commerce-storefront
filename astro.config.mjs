@@ -850,6 +850,7 @@ async function config() {
                       { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
                       { label: 'Localization (Document Authoring)', link: '/merchants/quick-start/content-localization/' },
                       { label: 'Localization (Universal Editor)', link: '/merchants/quick-start/content-localization-universal-editor/' },
+                      { label: 'Commerce localization tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
                       { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
                       { label: 'Section metadata', link: '/merchants/quick-start/section-metadata/' },
                     ],
