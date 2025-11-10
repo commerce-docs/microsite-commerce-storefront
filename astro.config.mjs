@@ -78,7 +78,9 @@ async function config() {
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-project`,
-      '/merchants/get-started/multistore': `${basePath}/merchants/multistore`,
+      '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
+      '/merchants/multistore': `${basePath}/setup/configuration/multistore-setup`,
+      '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
       '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
       '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
       '/product-details/pdp-installation': `${basePath}/dropins/product-details/installation`,
@@ -502,6 +504,7 @@ async function config() {
                           { label: 'Overview', link: '/dropins/personalization/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Events', link: '/dropins/personalization/events/' },
+                          { label: 'Dictionary', link: '/dropins/personalization/dictionary/' },
                           { label: 'Functions', link: '/dropins/personalization/functions/' },
                           { label: 'Slots', link: '/dropins/personalization/slots/' },
                           {
@@ -792,6 +795,21 @@ async function config() {
 
                   // ---------- OTHER ----------
                   {
+                    label: 'Boilerplate',
+                    collapsed: true,
+                    items: [
+                      { label: 'Overview', link: '/boilerplate/' },
+                      { label: 'Structure', link: '/boilerplate/structure/' },
+                      { label: 'Build Process', link: '/boilerplate/build-process/' },
+                      { label: 'Configuration', link: '/boilerplate/configuration/' },
+                      {
+                        label: 'Blocks',
+                        collapsed: true,
+                        autogenerate: { directory: '/boilerplate/blocks/' },
+                      },
+                    ],
+                  },
+                  {
                     label: 'Troubleshooting',
                     collapsed: true,
                     autogenerate: { directory: '/troubleshooting/' },
@@ -827,6 +845,11 @@ async function config() {
                       { label: 'Overview', link: '/merchants/storefront-builder/commerce-blocks/' },
                       { label: 'Personalization', link: '/merchants/get-started/personalization/' },
                       { label: 'Product recommendations', link: '/merchants/get-started/product-recommendations/' },
+                      {
+                        label: 'Block configuration',
+                        collapsed: true,
+                        autogenerate: { directory: '/merchants/blocks/' },
+                      },
                     ],
                   },
                   {
@@ -835,14 +858,8 @@ async function config() {
                       { label: 'Overview', link: '/merchants/get-started/' },
                       { label: 'Enrichment', link: '/merchants/get-started/enrichment/' },
                       { label: 'Experiments', link: '/merchants/get-started/experiments/' },
-                      { label: 'Terms and conditions', link: '/merchants/get-started/terms-and-conditions/' },
-                    ],
-                  },
-                  {
-                    label: 'Multistore',
-                    items: [
-                      { label: 'Setup', link: '/merchants/multistore/' },
                       { label: 'Localization', link: '/merchants/multistore/content-localization/' },
+                      { label: 'Terms and conditions', link: '/merchants/get-started/terms-and-conditions/' },
                     ],
                   },
                 ],
