@@ -13,6 +13,7 @@ import { readFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import { cleanVersion } from './utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,12 +111,12 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
     // Clean version string (remove ~ ^ etc)
-    const cleanVersion = version.replace(/^[\^~]/, '');
-    const tag = `v${cleanVersion}`;
+    const cleanVersionStr = cleanVersion(version);
+    const tag = `v${cleanVersionStr}`;
 
-    console.log(`  Using version: ${cleanVersion}`);
+    console.log(`  Using version: ${cleanVersionStr}`);
 
-    let actualVersion = cleanVersion;
+    let actualVersion = cleanVersionStr;
     let isExactMatch = false;
 
     if (!existsSync(dropinPath)) {
@@ -126,15 +127,15 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
             isExactMatch = true;
         } catch (error) {
             // If tag doesn't exist, try without 'v' prefix
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            console.log(`  Tag ${tag} not found, trying ${cleanVersionStr}...`);
             try {
-                execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersion, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
-                actualVersion = cleanVersion;
+                execFileSync('git', ['clone', '--depth', '1', '--branch', cleanVersionStr, repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+                actualVersion = cleanVersionStr;
                 isExactMatch = true;
             } catch (fallbackError) {
                 // If neither tag exists, clone the default branch (no --branch flag)
-                console.log(`  ⚠️  Tag ${cleanVersion} not found, cloning default branch...`);
-                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersion}`);
+                console.log(`  ⚠️  Tag ${cleanVersionStr} not found, cloning default branch...`);
+                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersionStr}`);
                 execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
 
                 // Determine what we actually checked out
@@ -145,6 +146,20 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
             }
         }
     } else {
+        // Check if we're already at the correct version
+        try {
+            const currentRef = execFileSync('git', ['describe', '--tags', '--exact-match'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            if (currentRef === tag || currentRef === cleanVersion) {
+                console.log(`  Already at ${currentRef}`);
+                actualVersion = currentRef;
+                isExactMatch = true;
+                return { path: dropinPath, actualVersion, isExactMatch };
+            }
+        } catch {
+            // Not at an exact tag, continue with checkout
+        }
+
         console.log(`  Checking out ${tag}...`);
         try {
             // First fetch all tags
@@ -155,15 +170,15 @@ export function cloneDropinAtVersion(repoName, repoConfig, version) {
             isExactMatch = true;
         } catch (error) {
             // If tag with 'v' doesn't exist, try without
-            console.log(`  Tag ${tag} not found, trying ${cleanVersion}...`);
+            console.log(`  Tag ${tag} not found, trying ${cleanVersionStr}...`);
             try {
-                execFileSync('git', ['checkout', cleanVersion], { cwd: dropinPath, stdio: 'pipe' });
-                actualVersion = cleanVersion;
+                execFileSync('git', ['checkout', cleanVersionStr], { cwd: dropinPath, stdio: 'pipe' });
+                actualVersion = cleanVersionStr;
                 isExactMatch = true;
             } catch (fallbackError) {
                 // If neither tag exists, fetch and checkout the default branch
-                console.log(`  ⚠️  Tag ${cleanVersion} not found, fetching default branch...`);
-                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersion}`);
+                console.log(`  ⚠️  Tag ${cleanVersionStr} not found, fetching default branch...`);
+                console.log(`  ⚠️  Documentation will be generated from default branch code, not version ${cleanVersionStr}`);
                 try {
                     // Fetch the default branch
                     execFileSync('git', ['fetch', 'origin'], { cwd: dropinPath, stdio: 'pipe' });
