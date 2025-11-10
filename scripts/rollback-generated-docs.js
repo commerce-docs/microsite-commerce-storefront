@@ -3,141 +3,207 @@
 /**
  * Rollback Generated Documentation
  * 
- * This script restores all auto-generated documentation files to their last committed state.
- * Useful for testing generators with a clean slate.
+ * This script reverts all auto-generated documentation files to their
+ * original state or deletes them if they were newly created.
  * 
  * USAGE:
- * npm run rollback-docs
+ * - Rollback all generated docs: npm run rollback-generated-docs
+ * - Rollback specific type: npm run rollback-generated-docs functions
+ * - Available types: functions, events, slots, containers, dictionaries, all
  * 
- * WHAT IT DOES:
- * - Restores modified/deleted files in src/content/docs/dropins/
- * - Restores modified/deleted files in src/content/docs/dropins-b2b/
- * - Removes untracked (new) files in these directories
- * - PRESERVES structural files: [dropin]/containers/index.mdx (overview pages)
- * - Shows what files were restored/removed/skipped
- * 
- * SAFETY:
- * - Only affects files in dropins directories
- * - Uses git restore for tracked files
- * - Uses git clean for untracked files
- * - Skips container overview files (structural navigation)
- * - Does not affect other parts of the codebase
+ * ACTIONS:
+ * - Restores modified files from git (if they existed before)
+ * - Deletes newly created files (not tracked in git)
+ * - Shows summary of all changes rolled back
  */
 
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..');
+const projectRoot = process.cwd();
 
-// Paths containing auto-generated documentation
-const GENERATED_PATHS = [
-    'src/content/docs/dropins',
-    'src/content/docs/dropins-b2b'
-];
+// Define patterns for generated files
+const GENERATED_FILE_PATTERNS = {
+    functions: 'src/content/docs/dropins/*/functions.mdx',
+    events: 'src/content/docs/dropins/*/events.mdx',
+    slots: 'src/content/docs/dropins/*/slots.mdx',
+    containers: 'src/content/docs/dropins/*/containers/*.mdx',
+    dictionaries: 'src/content/docs/dropins/*/dictionary.mdx',
+    installation: 'src/content/docs/dropins/*/installation.mdx',
+};
 
-console.log('\n🔄 Rolling back generated documentation...\n');
+/**
+ * Get git status for generated files
+ */
+function getGeneratedFileStatus(fileType = 'all') {
+    const patterns = fileType === 'all'
+        ? Object.values(GENERATED_FILE_PATTERNS)
+        : [GENERATED_FILE_PATTERNS[fileType]];
 
-let totalRestored = 0;
-let totalDeleted = 0;
+    const modified = [];
+    const untracked = [];
+    const deleted = [];
 
-for (const path of GENERATED_PATHS) {
-    const fullPath = join(projectRoot, path);
+    for (const pattern of patterns) {
+        try {
+            // Get modified and deleted files
+            const modifiedOutput = execSync(
+                `git diff --name-only --diff-filter=M ${pattern}`,
+                { encoding: 'utf8', cwd: projectRoot }
+            ).trim();
 
-    if (!existsSync(fullPath)) {
-        console.log(`  ⚠️  Path does not exist: ${path}`);
-        continue;
-    }
-
-    try {
-        // Check if there are any changes to restore or untracked files to delete
-        const statusOutput = execSync(`git status --porcelain ${path}`, {
-            encoding: 'utf8',
-            cwd: projectRoot
-        });
-
-        if (statusOutput.trim()) {
-            console.log(`  📂 ${path}`);
-
-            const modifiedFiles = [];
-            const untrackedFiles = [];
-
-            // Parse status and categorize files
-            const changedFiles = statusOutput.trim().split('\n');
-            changedFiles.forEach(file => {
-                const [status, ...fileParts] = file.trim().split(/\s+/);
-                const fileName = fileParts.join(' ');
-
-                // Skip container overview files (structural, not generated)
-                if (fileName.includes('/containers/index.mdx')) {
-                    console.log(`     ⏭️  Skipping structural file: ${fileName}`);
-                    return;
-                }
-
-                if (status.includes('M')) {
-                    console.log(`     ↩️  Restoring modified: ${fileName}`);
-                    modifiedFiles.push(fileName);
-                    totalRestored++;
-                } else if (status.includes('D')) {
-                    console.log(`     ↩️  Restoring deleted: ${fileName}`);
-                    modifiedFiles.push(fileName);
-                    totalRestored++;
-                } else if (status.includes('?')) {
-                    console.log(`     🗑️  Removing untracked: ${fileName}`);
-                    untrackedFiles.push(fileName);
-                    totalDeleted++;
-                }
-            });
-
-            // Restore tracked files that were modified/deleted (one by one to respect skip list)
-            if (modifiedFiles.length > 0) {
-                modifiedFiles.forEach(file => {
-                    try {
-                        execSync(`git restore "${file}"`, {
-                            cwd: projectRoot,
-                            stdio: 'pipe'
-                        });
-                    } catch (error) {
-                        console.error(`     ⚠️  Could not restore: ${file}`);
-                    }
-                });
+            if (modifiedOutput) {
+                modified.push(...modifiedOutput.split('\n').filter(Boolean));
             }
 
-            // Remove untracked files (one by one to respect skip list)
-            if (untrackedFiles.length > 0) {
-                untrackedFiles.forEach(file => {
-                    try {
-                        execSync(`git clean -f "${file}"`, {
-                            cwd: projectRoot,
-                            stdio: 'pipe'
-                        });
-                    } catch (error) {
-                        console.error(`     ⚠️  Could not remove: ${file}`);
-                    }
-                });
+            // Get deleted files
+            const deletedOutput = execSync(
+                `git diff --name-only --diff-filter=D ${pattern}`,
+                { encoding: 'utf8', cwd: projectRoot }
+            ).trim();
+
+            if (deletedOutput) {
+                deleted.push(...deletedOutput.split('\n').filter(Boolean));
             }
-        } else {
-            console.log(`  ✓ ${path} (no changes)`);
+
+            // Get untracked files
+            const untrackedOutput = execSync(
+                `git ls-files --others --exclude-standard ${pattern}`,
+                { encoding: 'utf8', cwd: projectRoot }
+            ).trim();
+
+            if (untrackedOutput) {
+                untracked.push(...untrackedOutput.split('\n').filter(Boolean));
+            }
+        } catch (error) {
+            // Pattern might not match any files, continue
         }
-    } catch (error) {
-        console.error(`  ❌ Error processing ${path}: ${error.message}`);
+    }
+
+    return { modified, untracked, deleted };
+}
+
+/**
+ * Rollback modified files using git restore
+ */
+function rollbackModifiedFiles(files) {
+    if (files.length === 0) return 0;
+
+    console.log(`\n📝 Restoring ${files.length} modified file(s)...`);
+
+    let restored = 0;
+    for (const file of files) {
+        try {
+            execSync(`git restore "${file}"`, { cwd: projectRoot, stdio: 'pipe' });
+            console.log(`  ✅ Restored: ${file}`);
+            restored++;
+        } catch (error) {
+            console.log(`  ❌ Failed to restore: ${file}`);
+        }
+    }
+
+    return restored;
+}
+
+/**
+ * Delete untracked files
+ */
+function deleteUntrackedFiles(files) {
+    if (files.length === 0) return 0;
+
+    console.log(`\n🗑️  Deleting ${files.length} untracked file(s)...`);
+
+    let deleted = 0;
+    for (const file of files) {
+        try {
+            const filePath = join(projectRoot, file);
+            if (existsSync(filePath)) {
+                execSync(`rm "${filePath}"`, { cwd: projectRoot, stdio: 'pipe' });
+                console.log(`  ✅ Deleted: ${file}`);
+                deleted++;
+            }
+        } catch (error) {
+            console.log(`  ❌ Failed to delete: ${file}`);
+        }
+    }
+
+    return deleted;
+}
+
+/**
+ * Restore deleted files
+ */
+function restoreDeletedFiles(files) {
+    if (files.length === 0) return 0;
+
+    console.log(`\n♻️  Restoring ${files.length} deleted file(s)...`);
+
+    let restored = 0;
+    for (const file of files) {
+        try {
+            execSync(`git restore "${file}"`, { cwd: projectRoot, stdio: 'pipe' });
+            console.log(`  ✅ Restored: ${file}`);
+            restored++;
+        } catch (error) {
+            console.log(`  ❌ Failed to restore: ${file}`);
+        }
+    }
+
+    return restored;
+}
+
+/**
+ * Main rollback function
+ */
+function rollbackGeneratedDocs(fileType = 'all') {
+    console.log('🔄 Rolling back generated documentation...');
+    console.log('=====================================\n');
+
+    if (fileType !== 'all' && !GENERATED_FILE_PATTERNS[fileType]) {
+        console.error(`❌ Invalid file type: ${fileType}`);
+        console.log(`Available types: ${Object.keys(GENERATED_FILE_PATTERNS).join(', ')}, all`);
+        process.exit(1);
+    }
+
+    console.log(`📂 Scanning for ${fileType === 'all' ? 'all generated' : fileType} files...\n`);
+
+    const { modified, untracked, deleted } = getGeneratedFileStatus(fileType);
+
+    const totalFiles = modified.length + untracked.length + deleted.length;
+
+    if (totalFiles === 0) {
+        console.log('✨ No generated files to rollback. Everything is clean!');
+        return;
+    }
+
+    console.log(`Found ${totalFiles} file(s) to rollback:`);
+    console.log(`  - ${modified.length} modified`);
+    console.log(`  - ${untracked.length} untracked`);
+    console.log(`  - ${deleted.length} deleted`);
+
+    // Perform rollback
+    const modifiedCount = rollbackModifiedFiles(modified);
+    const untrackedCount = deleteUntrackedFiles(untracked);
+    const deletedCount = restoreDeletedFiles(deleted);
+
+    // Summary
+    console.log('\n✨ Rollback complete!');
+    console.log('=====================================');
+    console.log(`📊 Summary:`);
+    console.log(`  - ${modifiedCount} file(s) restored`);
+    console.log(`  - ${untrackedCount} file(s) deleted`);
+    console.log(`  - ${deletedCount} file(s) recovered`);
+    console.log(`  - Total: ${modifiedCount + untrackedCount + deletedCount}/${totalFiles} files processed\n`);
+
+    if (modifiedCount + untrackedCount + deletedCount < totalFiles) {
+        console.log('⚠️  Some files could not be rolled back. Please check the errors above.');
+        process.exit(1);
     }
 }
 
-const totalChanges = totalRestored + totalDeleted;
+// Parse command line arguments
+const fileType = process.argv[2] || 'all';
 
-if (totalChanges > 0) {
-    const messages = [];
-    if (totalRestored > 0) messages.push(`${totalRestored} file(s) restored`);
-    if (totalDeleted > 0) messages.push(`${totalDeleted} untracked file(s) removed`);
-    console.log(`\n✅ ${messages.join(', ')}.\n`);
-} else {
-    console.log('\n✓ All generated documentation is already clean.\n');
-}
-
-console.log('💡 Tip: You can now regenerate documentation with a clean slate:');
-console.log('   npm run generate-all-docs\n');
-
+// Run rollback
+rollbackGeneratedDocs(fileType);

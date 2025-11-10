@@ -1,82 +1,221 @@
 ---
 title: Cart initialization
-description: Learn how to configure the initializer for the cart drop-in component.
+description: Configure the Cart drop-in with language definitions, custom data models, and drop-in-specific options.
+sidebar:
+  label: Initialization
+  order: 3
 ---
 
-import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-The cart drop-in component initializer provides options for configuring language definitions and extending the default models with new fields and transformers.
+The **Cart initializer** configures how the cart manages shopping cart data, including items, pricing, discounts, and customer information. Use initialization to customize cart behavior, enable guest cart features, and transform cart data models to match your storefront requirements.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.5.1</strong>
+</div>
+
+
 
 ## Configuration options
 
-The cart component initializer accepts the following configuration options:
+The following table describes the configuration options available for the **Cart** initializer:
 
-<OptionsTable
-  options={[
-    ['Option', 'Type', 'Req?', 'Description'],
-    ['disableGuestCart', 'boolean', 'No', 'Whether guest carts have been disabled.'],
-    ['langDefinitions', 'object', 'No', 'Provides language definitions for internationalization (i18n).'],
-    ['models', 'object', 'No', 'Extend the default model (CartModel) with new fields and transform them as needed.'],
-  ]}
-/>
+<TableWrapper nowrap={[0,1]}>
 
-### Example
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
+| `disableGuestCart` | `boolean` | No | When set to \`true\`, prevents guest users from creating or accessing shopping carts, requiring authentication before cart operations. |
 
-The following code shows an example implementation of the cart initializer configuration:
+</TableWrapper>
 
-```ts
-// Initialize cart 
-initializeDropin(async () => {
-  await initializers.mountImmediately(initialize, {
-    langDefinitions,
-    models,
-  });
-})();
+## Basic initialization
+
+Initialize the drop-in with default settings:
+
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart';
+
+await initializers.mountImmediately(initialize, {});
 ```
 
-### Set language definitions
+## Language definitions
 
-The `langDefinitions` property registers the cart component dictionary files, which are used for internationalization purposes. These files allow you to provide localized text for different languages in your application.
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
 
-```ts
-// Fetch the dictionary files for your application
-const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());
-const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart';
 
-// Register the component with language definitions
-const langDefinitions = {
-  default: en_US,
-  en_US,
-  fr_FR,
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
 };
 
-// Register initializers
-initializers.register(api.initialize, {
-  langDefinitions,
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+<Aside type="tip">
+For complete dictionary customization including all available keys and multi-language support, see the [Cart Dictionary](/dropins/cart/dictionary/) page.
+</Aside>
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+| [`CartModel`](#cartmodel) | Transforms cart data from GraphQL including items, totals, discounts, taxes, gift options, addresses, and payment methods. Use this to add custom fields or modify existing cart data structures. |
+
+</TableWrapper>
+
+The following example shows how to customize the `CartModel` model for the **Cart** drop-in:
+
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart';
+
+const models = {
+  CartModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in-specific configuration
+
+The **Cart** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-cart';
+
+await initializers.mountImmediately(initialize, {
+  // Drop-in-specific configuration
+  disableGuestCart: true,
 });
 ```
 
-### Set models
+<Aside type="note">
+Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
+</Aside>
 
-You can extend the default models in the cart component and provide transformers to process new fields.
 
-The `models` property is an object that contains the default models that you might want to extend and the transformers to use to transform the data. By default, the cart component initializer only accepts the `CartModel`.
 
-The following example shows how to extend the default models with new fields and transformers:
+## Configuration types
 
-```ts
-// Initialize cart
-initializeDropin(async () => {
-  await initializers.mountImmediately(initialize, {
-    langDefinitions,
-    models: {
-      CartModel: {
-        transformer: (data) => ({
-          printedCardIncluded: data?.printed_card_included,
-          giftReceiptIncluded: data?.gift_receipt_included,
-        }),
-      },
-    },
-  });
-})();
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
 ```
+
+### models
+
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
+
+```typescript
+models?: {
+  [modelName: string]: Model<any>;
+};
+```
+
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### CartModel
+
+```typescript
+export interface CartModel {
+  totalGiftOptions: {
+    giftWrappingForItems: Price;
+    giftWrappingForItemsInclTax: Price;
+    giftWrappingForOrder: Price;
+    giftWrappingForOrderInclTax: Price;
+    printedCard: Price;
+    printedCardInclTax: Price;
+  };
+  cartGiftWrapping: {
+    uid: string;
+    design: string;
+    selected: boolean;
+    image: WrappingImage;
+    price: Price;
+  }[];
+  giftReceiptIncluded: boolean;
+  printedCardIncluded: boolean;
+  giftMessage: {
+    recipientName: string;
+    senderName: string;
+    message: string;
+  };
+  appliedGiftCards: AppliedGiftCardProps[];
+  id: string;
+  totalQuantity: number;
+  totalUniqueItems: number;
+  errors?: ItemError[];
+  items: Item[];
+  miniCartMaxItems: Item[];
+  total: {
+    includingTax: Price;
+    excludingTax: Price;
+  };
+  discount?: Price;
+  subtotal: {
+    excludingTax: Price;
+    includingTax: Price;
+    includingDiscountOnly: Price;
+  };
+  appliedTaxes: TotalPriceModifier[];
+  totalTax?: Price;
+  appliedDiscounts: TotalPriceModifier[];
+  shipping?: Price;
+  isVirtual?: boolean;
+  addresses: {
+    shipping?: {
+      countryCode: string;
+      zipCode?: string;
+      regionCode?: string;
+    }[];
+  };
+  isGuestCart?: boolean;
+  hasOutOfStockItems?: boolean;
+  hasFullyOutOfStockItems?: boolean;
+  appliedCoupons?: Coupon[];
+}
+```
+
+{/* This documentation is auto-generated from: REPO_URL */}
