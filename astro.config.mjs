@@ -77,7 +77,6 @@ async function config() {
       '/get-started/launch-checklist': `${basePath}/launch`,
       '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
-      '/get-started/storefront-structure': `${basePath}/get-started/boilerplate-project`,
       '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
       '/merchants/multistore': `${basePath}/setup/configuration/multistore-setup`,
       '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -819,21 +818,6 @@ async function config() {
 
                   // ---------- OTHER ----------
                   {
-                    label: 'Boilerplate',
-                    collapsed: true,
-                    items: [
-                      { label: 'Overview', link: '/boilerplate/' },
-                      { label: 'Structure', link: '/boilerplate/structure/' },
-                      { label: 'Build Process', link: '/boilerplate/build-process/' },
-                      { label: 'Configuration', link: '/boilerplate/configuration/' },
-                      {
-                        label: 'Blocks',
-                        collapsed: true,
-                        autogenerate: { directory: '/boilerplate/blocks/' },
-                      },
-                    ],
-                  },
-                  {
                     label: 'Troubleshooting',
                     collapsed: true,
                     autogenerate: { directory: '/troubleshooting/' },
@@ -849,7 +833,7 @@ async function config() {
               // ========= STOREFRONT AUTHORS =========
               {
                 label: 'Storefront Authors',
-                link: '/merchants/storefront-builder/',
+                link: '/merchants/quick-start/',
                 icon: 'seti:svg',
                 items: [
                   {
