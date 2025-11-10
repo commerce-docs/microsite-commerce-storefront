@@ -257,8 +257,17 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    </Aside>
 
 4. **Obtain required credentials**:
-   - **AEM Admin API token**: Generate from your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" /> (the setup wizard exchanges your temporary token for a long-lived token automatically)
-   - **App Builder credentials**: Automatically configured when you authenticate via the setup wizard. After authentication completes, download the App Builder configuration file (typically a `.json` file) from your Adobe Developer Console App Builder workspace, then run `aio app use <file_name>` in the root directory of the prerender project to activate the credentials.
+   - **AEM Admin API token**: To obtain your token:
+     1. Login to the <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM Admin API" /> (select the link from your preferred Identity Provider; the ones suffixed by "_sa" allow you to select a specific account rather than the one currently logged in)
+     2. Once redirected to the JSON response, open your browser's Developer Tools (F12)
+     3. Go to the Application tab (Chrome) or Storage tab (Firefox)
+     4. Under Cookies, find and copy the value of the `auth_token` cookie
+     5. Paste that token in the setup wizard textarea (the setup wizard exchanges your temporary token for a long-lived token automatically)
+   - **App Builder credentials**: To configure the credentials:
+     1. Go to the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" />
+     2. Open your project and navigate to the workspace you want to use (Stage or Production)
+     3. Click the "Download All" button in the top-right to download the App Builder configuration file (a `.json` file)
+     4. Run `aio app use <file_name>` in the root directory of your prerender project to activate the credentials
    - **Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> for environment and API configuration
    - **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details on configuring Optimizer headers and endpoints.
    
@@ -287,7 +296,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 
 7. **Enable automated synchronization**:
    - Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector
-   - Configure polling intervals (default: checks for changes every 5 minutes)
+   - Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
    - Monitor the product index to verify continuous updates
 
 </Steps>
@@ -570,27 +579,19 @@ For troubleshooting during development and operations, consult the <Link href="h
 
 Common issues include:
 
-- **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year)
-  - To verify the token expiration, use <Link href="https://www.jwt.io/" text="jwt.io" /> — decode the token and check its expiration time
-  - Check token expiration in your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" />
+- **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year). To check the token expiration, decode the token using <Link href="https://www.jwt.io/" text="jwt.io" /> or check your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" />
   - Generate a new token if expired (see <Link href="https://www.aem.live/docs/admin.html#tag/orgConfig/operation/createOrgApiKey" text="how to generate a new token" />) and update `AEM_ADMIN_API_KEY` in your `.env` file
   - Redeploy with `npm run deploy` after updating credentials
   
 - **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches
   - Query the Catalog Service directly using its <Link href="https://developer.adobe.com/commerce/services/graphql/catalog-service/products/" text="GraphQL Product API" /> to verify product data
   - Use the Management UI to view the product index and confirm that the SKU is listed
-  - Check the `pdp-renderer` action logs in App Builder for GraphQL errors: `aio rt activation list pdp-renderer`
+  - Run `aio rt activations list` to check action logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
   
 - **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
-  - Check activation logs: `aio rt activation list product-change-detector`
-  - View detailed logs: `aio rt activation logs <ACTIVATION_ID>`
+  - Run `aio rt activations list` to check activation logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
   - Manually trigger the change detector from the Management UI to test functionality
-  
-- **Storage errors**: Verify your App Builder workspace has sufficient storage quota
-  - Check storage usage in the Adobe Developer Console under your App Builder workspace
-  - Review blob storage logs: `aio rt activation list blob-store`
-  - Contact Adobe support to request quota increases if needed
 
 ## Additional resources
 
