@@ -466,7 +466,7 @@ function formatValueForAEM(value, type, propertyKey) {
  * Shows common section styling options available to all blocks
  */
 function generateSectionMetadataTable() {
-    let output = `## Section Metadata\n\n`;
+    let output = `## Section metadata\n\n`;
     output += `Control the section styling that wraps your commerce block using the section metadata table:\n\n`;
 
     // Table with full-width responsive layout
@@ -530,7 +530,7 @@ function generateMetadataTable(blockName, blockDisplayName) {
         template = 'Addresses, Columns';
     }
 
-    let output = `## Page Metadata\n\n`;
+    let output = `## Page metadata\n\n`;
     output += `Configure page-level metadata in the document authoring table below:\n\n`;
 
     // Table with full-width responsive layout
@@ -562,10 +562,10 @@ function generateMetadataTable(blockName, blockDisplayName) {
     output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${robots}</td>\n`;
     output += `</tr>\n`;
 
-    // Cache-Control row (only for checkout, cart, login, create-account)
+    // Cache Control row (only for checkout, cart, login, create-account)
     if (cacheControl) {
         output += `<tr>\n`;
-        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Cache-Control</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Cache Control</td>\n`;
         output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${cacheControl}</td>\n`;
         output += `</tr>\n`;
     }
@@ -585,7 +585,7 @@ function generateDocumentAuthoringTable(blockName, configs) {
         return '';
     }
 
-    let output = `## Document Authoring Configuration\n\n`;
+    let output = `## Document authoring configuration\n\n`;
     output += `Modify the values in the second column to customize the block's behavior. You can remove any rows for properties you don't need to configure.\n\n`;
 
     // Table with full-width responsive layout
@@ -716,6 +716,13 @@ function getBoilerplateVersion(boilerplatePath) {
 }
 
 /**
+ * Mapping of blocks to their setup/tutorial guides
+ */
+const setupGuideMapping = {
+    'product-recommendations': '/merchants/get-started/product-recommendations/'
+};
+
+/**
  * Generate merchant documentation for a single block
  */
 function generateMerchantBlockDoc(block, outputDir, boilerplateVersion) {
@@ -724,6 +731,7 @@ function generateMerchantBlockDoc(block, outputDir, boilerplateVersion) {
     const documentAuthoringTable = generateDocumentAuthoringTable(block.name, block.configs);
     const metadataTable = generateMetadataTable(block.name, block.displayName);
     const sectionMetadataTable = generateSectionMetadataTable();
+    const setupGuideUrl = setupGuideMapping[block.name];
 
     const sidebarLabel = block.sidebarLabel || block.displayName;
     let content = `---
@@ -735,15 +743,22 @@ sidebar:
 
 import TableWrapper from '@components/TableWrapper.astro';
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+${description} This block integrates with Adobe Commerce to provide a seamless shopping experience for your customers.
+
+`;
+
+    // Add setup guide note if one exists
+    if (setupGuideUrl) {
+        content += `:::note[Setup required]
+Before using this block, see the [${block.displayName} setup guide](${setupGuideUrl}) for configuration instructions.
+:::
+
+`;
+    }
+
+    content += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: ${boilerplateVersion}</strong>
 </div>
-
-## Overview
-
-${description}
-
-This block integrates with Adobe Commerce to provide a seamless shopping experience for your customers.
 
 `;
 
@@ -762,7 +777,7 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
 
     // Add detailed configuration options reference table
     if (block.configs.length > 0) {
-        content += `## Configuration Properties Reference\n\n`;
+        content += `## Configuration properties reference\n\n`;
         content += `The table below describes each configuration property in detail:\n\n`;
         content += `<TableWrapper nowrap={[0, 1]}>\n\n`;
         content += `| Property | Default | Req? | Description |\n`;
@@ -811,14 +826,14 @@ This block integrates with Adobe Commerce to provide a seamless shopping experie
     } else {
         content += `## Configuration
 
-This block uses default configuration. No additional configuration is required.
+This block requires no configuration. Add it to your page and it will automatically work with your storefront.
 
 `;
     }
 
     // Add tips
     if (tips.length > 0) {
-        content += `## Tips for Merchants\n\n`;
+        content += `## Tips for merchants\n\n`;
         for (const tip of tips) {
             content += `- ${tip}\n`;
         }
@@ -826,7 +841,7 @@ This block uses default configuration. No additional configuration is required.
     }
 
     // Add related links
-    content += `## Related Resources
+    content += `## Related resources
 
 - [AEM Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce)
 - [Edge Delivery Services](https://www.aem.live/docs/)
