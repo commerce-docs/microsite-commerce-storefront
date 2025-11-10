@@ -1,58 +1,220 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - User Account → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-account → Package name (e.g., "@dropins/storefront-cart")
-  - 1.2.0 → Version number (e.g., "1.5.1")
-  - 0 → Number of containers with slots
-  - <Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside> → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-account → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: User Account Slots
-description: Learn about the slots provided in the User Account drop-in for customization.
+description: Customize UI sections in the User Account drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **User Account** drop-in component for customizing container appearance and behavior.
+The User Account drop-in exposes **10 slots** in **9 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.2.0</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#addressform-slots"><code>AddressForm</code></a></td>
+<td><code>AddressFormActions</code>, <code>AddressFormInputs</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#addresses-slots"><code>Addresses</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#addresseswrapper-slots"><code>AddressesWrapper</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#customerinformation-slots"><code>CustomerInformation</code></a></td>
+<td><code>CustomerData</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#changepassword-slots"><code>ChangePassword</code></a></td>
+<td><code>CustomerData</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#fields-slots"><code>Fields</code></a></td>
+<td><code>AddressFormInputs</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#useform-slots"><code>useForm</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderslist-slots"><code>OrdersList</code></a></td>
+<td><code>OrdersListAction</code>, <code>OrdersListCard</code>, <code>OrderItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderslistwrapper-slots"><code>OrdersListWrapper</code></a></td>
+<td><code>OrdersListCard</code>, <code>OrderItemImage</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
 
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
+## AddressForm slots
 
-<Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside>
+```js {4,5}
+interface AddressFormProps
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-account */}
+slots?: {
+  AddressFormActions?: SlotProps<AddressFormActionsContext>;
+  AddressFormInputs?: SlotProps<AddressFormInputsContext>;
+};
+```
+
+---
+
+## Addresses slots
+
+```js {4}
+interface AddressesProps
+
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## AddressesWrapper slots
+
+```js {4}
+interface AddressesWrapperProps
+
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## CustomerInformation slots
+
+```js {4}
+interface CustomerInformationProps
+
+slots?: {
+  CustomerData?: SlotProps<CustomerDataContext>;
+};
+```
+
+---
+
+## ChangePassword slots
+
+```js {4}
+interface ChangePasswordProps
+
+slots?: {
+  CustomerData?: SlotProps<CustomerDataContext>;
+};
+```
+
+---
+
+## Fields slots
+
+```js {4}
+interface FieldsProps
+
+slots?: {
+  AddressFormInputs?: SlotProps<AddressFormInputsContext>;
+};
+```
+
+---
+
+## useForm slots
+
+```js {4}
+interface useFormProps
+
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## OrdersList slots
+
+```js {4,5,6}
+interface OrdersListProps
+
+slots?: {
+  OrdersListAction?: SlotProps<OrdersListActionContext>;
+  OrdersListCard?: SlotProps<OrdersListCardContext>;
+  OrderItemImage?: SlotProps<{
+    data: OrderItem;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+### OrderItemImage example
+
+This example from the Commerce Orders List block shows how to customize the `OrderItemImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-account/render.js';
+import OrdersList from '@dropins/storefront-account/containers/OrdersList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+
+provider.render(OrdersList, {
+  slots: {
+    OrderItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+      const anchor = document.createElement('a');
+      anchor.href = createProductLink(ctx.data);
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchor,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.orders-list'));
+```
+
+---
+
+## OrdersListWrapper slots
+
+```js {4,5}
+interface OrdersListWrapperProps
+
+slots?: {
+  OrdersListCard?: SlotProps<OrdersListCardContext>;
+  OrderItemImage?: SlotProps<{
+    data: OrderItem;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

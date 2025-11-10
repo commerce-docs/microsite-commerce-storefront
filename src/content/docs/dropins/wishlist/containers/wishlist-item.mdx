@@ -1,85 +1,46 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Wishlist → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-wishlist → Package name (e.g., "cart", "checkout")
-  - WishlistItem → Container name (e.g., "MiniCart", "OrderSummary")
-  - WishlistItem → Display name for container (e.g., "Mini Cart")
-  - 2.0.1 → Version number (e.g., "1.5.1")
-  - The WishlistItem container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { WishlistItem } from '@dropins/storefront-wishlist';
-
-export default function MyComponent() {
-  return (
-    <WishlistItem/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-wishlist → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Wishlist - WishlistItem Container
-description: Learn about the WishlistItem container in the Wishlist drop-in.
-sidebar:
-  label: WishlistItem
-  order: auto
+title: WishlistItem container
+description: Learn about the WishlistItem container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import OptionsTable from '@components/OptionsTable.astro';
 
-## Overview
+The `WishlistItem` container manages and displays a single product from a wishlist. It allows users to interact with the product, such as moving it to the cart or navigating to the product details page.
 
-The WishlistItem container component for the drop-in.
+For complex products that have no variant selected in the wishlist, the **Move To Cart** button becomes a **Customize** button. Users must select a variant first by navigating to the product details page.
+Its behavior is driven by configuration options such as `moveProdToCart`, `getProductData`, `getRefinedProduct` and routing via `routeProdDetailPage` callbacks.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.0.1</strong>
-</div>
+<Diagram caption="WishlistItem container">
+  ![Wishlist container](@images/dropins/wish-list/wishlist-item.png)
+</Diagram>
 
-## Configuration
+## Configurations
 
 The `WishlistItem` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['item', 'Item', 'Yes', 'The wishlisted item.'],
+        ['moveProdToCart', 'function', 'Yes', 'A function that is executed when the user clicks the "move product to cart" button.'],
+        ['routeProdDetailPage', 'function', 'Yes', 'A function that returns the URL for the product details page.'],
+        ['getProductData', 'function', 'No', 'A function that is executed to retrieve product information when rendering the wishlist item.'],
+        ['getRefinedProduct', 'function', 'No', 'A function that is executed to retrieve complex product information (such as product options) when rendering the wishlist item.']
+    ]}
+/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+## Example
 
-</TableWrapper>
+The following example demonstrates how to render the `WishlistItem` container:
 
-## Slots
-
-This container does not currently expose any customizable slots.
-
-## Usage
-
-The following example demonstrates how to use the `WishlistItem` container:
-
-```jsx
-import { WishlistItem } from '@dropins/storefront-wishlist';
-
-export default function MyComponent() {
-  return (
-    <WishlistItem/>
-  );
-}
+```javascript
+provider.render(WishlistItem, {
+    item: sampleWishlistItem,
+    moveProdToCart: cartApi.addProductsToCart,
+    routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct
+  });
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-wishlist */}

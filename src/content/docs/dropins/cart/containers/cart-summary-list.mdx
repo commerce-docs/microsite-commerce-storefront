@@ -1,85 +1,124 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Cart → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-cart → Package name (e.g., "cart", "checkout")
-  - CartSummaryList → Container name (e.g., "MiniCart", "OrderSummary")
-  - CartSummaryList → Display name for container (e.g., "Mini Cart")
-  - 1.5.1 → Version number (e.g., "1.5.1")
-  - The CartSummaryList container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { CartSummaryList } from '@dropins/storefront-cart';
-
-export default function MyComponent() {
-  return (
-    <CartSummaryList/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-cart → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Cart - CartSummaryList Container
-description: Learn about the CartSummaryList container in the Cart drop-in.
-sidebar:
-  label: CartSummaryList
-  order: auto
+title: CartSummaryList container
+description: Learn about the CartSummaryList container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+import CodeInclude from '@components/CodeInclude.astro';
+import cartModel from '../_includes/cartModel.ts?raw';
 
-## Overview
+The `CartSummaryList` container displays a summary of the items in the shopping cart by rendering a list of `CartItem` components. Each `CartItem` represents an individual item in the cart.
 
-The CartSummaryList container component for the drop-in.
+<Diagram caption="CartSummaryList container">
+  ![CartSummaryList container](@images/dropins/cart/cart-summary-list.png)
+</Diagram>
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.5.1</strong>
-</div>
 
-## Configuration
+## Configurations
 
 The `CartSummaryList` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['children', 'CartModel', 'Yes', 'Child elements to be rendered inside the container.'],
+    ['routeProduct', 'function', 'No', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'No', 'Callback function that returns an empty cart.'],
+    ['initialData', 'string', 'Yes', 'Initial cart data to preload the component. Defaults to null.'],
+    ['hideHeading', 'boolean', 'No', 'Whether to hide the heading of the cart.'],
+    ['hideFooter', 'boolean', 'No', 'Whether to hide the footer of the cart.'],
+    ['routeProduct', 'function', 'No', 'Callback function that returns a product.'],
+    ['routeEmptyCartCTA', 'function', 'No', 'Callback function that returns an empty cart.'],
+    ['routeCart', 'function', 'No', 'Callback function that navigates to the cart.'],
+    ['onItemUpdate', 'function', 'No', 'Callback function that updates the item.'],
+    ['onItemRemove', 'function', 'No', 'Callback function that removes the item.'],
+    ['maxItems', 'number', 'No', 'Maximum number of items to display.'],
+    ['slots', 'function', 'No', 'Allows passing a container or custom component.'],
+    ['attributesToHide', 'string[]', 'No', 'Attributes to hide.'],
+    ['enableRemoveItem', 'boolean', 'No', 'Enable remove item.'],
+    ['enableUpdateItemQuantity', 'boolean', 'No', 'Enable update item quantity.'],
+    ['onItemsErrorsChange', 'function', 'No', 'Callback function that changes the items errors.'],
+    ['accordion', 'boolean', 'No', 'Toggle accordion view.'],
+    ['variant', 'primary' | 'secondary', 'No', 'Cart variant.'],
+    ['isLoading', 'boolean', 'No', 'Toggle loading state.'],
+    ['showMaxItems', 'boolean', 'No', 'Toggle show max items.'],
+    ['showDiscount', 'boolean', 'No', 'Toggle show discount.'],
+    ['showSavings', 'boolean', 'No', 'Toggle show savings.'],
+    ['quantityType', 'stepper' | 'dropdown', 'No', 'Display quantity changes as a stepper or in a dropdown menu.'],
+    ['dropdownOptions', 'string[]', 'No', 'An array of items to display in a dropdown menu.'],
+    ['undo', 'boolean', 'No', 'Enables the undo banner to restore recently removed items to the cart.']
+  ]}
+/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+The `CartModel` object has the following shape:
 
-</TableWrapper>
+<CodeInclude code={cartModel} lang="ts" frame="none" />
 
-## Slots
+## Supported slots
 
-This container does not currently expose any customizable slots.
+The `CartSummaryList` container supports the following slots:
 
-## Usage
+* Heading
+* EmptyCart
+* Footer
+* Thumbnail
+* ProductAttributes
+* CartSummaryFooter
+* CartItem
+* UndoBanner
+* ItemTitle
+* ItemPrice
+* ItemQuantity
+* ItemTotal
+* ItemSku
+* ItemRemoveAction
 
-The following example demonstrates how to use the `CartSummaryList` container:
+## Example configuration
 
-```jsx
-import { CartSummaryList } from '@dropins/storefront-cart';
+The following example demonstrates how to render the `CartSummaryList` container with the `routeProduct` and `routeEmptyCartCTA` callbacks:
 
-export default function MyComponent() {
-  return (
-    <CartSummaryList/>
-  );
-}
-```
+```js
+provider.render(CartSummaryList, {
+  enableRemoveItem: true,
+  enableUpdateItemQuantity: true,
+  showDiscount: true,
+  // accordion: true,
+  // showMaxItems: false,
+  // maxItems: 6,
+  // routeCart: () => '#cart',
+  // showSavings: true,
+  // quantityType: 'dropdown',
+  // dropdownOptions: [
+  //   { value: '1', text: '1' },
+  //   { value: '2', text: '2' },
+  //   { value: '3', text: '3' },
+  // ],
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => '#empty-cart',
+  slots: {
+    Footer: (ctx) => {
+      // Runs on mount
+      const wrapper = document.createElement('div');
+      ctx.appendChild(wrapper);
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-cart */}
+      // Append Product Promotions on every update
+      ctx.onChange((next) => {
+        wrapper.innerHTML = '';
+
+        next.item?.discount?.label?.forEach((label) => {
+          const discount = document.createElement('div');
+          discount.style.color = '#3d3d3d';
+          discount.innerText = label;
+          wrapper.appendChild(discount);
+        });
+      });
+    },
+  },
+})($cartSummaryList);

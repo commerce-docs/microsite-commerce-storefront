@@ -1,58 +1,324 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - User Auth → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-auth → Package name (e.g., "@dropins/storefront-cart")
-  - 2.1.1 → Version number (e.g., "1.5.1")
-  - 0 → Number of containers with slots
-  - <Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside> → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-auth → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: User Auth Slots
-description: Learn about the slots provided in the User Auth drop-in for customization.
+description: Customize UI sections in the User Auth drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **User Auth** drop-in component for customizing container appearance and behavior.
+The User Auth drop-in exposes **5 slots** in **7 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.1.1</strong>
+<strong>Version: 2.1.5</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#form-slots"><code>Form</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#useform-slots"><code>useForm</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#fields-slots"><code>Fields</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#signin-slots"><code>SignIn</code></a></td>
+<td><code>SuccessNotification</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#inputsdefaultvalueset-slots"><code>inputsDefaultValueSet</code></a></td>
+<td><code>SuccessNotification</code>, <code>PrivacyPolicyConsent</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#successnotification-slots"><code>SuccessNotification</code></a></td>
+<td><code>SuccessNotificationActions</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#updatepassword-slots"><code>UpdatePassword</code></a></td>
+<td><code>SuccessNotification</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
 
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
+## Form slots
 
-<Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside>
+```js {4}
+interface FormProps
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-auth */}
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## useForm slots
+
+```js {4}
+interface useFormProps
+
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## Fields slots
+
+```js {4}
+interface FieldsProps
+
+slots?: {
+  [key: string]: SlotProps;
+};
+```
+
+---
+
+## SignIn slots
+
+```js {4}
+interface SignInProps
+
+slots?: {
+  SuccessNotification?: SlotProps<DefaultSlotContext>;
+};
+```
+
+### SuccessNotification example
+
+This example from the Commerce Confirm Account block shows how to customize the `SuccessNotification` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import SignIn from '@dropins/storefront-auth/containers/SignIn.js';
+import { rootLink } from '../../scripts/commerce.js';
+// Note: `labels` and `recommendationsData` should be defined in your block context
+
+provider.render(SignIn, {
+  slots: {
+    SuccessNotification: (ctx) => {
+      const userName = ctx?.isSuccessful?.userName || '';
+      const elem = document.createElement('div');
+      authRenderer.render(SuccessNotification, {
+        labels: {
+          headingText: `Welcome ${userName}!`,
+          messageText: 'You have successfully logged in.',
+        },
+        slots: {
+          SuccessNotificationActions: (innerCtx) => {
+            const primaryBtn = document.createElement('div');
+            UI.render(Button, {
+              children: 'My Account',
+              onClick: () => {
+                window.location.href = rootLink(CUSTOMER_ACCOUNT_PATH);
+              },
+            })(primaryBtn);
+            innerCtx.appendChild(primaryBtn);
+            const secondaryButton = document.createElement('div');
+            secondaryButton.style.display = 'flex';
+            secondaryButton.style.justifyContent = 'center';
+            secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
+            UI.render(Button, {
+              children: 'Logout',
+              variant: 'tertiary',
+              onClick: async () => {
+                await authApi.revokeCustomerToken();
+                window.location.href = rootLink('/');
+              },
+            })(secondaryButton);
+            innerCtx.appendChild(secondaryButton);
+          },
+        },
+      })(elem);
+      ctx.appendChild(elem);
+    }
+  }
+})(document.querySelector('.sign-in'));
+```
+
+---
+
+## inputsDefaultValueSet slots
+
+```js {4,5}
+interface inputsDefaultValueSetProps
+
+slots?: {
+  SuccessNotification?: SlotProps<DefaultSlotContext>;
+  PrivacyPolicyConsent: SlotProps;
+};
+```
+
+### PrivacyPolicyConsent example
+
+This example from the Commerce Scripts block shows how to customize the `PrivacyPolicyConsent` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import inputsDefaultValueSet from '@dropins/storefront-auth/containers/inputsDefaultValueSet.js';
+import { PRIVACY_POLICY_PATH } from '../../scripts/commerce.js';
+
+provider.render(inputsDefaultValueSet, {
+  slots: {
+    PrivacyPolicyConsent: async (ctx) => {
+      const wrapper = document.createElement('span');
+      Object.assign(wrapper.style, {
+        color: 'var(--color-neutral-700)',
+        font: 'var(--type-details-caption-2-font)',
+        display: 'block',
+        marginBottom: 'var(--spacing-medium)',
+      });
+      const link = document.createElement('a');
+      link.href = PRIVACY_POLICY_PATH;
+      link.target = '_blank';
+      link.textContent = 'Privacy Policy';
+      wrapper.append(
+      'By creating an account, you acknowledge that you have read and agree to our ',
+      link,
+      ', which outlines how we collect, use, and protect your personal data.',
+      );
+      ctx.appendChild(wrapper);
+    }
+  }
+})(document.querySelector('.inputs-default-value-set'));
+```
+
+---
+
+## SuccessNotification slots
+
+```js {4}
+interface SuccessNotificationProps
+
+slots?: {
+  SuccessNotificationActions?: SlotProps;
+};
+```
+
+### SuccessNotificationActions example
+
+This example from the Commerce Confirm Account block shows how to customize the `SuccessNotificationActions` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import SuccessNotification from '@dropins/storefront-auth/containers/SuccessNotification.js';
+import { rootLink } from '../../scripts/commerce.js';
+
+provider.render(SuccessNotification, {
+  slots: {
+    SuccessNotificationActions: (innerCtx) => {
+      const primaryBtn = document.createElement('div');
+      UI.render(Button, {
+        children: 'My Account',
+        onClick: () => {
+          window.location.href = rootLink(CUSTOMER_ACCOUNT_PATH);
+        },
+      })(primaryBtn);
+      innerCtx.appendChild(primaryBtn);
+      const secondaryButton = document.createElement('div');
+      secondaryButton.style.display = 'flex';
+      secondaryButton.style.justifyContent = 'center';
+      secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
+      UI.render(Button, {
+        children: 'Logout',
+        variant: 'tertiary',
+        onClick: async () => {
+          await authApi.revokeCustomerToken();
+          window.location.href = rootLink('/');
+        },
+      })(secondaryButton);
+      innerCtx.appendChild(secondaryButton);
+    }
+  }
+})(document.querySelector('.success-notification'));
+```
+
+---
+
+## UpdatePassword slots
+
+```js {4}
+interface UpdatePasswordProps
+
+slots?: {
+  SuccessNotification?: SlotProps<DefaultSlotContext>;
+};
+```
+
+### SuccessNotification example
+
+This example from the Commerce Create Password block shows how to customize the `SuccessNotification` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import UpdatePassword from '@dropins/storefront-auth/containers/UpdatePassword.js';
+import { rootLink } from '../../scripts/commerce.js';
+// Note: `labels` and `recommendationsData` should be defined in your block context
+
+provider.render(UpdatePassword, {
+  slots: {
+    SuccessNotification: (ctx) => {
+      const userName = ctx?.isSuccessful?.userName || '';
+      const elem = document.createElement('div');
+      authRenderer.render(SuccessNotification, {
+        labels: {
+          headingText: `Welcome ${userName}!`,
+          messageText: 'Your password has been successfully updated.',
+        },
+        slots: {
+          SuccessNotificationActions: (innerCtx) => {
+            const primaryBtn = document.createElement('div');
+            UI.render(Button, {
+              children: 'My Account',
+              onClick: () => {
+                window.location.href = rootLink(CUSTOMER_ACCOUNT_PATH);
+              },
+            })(primaryBtn);
+            innerCtx.appendChild(primaryBtn);
+            const secondaryButton = document.createElement('div');
+            secondaryButton.style.display = 'flex';
+            secondaryButton.style.justifyContent = 'center';
+            secondaryButton.style.marginTop = 'var(--spacing-xsmall)';
+            UI.render(Button, {
+              children: 'Logout',
+              variant: 'tertiary',
+              onClick: async () => {
+                await authApi.revokeCustomerToken();
+                window.location.href = rootLink('/');
+              },
+            })(secondaryButton);
+            innerCtx.appendChild(secondaryButton);
+          },
+        },
+      })(elem);
+      ctx.appendChild(elem);
+    }
+  }
+})(document.querySelector('.update-password'));
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

@@ -1,45 +1,27 @@
 ---
-title: Cart Installation
-description: Learn how to install the Cart drop-in component into your site.
+title: Cart installation
+description: Learn how to install the cart drop-in component into your site.
 sidebar:
-  label: Installation
+  # label: Cart Installation
   order: 2
 ---
 
-import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Callouts from '@components/Callouts.astro';
+import Diagram from '@components/Diagram.astro';
+import Vocabulary from '@components/Vocabulary.astro';
 
-{/* 
-TEMPLATE INSTRUCTIONS:
-This template is used by scripts/@generate-installation-docs.js to generate installation documentation.
-
-PLACEHOLDERS:
-- Cart: Display name (e.g., "Cart", "Checkout")
-- @dropins/storefront-cart: Full package name (e.g., "@dropins/storefront-cart")
-- 1.5.1: Package version (e.g., "1.5.1")
-- CartSummaryGrid: Name of a primary container for examples
-- import { CartSummaryGrid } from '@dropins/storefront-cart';: Generated import statement
-- 11: Number of available containers
-- https://github.com/adobe-commerce/storefront-cart: Source repository URL
-
-TO MODIFY:
-- Structure changes: Edit this template
-- Content changes: Usually automatic from script extraction
-*/}
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.5.1</strong> | <strong>11 containers</strong>
-</div>
+The cart drop-in component, like our other drop-in components, are designed for the browser's JavaScript runtime without the need for a bundler. You can also install and execute drop-in components in a build-time environment with bundlers like Vite. The installation steps for both runtime and build-time environments are the same after the initial drop-in component package imports.
 
 ## Step-by-step
 
-Use the following steps to install the **Cart** component:
+Use the following steps to install the cart component:
 
-<Aside type="note">
-These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as static HTML or React.
-</Aside>
+:::note[Edge Delivery Service]
+These steps are specific for EDS projects, and may not necessarily be the same for other frameworks such as a static HTML or React framework.
+:::
 
 <Tasks>
 
@@ -47,125 +29,235 @@ These steps are specific for Edge Delivery Services projects, and may not necess
 
 ### Install the packages
 
-Install the required packages using npm:
+Use a CDN or NPM (recommended for performance) to install the drop-in component tools (`@dropins/tools`) and cart (`@dropins/storefront-cart`) packages.
 
-```bash frame="none"
-npm install @dropins/tools @dropins/storefront-cart
-```
+<Tabs>
+  <TabItem label="NPM" icon="seti:npm">
 
-<Aside type="tip">
+    ```bash frame="none"
+    npm install @dropins/tools @dropins/storefront-cart
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+
+    ```html title="index.html" del={"Replace with actual URLs":5-7}
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Storefront</title>
+
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/tools@latest"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dropins/storefront-cart@latest"></script>
+    </head>
+    ```
+
+  </TabItem>
+</Tabs>
+
+:::note[Install @dropins/tools]
 All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
-</Aside>
+:::
 
 </Task>
 
 <Task>
-
 ### Map the packages
 
-Add the drop-in to your `importmap` in the `head.html` file:
+In the `<head>` tag of your `index.html` or `head.html` file, use an `importmap` pointed to the `node_modules` directory, a **custom local directory**, or **CDN** (for run-time environments).
 
-```json title="head.html"
-<script nonce="aem" type="importmap">
-{
-  "imports": {
-    "@dropins/storefront-cart/": "/scripts/__dropins__/@dropins/storefront-cart/",
-    "@dropins/tools/": "/scripts/__dropins__/tools/"
-  }
-}
-</script>
-```
+<Tabs>
+<TabItem label="node_modules" icon="seti:npm">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to the local `node_modules` directory that contains your installed drop-in component files from the drop-in component tools (@dropins/tools) and the cart (@dropins/storefront-cart):
 
-With the `importmap` defined, you can now import the required files from these packages into your block as described in the next step.
+  ```html title="head.html"
+  <script type="importmap">
+    {
+      "imports": {
+        "@dropins/tools/": "/node_modules/@dropins/tools/",
+        "@dropins/storefront-cart/": "/node_modules/@dropins/storefront-cart/",
+      }
+    }
+  </script>
+  <script src="/scripts/scripts.js" type="module"></script>
+    ```
+  </TabItem>
+    <TabItem label="custom" icon="seti:folder">
+    This example shows an `importmap` added to a `head.html` The `importmap` points both packages to local directories that contain all the optimized/minified files from the drop-in component tools (@dropins/tools) and the cart (@dropins/storefront-cart):
+
+    ```html title="head.html"
+    <script type="importmap">
+      {
+        "imports": {
+          "@dropins/tools/": "/scripts/__dropins__/tools/",
+          "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
+        }
+      }
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    ```
+
+  </TabItem>
+  <TabItem label="CDN" icon="external">
+    This example shows an `importmap` pointing both packages to a CDN for the drop-in component tools (@dropins/tools) and the cart (@dropins/storefront-cart):
+
+    ```html title="index.html" {"Replace CDN URLs with correct URLs":5-7} del='https://cdn.jsdelivr.net/npm/'
+    <head>
+      <script type="importmap">
+        {
+          "imports": {
+
+            "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest",
+            "@dropins/storefront-cart/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-cart@latest",
+          }
+        }
+      </script>
+    </head>
+    ```
+
+  </TabItem>
+
+</Tabs>
+
+With the `importmap` defined for both runtime and build-time environments, you can now **import the required files** from these packages into your cart block as described in the next step.
 
 </Task>
 
 <Task>
-
 ### Import the required files
 
-Import the necessary components and utilities:
+Import the required files from the drop-in components tools (`@dropins/tools/fetch-graphql.js'`, `@dropin/tools/initializers.js`) and the cart (`@dropins/storefront-cart`) into a JavaScript file for your cart block. The example here shows the imports added to a `cart.js` file. These imports constitute the minimum imports you need to create a fully functioning cart for your site:
 
-```js title="Cart.js"
+```js title="cart.js"
 // GraphQL Client
 import * as mesh from '@dropins/tools/fetch-graphql.js';
 
-// Component tools
+// component tools
 import { initializers } from '@dropins/tools/initializer.js';
+
+// drop-in component functions
+import * as pkg from '@dropins/storefront-cart/api.js';
 
 // Drop-in component provider
 import { render as provider } from '@dropins/storefront-cart/render.js';
 
-// Drop-in component API functions
-import * as api from '@dropins/storefront-cart/api.js';
-
 // Drop-in component containers
-import { CartSummaryGrid } from '@dropins/storefront-cart';
+import Cart from '@dropins/storefront-cart/containers/Cart.js';
+import MiniCart from '@dropins/storefront-cart/containers/MiniCart.js';
 ```
+
+<Vocabulary>
+
+### GraphQL client
+
+Enables the ability to set and get endpoints and headers, as well as fetches data and configurations.
+
+### Drop-in component tools
+
+The Initializer is responsible for setting up event listeners and initializing a module with the given configuration.
+
+### drop-in component functions
+
+Enables the cart API functions: addProductsToCart, createEmptyCart, getCartData... and more.
+
+### Drop-in component provider
+
+Renders the cart UI.
+
+### Drop-in component containers
+
+Structural elements that are responsible for managing and displaying the UI for the `Cart` and `Mini-cart`.
+
+</Vocabulary>
 
 </Task>
 
 <Task>
-
 ### Connect to the endpoint
 
-Configure the GraphQL endpoint:
+Connect your cart component to the API Mesh endpoint and set the required headers as shown in the example below. Replace the endpoint URL and header placeholder values with the actual values from your Commerce backend services:
 
-```js title="Cart.js"
+```js title="cart.js"
 // Set endpoint configuration
 mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
+```
 
-// Set store code header
+#### Request headers
+
+The cart does not need additional headers set for basic installation. But if you're looking to enable features for your drop-in component, the GraphQL request accepts additional headers. The below example shows how you could set the `Commerce-Auth` header with the customer token for the Authorization header, and how to set the store code header for store specific features. Replace the header values with the actual values from your Commerce backend services:
+
+```js title="cart.js"
+// Set the customer token. This method is specific to @dropins/storefront-cart package.
+pkg.setFetchGraphQlHeader('commerce-auth', '<token>');
+
+// Set store code header. This method is specific to the @dropins/tools package.
 mesh.setFetchGraphQlHeader('store', '<default>');
 ```
 
-<Aside type="note">
-This setting is specific for GraphQL Mesh. Refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections.
-</Aside>
+:::note[Authentication]
+Note that this setting is specific for GraphQL Mesh, so refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections. Visit the [user authentication](/dropins/user-auth/) drop-in component for instructions on setting up Authentication features.
+:::
 
 </Task>
 
 <Task>
-
 ### Register and load the drop-in
 
-Mount the initializers after the page has loaded:
+The code below shows how to register the cart, load it (mount), and enable the logger for debugging purposes. You can add these functions within a `<script>` tag in your Cart HTML page as shown here:
 
-```js title="Cart.js"
-// Register drop-in initializer
-initializers.register(api.initialize, {});
+```html title="index.html" ins={"1":5} ins={"2":8}
+<script type="module">
+  // more code above...
 
-// Mount initializers (must be called after all initializers are registered)
-initializers.mountImmediately(initialize, { langDefinitions });
+  // Register and load the Cart drop-in
+  initializers.register(pkg.initialize);
+
+  // Mount Initializers (must be called after all initializers are registered)
+  window.addEventListener('load', initializers.mount);
+</script>
 ```
+
+<Callouts square color="var(--sl-color-green)">
+
+1. This function registers the cart to be loaded on the page by the `initializers.mount` function.
+1. This event handler triggers the initializers.mount function to load the cart after the page has loaded.
+
+</Callouts>
 
 </Task>
 
 <Task>
-
 ### Render the drop-in
 
-Render the CartSummaryGrid container on your page:
+Render the cart on the page. The example below provides the minimal configuration options required to render the default Cart drop-in component, along with an example to render Mini-Cart.
 
-```js title="Cart.js"
+```js title="cart.js"
 // Render Cart
-provider.render(CartSummaryGrid, {
-  // Add configuration options here
-})(document.getElementById('your-dropin-element'));
+provider.render(Cart, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => 'your-empty-cart-element',
+  routeCheckout: () => 'your-checkout-element',
+})(document.getElementById('your-cart-element'));
+
+// Render MiniCart
+provider.render(MiniCart, {
+  routeProduct: (item) => {
+    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
+  },
+  routeEmptyCartCTA: () => 'your-empty-cart-element',
+  routeCart: () => 'your-cart-element',
+  routeCheckout: () => 'your-checkout-element',
+})(document.getElementById('your-mini-cart-element'));
 ```
 
-<Aside type="tip">
-See the [Containers documentation](/dropins/Cart/containers/) for a complete list of available containers and their configuration options.
-</Aside>
+Test the cart by viewing your cart page in a browser, or running your local dev or build server. If you see the cart rendered in the browser, congrats!, you have a successful installation. If not, check the console for any errors and verify that you have followed all the steps correctly.
 
 </Task>
 
 </Tasks>
 
-## Next steps
+## Summary
 
-- Explore the [API functions](/dropins/Cart/functions/) available for programmatic control
-- Customize the appearance using [slots](/dropins/Cart/slots/)
-- Learn about [events](/dropins/Cart/events/) for integration with other components
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-cart */}
+The installation of all drop-in components follow the same pattern demonstrated by installing the cart: Install, Map, Import, Connect, Register, and Render.

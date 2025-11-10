@@ -119,7 +119,6 @@ function scanForInstallation(repoPath) {
  * 
  * @param {string} repoName - Drop-in name
  * @param {Object} repoConfig - Repository configuration
- * @param {Object} installationData - Installation data with containers
  * @param {Object|string} versionInfo - Version info object or version string
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
@@ -132,7 +131,6 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
 
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
-    const displayVersion = typeof versionInfo === 'object' ? versionInfo.requested : versionInfo;
 
     // Pick first container for example, or use a generic placeholder
     let containerExample = 'Container';
@@ -147,7 +145,7 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': packageName,
-        'DROPIN_VERSION': cleanVersion(displayVersion),
+        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'CONTAINER_EXAMPLE': containerExample,
         'IMPORT_EXAMPLE': importExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
