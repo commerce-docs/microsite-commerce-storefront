@@ -178,6 +178,8 @@ function generateCustomizationExample(dictionaryJson) {
 }
 
 function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-dictionary.mdx');
 
     // If no dictionary found, generate placeholder page
@@ -213,7 +215,7 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo
         'DROPIN_KEY': repoName,  // kebab-case key for filenames
         'DROPIN_VAR': dictionaryVarName,  // camelCase variable name
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
+        'DROPIN_VERSION': cleanVersion(version),
         'DICTIONARY_JSON': dictionaryJson,
         'CUSTOM_EXAMPLE': customExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
