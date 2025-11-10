@@ -271,7 +271,17 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    This deploys all actions and schedules to your selected workspace (Stage or Production).
 
 6. **Test the deployment**:
-   - Manually invoke actions using the Management UI or via CLI commands such as `aio rt:action:invoke <action-name>` (replace `<action-name>` with the specific action you want to test, for example `pdp-renderer`)
+   - Manually invoke actions using the Management UI or via CLI commands:
+     ```bash
+     # Fetch all products from Catalog Service and store them
+     `aio rt action invoke aem-commerce-ssg/fetch-all-products`
+     
+     # Check for product changes and generate markup
+     `aio rt action invoke aem-commerce-ssg/check-product-changes`
+     
+     # Clean up and unpublish deleted products
+     `aio rt action invoke aem-commerce-ssg/mark-up-clean-up`
+     ```
    - Verify product markup generation for sample SKUs
    - Check that pages publish successfully to your AEM project
 
@@ -345,8 +355,8 @@ The prerender solution involves two separate codebases that work together:
         B0["Runs Independently"]
         B1["Detect product changes"]
         B2["Generate prerendered HTML<br>with semantic markup"]
-        B3["Store HTML in<br>App Builder bucket"]
-        B4["AEM Admin API configures<br>overlay link to bucket"]
+        B3["Store HTML in<br>App Builder blob store"]
+        B4["AEM Admin API configures<br>overlay link to blob store"]
   end
  subgraph eds["<strong>Edge Delivery Services</strong>"]
     direction TB
@@ -569,17 +579,17 @@ Common issues include:
 - **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches
   - Query the Catalog Service directly using its <Link href="https://developer.adobe.com/commerce/services/graphql/catalog-service/products/" text="GraphQL Product API" /> to verify product data
   - Use the Management UI to view the product index and confirm that the SKU is listed
-  - Check the `pdp-renderer` action logs in App Builder for GraphQL errors: `aio rt:activation:list pdp-renderer`
+  - Check the `pdp-renderer` action logs in App Builder for GraphQL errors: `aio rt activation list pdp-renderer`
   
 - **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
-  - Check activation logs: `aio rt:activation:list product-change-detector`
-  - View detailed logs: `aio rt:activation:logs <ACTIVATION_ID>`
+  - Check activation logs: `aio rt activation list product-change-detector`
+  - View detailed logs: `aio rt activation logs <ACTIVATION_ID>`
   - Manually trigger the change detector from the Management UI to test functionality
   
 - **Storage errors**: Verify your App Builder workspace has sufficient storage quota
   - Check storage usage in the Adobe Developer Console under your App Builder workspace
-  - Review blob storage logs: `aio rt:activation:list blob-store`
+  - Review blob storage logs: `aio rt activation list blob-store`
   - Contact Adobe support to request quota increases if needed
 
 ## Additional resources
