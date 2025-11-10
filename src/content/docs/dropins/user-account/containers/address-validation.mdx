@@ -1,101 +1,63 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - User Account → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-account → Package name (e.g., "cart", "checkout")
-  - AddressValidation → Container name (e.g., "MiniCart", "OrderSummary")
-  - AddressValidation → Display name for container (e.g., "Mini Cart")
-  - 1.2.0 → Version number (e.g., "1.5.1")
-  - The AddressValidation container component for the drop-in. → Brief description of what the container does
-  - | `selectedAddress` | `'suggested' \| 'original' \| null` | No | Configuration for selected address |
-| `suggestedAddress` | `Partial<CustomerAddressesModel> \| null` | Yes | Configuration for suggested address |
-| `originalAddress` | `CustomerAddressesModel \| null` | Yes | Configuration for original address |
-| `handleSelectedAddress` | `(payload: { selection: 'suggested' \| 'original'` | No | Configuration for handle selected address |
-| `address` | `CustomerAddressesModel \| null \| undefined` | Yes | Configuration for address | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { AddressValidation } from '@dropins/storefront-account';
-
-export default function MyComponent() {
-  return (
-    <AddressValidation
-      suggestedAddress={data}
-      originalAddress={data}
-      address={data}
-    />
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-account → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: User Account - AddressValidation Container
-description: Learn about the AddressValidation container in the User Account drop-in.
-sidebar:
-  label: AddressValidation
-  order: auto
+title: AddressValidation container
+description: Configure the AddressValidation container to present suggested vs. original shipping addresses and act on the shopper's choice.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
 
-## Overview
+The `AddressValidation` container displays a suggested shipping address (from a third-party verification service) alongside the entered address, allowing shoppers to choose between them.
 
-The AddressValidation container component for the drop-in.
+Typically invoked from a modal during address creation after calling your address verification service.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.2.0</strong>
-</div>
-
-## Configuration
+## AddressValidation configurations
 
 The `AddressValidation` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['originalAddress', 'CustomerAddressesModel | null', 'Yes', 'Original address set by the user.'],
+    ['suggestedAddress', 'Partial<CustomerAddressesModel> | null', 'Yes', 'Address suggestion to present to the user.'],
+    ['handleSelectedAddress', 'function', 'No', 'Async callback fired when the shopper selects an address. Receives the selection and the chosen address.'],
+  ]}
+/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `selectedAddress` | `'suggested' \| 'original' \| null` | No | Configuration for selected address |
-| `suggestedAddress` | `Partial<CustomerAddressesModel> \| null` | Yes | Configuration for suggested address |
-| `originalAddress` | `CustomerAddressesModel \| null` | Yes | Configuration for original address |
-| `handleSelectedAddress` | `(payload: { selection: 'suggested' \| 'original'` | No | Configuration for handle selected address |
-| `address` | `CustomerAddressesModel \| null \| undefined` | Yes | Configuration for address |
+### AddressValidationProps interface
 
-</TableWrapper>
+The `AddressValidation` container receives an object that implements the following interface:
 
-## Slots
-
-This container does not currently expose any customizable slots.
-
-## Usage
-
-The following example demonstrates how to use the `AddressValidation` container:
-
-```jsx
-import { AddressValidation } from '@dropins/storefront-account';
-
-export default function MyComponent() {
-  return (
-    <AddressValidation
-      suggestedAddress={data}
-      originalAddress={data}
-      address={data}
-    />
-  );
+```ts
+interface AddressValidationProps {
+  selectedAddress?: 'suggested' | 'original' | null;
+  suggestedAddress: Partial<CustomerAddressesModel> | null;
+  originalAddress: CustomerAddressesModel | null;
+  handleSelectedAddress?: (payload: {
+    selection: 'suggested' | 'original';
+    address: CustomerAddressesModel | null | undefined;
+  }) => void;
 }
 ```
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-account */}
+## CustomerAddressesModel type
+
+The `CustomerAddressesModel` type has this shape:
+
+```ts
+interface CustomerAddressesModel {
+  city?: string;
+  countryCode?: string;
+  region?: { region: string; regionCode: string; regionId: string | number };
+  postcode?: string;
+  street?: string;
+}
+```
+
+<Aside type="note" title="Normalization">
+Transform your address verification service output to `CustomerAddressesModel` format (with fields like `street`, `city`, `region`, `countryCode`, `postcode`) before passing it to the container. Missing properties default to the original address values.
+</Aside>
+
+## Example
+
+For a complete walkthrough, see the [Validate address](/dropins/user-account/tutorials/validate-address/) tutorial.

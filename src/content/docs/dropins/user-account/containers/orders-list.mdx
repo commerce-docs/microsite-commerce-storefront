@@ -1,85 +1,79 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - User Account → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-account → Package name (e.g., "cart", "checkout")
-  - OrdersList → Container name (e.g., "MiniCart", "OrderSummary")
-  - OrdersList → Display name for container (e.g., "Mini Cart")
-  - 1.2.0 → Version number (e.g., "1.5.1")
-  - The OrdersList container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { OrdersList } from '@dropins/storefront-account';
-
-export default function MyComponent() {
-  return (
-    <OrdersList/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-account → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: User Account - OrdersList Container
-description: Learn about the OrdersList container in the User Account drop-in.
-sidebar:
-  label: OrdersList
-  order: auto
+title: OrdersList container
+description: Learn about the OrdersList container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-## Overview
+The `OrdersList` container is a standalone component designed to provide access to a customer's order history and detailed order information. It can be rendered in a full-size or minified view.
 
-The OrdersList container component for the drop-in.
+Use the full-size view when the `OrdersList` component functions as a standalone page. This view displays the complete list of orders, includes a filter for filtering by the date placed. It also features pagination, which is visible if the number of orders exceeds one page.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.2.0</strong>
-</div>
+<Diagram caption="Full-size view with no order list items">
+  ![Full-size view with no order list items](@images/dropins/user-account/orders-full-no-orders.png)
+</Diagram>
 
-## Configuration
+<Diagram caption="Full-size view with multiple items">
+  ![Full-size view with multiple items](@images/dropins/user-account/customer-info-edit.png)
+</Diagram>
 
-The `OrdersList` container provides the following configuration options:
+The minified view can be usef when the container is part of a page alongside other components, such as a user account dashboard. In this view, only a few of the most recent orders are displayed (the number is configurable). A **View all orders** button is rendered at the bottom, which navigates the customer to the full order history page.
 
-<TableWrapper nowrap={[0]}>
+<Diagram caption="Minified view with no items">
+  ![Minified view with no items](@images/dropins/user-account/orders-minified-none.png)
+</Diagram>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+<Diagram caption="Minified view with multiple items">
+  ![Minified view with multiple items](@images/dropins/user-account/orders-minified-multiple.png)
+</Diagram>
 
-</TableWrapper>
+## OrdersList configurations
 
-## Slots
+The OrdersList container provides the following configuration options:
 
-This container does not currently expose any customizable slots.
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the address container.'],
+        ['withHeader', 'boolean', 'No', 'Whether to show/hide container header.'],
+        ['minifiedView', 'boolean', 'No', 'Whether to enable/disable minified view.'],
+        ['withThumbnails', 'boolean', 'No', 'Whether to enable/disable product thumbnails on order cards.'],
+        ['withFilter', 'boolean', 'No', 'Whether to enable/disable filter dropdown.'],
+        ['ordersInMinifiedView', 'number', 'No', 'Used only in minified view. Defines how many orders are visible in a minified view (default: 1).'],
+        ['pageSize', 'number', 'No', 'Sets the  pagination size (default: 10).'],
+        ['routeOrdersList', 'function', 'No', 'Used only in minified view. Determines where the “View all orders” button redirects the customer.'],
+        ['routeOrderDetails', 'function', 'No', 'Determines where a click on the order card button (a chevron icon to the right of the order card) redirects the customer.'],
+        ['routeReturnDetails', 'function', 'No', 'Determines where the return number link redirects the customer.'],
+        ['routeTracking', 'function', 'No', 'Determines where the tracking number link redirects the customer.'],
+        ['routeOrderProduct', 'function', 'No', 'Determines where the product thumbnail link redirects the customer.'],
+        ['slots.OrdersListAction', 'slot', 'No', 'Overrides or extends order actions (right side of the order card).'],
+        ['slots.OrdersListCard', 'slot', 'No', 'Overrides or extends order card details.'],
+    ]}
+/>
 
-## Usage
+## Example
 
-The following example demonstrates how to use the `OrdersList` container:
+The following example demonstrates how to use the OrdersList container:
 
-```jsx
-import { OrdersList } from '@dropins/storefront-account';
+```javascript
+export default async function decorate(block) {
+ const { 'minified-view': minifiedViewConfig = 'false' } = readBlockConfig(block);
 
-export default function MyComponent() {
-  return (
-    <OrdersList/>
-  );
+ if (!checkIsAuthenticated()) {
+   window.location.href = CUSTOMER_LOGIN_PATH;
+ } else {
+   await accountRenderer.render(OrdersList, {
+     minifiedView: minifiedViewConfig === 'true',
+     routeOrdersList: () => CUSTOMER_ORDERS_PATH,
+     routeOrderDetails: (orderNumber) => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
+     routeReturnDetails: ({ orderNumber, returnNumber }) => `${CUSTOMER_RETURN_DETAILS_PATH}?orderRef=${orderNumber}&returnRef=${returnNumber}`,
+     routeOrderProduct: (productData) => (productData ? `/products/${productData.product.urlKey}/${productData.product.sku}` : '#'),
+   })(block);
+ }
 }
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-account */}

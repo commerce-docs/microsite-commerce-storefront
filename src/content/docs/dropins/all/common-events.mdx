@@ -1,0 +1,225 @@
+---
+title: Common events reference
+description: Detailed reference for common events shared across multiple drop-ins, including authentication, error handling, and localization events.
+sidebar:
+  label: Common events
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Drop-ins use common events for cross-component communication, authentication management, localization, and error handling. These events provide a standard way for your storefront to communicate with drop-ins and coordinate behavior across the application.
+
+<Aside type="tip">
+For conceptual information about the event system, see the [Events guide](/dropins/all/events/). For drop-in-specific events, refer to each drop-in's individual Events page.
+</Aside>
+
+## Events overview
+
+<TableWrapper nowrap={[0]}>
+
+| Event | Category | Used By | Description |
+|-------|----------|---------|-------------|
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
+
+</TableWrapper>
+
+---
+
+## authenticated
+
+Category: Authentication  
+Direction: Emitted by external source, Listened to by drop-ins  
+Used By: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fires when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI based on the current authentication status.
+
+### When to emit
+
+Emit this event from your storefront when:
+- An authentication token is refreshed
+- The authentication state is restored (e.g., page refresh with active session)
+- A session expires
+- A user logs out
+- A user successfully logs in
+
+### Data payload
+
+```typescript
+boolean
+```
+
+The payload is a simple boolean value:
+- `true` = User is authenticated
+- `false` = User is not authenticated or has logged out
+
+### Usage examples
+
+**Emit when authentication changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User logged in
+events.emit('authenticated', true);
+
+// User logged out
+events.emit('authenticated', false);
+```
+
+**Listen for authentication changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    console.log('User authenticated');
+    // Update UI, load user-specific data, etc.
+  } else {
+    console.log('User logged out');
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Later, when you want to stop listening
+authListener.off();
+```
+
+---
+
+## error
+
+Category: Error Handling  
+Direction: Emitted by drop-ins, Listened to by external code  
+Used By: Most drop-ins for error reporting
+
+Fires when a drop-in encounters an error (API failure, validation error, network timeout). Your storefront should listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+### When emitted
+
+Drop-ins emit this event when:
+- API requests fail
+- Critical operations fail
+- Network errors occur
+- Unexpected errors occur
+- Validation fails
+
+### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+<Aside type="note">
+The exact payload structure varies by drop-in. The `message` field is typically always present. Check individual drop-in documentation for specific error structures.
+</Aside>
+
+### Usage examples
+
+**Listen for errors from drop-ins:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  
+  // Display error to user
+  showErrorNotification(error.message);
+  
+  // Log to error tracking service
+  if (window.Sentry) {
+    Sentry.captureException(error);
+  }
+  
+  // Handle specific error codes
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+// Later, when you want to stop listening
+errorListener.off();
+```
+
+**Emit errors from custom code:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+try {
+  // Your custom logic
+  await customOperation();
+} catch (err) {
+  events.emit('error', {
+    message: 'Custom operation failed',
+    code: 'CUSTOM_ERROR',
+    details: err,
+    source: 'MyCustomComponent'
+  });
+}
+```
+
+---
+
+## locale
+
+Category: Localization  
+Direction: Emitted by external source, Listened to by drop-ins  
+Used By: All drop-ins with internationalization support
+
+Fires when the application's language or locale changes. Drop-ins listen to this event to update their text content, date formatting, currency display, and other locale-specific elements.
+
+### When to emit
+
+Emit this event from your storefront when:
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard locale format (e.g., `en-US`, `fr-FR`, `de-DE`).
+
+### Usage examples
+
+**Emit when locale changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+**Listen for locale changes:**
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (newLocale) => {
+  console.log('Locale changed to:', newLocale);
+  // Update UI text, reload translations, etc.
+  updateTranslations(newLocale);
+});
+
+// Later, when you want to stop listening
+localeListener.off();
+```
+

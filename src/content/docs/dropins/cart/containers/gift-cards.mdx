@@ -1,85 +1,58 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Cart → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-cart → Package name (e.g., "cart", "checkout")
-  - GiftCards → Container name (e.g., "MiniCart", "OrderSummary")
-  - GiftCards → Display name for container (e.g., "Mini Cart")
-  - 1.5.1 → Version number (e.g., "1.5.1")
-  - The GiftCards container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { GiftCards } from '@dropins/storefront-cart';
-
-export default function MyComponent() {
-  return (
-    <GiftCards/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-cart → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Cart - GiftCards Container
-description: Learn about the GiftCards container in the Cart drop-in.
-sidebar:
-  label: GiftCards
-  order: auto
+title: GiftCards container
+description: Learn about the GiftCards container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-## Overview
+The `GiftCards` container manages the application and removal of gift cards to the shopping cart. It provides a text box for users to enter gift card codes. The container uses the `applyGiftCardToCart` and `removeGiftCardFromCart` functions to apply the coupon to the cart. When a gift card code is applied, the corresponding amount is subtracted from the total order value, and the discount is displayed in the cart and order summary.
 
-The GiftCards container component for the drop-in.
+The Adobe Commerce merchant can manage gift card configuration from **Marketing** > **Gift Card Accounts**.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.5.1</strong>
-</div>
+<Diagram caption="GiftCards container">
+  ![GiftCards container](@images/dropins/cart/gift-cards.png)
+</Diagram>
 
-## Configuration
+## Configurations
 
 The `GiftCards` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+	  compact
+	  options={[
+	    ['Option', 'Type', 'Req?', 'Description'],
+	    ['className', 'string', 'No', 'CSS class applied to accordion.'],
+	    ['accordionSectionTitle', 'string', 'No', 'Accordion section title overriding translation.'],
+	    ['accordionSectionIcon', 'VNode', 'No', 'Coupons section icon.'],
+	    ['couponCodeField', 'VNode', 'No', 'Coupon code input field.'],
+	    ['applyCouponsButton', 'VNode', 'No', 'The button used to apply a coupon.'],
+	    ['error', 'VNode', 'No', 'An error message'],
+	    ['appliedCoupons', 'VNode', 'No', 'List of applied coupon codes.'],
+	    ['onApplyCoupon', 'function', 'No', 'Callback when applying a coupon code.'],
+	  ]}
+	/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+## Example configuration
 
-</TableWrapper>
+The following example demonstrates how to render the `GiftCards` container as part of the OrderSummary slot:
 
-## Slots
+```js
+provider.render(OrderSummary, {
+ routeProduct: (product) => rootLink(`/products/${product.url.urlKey}/${product.topLevelSku}`),
+ routeCheckout: checkoutURL ? () => rootLink(checkoutURL) : undefined,
+ slots: {
+   GiftCards: (ctx) => {
+     const giftCards = document.createElement('div');
 
-This container does not currently expose any customizable slots.
+     provider.render(GiftCards)(giftCards);
 
-## Usage
+     ctx.appendChild(giftCards);
+   },
+ },
+})($summary);
 
-The following example demonstrates how to use the `GiftCards` container:
-
-```jsx
-import { GiftCards } from '@dropins/storefront-cart';
-
-export default function MyComponent() {
-  return (
-    <GiftCards/>
-  );
-}
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-cart */}

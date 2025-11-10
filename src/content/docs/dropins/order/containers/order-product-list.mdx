@@ -1,85 +1,45 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Order → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-order → Package name (e.g., "cart", "checkout")
-  - OrderProductList → Container name (e.g., "MiniCart", "OrderSummary")
-  - OrderProductList → Display name for container (e.g., "Mini Cart")
-  - 1.4.0 → Version number (e.g., "1.5.1")
-  - The OrderProductList container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { OrderProductList } from '@dropins/storefront-order';
-
-export default function MyComponent() {
-  return (
-    <OrderProductList/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-order → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Order - OrderProductList Container
-description: Learn about the OrderProductList container in the Order drop-in.
-sidebar:
-  label: OrderProductList
-  order: auto
+title: OrderProductList container
+description: Learn about the OrderProductList container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-## Overview
+The `OrderProductList` container displays a list of products associated with a specific order or return. Each item in the list is represented by a product card containing details such as the price, applied discounts, tax information, final amount, and product attributes.
 
-The OrderProductList container component for the drop-in.
+The settings for displaying tax amounts can be configured at **Stores** > Configuration > **Sales** > **Tax** > **Order, Invoices, Credit Memos Display Settings**.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.4.0</strong>
-</div>
+<Diagram caption="OrderProductList container">
+  ![OrderProductList  container](@images/dropins/order/order-product-list.png)
+</Diagram>
 
-## Configuration
+## Configurations
 
 The `OrderProductList` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the form.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing transformed order data. It can be passed as an initial value and used as a fallback if data is not received from the backend.'],
+        ['withHeader', 'boolean', 'No', 'Controls the visibility of the container header, allowing it to be shown or hidden.'],
+        ['showConfigurableOptions', 'function', 'No', 'Allows rendering additional product parameters during container integration by defining key-value pairs for further customization.'],
+    ]}
+/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+## Example
 
-</TableWrapper>
+The following example demonstrates how to render the `OrderProductList` container:
 
-## Slots
-
-This container does not currently expose any customizable slots.
-
-## Usage
-
-The following example demonstrates how to use the `OrderProductList` container:
-
-```jsx
-import { OrderProductList } from '@dropins/storefront-order';
-
-export default function MyComponent() {
-  return (
-    <OrderProductList/>
-  );
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(OrderProductList, {
+    routeProductDetails: (product) => `/products/${product.productUrlKey}/${product.product.sku}`,
+  })(block);
 }
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-order */}

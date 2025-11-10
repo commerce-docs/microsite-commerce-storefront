@@ -1,99 +1,51 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Payment Services → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-payment-services → Package name (e.g., "cart", "checkout")
-  - CreditCard → Container name (e.g., "MiniCart", "OrderSummary")
-  - CreditCard → Display name for container (e.g., "Mini Cart")
-  - 1.0.2 → Version number (e.g., "1.5.1")
-  - The CreditCard container component for the drop-in. → Brief description of what the container does
-  - | `https` | `//example.com/graphql". \*/ apiUrl: string` | Yes | Configuration for https |
-| `getCartId` | `() => Promise<string>` | Yes | Should return a promise that resolves to the shopper`s cart ID. |
-| `see` | `https://developer.adobe.com/commerce/webapi/graphql/usage/authorization-tokens/. \*/ getCustomerToken?: (() => string \| null) \| null` | Yes | Configuration for see |
-| `current` | `null` | Yes | Configuration for current | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { CreditCard } from '@dropins/storefront-payment-services';
-
-export default function MyComponent() {
-  return (
-    <CreditCard
-      https="example"
-      getCartId="example"
-      see="example"
-    />
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-payment-services → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Payment Services - CreditCard Container
-description: Learn about the CreditCard container in the Payment Services drop-in.
-sidebar:
-  label: CreditCard
-  order: auto
+title: CreditCard container
+description: Use the CreditCard container to render a credit card form during checkout.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
 
-## Overview
+The `CreditCard` container allows a shopper to enter credit card details during the checkout process. You can configure it to manage and display the credit card fields.
 
-The CreditCard container component for the drop-in.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.2</strong>
-</div>
-
-## Configuration
+## CreditCard configurations
 
 The `CreditCard` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0, 1, 2]}>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `https` | `//example.com/graphql". \*/ apiUrl: string` | Yes | Configuration for https |
-| `getCartId` | `() => Promise<string>` | Yes | Should return a promise that resolves to the shopper`s cart ID. |
-| `see` | `https://developer.adobe.com/commerce/webapi/graphql/usage/authorization-tokens/. \*/ getCustomerToken?: (() => string \| null) \| null` | Yes | Configuration for see |
-| `current` | `null` | Yes | Configuration for current |
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `getCartId` | function | Yes | Should return a promise that resolves to the shopper's cart ID. |
+| `creditCardFormRef` | object | Yes | Credit card form reference. Initially, `{ current: null }` should be passed. Once rendered, the credit card container will set the `current` property to an `{ validate: () => boolean; submit: () => Promise<void> }` object, which parent containers can use to (programmatically) validate and submit the credit card form. Any error that happens during the payment flow will not only propagate to `onError` but will also cause the promise returned by `submit()` to be rejected.  |
+| `onSuccess` | function | No | Called when the payment flow finishes successfully. The function receives an `{ cartId: string }` object as an argument. |
+| `onError` | function | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties: `{name: string, message: string}`, containing the localized error name and message. Both properties are user-facing and can be translated using the `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). |
 
 </TableWrapper>
 
-## Slots
+## Example
 
-This container does not currently expose any customizable slots.
+The following example shows how to render and submit a credit card form.
 
-## Usage
+```js
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
 
-The following example demonstrates how to use the `CreditCard` container:
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
 
-```jsx
-import { CreditCard } from '@dropins/storefront-payment-services';
+PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
 
-export default function MyComponent() {
-  return (
-    <CreditCard
-      https="example"
-      getCartId="example"
-      see="example"
-    />
-  );
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
 }
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-payment-services */}

@@ -1,171 +1,66 @@
 ---
-title: Payment Services Installation
-description: Learn how to install the Payment Services drop-in component into your site.
-sidebar:
-  label: Installation
-  order: 2
+title: Payment Services installation
+description: Learn how to install the Payment Services drop-in component on your site.
 ---
 
-import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
-import Tasks from '@components/Tasks.astro';
+import Aside from '@components/Aside.astro';
+import Badge from '@components/overrides/Badge.astro';
+import Link from '@components/Link.astro';
 import Task from '@components/Task.astro';
-import Callouts from '@components/Callouts.astro';
+import Tasks from '@components/Tasks.astro';
 
-{/* 
-TEMPLATE INSTRUCTIONS:
-This template is used by scripts/@generate-installation-docs.js to generate installation documentation.
+This guide explains how to install and configure the Payment Services drop-in component in your storefront.
 
-PLACEHOLDERS:
-- Payment Services: Display name (e.g., "Cart", "Checkout")
-- @dropins/storefront-payment-services: Full package name (e.g., "@dropins/storefront-cart")
-- 1.0.2: Package version (e.g., "1.5.1")
-- CreditCard: Name of a primary container for examples
-- import { CreditCard } from '@dropins/storefront-payment-services';: Generated import statement
-- 1: Number of available containers
-- https://github.com/adobe-commerce/storefront-payment-services: Source repository URL
+## Onboard to Payment Services
+Before you can use the Payment Services component in your storefront, you must <Link href="https://experienceleague.adobe.com/en/docs/commerce/payment-services/get-started/onboard" text="onboard" /> to Payment Services in the Adobe Commerce Admin.
 
-TO MODIFY:
-- Structure changes: Edit this template
-- Content changes: Usually automatic from script extraction
-*/}
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.2</strong> | <strong>1 containers</strong>
-</div>
-
-## Step-by-step
-
-Use the following steps to install the **Payment Services** component:
-
-<Aside type="note">
-These steps are specific for Edge Delivery Services projects, and may not necessarily be the same for other frameworks such as static HTML or React.
+<Aside type="note" title="Payment Services extension">
+  The Payment Services drop-in requires the Payment Services extension version <Link href="https://experienceleague.adobe.com/en/docs/commerce/payment-services/release-notes#v2100" text="2.10.0" /> or higher. <Badge tooltip="Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only." text="PaaS only" variant="note" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" />
 </Aside>
+
+## Register your storefront domain with Apple
+The following steps explain how to register your storefront domain with Apple, which is required to use Apple Pay.
 
 <Tasks>
+  <Task>
+    ### Download the file <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" />
+    Download the Apple Pay domain verification file.
+    <Link href="https://paypalobjects.com/devdoc/apple-pay/well-known/apple-developer-merchantid-domain-association" text="Click to download" />.
+  </Task>
 
-<Task>
+  <Task>
+    ### Serve as binary content <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" />
+Add the file to the following path in your storefront repository. Note the added `.bin` extension, which is currently the only way available in EDS to serve binary content.
+    ```txt showLineNumbers=false
+    /.well-known/apple-developer-merchantid-domain-association.bin
+    ```
+  </Task>
 
-### Install the packages
+  <Task>
+    ### Set up URL redirect <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" />
+Add a <Link href="https://www.aem.live/docs/redirects" text="redirect" /> to make the domain verification file accessible at `https://your-sandbox-domain.com/.well-known/apple-developer-merchantid-domain-association`.
 
-Install the required packages using npm:
+    | Source                                                    | Destination                                                    |
+    |-----------------------------------------------------------|----------------------------------------------------------------|
+    | .well-known/apple-developer-merchantid-domain-association | /.well-known/apple-developer-merchantid-domain-association.bin |
 
-```bash frame="none"
-npm install @dropins/tools @dropins/storefront-payment-services
-```
+    <Aside type="caution" title="Sandbox only">
+      Serving the file via a redirect works for sandbox domain registration, but not for production. In production, the file [must be served directly](#set-up-production-url-rewrite), without a redirect.
+    </Aside>
+  </Task>
 
-<Aside type="tip">
-All drop-in components require the `@dropins/tools` package. This package contains the libraries that drop-in components need to initialize and communicate, including `fetch-graphql`, `event-bus`, and `initializer` utilities.
-</Aside>
+  <Task>
+    ### Register sandbox domain
+Contact your sales representative to register the sandbox domain with Apple.
+  </Task>
 
-</Task>
+  <Task>
+    ### Set up production URL rewrite <Badge tooltip="Applies to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer projects only (Adobe-managed SaaS infrastructure)." text="SaaS only" variant="success" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" />
+Set up a <Link href="/setup/configuration/content-delivery-network/#url-rewrites" text="URL rewrite" /> at the CDN level to make the domain verification file directly accessible at https://your-production-domain.com/.well-known/apple-developer-merchantid-domain-association, without redirects.
+  </Task>
 
-<Task>
-
-### Map the packages
-
-Add the drop-in to your `importmap` in the `head.html` file:
-
-```json title="head.html"
-<script nonce="aem" type="importmap">
-{
-  "imports": {
-    "@dropins/storefront-payment-services/": "/scripts/__dropins__/@dropins/storefront-payment-services/",
-    "@dropins/tools/": "/scripts/__dropins__/tools/"
-  }
-}
-</script>
-```
-
-With the `importmap` defined, you can now import the required files from these packages into your block as described in the next step.
-
-</Task>
-
-<Task>
-
-### Import the required files
-
-Import the necessary components and utilities:
-
-```js title="Payment Services.js"
-// GraphQL Client
-import * as mesh from '@dropins/tools/fetch-graphql.js';
-
-// Component tools
-import { initializers } from '@dropins/tools/initializer.js';
-
-// Drop-in component provider
-import { render as provider } from '@dropins/storefront-payment-services/render.js';
-
-// Drop-in component API functions
-import * as api from '@dropins/storefront-payment-services/api.js';
-
-// Drop-in component containers
-import { CreditCard } from '@dropins/storefront-payment-services';
-```
-
-</Task>
-
-<Task>
-
-### Connect to the endpoint
-
-Configure the GraphQL endpoint:
-
-```js title="Payment Services.js"
-// Set endpoint configuration
-mesh.setEndpoint('https://<graphql-service-endpoint>/graphql');
-
-// Set store code header
-mesh.setFetchGraphQlHeader('store', '<default>');
-```
-
-<Aside type="note">
-This setting is specific for GraphQL Mesh. Refer to the [Commerce GraphQL Service](https://developer.adobe.com/commerce/webapi/graphql/usage/headers/#request-headers) for direct connections.
-</Aside>
-
-</Task>
-
-<Task>
-
-### Register and load the drop-in
-
-Mount the initializers after the page has loaded:
-
-```js title="Payment Services.js"
-// Register drop-in initializer
-initializers.register(api.initialize, {});
-
-// Mount initializers (must be called after all initializers are registered)
-initializers.mountImmediately(initialize, { langDefinitions });
-```
-
-</Task>
-
-<Task>
-
-### Render the drop-in
-
-Render the CreditCard container on your page:
-
-```js title="Payment Services.js"
-// Render Payment Services
-provider.render(CreditCard, {
-  // Add configuration options here
-})(document.getElementById('your-dropin-element'));
-```
-
-<Aside type="tip">
-See the [Containers documentation](/dropins/Payment Services/containers/) for a complete list of available containers and their configuration options.
-</Aside>
-
-</Task>
-
+  <Task>
+    ### Register production domain
+Contact your sales representative to register the production domain with Apple.
+  </Task>
 </Tasks>
-
-## Next steps
-
-- Explore the [API functions](/dropins/Payment Services/functions/) available for programmatic control
-- Customize the appearance using [slots](/dropins/Payment Services/slots/)
-- Learn about [events](/dropins/Payment Services/events/) for integration with other components
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-payment-services */}

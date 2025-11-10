@@ -1,58 +1,217 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - Order → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-order → Package name (e.g., "@dropins/storefront-cart")
-  - 1.4.0 → Version number (e.g., "1.5.1")
-  - 0 → Number of containers with slots
-  - <Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside> → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-order → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: Order Slots
-description: Learn about the slots provided in the Order drop-in for customization.
+description: Customize UI sections in the Order drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **Order** drop-in component for customizing container appearance and behavior.
+The Order drop-in exposes **11 slots** in **6 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.4.0</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#returnorderproductlist-slots"><code>ReturnOrderProductList</code></a></td>
+<td><code>Footer</code>, <code>ReturnOrderItem</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#keyssortorder-slots"><code>KeysSortOrder</code></a></td>
+<td><code>OrderReturnInformation</code>, <code>PaymentMethodIcon</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderproductlist-slots"><code>OrderProductList</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderproductlistcontent-slots"><code>OrderProductListContent</code></a></td>
+<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderstatus-slots"><code>OrderStatus</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#orderstatuscontent-slots"><code>OrderStatusContent</code></a></td>
+<td><code>OrderActions</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
 
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
+## ReturnOrderProductList slots
 
-<Aside type="note">
-This drop-in does not currently expose customizable slots.
-</Aside>
+```js {4,5,6}
+interface ReturnOrderProductListProps
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-order */}
+slots?: {
+  Footer: SlotProps;
+  ReturnOrderItem: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## KeysSortOrder slots
+
+```js {4,5}
+interface KeysSortOrderProps
+
+slots?: {
+  OrderReturnInformation: SlotProps<OrdersReturnPropsModel | undefined>;
+  PaymentMethodIcon: SlotProps<Record<string, string>>;
+};
+```
+
+---
+
+## OrderProductList slots
+
+```js {4,5}
+interface OrderProductListProps
+
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+### Footer example
+
+This example from the Commerce Order Product List block shows how to customize the `Footer` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { render as CartProvider } from '@dropins/storefront-cart/render.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+
+provider.render(OrderProductList, {
+  slots: {
+    Footer: (ctx) => {
+      const giftOptions = document.createElement('div');
+      CartProvider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'order',
+        isEditable: false,
+        slots: {
+          SwatchImage: (swatchCtx) => {
+            const { defaultImageProps, imageSwatchContext } = swatchCtx;
+            tryRenderAemAssetsImage(swatchCtx, {
+              alias: imageSwatchContext.label,
+              imageProps: defaultImageProps,
+              wrapper: document.createElement('span'),
+              params: {
+                width: defaultImageProps.width,
+                height: defaultImageProps.height,
+              },
+            });
+          },
+        },
+      })(giftOptions);
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.order-product-list'));
+```
+
+### CartSummaryItemImage example
+
+This example from the Commerce Order Product List block shows how to customize the `CartSummaryItemImage` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+
+provider.render(OrderProductList, {
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      const { data, defaultImageProps } = ctx;
+      const anchor = document.createElement('a');
+      anchor.href = createProductLink(data);
+      tryRenderAemAssetsImage(ctx, {
+        alias: data.product.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchor,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.order-product-list'));
+```
+
+---
+
+## OrderProductListContent slots
+
+```js {4,5}
+interface OrderProductListContentProps
+
+slots?: {
+  Footer: SlotProps;
+  CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+  }>;
+};
+```
+
+---
+
+## OrderStatus slots
+
+```js {4}
+interface OrderStatusProps
+
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
+```
+
+---
+
+## OrderStatusContent slots
+
+```js {4}
+interface OrderStatusContentProps
+
+slots?: {
+  OrderActions: SlotProps<DefaultSlotContext>;
+};
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

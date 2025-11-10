@@ -1,85 +1,70 @@
-{/*
-  Template for Drop-in Container Documentation
-  
-  This template is used by scripts/@generate-container-docs.js to generate container documentation
-  for each container from the source repositories.
-  
-  Placeholders used in this template:
-  - Order → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-order → Package name (e.g., "cart", "checkout")
-  - CreateReturn → Container name (e.g., "MiniCart", "OrderSummary")
-  - CreateReturn → Display name for container (e.g., "Mini Cart")
-  - 1.4.0 → Version number (e.g., "1.5.1")
-  - The CreateReturn container component for the drop-in. → Brief description of what the container does
-  - | No configurations | - | - | - | → Generated markdown table of all Props
-  - This container does not currently expose any customizable slots. → Generated slots sections with examples
-  - ```jsx
-import { CreateReturn } from '@dropins/storefront-order';
-
-export default function MyComponent() {
-  return (
-    <CreateReturn/>
-  );
-}
-``` → Basic usage example with code
-  - https://github.com/adobe-commerce/storefront-order → GitHub repository URL
-  
-  The script handles:
-  - Extracting container Props from TypeScript interfaces
-  - Generating configuration tables with types and descriptions
-  - Extracting and documenting all slots
-  - Creating basic usage examples
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
-title: Order - CreateReturn Container
-description: Learn about the CreateReturn container in the Order drop-in.
-sidebar:
-  label: CreateReturn
-  order: auto
+title:  CreateReturn container
+description: Learn about the CreateReturn container.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Callouts from '@components/Callouts.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-## Overview
+The `CreateReturn` container manages the creation of return requests. It supports custom return attributes and configurable validation through the Adobe Commerce Admin. This container consists of three sequential screens that guide users through the item return process:
 
-The CreateReturn container component for the drop-in.
+1. **Select Items.** The first screen displays a list of items eligible for return. The user can select items by checking the boxes next to them and specifying the quantity of each item they wish to return. Once the selection is complete, the user can click the **Continue** button to proceed to the next step.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.4.0</strong>
-</div>
+  <Diagram caption="CreateReturn container">
+  ![CreateReturn  container](@images/dropins/order/create-return1.png)
+  </Diagram>
 
-## Configuration
+1. **Return Reasons.** The second screen shows the selected items. Below each item, an additional form is displayed that allows the customer can specify the reason for the return. This step helps gather information on why each item is being returned, which can be valuable for analytics and improving customer experience.
+
+  <Diagram caption=" container">
+  ![  container](@images/dropins/order/create-return2.png)
+  </Diagram>
+
+1. **Success Screen.** The final screen displays a success message confirming the return process. It also includes a customizable button that allows redirection to any specified page on the website.
+
+  <Diagram caption=" container">
+  ![  container](@images/dropins/order/create-return3.png)
+  </Diagram>
+
+## Prerequisites
+
+- [Returns must be enabled](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/order-management/returns/rma-configure). The **Stores** > Configuration > **Sales** > **Sales** > **RMA Settings** in the Adobe Commerce Admin.
+
+- If you need to add custom return attributes, add them at **Stores** > **Attributes** > **Returns**. You can optionally use the Input Validation field to define custom validation rules.
+
+## Configurations
 
 The `CreateReturn` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<OptionsTable
+compact
+    options={[
+        ['Options', 'Type', 'Req?', 'Description'],
+        ['className', 'string', 'No', 'Allows custom CSS classes to be applied to the container for styling purposes.'],
+        ['orderData', 'OrderDataModel', 'No', 'A structured object containing order-related data. It can be used as an initial value if data is not fetched from the backend, serving as a fallback.'],
+        ['slots.ReturnOrderItem', 'function', 'No', 'Enables integration of additional elements or functionality, allowing customization to meet specific requirements. This can include adding new components, modifying existing ones, or inserting custom content.'],
+        ['slots.ReturnFormActions', 'function', 'No', 'Provides the ability to add custom events or replace existing actions with tailored functionality. Examples include adding unique buttons, setting up custom redirects, or modifying interface elements.'],
+        ['onSuccess', 'function', 'No', 'A callback function executed after the form is successfully submitted.'],
+        ['onError', 'function', 'No', 'A callback function executed when an error occurs during submission. The error is passed as a parameter for handling.'],
+        ['routeReturnSuccess', 'function', '', 'Defines a custom URL to redirect users upon successful return submission.'],
+        ['showConfigurableOptions', 'function', 'No', 'Allows rendering additional product parameters during container integration by defining key-value pairs for further customization.'],
+    ]}
+/>
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| No configurations | - | - | - |
+## Example
 
-</TableWrapper>
+The following example demonstrates how to render the `CreateReturn` container:
 
-## Slots
-
-This container does not currently expose any customizable slots.
-
-## Usage
-
-The following example demonstrates how to use the `CreateReturn` container:
-
-```jsx
-import { CreateReturn } from '@dropins/storefront-order';
-
-export default function MyComponent() {
-  return (
-    <CreateReturn/>
-  );
+```javascript
+export default async function decorate(block) {
+  await orderRenderer.render(CreateReturn, {
+    routeReturnSuccess: (orderData) =>
+      checkIsAuthenticated()
+        ? `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderData.number}`
+        : `${ORDER_DETAILS_PATH}?orderRef=${orderData.token}`,
+  })(block);
 }
 ```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-order */}

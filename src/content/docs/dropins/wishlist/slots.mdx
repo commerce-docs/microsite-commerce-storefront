@@ -1,122 +1,81 @@
-{/*
-  Template for Drop-in Slots Documentation
-  
-  This template is used by scripts/@generate-slot-docs.js to generate slot documentation
-  for each drop-in from the source repositories.
-  
-  Placeholders used in this template:
-  - Wishlist → Display name (e.g., "Cart", "Checkout")
-  - @dropins/storefront-wishlist → Package name (e.g., "@dropins/storefront-cart")
-  - 2.0.1 → Version number (e.g., "1.5.1")
-  - 1 → Number of containers with slots
-  - ## Wishlist slots
-
-The slots for the `Wishlist` container allow you to customize its appearance and behavior.
-
-```js
-interface WishlistProps
-
-slots?: {
-image?: SlotProps<{
-      defaultImageProps: ImageProps;
-      item: Item;
-    }>;
-};
-```
-
-### image slot
-
-The `image` slot allows you to customize the image section of the `Wishlist` container.
-
-```js
- provider.render(Wishlist, {
-  slots: {
-    image: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom image';
-      ctx.appendChild(element);
-    }
-  }
-});
-```
-
----
-
- → Generated slots content from source repositories
-  - https://github.com/adobe-commerce/storefront-wishlist → GitHub repository URL
-  
-  The script handles:
-  - Extracting container names and their slots from .tsx files
-  - Generating TypeScript interface definitions
-  - Creating placeholder sections for each slot
-  
-  The template and script must be kept in sync.
-*/}
-
 ---
 title: Wishlist Slots
-description: Learn about the slots provided in the Wishlist drop-in for customization.
+description: Customize UI sections in the Wishlist drop-in using slots.
 sidebar:
   label: Slots
   order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-## Overview
-
-Learn about the slots provided in the **Wishlist** drop-in component for customizing container appearance and behavior.
+The Wishlist drop-in exposes **1 slot** in **1 container** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 2.0.1</strong>
 </div>
 
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#wishlist-slots"><code>Wishlist</code></a></td>
+<td><code>image</code></td>
+</tr>
+</tbody>
+</table>
 
-## What are Slots?
-
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.
 
 ## Wishlist slots
 
-The slots for the `Wishlist` container allow you to customize its appearance and behavior.
-
-```js
+```js {4}
 interface WishlistProps
 
 slots?: {
-image?: SlotProps<{
-      defaultImageProps: ImageProps;
-      item: Item;
-    }>;
+  image?: SlotProps<{
+    defaultImageProps: ImageProps;
+    item: Item;
+  }>;
 };
 ```
 
-### image slot
+### image example
 
-The `image` slot allows you to customize the image section of the `Wishlist` container.
+This example from the Commerce Wishlist block shows how to customize the `image` slot:
 
 ```js
- provider.render(Wishlist, {
+import { render as provider } from '@dropins/storefront-wishlist/render.js';
+import Wishlist from '@dropins/storefront-wishlist/containers/Wishlist.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+// Note: `WISHLIST_IMAGE_DIMENSIONS` should be defined in your block context (object with `width` and `height` properties)
+
+provider.render(Wishlist, {
   slots: {
     image: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom image';
-      ctx.appendChild(element);
+      const { item, defaultImageProps } = ctx;
+      tryRenderAemAssetsImage(ctx, {
+        alias: item.product.sku,
+        imageProps: defaultImageProps,
+        params: {
+          width: defaultImageProps.width || WISHLIST_IMAGE_DIMENSIONS.width,
+          height: defaultImageProps.height || WISHLIST_IMAGE_DIMENSIONS.height,
+        },
+      });
     }
   }
-});
+})(document.querySelector('.wishlist'));
 ```
 
 ---
 
 
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-wishlist */}
+{/* This documentation is auto-generated from: REPO_URL */}
