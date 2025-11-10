@@ -175,9 +175,11 @@ export function truncate(text, maxLength, suffix = '...') {
  * @returns {string} Clean version string (e.g., '1.0.0')
  */
 export function cleanVersion(version) {
-    // Handle both string versions and versionInfo objects
-    const versionString = typeof version === 'object' ? version.requested : version;
-    return versionString.replace(/^[\^~]/, '');
+    // Handle non-string inputs gracefully
+    if (!version || typeof version !== 'string') {
+        return 'unknown';
+    }
+    return version.replace(/^[\^~]/, '');
 }
 
 /**
