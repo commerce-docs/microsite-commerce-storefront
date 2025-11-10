@@ -143,9 +143,11 @@ async function config() {
       '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
       '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
       // Merchant/Storefront Builder Redirects
-      '/merchants/get-started/localization': `${basePath}/merchants/multistore/content-localization`,
-      '/merchants/multistore/commerce-localization': `${basePath}/merchants/multistore/content-localization`,
-      '/merchants/multistore/localization': `${basePath}/merchants/multistore/content-localization`,
+      '/merchants/get-started/localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/commerce-localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/content-localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
       // Miscellaneous Redirects
       '/activate': `${basePath}/setup`,
       '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
@@ -846,6 +848,8 @@ async function config() {
                       { label: 'Using the Visual Editor', link: '/merchants/quick-start/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
+                      { label: 'Localization (Document Authoring)', link: '/merchants/quick-start/content-localization/' },
+                      { label: 'Localization (Universal Editor)', link: '/merchants/quick-start/content-localization-universal-editor/' },
                       { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
                       { label: 'Section metadata', link: '/merchants/quick-start/section-metadata/' },
                     ],
@@ -894,13 +898,6 @@ async function config() {
                       { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
                       { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
                       { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
-                    ],
-                  },
-                  {
-                    label: 'Multistore',
-                    items: [
-                      { label: 'Setup', link: '/merchants/multistore/' },
-                      { label: 'Localization', link: '/merchants/multistore/content-localization/' },
                     ],
                   },
                 ],
