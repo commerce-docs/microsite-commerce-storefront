@@ -971,7 +971,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**'],
             }
           ),
           starlightHeadingBadges(),
