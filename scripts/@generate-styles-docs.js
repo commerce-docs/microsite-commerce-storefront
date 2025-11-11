@@ -92,7 +92,7 @@ function extractMediaQueries(cssContent) {
     let match;
 
     while ((match = mediaRegex.exec(cssContent)) !== null) {
-        queries.add(match[0].replace('{', '').trim());
+        queries.add(match[0].replace(/\{/g, '').trim());
     }
 
     return Array.from(queries);
