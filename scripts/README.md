@@ -444,6 +444,38 @@ npm run generate-slot-docs cart
 - Supports enrichment data for slot descriptions
 - Auto-updates sidebar navigation
 
+### Styles Documentation Generator
+
+Generates CSS styling documentation by analyzing drop-in component stylesheets and design token usage. **Also generates a comprehensive design tokens reference** in the universal styling guide.
+
+```bash
+# Generate for all drop-ins
+npm run generate-styles-docs
+
+# Generate for specific drop-in
+npm run generate-styles-docs cart
+```
+
+**Output**: 
+- `src/content/docs/dropins/{dropin-name}/styles.mdx` - Drop-in specific styles
+- `src/content/docs/dropins/all/styling.mdx` - Universal guide with complete design tokens reference
+
+**Features**:
+- Scans `src/components/` and `src/containers/` directories for `.css` files
+- Extracts CSS class names using BEM-like naming conventions
+- **Extracts ALL design tokens from boilerplate with actual default values**
+- **Generates comprehensive, categorized design tokens reference** (colors, spacing, typography, shapes, grid)
+- Analyzes design token usage (colors, spacing, typography, etc.)
+- Identifies responsive patterns and media queries
+- Generates real CSS examples from actual component files
+- Groups classes and tokens by component
+- **Organizes tokens by category** with collapsible sections for large groups
+- Provides customization examples and best practices
+- Auto-updates sidebar navigation
+
+**Design Tokens Reference**:
+The generator automatically updates the universal styling guide (`dropins/all/styling.mdx`) with a complete, categorized list of all available design tokens extracted from the boilerplate's `styles/styles.css`. This eliminates the need for developers to navigate GitHub to find token values—everything is documented in one searchable location with actual default values shown.
+
 ### Dictionary Documentation Generator
 
 Generates dictionary documentation by extracting i18n strings from source repositories.
