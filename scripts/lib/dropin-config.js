@@ -91,6 +91,14 @@ export const DROPIN_REPOS = {
         type: 'B2C',
         displayName: 'Personalization',
         isPublic: false
+    },
+    // B2B Drop-ins
+    'quote-management': {
+        packageName: '@dropins/storefront-quote-management',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-quote-management.git',
+        type: 'B2B',
+        displayName: 'Quote Management',
+        isPublic: true  // Public repo
     }
 };
 
