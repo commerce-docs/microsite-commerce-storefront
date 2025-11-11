@@ -143,9 +143,11 @@ async function config() {
       '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
       '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
       // Merchant/Storefront Builder Redirects
-      '/merchants/get-started/localization': `${basePath}/merchants/multistore/content-localization`,
-      '/merchants/multistore/commerce-localization': `${basePath}/merchants/multistore/content-localization`,
-      '/merchants/multistore/localization': `${basePath}/merchants/multistore/content-localization`,
+      '/merchants/get-started/localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/commerce-localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/content-localization': `${basePath}/merchants/quick-start/content-localization`,
+      '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
       // Miscellaneous Redirects
       '/activate': `${basePath}/setup`,
       '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
@@ -355,9 +357,9 @@ async function config() {
                       { label: 'Installing', link: '/dropins/all/installing/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
-                      { label: 'Labeling', link: '/dropins/all/labeling/' },
+                      { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
                       { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
-                      { label: 'Linking', link: '/dropins/all/linking/' },
+                      { label: 'Localizing Links', link: '/dropins/all/linking/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Events', link: '/dropins/all/events/' },
@@ -841,14 +843,23 @@ async function config() {
                     label: 'Quick start',
                     items: [
                       { label: 'Overview', link: '/merchants/quick-start/' },
-                      { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
                       { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
+                      { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
                       { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
                       { label: 'Using the Visual Editor', link: '/merchants/quick-start/visual-editor/' },
                       // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
                       { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
                       { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
                       { label: 'Section metadata', link: '/merchants/quick-start/section-metadata/' },
+                      {
+                        label: 'Localization',
+                        collapsed: true,
+                        items: [
+                          { label: 'Document Authoring workflow', link: '/merchants/quick-start/content-localization/' },
+                          { label: 'Universal Editor workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
+                          { label: 'Commerce-specific tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
+                        ],
+                      },
                     ],
                   },
                   {
@@ -896,13 +907,6 @@ async function config() {
                       { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
                       { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
                       { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
-                    ],
-                  },
-                  {
-                    label: 'Multistore',
-                    items: [
-                      { label: 'Setup', link: '/merchants/multistore/' },
-                      { label: 'Localization', link: '/merchants/multistore/content-localization/' },
                     ],
                   },
                 ],
@@ -971,7 +975,7 @@ async function config() {
               },
             ],
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**'],
             }
           ),
           starlightHeadingBadges(),
