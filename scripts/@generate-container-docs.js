@@ -161,8 +161,25 @@ function generateSlotsContent(containerName, slots) {
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {Map} Map of container names to MDX content
  */
-function generateContainersMDX(repoName, repoConfig, containers, version, enrichmentData = null) {
+function generateContainersMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-container.mdx');
+
+    // Validate template: Check if it contains TableWrapper around CONFIGURATIONS_TABLE
+    // This would cause nested wrappers since generatePropertyTable() already adds them
+    if (template.includes('<TableWrapper') && template.includes('CONFIGURATIONS_TABLE')) {
+        const configSection = template.substring(
+            template.indexOf('## Configuration'),
+            template.indexOf('## Slots')
+        );
+        if (configSection.includes('<TableWrapper') && configSection.includes('CONFIGURATIONS_TABLE')) {
+            logger.warn('⚠️  Template contains TableWrapper in Configuration section!');
+            logger.warn('   This will cause nested wrappers. Remove wrapper from template.');
+            logger.warn('   The generatePropertyTable() function already includes the wrapper.');
+        }
+    }
+
     const containerDocs = new Map();
 
     for (const containerInfo of containers) {
@@ -218,7 +235,9 @@ function generateContainersMDX(repoName, repoConfig, containers, version, enrich
 /**
  * Custom write handler for containers (generates multiple files)
  */
-function writeContainerDocs(repoName, repoConfig, containerDocs, version) {
+function writeContainerDocs(repoName, repoConfig, containerDocs, versionInfo) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
     const outputDir = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'containers');
 
@@ -243,7 +262,9 @@ function writeContainerDocs(repoName, repoConfig, containerDocs, version) {
 /**
  * Generate containers overview page
  */
-function generateOverviewPage(repoName, repoConfig, containerDocs, version, outputDir, basePath) {
+function generateOverviewPage(repoName, repoConfig, containerDocs, versionInfo, outputDir, basePath) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const overviewTemplate = readTemplate('container-overview.mdx');
 
     // Build list of containers

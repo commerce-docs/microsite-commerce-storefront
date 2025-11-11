@@ -43,6 +43,7 @@ import { EnrichmentLoader } from './lib/core/enrichment-loader.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { validateAllFunctionDocs } from './lib/function-type-validator.js';
 import { generateNoFunctionsPage } from './lib/markdown/empty-state-generator.js';
+import { generatePropertyTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -432,37 +433,127 @@ function scanForFunctions(repoPath) {
  * @returns {string|null} Function signature or null if not found
  */
 function extractFunctionSignature(tsContent, functionName) {
-    // Match: export const functionName = async (...) => { or with explicit return type
-    // or: export function functionName(...) { or with explicit return type
+    // Debug logging
+    if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
+        console.log(`\n🔍 DEBUG: extractFunctionSignature called for ${functionName}`);
+    }
+
+    // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
-        // With return type annotation - capture until => { (arrow function body)
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*=>\\s*\\{`, 's'),
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*=>\\s*\\{`, 's'),
-        new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*\\{`, 's'),
-        new RegExp(`export\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*:\\s*([\\s\\S]*?)\\s*\\{`, 's'),
-        // Without return type annotation (implicit)
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(([^)]*)\\)\\s*=>`, 's'),
-        new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(([^)]*)\\)\\s*=>`, 's'),
-        new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*\\{`, 's'),
-        new RegExp(`export\\s+function\\s+${functionName}\\s*\\(([^)]*)\\)\\s*\\{`, 's'),
+        { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(`, 's'), isAsync: true, isArrow: true },
+        { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(`, 's'), isAsync: false, isArrow: true },
+        { regex: new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: true, isArrow: false },
+        { regex: new RegExp(`export\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: false, isArrow: false },
     ];
 
-    for (let i = 0; i < patterns.length; i++) {
-        const pattern = patterns[i];
-        const match = tsContent.match(pattern);
+    for (const { regex, isAsync, isArrow } of patterns) {
+        const match = tsContent.match(regex);
         if (match) {
-            const params = match[1].trim();
+            const startIndex = match.index + match[0].length - 1; // Position of opening paren
 
-            // First 4 patterns have explicit return type
-            if (i < 4) {
-                const returnType = match[2].trim();
-                return { params, returnType };
-            } else {
-                // Last 4 patterns don't have explicit return type - infer it
-                const isAsync = i === 4 || i === 6; // async arrow function or async function
-                const returnType = isAsync ? 'Promise<any>' : 'any';
-                return { params, returnType };
+            // Extract parameters with balanced parenthesis matching
+            let parenCount = 0;
+            let i = startIndex;
+            let paramsStr = '';
+            let inString = false;
+            let stringChar = '';
+
+            for (; i < tsContent.length; i++) {
+                const char = tsContent[i];
+                const prevChar = i > 0 ? tsContent[i - 1] : '';
+
+                // Handle string literals
+                if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar) {
+                        inString = false;
+                    }
+                }
+
+                if (inString) {
+                    if (parenCount > 0) paramsStr += char;
+                    continue;
+                }
+
+                // Count parentheses
+                if (char === '(') {
+                    parenCount++;
+                    if (parenCount > 1) paramsStr += char;
+                } else if (char === ')') {
+                    parenCount--;
+                    if (parenCount === 0) {
+                        // Found the matching closing paren
+                        i++; // Move past the closing paren
+                        break;
+                    }
+                    paramsStr += char;
+                } else if (parenCount > 0) {
+                    paramsStr += char;
+                }
             }
+
+            // Now extract the return type if present
+            let returnType = null;
+
+            // Skip whitespace after closing paren
+            while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                i++;
+            }
+
+            // Check for explicit return type annotation ": Type"
+            if (tsContent[i] === ':') {
+                i++; // Skip the colon
+                // Skip whitespace
+                while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                    i++;
+                }
+
+                // Extract return type until we find => or {
+                let returnTypeStr = '';
+                let angleCount = 0;
+                let braceCount = 0;
+
+                while (i < tsContent.length) {
+                    const char = tsContent[i];
+                    const nextChar = i + 1 < tsContent.length ? tsContent[i + 1] : '';
+
+                    if (char === '<') angleCount++;
+                    else if (char === '>') angleCount--;
+                    else if (char === '{') braceCount++;
+                    else if (char === '}') braceCount--;
+
+                    // Stop at => or { (function body) when not inside brackets
+                    if (angleCount === 0 && braceCount === 0) {
+                        if ((char === '=' && nextChar === '>') || char === '{') {
+                            returnType = returnTypeStr.trim();
+                            break;
+                        }
+                    }
+
+                    returnTypeStr += char;
+                    i++;
+                }
+            }
+
+            // If no explicit return type, infer based on async
+            if (!returnType) {
+                returnType = isAsync ? 'Promise<any>' : 'any';
+            }
+
+            // Clean up params string (remove extra whitespace, normalize line breaks)
+            const params = paramsStr.trim().replace(/\s+/g, ' ');
+
+            // Debug logging
+            if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
+                console.log(`\n🔍 DEBUG: Extracted ${functionName}:`);
+                console.log('  Raw params:', JSON.stringify(paramsStr));
+                console.log('  Cleaned params:', JSON.stringify(params));
+                console.log('  Return type:', returnType);
+            }
+
+            return { params, returnType };
         }
     }
 
@@ -835,20 +926,76 @@ function cleanFunctionDescription(mdxContent, functionName) {
 }
 
 /**
+ * Normalize description to start with a verb for parallel structure in function tables
+ * 
+ * @param {string} description - Function description
+ * @param {string} functionName - Name of the function
+ * @returns {string} Description starting with a verb
+ */
+function normalizeDescriptionToVerb(description, functionName) {
+    if (!description) return description;
+
+    let normalized = description;
+
+    // Remove "The [functionName] query/mutation/function " prefix (handles GraphQL terminology)
+    const functionPrefixPattern = new RegExp(`^The \`?${functionName}\`? (query|mutation|function) `, 'i');
+    normalized = normalized.replace(functionPrefixPattern, '');
+
+    // Remove generic "The [functionName] " prefix (even without function/query/mutation)
+    const simpleFunctionPattern = new RegExp(`^The \`?${functionName}\`? `, 'i');
+    normalized = normalized.replace(simpleFunctionPattern, '');
+
+    // Remove generic "The function/query/mutation " prefix
+    normalized = normalized.replace(/^The (function|query|mutation) /i, '');
+
+    // Remove "A function that " prefix
+    normalized = normalized.replace(/^A function that /i, '');
+
+    // Remove "An API function that " prefix
+    normalized = normalized.replace(/^An API function that /i, '');
+
+    // Handle passive voice constructions (before capitalization)
+    // "is used to X" → "X"
+    normalized = normalized.replace(/^is used to /i, '');
+
+    // "can be used to X" → "X"
+    normalized = normalized.replace(/^can be used to /i, '');
+
+    // "allows you to X" → "X"
+    normalized = normalized.replace(/^allows you to /i, '');
+
+    // Handle "is simmilar/similar to" pattern - keep it but fix capitalization
+    normalized = normalized.replace(/^is (similar|simmilar) to/i, 'Is $1 to');
+
+    // Capitalize first letter (but preserve intentional uppercase patterns like "Is similar")
+    if (normalized.length > 0 && !normalized.match(/^[A-Z]/)) {
+        normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    // Ensure it ends with a period
+    if (normalized && !normalized.endsWith('.')) {
+        normalized += '.';
+    }
+
+    return normalized;
+}
+
+/**
  * Generate functions MDX content
  * 
  * @param {string} repoName - Repository name (e.g., 'cart')
  * @param {Object} repoConfig - Repository configuration
- * @param {Object} scannedData - Scanned function data
- * @param {string} version - Package version
+ * @param {Object|string} versionInfo - Version info object or version string
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrichmentData = null) {
+function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const { functions } = scannedData;
 
     if (functions.length === 0) {
-        return generateEmptyFunctionsDocs(repoName, repoConfig, version);
+        return generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo.requested);
     }
 
     // Create validation report for source-first validation
@@ -920,6 +1067,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
         if (!description) {
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
+
+        // Normalize description to start with a verb for parallel structure
+        description = normalizeDescriptionToVerb(description, func.name);
 
         // Use first sentence only for table
         let shortDesc = description || 'API function for the drop-in.';
@@ -1113,15 +1263,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             const parameters = parseTypeScriptParameters(signature.params);
 
             if (parameters.length > 0) {
-                functionsContent += `<TableWrapper nowrap={[0, 1]}>\n\n`;
+                // Transform parameters into format expected by generatePropertyTable
+                const tableItems = [];
 
-                // Header row
-                functionsContent += `| Parameter | Type | Req? | Description |\n`;
-                functionsContent += `|---|---|---|---|\n`;
-
-                // Parameter rows
                 parameters.forEach(param => {
-                    const required = param.optional ? 'No' : 'Yes';
                     let type = param.type;
 
                     // Check if this is an inline object type with nested properties
@@ -1134,10 +1279,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         if (nestedProps.length > 0) {
                             // Show each nested property as a separate row
                             nestedProps.forEach(nestedProp => {
-                                const nestedRequired = nestedProp.optional ? 'No' : 'Yes';
-                                let nestedType = `\`${nestedProp.type}\``;
-
-                                // Get description using parameter patterns with fallback hierarchy
                                 const description = getParameterDescription(
                                     nestedProp.name,
                                     enrichment,
@@ -1146,7 +1287,12 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                                     func.name
                                 );
 
-                                functionsContent += `| \`${nestedProp.name}\` | ${nestedType} | ${nestedRequired} | ${description} |\n`;
+                                tableItems.push({
+                                    name: nestedProp.name,
+                                    type: nestedProp.type,
+                                    required: !nestedProp.optional,
+                                    description: description
+                                });
                             });
                             return; // Skip the default handling for this parameter
                         }
@@ -1165,9 +1311,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         }
                     }
 
-                    // Wrap type in backticks for inline code
-                    type = `\`${type}\``;
-
                     // Get description using parameter patterns with fallback hierarchy
                     const description = getParameterDescription(
                         param.name,
@@ -1176,10 +1319,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                         repoName,
                         func.name
                     );
-                    functionsContent += `| \`${param.name}\` | ${type} | ${required} | ${description} |\n`;
+
+                    tableItems.push({
+                        name: param.name,
+                        type: type,
+                        required: !param.optional,
+                        description: description
+                    });
                 });
 
-                functionsContent += `\n</TableWrapper>\n\n`;
+                // Use shared library to generate table
+                functionsContent += generatePropertyTable(tableItems, {
+                    nowrapColumns: [0, 1]
+                });
+                functionsContent += '\n\n';
             }
         }
 
@@ -1351,25 +1504,36 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
             // Auto-link event names to events documentation
             // Match event names in backticks like `cart/data`, `cart/updated`, etc.
             eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
+                // Skip auto-linking for dropins without events pages
+                const dropinsWithoutEvents = ['personalization'];
+                if (dropinsWithoutEvents.includes(repoName)) {
+                    return match; // Return original backticked text without linking
+                }
+
                 // Create base anchor: cart/data -> cartdata
                 const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
 
-                // Known event types based on common patterns
-                // Most cart events are bidirectional (emits-and-listens)
-                const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged', 'cart/reset', 'shipping/estimate'];
-                const emitsOnlyEvents = ['cart/initialized', 'cart/product/added', 'cart/product/removed', 'cart/product/updated'];
+                // Per-dropin mapping of bidirectional events (emits-and-listens)
+                // Events can be bidirectional in one dropin but only emit in another
+                const emitsAndListensByDropin = {
+                    'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
+                    'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
+                    'order': ['order/data'],
+                    'product-details': ['pdp/data', 'pdp/values'],
+                    'recommendations': ['recommendations/data'],
+                    'product-discovery': ['search/error', 'search/loading', 'search/result'],
+                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                };
 
-                let anchorSuffix = '-emits-and-listens'; // Default
-
-                if (emitsOnlyEvents.includes(eventName)) {
-                    anchorSuffix = '-emits';
-                } else if (emitsAndListensEvents.includes(eventName)) {
+                // Default to -emits since most events only have an "Emits" section
+                let anchorSuffix = '-emits';
+                const dropinBidirectionalEvents = emitsAndListensByDropin[repoName] || [];
+                if (dropinBidirectionalEvents.includes(eventName)) {
                     anchorSuffix = '-emits-and-listens';
                 }
-                // Otherwise use default (emits-and-listens)
 
-                // Link to the events page with full anchor (use relative path without trailing slash)
-                return `[\`${eventName}\`](../events#${baseAnchor}${anchorSuffix})`;
+                // Link to the events page with full anchor (use absolute path for proper link validation)
+                return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
             });
 
             // Auto-link model names to their definitions (first occurrence only)
@@ -1393,16 +1557,33 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
 
                 // Still auto-link any event names in the enrichment (if any)
                 eventsContent = eventsContent.replace(/`([a-z-]+\/[a-z-]+)`/g, (match, eventName) => {
+                    // Skip auto-linking for dropins without events pages
+                    const dropinsWithoutEvents = ['personalization'];
+                    if (dropinsWithoutEvents.includes(repoName)) {
+                        return match; // Return original backticked text without linking
+                    }
+
                     const baseAnchor = eventName.replace(/\//g, '').toLowerCase();
-                    const emitsAndListensEvents = ['cart/data', 'cart/updated', 'cart/merged', 'cart/reset', 'shipping/estimate'];
-                    const emitsOnlyEvents = ['cart/initialized', 'cart/product/added', 'cart/product/removed', 'cart/product/updated'];
-                    let anchorSuffix = '-emits-and-listens';
-                    if (emitsOnlyEvents.includes(eventName)) {
-                        anchorSuffix = '-emits';
-                    } else if (emitsAndListensEvents.includes(eventName)) {
+
+                    // Per-dropin mapping of bidirectional events (emits-and-listens)
+                    // Events can be bidirectional in one dropin but only emit in another
+                    const emitsAndListensByDropin = {
+                        'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
+                        'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
+                        'order': ['order/data'],
+                        'product-details': ['pdp/data', 'pdp/values'],
+                        'recommendations': ['recommendations/data'],
+                        'product-discovery': ['search/error', 'search/loading', 'search/result'],
+                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                    };
+
+                    // Default to -emits since most events only have an "Emits" section
+                    let anchorSuffix = '-emits';
+                    const dropinBidirectionalEvents = emitsAndListensByDropin[repoName] || [];
+                    if (dropinBidirectionalEvents.includes(eventName)) {
                         anchorSuffix = '-emits-and-listens';
                     }
-                    return `[\`${eventName}\`](../events#${baseAnchor}${anchorSuffix})`;
+                    return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
                 });
             }
         }
@@ -1503,6 +1684,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
                     returnsContent = 'Returns `number`.';
                 } else if (actualType === 'boolean') {
                     returnsContent = 'Returns `boolean`.';
+                } else if (actualType.includes('any') && enrichment && enrichment.returns) {
+                    // Type contains 'any' but wasn't caught by GenericTypeHandler (e.g., 'any | null')
+                    // Use enrichment text if available
+                    returnsContent = `Returns ${enrichment.returns}.`;
                 } else if (actualType.length < 100) {
                     returnsContent = `Returns \`${actualType}\`.`;
                 } else {
@@ -1601,7 +1786,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(version),
+        DROPIN_VERSION: cleanVersion(versionInfo.requested),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
         FUNCTIONS_CONTENT: functionsContent + dataModelsSection
@@ -1616,7 +1801,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, version, enrich
  * @param {string} version - Package version
  * @returns {string} Generated MDX content
  */
-function generateEmptyFunctionsDocs(repoName, repoConfig, version) {
+function generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     // Use shared empty state generator for clean, consistent output
     return generateNoFunctionsPage({
         dropinDisplayName: repoConfig.displayName,
@@ -1644,13 +1831,5 @@ await runGenerator({
 // ============================================================================
 
 console.log('\n🔍 Running post-generation type validation...\n');
-const validationSuccess = validateAllFunctionDocs(projectRoot);
-
-if (!validationSuccess) {
-    console.warn('\n⚠️  WARNING: Generic type issues detected in generated documentation.');
-    console.warn('   These are pre-existing issues that should be fixed in the source code.');
-    console.warn('   For now, continuing with warnings only.\n');
-} else {
-    console.log('\n✅ All function documentation validated successfully!\n');
-}
+validateAllFunctionDocs(projectRoot);
 

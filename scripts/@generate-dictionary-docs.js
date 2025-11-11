@@ -106,6 +106,13 @@ function scanForDictionary(repoPath) {
  * Extract a realistic example from the dictionary for the customization guide
  * Recursively finds string values to create a meaningful example
  */
+/**
+ * Create a simple custom value to demonstrate customization
+ */
+function createCustomValue(defaultValue, key) {
+    return 'Custom string';
+}
+
 function generateCustomizationExample(dictionaryJson) {
     try {
         const parsed = JSON.parse(dictionaryJson);
@@ -145,7 +152,8 @@ function generateCustomizationExample(dictionaryJson) {
                         if (!target[pathKey]) target[pathKey] = {};
                         target = target[pathKey];
                     }
-                    target[key] = `Custom ${value}`;
+                    // Create realistic alternative values that would make sense in the UI
+                    target[key] = createCustomValue(value, key);
                     foundCount++;
                 } else if (typeof value === 'object' && value !== null) {
                     // Recurse into nested objects
@@ -158,11 +166,8 @@ function generateCustomizationExample(dictionaryJson) {
 
         // Return formatted JSON if we found any values
         if (foundCount > 0) {
-            return JSON.stringify(exampleObj, null, 2)
-                .split('\n')
-                .map(line => '  ' + line) // Indent for code block
-                .join('\n')
-                .trim();
+            // Return plain JSON - template will use it in export statement
+            return JSON.stringify(exampleObj, null, 2);
         }
 
         return null;
@@ -172,7 +177,9 @@ function generateCustomizationExample(dictionaryJson) {
     }
 }
 
-function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, enrichmentData = null) {
+function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-dictionary.mdx');
 
     // If no dictionary found, generate placeholder page
@@ -198,9 +205,15 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, en
   }`;
     }
 
+    // Convert kebab-case to camelCase for variable name
+    const camelCaseKey = repoName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const dictionaryVarName = `${camelCaseKey}Dictionary`;
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_KEY': repoName,  // kebab-case key for filenames
+        'DROPIN_VAR': dictionaryVarName,  // camelCase variable name
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
         'DICTIONARY_JSON': dictionaryJson,

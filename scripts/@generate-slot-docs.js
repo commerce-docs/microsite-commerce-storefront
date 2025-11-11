@@ -179,6 +179,52 @@ function generateSlotsContent(containers) {
 }
 
 /**
+ * Generate summary table of all containers and their slots
+ */
+function generateSummaryTable(containers) {
+    if (containers.length === 0) {
+        return '';
+    }
+
+    let table = '<table>\n';
+    table += '<thead>\n';
+    table += '<tr>\n';
+    table += '<th style="white-space: nowrap;">Container</th>\n';
+    table += '<th>Slots</th>\n';
+    table += '</tr>\n';
+    table += '</thead>\n';
+    table += '<tbody>\n';
+
+    for (const container of containers) {
+        // Parse slot names from the interface
+        // Match slot names regardless of type parameters (handles multiline definitions)
+        const slotPattern = /(\w+)\??\s*:\s*SlotProps/g;
+        let match;
+        const slots = [];
+
+        while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
+            slots.push(`<code>${match[1]}</code>`);
+        }
+
+        const slotsList = slots.length > 0 ? slots.join(', ') : 'None';
+
+        // Create anchor link to the container's section
+        const anchorId = `${container.containerName.toLowerCase()}-slots`;
+        const containerLink = `<a href="#${anchorId}"><code>${container.containerName}</code></a>`;
+
+        table += '<tr>\n';
+        table += `<td style="white-space: nowrap;">${containerLink}</td>\n`;
+        table += `<td>${slotsList}</td>\n`;
+        table += '</tr>\n';
+    }
+
+    table += '</tbody>\n';
+    table += '</table>\n';
+
+    return table;
+}
+
+/**
  * Generate slots MDX documentation
  * 
  * @param {string} repoName - Drop-in name
@@ -188,38 +234,53 @@ function generateSlotsContent(containers) {
  * @param {Object} enrichmentData - Optional enrichment data
  * @returns {string} Generated MDX content
  */
-function generateSlotsMDX(repoName, repoConfig, containers, version, enrichmentData = null) {
+function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichmentData = null) {
     const template = readTemplate('dropin-slots.mdx');
 
-    // Generate slots content
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
+
+    // Generate summary table, examples, and detailed content
+    const summaryTable = generateSummaryTable(containers);
     const slotsContent = generateSlotsContent(containers);
 
     // Generate intro text based on whether slots exist
     let introText;
     if (containers.length === 0) {
-        // Concise intro for drop-ins with no slots
-        introText = `This drop-in currently has no slots defined.`;
+        // All no-slot dropins get the "Why no slots?" heading
+        const baseIntro = `The ${repoConfig.displayName} drop-in does not expose any slots for customization.\n\n## Why no slots?`;
+
+        // Add specific explanation based on the dropin
+        if (repoConfig.packageName === '@dropins/storefront-payment-services') {
+            introText = `${baseIntro}\n\nThis drop-in wraps the Adobe Payment Services SDK (\`@adobe-commerce/payment-services-sdk\`), which renders secure payment forms directly into specified DOM elements. The SDK controls all UI rendering to maintain PCI (Payment Card Industry) compliance and security standards. You customize the payment forms through SDK configuration options (field placeholders, card type settings, callback handlers) passed to \`sdk.Payment.CreditCard.render()\`, not through the slot-based pattern other drop-ins use.`;
+        } else {
+            // Generic explanation for other dropins without slots
+            introText = `${baseIntro}\n\nThis drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the drop-in's feature set expands.`;
+        }
     } else {
-        // Full intro with explanation for drop-ins with slots
-        introText = `## Overview
+        // Count total slots across all containers
+        const totalSlots = containers.reduce((total, container) => {
+            const slotPattern = /(\w+)\??\s*:\s*SlotProps/g;
+            const matches = container.slotsInterface.match(slotPattern);
+            return total + (matches ? matches.length : 0);
+        }, 0);
 
-Learn about the slots provided in the **${repoConfig.displayName}** drop-in component for customizing container appearance and behavior.
-
-<Aside type="tip">
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
-</Aside>
-
-## What are Slots?
-
-Slots are customization points that allow you to replace or extend parts of a container's UI. Each container can expose multiple slots for different sections of its interface.`;
+        // Brief, focused intro for drop-ins with slots
+        const containerCount = containers.length;
+        const containerWord = containerCount === 1 ? 'container' : 'containers';
+        const slotWord = totalSlots === 1 ? 'slot' : 'slots';
+        introText = `The ${repoConfig.displayName} drop-in exposes **${totalSlots} ${slotWord}** in **${containerCount} ${containerWord}** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
     }
 
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(version),
+        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'INTRO_TEXT': introText,
+        'SUMMARY_TABLE': summaryTable,
+        'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example
+        'COMPLEX_EXAMPLE': '', // Removed - each slot now has its own example
         'SLOTS_CONTENT': slotsContent,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
         'CONTAINER_COUNT': containers.length.toString()

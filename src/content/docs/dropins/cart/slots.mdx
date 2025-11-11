@@ -1,20 +1,77 @@
 ---
-title: Cart slots
-description: Learn about the slots provided in the Cart drop-in component.
+title: Cart Slots
+description: Customize UI sections in the Cart drop-in using slots.
+sidebar:
+  label: Slots
+  order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
-Learn about the slots provided in the Cart drop-in component.
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-[Extending drop-in components](/dropins/all/extending/) describes default properties available to all slots.
+The Cart drop-in exposes **49 slots** in **6 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.5.1</strong>
+</div>
+
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#cartsummarygrid-slots"><code>CartSummaryGrid</code></a></td>
+<td><code>Thumbnail</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#cartsummarylist-slots"><code>CartSummaryList</code></a></td>
+<td><code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>Thumbnail</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>UndoBanner</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemQuantity</code>, <code>ItemTotal</code>, <code>ItemSku</code>, <code>ItemRemoveAction</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#cartsummarytable-slots"><code>CartSummaryTable</code></a></td>
+<td><code>Item</code>, <code>Price</code>, <code>Quantity</code>, <code>Subtotal</code>, <code>Thumbnail</code>, <code>ProductTitle</code>, <code>Sku</code>, <code>Configurations</code>, <code>ItemAlert</code>, <code>ItemWarning</code>, <code>Actions</code>, <code>UndoBanner</code>, <code>EmptyCart</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#giftoptions-slots"><code>GiftOptions</code></a></td>
+<td><code>SwatchImage</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#minicart-slots"><code>MiniCart</code></a></td>
+<td><code>ProductList</code>, <code>ProductListFooter</code>, <code>PreCheckoutSection</code>, <code>Thumbnail</code>, <code>Heading</code>, <code>EmptyCart</code>, <code>Footer</code>, <code>ProductAttributes</code>, <code>CartSummaryFooter</code>, <code>CartItem</code>, <code>UndoBanner</code>, <code>ItemTitle</code>, <code>ItemPrice</code>, <code>ItemQuantity</code>, <code>ItemTotal</code>, <code>ItemSku</code>, <code>ItemRemoveAction</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#ordersummary-slots"><code>OrderSummary</code></a></td>
+<td><code>EstimateShipping</code>, <code>Coupons</code>, <code>GiftCards</code></td>
+</tr>
+</tbody>
+</table>
+
+
+## CartSummaryGrid slots
+
+```js {4}
+interface CartSummaryGridProps
+
+slots?: {
+  Thumbnail?: SlotProps<{ 
+    item: CartModel['items'][number], 
+    defaultImageProps: ImageProps 
+  }>;
+};
+```
+
+---
 
 ## CartSummaryList slots
 
-The slots for the `CartSummaryList` container allow you to customize the appearance of the cart summary list.
-
-```js
+```js {4,5,6,7,11,12,13,14,21,22,23,35,36,37}
 interface CartSummaryListProps
 
 slots?: {
@@ -41,8 +98,8 @@ slots?: {
     item: CartModel['items'][number];
     enableUpdateItemQuantity: boolean;
     handleItemQuantityUpdate: (
-      item: CartModel['items'][number],
-      quantity: number
+    item: CartModel['items'][number],
+    quantity: number
     ) => void;
     itemsLoading: Set<string>;
     handleItemsError: (uid: string, message?: string) => void;
@@ -55,8 +112,8 @@ slots?: {
     item: CartModel['items'][number];
     enableRemoveItem: boolean;
     handleItemQuantityUpdate: (
-      item: CartModel['items'][number],
-      quantity: number
+    item: CartModel['items'][number],
+    quantity: number
     ) => void;
     handleItemsError: (uid: string, message?: string) => void;
     handleItemsLoading: (uid: string, state: boolean) => void;
@@ -66,535 +123,235 @@ slots?: {
 };
 ```
 
-### Heading slot
+### Heading example
 
-The `Heading` slot allows you to add content to the top of the `CartSummaryList` container.
-
-```js
- provider.render(CartSummaryList, {
-  slots: {
-    Heading: (ctx) => {
-      // Runs on mount
-      const heading = document.createElement('h2');
-      heading.innerText = 'Cart List';
-      ctx.appendChild(heading);
-    },
-  },
-})($list),
-```
-
-### EmptyCart slot
-
-The `EmptyCart` slot allows you to add content to the `CartSummaryList` container when the cart is empty.
+This example from the Commerce Checkout block shows how to customize the `Heading` slot:
 
 ```js
- provider.render(CartSummaryList, {
-  slots: {
-    EmptyCart: (ctx) => {
-      // Runs on mount
-      const emptyCart = document.createElement('div');
-      emptyCart.innerText = 'Your cart is empty';
-      ctx.appendChild(emptyCart);
-    },
-  },
-})($list),
-```
-
-
-### Thumbnail slot
-
-Define a callback function in the `Thumbnail` slot of the `CartSummaryList` container to modify or replace the thumbnail section for each item in the cart.
-
-The context object passed to the callback function includes an `item` property that contains the item data with the following type:
-
-```typescript
-export interface Item {
-  taxedPrice: {
-    value: number;
-    currency: string;
-  };
-  rowTotal: {
-    value: number;
-    currency: string;
-  };
-  rowTotalIncludingTax: {
-    value: number;
-    currency: string;
-  };
-  itemType: string;
-  uid: string;
-  url: {
-    urlKey: string;
-    categories: string[];
-  };
-  quantity: number;
-  sku: string;
-  name: string;
-  image: {
-    src: string;
-    alt: string;
-  };
-  links?: {
-    count: number;
-    result: string;
-  };
-  price: {
-    value: number;
-    currency: string;
-  };
-  total: {
-    value: number;
-    currency: string;
-  };
-  discountedTotal?: {
-    value: number;
-    currency: string;
-  };
-  discount?: {
-    value: number;
-    currency: string;
-  };
-  regularPrice: {
-    value: number;
-    currency: string;
-  };
-  discounted: boolean;
-  bundleOptions?: { [key: string]: any };
-  selectedOptions?: { [key: string]: any };
-  customizableOptions?: { [key: string]: any };
-  message?: string;
-  recipient?: string;
-  recipientEmail?: string;
-  sender?: string;
-  senderEmail?: string;
-  lowInventory?: boolean;
-  insufficientQuantity?: boolean;
-  onlyXLeftInStock?: number | null;
-  outOfStock?: boolean;
-  notAvailableMessage?: string;
-  stockLevel?: string;
-  productAttributes?: Array<{
-  code: string;
-  value?: string;
-  selected_options?: {
-    value: string;
-    label: string;
-  }[];
-}>;
-}
-```
-
-#### Example extension
-
-The following example demonstrates how to extend the `Thumbnail` slot.
-
-```javascript
-  return provider.render(CartSummaryList, {
-    hideHeading: hideHeading === 'true',
-    routeProduct: (product) => `/products/${product.url.urlKey}/${product.sku}`,
-    routeEmptyCartCTA: startShoppingURL ? () => startShoppingURL : undefined,
-    maxItems: parseInt(maxItems, 10) || undefined,
-    attributesToHide: hideAttributes.split(',').map((attr) => attr.trim().toLowerCase()),
-    enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
-    enableRemoveItem: enableRemoveItem === 'true',
-    slots: {
-      Thumbnail: (ctx) => {
-        const { item } = ctx;
-
-        // Create a link to save the item for later
-        const saveForLaterLink  = document.createElement('a');
-        saveForLaterLink.href = '#';
-        saveForLaterLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          console.log(`Saving ${item.name}(${item.sku}) for later`);
-          // TODO: Implement save for later functionality
-        });
-        saveForLaterLink.innerText = 'Save for later';
-
-        // Create a separator
-        const separator = document.createElement('span');
-        separator.innerText = ' | ';
-
-        // Create a link to remove the item from the cart
-        const removeLink = document.createElement('a');
-        removeLink.href = '#';
-        removeLink.addEventListener('click', (e) => {
-          e.preventDefault();
-          console.log(`Removing ${item.name}(${item.sku}) from cart`);
-          // TODO: Implement remove item functionality
-        });
-        removeLink.innerText = 'Remove';
-
-        // Create a container to hold the links
-        const container = document.createElement('div');
-        container.innerHTML = '<div class="cart-summary__thumbnail"/>';
-
-        // Style the container
-        container.style.font = 'var(--type-details-caption-2-font)'
-        container.style.display = 'flex';
-        container.style.justifyContent = 'space-between';
-
-        // Append the links to the container
-        container.appendChild(saveForLaterLink);
-        container.appendChild(separator);
-        container.appendChild(removeLink);
-
-        // Append the container as a child to the existing thumbnail content
-        ctx.appendChild(container)
-      }
-    }
-  })(block);
-```
-
-### Footer slot
-
-The `Footer` slot allows you to add content to the bottom of the `CartSummaryList` container.
-
-The following example demonstrates how to extend the `Footer` slot by adding a promotional cart rule to each product in the cart.
-
-```js
-Footer: (ctx) => {
-  // Runs on mount
-  const wrapper = document.createElement('div');
-  ctx.appendChild(wrapper);
-
-  // Append Product Promotions on every update
-  ctx.onChange((next) => {
-    wrapper.innerHTML = '';
-
-    next.item?.discount?.label?.forEach((label) => {
-      const discount = document.createElement('div');
-      discount.style.color = '#3d3d3d';
-      discount.innerText = label;
-      wrapper.appendChild(discount);
-    });
-  });
-},
-```
-
-### ProductAttributes slot
-
-The `ProductAttributes` slot allows you to add custom content to the `CartSummaryList` container.
-
-The following example demonstrates how to add the Fashion Material and Fashion Style product attributes to each product in the cart.
-
-```javascript
-  return provider.render(CartSummaryList, {
-    enableRemoveItem: true,
-    enableUpdateItemQuantity: true,
-    routeProduct: (item) => {
-      return `${item.url.categories.join('/')}/${item.url.urlKey}`;
-    },
-    routeEmptyCartCTA: () => '#empty-cart',
-    slots: {
-      ProductAttributes: (ctx) => {
-        // Prepend Product Attributes
-        const ProductAttributes = ctx.item?.productAttributes;
-
-        ProductAttributes?.forEach((attr) => {
-          if(attr.code === "Fashion Material" || attr.code === "Fashion Style") {
-            if(attr.selected_options) {
-              const selectedOptions = attr.selected_options
-              .filter((option) => option.label.trim() !== '')
-              .map((option) => option.label)
-              .join(', ');
-              
-              if(selectedOptions) {
-                const productAttribute = document.createElement('div');
-                productAttribute.innerText = `${attr.code}: ${selectedOptions}`;
-                ctx.appendChild(productAttribute);
-              }
-            } else if (attr.value) {
-              const productAttribute = document.createElement('div');
-              productAttribute.innerText = `${attr.code}: ${attr.value}`;
-              ctx.appendChild(productAttribute);
-            }
-          }
-        })
-      },
-    },
-  })(productList);
-```
-
-### CartSummaryFooter slot
-
-The `CartSummaryFooter` slot allows you to add content to the bottom of the `CartSummaryList` container.
-
-```js
- provider.render(CartSummaryList, {
-  slots: {
-    CartSummaryFooter: (ctx) => {
-      const cartSummaryFooter = document.createElement('div');
-      cartSummaryFooter.innerText = 'Cart summary footer';
-      ctx.appendChild(cartSummaryFooter);
-    },
-  },
-})($list),
-```
-
-### ItemTitle slot
-
-The `ItemTitle` slot allows you to customize the title display for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to replace the default title with a custom title:
-
-```javascript
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  slots: {
-    ItemTitle: (ctx) => {
-      // Create custom title element
-      const customTitle = document.createElement('div');
-      customTitle.className = 'cart-item-custom-title';
-      customTitle.textContent = 'Custom Title';
-
-      ctx.replaceWith(customTitle);
-    },
-  },
-})(cartSummaryList);
-```
-
-### ItemPrice slot
-
-The `ItemPrice` slot allows you to customize the price display for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to add a custom price label:
-
-```javascript
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  slots: {
-    ItemPrice: (ctx) => {
-      const priceLabel = document.createElement('span');
-      priceLabel.className = 'cart-item-price-label';
-      priceLabel.textContent = 'Item Price';
-
-      ctx.prependChild(priceLabel);
-    },
-  },
-})(cartSummaryList);
-```
-
-### ItemQuantity slot
-
-The `ItemQuantity` slot allows you to customize the quantity display and controls for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to customize the quantity field by adding a "Qty:" label and using an input component from the SDK:
-
-```javascript
-import {
-  provider as UI,
-  Input,
-} from '@dropins/tools/components.js';
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { rootLink } from '../../scripts/commerce.js';
 
 provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
   slots: {
-    ItemQuantity: (ctx) => {
-      const { item, handleItemQuantityUpdate } = ctx;
-
-      // Create container with label and input
-      const quantityContainer = document.createElement('div');
-      quantityContainer.className = 'cart-item-quantity-container';
-
-      // Add "Qty:" label
-      const quantityLabel = document.createElement('span');
-      quantityLabel.className = 'cart-item-quantity-label';
-      quantityLabel.textContent = 'Qty:';
-
-      // Create input wrapper for SDK Input component
-      const inputWrapper = document.createElement('div');
-      inputWrapper.className = 'cart-item-quantity-input';
-      inputWrapper.style.display = 'inline-block';
-      inputWrapper.style.width = '60px';
-
-      // Render SDK Input component
-      UI.render(Input, {
-        value: item.quantity.toString(),
-        min: 1,
-        size: 'small',
-        variant: 'primary',
-        onValue: (value) => {
-          const newQuantity = parseInt(value, 10);
-          if (
-            !Number.isNaN(newQuantity)
-            && newQuantity > 0
-            && newQuantity !== item.quantity
-          ) {
-            handleItemQuantityUpdate(item, newQuantity);
-          }
-        },
-      })(inputWrapper);
-
-      // Style the container for inline layout
-      quantityContainer.style.display = 'flex';
-      quantityContainer.style.alignItems = 'center';
-      quantityContainer.style.gap = 'var(--spacing-xsmall)';
-
-      quantityContainer.appendChild(quantityLabel);
-      quantityContainer.appendChild(inputWrapper);
-
-      ctx.replaceWith(quantityContainer);
-    },
-  },
-})(cartSummaryList);
-```
-
-### ItemTotal slot
-
-The `ItemTotal` slot allows you to customize the total price display for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to add a custom total label:
-
-```javascript
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  slots: {
-    ItemTotal: (ctx) => {
-      const totalLabel = document.createElement('div');
-      totalLabel.className = 'cart-item-total-label';
-      totalLabel.textContent = 'Item Total';
-
-      ctx.prependChild(totalLabel);
-    },
-  },
-})(cartSummaryList);
-```
-
-### ItemSku slot
-
-The `ItemSku` slot allows you to customize the SKU display for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to replace the default SKU with a custom SKU:
-
-```javascript
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  slots: {
-    ItemSku: (ctx) => {
-      const customSku = document.createElement('div');
-      customSku.className = 'cart-item-custom-sku';
-      customSku.textContent = 'custome-sku';
-
-      ctx.replaceWith(customSku);
-    },
-  },
-})(cartSummaryList);
-```
-
-### ItemRemoveAction slot
-
-The `ItemRemoveAction` slot allows you to customize the remove action button for each item in the `CartSummaryList` container.
-
-The following example demonstrates how to replace the default remove button with a custom button:
-
-```javascript
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  slots: {
-    ItemRemoveAction: (ctx) => {
-      // Simple remove button with text
-      const removeButton = document.createElement('button');
-      removeButton.innerText = 'Remove';
-      // apply styling using design tokens where possible
-      removeButton.style.background = 'transparent';
-      removeButton.style.border = 'none';
-      removeButton.style.color = 'var(--color-neutral-600)';
-      removeButton.style.cursor = 'pointer';
-      removeButton.style.fontSize = 'var(--type-body-2-font-size)';
-      removeButton.style.padding = '0';
-      removeButton.style.paddingRight = 'var(--spacing-medium)';
-      removeButton.style.fontWeight = 'var(--type-body-2-font-weight, normal)';
-      removeButton.style.textDecoration = 'underline';
-      removeButton.style.float = 'right';
-      removeButton.style.marginLeft = 'auto';
-      removeButton.style.display = 'block';
-
-      // Remove functionality
-      removeButton.addEventListener('click', () => {
-        if (ctx.handleItemQuantityUpdate) {
-          ctx.handleItemQuantityUpdate(ctx.item, 0);
-        }
+    Heading: (headingCtx) => {
+      const title = 'Your Cart ({count})';
+      const cartSummaryListHeading = document.createElement('div');
+      cartSummaryListHeading.classList.add('cart-summary-list__heading');
+      const cartSummaryListHeadingText = document.createElement('div');
+      cartSummaryListHeadingText.classList.add(
+      'cart-summary-list__heading-text',
+      );
+      cartSummaryListHeadingText.innerText = title.replace(
+      '({count})',
+      headingCtx.count ? `(${headingCtx.count})` : '',
+      );
+      const editCartLink = document.createElement('a');
+      editCartLink.classList.add('cart-summary-list__edit');
+      editCartLink.href = rootLink('/cart');
+      editCartLink.rel = 'noreferrer';
+      editCartLink.innerText = 'Edit';
+      cartSummaryListHeading.appendChild(cartSummaryListHeadingText);
+      cartSummaryListHeading.appendChild(editCartLink);
+      headingCtx.appendChild(cartSummaryListHeading);
+      headingCtx.onChange((nextHeadingCtx) => {
+        cartSummaryListHeadingText.innerText = title.replace(
+        '({count})',
+        nextHeadingCtx.count ? `(${nextHeadingCtx.count})` : '',
+        );
       });
-
-      ctx.replaceWith(removeButton);
-    },
-  },
-})(cartSummaryList);
+    }
+  }
+})(document.querySelector('.cart-summary-list'));
 ```
 
-## OrderSummary slots
+### Footer example
 
-The `OrderSummaryProps` interface defines two slots for customizing the appearance of the order summary.
+This example from the Commerce Cart block shows how to customize the `Footer` slot:
 
 ```js
-interface OrderSummaryProps
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+// Note: `placeholders` should be defined in your block context (typically from `fetchPlaceholders()`)
+// Note: `enableUpdatingProduct` should be defined in your block context
+// Note: `handleEditButtonClick` should be defined in your block context
+// Note: `swatchImageSlot` should be defined in your block context (typically imported from a local utils file)
+
+provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Edit Link
+      if (ctx.item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
+        const editLink = document.createElement('div');
+        editLink.className = 'cart-item-edit-link';
+        UI.render(Button, {
+          children: placeholders?.Global?.CartEditButton,
+          variant: 'tertiary',
+          size: 'medium',
+          icon: h(Icon, { source: 'Edit' }),
+          onClick: () => handleEditButtonClick(ctx.item),
+        })(editLink);
+        ctx.appendChild(editLink);
+      }
+      // Wishlist Button (if product is not configurable)
+      const $wishlistToggle = document.createElement('div');
+      $wishlistToggle.classList.add('cart__action--wishlist-toggle');
+      wishlistRender.render(WishlistToggle, {
+        product: ctx.item,
+        size: 'medium',
+        labelToWishlist: placeholders?.Global?.CartMoveToWishlist,
+        labelWishlisted: placeholders?.Global?.CartRemoveFromWishlist,
+        removeProdFromCart: Cart.updateProductsFromCart,
+      })($wishlistToggle);
+      ctx.appendChild($wishlistToggle);
+      // Gift Options
+      const giftOptions = document.createElement('div');
+      provider.render(GiftOptions, {
+        item: ctx.item,
+        view: 'product',
+        dataSource: 'cart',
+        handleItemsLoading: ctx.handleItemsLoading,
+        handleItemsError: ctx.handleItemsError,
+        onItemUpdate: ctx.onItemUpdate,
+        slots: {
+          SwatchImage: swatchImageSlot,
+        },
+      })(giftOptions);
+      ctx.appendChild(giftOptions);
+    }
+  }
+})(document.querySelector('.cart-summary-list'));
+```
+
+### Thumbnail example
+
+This example from the Commerce Cart block shows how to customize the `Thumbnail` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+
+provider.render(CartSummaryList, {
+  slots: {
+    Thumbnail: (ctx) => {
+      const { item, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = createProductLink(item);
+      tryRenderAemAssetsImage(ctx, {
+        alias: item.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.cart-summary-list'));
+```
+
+---
+
+## CartSummaryTable slots
+
+```js {4,5,6,13,14,19,20,21,22,23,24,30,37}
+interface CartSummaryTableProps
 
 slots?: {
-  EstimateShipping?: SlotProps;
-  Coupons?: SlotProps;
+  Item?: SlotProps<{ item: CartModel['items'][number] }>;
+  Price?: SlotProps<{ item: CartModel['items'][number] }>;
+  Quantity?: SlotProps<{
+    item: CartModel['items'][number];
+    isUpdating: boolean;
+    quantityInputValue: number;
+    handleInputChange: (e: Event) => void;
+    itemUpdateErrors: Map<string, string>;
+  }>;
+  Subtotal?: SlotProps<{ item: CartModel['items'][number] }>;
+  Thumbnail?: SlotProps<{
+    item: CartModel['items'][number];
+    defaultImageProps: ImageProps;
+    index: number;
+  }>;
+  ProductTitle?: SlotProps<{ item: CartModel['items'][number] }>;
+  Sku?: SlotProps<{ item: CartModel['items'][number] }>;
+  Configurations?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemAlert?: SlotProps<{ item: CartModel['items'][number] }>;
+  ItemWarning?: SlotProps<{ item: CartModel['items'][number] }>;
+  Actions?: SlotProps<{
+    item: CartModel['items'][number];
+    itemsUpdating: Map<string, { isUpdating: boolean; updatedValue: number }>;
+    setItemUpdating: (uid: string, state: boolean) => void;
+    setItemUpdateError: (uid: string, error: string) => void;
+  }>;
+  UndoBanner?: SlotProps<{
+    item: CartModel['items'][number];
+    loading: boolean;
+    error?: string;
+    onUndo: () => void;
+    onDismiss: () => void;
+  }>;
+  EmptyCart?: SlotProps;
 };
 ```
 
-### EstimateShipping slot
+---
 
-The `EstimateShipping` slot allows you to add estimated shipping information to the `OrderSummary` container. 
+## GiftOptions slots
 
-The following example demonstrates how to add the Estimate Shipping layout to the OrderSummary container.
+```js {4}
+interface GiftOptionsProps
 
-```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
-
-    errors: ctx.hasErrors,
-
-    slots: {
-      EstimateShipping: (ctx) => {
-        const estimateShippingForm = document.createElement('div');
-
-        provider.render(EstimateShipping)(estimateShippingForm);
-
-        ctx.appendChild(estimateShippingForm);
-      }
-    },
-  })(orderSummary);
+slots?: {
+  SwatchImage?: SlotProps<{ 
+    item: Item | ProductGiftOptionsConfig
+    imageSwatchContext: ImageNodeRenderProps['imageSwatchContext']
+    defaultImageProps: ImageProps
+  }>;
+};
 ```
 
-### Coupons slot
+### SwatchImage example
 
-The Coupons slot allows you to add the Coupons layout to the `OrderSummary` container. 
-
-The following example demonstrates how to enable coupons to the `OrderSummary` container.
-
-```javascript
-  return provider.render(OrderSummary, {
-    routeCheckout: () => '#checkout',
-
-    errors: ctx.hasErrors,
-
-    slots: {
-      Coupons: (ctx) => {
-          const coupons = document.createElement('div');
-
-          provider.render(Coupons)(coupons);
-
-          ctx.appendChild(coupons);
-        }
-    },
-  })(orderSummary);
-```
-
-## MiniCart slot
-
-The `MiniCartProps` interface defines slots for customizing the appearance of the mini cart.
+This example from the Commerce Order Product List block shows how to customize the `SwatchImage` slot:
 
 ```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+
+provider.render(GiftOptions, {
+  slots: {
+    SwatchImage: (swatchCtx) => {
+      const { defaultImageProps, imageSwatchContext } = swatchCtx;
+      tryRenderAemAssetsImage(swatchCtx, {
+        alias: imageSwatchContext.label,
+        imageProps: defaultImageProps,
+        wrapper: document.createElement('span'),
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+    }
+  }
+})(document.querySelector('.gift-options'));
+```
+
+---
+
+## MiniCart slots
+
+```js {4,5,6,7,11,12,13,14,15,16,17,24,25,26,38,39,40}
 interface MiniCartProps
 
 slots?: {
@@ -610,7 +367,7 @@ slots?: {
   Footer?: SlotProps;
   ProductAttributes?: SlotProps;
   CartSummaryFooter?: SlotProps;
-  CartItem?: SlotProps;
+  CartItem?: SlotProps; 
   UndoBanner?: SlotProps<{
     item: CartModel['items'][0];
     loading: boolean;
@@ -624,8 +381,8 @@ slots?: {
     item: CartModel['items'][number];
     enableUpdateItemQuantity: boolean;
     handleItemQuantityUpdate: (
-      item: CartModel['items'][number],
-      quantity: number
+    item: CartModel['items'][number],
+    quantity: number
     ) => void;
     itemsLoading: Set<string>;
     handleItemsError: (uid: string, message?: string) => void;
@@ -638,8 +395,8 @@ slots?: {
     item: CartModel['items'][number];
     enableRemoveItem: boolean;
     handleItemQuantityUpdate: (
-      item: CartModel['items'][number],
-      quantity: number
+    item: CartModel['items'][number],
+    quantity: number
     ) => void;
     handleItemsError: (uid: string, message?: string) => void;
     handleItemsLoading: (uid: string, state: boolean) => void;
@@ -649,98 +406,132 @@ slots?: {
 };
 ```
 
-**Note:** Many slots are shared between MiniCart and CartSummaryList components. For implementation details of shared slots, refer to the corresponding examples in the [CartSummaryList slots section](#cartsummarylist-slots) above.
+### Thumbnail example
 
-The following slots are specific to the MiniCart component:
+This example from the Commerce Mini Cart block shows how to customize the `Thumbnail` slot:
 
-### ProductListFooter slot
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import MiniCart from '@dropins/storefront-cart/containers/MiniCart.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+import { getProductLink } from '../../scripts/commerce.js';
+const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+// Note: `placeholders` should be defined in your block context (typically from `fetchPlaceholders()`)
+// Note: `enableUpdatingProduct` should be defined in your block context
+// Note: `handleEditButtonClick` should be defined in your block context
 
-The ProductListFooter slot allows you to add content after the product list and before the subtotal section of the `MiniCart` container.
-
-The following example demonstrates how to extend the `ProductListFooter` by adding the store return policy.
-
-```javascript
-  return provider.render(MiniCart, {
-    routeEmptyCartCTA: () => '#empty-cart',
-    routeCart: () => '#cart',
-    routeCheckout: () => '#checkout',
-    slots: {
-      ProductListFooter: (ctx) => {
-        const productListFooter = document.createElement('div');
-        ctx.appendChild(productListFooter);
-    
-        ctx.onChange((next) => {
-          // Clear the existing content
-          productListFooter.innerHTML = '';
-    
-          if (Object.keys(next.data.items).length === 0) {
-            return;
-          }
-    
-          const shadowWrapper = document.createElement('div');
-          shadowWrapper.style.backgroundColor = '#EFF5EF';
-          shadowWrapper.style.borderRadius = '5px';
-    
-          // Create the content div
-          const contentDiv = document.createElement('div');
-          contentDiv.innerHTML = "<p style='line-height: 1.5;'>Enjoy hassle-free shopping with our 30-day return policy!</p>";
-          contentDiv.style.display = 'flex';
-          contentDiv.style.flexDirection = 'column';
-          contentDiv.style.padding = '12px';
-    
-          // Append the content div to the shadow wrapper
-          shadowWrapper.appendChild(contentDiv);
-    
-          productListFooter.appendChild(shadowWrapper);
-        });
-      },
-    },
-  })(orderSummary);
+provider.render(MiniCart, {
+  slots: {
+    Thumbnail: (ctx) => {
+      const { item, defaultImageProps } = ctx;
+      const anchorWrapper = document.createElement('a');
+      anchorWrapper.href = createProductLink(item);
+      tryRenderAemAssetsImage(ctx, {
+        alias: item.sku,
+        imageProps: defaultImageProps,
+        wrapper: anchorWrapper,
+        params: {
+          width: defaultImageProps.width,
+          height: defaultImageProps.height,
+        },
+      });
+      if (item?.itemType === 'ConfigurableCartItem' && enableUpdatingProduct === 'true') {
+        const editLinkContainer = document.createElement('div');
+        editLinkContainer.className = 'cart-item-edit-container';
+        const editLink = document.createElement('div');
+        editLink.className = 'cart-item-edit-link';
+        UI.render(Button, {
+          children: placeholders?.Global?.CartEditButton,
+          variant: 'tertiary',
+          size: 'medium',
+          icon: h(Icon, { source: 'Edit' }),
+          onClick: () => handleEditButtonClick(item),
+        })(editLink);
+        editLinkContainer.appendChild(editLink);
+        ctx.appendChild(editLinkContainer);
+      }
+    }
+  }
+})(document.querySelector('.mini-cart'));
 ```
 
-### PreCheckoutSection slot
+---
 
-The PreCheckoutSection slot allows you to add content after the the subtotal section and before the Call to Action buttons of the `MiniCart` container.
+## OrderSummary slots
 
-The following example demonstrates how to extend the `PreCheckoutSection` by adding the loyalty program callouts.
+```js {4,5,6}
+interface OrderSummaryProps
 
-```javascript
-  return provider.render(MiniCart, {
-    routeEmptyCartCTA: () => '#empty-cart',
-    routeCart: () => '#cart',
-    routeCheckout: () => '#checkout',
-    slots: {
-      PreCheckoutSection: (ctx) => {
-        const preCheckoutSection = document.createElement('div');
-        ctx.appendChild(preCheckoutSection);
-    
-        ctx.onChange((next) => {
-          // Clear the existing content
-          preCheckoutSection.innerHTML = '';
-    
-          if (Object.keys(next.data.items).length === 0) {
-            return;
-          }
-    
-          // Create a wrapper div for the shadow background
-          const shadowWrapper = document.createElement('div');
-          shadowWrapper.style.backgroundColor = '#EEEFFB';
-          shadowWrapper.style.borderRadius = '5px';
-    
-          // Create the content div
-          const contentDiv = document.createElement('div');
-          contentDiv.innerHTML = "<p style='line-height: 1.5;'>Earn rewards every time you shop! Sign up for our free loyalty program today and start earning points on this purchase.</p>";
-          contentDiv.style.display = 'flex';
-          contentDiv.style.flexDirection = 'column';
-          contentDiv.style.padding = '12px';
-    
-          // Append the content div to the shadow wrapper
-          shadowWrapper.appendChild(contentDiv);
-    
-          // Append the shadow wrapper to the preCheckoutSection div
-          preCheckoutSection.appendChild(shadowWrapper);
-        });
-      },
-    },
-  })(orderSummary);
+slots?: {
+  EstimateShipping?: SlotProps;
+  Coupons?: SlotProps;
+  GiftCards?: SlotProps;
+};
 ```
+
+### EstimateShipping example
+
+This example from the Commerce Cart block shows how to customize the `EstimateShipping` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import OrderSummary from '@dropins/storefront-cart/containers/OrderSummary.js';
+
+provider.render(OrderSummary, {
+  slots: {
+    EstimateShipping: async (ctx) => {
+      if (enableEstimateShipping === 'true') {
+        const wrapper = document.createElement('div');
+        await provider.render(EstimateShipping, {})(wrapper);
+        ctx.replaceWith(wrapper);
+      }
+    }
+  }
+})(document.querySelector('.order-summary'));
+```
+
+### Coupons example
+
+This example from the Commerce Cart block shows how to customize the `Coupons` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import OrderSummary from '@dropins/storefront-cart/containers/OrderSummary.js';
+
+provider.render(OrderSummary, {
+  slots: {
+    Coupons: (ctx) => {
+      const coupons = document.createElement('div');
+      provider.render(Coupons)(coupons);
+      ctx.appendChild(coupons);
+    }
+  }
+})(document.querySelector('.order-summary'));
+```
+
+### GiftCards example
+
+This example from the Commerce Cart block shows how to customize the `GiftCards` slot:
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import OrderSummary from '@dropins/storefront-cart/containers/OrderSummary.js';
+
+provider.render(OrderSummary, {
+  slots: {
+    GiftCards: (ctx) => {
+      const giftCards = document.createElement('div');
+      provider.render(GiftCards)(giftCards);
+      ctx.appendChild(giftCards);
+    }
+  }
+})(document.querySelector('.order-summary'));
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

@@ -45,10 +45,45 @@ export function sanitizeText(text) {
 }
 
 /**
+ * Sanitize inline code (types, code snippets) for use in markdown table cells
+ * 
+ * This is a lighter sanitizer for content that will be wrapped in backticks.
+ * Inside backticks, most characters are literal and don't need escaping.
+ * Only escapes characters that would break inline code blocks.
+ * 
+ * @param {string} text - Text to sanitize (will be wrapped in backticks)
+ * @returns {string} Sanitized text safe for inline code in markdown tables
+ * 
+ * @example
+ * sanitizeInlineCode('(item: CartModel[\'items\'][0]) => string')
+ * // Returns: '(item: CartModel[\'items\'][0]) => string' (unchanged)
+ */
+export function sanitizeInlineCode(text) {
+    if (!text) return '';
+
+    return text
+        .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
+        .replace(/\n/g, ' ')           // Remove line breaks
+        .replace(/\r/g, '')            // Remove carriage returns
+        .replace(/`/g, '\\`')          // Escape backticks (would break inline code)
+        .replace(/\|/g, '\\|')         // Escape pipes (would break table cell)
+        .replace(/\s+/g, ' ')          // Collapse multiple spaces
+        .trim();
+}
+
+/**
  * Generate a markdown table for properties/parameters/configurations
  * 
  * Creates a markdown table with columns for name, type, required status, and description.
  * Automatically wraps in TableWrapper component if nowrap columns are specified.
+ * 
+ * **IMPORTANT**: This function generates a COMPLETE table including:
+ * - TableWrapper component (if nowrapColumns specified)
+ * - Table header row
+ * - Table data rows
+ * 
+ * Templates should NOT wrap the output in TableWrapper or add headers.
+ * Doing so will cause nested wrappers and duplicate headers.
  * 
  * @param {Array<Object>} items - Array of items to include in table
  * @param {string} items[].name - Property/parameter name
@@ -59,13 +94,14 @@ export function sanitizeText(text) {
  * @param {Array<number>} options.nowrapColumns - Column indices that should not wrap (0-based)
  * @param {string} options.emptyMessage - Message to show if table is empty
  * @param {boolean} options.includeRequired - Whether to include Required column (default: true)
- * @returns {string} Markdown table with optional TableWrapper
+ * @returns {string} Complete markdown table with optional TableWrapper
  * 
  * @example
  * const items = [
  *   { name: 'sku', type: 'string', required: true, description: 'Product SKU' },
  *   { name: 'quantity', type: 'number', required: false, description: 'Quantity to add' }
  * ];
+ * // Returns: <TableWrapper nowrap={[0,1]}>\n\n| Parameter | Type | ... \n</TableWrapper>
  * generatePropertyTable(items, { nowrapColumns: [0, 1] })
  */
 export function generatePropertyTable(items, options = {}) {
@@ -100,7 +136,17 @@ export function generatePropertyTable(items, options = {}) {
     // Generate data rows
     for (const item of items) {
         const name = `\`${item.name}\``;
-        const type = `\`${sanitizeText(item.type)}\``;
+
+        // Handle types with links (marked with __LINK__ prefix)
+        let type;
+        if (item.type && item.type.startsWith('__LINK__')) {
+            // Strip the marker and don't wrap in backticks (it already has markdown links)
+            type = item.type.replace('__LINK__', '');
+        } else {
+            // Regular type - wrap in backticks
+            type = `\`${sanitizeInlineCode(item.type)}\``;
+        }
+
         const required = item.required ? 'Yes' : 'No';
         const description = sanitizeText(item.description || '');
 
