@@ -1,0 +1,197 @@
+---
+title: Commerce localization tasks
+description: Commerce-specific tasks for translating drop-in labels, verifying store view configuration, and testing Commerce functionality across locales.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+
+After translating your storefront content ([Universal Editor](/merchants/quick-start/content-localization-universal-editor/) or [Document Authoring](/merchants/quick-start/content-localization/)), complete these Commerce-specific tasks.
+
+<Aside type="tip" title="For developers">
+
+For technical implementation details, see:
+- [Labeling and Localizing Drop-In Components](/dropins/all/labeling/) - How placeholder files work with drop-in dictionaries
+- [Localizing links](/dropins/all/linking/) - Programmatic link localization with `decorateLinks()` and `rootLink()`
+
+</Aside>
+
+## Commerce-specific localization tasks
+
+<Tasks>
+
+<Task>
+### Translate drop-in placeholder files
+
+Drop-in components use placeholder JSON files to store UI labels and text. These files must be translated for each locale.
+
+<Steps>
+1. Locate the `placeholders` folder for each locale:
+   - Source: `/en/placeholders/`
+   - Target: `/fr/placeholders/` (or your target locale)
+1. Translate the placeholder JSON files for each drop-in:
+   - `cart.json` - Shopping cart labels and messages
+   - `checkout.json` - Checkout flow text
+   - `pdp.json` - Product detail page labels
+   - Other drop-in-specific placeholder files
+1. Include these files in your translation workflow or translate them manually.
+1. Verify that the JSON syntax remains valid after translation.
+
+</Steps>
+
+<Aside type="note" title="Placeholder file format">
+
+Placeholder files contain key-value pairs where the keys must remain in English (they are used by the code), but the values should be translated. For example: `"addToCart": "Ajouter au panier"` (French) instead of `"addToCart": "Add to Cart"`.
+
+</Aside>
+
+</Task>
+
+<Task>
+### Align with the multistore configuration
+
+Ensure that your translated content aligns with the multistore folder structure and store view configuration.
+
+<Steps>
+1. Review your [multistore setup](/setup/configuration/multistore-setup/) to confirm:
+   - Store view codes in Adobe Commerce Admin
+   - Folder structure on Edge Delivery Services (for example, `/en/`, `/fr/`, `/fr-ca/`, `/en-ca/`)
+   - Store view headers in `config.json`
+1. Verify that translated content exists in the correct locale folders.
+1. Confirm store view headers are configured:
+   - Each locale should have the correct `Magento-Store-View-Code` header
+   - Headers must match the store view codes in Adobe Commerce Admin
+
+</Steps>
+
+</Task>
+
+<Task>
+### Verify Commerce functionality
+
+After publishing translated content, verify that all Commerce integration points work correctly.
+
+<Steps>
+1. Navigate to your storefront in each locale (for example, `https://yoursite.com/fr/`).
+1. Verify drop-in components display translated text:
+   - Shopping cart labels
+   - Checkout flow text
+   - Product detail page labels
+   - Account/login interfaces
+1. Test Commerce data integration:
+   - Products display in the correct language
+   - Prices show the correct currency for the locale
+   - Product descriptions match the store view language
+1. Verify store view functionality:
+   - Store switcher displays available locales
+   - Switching stores navigates to the correct URL
+   - Each store view shows appropriate content
+1. Test the complete customer journey:
+   - Browse products in the translated locale
+   - Add items to cart and verify cart labels
+   - Proceed through checkout and verify all text
+   - Check confirmation emails use the correct language
+
+</Steps>
+
+<Aside type="caution" title="Store view headers">
+
+If product data or pricing appears incorrect, verify the store view headers in your `config.json` file. The `Magento-Store-View-Code` header determines which Commerce data is returned for each locale.
+
+</Aside>
+
+</Task>
+
+</Tasks>
+
+## Link localization
+
+The boilerplate automatically localizes internal links to match the current locale. This ensures that users stay within their chosen language and region as they navigate the site.
+
+### Automatic link localization
+
+The `decorateLinks()` function (enabled by default in the boilerplate) automatically prepends the locale path to all internal links. For example:
+- On `/en-ca/` pages: `/products/` becomes `/en-ca/products/`
+- On `/fr/` pages: `/products/` becomes `/fr/products/`
+
+### Preventing link localization
+
+For links that should always point to a specific locale (like store switcher links), add `#nolocal` to the URL:
+
+```
+[Switch to US Store](https://yoursite.com/en/#nolocal)
+```
+
+This prevents automatic localization, keeping the link at `/en/` regardless of locale.
+
+**See also:** [Localizing links](/dropins/all/linking/) for developer implementation details.
+
+## Best practices for Commerce localization
+
+- **Placeholder files**: Translate placeholder JSON files before launching each locale. Untranslated labels confuse customers.
+- **Store view testing**: Test the complete customer journey (browse → cart → checkout) in each locale.
+- **Path alignment**: Align content paths with multistore configuration for each locale.
+- **Product configuration**: Configure products, categories, and CMS content for each store view in Adobe Commerce Admin.
+- **Translation quality**: Use human translation for checkout, cart messages, and error messages.
+- **Currency and pricing**: Verify currency symbols, decimal separators, and price formatting for each locale.
+- **Link localization**: Add `#nolocal` to store switcher and cross-locale links.
+
+## Troubleshooting Commerce-specific issues
+
+### Product data appears in wrong language
+
+**Symptoms**: Products display English descriptions on the French storefront, or prices show wrong currency.
+
+**Solutions**:
+- Verify the `Magento-Store-View-Code` header in your `config.json` for the locale path
+- Ensure the store view code matches the one configured in Adobe Commerce Admin
+- Check that products are configured for the target store view in Commerce Admin
+- Clear the browser cache and test in an incognito window
+
+### Drop-in labels not translated
+
+**Symptoms**: Cart, checkout, or product detail page labels appear in English instead of the target language.
+
+**Solutions**:
+- Verify placeholder JSON files (`cart.json`, `checkout.json`, `pdp.json`) exist in the locale's `placeholders` folder
+- Check that JSON files contain translated values (not just copied from English)
+- Ensure JSON syntax is valid (no syntax errors from translation process)
+- Republish the placeholder files to Edge Delivery Services
+- Check browser console for errors loading placeholder files
+
+### Store view path issues
+
+**Symptoms**: `/fr/` URLs show English content, or French content appears at wrong paths.
+
+**Solutions**:
+- Verify that locale folders match your [multistore setup](/setup/configuration/multistore-setup/) folder structure
+- Check that store view headers in `config.json` match the locale paths
+- Example: `/fr/` folder should have `"Magento-Store-View-Code": "fr"` in its config
+- Clear CDN cache and test in an incognito window
+
+### Currency or pricing display issues
+
+**Symptoms**: Wrong currency symbols, incorrect decimal separators, or unexpected price formatting.
+
+**Solutions**:
+- Verify the store view is configured with the correct currency in Adobe Commerce Admin
+- Check that the `Magento-Store-View-Code` header is correctly set for the locale
+- Ensure product prices are configured for the target store view
+- Test in different browsers to rule out browser-specific formatting issues
+
+## Additional resources
+
+### Adobe Commerce configuration
+
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views" text="Store view configuration" /> - Adobe Experience League
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/config/scope-change" text="Adobe Commerce Configuration Scope" /> - Adobe Experience League
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/start/setup/websites-stores-views" text="Websites, Stores, and Views" /> - Adobe Experience League
+
+### Edge Delivery Services
+
+- <Link href="https://www.aem.live/docs/" text="Edge Delivery Services Documentation" /> - aem.live
+- <Link href="https://www.aem.live/docs/translation-and-localization" text="Translation and Localization" /> - aem.live
+

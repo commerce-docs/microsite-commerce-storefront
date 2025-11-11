@@ -32,8 +32,6 @@ There are two main approaches to multistore:
 - **Store Switcher**: Out-of-the-box UI enables users to switch between stores and locales.
 - **Automatic Link Management**: Links are automatically updated to point to the correct localized version as users navigate.
 
----
-
 ## How it works
 
 Adobe Commerce uses a [hierarchical structure](https://experienceleague.adobe.com/en/docs/commerce-admin/start/setup/websites-stores-views) to manage multiple stores within a single instance. This structure consists of three levels: websites, stores, and store views. Localization is managed at the store view level, allowing merchants to present the store in different languages and apply the proper currency.
@@ -42,14 +40,14 @@ Each store or locale is defined in configuration files, specifying which headers
 
 ### Content organization
 
-Content is organized primarily by language. US English files should be placed in the `en` directory of the project root. All other language- and region-specific files should be placed in a directory that is named in the format `*region-code_language-code*`. For example, the `/en/` directory contains data for the US market, while the `/en_ca/` directory contains data for Canada. French content should be placed in directories with names like `fr_fr` for France and `fr_ca` for Canada.
+Content is organized primarily by language. US English files should be placed in the `en` directory of the project root. All other language- and region-specific files should be placed in a directory that is named in the format `language-code-region-code` (using hyphens). For example, the `/en/` directory contains data for the US market, while the `/en-ca/` directory contains data for Canada. French content should be placed in directories with names like `fr-fr` for France and `fr-ca` for Canada.
 
 <FileTree>
 - **/en/** _-- English store (Default root language)_
   - placeholders/ _-- Stores JSON files for text and UI components for the English US store._
   - index _-- The home page of the English US store._
   - store-switcher _-- Manages the list of stores and their URL for the English US store._
-- **/en_ca/** _-- English Canadian Store_
+- **/en-ca/** _-- English Canadian Store_
   - placeholders/ _-- Defines JSON files for text and UI components for the Canadian store._
   - index _-- The home page of the English Canadian store._
   - store-switcher _-- Manages the list of stores and their URL for the Canadian store._
@@ -63,9 +61,11 @@ Each store view requires specific files to define the customer experience:
 
 **Content files**: The content files provide the structure of the pages served to your shoppers. They are located in the store view directories and contain the content for each store view. These files are documents hosted on da.live (Document Authoring environment), SharePoint, or Google Docs that are used to generate the store view pages.
 
-**Placeholders**: JSON files that define reusable variables for text and UI components. Each drop-in component has its own placeholders file—`cart.json`, `checkout.json`, `pdp.json`. These files replace variables in your content files with text values. For translating these placeholder files and other content, see [Content localization](/merchants/multistore/content-localization/).
+**Placeholders**: JSON files that define reusable variables for text and UI components. Each drop-in component has its own placeholder file—`cart.json`, `checkout.json`, `pdp.json`. These files replace variables in your content files with text values.
 
----
+**Merchant guidance:** For translating placeholder files, see [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/).
+
+**Developer guidance:** For technical implementation details, see [Labeling and Localizing Drop-In Components](/dropins/all/labeling/).
 
 ## Prerequisites
 
@@ -114,7 +114,7 @@ Set up the folder structure in your Document Authoring environment to support th
 
 2. **Create the Canadian English folder**:
    - Select "New folder"
-   - Name it `en-ca` (or your preferred naming convention like `en_ca`)
+   - Name it `en-ca`
 
 3. **Create the Canadian French folder**:
    - Select "New folder"  
@@ -128,7 +128,14 @@ Set up the folder structure in your Document Authoring environment to support th
 </Steps>
 
 <Aside type="note" title="Folder naming">
-You can name folders anything you want, as long as they're unique and can be used in web addresses. Choose between hyphens (`en-ca`) or underscores (`en_ca`) and be consistent. Exclude the newly created store view folders when copying content to avoid nested duplicates.
+
+**Standard format:** Use hyphens for locale folders (`en-ca`, `fr-ca`) following the `language-code-region-code` pattern. This aligns with:
+- ISO 639-1 (language codes) and ISO 3166-1 (country codes)
+- Web URL conventions
+- Adobe/AEM.live best practices
+
+Ensure folder names match exactly with Adobe Commerce store view codes and can be used in web addresses.
+
 </Aside>
 
 </Task>
@@ -267,7 +274,11 @@ Create a `store-switcher` file in each store view root folder containing a bulle
   - [United States (USD)](https://main--aem-boilerplate-commerce--hlxsites.aem.page/en/#nolocal)
 ```
 
-**Important:** The storefront will automatically update links relative to the storefront's root path. For links you don't want to be localized (such as store switcher links), add the hash `#nolocal` to ensure these remain absolute to the site.
+**Important:** The boilerplate automatically localizes internal links to keep users within their current locale (see [Localizing links](/dropins/all/linking/) for technical details). For links that should always point to a specific locale (such as store switcher links), add the hash `#nolocal` to prevent automatic localization:
+
+```markdown
+[United States (USD)](https://yoursite.com/en/#nolocal)
+```
 
 **Best practice:** Prioritize the current store view in the display order for better user experience. For example, in the `en-ca` folder's store switcher, list "Canada (EN)" first.
 
@@ -306,7 +317,7 @@ Test your new store views to ensure proper functionality before publishing.
 </Steps>
 
 <Aside type="note" title="Session storage verification">
-The session storage verification confirms that your configuration is properly loaded and the store view is correctly identified.
+Use session storage to verify configuration loads properly and identifies the correct store view.
 </Aside>
 
 </Task>
@@ -314,14 +325,18 @@ The session storage verification confirms that your configuration is properly lo
 <Task>
 ### Localize and translate content
 
-Once your infrastructure is set up, prepare content for each locale.
+After setting up infrastructure, prepare content for each locale.
 
 <Steps>
-1. **Translate or localize content files** in the `/en-ca/` and `/fr-ca/` folders.
+1. **Translate content files** in the `/en-ca/` and `/fr-ca/` folders using your chosen authoring tool:
+   - **Document Authoring**: Follow the [Localization (Document Authoring Tool)](/merchants/quick-start/content-localization/) workflow
+   - **Universal Editor**: Follow the [Localization (Universal Editor)](/merchants/quick-start/content-localization-universal-editor/) workflow
 
-2. **Update placeholder JSON files** with correctly translated labels. Update each component's placeholders file as needed—`cart.json`, `checkout.json`, `pdp.json`.
+2. **Complete Commerce-specific tasks**: Follow the [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/) guide to:
+   - Translate drop-in placeholder files (`cart.json`, `checkout.json`, `pdp.json`)
+   - Verify store view configuration aligns with folder structure
+   - Test Commerce functionality across all locales
 
-3. **Use automated translation tools**: For guidance on using da.live's Translation app to automate content translation, see [Content localization](/merchants/multistore/content-localization/).
 </Steps>
 
 </Task>
@@ -364,7 +379,7 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 ## Best practices
 
 ### Folder structure
-- Use clear, consistent naming conventions (`en-ca`, `fr-ca` or `en_ca`, `fr_ca`)
+- Use clear, consistent naming conventions (`en-ca`, `fr-ca`)
 - Ensure that folder names can be used in web URLs
 - Match folder names exactly with the Adobe Commerce store view codes
 - Maintain the same content structure across all store views
@@ -414,11 +429,9 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 - Consider CDN configuration for different regions
 - Test loading times from the target markets
 
----
-
 ## Related resources
 
-- [Content localization](/merchants/multistore/content-localization/) - Automated translation using da.live
+- [Content localization](/merchants/quick-start/content-localization/) - Automated translation using da.live
 - [Storefront Configuration](/setup/configuration/commerce-configuration) - Complete config.json reference
 - [Analytics](/setup/analytics/instrumentation) - Analytics configuration for store views
 - [Store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views) - Adobe Commerce Admin guide
