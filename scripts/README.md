@@ -240,6 +240,59 @@ The CLI has been extensively tested and improved to ensure:
 
 Automated generators for creating function and event documentation from drop-in source repositories.
 
+## Source-First Principle 🎯
+
+**ALL generators prioritize data extraction from source repositories over manual enrichment files.**
+
+### Version Management
+
+The generator workflow ensures documentation matches the exact version in production:
+
+1. **Clone Boilerplate** → Clones/updates `aem-boilerplate-commerce` (main branch)
+2. **Read Versions** → Extracts `@dropins/*` package versions from `package.json`
+3. **Clone Drop-ins** → For each drop-in, clones the **specific tagged version** (e.g., `v1.2.3`)
+4. **Extract Data** → Reads actual source code, examples, JSDoc, tests
+5. **Generate Docs** → Creates documentation from verified, working code
+
+### What Gets Extracted from Source
+
+| Data Type | Source Locations | Priority |
+|-----------|------------------|----------|
+| **Function Signatures** | TypeScript definitions | Always from source |
+| **Parameters** | TypeScript interfaces | Always from source |
+| **Return Types** | TypeScript types | Always from source |
+| **Usage Examples** | JSDoc → HTML examples → Boilerplate blocks | Source first, enrichment fallback |
+| **Event Emissions** | `events.emit()` calls in source | Always from source |
+| **Event Listeners** | `events.on()` calls in source | Always from source |
+
+### Repository Structure
+
+```
+.temp-repos/
+├── boilerplate/              # Main branch (determines versions)
+│   ├── package.json         # Source of truth for @dropin versions
+│   └── blocks/              # Real-world usage examples
+│       ├── product-details/
+│       ├── product-list-page/
+│       └── commerce-cart/
+├── cart/                    # Tagged version (e.g., v1.2.3)
+│   ├── src/api/            # Function source code
+│   ├── examples/           # HTML example demonstrations
+│   └── tests/              # Test files with usage examples
+├── checkout/                # Tagged version
+├── order/                  # Tagged version
+└── ...                     # All other drop-ins at tagged versions
+```
+
+### Enrichment Files (Fallback Only)
+
+Manual enrichment files in `_dropin-enrichments/` are used **only when**:
+- Source code lacks necessary documentation
+- Additional business context is needed
+- Examples in source are insufficient
+
+**Rule:** If it exists in source code, extract it. Don't maintain it manually.
+
 ## Master Command - Generate All Documentation ⭐
 
 **Run all 9 generators at once** to regenerate the entire documentation site (500+ pages):
@@ -518,13 +571,51 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 **Location**: `_dropin-enrichments/{dropin-name}/`
 
 **Supported Files**:
-- `functions.json` - Function descriptions and metadata
+- `functions.json` - Function descriptions, metadata, and **accurate type signatures**
 - `events.json` - Event descriptions and use cases
 - `containers.json` - Container descriptions and configuration
 - `slots.json` - Slot descriptions and customization examples
 - `dictionary.json` - Additional documentation for i18n keys
 - `installation.json` - Custom installation instructions and requirements
 - `initialization.json` - Additional configuration documentation
+
+### Signature Enrichment (Type Accuracy)
+
+When TypeScript source files lack explicit return type annotations, the generator infers `Promise<any>` or `any` as a safe fallback. For accurate documentation, you can override these with correct types in enrichment files.
+
+**Run the audit tool to find functions needing type enrichment:**
+
+```bash
+# Audit specific drop-in
+npm run audit-signatures cart
+
+# Or run directly
+node scripts/audit-signatures.js cart
+```
+
+**Example output:**
+```
+⚠️  Functions needing manual type enrichment:
+----------------------------------------------------------------------
+   createGuestCart
+      Inferred: Promise<any>
+      Action: Add to _dropin-enrichments/cart/functions.json
+```
+
+**Add accurate signature to enrichment file:**
+
+```json
+{
+  "createGuestCart": {
+    "signature": {
+      "params": "",
+      "returnType": "Promise<string>"
+    }
+  }
+}
+```
+
+The generator will use your enriched signature instead of the inferred one, ensuring accurate documentation.
 
 ### Example: Event Enrichment
 
@@ -547,6 +638,172 @@ When the generator runs:
 - Keep API signatures and types up-to-date automatically
 - Reduce maintenance burden
 - Ensure consistency across documentation
+
+---
+
+# Reference Documentation System
+
+The project includes a lightweight reference documentation system for linking to external documentation sources (e.g., AEM.live).
+
+## Overview
+
+Rather than scraping and maintaining local copies of external docs, the system provides a centralized registry of reference URLs that enrichment files and generators can use to create consistent, accurate links.
+
+**Location**: `reference-docs.json` (root of project)
+
+## Available References
+
+### AEM.live Documentation
+
+The system includes **40+ indexed topics** from the official [AEM.live documentation](https://www.aem.live/docs/):
+
+- Developer topics: blocks, spreadsheets, indexing, custom headers, etc.
+- Authoring topics: content creation, AEM authoring, bulk metadata, etc.
+- Launch topics: CDN setup, redirects, sitemap, go-live checklist, etc.
+- Architecture topics: security, global CDN, anti-patterns, etc.
+
+## Using Reference Links
+
+### In Enrichment Files
+
+Reference external documentation directly in your enrichment JSON:
+
+```json
+{
+  "myFunction": {
+    "description": "This function integrates with [AEM blocks](https://www.aem.live/developer/block-collection) to render content. For data sources, see the [spreadsheets documentation](https://www.aem.live/developer/spreadsheets)."
+  }
+}
+```
+
+### In Generator Scripts
+
+Programmatically access reference URLs:
+
+```javascript
+import { getReferenceUrl, createReferenceLink } from './lib/reference-docs.js';
+
+// Get a specific URL
+const url = getReferenceUrl('aem-live', 'block-collection');
+// Returns: "https://www.aem.live/developer/block-collection"
+
+// Create a markdown link
+const link = createReferenceLink('aem-live', 'authoring', 'Learn about authoring');
+// Returns: "[Learn about authoring](https://www.aem.live/docs/authoring)"
+```
+
+## CLI Tools
+
+### List All References
+
+Display all available reference documentation sources and topics:
+
+```bash
+npm run list-reference-docs
+```
+
+**Output:**
+```
+📚 Available Reference Documentation Sources:
+
+Adobe Experience Manager - Edge Delivery Services
+  Base URL: https://www.aem.live/docs/
+  Description: Official AEM Edge Delivery Services documentation
+  Topics: 40
+
+💡 Usage Examples:
+  - Get URL: getReferenceUrl("aem-live", "authoring")
+  - Create Link: createReferenceLink("aem-live", "block-collection")
+```
+
+### Search for Topics
+
+Search across all reference documentation:
+
+```bash
+npm run list-reference-docs -- search authoring
+npm run list-reference-docs -- search security
+npm run list-reference-docs -- search blocks
+```
+
+### List Topics for a Source
+
+Show all available topics for a specific source:
+
+```bash
+npm run list-reference-docs -- list aem-live
+```
+
+**Output:**
+```
+📖 Topics in 'aem-live':
+
+  developer-tutorial
+    Title: Developer Tutorial
+    URL: https://www.aem.live/developer/tutorial
+    Description: Get up-and-running with a new project
+  
+  block-collection
+    Title: Block Collection
+    URL: https://www.aem.live/developer/block-collection
+    Description: Product blocks and recommended blueprints
+  
+  ... (40+ topics)
+```
+
+## Available Helper Functions
+
+The `scripts/lib/reference-docs.js` module provides:
+
+```javascript
+import { 
+  getReferenceUrl,           // Get URL by source and topic key
+  getReferenceTopic,         // Get topic info (title, description, URL)
+  createReferenceLink,       // Create markdown link
+  getAllTopics,              // Get all topics for a source
+  searchTopics,              // Search by keyword
+  listSources,               // List all available sources
+  displayReferenceInfo       // Display CLI info
+} from './lib/reference-docs.js';
+```
+
+## Adding New Reference Sources
+
+To add a new reference documentation source:
+
+1. Edit `reference-docs.json`
+2. Add a new source under `references`:
+
+```json
+{
+  "references": {
+    "aem-live": { ... },
+    "my-new-source": {
+      "name": "My Documentation Source",
+      "base_url": "https://docs.example.com/",
+      "description": "Description of the documentation",
+      "topics": {
+        "getting-started": {
+          "url": "https://docs.example.com/getting-started",
+          "title": "Getting Started",
+          "description": "Introduction and setup guide"
+        }
+      }
+    }
+  }
+}
+```
+
+3. The CLI and helper functions will automatically pick up the new source
+
+## Benefits
+
+- ✅ **Centralized** - All reference links in one place
+- ✅ **Maintainable** - Update URLs once, reflected everywhere
+- ✅ **Consistent** - Standardized linking across all docs
+- ✅ **Discoverable** - Search and explore available references
+- ✅ **No Scraping** - Links to live documentation, always up-to-date
+- ✅ **Lightweight** - Just configuration, no cached files
 
 ---
 
@@ -741,6 +998,88 @@ if (hasEnrichment(enrichmentData, 'myFunction', 'description')) {
 - Validates enrichment data
 - Provides fallback mechanisms
 - Returns null for empty enrichments
+
+### `source-validator.js` ⭐
+
+**SOURCE-FIRST PRINCIPLE**: Validates and merges source code data with manual documentation, ensuring source code is always the source of truth for technical specifications.
+
+```javascript
+import { 
+  validateAndMerge, 
+  validateFunctionSignature,
+  validateEventData,
+  createValidationReport 
+} from './lib/source-validator.js';
+
+// Create validation report for a generator run
+const report = createValidationReport();
+
+// Validate and merge function data
+const result = validateAndMerge({
+  itemName: 'addToCart',
+  itemType: 'function',
+  sourceData: {
+    signature: '(items: CartItem[]) => Promise<CartModel>',
+    params: [{ name: 'items', type: 'CartItem[]' }],
+    returnType: 'Promise<CartModel>'
+  },
+  manualData: enrichmentData,
+  warnOnMismatch: true
+});
+
+// Use merged data (source takes precedence)
+const mergedData = result.data;
+
+// Add to report
+report.addItem('addToCart', result);
+
+// Print validation summary at end of generation
+report.printSummary();
+```
+
+**Used by**: ALL generators (required for Source-First Principle)  
+**What It Does**:
+- ✅ **Validates** source code vs manual docs
+- ✅ **Merges** data with source taking precedence
+- ✅ **Warns** when conflicts are detected
+- ✅ **Reports** validation results
+- ✅ **Overwrites** outdated manual specs
+
+**Source-Controlled Fields** (source always wins):
+- Function signatures, parameters, return types
+- Event names and data payloads
+- Container props and slot definitions
+- Model/type structures
+- Usage examples
+
+**Manual-Controlled Fields** (manual preserved):
+- Descriptions and explanations
+- Business context and rationale
+- Best practices and recommendations
+- Deprecation notices
+
+### `example-extractor.js`
+
+Extracts real-world usage examples from source repositories (HTML examples, boilerplate blocks, JSDoc).
+
+```javascript
+import { getAllExamples } from './lib/example-extractor.js';
+
+// Get examples for a function (prioritizes source over enrichment)
+const examples = getAllExamples('cart', 'addProductsToCart', 3);
+
+// Returns array of { title, code, source }
+// source: 'jsdoc' | 'html-example' | 'boilerplate'
+```
+
+**Used by**: Function generators  
+**Priority Order**:
+1. JSDoc `@example` tags (highest)
+2. HTML examples (`examples/html-host/index.html`)
+3. Boilerplate blocks (`blocks/*/*.js`)
+4. Enrichment files (fallback only)
+
+**Important**: Must be called AFTER repositories are cloned at correct versions.
 
 ### `repository.js`
 
@@ -1037,6 +1376,51 @@ The framework handles ALL of this for you:
 - **Focus on logic** not infrastructure
 - **Easy to test** your scanner and generator functions
 
+## Documentation Accuracy Standards
+
+**🎯 Critical**: All generated documentation must be 100% accurate and verifiable.
+
+### Verification Checklist
+
+Before committing enrichment data with `returns` fields:
+
+- [ ] **Verified from source** - Checked actual implementation file
+- [ ] **Complete structure** - All fields from GraphQL query/mutation included
+- [ ] **Verification link** - Added GitHub source link in documentation
+- [ ] **Tested accuracy** - Cross-referenced with test files for validation
+- [ ] **Documented raw vs transformed** - Clarified if data is raw GraphQL or transformed
+
+### Tools for Verification
+
+1. **Return Type Analyzer** (`scripts/lib/return-type-analyzer.js`)
+   - Analyzes function implementations
+   - Extracts GraphQL field structures
+   - Generates verified JSON examples
+   - Provides GitHub verification links
+
+2. **Manual Verification Process**
+   - Read the function implementation (`src/api/[function]/[function].ts`)
+   - Find what's actually returned (look for `return` statements)
+   - If returning raw GraphQL, check the query/mutation file
+   - Extract all fields from the GraphQL definition
+   - Cross-reference with test data for validation
+
+### Example: Verifying `getEstimateShipping`
+
+```bash
+# 1. Check implementation
+cat .temp-repos/cart/src/api/getEstimateShipping/getEstimateShipping.ts
+# → Returns: selectedMethod (line 81)
+
+# 2. Check GraphQL query
+cat .temp-repos/cart/src/api/getEstimateShipping/graphql/estimateShippingMethodsMutation.ts
+# → Fields: amount, carrier_code, method_code, error_message, price_excl_tax, price_incl_tax
+
+# 3. Verify with tests
+grep -A 10 "estimateShippingMethods:" .temp-repos/cart/src/api/getEstimateShipping/getEstimateShipping.test.ts
+# → Confirms all fields present in test data
+```
+
 ## Best Practices
 
 1. **Import only what you need**: Don't import entire modules
@@ -1045,6 +1429,7 @@ The framework handles ALL of this for you:
 4. **Handle errors gracefully**: Shared functions return null on errors with warnings
 5. **Keep generators focused**: Generators should focus on their specific task
 6. **Test incrementally**: Test with single drop-ins before running on all
+7. **Verify accuracy**: Always verify enrichment data against source code before committing
 
 ## Troubleshooting
 

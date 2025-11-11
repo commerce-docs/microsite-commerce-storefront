@@ -139,7 +139,7 @@ export function updateSidebarForDictionary(dropinName, repoConfig) {
  * @returns {boolean} True if successful
  */
 export function updateSidebarForInstallation(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Installation', null); // Insert at top
+    return insertSidebarEntry(dropinName, repoConfig, 'Installation', 'Overview'); // After Overview
 }
 
 /**

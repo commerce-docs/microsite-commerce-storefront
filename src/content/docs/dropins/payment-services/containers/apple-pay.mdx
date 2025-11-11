@@ -1,0 +1,90 @@
+---
+title: ApplePay container
+description: Use the ApplePay container to render an Apple Pay button
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+
+The `ApplePay` container renders a button that macOS/iOS users can use to check out using <Link href="https://www.apple.com/apple-pay/" text="Apple Pay" />.
+
+## ApplePay configurations
+
+The `ApplePay` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `location` | string | Yes | Location where the Apple Pay button will be rendered. Must be either `CHECKOUT` or `PRODUCT_DETAIL`. |
+| `getCartId` | function | Maybe | Required if `createCart` not provided. Should return a promise that resolves to the shopper's cart ID. |
+| `createCart` | object | Maybe | Required if `getCartId` not provided. The object must define a single `getCartItems` property, which must be a function that returns a list of cart items to purchase. The list must contain at least one cart item. Cart items must be provided as objects with at minimum a `sku` (string) and a `quantity` (number). See the "Cart item object" section for more information. |
+| `onSuccess` | function | No | Called when the payment flow finishes successfully. The function receives an `{ cartId: string }` object as an argument. If the function returns a promise, the promise will be awaited before marking the payment as "completed successfully" in the Apple Pay sheet. If the promise rejects, the payment will be marked as "failed" in the Apple Pay sheet and the error will be propagated to the `onError` callback, if provided. |
+| `onError` | function | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties: `{name: string, message: string}`, containing the localized error name and message. Both properties are user-facing and can be translated using the `PaymentServices.ApplePay.errors` [language definitions](/dropins/payment-services/dictionary/). |
+| `hidden` | boolean | No | Whether the button is hidden. Set this to `true` to hide the Apple Pay button (default: `false`). |
+| `disabled` | boolean | No | Whether the button is disabled. Set this to `true` to disable the Apple Pay button (default: `false`). |
+
+</TableWrapper>
+
+### Cart item object
+
+The cart items that `getCartItems` returns should be objects with the following properties:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+
+| Property | Type | Req? | Description |
+|----------|------|------|-------------|
+| `sku` | string | Yes | The product SKU. |
+| `quantity` | number | Yes | The quantity of the product. |
+| `parentSku` | string | No | The parent product SKU. |
+| `selectedOptions` | `(string \| number)[]` | No | Selected product options. |
+| `enteredOptions` | `{ uid: string \| number; value: string }[]` | No | Entered product options. |
+
+</TableWrapper>
+
+## Checkout page example
+
+```js
+import ApplePay from '@dropins/storefront-payment-services/containers/ApplePay.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
+
+const cart = events.lastPayload('checkout/initialized');
+
+if (cart) {
+  const $content = document.createElement('div');
+  PaymentServices.render(ApplePay, {
+    location: PaymentLocation.CHECKOUT,
+    getCartId: async () => cart.id,
+    onSuccess: () => orderApi.placeOrder(cart.id),
+    onError: (error) => { console.error(error) },
+  })($content);
+}
+```
+
+## Product details page example
+
+```js
+import ApplePay from '@dropins/storefront-payment-services/containers/ApplePay.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
+
+const product = events.lastPayload('pdp/values');
+
+if (product) {
+  const $content = document.createElement('div');
+  PaymentServices.render(ApplePay, {
+    location: PaymentLocation.PRODUCT_DETAIL,
+    createCart: {
+      getCartItems: () => [{
+        sku: product.sku,
+        quantity: 1,
+      }],
+    },
+    onSuccess: ({cartId}) => orderApi.placeOrder(cartId),
+    onError: (error) => { console.error(error) },
+  })($content);
+}
+```
