@@ -1,0 +1,143 @@
+{
+  "addProductsToCart": {
+    "description": "The `addProductsToCart` function adds products to a cart. You must supply a `sku` and `quantity`for each product. The other parameters are specified for complex product types. The function calls the [`addProductsToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/) mutation.",
+    "events": "Emits the `cart/updated` and `cart/data` events with the `CartModel` as the data payload. Additionally, emits `cart/product/added` for new items and `cart/product/updated` for items with increased quantities. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).",
+    "parameters": {
+      "sku": {
+        "description": "The product identifier (SKU) to add to the cart. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (e.g., `MS09-M-Blue` for a medium blue shirt)."
+      },
+      "parentSku": {
+        "description": "For configurable products, this is the SKU of the parent (base) product. For example, if adding a specific variant like `MS09-M-Blue` (child SKU), the `parentSku` would be `MS09` (the base configurable product). This helps Commerce track the relationship between the variant and its parent product."
+      },
+      "quantity": {
+        "description": "The number of items to add to the cart. For example, `1` to add a single item, or `3` to add three units of the product. This value must be a positive number."
+      },
+      "optionsUIDs": {
+        "description": "An array of option UIDs for configurable products. These are the UIDs of the selected product options (such as color or size) that define which product variant the customer wants. For example, if a customer selects **Medium** and **Blue** for a configurable shirt, you would include the UIDs for those specific options. Use the product query to retrieve available option UIDs for a product."
+      },
+      "enteredOptions": {
+        "description": "An array of custom options that allow text input for customizable products. Each object contains a `uid` (the unique identifier for the custom option field from the product data) and a `value` (the text the customer entered). For example, if a product offers monogram personalization, you would provide the field's UID and the customer's text like `{ uid: 'Y3VzdG9tLW9wdGlvbi8x', value: 'ABC' }`."
+      },
+      "customFields": {
+        "description": "An optional object for passing additional custom data or attributes to associate with the cart item. This can include any key-value pairs needed for your implementation, such as gift messages, special handling instructions, or custom metadata. The structure and usage of this field depends on your Commerce backend configuration and any custom extensions you have installed."
+      }
+    }
+  },
+  "applyCouponsToCart": {
+    "description": "A function that applies or replaces one or more coupons to the cart. The function calls the [`applyCouponsToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupons-to-cart/) mutation.",
+    "events": "Emits the `cart/updated` and `cart/data` events with the updated cart information after applying the coupons.",
+    "parameters": {
+      "couponCodes": {
+        "description": "An array of coupon codes to apply to the cart."
+      },
+      "type": {
+        "description": "The strategy for applying coupons. See [`ApplyCouponsStrategy`](#applycouponsstrategy)."
+      }
+    },
+    "input_models": {
+      "ApplyCouponsStrategy": {
+        "source_hint": "api/applyCouponsToCart/applyCouponsToCart.d.ts",
+        "description": "Strategy for how coupons should be applied to the cart:\n\n- `APPEND`: Adds the specified coupons to any existing coupons already applied to the cart\n- `REPLACE`: Removes all existing coupons and applies only the specified coupons"
+      }
+    }
+  },
+  "applyGiftCardToCart": {
+    "description": "The applyGiftCardToCart function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card. The function calls the [`applyGiftCardToCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-gift-card-to-cart/) mutation.",
+    "events": "Emits the `cart/updated` and `cart/data` events. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).",
+    "parameters": {
+      "giftCardCode": {
+        "description": "The code assigned to a gift card."
+      }
+    }
+  },
+  "createGuestCart": {
+    "description": "The `createGuestCart` function creates a new empty cart for a guest user. This is typically used internally by the cart initialization process.",
+    "returns": "the cart ID for the newly created guest cart",
+    "returns_source": "state.cartId"
+  },
+  "getCartData": {
+    "description": "The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `cart/data` or `cart/updated` events so that you do not need to make another network call."
+  },
+  "getEstimatedTotals": {
+    "description": "A function that returns estimated totals for cart based on an address. It takes an `address` parameter. The function calls the [`estimateTotals`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-totals/) mutation.",
+    "parameters": {
+      "address": {
+        "description": "The shipping address used to calculate estimated cart totals, taxes, and shipping costs. See [`EstimateAddressShippingInput`](#estimateaddressshippinginput)."
+      }
+    },
+    "input_models": {
+      "EstimateAddressShippingInput": {
+        "source_hint": "api/getEstimatedTotals/getEstimatedTotals.d.ts",
+        "description": "Defines the shipping address for calculating cart totals."
+      }
+    }
+  },
+  "getEstimateShipping": {
+    "description": "The `getEstimateShipping` function returns the first available shipping method and its estimated cost, based on the provided address. The function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/) mutation. Note: This function returns raw GraphQL data. For a transformed `ShippingMethod` object, listen to the `shipping/estimate` event instead.",
+    "returns": "a [`RawShippingMethodGraphQL`](#rawshippingmethodgraphql) object with snake_case properties from the GraphQL response, or null if no valid shipping method is available",
+    "returns_source": "graphql.estimateShippingMethodsMutation",
+    "events": "Emits the `shipping/estimate` event, which contains the transformed `ShippingMethod` data along with address information.",
+    "parameters": {
+      "address": {
+        "description": "The address criteria used to determine available shipping methods. See [`EstimateAddressInput`](#estimateaddressinput)."
+      }
+    },
+    "output_models": {
+      "RawShippingMethodGraphQL": {
+        "definition": "interface RawShippingMethodGraphQL {\n  amount: {\n    currency: string;\n    value: number;\n  };\n  carrier_code: string;\n  method_code: string;\n  error_message?: string;\n  price_excl_tax: {\n    currency: string;\n    value: number;\n  };\n  price_incl_tax: {\n    currency: string;\n    value: number;\n  };\n}",
+        "description": "The raw GraphQL response structure with snake_case properties returned by the estimateShippingMethods mutation."
+      }
+    },
+    "input_models": {
+      "EstimateAddressInput": {
+        "source_hint": "api/getEstimateShipping/getEstimateShipping.d.ts",
+        "description": "Defines the address criteria for estimating shipping methods."
+      }
+    }
+  },
+  "getStoreConfig": {
+    "description": "The `getStoreConfig` function returns information about a store's configuration. The function calls the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query."
+  },
+  "initializeCart": {
+    "description": "The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a dropin's lifecycle. You do not need to call this manually. The function calls the [`mergeCarts`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/merge-carts/) mutation.",
+    "events": "Emits the `cart/initialized`, `cart/data`, and `cart/merged` events. The event payload contains data about the address and shipping method."
+  },
+  "publishShoppingCartViewEvent": {
+    "description": "Publishes a shopping cart view event to the ACDL. This function sets the shopping cart context and triggers a `SHOPPING_CART_VIEW` event on the Adobe Client Data Layer, typically used when a cart page loads.",
+    "events": "Publishes the `SHOPPING_CART_VIEW` event to the Adobe Client Data Layer (ACDL) with the current cart context."
+  },
+  "refreshCart": {
+    "description": "The `refreshCart` function refreshes the cart data.",
+    "events": "Emits the `cart/data` event with the updated cart information."
+  },
+  "removeGiftCardFromCart": {
+    "description": "This function removes a single gift card from the cart. It function calls the [`removeGiftCardFromCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/remove-giftcard/) mutation.",
+    "events": "Emits the `cart/updated` and `cart/data` events.",
+    "parameters": {
+      "giftCardCode": {
+        "description": "Defines the gift card code to remove."
+      }
+    }
+  },
+  "resetCart": {
+    "description": "This function resets the cart drop-in. As a result, the cart ID is set to null and the authenticated status is set to false."
+  },
+  "setGiftOptionsOnCart": {
+    "description": "[`setGiftOptionsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-gift-options/) is a function that sets gift options on the cart. It takes a `giftOptions` parameter.",
+    "events": "Emits the `cart/updated` and `cart/data` events.",
+    "parameters": {
+      "giftForm": {
+        "description": "Defines the gift options to set."
+      }
+    }
+  },
+  "updateProductsFromCart": {
+    "description": "The `updateProductsFromCart` function updates cart items by either changing the quantity or removing and adding an item in one step. When passing a specified quantity, the function replaces the current quantity. Setting the quantity to 0 removes an item from the cart. The function calls the [`updateCartItems`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutation.\n\nWhen an `optionsUIDs` array is sent along with the cart item’s UID and quantity, the function adds the item with the specified options. It removes any pre-existing item with the same UID that lacks the newly provided `optionsUIDs`. In this process, the function invokes first the [addProductsToCart](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/add-products/), and later the [updateCartItems](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/update-items/) mutations.",
+    "events": "Emits the `cart/updated` and `cart/data` events. Additionally, emits `cart/product/updated` event with the affected items when their quantities are changed. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).",
+    "parameters": {
+      "items": {
+        "description": "An input object that defines products to be updated."
+      }
+    }
+  }
+}

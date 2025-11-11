@@ -30,51 +30,51 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Product Details** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+The **Product Details** drop-in emits product configuration and validation events, enabling real-time validation feedback and coordination with other storefront components.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.3.5</strong>
 </div>
 
 <Aside type="tip">
-**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
+For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
 </Aside>
 
 ## Events reference
+
+Drop-ins communicate via the [event bus](/sdk/reference/events/).
 
 {/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [pdp/valid](#pdpvalid-emits) | Emits | Emitted when validation state changes |
-| [pdp/setValues](#pdpsetvalues-listens) | Listens | Fired by Pdp (`pdp`) when values are set programmatically |
-| [pdp/data](#pdpdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes |
-| [pdp/values](#pdpvalues-emits-and-listens) | Emits and listens | Triggered when form or configuration values change |
+| [pdp/valid](#pdpvalid-emits) | Emits | Emitted when validation state changes. |
+| [pdp/setValues](#pdpsetvalues-listens) | Listens | Fired by Pdp (`pdp`) when values are set programmatically. |
+| [pdp/data](#pdpdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [pdp/values](#pdpvalues-emits-and-listens) | Emits and listens | Triggered when form or configuration values change. |
 
 </TableWrapper>
 {/* EVENTS_TABLE_END */}
 
 ## Event details
 
-The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
-
 
 ### `pdp/data` (emits and listens)
 
-Triggered when data is available or changes
+Triggered when data is available or changes.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 ProductModel | null
 ```
 
+See [`ProductModel`](#productmodel) for full type definition.
+
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -90,17 +90,13 @@ pdpDataListener.off();
 
 ### `pdp/setValues` (listens)
 
-Fired by Pdp (`pdp`) when values are set programmatically
+Fired by Pdp (`pdp`) when values are set programmatically.
 
-#### Data payload
-
-This event's data payload structure is not documented in the source code.
+#### Event payload
 
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -116,9 +112,9 @@ pdpSetValuesListener.off();
 
 ### `pdp/valid` (emits)
 
-Emitted when validation state changes
+Emitted when validation state changes.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 boolean
@@ -127,8 +123,6 @@ boolean
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -144,19 +138,19 @@ pdpValidListener.off();
 
 ### `pdp/values` (emits and listens)
 
-Triggered when form or configuration values change
+Triggered when form or configuration values change.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 ValuesModel
 ```
 
+See [`ValuesModel`](#valuesmodel) for full type definition.
+
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -168,5 +162,64 @@ const pdpValuesListener = events.on('pdp/values', (data) => {
 
 // Later, when you want to stop listening
 pdpValuesListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### ProductModel
+
+Used in: [`pdp/data`](#pdpdata-emits-and-listens).
+
+```ts
+interface ProductModel {
+  name: string;
+  sku: string;
+  isBundle: boolean;
+  addToCartAllowed: boolean;
+  inStock: boolean | null;
+  shortDescription?: string;
+  metaDescription?: string;
+  metaKeyword?: string;
+  metaTitle?: string;
+  description?: string;
+  images?: Image[];
+  prices: Prices;
+  attributes?: Attribute[];
+  options?: Option[];
+  optionUIDs?: string[];
+  url?: string;
+  urlKey?: string;
+  externalId?: string;
+  externalParentId?: string;
+  variantSku?: string;
+  productType?: ProductType | undefined;
+}
+```
+
+### ValuesModel
+
+Used in: [`pdp/values`](#pdpvalues-emits-and-listens).
+
+```ts
+interface ValuesModel {
+  sku: string;
+  quantity: number;
+  optionsUIDs?: string[];
+  enteredOptions?: Array<{ uid: string; value: string }>;
+}
 ```
 
