@@ -144,6 +144,77 @@ Choose the right content type for your documentation:
 4. **Write scannable content** - use headings, lists, and short paragraphs
 5. **Include examples** - show, don't just tell
 
+### The Elements of Style Principles
+
+All documentation writing must follow "The Elements of Style" by William Strunk Jr. and E.B. White. These principles ensure clear, concise, and effective technical writing:
+
+1. **Use the active voice**
+   - ✅ "The system processes requests"
+   - ❌ "Requests are processed by the system"
+
+2. **Put statements in positive form**
+   - Say what is, not what isn't
+   - ✅ "Use the Link component for external links"
+   - ❌ "Don't use standard markdown for external links"
+
+3. **Use definite, specific, concrete language**
+   - Avoid vague terms
+   - ✅ "Run `npm install` to install dependencies"
+   - ❌ "Install the necessary packages"
+
+4. **Omit needless words**
+   - Make every word tell
+   - ✅ "Configure the endpoint"
+   - ❌ "You can configure the endpoint if you want to"
+
+5. **Keep related words together**
+   - Subject near verb, modifiers near what they modify
+   - ✅ "The function returns a promise that resolves when complete"
+   - ❌ "The function, when the operation completes, returns a promise"
+
+6. **Express parallel ideas in parallel form**
+   - Maintain consistent grammatical structure
+   - ✅ "The component loads data, processes it, and renders the UI"
+   - ❌ "The component loads data, processes it, and then the UI is rendered"
+
+7. **Use the same form for coordinate ideas**
+   - Maintain grammatical consistency
+   - Lists should use the same structure for all items
+
+8. **Place emphatic words at the end of sentences**
+   - ✅ "For better performance, use the Link component"
+   - ❌ "Use the Link component for better performance" (less emphasis)
+
+9. **Avoid a succession of loose sentences**
+   - Vary sentence structure
+   - Mix simple, compound, and complex sentences
+
+10. **Make the paragraph the unit of composition**
+    - One topic per paragraph
+    - Begin each paragraph with a topic sentence
+
+11. **Use orthodox spelling and grammar**
+    - Follow standard American English conventions
+    - Use consistent terminology throughout
+
+12. **Do not overwrite or overstate**
+    - Be direct and factual
+    - ✅ "This improves performance"
+    - ❌ "This dramatically revolutionizes and transforms performance"
+
+13. **Avoid qualifiers**
+    - Use sparingly: very, rather, quite, pretty, little, somewhat
+    - ✅ "The build is fast"
+    - ❌ "The build is quite fast"
+
+14. **Be clear and direct**
+    - Favor simple over complex constructions
+    - Technical writing should be immediately understandable
+
+15. **Prefer the standard to the offbeat**
+    - Use conventional language and structure
+    - Avoid trendy or informal expressions in technical documentation
+
 ### Grammar Rules
 
 Follow these specific grammar rules for consistency and clarity:
@@ -174,12 +245,14 @@ Follow these specific grammar rules for consistency and clarity:
    - Keep list items in the same grammatical form
    - All bullet points should follow the same structure
 
-6. **Use periods in lists for complete sentences**
-   - If a list item is a complete sentence, end it with a period
-   - If a list item is a fragment, no period needed
-   - ✅ "The boilerplate includes all drop-in packages." (complete sentence)
+6. **Always end complete sentences in lists with periods**
+   - ALWAYS end ordered and unordered list items with periods if they are complete sentences
+   - Fragments do not need periods
+   - ✅ "The boilerplate includes all drop-in packages." (complete sentence with period)
    - ✅ "All drop-in packages" (fragment, no period)
+   - ❌ "The boilerplate includes all drop-in packages" (missing period on complete sentence)
    - Be consistent within each list - all complete sentences or all fragments
+   - This applies to ALL lists: bulleted, numbered, nested, and lists within Steps components
 
 7. **No bold text after H3 headings** - Use H4 headings instead
    - Use proper heading hierarchy for structure
