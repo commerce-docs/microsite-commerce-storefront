@@ -235,7 +235,7 @@ function extractInitializers(boilerplatePath) {
 // ============================================================================
 
 /**
- * Generate overview page with CardGrid
+ * Generate overview page with table of blocks
  */
 function generateOverview(blocks, initializers, boilerplateVersion, outputPath) {
     console.log('\n📝 Generating overview page...');
@@ -243,21 +243,18 @@ function generateOverview(blocks, initializers, boilerplateVersion, outputPath) 
     // Load template
     let content = loadTemplate('boilerplate-overview.mdx');
 
-    // Build CardGrid for commerce blocks
-    let cardsContent = '<CardGrid>\n';
+    // Build table for commerce blocks
+    let tableContent = '| Block | Drop-ins used |\n';
+    tableContent += '|-------|---------------|\n';
+    
     for (const block of blocks) {
+        const blockLink = `[${block.displayName}](/boilerplate/blocks/${block.name}/)`;
         const dropinList = block.analysis.dropins.length > 0
             ? block.analysis.dropins.join(', ')
             : 'None';
 
-        cardsContent += `  <Card title="${block.displayName}" icon="seti:html">
-    [View documentation](/boilerplate/blocks/${block.name}/)
-    
-    **Drop-ins**: ${dropinList}
-  </Card>
-`;
+        tableContent += `| ${blockLink} | ${dropinList} |\n`;
     }
-    cardsContent += '</CardGrid>';
 
     // Build initializers list
     let initializersList = '';
@@ -273,7 +270,7 @@ function generateOverview(blocks, initializers, boilerplateVersion, outputPath) 
     content = content
         .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
         .replace(/BLOCK_COUNT/g, blocks.length.toString())
-        .replace(/COMMERCE_BLOCKS_CARDGRID/g, cardsContent)
+        .replace(/COMMERCE_BLOCKS_TABLE/g, tableContent)
         .replace(/INITIALIZERS_LIST/g, initializersList);
 
     // Write file
