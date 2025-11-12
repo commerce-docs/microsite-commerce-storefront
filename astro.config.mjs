@@ -298,7 +298,6 @@ async function config() {
                       { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Explore the boilerplate', link: '/get-started/boilerplate-project/' },
-                      { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
                     ],
                   },
@@ -347,6 +346,7 @@ async function config() {
                       },
                     ],
                   },
+                  { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                   {
                     label: 'Storefront setup',
                     collapsed: true,

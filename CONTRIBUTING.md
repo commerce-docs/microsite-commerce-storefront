@@ -321,6 +321,42 @@ This is something users should be careful about.
 3. **Test components** in the browser to ensure they render correctly
 4. **Keep accessibility in mind** - use proper alt text for images, meaningful link text
 
+### Tables
+
+**Standard Table Format:** All tables should use the TableWrapper component with consistent formatting.
+
+**Required Pattern:**
+1. Import TableWrapper component at the top of your file
+2. Wrap markdown tables in `<TableWrapper nowrap={[0]}>`
+3. Make first column items into links to relevant reference pages
+4. Use standard markdown table syntax inside the wrapper
+
+**Example:**
+```jsx
+import TableWrapper from '@components/TableWrapper.astro';
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Description |
+|-----------|-------------|
+| [Cart](/dropins/cart/) | Shopping cart functionality |
+| [Checkout](/dropins/checkout/) | Complete checkout flow |
+
+</TableWrapper>
+```
+
+**Benefits:**
+- `nowrap={[0]}` prevents the first column from wrapping, keeping names clean
+- First column links provide quick navigation to detailed documentation
+- Consistent formatting across all documentation
+- Responsive table behavior on mobile devices
+
+**When to Use Tables:**
+- Comparing features or options
+- Listing components with descriptions
+- Directory or file structure references
+- Configuration option references
+
 ## Assets & Media
 
 ### Images
