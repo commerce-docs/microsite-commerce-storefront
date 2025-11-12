@@ -115,8 +115,8 @@ function analyzeBlockCode(jsPath) {
 
     const code = readFileSync(jsPath, 'utf8');
 
-    // Extract drop-in imports
-    const dropinImportPattern = /import\s+(?:{[^}]+}|\w+)\s+from\s+['"]@dropins\/([\w-]+)(?:\/(.+?))?['"]/g;
+    // Extract drop-in imports (handles: import {}, import name, import * as name, import name, { ... })
+    const dropinImportPattern = /import\s+(?:(?:\*\s+as\s+\w+)|(?:{[^}]+})|(?:\w+(?:\s*,\s*{[^}]+})?))\s+from\s+['"]@dropins\/([\w-]+)(?:\/[^'"]+)?['"]/g;
     let match;
     while ((match = dropinImportPattern.exec(code)) !== null) {
         const dropin = match[1];
@@ -206,24 +206,33 @@ function extractCommerceBlocks(boilerplatePath) {
 }
 
 /**
- * Extract initializers from scripts directory
+ * Extract initializers from scripts/initializers directory
  */
 function extractInitializers(boilerplatePath) {
     console.log('\n🔍 Analyzing initializers...');
 
-    const scriptsDir = join(boilerplatePath, 'scripts');
+    const initializersDir = join(boilerplatePath, 'scripts', 'initializers');
     const initializers = [];
 
-    const initFiles = ['commerce.js', 'initializers.js'];
+    if (existsSync(initializersDir)) {
+        const files = readdirSync(initializersDir);
 
-    for (const file of initFiles) {
-        const filePath = join(scriptsDir, file);
-        if (existsSync(filePath)) {
-            initializers.push({
-                name: file,
-                path: filePath
-            });
+        for (const file of files) {
+            if (file.endsWith('.js')) {
+                const filePath = join(initializersDir, file);
+                const stats = statSync(filePath);
+
+                if (stats.isFile()) {
+                    initializers.push({
+                        name: file,
+                        path: `scripts/initializers/${file}` // Relative path for display
+                    });
+                }
+            }
         }
+
+        // Sort alphabetically for consistent output
+        initializers.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     console.log(`  ✓ Found ${initializers.length} initializer files`);
@@ -246,7 +255,7 @@ function generateOverview(blocks, initializers, boilerplateVersion, outputPath) 
     // Build table for commerce blocks
     let tableContent = '| Block | Drop-ins used |\n';
     tableContent += '|-------|---------------|\n';
-    
+
     for (const block of blocks) {
         const blockLink = `[${block.displayName}](/boilerplate/blocks/${block.name}/)`;
         const dropinList = block.analysis.dropins.length > 0
