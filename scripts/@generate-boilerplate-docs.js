@@ -219,6 +219,29 @@ function extractInitializers(boilerplatePath) {
 // ============================================================================
 
 /**
+ * Map drop-in package name to documentation path
+ * @param {string} packageName - Package name (e.g., 'storefront-cart', 'tools')
+ * @returns {string|null} Documentation path (e.g., 'cart') or null if not found
+ */
+function getDropinDocPath(packageName) {
+    // Handle 'tools' package - it doesn't have its own documentation page
+    if (packageName === 'tools') {
+        return null; // Skip linking to tools
+    }
+
+    // Find the drop-in config entry that matches this package name
+    for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
+        // Extract package name without @dropins/ prefix
+        const configPackageName = config.packageName.replace('@dropins/', '');
+        if (configPackageName === packageName) {
+            return docPath;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Generate overview page with CardGrid
  */
 function generateOverview(blocks, initializers, outputPath) {
@@ -290,8 +313,8 @@ The boilerplate includes **${blocks.length} commerce blocks** that implement var
 - [Edge Delivery Services Documentation](https://www.aem.live/docs/)
 `;
 
-    // Apply standard transforms
-    content = applyStandardTransforms(content);
+    // Don't apply standard transforms to overview page - it's not a block doc
+    // Standard transforms are designed for individual block documentation pages
 
     // Write file
     ensureParentDirectoryExists(outputPath);
@@ -630,7 +653,7 @@ Configure your environment using:
 
 - [Project Structure](/boilerplate/structure/)
 - [Build Process](/boilerplate/build-process/)
-- [Drop-in Installation](/dropins/cart/installation/)
+- [Drop-in Quick Start](/dropins/cart/quick-start/)
 `;
 
     ensureParentDirectoryExists(outputPath);

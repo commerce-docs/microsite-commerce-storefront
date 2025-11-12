@@ -33,7 +33,7 @@ function escapeRegExp(string) {
 /**
  * Check if a page path has a corresponding sidebar entry
  * 
- * @param {string} pagePath - Page path (e.g., '/dropins/order/installation/')
+ * @param {string} pagePath - Page path (e.g., '/dropins/order/quick-start/')
  * @returns {boolean} True if sidebar entry exists
  */
 function hasSidebarEntry(pagePath) {
@@ -103,8 +103,8 @@ USAGE:
   node scripts/validate-sidebar-updates.js --all
 
 EXAMPLES:
-  node scripts/validate-sidebar-updates.js /dropins/order/installation/
-  node scripts/validate-sidebar-updates.js /dropins/personalization/installation/
+  node scripts/validate-sidebar-updates.js /dropins/order/quick-start/
+  node scripts/validate-sidebar-updates.js /dropins/personalization/quick-start/
     `);
     process.exit(0);
 }

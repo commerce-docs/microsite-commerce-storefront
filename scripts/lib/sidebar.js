@@ -21,18 +21,20 @@ const projectRoot = join(__dirname, '../..');
  * @param {string} repoConfig - Repository configuration with type and displayName
  * @param {string} entryLabel - Label for the new entry (e.g., 'Functions', 'Events')
  * @param {string} referenceLabel - Label of the entry to insert after (e.g., 'Slots')
+ * @param {string} referencePath - Optional custom path for reference (defaults to /${referenceLabel.toLowerCase()}/)
  * @returns {boolean} True if successful, false if entry already exists or reference not found
  * 
  * @example
  * insertSidebarEntry('cart', repoConfig, 'Functions', 'Slots');
  * // Inserts Functions entry after Slots entry for cart drop-in
  */
-export function insertSidebarEntry(dropinName, repoConfig, entryLabel, referenceLabel = null) {
+export function insertSidebarEntry(dropinName, repoConfig, entryLabel, referenceLabel = null, referencePath = null) {
     const configPath = join(projectRoot, 'astro.config.mjs');
     const config = readFileSync(configPath, 'utf8');
 
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase()}/`;
+    // Convert label to kebab-case for URL (e.g., "Quick Start" -> "quick-start")
+    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase().replace(/\s+/g, '-')}/`;
     const sidebarEntry = `{ label: '${entryLabel}', link: '${entryPath}' },`;
 
     // Check if the entry already exists
@@ -48,9 +50,12 @@ export function insertSidebarEntry(dropinName, repoConfig, entryLabel, reference
         return false;
     }
 
+    // Build reference path - use custom path if provided, otherwise build from label
+    const refPath = referencePath || `/${basePath}/${dropinName}/${referenceLabel.toLowerCase()}/`;
+
     // Find the reference entry and insert after it
     const referencePattern = new RegExp(
-        `(\\{\\s*label:\\s*'${referenceLabel}',\\s*link:\\s*'/${basePath}/${dropinName}/${referenceLabel.toLowerCase()}/'\\s*\\},)`,
+        `(\\{\\s*label:\\s*'${referenceLabel}',\\s*link:\\s*'${refPath.replace(/\\/g, '\\\\').replace(/\//g, '\\/')}'\\s*\\},)`,
         'i'
     );
 
@@ -132,14 +137,17 @@ export function updateSidebarForDictionary(dropinName, repoConfig) {
 }
 
 /**
- * Update sidebar navigation for installation
+ * Update sidebar navigation for quick start pages
  * 
  * @param {string} dropinName - Name of the drop-in
  * @param {Object} repoConfig - Repository configuration
  * @returns {boolean} True if successful
  */
 export function updateSidebarForInstallation(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Installation', 'Overview'); // After Overview
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    // Overview links to root (e.g., /dropins/cart/), not /dropins/cart/overview/
+    const overviewPath = `/${basePath}/${dropinName}/`;
+    return insertSidebarEntry(dropinName, repoConfig, 'Quick Start', 'Overview', overviewPath);
 }
 
 /**
@@ -150,7 +158,7 @@ export function updateSidebarForInstallation(dropinName, repoConfig) {
  * @returns {boolean} True if successful
  */
 export function updateSidebarForInitialization(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Installation'); // After Installation
+    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Quick Start'); // After Quick Start
 }
 
 /**
@@ -166,7 +174,8 @@ export function sidebarEntryExists(dropinName, repoConfig, entryLabel) {
     const config = readFileSync(configPath, 'utf8');
 
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase()}/`;
+    // Convert label to kebab-case for URL (e.g., "Quick Start" -> "quick-start")
+    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase().replace(/\s+/g, '-')}/`;
 
     const entryPattern = new RegExp(`label:\\s*'${entryLabel}',\\s*link:\\s*'${entryPath}'`);
     return entryPattern.test(config);

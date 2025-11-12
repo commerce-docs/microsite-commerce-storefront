@@ -30,7 +30,7 @@ const GENERATED_FILE_PATTERNS = {
     slots: 'src/content/docs/dropins/*/slots.mdx',
     containers: 'src/content/docs/dropins/*/containers/*.mdx',
     dictionaries: 'src/content/docs/dropins/*/dictionary.mdx',
-    installation: 'src/content/docs/dropins/*/installation.mdx',
+    quickStart: 'src/content/docs/dropins/*/quick-start.mdx',
 };
 
 /**

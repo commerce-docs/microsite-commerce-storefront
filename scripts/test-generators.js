@@ -125,7 +125,7 @@ const validationScripts = [
     { name: 'Event Payloads', script: 'validate-event-payloads.js' },
     { name: 'Function Types', script: 'validate-function-types.js' },
     { name: 'Parameter Patterns', script: 'validate-parameter-patterns.js' },
-    { name: 'Sidebar Updates', script: 'validate-sidebar-updates.js', testPath: '/dropins/cart/installation/' },
+    { name: 'Sidebar Updates', script: 'validate-sidebar-updates.js', testPath: '/dropins/cart/quick-start/' },
 ];
 
 for (const validator of validationScripts) {
