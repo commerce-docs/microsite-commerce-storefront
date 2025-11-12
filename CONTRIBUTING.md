@@ -144,6 +144,49 @@ Choose the right content type for your documentation:
 4. **Write scannable content** - use headings, lists, and short paragraphs
 5. **Include examples** - show, don't just tell
 
+### Grammar Rules
+
+Follow these specific grammar rules for consistency and clarity:
+
+1. **Add articles where needed**
+   - Use "a", "an", "the" appropriately
+   - ✅ "Import the initializer"
+   - ❌ "Import initializer"
+
+2. **Avoid possessives for objects** - Use "in/of" constructions instead
+   - ✅ "The styles in the Cart"
+   - ❌ "The Cart's styles"
+   - ✅ "The initializer for the drop-in"
+   - ❌ "The drop-in's initializer"
+
+3. **Never use Latin abbreviations** - Write out the English equivalent
+   - ✅ "for example" not ❌ "e.g."
+   - ✅ "and so on" not ❌ "etc."
+   - ✅ "that is" not ❌ "i.e."
+
+4. **Omit needless words** (Strunk & White)
+   - Make every word tell
+   - Remove redundant phrases
+   - ✅ "Configure the endpoint"
+   - ❌ "You can configure the endpoint"
+
+5. **Use parallel construction**
+   - Keep list items in the same grammatical form
+   - All bullet points should follow the same structure
+
+6. **Use periods in lists for complete sentences**
+   - If a list item is a complete sentence, end it with a period
+   - If a list item is a fragment, no period needed
+   - ✅ "The boilerplate includes all drop-in packages." (complete sentence)
+   - ✅ "All drop-in packages" (fragment, no period)
+   - Be consistent within each list - all complete sentences or all fragments
+
+7. **No bold text after H3 headings** - Use H4 headings instead
+   - Use proper heading hierarchy for structure
+   - ✅ `#### Configuration options` (H4 heading)
+   - ❌ `**Configuration options**` (bold text after H3)
+   - This ensures proper document outline and accessibility
+
 ## File Conventions
 
 ### Naming Standards
