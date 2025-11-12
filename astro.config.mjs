@@ -367,6 +367,7 @@ async function config() {
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
                       { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
+                      { label: 'Commerce blocks', link: '/dropins/all/commerce-blocks/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
                       { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
