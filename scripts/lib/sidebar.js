@@ -54,7 +54,7 @@ export function insertSidebarEntry(dropinName, repoConfig, entryLabel, reference
 
     // Find the reference entry and insert after it
     const referencePattern = new RegExp(
-        `(\\{\\s*label:\\s*'${referenceLabel}',\\s*link:\\s*'${refPath.replace(/\//g, '\\/')}'\\s*\\},)`,
+        `(\\{\\s*label:\\s*'${referenceLabel}',\\s*link:\\s*'${refPath.replace(/\\/g, '\\\\').replace(/\//g, '\\/')}'\\s*\\},)`,
         'i'
     );
 
