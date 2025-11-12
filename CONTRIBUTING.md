@@ -187,6 +187,25 @@ Follow these specific grammar rules for consistency and clarity:
    - ❌ `**Configuration options**` (bold text after H3)
    - This ensures proper document outline and accessibility
 
+8. **Use Steps component for ordered lists** - Always use the Steps component for step-by-step instructions
+   - Import from `@astrojs/starlight/components`
+   - ✅ `<Steps>` wrapping numbered list items (proper component)
+   - ❌ Standard markdown without Steps component (less visually distinct)
+   - Steps component provides enhanced styling and visual hierarchy
+   - **Always use `1.` for every list item** - Markdown automatically numbers them sequentially
+   - Example:
+     ```jsx
+     import { Steps } from '@astrojs/starlight/components';
+     
+     <Steps>
+     
+     1. First step description
+     1. Second step description
+     1. Third step description
+     
+     </Steps>
+     ```
+
 ## File Conventions
 
 ### Naming Standards
@@ -236,6 +255,11 @@ Standard Markdown is supported, plus MDX extensions for interactive components.
 #### Minor Sections (H4)
 ```
 
+**Important:** Always use H4 headings for subsections under H3. Never use bold text as a substitute for headings.
+- ✅ `#### Configuration options` (correct - H4 heading)
+- ❌ `**Configuration options**` (incorrect - bold text)
+- Proper heading hierarchy ensures accessibility and proper document structure
+
 **Code Blocks:**
 ````markdown
 ```javascript
@@ -249,19 +273,32 @@ function initializeCart() {
 
 **Links:**
 
-For internal links (within the documentation site):
+**Internal Links** (within the documentation site):
 ```markdown
 [Internal Link](/get-started/create-storefront/)
 ```
 
-For external links (to external websites), use the custom Link component:
+**External Links** (REQUIRED - use Link component for ALL external links):
+
+All external links (to websites outside this documentation) MUST use the Link component:
 ```jsx
 import Link from '@components/Link.astro';
 
 <Link href="https://example.com" text="External Link" />
 ```
 
-The Link component automatically adds an external link icon and opens in a new tab.
+**Why this is required:**
+- Automatically adds an external link icon for visual consistency
+- Opens in a new tab to preserve user's place in documentation
+- Provides consistent styling across all external links
+- Makes it clear to users when they're leaving the documentation
+
+**Examples of external links that require the Link component:**
+- GitHub repositories and files
+- NPM packages
+- External documentation sites (aem.live, da.live, etc.)
+- API documentation
+- Any URL starting with `http://` or `https://` that's not this documentation
 
 ### Available Components
 
