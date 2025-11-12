@@ -248,10 +248,20 @@ function initializeCart() {
 ````
 
 **Links:**
+
+For internal links (within the documentation site):
 ```markdown
 [Internal Link](/get-started/create-storefront/)
-[External Link](https://example.com)
 ```
+
+For external links (to external websites), use the custom Link component:
+```jsx
+import Link from '@components/Link.astro';
+
+<Link href="https://example.com" text="External Link" />
+```
+
+The Link component automatically adds an external link icon and opens in a new tab.
 
 ### Available Components
 
