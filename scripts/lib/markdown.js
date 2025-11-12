@@ -42,11 +42,9 @@ export function replacePlaceholders(content, replacements) {
     let result = content;
 
     for (const [placeholder, value] of Object.entries(replacements)) {
-        // Replace placeholders, but exclude those inside comments
-        // Match the placeholder but use negative lookbehind to exclude comment context
-        // Also use word boundaries to avoid partial matches
-        const regex = new RegExp(`\\b${placeholder}\\b(?![^{]*\\*/)`, 'g');
-        result = result.replace(regex, value);
+        // Simple global replacement - placeholders should be unique strings
+        // that won't appear elsewhere in the content
+        result = result.replaceAll(placeholder, value);
     }
 
     return result;

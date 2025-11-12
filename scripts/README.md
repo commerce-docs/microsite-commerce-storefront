@@ -47,7 +47,7 @@ The CLI then automatically handles all the setup and configuration for you.
 ```
 [dropin-folder]/
 ├── overview.mdx
-├── installation.mdx
+├── quick-start.mdx
 ├── initialization.mdx
 ├── containers/
 │   ├── index.mdx              ← Container overview
@@ -104,7 +104,7 @@ description: Learn about the features and functions of the DROPIN_NAME drop-in c
 
 {/* DESCRIBE the main functionality and purpose of the DROPIN_NAME drop-in component. */}
 
-Visit the [DROPIN_NAME installation](/DROPINS_BASE_PATH/DROPIN_PACKAGE/installation/) page to get started.
+Visit the [DROPIN_NAME quick start](/DROPINS_BASE_PATH/DROPIN_PACKAGE/quick-start/) page to get started.
 
 ## Available slots
 
@@ -122,7 +122,7 @@ description: Learn about the features and functions of the Quote Management drop
 
 {/* DESCRIBE the main functionality and purpose of the Quote Management drop-in component. */}
 
-Visit the [Quote Management installation](/dropins-b2b/quote-management/installation/) page to get started.
+Visit the [Quote Management quick start](/dropins-b2b/quote-management/quick-start/) page to get started.
 
 ## Available slots
 
@@ -313,7 +313,7 @@ npm run generate-all-docs -- --dry-run
 - ✅ Displays comprehensive summary at the end
 
 **Generated documentation:**
-- **70+ drop-in pages** (functions, events, containers, slots, dictionaries, installation, initialization)
+- **70+ drop-in pages** (functions, events, containers, slots, dictionaries, quick start, initialization)
 - **33 boilerplate pages** (technical documentation)
 - **29 merchant block pages** (business user documentation)
 - **500+ total pages**
@@ -444,6 +444,38 @@ npm run generate-slot-docs cart
 - Supports enrichment data for slot descriptions
 - Auto-updates sidebar navigation
 
+### Styles Documentation Generator
+
+Generates CSS styling documentation by analyzing drop-in component stylesheets and design token usage. **Also generates a comprehensive design tokens reference** in the universal styling guide.
+
+```bash
+# Generate for all drop-ins
+npm run generate-styles-docs
+
+# Generate for specific drop-in
+npm run generate-styles-docs cart
+```
+
+**Output**: 
+- `src/content/docs/dropins/{dropin-name}/styles.mdx` - Drop-in specific styles
+- `src/content/docs/dropins/all/styling.mdx` - Universal guide with complete design tokens reference
+
+**Features**:
+- Scans `src/components/` and `src/containers/` directories for `.css` files
+- Extracts CSS class names using BEM-like naming conventions
+- **Extracts ALL design tokens from boilerplate with actual default values**
+- **Generates comprehensive, categorized design tokens reference** (colors, spacing, typography, shapes, grid)
+- Analyzes design token usage (colors, spacing, typography, etc.)
+- Identifies responsive patterns and media queries
+- Generates real CSS examples from actual component files
+- Groups classes and tokens by component
+- **Organizes tokens by category** with collapsible sections for large groups
+- Provides customization examples and best practices
+- Auto-updates sidebar navigation
+
+**Design Tokens Reference**:
+The generator automatically updates the universal styling guide (`dropins/all/styling.mdx`) with a complete, categorized list of all available design tokens extracted from the boilerplate's `styles/styles.css`. This eliminates the need for developers to navigate GitHub to find token values—everything is documented in one searchable location with actual default values shown.
+
 ### Dictionary Documentation Generator
 
 Generates dictionary documentation by extracting i18n strings from source repositories.
@@ -467,28 +499,28 @@ npm run generate-dictionary-docs cart
 - Supports enrichment data for additional documentation
 - Auto-updates sidebar navigation
 
-### Installation Documentation Generator
+### Quick Start Documentation Generator
 
-Generates comprehensive installation documentation with package setup, imports, and configuration.
+Generates quick start reference pages with package info, imports, and usage examples.
 
 ```bash
 # Generate for all drop-ins
-npm run generate-installation-docs
+npm run generate-quick-start-docs
 
 # Generate for specific drop-in
-npm run generate-installation-docs cart
+npm run generate-quick-start-docs cart
 ```
 
-**Output**: `src/content/docs/dropins/{dropin-name}/installation.mdx`
+**Output**: `src/content/docs/dropins/{dropin-name}/quick-start.mdx`
 
 **Features**:
 - Extracts package names and versions from package.json
 - Identifies available containers for import examples
-- Generates accurate importmap configurations
-- Creates step-by-step installation guides
-- Includes version information and container counts
+- Generates accurate import paths and configurations
+- Creates quick reference guides for getting started
+- Includes version information and boilerplate examples
 - Provides usage examples with actual container names
-- Supports enrichment data for custom instructions
+- Supports enrichment data for custom introductions
 
 ### Initialization Documentation Generator
 
@@ -576,7 +608,7 @@ Enrichment files allow you to preserve high-quality, manually written documentat
 - `containers.json` - Container descriptions and configuration
 - `slots.json` - Slot descriptions and customization examples
 - `dictionary.json` - Additional documentation for i18n keys
-- `installation.json` - Custom installation instructions and requirements
+- `quick-start.json` - Custom introductions and quick start content
 - `initialization.json` - Additional configuration documentation
 
 ### Signature Enrichment (Type Accuracy)
