@@ -1,64 +1,193 @@
 ---
 title: Configuration
-description: Learn about configuration options for the AEM Commerce boilerplate.
+description: Learn how to configure the AEM Commerce boilerplate for your storefront.
 sidebar:
   label: Configuration
   order: 4
 ---
 
 import { Aside, Code } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
 
-<Aside type="note">
-Auto-generated on 2025-11-12.
-</Aside>
+The AEM Commerce boilerplate requires configuration to connect to your Adobe Commerce instance and customize the storefront behavior.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Boilerplate version: 1.5.3</strong>
+</div>
+
+## Configuration Overview
+
+The boilerplate uses multiple configuration files depending on your deployment stage:
+
+- **`demo-config.json`** - Local development configuration
+- **`.aem.live` config service** - Production configuration (site.yaml, sitemap.yaml, etc.)
+- **`head.html`** - Import map and meta tags
+- **Drop-in initializers** - Individual drop-in configuration in `scripts/initializers/`
 
 ## Head Configuration
 
 The `head.html` file contains:
 
-- **Importmap**: Maps drop-in package names to CDN URLs
-- **Meta tags**: SEO and social sharing metadata
-- **Scripts**: Analytics, tracking, and initialization
-
-### Importmap Example
-
 ```html
-<script type="importmap">
-{
-  "imports": {
-    "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
-    "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
-    "@dropins/tools/": "/scripts/__dropins__/tools/"
-  }
-}
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<script type="module">
+  // Import map for drop-ins
+  import { setLibs } from './scripts/aem.js';
+  setLibs('/libs');
 </script>
+<script type="importmap">
+  {
+    "imports": {
+      "@dropins/tools/": "./scripts/__dropins__/tools/",
+      // ... other drop-in mappings
+    }
+  }
+</script>
+<link rel="stylesheet" href="/styles/styles.css"/>
+<link rel="icon" href="data:,">
 ```
 
-## Initializers
+**Key elements**:
+- Import map for drop-in component resolution
+- Global styles reference
+- Viewport and responsive settings
 
-Drop-ins are initialized in `scripts/commerce.js`:
+## Demo Configuration (Local Development)
 
-- `commerce.js`
+The `demo-config.json` file provides configuration for local development:
 
-### Initialization Pattern
+```json
+{
+  "commerce": {
+    "storeCode": "main",
+    "storeView": "default",
+    "locale": "en_US",
+    "currency": "USD"
+  },
+  "contentSource": {
+    "type": "markup",
+    "baseUrl": "https://main--aem-boilerplate-commerce--hlxsites.aem.page"
+  }
+}
+```
 
-Each drop-in follows this pattern:
+## Production Configuration Templates
 
-1. Import tools and drop-in packages
-2. Configure endpoint and headers
-3. Register initializer
-4. Mount drop-in
+The boilerplate includes template configuration files:
 
-## Environment Variables
+### default-site.yaml
 
-Configure your environment using:
+Site-level configuration template:
 
-- **GraphQL Endpoint**: Commerce backend URL
-- **Store Code**: Multi-store configuration
-- **API Keys**: Third-party integrations
+```yaml
+# Site configuration
+commerce:
+  endpoint: https://your-commerce-instance.com/graphql
+  storeCode: main
+  storeView: default
+  
+# Feature flags
+features:
+  personalization: true
+  recommendations: true
+```
+
+### default-fstab.yaml
+
+Content source configuration:
+
+```yaml
+mountpoints:
+  /: https://drive.google.com/drive/folders/YOUR_FOLDER_ID
+```
+
+### default-query.yaml
+
+Content indexing configuration:
+
+```yaml
+indices:
+  default:
+    include:
+      - /**
+    exclude:
+      - /drafts/**
+```
+
+### default-sitemap.yaml
+
+Sitemap configuration for SEO:
+
+```yaml
+sitemaps:
+  default:
+    origin: https://main--aem-boilerplate-commerce--hlxsites.aem.live
+    hreflang: true
+```
+
+## Drop-in Initializers
+
+Configure individual drop-ins in `scripts/initializers/`:
+
+### Example: cart.js
+
+```javascript
+import { initializers } from '@dropins/tools/initializer.js';
+
+initializers.register('cart', async () => {
+  // Cart drop-in initialization
+  const { initialize } = await import('@dropins/storefront-cart/api.js');
+  
+  await initialize({
+    // Configuration options
+    models: {
+      CartModel: {
+        transformer: (data) => {
+          // Custom data transformation
+          return data;
+        }
+      }
+    }
+  });
+});
+```
+
+## Environment-Specific Configuration
+
+<Aside type="tip">
+Use different configuration values for different environments:
+
+- **Local**: `demo-config.json`
+- **Preview**: Configure in AEM.page branch settings
+- **Production**: Configure in AEM.live production settings
+</Aside>
+
+## Common Configuration Options
+
+### Commerce Backend
+
+- **Endpoint URL**: Your Adobe Commerce GraphQL endpoint
+- **Store code**: Multi-store configuration
+- **Store view**: Language/locale configuration
+- **Authentication**: API keys and tokens (if required)
+
+### Drop-in Features
+
+- **Cart**: Guest cart, persistent cart, mini cart behavior
+- **Checkout**: Payment methods, shipping methods, address validation
+- **Product Discovery**: Facets, filters, sorting options
+- **Personalization**: Target rules, audience segments
+
+### Content Delivery
+
+- **CDN configuration**: Edge Delivery Services CDN
+- **CORS setup**: Cross-origin resource sharing for API calls
+- **Cache headers**: Performance optimization
 
 ## Related Documentation
 
-- [Project Structure](/boilerplate/structure/)
-- [Build Process](/boilerplate/build-process/)
-- [Drop-in Quick Start](/dropins/cart/quick-start/)
+- [Boilerplate overview](/boilerplate/) - Complete reference
+- [Storefront configuration guide](/setup/configuration/commerce-configuration/) - Detailed setup instructions
+- [CORS setup](/setup/configuration/cors-setup/) - Security configuration
+- [Multistore setup](/setup/configuration/multistore-setup/) - Multiple stores/languages
+
