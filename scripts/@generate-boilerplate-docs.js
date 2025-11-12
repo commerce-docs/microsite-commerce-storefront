@@ -58,6 +58,42 @@ function getDropinDocPath(packageName) {
     return null;
 }
 
+/**
+ * Extract version from boilerplate package.json
+ */
+function extractBoilerplateVersion(boilerplatePath) {
+    const packageJsonPath = join(boilerplatePath, 'package.json');
+    
+    if (!existsSync(packageJsonPath)) {
+        console.warn('  ⚠️  package.json not found, using "latest" as version');
+        return 'latest';
+    }
+
+    try {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+        // Boilerplate doesn't have its own version, so use the date or a placeholder
+        // We could use a drop-in version or commit hash
+        const toolsVersion = packageJson.dependencies?.['@dropins/tools'] || 'latest';
+        return toolsVersion.replace(/[\^~]/, ''); // Remove semver prefixes
+    } catch (error) {
+        console.warn('  ⚠️  Error reading package.json:', error.message);
+        return 'latest';
+    }
+}
+
+/**
+ * Load template file
+ */
+function loadTemplate(templateName) {
+    const templatePath = join(projectRoot, '_dropin-templates', templateName);
+    
+    if (!existsSync(templatePath)) {
+        throw new Error(`Template not found: ${templateName}`);
+    }
+
+    return readFileSync(templatePath, 'utf8');
+}
+
 // ============================================================================
 // CODE ANALYSIS
 // ============================================================================
