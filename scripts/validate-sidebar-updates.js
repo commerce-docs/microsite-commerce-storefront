@@ -22,9 +22,18 @@ const projectRoot = join(__dirname, '..');
 const configPath = join(projectRoot, 'astro.config.mjs');
 
 /**
+ * Escape a string for use in a regular expression
+ * @param {string} string
+ * @returns {string}
+ */
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Check if a page path has a corresponding sidebar entry
  * 
- * @param {string} pagePath - Page path (e.g., '/dropins/order/installation/')
+ * @param {string} pagePath - Page path (e.g., '/dropins/order/quick-start/')
  * @returns {boolean} True if sidebar entry exists
  */
 function hasSidebarEntry(pagePath) {
@@ -41,7 +50,7 @@ function hasSidebarEntry(pagePath) {
     // Create regex pattern to match sidebar entry
     // Matches: { label: '...', link: '/path/to/page/' }
     const pattern = new RegExp(
-        `link:\\s*['"]/${normalizedPath.replace(/\//g, '\\/')}/['"]`,
+        `link:\\s*['"]/${escapeRegExp(normalizedPath)}/['"]`,
         'i'
     );
 
@@ -94,8 +103,8 @@ USAGE:
   node scripts/validate-sidebar-updates.js --all
 
 EXAMPLES:
-  node scripts/validate-sidebar-updates.js /dropins/order/installation/
-  node scripts/validate-sidebar-updates.js /dropins/personalization/installation/
+  node scripts/validate-sidebar-updates.js /dropins/order/quick-start/
+  node scripts/validate-sidebar-updates.js /dropins/personalization/quick-start/
     `);
     process.exit(0);
 }

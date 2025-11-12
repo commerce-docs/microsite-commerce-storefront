@@ -12,7 +12,7 @@ This file tracks bugs found in documentation generators, their fixes, and any ma
 - **Status**: FIXED
 - **Date Found**: 2025-11-09
 - **Date Fixed**: 2025-11-09
-- **Affected Generators**: `@generate-installation-docs.js`
+- **Affected Generators**: `@generate-quick-start-docs.js`
 - **Root Cause**: `updateSidebarForInstallation()` in `scripts/lib/sidebar.js` passed `null` as the reference label, causing `insertSidebarEntry()` to skip insertion silently
 - **Fix**: Updated `scripts/lib/sidebar.js` line 142 to pass `'Overview'` instead of `null`
 - **Branches Affected**: 
@@ -32,7 +32,7 @@ This file tracks bugs found in documentation generators, their fixes, and any ma
   - ✅ Added sidebar validation script (`scripts/validate-sidebar-updates.js`)
   - ✅ Integrated validation into test suite
   - ✅ Documented in workflow improvements
-- **Verification**: Run `npm run validate:sidebar /dropins/order/installation/` to verify fix
+- **Verification**: Run `npm run validate:sidebar /dropins/order/quick-start/` to verify fix
 
 ## Prevention Checklist
 
