@@ -71,10 +71,9 @@ function extractBoilerplateVersion(boilerplatePath) {
 
     try {
         const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-        // Boilerplate doesn't have its own version, so use the date or a placeholder
-        // We could use a drop-in version or commit hash
-        const toolsVersion = packageJson.dependencies?.['@dropins/tools'] || 'latest';
-        return toolsVersion.replace(/[\^~]/, ''); // Remove semver prefixes
+        // Use the boilerplate's own version field
+        const version = packageJson.version || 'latest';
+        return version;
     } catch (error) {
         console.warn('  ⚠️  Error reading package.json:', error.message);
         return 'latest';
