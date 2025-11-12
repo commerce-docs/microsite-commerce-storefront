@@ -173,7 +173,6 @@ Skip generation entirely and maintain a fully custom installation doc:
 - `scripts/@generate-installation-docs.js` - Installation generator
 - `_dropin-templates/dropin-installation-simple.mdx` - Simplified template (links to shared guide)
 - `_dropin-enrichments/{dropin}/installation.json` - Per-drop-in enrichments
-- `_dropin-enrichments/INSTALLATION-ENRICHMENT-SCHEMA.md` - Detailed schema documentation
 - `src/content/docs/dropins/{dropin}/installation.mdx` - Generated output files
 
 ## Maintaining the Shared Guide
