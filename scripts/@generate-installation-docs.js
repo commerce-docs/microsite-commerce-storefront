@@ -194,6 +194,7 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_SLUG': repoName,
         'DROPIN_PACKAGE': packageName,
         'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'CONTAINER_EXAMPLE': containerExample,
