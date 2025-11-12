@@ -140,6 +140,12 @@ async function processSingleDropin(config) {
     };
     const mdxContent = await generateContent(repoName, repoConfig, scannedData, versionInfo, enrichmentData);
 
+    // Check if generation was skipped (e.g., override_template)
+    if (mdxContent === null) {
+        logger.blank();
+        return;
+    }
+
     // Write output (use custom handler if provided, otherwise use default)
     if (writeOutput) {
         // Custom write handler (e.g., for multi-file output like containers)

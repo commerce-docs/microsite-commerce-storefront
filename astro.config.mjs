@@ -354,12 +354,12 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
-                      { label: 'Installing', link: '/dropins/all/installing/' },
-                      { label: 'Branding', link: '/dropins/all/branding/' },
+                      { label: 'Using drop-ins', link: '/dropins/all/installing/' },
                       { label: 'Styling', link: '/dropins/all/styling/' },
+                      { label: 'Branding', link: '/dropins/all/branding/' },
                       { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
-                      { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
                       { label: 'Localizing Links', link: '/dropins/all/linking/' },
+                      { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
                       { label: 'Slots', link: '/dropins/all/slots/' },
                       { label: 'Layouts', link: '/dropins/all/layouts/' },
                       { label: 'Events', link: '/dropins/all/events/' },
@@ -469,6 +469,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/order/' },
+                          { label: 'Installation', link: '/dropins/order/installation/' },
                           { label: 'Initialization', link: '/dropins/order/initialization/' },
                           { label: 'Slots', link: '/dropins/order/slots/' },
                           { label: 'Styles', link: '/dropins/order/styles/' },
@@ -525,6 +526,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/personalization/' },
+                          { label: 'Installation', link: '/dropins/personalization/installation/' },
                           { label: 'Initialization', link: '/dropins/personalization/initialization/' },
                           { label: 'Events', link: '/dropins/personalization/events/' },
                           { label: 'Dictionary', link: '/dropins/personalization/dictionary/' },
@@ -623,6 +625,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins/user-account/' },
+                          { label: 'Installation', link: '/dropins/user-account/installation/' },
                           { label: 'Initialization', link: '/dropins/user-account/initialization/' },
                           { label: 'Functions', link: '/dropins/user-account/functions/' },
                           { label: 'Slots', link: '/dropins/user-account/slots/' },

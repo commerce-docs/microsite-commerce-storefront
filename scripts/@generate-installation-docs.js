@@ -121,10 +121,17 @@ function scanForInstallation(repoPath) {
  * @param {Object} repoConfig - Repository configuration
  * @param {Object|string} versionInfo - Version info object or version string
  * @param {Object} enrichmentData - Optional enrichment data
- * @returns {string} Generated MDX content
+ * @returns {string|null} Generated MDX content, or null if override_template is true
  */
 function generateInstallationMDX(repoName, repoConfig, installationData, versionInfo, enrichmentData = null) {
-    const template = readTemplate('dropin-installation.mdx');
+    // Check if enrichment specifies template override
+    if (enrichmentData && enrichmentData.override_template === true) {
+        console.log(`  ⏭️  Skipping generation for ${repoName} (override_template: true)`);
+        return null;
+    }
+
+    // Use simple template that links to shared installation guide
+    const template = readTemplate('dropin-installation-simple.mdx');
 
     const { containers, packageInfo } = installationData;
     const packageName = repoConfig.packageName;
@@ -141,15 +148,63 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     // Generate import example
     const importExample = `import { ${containerExample} } from '${packageName}';`;
 
+    // Map drop-in names to initializer file names
+    const initializerMap = {
+        'cart': 'cart',
+        'checkout': 'checkout',
+        'order': 'order',
+        'payment-services': 'payment-services',
+        'pdp': 'pdp',
+        'product-details': 'pdp',
+        'product-discovery': 'search',
+        'recommendations': 'recommendations',
+        'user-account': 'account',
+        'user-auth': 'auth',
+        'wishlist': 'wishlist',
+        'personalization': 'personalization'
+    };
+    const initializerName = initializerMap[repoName] || repoName;
+
+    // Process enrichment data for custom sections
+    let customIntro = '';
+    let customSectionsBefore = '';
+    let customSectionsAfter = '';
+
+    if (enrichmentData) {
+        // Custom intro
+        if (enrichmentData.intro) {
+            customIntro = enrichmentData.intro + '\n';
+        }
+
+        // Custom sections before steps
+        if (enrichmentData.sections && enrichmentData.sections.before_steps && enrichmentData.sections.before_steps.length > 0) {
+            customSectionsBefore = enrichmentData.sections.before_steps
+                .map(section => `## ${section.title}\n\n${section.content}`)
+                .join('\n\n') + '\n';
+        }
+
+        // Custom sections after steps
+        if (enrichmentData.sections && enrichmentData.sections.after_steps && enrichmentData.sections.after_steps.length > 0) {
+            customSectionsAfter = enrichmentData.sections.after_steps
+                .map(section => `## ${section.title}\n\n${section.content}`)
+                .join('\n\n') + '\n';
+        }
+    }
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
+        'DROPIN_SLUG': repoName,
         'DROPIN_PACKAGE': packageName,
         'DROPIN_VERSION': cleanVersion(versionInfo.requested),
         'CONTAINER_EXAMPLE': containerExample,
         'IMPORT_EXAMPLE': importExample,
+        'INITIALIZER_NAME': initializerName,
         'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
-        'CONTAINER_COUNT': containers.length.toString()
+        'CONTAINER_COUNT': containers.length.toString(),
+        'CUSTOM_INTRO': customIntro,
+        'CUSTOM_SECTIONS_BEFORE': customSectionsBefore,
+        'CUSTOM_SECTIONS_AFTER': customSectionsAfter
     });
 }
 

@@ -1,30 +1,416 @@
 ---
-title: Installing Drop-In Components
-description: Learn about installing and initializing drop-in components for your site.
+title: Using drop-ins
+description: Learn how to use Adobe Commerce drop-in components in your storefront blocks.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
-import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
+import Vocabulary from '@components/Vocabulary.astro';
 
-Drop-in components are designed for the browser's JavaScript run-time without the need for a bundler. But they can also be installed and executed in a build-time environment with bundlers like Webpack and Vite. The installation steps for both run-time and build-time environments are the same after the initial drop-in component package imports.
+Drop-in components add Commerce functionality to your storefront. The [Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) includes all drop-ins pre-installed—no package installation needed.
 
-## Why install drop-in components?
+## Key terms
 
-Installing drop-in components is essential for customizing and enhancing your Adobe Commerce storefront, especially if you choose not to start with the [boilerplate template](/get-started/boilerplate-project/). It is a strategic choice for businesses looking to customize, optimize, and scale their Adobe Commerce storefronts effectively. This approach provides the flexibility and modularity needed to create a unique and high-performing online shopping experience.
+Before you start, understand these essential terms:
 
-If you have an existing storefront project and are not starting with the boilerplate template, you can install drop-in components individually to add the specific features that you need.
+<Vocabulary columns={2}>
 
-## Workflow
+### Initializer
 
-The following diagram provides an overview of the steps necessary for installing a drop-in:
+A JavaScript file that automatically configures a drop-in when imported (sets GraphQL endpoint, loads translations, registers the drop-in).
 
-<Diagram>![PDP Installation](@images/pdp/pdp-installation.svg)</Diagram>
+### Container
 
-The installation of all drop-in components follows the same pattern described in the workflow diagram above. Refer to the following resources for step-by-step instructions to install specific drop-in components:
+A pre-built UI component that renders drop-in functionality (for example, `SignIn`, `CartSummaryList`, `OrderSummary`).
 
-- [Product details page (PDP)](/dropins/product-details/installation/)
+### Provider
+
+The `render` function that mounts containers into your blocks. Each drop-in exports its own provider.
+
+### Decorate function
+
+The standard block entry point where you render containers (`export default async function decorate(block)`).
+
+</Vocabulary>
+
+## How to use drop-ins
+
+Three steps: import the initializer, import the container, and render it. Most blocks use a single container.
+
+<Tasks>
+
+<Task>
+
+### Import the initializer
+
+Import the initializer for the drop-in. This configures the GraphQL endpoint, loads placeholder text, and registers the drop-in.
+
+```js title="blocks/commerce-login/commerce-login.js"
+// Import initializer (side-effect import handles all setup)
+import '../../scripts/initializers/auth.js';
+```
+
+<Aside type="note">
+Initializers run once when imported. They configure the drop-in for use throughout your application.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Import the container
+
+Import the container you need and the render provider. Import maps in `head.html` resolve paths to the optimized code.
+
+```js title="blocks/commerce-login/commerce-login.js"
+// Import the container
+import { SignIn } from '@dropins/storefront-auth/containers/SignIn.js';
+
+// Import the provider
+import { render as authRenderer } from '@dropins/storefront-auth/render.js';
+```
+
+</Task>
+
+<Task>
+
+### Render the container
+
+Render the container in the `decorate` function of your block. Pass configuration options to customize behavior.
+
+```js title="blocks/commerce-login/commerce-login.js"
+import { rootLink } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  await authRenderer.render(SignIn, {
+    routeForgotPassword: () => rootLink('/customer/forgot-password'),
+    routeRedirectOnSignIn: () => rootLink('/customer/account'),
+  })(block);
+}
+```
+
+**Complete example:**
+
+```js title="blocks/commerce-login/commerce-login.js"
+import { SignIn } from '@dropins/storefront-auth/containers/SignIn.js';
+import { render as authRenderer } from '@dropins/storefront-auth/render.js';
+import { rootLink } from '../../scripts/commerce.js';
+import '../../scripts/initializers/auth.js';
+
+export default async function decorate(block) {
+  await authRenderer.render(SignIn, {
+    routeForgotPassword: () => rootLink('/customer/forgot-password'),
+    routeRedirectOnSignIn: () => rootLink('/customer/account'),
+  })(block);
+}
+```
+
+<Aside type="note" title="Containers documentation">
+See the Containers documentation for each drop-in for available configuration options.
+</Aside>
+
+</Task>
+
+</Tasks>
+
+## Drop-in specific guides
+
+Each drop-in has its own installation page with package names, versions, and drop-in-specific requirements:
+
 - [Cart](/dropins/cart/installation/)
 - [Checkout](/dropins/checkout/installation/)
+- [Order](/dropins/order/installation/)
+- [Payment Services](/dropins/payment-services/installation/)
+- [Personalization](/dropins/personalization/installation/)
+- [Product Details](/dropins/product-details/installation/)
+- [Product Discovery](/dropins/product-discovery/installation/)
+- [Recommendations](/dropins/recommendations/installation/)
+- [User Account](/dropins/user-account/installation/)
+- [User Auth](/dropins/user-auth/installation/)
+- [Wishlist](/dropins/wishlist/installation/)
+
+## Advanced patterns
+
+These patterns show how to handle more complex scenarios in your blocks.
+
+### Multiple containers in one block
+
+Most blocks use a single container, but complex blocks can render multiple containers together. Use `Promise.all()` to render them in parallel for better performance. The Cart block demonstrates this pattern:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+import '../../scripts/initializers/cart.js';
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import OrderSummary from '@dropins/storefront-cart/containers/OrderSummary.js';
+import { rootLink, getProductLink } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  // Create layout structure
+  const fragment = document.createRange().createContextualFragment(`
+    <div class="cart__list"></div>
+    <div class="cart__order-summary"></div>
+  `);
+  
+  const $list = fragment.querySelector('.cart__list');
+  const $summary = fragment.querySelector('.cart__order-summary');
+  block.appendChild(fragment);
+
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+
+  // Render multiple containers in parallel
+  await Promise.all([
+    provider.render(CartSummaryList, {
+      routeProduct: createProductLink,
+      enableRemoveItem: true,
+    })($list),
+
+    provider.render(OrderSummary, {
+      routeCheckout: () => rootLink('/checkout'),
+    })($summary),
+  ]);
+}
+```
+
+### Nesting containers with slots
+
+Render containers inside other container slots for advanced composition. Use conditional logic to control which slots render:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+import '../../scripts/initializers/cart.js';
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import OrderSummary from '@dropins/storefront-cart/containers/OrderSummary.js';
+import EstimateShipping from '@dropins/storefront-cart/containers/EstimateShipping.js';
+import Coupons from '@dropins/storefront-cart/containers/Coupons.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+import { rootLink, getProductLink } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  const { 'enable-estimate-shipping': enableEstimateShipping = 'false' } = readBlockConfig(block);
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+
+  await provider.render(OrderSummary, {
+    routeProduct: createProductLink,
+    routeCheckout: () => rootLink('/checkout'),
+    slots: {
+      EstimateShipping: async (ctx) => {
+        if (enableEstimateShipping === 'true') {
+          const wrapper = document.createElement('div');
+          await provider.render(EstimateShipping, {})(wrapper);
+          ctx.replaceWith(wrapper);
+        }
+      },
+      Coupons: (ctx) => {
+        const coupons = document.createElement('div');
+        provider.render(Coupons)(coupons);
+        ctx.appendChild(coupons);
+      },
+    },
+  })(block);
+}
+```
+
+### Combining multiple drop-ins
+
+Use multiple drop-ins in a single block when functionality overlaps. The Cart block combines Cart and Wishlist:
+
+```js title="blocks/commerce-cart/commerce-cart.js"
+// Import event bus
+import { events } from '@dropins/tools/event-bus.js';
+
+// Import initializers for both drop-ins
+import '../../scripts/initializers/cart.js';
+import '../../scripts/initializers/wishlist.js';
+
+// Import from both drop-ins
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import * as Cart from '@dropins/storefront-cart/api.js';
+
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+import { WishlistAlert } from '@dropins/storefront-wishlist/containers/WishlistAlert.js';
+
+import { getProductLink } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  // Create notification area
+  const fragment = document.createRange().createContextualFragment(`
+    <div class="cart__notification"></div>
+  `);
+  const $notification = fragment.querySelector('.cart__notification');
+  block.appendChild(fragment);
+  
+  // Wishlist route
+  const routeToWishlist = '/wishlist';
+  
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+  
+  // Render cart with wishlist functionality in slots
+  await provider.render(CartSummaryList, {
+    routeProduct: createProductLink,
+    slots: {
+      Footer: (ctx) => {
+        // Add wishlist toggle to each cart item
+        const $wishlistToggle = document.createElement('div');
+        $wishlistToggle.classList.add('cart__action--wishlist-toggle');
+        
+        wishlistRender.render(WishlistToggle, {
+          product: ctx.item,
+          removeProdFromCart: Cart.updateProductsFromCart,
+        })($wishlistToggle);
+        
+        ctx.appendChild($wishlistToggle);
+      },
+    },
+  })(block);
+  
+  // Listen for wishlist events
+  events.on('wishlist/alert', ({ action, item }) => {
+    wishlistRender.render(WishlistAlert, {
+      action,
+      item,
+      routeToWishlist,
+    })($notification);
+    
+    setTimeout(() => {
+      $notification.innerHTML = '';
+    }, 5000);
+  });
+}
+```
+
+### Using API functions without containers
+
+Call API functions directly for programmatic control without rendering UI:
+
+```js title="blocks/custom-block/custom-block.js"
+import '../../scripts/initializers/cart.js';
+import * as Cart from '@dropins/storefront-cart/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+export default async function decorate(block) {
+  // Get cached cart data synchronously
+  const cachedCart = Cart.getCartDataFromCache();
+  console.log('Cached cart:', cachedCart);
+  
+  // Fetch fresh cart data
+  const freshCart = await Cart.getCartData();
+  console.log('Fresh cart:', freshCart);
+  
+  // Add products programmatically
+  const button = block.querySelector('.add-to-cart-button');
+  if (button) {
+    button.addEventListener('click', async () => {
+      try {
+        await Cart.addProductsToCart([
+          { sku: 'ABC123', quantity: 1 }
+        ]);
+        console.log('Product added successfully');
+      } catch (error) {
+        console.error('Failed to add product:', error);
+      }
+    });
+  }
+  
+  // Update cart totals in custom UI
+  events.on('cart/data', (cartData) => {
+    const totalElement = block.querySelector('.cart-total');
+    if (totalElement && cartData?.prices?.grandTotal) {
+      totalElement.textContent = cartData.prices.grandTotal.value;
+    }
+  }, { eager: true });
+}
+```
+
+### Error handling
+
+Handle errors gracefully with try/catch blocks and user notifications:
+
+```js title="blocks/commerce-mini-cart/commerce-mini-cart.js"
+import createMiniPDP from '../../scripts/components/commerce-mini-pdp/commerce-mini-pdp.js';
+import createModal from '../modal/modal.js';
+import { fetchPlaceholders } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  const placeholders = await fetchPlaceholders();
+  let currentModal = null;
+
+  // Custom message display function
+  const showMessage = (message) => {
+    const messageEl = block.querySelector('.mini-cart__message');
+    if (messageEl) {
+      messageEl.textContent = message;
+      messageEl.classList.add('visible');
+      setTimeout(() => messageEl.classList.remove('visible'), 3000);
+    }
+  };
+
+  async function handleEditButtonClick(cartItem) {
+    try {
+      // Attempt to load and show mini PDP
+      const miniPDPContent = await createMiniPDP(cartItem);
+      currentModal = await createModal([miniPDPContent]);
+      
+      if (currentModal.block) {
+        currentModal.block.setAttribute('id', 'mini-pdp-modal');
+      }
+      
+      currentModal.showModal();
+    } catch (error) {
+      console.error('Error opening mini PDP modal:', error);
+      
+      // Show error message using mini-cart's message system
+      showMessage(placeholders?.Global?.ProductLoadError || 'Failed to load product');
+    }
+  }
+  
+  // ... rest of block implementation
+}
+```
+
+<Aside type="note" title="Always provide feedback">
+Always provide feedback to users when operations fail. The example shows how to define a custom message function, but you can also use the `InLineAlert` component from `@dropins/tools/components.js` for consistent error messaging.
+</Aside>
+
+## What the boilerplate provides
+
+The boilerplate includes everything you need:
+
+- Drop-in packages installed in `package.json`.
+- Optimized code in `scripts/__dropins__/`.
+- Import maps in `head.html`.
+- Initializers in `scripts/initializers/` for automatic setup.
+- Example blocks demonstrating usage.
+
+## Installation workflow
+
+The following diagram shows how drop-ins integrate into your boilerplate project:
+
+<Diagram>![Drop-in Installation](@images/pdp/pdp-installation.svg)</Diagram>
+
+## Additional concepts
+
+Additional terms you'll encounter as you work with drop-ins.
+
+**Drop-in**  
+A self-contained Commerce component (Cart, Checkout, Product Details) that includes containers, API functions, and events.
+
+**Import maps** (in `head.html`)  
+Configuration that maps clean import paths (for example, `@dropins/storefront-cart`) to optimized code in `scripts/__dropins__/`. The boilerplate includes these pre-configured.
+
+**Event bus** (`@dropins/tools/event-bus.js`)  
+Pub/sub system for drop-in communication. Drop-ins emit events when state changes (for example, `cart/data`, `checkout/updated`). Listen to events to update custom UI or trigger logic.
+
+**API functions**  
+Programmatic interfaces to control drop-in behavior without rendering UI. Fetch data, trigger actions, and read cached state (for example, `Cart.addProductsToCart()`, `Cart.getCartData()`).
+
+**Slots**  
+Extension points in containers where you can inject custom content or replace default behavior. Used for deep customization beyond configuration options.
+
+## Summary
+
+The boilerplate makes using drop-ins straightforward: import an initializer for automatic setup, import the containers you need, render them with configuration options, and optionally listen to events for custom behavior. No manual package installation or complex configuration required.
