@@ -20,36 +20,13 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
 
 // Import shared utilities
 import { getProjectRoot } from './lib/generator-core.js';
 import { ensureParentDirectoryExists, formatDate } from './lib/utils.js';
+import { cloneOrUpdateBoilerplate } from './lib/repository.js';
 
 const projectRoot = getProjectRoot();
-
-// ============================================================================
-// REPOSITORY MANAGEMENT
-// ============================================================================
-
-/**
- * Clone or update the boilerplate repository
- */
-function cloneBoilerplate() {
-    const boilerplatePath = join(projectRoot, '.temp-repos', 'aem-boilerplate-commerce');
-
-    console.log('\n📦 Cloning/updating AEM Commerce boilerplate...');
-
-    if (!existsSync(boilerplatePath)) {
-        console.log('  Cloning boilerplate repository...');
-        execFileSync('git', ['clone', '--depth', '1', 'https://github.com/hlxsites/aem-boilerplate-commerce.git', boilerplatePath], { stdio: 'inherit' });
-    } else {
-        console.log('  Updating boilerplate repository...');
-        execSync(`cd ${boilerplatePath} && git pull`, { stdio: 'inherit' });
-    }
-
-    return boilerplatePath;
-}
 
 // ============================================================================
 // CONFIGURATION EXTRACTION
@@ -315,8 +292,8 @@ try {
     console.log('  MERCHANT BLOCK DOCUMENTATION GENERATOR');
     console.log('='.repeat(60));
 
-    // Clone/update boilerplate
-    const boilerplatePath = cloneBoilerplate();
+    // Clone/update boilerplate using shared function
+    const { path: boilerplatePath } = cloneOrUpdateBoilerplate();
 
     // Extract blocks
     const blocks = extractCommerceBlocks(boilerplatePath);
