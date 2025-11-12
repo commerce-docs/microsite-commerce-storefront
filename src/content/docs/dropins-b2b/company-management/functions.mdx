@@ -1,0 +1,325 @@
+---
+title: Company Management functions
+description: API functions provided by the Company Management drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+The Company Management drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+
+
+
+## allowCompanyRegistration
+
+Return whether the backend allows company self-registration per store configuration.
+
+### Signature
+
+```ts
+export const allowCompanyRegistration = async (
+  
+): Promise<boolean>
+```
+
+```ts
+const allowed = await allowCompanyRegistration(); // boolean
+```
+
+---
+
+## companyEnabled
+
+Return whether the Company feature is enabled in store configuration.
+
+### Signature
+
+```ts
+export const companyEnabled = async (
+  
+): Promise<boolean>
+```
+
+```ts
+const enabled = await companyEnabled(); // boolean
+```
+
+---
+
+## createCompany
+
+API function for the drop-in.
+
+### Signature
+
+```ts
+export const createCompany = async (
+  formData: any
+): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
+```
+
+---
+
+## fetchUserPermissions
+
+The `fetchUserPermissions` API function retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. This function is used internally by other API functions to determine what data the user can access.
+
+### Signature
+
+```ts
+export const fetchUserPermissions = async (
+  
+): Promise<{ allowedIds: Set<string>; roleResponse: any }>
+```
+
+```ts
+fetchUserPermissions(): Promise<{ allowedIds: Set<string>; roleResponse: any }>;
+```
+
+---
+
+## getCompany
+
+API function for the drop-in.
+
+### Signature
+
+```ts
+export const getCompany = async (
+  
+): Promise<CompanyModel | null>
+```
+
+```ts
+getCompany(): Promise<CompanyModel>;
+```
+
+---
+
+## getCountries
+
+## Overview
+
+### Signature
+
+```ts
+export const getCountries = async (
+  
+): Promise<{
+  availableCountries: Country[] | [];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+### Basic Usage - Get All Countries
+
+```typescript
+import { getCountries } from '@adobe-commerce/storefront-company-management/api';
+
+try {
+  const data = await getCountries();
+  
+  console.log('Available countries:', data.availableCountries);
+  console.log('Countries requiring regions:', data.countriesWithRequiredRegion);
+  console.log('Countries with optional zip codes:', data.optionalZipCountries);
+} catch (error) {
+  console.error('Failed to fetch countries:', error);
+}
+```
+
+### Get Regions for Specific Country
+
+```typescript
+import { getCountries } from '@adobe-commerce/storefront-company-management/api';
+
+try {
+  const data = await getCountries('US');
+  
+  if (data.availableRegions) {
+    console.log('US regions:', data.availableRegions);
+    // Example output: [{ value: 'CA,12', text: 'California' }, ...]
+  }
+} catch (error) {
+  console.error('Failed to fetch US regions:', error);
+}
+```
+
+### Dynamic Country/Region Form
+
+```typescript
+import { useState, useEffect } from 'preact/hooks';
+import { getCountries } from '@adobe-commerce/storefront-company-management/api';
+
+function AddressForm() {
+  const [countries, setCountries] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [countriesWithRequiredRegion, setCountriesWithRequiredRegion] = useState([]);
+
+  // Load countries on mount
+  useEffect(() => {
+    getCountries().then(data => {
+      setCountries(data.availableCountries);
+      setCountriesWithRequiredRegion(data.countriesWithRequiredRegion);
+    });
+  }, []);
+
+  // Load regions when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      getCountries(selectedCountry).then(data => {
+        setRegions(data.availableRegions || []);
+      });
+    } else {
+      setRegions([]);
+    }
+  }, [selectedCountry]);
+
+  const isRegionRequired = countriesWithRequiredRegion.includes(selectedCountry);
+  const hasRegionOptions = regions.length > 0;
+
+  return (
+    <form>
+      <select 
+        value={selectedCountry} 
+        onChange={(e) => setSelectedCountry(e.target.value)}
+      >
+        <option value="">Select Country</option>
+        {countries.map(country => (
+          <option key={country.value} value={country.value}>
+            {country.text}
+          </option>
+        ))}
+      </select>
+
+      {selectedCountry && (
+        hasRegionOptions ? (
+          <select required={isRegionRequired}>
+            <option value="">Select Region</option>
+            {regions.map(region => (
+              <option key={region.value} value={region.value}>
+                {region.text}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input 
+            type="text" 
+            placeholder="Enter region/state"
+            required={isRegionRequired}
+          />
+        )
+      )}
+    </form>
+  );
+}
+```
+
+---
+
+## getCustomerCompany
+
+Fetches simplified customer company information for display on the account information page.
+
+### Signature
+
+```ts
+export const getCustomerCompany = async (
+  
+): Promise<CustomerCompanyInfo | null>
+```
+
+---
+
+## initialize
+
+Initializes the Company drop-in with optional language definitions and data model metadata.
+
+```ts
+initialize(config?: {
+  langDefinitions?: Record<string, Record<string, string>>;
+  models?: Record<string, any>;
+}): Promise<{ success: true; config: any }>;
+```
+
+---
+
+## isCompanyAdmin
+
+Check if the current authenticated customer is a company administrator in any company.
+
+### Signature
+
+```ts
+export const isCompanyAdmin = async (
+  
+): Promise<boolean>
+```
+
+```ts
+const isAdmin = await isCompanyAdmin(); // boolean
+```
+
+---
+
+## isCompanyUser
+
+Check if the current authenticated customer belongs to any company.
+
+### Signature
+
+```ts
+export const isCompanyUser = async (
+  
+): Promise<boolean>
+```
+
+```ts
+const belongsToCompany = await isCompanyUser(); // boolean
+```
+
+---
+
+## updateCompany
+
+API function for the drop-in.
+
+### Signature
+
+```ts
+export const updateCompany = async (
+  input: UpdateCompanyDto
+): Promise<CompanyModel>
+```
+
+```ts
+updateCompany(companyData: Partial<CompanyModel>): Promise<CompanyModel>;
+```
+
+---
+
+## validateCompanyEmail
+
+Validates if a company email is available.
+
+### Signature
+
+```ts
+export const validateCompanyEmail = async (
+  email: string
+): Promise<ValidateCompanyEmailResponse>
+```
+
+```ts
+validateCompanyEmail(email: string): Promise<{ isValid: boolean; error?: string }>;
+```
+
+---
+
+
+
+
