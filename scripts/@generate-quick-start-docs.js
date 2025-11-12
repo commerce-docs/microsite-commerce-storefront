@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Installation Documentation Generator
+ * Quick Start Documentation Generator
  *
- * Generates comprehensive installation documentation for each drop-in by:
+ * Generates quick start reference pages for each drop-in by:
  * 1. Extracting package names and versions from source repositories
  * 2. Identifying available containers for import examples
  * 3. Creating accurate importmap and code examples
  *
  * USAGE:
- * - Generate all drop-ins: npm run generate-installation-docs
- * - Generate single drop-in: npm run generate-installation-docs cart
+ * - Generate all drop-ins: npm run generate-quick-start-docs
+ * - Generate single drop-in: npm run generate-quick-start-docs cart
  * - Available drop-ins: cart, checkout, order, product-details, product-discovery,
  *                       recommendations, user-account, user-auth, wishlist,
  *                       payment-services, company-management
  *
- * OUTPUT: Single installation.mdx file per drop-in
+ * OUTPUT: Single quick-start.mdx file per drop-in
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
@@ -94,10 +94,10 @@ function getPackageInfo(repoPath) {
 }
 
 /**
- * Scan repository for installation data
+ * Scan repository for quick start data
  * 
  * @param {string} repoPath - Path to the repository
- * @returns {Object} Installation data with containers and package info
+ * @returns {Object} Quick start data with containers and package info
  */
 function scanForInstallation(repoPath) {
     const containers = extractContainerNames(repoPath);
@@ -115,7 +115,7 @@ function scanForInstallation(repoPath) {
 // ============================================================================
 
 /**
- * Generate installation MDX documentation
+ * Generate quick start MDX documentation
  * 
  * @param {string} repoName - Drop-in name
  * @param {Object} repoConfig - Repository configuration
@@ -130,8 +130,8 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
         return null;
     }
 
-    // Use simple template that links to shared installation guide
-    const template = readTemplate('dropin-installation-simple.mdx');
+    // Use simple template that links to shared guide
+    const template = readTemplate('dropin-quick-start.mdx');
 
     const { containers, packageInfo } = installationData;
     const packageName = repoConfig.packageName;
@@ -213,11 +213,11 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
 // ============================================================================
 
 runGenerator({
-    name: 'Installation',
+    name: 'Quick Start',
     itemType: 'containers',
     loadEnrichments: loadInstallationEnrichments,
     scanRepo: scanForInstallation,
     generateContent: generateInstallationMDX,
     updateSidebar: updateSidebarForInstallation,
-    outputFileName: 'installation.mdx'
+    outputFileName: 'quick-start.mdx'
 });

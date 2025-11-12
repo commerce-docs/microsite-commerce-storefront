@@ -228,7 +228,7 @@ function getDropinDocPath(packageName) {
     if (packageName === 'tools') {
         return null; // Skip linking to tools
     }
-    
+
     // Find the drop-in config entry that matches this package name
     for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
         // Extract package name without @dropins/ prefix
@@ -237,7 +237,7 @@ function getDropinDocPath(packageName) {
             return docPath;
         }
     }
-    
+
     return null;
 }
 
@@ -653,7 +653,7 @@ Configure your environment using:
 
 - [Project Structure](/boilerplate/structure/)
 - [Build Process](/boilerplate/build-process/)
-- [Drop-in Installation](/dropins/cart/installation/)
+- [Drop-in Quick Start](/dropins/cart/quick-start/)
 `;
 
     ensureParentDirectoryExists(outputPath);

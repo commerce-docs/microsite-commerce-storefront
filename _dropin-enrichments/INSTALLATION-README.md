@@ -6,7 +6,7 @@ The installation documentation system uses a **DRY (Don't Repeat Yourself)** app
 
 ### 1. Shared Installation Guide
 
-**Location**: `src/content/docs/dropins/all/installing.mdx`
+**Location**: `src/content/docs/dropins/all/quick-start.mdx`
 
 Contains the complete 6-step installation process that applies to all drop-ins:
 1. Install the packages
@@ -20,7 +20,7 @@ This guide uses placeholders and examples that work for any drop-in.
 
 ### 2. Drop-In Specific Pages
 
-**Template**: `_dropin-templates/dropin-installation-simple.mdx`
+**Template**: `_dropin-templates/dropin-quick-start.mdx`
 
 Each drop-in has a simplified installation page that:
 - Links to the shared guide for standard steps
@@ -30,14 +30,21 @@ Each drop-in has a simplified installation page that:
 
 ### 3. Automated Generation
 
-The generator (`scripts/@generate-installation-docs.js`) automatically extracts:
+The generator (`scripts/@generate-quick-start-docs.js`) automatically extracts:
 - Package names and versions from source repositories
 - Available containers for import examples
 - Accurate package names and import statements
 
 ## Enrichment Schema
 
-Each drop-in can have an `installation.json` file with the following structure:
+Each drop-in can have a `quick-start.json` file with the following structure:
+
+### Important: External Links
+**Always use the Link component for external URLs:**
+```jsx
+<Link href="https://example.com" text="Link Text" />
+```
+Do NOT use markdown syntax `[text](url)` for external links. The Link component automatically adds an external icon and opens in a new tab.
 
 ```json
 {
@@ -82,14 +89,14 @@ These drop-ins use the simplified template that links to the shared installation
 
 ## Usage
 
-### Generate All Installation Docs
+### Generate All Quick Start Pages
 ```bash
-npm run generate-installation-docs
+npm run generate-quick-start-docs
 ```
 
 ### Generate Single Drop-in
 ```bash
-npm run generate-installation-docs cart
+npm run generate-quick-start-docs cart
 ```
 
 ### Available Drop-ins
@@ -169,22 +176,22 @@ Skip generation entirely and maintain a fully custom installation doc:
 
 ## Files
 
-- `src/content/docs/dropins/all/installing.mdx` - Shared installation guide (manually maintained)
-- `scripts/@generate-installation-docs.js` - Installation generator
-- `_dropin-templates/dropin-installation-simple.mdx` - Simplified template (links to shared guide)
-- `_dropin-enrichments/{dropin}/installation.json` - Per-drop-in enrichments
-- `src/content/docs/dropins/{dropin}/installation.mdx` - Generated output files
+- `src/content/docs/dropins/all/quick-start.mdx` - Shared "Using drop-ins" guide (manually maintained)
+- `scripts/@generate-quick-start-docs.js` - Quick start generator
+- `_dropin-templates/dropin-quick-start.mdx` - Quick start template (links to shared guide)
+- `_dropin-enrichments/{dropin}/quick-start.json` - Per-drop-in enrichments
+- `src/content/docs/dropins/{dropin}/quick-start.mdx` - Generated output files
 
 ## Maintaining the Shared Guide
 
 When updating installation steps that affect all drop-ins:
 
-1. **Edit the shared guide**: `src/content/docs/dropins/all/installing.mdx`
+1. **Edit the shared guide**: `src/content/docs/dropins/all/quick-start.mdx`
 2. **Changes propagate automatically**: All drop-in pages link to this guide
 3. **No regeneration needed**: Updates appear immediately across all drop-ins
 
 When updating drop-in-specific details:
 
-1. **Regenerate specific drop-in**: `npm run generate-installation-docs {dropin-name}`
-2. **Or regenerate all**: `npm run generate-installation-docs`
+1. **Regenerate specific drop-in**: `npm run generate-quick-start-docs {dropin-name}`
+2. **Or regenerate all**: `npm run generate-quick-start-docs`
 

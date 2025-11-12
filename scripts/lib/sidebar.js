@@ -33,7 +33,8 @@ export function insertSidebarEntry(dropinName, repoConfig, entryLabel, reference
     const config = readFileSync(configPath, 'utf8');
 
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase()}/`;
+    // Convert label to kebab-case for URL (e.g., "Quick Start" -> "quick-start")
+    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase().replace(/\s+/g, '-')}/`;
     const sidebarEntry = `{ label: '${entryLabel}', link: '${entryPath}' },`;
 
     // Check if the entry already exists
@@ -136,7 +137,7 @@ export function updateSidebarForDictionary(dropinName, repoConfig) {
 }
 
 /**
- * Update sidebar navigation for installation
+ * Update sidebar navigation for quick start pages
  * 
  * @param {string} dropinName - Name of the drop-in
  * @param {Object} repoConfig - Repository configuration
@@ -146,7 +147,7 @@ export function updateSidebarForInstallation(dropinName, repoConfig) {
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
     // Overview links to root (e.g., /dropins/cart/), not /dropins/cart/overview/
     const overviewPath = `/${basePath}/${dropinName}/`;
-    return insertSidebarEntry(dropinName, repoConfig, 'Installation', 'Overview', overviewPath);
+    return insertSidebarEntry(dropinName, repoConfig, 'Quick Start', 'Overview', overviewPath);
 }
 
 /**
@@ -157,7 +158,7 @@ export function updateSidebarForInstallation(dropinName, repoConfig) {
  * @returns {boolean} True if successful
  */
 export function updateSidebarForInitialization(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Installation'); // After Installation
+    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Quick Start'); // After Quick Start
 }
 
 /**
@@ -173,7 +174,8 @@ export function sidebarEntryExists(dropinName, repoConfig, entryLabel) {
     const config = readFileSync(configPath, 'utf8');
 
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase()}/`;
+    // Convert label to kebab-case for URL (e.g., "Quick Start" -> "quick-start")
+    const entryPath = `/${basePath}/${dropinName}/${entryLabel.toLowerCase().replace(/\s+/g, '-')}/`;
 
     const entryPattern = new RegExp(`label:\\s*'${entryLabel}',\\s*link:\\s*'${entryPath}'`);
     return entryPattern.test(config);
