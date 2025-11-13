@@ -79,7 +79,43 @@ Compared to content blocks, commerce blocks enable Adobe Commerce functionality 
 
 Using a frontend framework can help manage the complexity. In the Commerce boilerplate, you can find examples of blocks that use a buildless version of [Preact](https://preactjs.com/) and [HTM](https://github.com/developit/htm). You should only use it for blocks that require complex state management with different render states. Otherwise, stick with plain JavaScript.
 
-Use the [existing blocks](/get-started/boilerplate-project/) in the Commerce boilerplate as a reference (for example, teaser and product recommendations). If you want to use React, it's possible, but not recommended. React is usually too heavy (size + execution) to achieve perfect Lighthouse scores.
+Use the [existing blocks](/boilerplate/getting-started/) in the Commerce boilerplate as a reference (for example, teaser and product recommendations). If you want to use React, it's possible, but not recommended. React is usually too heavy (size + execution) to achieve perfect Lighthouse scores.
+
+## Runtime flow
+
+Understanding how content transforms into rendered commerce experiences helps developers know where to customize and integrate. The following diagram illustrates the complete flow from authoring to rendering:
+
+<Diagram type="mermaid" code={`
+graph LR
+    A["Author<br/><small>Creates table</small>"]
+    B["Edge Delivery<br/><small>Server-side transform</small>"]
+    C["Browser<br/><small>Loads HTML</small>"]
+    D["Block Decorator<br/><small>Client-side JS</small>"]
+    E["Drop-in<br/><small>Renders UI</small>"]
+    F["Commerce API<br/><small>Data</small>"]
+    
+    A -->|"Document"| B
+    B -->|"HTML with divs"| C
+    C -->|"Decorates blocks"| D
+    D -->|"Initialize"| E
+    E -->|"Fetch"| F
+    F -->|"Response"| E
+    
+    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
+`} />
+
+The flow demonstrates how a simple table in a document becomes a fully functional commerce component:
+
+1. **Author creates** a cart page with a "Commerce Cart" table in their document.
+2. **Edge Delivery Services** transforms the document server-side into HTML with a `<div class="commerce-cart">` element.
+3. **Browser loads** the HTML page and client-side JavaScript decorates the blocks.
+4. **Block decorator** (`blocks/commerce-cart/commerce-cart.js`) dynamically loads and initializes the Cart drop-in.
+5. **Drop-in** connects to Commerce backend via API and renders the cart UI.
 
 ## Adobe Commerce or Adobe Commerce as a Cloud Service
 
@@ -196,4 +232,4 @@ The [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce)
    - **AEM Blocks**: Authored in **DA.live**, Google Docs, or Microsoft Word using tables. Rendered server-side as basic HTML `<divs>` and decorated client-side. Developers can enrich these blocks with semantic HTML, accessibility attributes, and dynamic DOM transformations.
    - **Commerce Blocks**: Extend the AEM Blocks with Commerce drop-in components. They use the same authoring model but dynamically render the client-side UI based on the configuration provided in the authored tables.
 
-For a detailed breakdown of the file structure and where to find specific files, see the [Explore the Boilerplate](/get-started/boilerplate-project/) page.
+For a detailed breakdown of the file structure and where to find specific files, see the [Getting started](/boilerplate/getting-started/) page.
