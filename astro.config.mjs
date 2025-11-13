@@ -304,12 +304,12 @@ async function config() {
                     label: 'The Boilerplate',
                     collapsed: true,
                     items: [
+                      { label: 'Overview', link: '/boilerplate/' },
                       { label: 'Getting started', link: '/get-started/boilerplate-project/' },
-                      { label: 'Reference', link: '/boilerplate/' },
                       { label: 'Configuration', link: '/boilerplate/configuration/' },
-                      { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                       { label: 'Commerce blocks', link: '/boilerplate/blocks/' },
                       { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
+                      { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
                     ],
                   },
                   {
