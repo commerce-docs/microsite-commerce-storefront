@@ -100,6 +100,46 @@ export function getBoilerplatePackageVersions(boilerplatePath) {
 }
 
 /**
+ * Use existing drop-in repository without version constraints
+ * This is used for B2B drop-ins that aren't in the boilerplate
+ * 
+ * @param {string} repoName - Name of the drop-in (e.g., 'purchase-order', 'company-management')
+ * @param {Object} repoConfig - Repository configuration object with gitUrl
+ * @returns {Object} Object with { path: string, actualVersion: string, isExactMatch: boolean }
+ */
+export function useExistingDropinRepo(repoName, repoConfig) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Repository not found at ${dropinPath}`);
+        console.log(`  Cloning from default branch...`);
+        execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+    }
+
+    // Get current ref/branch/tag
+    let actualVersion;
+    try {
+        // Try to get exact tag
+        actualVersion = execFileSync('git', ['describe', '--tags', '--exact-match'],
+            { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+        console.log(`  Using version: ${actualVersion}`);
+        return { path: dropinPath, actualVersion, isExactMatch: true };
+    } catch {
+        // Not on a tag, get branch or commit
+        try {
+            actualVersion = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using branch: ${actualVersion}`);
+        } catch {
+            actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using commit: ${actualVersion}`);
+        }
+        return { path: dropinPath, actualVersion, isExactMatch: false };
+    }
+}
+
+/**
  * Clone or checkout a drop-in repository at a specific version
  * 
  * @param {string} repoName - Name of the drop-in (e.g., 'cart', 'checkout')

@@ -125,6 +125,41 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
     return dropinPath;
 }
 
+/**
+ * Use existing drop-in repository without version constraints
+ * This is used for B2B drop-ins that aren't in the boilerplate
+ */
+function useExistingDropinRepo(repoName, repoConfig) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Repository not found at ${dropinPath}`);
+        console.log(`  Cloning from default branch...`);
+        execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+    }
+
+    // Get current ref/branch/tag
+    try {
+        // Try to get exact tag
+        const actualVersion = execFileSync('git', ['describe', '--tags', '--exact-match'],
+            { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+        console.log(`  Using version: ${actualVersion}`);
+    } catch {
+        // Not on a tag, get branch or commit
+        try {
+            const actualVersion = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using branch: ${actualVersion}`);
+        } catch {
+            const actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using commit: ${actualVersion}`);
+        }
+    }
+
+    return dropinPath;
+}
+
 function scanForEvents(repoPath) {
     console.log(`  🔍 Scanning for events...`);
 
@@ -1081,13 +1116,23 @@ async function main() {
     console.log('================================\n');
 
     // Parse command-line arguments
-    const targetDropin = process.argv[2];
+    const args = process.argv.slice(2);
+    const targetDropin = args.find(arg => !arg.startsWith('--'));
+    const typeFilter = args.find(arg => arg.startsWith('--type='))?.split('=')[1];
 
-    // Filter drop-ins based on target
+    // Filter drop-ins based on type if specified (e.g., --type=B2B or --type=B2C)
     let dropinsToProcess = DROPIN_REPOS;
+    if (typeFilter) {
+        const upperTypeFilter = typeFilter.toUpperCase();
+        dropinsToProcess = Object.fromEntries(
+            Object.entries(DROPIN_REPOS).filter(([_, config]) => config.type === upperTypeFilter)
+        );
+        console.log(`🔍 Filtering by type: ${upperTypeFilter}\n`);
+    }
 
+    // Filter by specific drop-in if specified
     if (targetDropin) {
-        if (!DROPIN_REPOS[targetDropin]) {
+        if (!dropinsToProcess[targetDropin]) {
             console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
             console.log('Available drop-ins:');
             Object.keys(DROPIN_REPOS).forEach(name => {
@@ -1095,10 +1140,10 @@ async function main() {
             });
             process.exit(1);
         }
-        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
+        dropinsToProcess = { [targetDropin]: dropinsToProcess[targetDropin] };
         console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
     } else {
-        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
+        console.log(`📦 Processing all ${Object.keys(dropinsToProcess).length} drop-ins\n`);
     }
 
     // Clone/update boilerplate once for all drop-ins
@@ -1115,17 +1160,20 @@ async function main() {
 
             // Get version from boilerplate package.json
             const version = packageVersions[repoConfig.packageName];
+            let dropinPath;
 
             if (!version) {
-                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
-                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
-                continue;
+                // B2B drop-ins aren't in boilerplate - use existing standalone repo
+                console.log(`  Not found in boilerplate, using standalone repository...`);
+                dropinPath = useExistingDropinRepo(repoName, repoConfig);
+            } else {
+                // B2C drop-ins are in boilerplate - use version from there
+                dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
             }
-
-            // Clone git repo at specific version
-            const dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
             const eventsData = scanForEvents(dropinPath);
-            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, version);
+            // Use 'latest' for B2B drop-ins without boilerplate versions
+            const versionToUse = version || 'latest';
+            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, versionToUse);
 
             // Write to the appropriate location in docs
             const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
