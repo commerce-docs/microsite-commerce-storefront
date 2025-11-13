@@ -530,6 +530,7 @@ async function config() {
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
+                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Styles', link: '/dropins/payment-services/styles/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
