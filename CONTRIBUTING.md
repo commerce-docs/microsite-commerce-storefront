@@ -287,6 +287,21 @@ Follow these specific grammar rules for consistency and clarity:
 - **Be descriptive** but concise: `add-payment-method.mdx` not `payment.mdx`
 - **Match URL structure** to file structure where possible
 
+### Product Terminology
+
+Use the correct Adobe product terminology consistently throughout all documentation:
+
+- ✅ **Adobe Commerce boilerplate** - The official name for the boilerplate
+- ✅ **Edge Delivery Services + Adobe Commerce Boilerplate** - The full official name (from the repository)
+- ❌ ~~AEM Commerce boilerplate~~ - Incorrect; never use this term
+- ℹ️  The repository is named `aem-boilerplate-commerce`, but the product name is "Adobe Commerce boilerplate"
+
+This terminology applies to:
+- Page titles and descriptions
+- Body content and examples
+- Code comments and documentation
+- All references to the boilerplate project
+
 ### Frontmatter Requirements
 
 Every `.mdx` file should include frontmatter with at minimum:
