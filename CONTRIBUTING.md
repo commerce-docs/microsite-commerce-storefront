@@ -296,6 +296,26 @@ Use the correct Adobe product terminology consistently throughout all documentat
 - ❌ ~~AEM Commerce boilerplate~~ - Incorrect; never use this term
 - ℹ️  The repository is named `aem-boilerplate-commerce`, but the product name is "Adobe Commerce boilerplate"
 
+**Terminology Progression Within a Page:**
+
+Use natural shorthand after introducing the full term:
+1. **First mention**: "Adobe Commerce boilerplate" or "Edge Delivery Services + Adobe Commerce Boilerplate"
+2. **Second mention**: "Commerce boilerplate" (shorthand)
+3. **Subsequent mentions**: "boilerplate"
+
+Example:
+> The **Adobe Commerce boilerplate** provides a complete foundation... Why use the Commerce boilerplate? The boilerplate eliminates complexity by...
+
+**Shortening "Adobe Commerce" Within Sections:**
+
+After introducing "Adobe Commerce" in a section, subsequent mentions within that section should use "Commerce" as shorthand:
+
+- ✅ "The **Adobe Commerce boilerplate** applies to building Commerce storefronts..." (second mention shortened)
+- ✅ "Adobe Commerce provides... Commerce also supports..." (subsequent mentions shortened)
+- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce storefronts..." (repetitive, should shorten second mention)
+
+This rule applies within the scope of a section (between H2/H3 headings) to avoid repetition and improve readability.
+
 This terminology applies to:
 - Page titles and descriptions
 - Body content and examples
