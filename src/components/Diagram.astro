@@ -94,18 +94,17 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        // Convert enhanced SVG to blob URL for better plugin compatibility
-        // Blob URLs are treated as real URLs by the browser and may trigger
-        // plugin initialization more reliably than data URIs
+        // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
-        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
-        const svgBlobUrl = URL.createObjectURL(blob);
+        
+        // Use data URI for immediate availability (no async loading)
+        const dataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(enhancedSvg)));
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = svgBlobUrl;
+        img.src = dataUri;
         img.alt = 'Mermaid diagram';
         
         // Set the calculated dimensions on the img element
@@ -120,7 +119,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           display: block;
         `;
         
-        // Create zoom button like the working images
+        // Create zoom button
         const zoomButton = document.createElement('button');
         zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
         zoomButton.className = 'starlight-image-zoom-control';
@@ -137,30 +136,9 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Replace loading with the zoomable wrapper
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
-
-        // Store the enhanced SVG content for modal use
-        img.dataset.svgContent = enhancedSvg;
         
-        // Keep blob URL alive - don't revoke it immediately since the zoom modal needs it
-        // The blob URL will be garbage collected when the page unloads
-        // Blob URLs are treated as real URLs by the browser, which may help the plugin
-        // initialize faster than data URIs
-        
-        // Trigger plugin initialization - blob URLs may trigger faster than data URIs
-        // The plugin listens for 'astro:after-swap' and uses requestIdleCallback
-        // By ensuring the image is fully loaded first, the plugin may initialize faster
-        img.onload = () => {
-          requestAnimationFrame(() => {
-            document.dispatchEvent(new CustomEvent('astro:after-swap'));
-          });
-        };
-        
-        // If image is already loaded (shouldn't happen with blob URLs, but just in case)
-        if (img.complete) {
-          requestAnimationFrame(() => {
-            document.dispatchEvent(new CustomEvent('astro:after-swap'));
-          });
-        }
+        // The zoom plugin should already be initialized and watching for new elements
+        // No need to dispatch events or wait for async operations
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);
