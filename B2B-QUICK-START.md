@@ -39,10 +39,10 @@ npm run build:prod-fast
 | Command | What it does | When to use |
 |---------|-------------|-------------|
 | `npm run bootstrap-b2b-dropin <name>` | Creates directory + overview + sidebar | First time setup |
-| `npm run bootstrap-and-generate-b2b <name>` | Bootstrap + generate all docs | **One-command full setup** |
-| `npm run generate-all-docs` | Regenerates ALL drop-in docs | After enrichment changes |
-| `npm run generate-function-docs` | Just functions.mdx | Quick function doc updates |
-| `npm run generate-event-docs` | Just events.mdx | Quick event doc updates |
+| `npm run bootstrap-and-generate-b2b <name>` | Bootstrap + generate B2B docs | **One-command full setup** |
+| `npm run generate-b2b-docs` | Regenerates B2B drop-in docs only | After B2B enrichment changes |
+| `npm run generate-function-docs -- --type=B2B` | Just B2B functions.mdx | Quick function doc updates |
+| `npm run generate-event-docs -- --type=B2B` | Just B2B events.mdx | Quick event doc updates |
 | `npm run build:prod-fast` | Validate build | Before committing |
 
 ## Example: Adding "Quote Management"
@@ -53,8 +53,9 @@ cd .temp-repos
 git clone https://github.com/adobe-commerce/storefront-quote-management.git
 cd ..
 
-# ONE COMMAND - Bootstrap + Generate
+# ONE COMMAND - Bootstrap + Generate B2B docs (fast!)
 npm run bootstrap-and-generate-b2b quote-management
+# Only generates B2B drop-ins (5-8 min)
 
 # Edit overview (add real description)
 code src/content/docs/dropins-b2b/quote-management/index.mdx

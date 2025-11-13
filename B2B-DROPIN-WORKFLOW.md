@@ -103,10 +103,10 @@ Create these files as needed:
 
 ### Step 3: Generate All Documentation
 
-Run the master generator to create all documentation files:
+Run the B2B generator to create documentation files (B2B drop-ins only):
 
 ```bash
-npm run generate-all-docs
+npm run generate-b2b-docs
 ```
 
 **What this generates for your B2B drop-in:**
@@ -123,8 +123,10 @@ npm run generate-all-docs
 
 **Skip link verification** (if needed):
 ```bash
-npm run generate-all-docs -- --skip-link-check
+npm run generate-b2b-docs -- --skip-link-check
 ```
+
+**Note:** `generate-b2b-docs` only processes B2B drop-ins (5-8 minutes), unlike `generate-all-docs` which regenerates all 500+ pages (15-20 minutes).
 
 ### Step 4: Review and Refine
 
@@ -165,11 +167,11 @@ This validates:
 # 1. Bootstrap new B2B drop-in
 npm run bootstrap-b2b-dropin <name>
 
-# 2. Generate all documentation
-npm run generate-all-docs
+# 2. Generate B2B documentation
+npm run generate-b2b-docs
 
-# 3. Regenerate specific doc types
-npm run generate-function-docs
+# 3. Regenerate specific B2B doc types
+npm run generate-function-docs -- --type=B2B
 npm run generate-event-docs
 npm run generate-container-docs
 npm run generate-slot-docs
@@ -210,8 +212,8 @@ npm run bootstrap-b2b-dropin quote-management
 mkdir -p _dropin-enrichments/quote-management
 # Create functions.json, events.json, etc.
 
-# 6. Generate all documentation
-npm run generate-all-docs
+# 6. Generate B2B documentation
+npm run generate-b2b-docs
 
 # 7. Review locally
 npm run dev
@@ -242,7 +244,7 @@ git push origin releases/b2b-nov-release
 cd .temp-repos
 git clone <repo-url>
 cd ..
-npm run generate-all-docs
+npm run generate-b2b-docs
 ```
 
 ### "Could not extract types" error
