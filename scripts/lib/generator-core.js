@@ -32,24 +32,37 @@ const projectRoot = join(__dirname, '../..');
  * @returns {Object} Filtered drop-ins to process
  */
 function parseAndFilterDropins(generatorName) {
-    const targetDropin = process.argv[2];
+    const args = process.argv.slice(2);
+    const targetDropin = args.find(arg => !arg.startsWith('--'));
+    const typeFilter = args.find(arg => arg.startsWith('--type='))?.split('=')[1];
 
     logger.header(generatorName);
 
+    // Filter by type if specified (e.g., --type=B2B or --type=B2C)
+    let filteredDropins = DROPIN_REPOS;
+    if (typeFilter) {
+        const upperTypeFilter = typeFilter.toUpperCase();
+        filteredDropins = Object.fromEntries(
+            Object.entries(DROPIN_REPOS).filter(([_, config]) => config.type === upperTypeFilter)
+        );
+        console.log(`🔍 Filtering by type: ${upperTypeFilter}\n`);
+    }
+
     if (targetDropin) {
-        if (!DROPIN_REPOS[targetDropin]) {
+        if (!filteredDropins[targetDropin]) {
             logger.errorNotFound(targetDropin);
             process.exit(1);
         }
         logger.processingSingle(targetDropin);
         return {
-            dropins: { [targetDropin]: DROPIN_REPOS[targetDropin] },
+            dropins: { [targetDropin]: filteredDropins[targetDropin] },
             isSingleDropin: true
         };
     } else {
-        logger.processingAll(Object.keys(DROPIN_REPOS).length);
+        const dropinCount = Object.keys(filteredDropins).length;
+        logger.processingAll(dropinCount);
         return {
-            dropins: DROPIN_REPOS,
+            dropins: filteredDropins,
             isSingleDropin: false
         };
     }
