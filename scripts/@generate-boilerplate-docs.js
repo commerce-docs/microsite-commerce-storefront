@@ -194,6 +194,9 @@ function extractCommerceBlocks(boilerplatePath) {
             displayName: blockName.split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
             path: blockPath,
             hasJs: existsSync(jsPath),
             hasCss: existsSync(cssPath),
@@ -290,85 +293,424 @@ function generateOverview(blocks, initializers, boilerplateVersion, outputPath) 
 }
 
 /**
+ * Generate blocks overview page with grouped technical reference
+ */
+function generateBlocksOverview(blocks, outputPath) {
+    console.log('\n📝 Generating blocks overview page...');
+
+    // Load template
+    let content = loadTemplate('boilerplate-blocks-overview.mdx');
+
+    // Group blocks by category
+    const categories = {
+        'Shopping Experience': ['product-list-page', 'product-details', 'product-recommendations', 'commerce-cart', 'commerce-mini-cart', 'commerce-checkout'],
+        'Customer Account': ['commerce-login', 'commerce-create-account', 'commerce-confirm-account', 'commerce-forgot-password', 'commerce-create-password', 'commerce-account-header', 'commerce-account-sidebar', 'commerce-addresses', 'commerce-customer-information', 'commerce-customer-details'],
+        'Order Management': ['commerce-orders-list', 'commerce-search-order', 'commerce-order-header', 'commerce-order-status', 'commerce-order-product-list', 'commerce-order-cost-summary', 'commerce-shipping-status'],
+        'Returns & Exchanges': ['commerce-returns-list', 'commerce-create-return', 'commerce-order-returns', 'commerce-return-header'],
+        'Gift Options': ['commerce-gift-options'],
+        'Wishlist': ['commerce-wishlist']
+    };
+
+    // Build grouped table
+    let tableContent = '<TableWrapper nowrap={[0]}>\n\n';
+    tableContent += '| Block | Primary Drop-ins | Key Features |\n';
+    tableContent += '|-------|-----------------|--------------|\n';
+
+    for (const [category, blockNames] of Object.entries(categories)) {
+        tableContent += `| **${category}** | | |\n`;
+
+        for (const blockName of blockNames) {
+            const block = blocks.find(b => b.name === blockName);
+            if (block) {
+                const blockLink = `[${block.sidebarLabel}](/boilerplate/blocks/${block.name}/)`;
+                const primaryDropins = block.analysis.dropins.slice(0, 3).join(', ') || 'tools';
+
+                // Generate key features based on block name
+                const features = getBlockFeatures(block.name);
+
+                tableContent += `| ${blockLink} | ${primaryDropins} | ${features} |\n`;
+            }
+        }
+    }
+
+    tableContent += '\n</TableWrapper>';
+
+    // Replace placeholder
+    content = content.replace('BLOCKS_TABLE', tableContent);
+
+    // Write file
+    ensureParentDirectoryExists(outputPath);
+    writeFileSync(outputPath, content, 'utf8');
+
+    console.log(`  ✅ Generated ${outputPath}`);
+}
+
+/**
+ * Get key features description for a block
+ */
+function getBlockFeatures(blockName) {
+    const features = {
+        'product-list-page': 'Search, filtering, sorting, pagination, wishlist integration',
+        'product-details': 'Product options, pricing, add to cart, wishlist toggle',
+        'product-recommendations': 'AI-powered recommendations, multiple page types',
+        'commerce-cart': 'Item management, coupon codes, gift options, move to wishlist',
+        'commerce-mini-cart': 'Dropdown cart summary, quick view, checkout navigation',
+        'commerce-checkout': 'Complete checkout flow, shipping, payment, order review',
+        'commerce-login': 'Email/password authentication, redirect handling',
+        'commerce-create-account': 'Registration form, validation, account creation',
+        'commerce-confirm-account': 'Email confirmation landing, account activation',
+        'commerce-forgot-password': 'Password reset request, email trigger',
+        'commerce-create-password': 'Password reset form, token validation',
+        'commerce-account-header': 'Customer name display, logout functionality',
+        'commerce-account-sidebar': 'Account navigation menu, active state management',
+        'commerce-addresses': 'Address CRUD operations, default address management',
+        'commerce-customer-information': 'Profile editing, email/name updates',
+        'commerce-customer-details': 'Customer info display in order context',
+        'commerce-orders-list': 'Order history, status display, order details navigation',
+        'commerce-search-order': 'Guest order lookup, email and order number validation',
+        'commerce-order-header': 'Order number, date, status badge',
+        'commerce-order-status': 'Detailed status, tracking info, delivery estimates',
+        'commerce-order-product-list': 'Line items, reorder functionality, product images',
+        'commerce-order-cost-summary': 'Subtotal, taxes, shipping, discounts, grand total',
+        'commerce-shipping-status': 'Shipment tracking, carrier info, delivery status',
+        'commerce-returns-list': 'Return history, status tracking, return details navigation',
+        'commerce-create-return': 'Return request form, item selection, reason codes',
+        'commerce-order-returns': 'Return details for specific order',
+        'commerce-return-header': 'Return number, date, status display',
+        'commerce-gift-options': 'Gift messages, gift wrapping, gift receipt options',
+        'commerce-wishlist': 'Saved items, move to cart, item management'
+    };
+
+    return features[blockName] || 'Commerce functionality';
+}
+
+/**
+ * Parse README file for a block to extract configuration, events, and other details
+ */
+function parseBlockReadme(blockPath) {
+    const readmePath = join(blockPath, 'README.md');
+
+    if (!existsSync(readmePath)) {
+        return {
+            hasReadme: false,
+            configuration: null,
+            events: { listeners: [], emitters: [] },
+            urlParams: [],
+            localStorage: [],
+            behaviorPatterns: null,
+            errorHandling: null
+        };
+    }
+
+    const readmeContent = readFileSync(readmePath, 'utf8');
+
+    return {
+        hasReadme: true,
+        configuration: extractConfigurationTable(readmeContent),
+        events: extractEvents(readmeContent),
+        urlParams: extractUrlParams(readmeContent),
+        localStorage: extractLocalStorage(readmeContent),
+        behaviorPatterns: extractSection(readmeContent, '## Behavior Patterns'),
+        errorHandling: extractSection(readmeContent, '### Error Handling')
+    };
+}
+
+/**
+ * Extract configuration table from README
+ */
+function extractConfigurationTable(content) {
+    const configMatch = content.match(/\| Configuration Key \| Type \| Default \| Description \| Required \| Side Effects \|([\s\S]*?)(?=\n##|\n<!--|$)/);
+    if (!configMatch) return null;
+
+    const tableContent = configMatch[0];
+    const rows = tableContent.split('\n').filter(line => line.trim() && !line.includes('|---'));
+
+    if (rows.length <= 1) return null; // Only header row
+
+    return tableContent;
+}
+
+/**
+ * Extract events (listeners and emitters) from README
+ */
+function extractEvents(content) {
+    const events = { listeners: [], emitters: [] };
+
+    // Extract event listeners
+    const listenersMatch = content.match(/#### Event Listeners([\s\S]*?)(?=####|##|$)/);
+    if (listenersMatch) {
+        const listenerLines = listenersMatch[1].match(/- `events\.on\(['"](.*?)['"].*?\)` - (.*?)$/gm);
+        if (listenerLines) {
+            events.listeners = listenerLines.map(line => {
+                const match = line.match(/- `events\.on\(['"](.*?)['"].*?\)` - (.*)$/);
+                if (match) {
+                    return { name: match[1], description: match[2] };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+    }
+
+    // Extract event emitters
+    const emittersMatch = content.match(/#### Event Emitters([\s\S]*?)(?=##|$)/);
+    if (emittersMatch) {
+        const emitterLines = emittersMatch[1].match(/- `.*?\)` - (.*?)$/gm);
+        if (emitterLines) {
+            events.emitters = emitterLines.map(line => {
+                const match = line.match(/- `(.*?)\)` - (.*)$/);
+                if (match) {
+                    return { name: match[1], description: match[2] };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+    }
+
+    return events;
+}
+
+/**
+ * Extract URL parameters from README
+ */
+function extractUrlParams(content) {
+    const urlMatch = content.match(/### URL Parameters([\s\S]*?)(?=###|##|$)/);
+    if (!urlMatch || urlMatch[1].includes('No URL parameters')) return [];
+
+    const paramLines = urlMatch[1].match(/- `.*?` - .*$/gm);
+    if (!paramLines) return [];
+
+    return paramLines.map(line => {
+        const match = line.match(/- `(.*?)` - (.*)$/);
+        if (match) {
+            return { name: match[1], description: match[2] };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+/**
+ * Extract local storage usage from README
+ */
+function extractLocalStorage(content) {
+    const storageMatch = content.match(/### Local Storage([\s\S]*?)(?=###|##|$)/);
+    if (!storageMatch || storageMatch[1].includes('No localStorage')) return [];
+
+    const storageLines = storageMatch[1].match(/- `.*?` - .*$/gm);
+    if (!storageLines) return [];
+
+    return storageLines.map(line => {
+        const match = line.match(/- `(.*?)` - (.*)$/);
+        if (match) {
+            return { key: match[1], description: match[2] };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+/**
+ * Extract a section from README by heading
+ */
+function extractSection(content, heading) {
+    const pattern = new RegExp(`${heading}([\\s\\S]*?)(?=\\n## |$)`);
+    const match = content.match(pattern);
+    return match ? match[1].trim() : null;
+}
+
+/**
+ * Get a specific, meaningful description for a block
+ */
+function getBlockDescription(blockName) {
+    const descriptions = {
+        'product-list-page': 'Displays product listings with advanced search, filtering, sorting, and pagination capabilities. Integrates with Adobe Commerce Live Search and Product Recommendations for intelligent product discovery.',
+        'product-details': 'Renders complete product information including images, pricing, configurable options, and add-to-cart functionality. Supports simple, configurable, grouped, and bundle product types with wishlist integration.',
+        'product-recommendations': 'Displays AI-powered product recommendations based on Adobe Sensei machine learning. Adapts recommendations by page type (PDP, cart, homepage) and supports multiple recommendation units per page.',
+        'commerce-cart': 'Provides full shopping cart functionality with item management, quantity updates, coupon codes, gift options, and move-to-wishlist capabilities. Displays real-time pricing and inventory status.',
+        'commerce-mini-cart': 'Shows a dropdown cart summary typically placed in the site header. Provides quick cart overview, item count, subtotal, and one-click checkout navigation without leaving the current page.',
+        'commerce-checkout': 'Delivers the complete checkout experience including shipping address, shipping methods, payment options, and order review. Integrates with Adobe Payment Services for secure payment processing.',
+        'commerce-login': 'Provides customer authentication with email and password. Handles session management, redirect after login, and integrates with the storefront authentication system.',
+        'commerce-create-account': 'Enables new customer registration with email validation, password requirements, and privacy policy consent. Handles email confirmation flow and redirects authenticated users to their account page.',
+        'commerce-confirm-account': 'Serves as the email confirmation landing page after registration. Validates confirmation tokens and activates customer accounts, completing the registration process.',
+        'commerce-forgot-password': 'Initiates the password reset workflow by collecting the customer email address and triggering a password reset email with a secure token.',
+        'commerce-create-password': 'Completes the password reset process by validating the reset token and allowing customers to set a new password. Includes password strength requirements and confirmation.',
+        'commerce-account-header': 'Displays the logged-in customer name and provides logout functionality. Typically used at the top of account dashboard pages for consistent navigation.',
+        'commerce-account-sidebar': 'Renders the account section navigation menu with links to orders, addresses, account information, and wishlist. Highlights the active section for easy navigation.',
+        'commerce-addresses': 'Manages customer shipping and billing addresses with full CRUD operations. Allows setting default addresses and validates address data before saving.',
+        'commerce-customer-information': 'Enables customers to view and edit their profile information including name, email, and password. Validates changes and requires current password for email updates.',
+        'commerce-customer-details': 'Displays read-only customer information within the order details context, including name, email, and contact information associated with the order.',
+        'commerce-orders-list': 'Shows the complete order history with order numbers, dates, status, totals, and quick links to order details. Supports pagination for customers with many orders.',
+        'commerce-search-order': 'Allows guest customers to look up orders using order number and email address, providing access to order tracking without requiring account login.',
+        'commerce-order-header': 'Displays essential order information at the top of order details pages, including order number, order date, and current order status with visual status indicators.',
+        'commerce-order-status': 'Provides detailed order status information including processing status, shipment tracking, and delivery estimates. Updates dynamically as order progresses through fulfillment.',
+        'commerce-order-product-list': 'Lists all products in an order with images, names, quantities, prices, and options. Displays gift options for each item and provides links to product detail pages.',
+        'commerce-order-cost-summary': 'Breaks down order costs including subtotal, taxes, shipping fees, discounts, and grand total. Shows both order-time pricing and any applied promotions.',
+        'commerce-shipping-status': 'Displays shipment tracking information including carrier details, tracking numbers, and delivery status. Links to carrier tracking pages for detailed shipment updates.',
+        'commerce-returns-list': 'Shows all return requests with return numbers, dates, status, and links to return details. Helps customers track the progress of their return requests.',
+        'commerce-create-return': 'Enables customers to initiate return requests by selecting items from eligible orders, specifying quantities, and providing return reasons. Validates return eligibility.',
+        'commerce-order-returns': 'Displays return information specific to an order, showing which items have been returned or have pending return requests within the order details context.',
+        'commerce-return-header': 'Shows key return request information at the top of return details pages, including return number, request date, and current return status.',
+        'commerce-gift-options': 'Displays read-only gift options from order data in order-related pages. Shows gift messages and wrapping selections with secondary view styling for order context.',
+        'commerce-wishlist': 'Manages saved items for future purchase with options to move items to cart, remove items, and view product details. Supports both authenticated and guest users with automatic wishlist merging upon sign-in.'
+    };
+
+    return descriptions[blockName] || `Provides ${blockName.replace(/-/g, ' ')} functionality for the storefront.`;
+}
+
+/**
  * Generate documentation for individual blocks
  */
 function generateBlockDocs(block, boilerplateVersion, outputDir) {
     // Load template
     let content = loadTemplate('boilerplate-block.mdx');
 
+    // Parse README for rich information
+    const readme = parseBlockReadme(block.path);
+
     // Build description
-    const description = `The ${block.displayName} block provides commerce functionality for ${block.name.replace(/-/g, ' ')}.`;
+    const description = getBlockDescription(block.name);
 
-    // Build files list
-    let filesList = '**Files:**\n';
-    if (block.hasJs) filesList += `- \`${block.name}.js\` - JavaScript decorator and drop-in integration\n`;
-    if (block.hasCss) filesList += `- \`${block.name}.css\` - Block-specific styles\n`;
-
-    // Build drop-in info section
-    let dropinInfo = '';
-    if (block.analysis.dropins.length > 0) {
-        dropinInfo = '\n## Drop-ins Used\n\nThis block integrates the following drop-in components:\n\n';
-        for (const dropin of block.analysis.dropins) {
-            const docPath = getDropinDocPath(dropin);
-            if (docPath) {
-                dropinInfo += `- [\`@dropins/${dropin}\`](/dropins/${docPath}/) - Full documentation\n`;
-            } else {
-                dropinInfo += `- \`@dropins/${dropin}\`\n`;
-            }
-        }
-    }
-
-    // Build implementation details section
-    let implementationDetails = '';
-    if (block.analysis.containers.length > 0) {
-        implementationDetails += '### Containers\n\nThe following containers are rendered:\n\n';
-        for (const container of block.analysis.containers) {
-            implementationDetails += `- **${container}**\n`;
-        }
-        implementationDetails += '\n';
-    }
-
-    // Build events section
-    let eventsSection = '';
-    if (block.analysis.events.length > 0) {
-        eventsSection = '\n## Events\n\nThis block listens to the following events:\n\n';
-        for (const event of block.analysis.events) {
-            eventsSection += `- \`${event}\`\n`;
-        }
-    }
-
-    // Build API calls section
-    let apiCallsSection = '';
-    if (block.analysis.apiCalls.length > 0) {
-        apiCallsSection = '\n## API Functions\n\nThis block uses the following API functions:\n\n';
-        for (const apiCall of block.analysis.apiCalls) {
-            apiCallsSection += `- \`${apiCall}()\`\n`;
-        }
-    }
-
-    // Config options - currently not extracted, leave placeholder
-    const configOptions = '';
+    // Build streamlined sections
+    const quickStartSection = buildQuickStartSection(block.name);
+    const integrationSection = buildStreamlinedIntegrationSection(block, readme);
+    const customizationSection = buildCustomizationSection(block);
 
     // Replace placeholders
     content = content
         .replace(/BLOCK_DISPLAY_NAME/g, block.displayName)
+        .replace(/SIDEBAR_LABEL/g, block.sidebarLabel)
         .replace(/BLOCK_NAME/g, block.name)
         .replace(/BLOCK_DESCRIPTION/g, description)
         .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
-        .replace(/FILES_LIST/g, filesList)
-        .replace(/DROP_IN_INFO/g, dropinInfo)
-        .replace(/IMPLEMENTATION_DETAILS/g, implementationDetails)
-        .replace(/CONFIG_OPTIONS/g, configOptions)
-        .replace(/EVENTS_SECTION/g, eventsSection)
-        .replace(/API_CALLS_SECTION/g, apiCallsSection);
-
-    // Don't apply standard transforms for boilerplate docs - they're designed for drop-in docs
-    // and add sections (like "Block Configuration") that don't apply to boilerplate blocks
+        .replace(/QUICK_START_SECTION/g, quickStartSection)
+        .replace(/INTEGRATION_SECTION/g, integrationSection)
+        .replace(/CUSTOMIZATION_SECTION/g, customizationSection);
 
     // Write file
     const outputPath = join(outputDir, 'blocks', `${block.name}.mdx`);
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
+}
+
+/**
+ * Build Quick Start section
+ */
+function buildQuickStartSection(blockName) {
+    return `## Quick start
+
+This block is included in the boilerplate and works out of the box.
+
+- **Block:** \`blocks/${blockName}/${blockName}.js\`
+- **Styles:** \`blocks/${blockName}/${blockName}.css\`
+
+<Aside type="tip" title="For merchants">
+See the [merchant documentation](/merchants/blocks/${blockName}/) for how to add this block to pages.
+</Aside>`;
+}
+
+/**
+ * Build streamlined How it works section - combines drop-ins, events, config, and behavior
+ */
+function buildStreamlinedIntegrationSection(block, readme) {
+    let section = '## How it works\n\n';
+
+    // Drop-ins
+    if (block.analysis.dropins && block.analysis.dropins.length > 0) {
+        section += '### Drop-ins used\n\n';
+        for (const dropin of block.analysis.dropins) {
+            const docPath = getDropinDocPath(dropin);
+            const dropinPurpose = getDropinPurpose(dropin);
+            if (docPath) {
+                section += `- **${dropinPurpose}:** [\`@dropins/${dropin}\`](/dropins/${docPath}/)\n`;
+            } else {
+                section += `- **${dropinPurpose}:** \`@dropins/${dropin}\`\n`;
+            }
+        }
+        section += '\n';
+    }
+
+    // Events (if any)
+    const hasListeners = readme.events.listeners && readme.events.listeners.length > 0;
+    const hasEmitters = readme.events.emitters && readme.events.emitters.length > 0;
+
+    if (hasListeners || hasEmitters) {
+        section += '### Events\n\n';
+
+        if (hasListeners) {
+            section += 'Listens to:\n\n';
+            for (const event of readme.events.listeners) {
+                section += `- \`${event.name}\` - ${event.description}\n`;
+            }
+            section += '\n';
+        }
+
+        if (hasEmitters) {
+            section += 'Emits:\n\n';
+            for (const event of readme.events.emitters) {
+                section += `- \`${event.name}\` - ${event.description}\n`;
+            }
+            section += '\n';
+        }
+    }
+
+    // Configuration (if any)
+    if (readme.configuration) {
+        section += '### Configuration options\n\n';
+        section += '<TableWrapper nowrap={[0]}>\n\n';
+        section += readme.configuration;
+        section += '\n\n</TableWrapper>\n\n';
+    }
+
+    // Key behavior patterns (concise)
+    if (readme.behaviorPatterns) {
+        const contextDetection = readme.behaviorPatterns.match(/### Page Context Detection([\s\S]*?)(?=###|$)/);
+        if (contextDetection) {
+            section += '### Key behaviors\n\n';
+            section += contextDetection[1].trim() + '\n\n';
+        }
+    }
+
+    return section;
+}
+
+/**
+ * Build Customization section
+ */
+function buildCustomizationSection(block) {
+    const blockName = block.name;
+
+    let section = '## Customization\n\n';
+
+    section += 'Common approaches:\n\n';
+    section += `- **Modify behavior**: Edit \`blocks/${blockName}/${blockName}.js\`\n`;
+    section += `- **Update styles**: Edit \`blocks/${blockName}/${blockName}.css\`\n`;
+
+    if (block.analysis.dropins.length > 0) {
+        section += '- **Extend drop-ins**: Use [drop-in slots and events](/dropins/all/quick-start/#slots-and-events) for custom behavior\n';
+    }
+
+    section += '\n';
+    section += `See the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/${blockName}" text="source code" /> for implementation details.\n`;
+
+    return section;
+}
+
+/**
+ * Get purpose description for a drop-in
+ */
+function getDropinPurpose(dropin) {
+    const purposes = {
+        'storefront-cart': 'Cart management and operations',
+        'storefront-checkout': 'Checkout flow and order placement',
+        'storefront-order': 'Order management and history',
+        'storefront-pdp': 'Product detail page functionality',
+        'storefront-product-discovery': 'Product search and filtering',
+        'storefront-recommendations': 'AI-powered product recommendations',
+        'storefront-account': 'Customer account management',
+        'storefront-auth': 'Authentication and authorization',
+        'storefront-wishlist': 'Wishlist management',
+        'storefront-payment-services': 'Payment processing',
+        'tools': 'Shared utilities and components'
+    };
+    return purposes[dropin] || 'Commerce functionality';
 }
 
 /**
@@ -457,42 +799,14 @@ function generateConfigDocs(boilerplateVersion, outputPath) {
 
 /**
  * Update sidebar navigation
+ * Note: Individual block pages removed - only overview page remains
  */
 function updateSidebarNavigation(blocks) {
     console.log('\n📝 Updating sidebar navigation...');
-
-    const configPath = join(projectRoot, 'astro.config.mjs');
-    let config = readFileSync(configPath, 'utf8');
-
-    // Find the boilerplate sidebar section
-    const boilerplatePattern = /label:\s*['"]Boilerplate['"]\s*,\s*items:\s*\[[\s\S]*?\]/;
-
-    const blockItems = blocks.map(block =>
-        `{ label: '${block.displayName}', slug: 'boilerplate/blocks/${block.name}' }`
-    ).join(',\n            ');
-
-    const newBoilerplateSection = `label: 'Boilerplate',
-        items: [
-          { label: 'Overview', slug: 'boilerplate/index' },
-          { label: 'Structure', slug: 'boilerplate/structure' },
-          { label: 'Build Process', slug: 'boilerplate/build-process' },
-          { label: 'Configuration', slug: 'boilerplate/configuration' },
-          {
-            label: 'Blocks',
-            collapsed: true,
-            items: [
-              ${blockItems}
-            ]
-          }
-        ]`;
-
-    if (boilerplatePattern.test(config)) {
-        config = config.replace(boilerplatePattern, newBoilerplateSection);
-        writeFileSync(configPath, config, 'utf8');
-        console.log('  ✅ Updated sidebar navigation');
-    } else {
-        console.log('  ⚠️  Could not find boilerplate section in sidebar');
-    }
+    console.log('  ℹ️  Individual block pages removed - sidebar will be manually managed');
+    console.log('  ℹ️  Commerce blocks are now consolidated in /boilerplate/blocks/');
+    // Sidebar is now manually managed in astro.config.mjs
+    // No automatic updates needed for blocks section
 }
 
 // ============================================================================
@@ -524,14 +838,12 @@ try {
     // Generate overview
     generateOverview(blocks, initializers, boilerplateVersion, join(outputDir, 'index.mdx'));
 
-    // Generate block documentation
-    console.log('\n📝 Generating block documentation...');
-    let blockCount = 0;
-    blocks.forEach(block => {
-        generateBlockDocs(block, boilerplateVersion, outputDir);
-        blockCount++;
-    });
-    console.log(`  ✅ Generated ${blockCount} block docs`);
+    // Generate blocks overview page
+    generateBlocksOverview(blocks, join(outputDir, 'blocks', 'index.mdx'));
+
+    // Individual block documentation removed - consolidated into overview page
+    // See /boilerplate/blocks/ for complete block reference
+    // See /boilerplate/customizing-blocks/ for implementation guidance
 
     // Generate additional documentation
     generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
@@ -545,12 +857,12 @@ try {
     console.log('\n' + '='.repeat(60));
     console.log('\n📊 Generation Summary:\n');
     console.log(`✅ Overview page: 1`);
-    console.log(`✅ Commerce blocks: ${blocks.length}`);
+    console.log(`✅ Blocks overview page: 1 (${blocks.length} blocks listed)`);
     console.log(`✅ Structure docs: 1`);
     console.log(`✅ Build docs: 1`);
     console.log(`✅ Configuration docs: 1`);
-    console.log(`✅ Sidebar navigation: Updated`);
-    console.log(`📄 Total: ${blocks.length + 4} pages`);
+    console.log(`ℹ️  Sidebar navigation: Manually managed`);
+    console.log(`📄 Total: 5 pages`);
 
     console.log('\n📝 Generated Documentation:\n');
     console.log(`   📂 /boilerplate/`);
@@ -559,9 +871,9 @@ try {
     console.log(`      📄 build-process.mdx`);
     console.log(`      📄 configuration.mdx`);
     console.log(`      📂 blocks/`);
-    blocks.forEach(block => {
-        console.log(`         📄 ${block.name}.mdx`);
-    });
+    console.log(`         📄 index.mdx (Overview for ${blocks.length} blocks)`);
+    console.log(`\n   ℹ️  Individual block pages removed - see /boilerplate/blocks/`);
+    console.log(`   ℹ️  Customization guide at /boilerplate/customizing-blocks/`);
 
     console.log('\n✨ Boilerplate documentation generation complete!\n');
 

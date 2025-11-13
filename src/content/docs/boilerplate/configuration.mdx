@@ -17,113 +17,271 @@ The AEM Commerce boilerplate requires configuration to connect to your Adobe Com
 
 ## Configuration Overview
 
-The boilerplate uses multiple configuration files depending on your deployment stage:
+The boilerplate requires configuration at two levels:
 
-- **`demo-config.json`** - Local development configuration
-- **`.aem.live` config service** - Production configuration (site.yaml, sitemap.yaml, etc.)
-- **`head.html`** - Import map and meta tags
-- **Drop-in initializers** - Individual drop-in configuration in `scripts/initializers/`
+- **Commerce backend connection:** `demo-config.json` (local) or Configuration Service (production) provides Adobe Commerce GraphQL endpoints, API credentials, store settings, and analytics configuration.
 
-## Head Configuration
-
-The `head.html` file contains:
-
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<script type="module">
-  // Import map for drop-ins
-  import { setLibs } from './scripts/aem.js';
-  setLibs('/libs');
-</script>
-<script type="importmap">
-  {
-    "imports": {
-      "@dropins/tools/": "./scripts/__dropins__/tools/",
-      // ... other drop-in mappings
-    }
-  }
-</script>
-<link rel="stylesheet" href="/styles/styles.css"/>
-<link rel="icon" href="data:,">
-```
-
-**Key elements**:
-- Import map for drop-in component resolution
-- Global styles reference
-- Viewport and responsive settings
+- **Drop-in initialization:** Files in `scripts/initializers/` set up each drop-in by specifying which GraphQL client to use, loading language labels from placeholder files, and passing runtime options to the drop-in.
 
 ## Demo Configuration (Local Development)
 
-The `demo-config.json` file provides configuration for local development:
+The `demo-config.json` file provides configuration for local development. It connects to the boilerplate's sample Commerce backend:
 
 ```json
 {
-  "commerce": {
-    "storeCode": "main",
-    "storeView": "default",
-    "locale": "en_US",
-    "currency": "USD"
-  },
-  "contentSource": {
-    "type": "markup",
-    "baseUrl": "https://main--aem-boilerplate-commerce--hlxsites.aem.page"
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "https://www.aemshop.net/graphql",
+      "commerce-endpoint": "https://www.aemshop.net/cs-graphql",
+      "commerce-assets-enabled": false,
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "main_website_store",
+          "Magento-Store-View-Code": "default",
+          "Magento-Website-Code": "base",
+          "x-api-key": "4dfa19c9fe6f4cccade55cc5b3da94f7",
+          "Magento-Environment-Id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        "environment-id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a",
+        "store-code": "main_website_store",
+        "store-id": 1,
+        "store-name": "Main Website Store",
+        "store-url": "https://www.aemshop.net",
+        "store-view-code": "default",
+        "store-view-id": 1,
+        "store-view-name": "Default Store View",
+        "website-code": "base",
+        "website-id": 1,
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "YOUR_ROOT_CATEGORY_ID"
+        }
+      }
+    }
   }
 }
 ```
 
+### Local vs Production Configuration
+
+**For local development:**
+- The AEM CLI automatically serves `demo-config.json` as `/config.json` at runtime
+- No renaming required - the file works out of the box with the demo Commerce backend
+- To connect your own backend locally, edit the values in `demo-config.json` directly
+
+**For production deployment, choose one of these options:**
+
+1. **Configuration Service (Recommended)** - Use the `.aem.live` Configuration Service, which stores configuration at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`. This approach stores configuration in the same format as the `public` section in `default-site.json` and allows configuration updates without code deployments. Note that a local `config.json` in your repository will override the Configuration Service.
+
+2. **Repository-based config (Simple)** - Rename `demo-config.json` to `config.json` in your repository root, update the values with your production Commerce backend details, and commit the file. Edge Delivery Services will serve this file at `/config.json` in production.
+
 ## Production Configuration Templates
 
-The boilerplate includes template configuration files:
+The boilerplate includes template configuration files with placeholders for your site setup:
 
-### default-site.yaml
+### default-site.json
 
-Site-level configuration template:
+Comprehensive site configuration template for production deployment:
 
-```yaml
-# Site configuration
-commerce:
-  endpoint: https://your-commerce-instance.com/graphql
-  storeCode: main
-  storeView: default
-  
-# Feature flags
-features:
-  personalization: true
-  recommendations: true
+```json
+{
+  "version": 1,
+  "code": {
+    "owner": "{ORG}",
+    "repo": "{REPO}",
+    "source": {
+      "type": "github",
+      "url": "https://github.com/{ORG}/{REPO}"
+    }
+  },
+  "content": {
+    "source": {
+      "url": "{CONTENT_SOURCE}",
+      "type": "onedrive"
+    }
+  },
+  "folders": {
+    "/products/": "/products/default"
+  },
+  "cdn": {
+    "live": {
+      "host": "main--{SITE}--{ORG}.aem.live"
+    },
+    "preview": {
+      "host": "main--{SITE}--{ORG}.aem.page"
+    }
+  },
+  "headers": {},
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "{ENDPOINT}",
+      "commerce-endpoint": "{CS_ENDPOINT}",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "{STORE_CODE}",
+          "Magento-Store-View-Code": "{STORE_VIEW_CODE}",
+          "Magento-Website-Code": "{WEBSITE_CODE}",
+          "x-api-key": "{COMMERCE_API_KEY}",
+          "Magento-Environment-Id": "{COMMERCE_ENVIRONMENT_ID}"
+        }
+      },
+      "analytics": {
+        "base-currency-code": "USD",
+        "environment": "Production",
+        "store-id": "{STORE_ID}",
+        "store-name": "Main Website Store",
+        "store-url": "{DOMAIN}",
+        "store-view-id": "{STORE_VIEW_ID}",
+        "store-view-name": "Default Store View",
+        "website-id": "{WEBSITE_ID}",
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "{YOUR_ROOT_CATEGORY_ID}"
+        }
+      }
+    }
+  },
+  "robots": {
+    "txt": "User-agent: *\nAllow: /\nDisallow: /drafts/\nDisallow: /enrichment/\nDisallow: /tools/\nDisallow: /plugins/experimentation/\n\nSitemap: https://{DOMAIN}/sitemap-index.xml"
+  },
+  "sidekick": {
+    "project": "Boilerplate",
+    "plugins": [
+      {
+        "id": "cif",
+        "title": "Commerce",
+        "environments": ["edit"],
+        "url": "https://main--{SITE}--{ORG}.aem.live/tools/picker/dist/index.html",
+        "isPalette": true,
+        "paletteRect": "top: 54px; left: 5px; bottom: 5px; width: 300px; height: calc(100% - 59px); border-radius: var(--hlx-sk-button-border-radius); overflow: hidden; resize: horizontal."
+      },
+      {
+        "id": "personalisation",
+        "title": "Personalisation",
+        "environments": ["edit"],
+        "url": "https://main--{SITE}--{ORG}.aem.live/tools/segments/dist/index.html",
+        "isPalette": true,
+        "paletteRect": "top: 54px; left: 5px; bottom: 5px; width: 300px; height: calc(100% - 59px); border-radius: var(--hlx-sk-button-border-radius); overflow: hidden; resize: horizontal."
+      }
+    ]
+  },
+  "access": {
+    "admin": {
+      "role": {
+        "config_admin": ["{ADMIN_USER_EMAIL}"]
+      },
+      "requireAuth": "auto"
+    }
+  }
+}
 ```
+
+Replace the `{PLACEHOLDER}` values with your actual configuration.
 
 ### default-fstab.yaml
 
-Content source configuration:
+Content source and folder mapping configuration:
 
 ```yaml
 mountpoints:
-  /: https://drive.google.com/drive/folders/YOUR_FOLDER_ID
+  /:
+    url: https://content.da.live/{org}/{site}/
+    type: markup
+
+folders:
+  /products/: /products/default
 ```
+
+The `mountpoints` define where content is authored, and `folders` map URL paths to content directories.
 
 ### default-query.yaml
 
-Content indexing configuration:
+Content indexing configuration for generating sitemap and enrichment data:
 
 ```yaml
+version: 1
 indices:
-  default:
-    include:
-      - /**
+  sitemap:
+    target: /sitemap.json
     exclude:
-      - /drafts/**
+      - 'drafts/**'
+      - 'enrichment/**'
+      - 'fragments/**'
+      - 'products/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      image:
+        select: head > meta[property="og:image"]
+        value: |
+          attribute(el, 'content')
+      description:
+        select: head > meta[name="description"]
+        value: |
+          attribute(el, 'content')
+      template:
+        select: head > meta[name="template"]
+        value: |
+          attribute(el, 'content')
+      robots:
+        select: head > meta[name="robots"]
+        value: |
+          attribute(el, 'content')
+      lastModified:
+        select: none
+        value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
+  enrichment:
+    target: /enrichment/enrichment.json
+    include:
+      - '**/enrichment/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      products:
+        select: head > meta[name="enrichment-products"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      categories:
+        select: head > meta[name="enrichment-categories"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      positions:
+        select: head > meta[name="enrichment-positions"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
 ```
 
 ### default-sitemap.yaml
 
-Sitemap configuration for SEO:
+Sitemap generation configuration:
 
 ```yaml
 sitemaps:
   default:
-    origin: https://main--aem-boilerplate-commerce--hlxsites.aem.live
-    hreflang: true
+    source: /sitemap.json
+    destination: /sitemap-content.xml
+    lastmod: YYYY-MM-DD
 ```
+
+The sitemap reads from the generated `sitemap.json` (created by `default-query.yaml`) and outputs an XML sitemap.
 
 ## Drop-in Initializers
 
@@ -133,23 +291,26 @@ Configure individual drop-ins in `scripts/initializers/`:
 
 ```javascript
 import { initializers } from '@dropins/tools/initializer.js';
+import { initialize, setEndpoint } from '@dropins/storefront-cart/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL, fetchPlaceholders } from '../commerce.js';
 
-initializers.register('cart', async () => {
-  // Cart drop-in initialization
-  const { initialize } = await import('@dropins/storefront-cart/api.js');
-  
-  await initialize({
-    // Configuration options
-    models: {
-      CartModel: {
-        transformer: (data) => {
-          // Custom data transformation
-          return data;
-        }
-      }
-    }
-  });
-});
+await initializeDropin(async () => {
+  // Set Fetch GraphQL (Core)
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  // Fetch placeholders
+  const labels = await fetchPlaceholders('placeholders/cart.json');
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  // Initialize cart
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
 ```
 
 ## Environment-Specific Configuration
@@ -162,32 +323,9 @@ Use different configuration values for different environments:
 - **Production**: Configure in AEM.live production settings
 </Aside>
 
-## Common Configuration Options
-
-### Commerce Backend
-
-- **Endpoint URL**: Your Adobe Commerce GraphQL endpoint
-- **Store code**: Multi-store configuration
-- **Store view**: Language/locale configuration
-- **Authentication**: API keys and tokens (if required)
-
-### Drop-in Features
-
-- **Cart**: Guest cart, persistent cart, mini cart behavior
-- **Checkout**: Payment methods, shipping methods, address validation
-- **Product Discovery**: Facets, filters, sorting options
-- **Personalization**: Target rules, audience segments
-
-### Content Delivery
-
-- **CDN configuration**: Edge Delivery Services CDN
-- **CORS setup**: Cross-origin resource sharing for API calls
-- **Cache headers**: Performance optimization
-
 ## Related Documentation
 
 - [Boilerplate overview](/boilerplate/) - Complete reference
 - [Storefront configuration guide](/setup/configuration/commerce-configuration/) - Detailed setup instructions
 - [CORS setup](/setup/configuration/cors-setup/) - Security configuration
 - [Multistore setup](/setup/configuration/multistore-setup/) - Multiple stores/languages
-
