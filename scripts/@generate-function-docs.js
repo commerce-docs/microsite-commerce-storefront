@@ -1516,13 +1516,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                 // Per-dropin mapping of bidirectional events (emits-and-listens)
                 // Events can be bidirectional in one dropin but only emit in another
                 const emitsAndListensByDropin = {
+                    // B2C drop-ins
                     'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
                     'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
                     'order': ['order/data'],
                     'product-details': ['pdp/data', 'pdp/values'],
                     'recommendations': ['recommendations/data'],
                     'product-discovery': ['search/error', 'search/loading', 'search/result'],
-                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset'],
+                    // B2B drop-ins
+                    'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
+                    'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
+                    'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                    'company-switcher': ['companyContext/changed'],
+                    'company-management': ['auth/permissions']
                 };
 
                 // Default to -emits since most events only have an "Emits" section
@@ -1533,7 +1540,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                 }
 
                 // Link to the events page with full anchor (use absolute path for proper link validation)
-                return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
+                //  Use /dropins-b2b/ for B2B drop-ins, /dropins/ for B2C
+                const basePath = repoConfig.type === 'B2B' ? '/dropins-b2b' : '/dropins';
+                return `[\`${eventName}\`](${basePath}/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
             });
 
             // Auto-link model names to their definitions (first occurrence only)
@@ -1568,13 +1577,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     // Per-dropin mapping of bidirectional events (emits-and-listens)
                     // Events can be bidirectional in one dropin but only emit in another
                     const emitsAndListensByDropin = {
+                        // B2C drop-ins
                         'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
                         'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
                         'order': ['order/data'],
                         'product-details': ['pdp/data', 'pdp/values'],
                         'recommendations': ['recommendations/data'],
                         'product-discovery': ['search/error', 'search/loading', 'search/result'],
-                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset'],
+                        // B2B drop-ins
+                        'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
+                        'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
+                        'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                        'company-switcher': ['companyContext/changed'],
+                        'company-management': ['auth/permissions']
                     };
 
                     // Default to -emits since most events only have an "Emits" section
@@ -1583,7 +1599,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     if (dropinBidirectionalEvents.includes(eventName)) {
                         anchorSuffix = '-emits-and-listens';
                     }
-                    return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
+                    // Use /dropins-b2b/ for B2B drop-ins, /dropins/ for B2C
+                    const basePath = repoConfig.type === 'B2B' ? '/dropins-b2b' : '/dropins';
+                    return `[\`${eventName}\`](${basePath}/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
                 });
             }
         }

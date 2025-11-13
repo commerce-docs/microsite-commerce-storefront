@@ -581,7 +581,7 @@ ${configType.definition}
     }
 
     // Replace placeholders
-    return replacePlaceholders(template, {
+    let content = replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_KEY': repoName,  // kebab-case for URLs
         'DROPIN_PACKAGE': repoConfig.packageName,
@@ -596,6 +596,14 @@ ${configType.definition}
         'CUSTOM_CONFIG_SECTION': customConfigSection,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
+
+    // Fix paths for B2B drop-ins: /dropins/ -> /dropins-b2b/
+    // But keep /dropins/all/ as-is (shared documentation)
+    if (repoConfig.type === 'B2B') {
+        content = content.replace(/\/dropins\/(?!all\/)/g, '/dropins-b2b/');
+    }
+
+    return content;
 }
 
 /**

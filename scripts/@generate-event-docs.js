@@ -966,12 +966,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                     }
                 });
 
-                // Generate links to Data Models section for referenced types
+                // Generate links to Data Models section for referenced types (only if they have definitions)
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
         } else if (typedEvents.has(eventName)) {
@@ -1001,12 +1004,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                     }
                 });
 
-                // Generate links to Data Models section for referenced types
+                // Generate links to Data Models section for referenced types (only if they have definitions)
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
         } else {
@@ -1045,10 +1051,13 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 });
 
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
             // If no type found (neither defined nor inferred), leave payload section empty
@@ -1095,7 +1104,20 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             if (modelData.events.length > 0) {
                 dataModelsSection += `Used in: `;
                 dataModelsSection += modelData.events
-                    .map(eventName => `[\`${eventName}\`](#${eventName.replace(/\//g, '')}-${eventEmits.has(eventName) && eventListeners.has(eventName) ? 'emits-and-listens' : eventEmits.has(eventName) ? 'emits' : 'listens'})`)
+                    .map(eventName => {
+                        // Determine direction
+                        let direction;
+                        if (eventEmits.has(eventName) && eventListeners.has(eventName)) {
+                            direction = 'emits-and-listens';
+                        } else if (eventEmits.has(eventName)) {
+                            direction = 'emits';
+                        } else {
+                            direction = 'listens';
+                        }
+                        // Use eventNameToAnchor for consistency
+                        const anchor = eventNameToAnchor(eventName, direction);
+                        return `[\`${eventName}\`](#${anchor})`;
+                    })
                     .join(', ');
                 dataModelsSection += '.\n\n';
             }
