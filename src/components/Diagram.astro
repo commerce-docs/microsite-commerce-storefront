@@ -94,16 +94,17 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        // Convert enhanced SVG to data URI for instant zoom loading
+        // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
-        // Encode as data URI instead of blob URL to eliminate fetch lag when zooming
-        const svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(enhancedSvg);
+        
+        // Use data URI for immediate availability (no async loading)
+        const dataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(enhancedSvg)));
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = svgDataUri;
+        img.src = dataUri;
         img.alt = 'Mermaid diagram';
         
         // Set the calculated dimensions on the img element
@@ -118,7 +119,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           display: block;
         `;
         
-        // Create zoom button like the working images
+        // Create zoom button
         const zoomButton = document.createElement('button');
         zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
         zoomButton.className = 'starlight-image-zoom-control';
@@ -135,17 +136,9 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Replace loading with the zoomable wrapper
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
-
-        // Store the enhanced SVG content for modal use
-        img.dataset.svgContent = enhancedSvg;
         
-        // Trigger the zoom plugin to re-scan for images after our dynamic image is added
-        img.onload = () => {
-          setTimeout(() => {
-            // Dispatch the same event the plugin listens to for re-scanning
-            document.dispatchEvent(new CustomEvent('astro:after-swap'));
-          }, 100);
-        };
+        // The zoom plugin should already be initialized and watching for new elements
+        // No need to dispatch events or wait for async operations
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);

@@ -10,6 +10,8 @@
  * - Other generators that need empty state pages
  */
 
+import { cleanVersion } from '../utils.js';
+
 /**
  * Generate simple "no functions" page
  * 
@@ -20,10 +22,10 @@
  * @returns {string} Complete MDX content for functions page
  */
 export function generateNoFunctionsPage(config) {
-    const { dropinDisplayName, version, repoUrl = '' } = config;
-    const cleanVersion = version.replace(/^[\^~]/, '');
+  const { dropinDisplayName, version, repoUrl = '' } = config;
+  const cleanVersionStr = cleanVersion(version);
 
-    return `---
+  return `---
 title: ${dropinDisplayName} Functions
 description: API functions provided by the ${dropinDisplayName} drop-in for programmatic control and customization.
 sidebar:
@@ -67,7 +69,7 @@ import { Aside } from '@astrojs/starlight/components';
 This drop-in currently has no functions defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion}</strong>
+<strong>Version: ${cleanVersionStr}</strong>
 </div>
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
@@ -88,10 +90,10 @@ ${repoUrl ? `\n{/* This documentation is auto-generated from the drop-in source 
  * @returns {string} Complete MDX content for events page
  */
 export function generateNoEventsPage(config) {
-    const { dropinDisplayName, version } = config;
-    const cleanVersion = version.replace(/^[\^~]/, '');
+  const { dropinDisplayName, version } = config;
+  const cleanVersionStr = cleanVersion(version);
 
-    return `---
+  return `---
 title: ${dropinDisplayName} Data & Events
 description: Learn about the events used by the ${dropinDisplayName} and the data available within the events.
 sidebar:
@@ -104,7 +106,7 @@ import { Aside } from '@astrojs/starlight/components';
 This drop-in does not emit or listen to any drop-in-specific events.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion}</strong>
+<strong>Version: ${cleanVersionStr}</strong>
 </div>
 `;
 }
@@ -118,10 +120,10 @@ This drop-in does not emit or listen to any drop-in-specific events.
  * @returns {string} Complete MDX content for containers index page
  */
 export function generateNoContainersPage(config) {
-    const { dropinDisplayName, version } = config;
-    const cleanVersion = version.replace(/^[\^~]/, '');
+  const { dropinDisplayName, version } = config;
+  const cleanVersionStr = cleanVersion(version);
 
-    return `---
+  return `---
 title: ${dropinDisplayName} Containers
 description: React containers provided by the ${dropinDisplayName} drop-in.
 sidebar:
@@ -132,7 +134,7 @@ sidebar:
 This drop-in currently has no containers defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion}</strong>
+<strong>Version: ${cleanVersionStr}</strong>
 </div>
 `;
 }
@@ -146,10 +148,10 @@ This drop-in currently has no containers defined.
  * @returns {string} Complete MDX content for slots page
  */
 export function generateNoSlotsPage(config) {
-    const { dropinDisplayName, version } = config;
-    const cleanVersion = version.replace(/^[\^~]/, '');
+  const { dropinDisplayName, version } = config;
+  const cleanVersionStr = cleanVersion(version);
 
-    return `---
+  return `---
 title: ${dropinDisplayName} Slots
 description: Customizable slots provided by the ${dropinDisplayName} drop-in.
 sidebar:
@@ -160,7 +162,7 @@ sidebar:
 This drop-in currently has no customizable slots defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion}</strong>
+<strong>Version: ${cleanVersionStr}</strong>
 </div>
 
 For information about slots in general, see the [slots documentation](/customize/slots/).
@@ -176,10 +178,10 @@ For information about slots in general, see the [slots documentation](/customize
  * @returns {string} Complete MDX content for dictionary page
  */
 export function generateNoDictionaryPage(config) {
-    const { dropinDisplayName, version } = config;
-    const cleanVersion = version.replace(/^[\^~]/, '');
+  const { dropinDisplayName, version } = config;
+  const cleanVersionStr = cleanVersion(version);
 
-    return `---
+  return `---
 title: ${dropinDisplayName} Dictionary
 description: Customize user-facing text and labels in the ${dropinDisplayName} drop-in for localization and branding.
 sidebar:
@@ -190,18 +192,8 @@ sidebar:
 This drop-in currently has no dictionary defined.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersion}</strong>
+<strong>Version: ${cleanVersionStr}</strong>
 </div>
 `;
-}
-
-/**
- * Format version string by removing npm version prefixes
- * 
- * @param {string} version - Raw version string (e.g., "^1.0.3" or "1.0.3")
- * @returns {string} Clean version string (e.g., "1.0.3")
- */
-export function cleanVersion(version) {
-    return version.replace(/^[\^~]/, '');
 }
 

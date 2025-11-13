@@ -136,7 +136,17 @@ export function generatePropertyTable(items, options = {}) {
     // Generate data rows
     for (const item of items) {
         const name = `\`${item.name}\``;
-        const type = `\`${sanitizeInlineCode(item.type)}\``;  // Use sanitizeInlineCode for types
+
+        // Handle types with links (marked with __LINK__ prefix)
+        let type;
+        if (item.type && item.type.startsWith('__LINK__')) {
+            // Strip the marker and don't wrap in backticks (it already has markdown links)
+            type = item.type.replace('__LINK__', '');
+        } else {
+            // Regular type - wrap in backticks
+            type = `\`${sanitizeInlineCode(item.type)}\``;
+        }
+
         const required = item.required ? 'Yes' : 'No';
         const description = sanitizeText(item.description || '');
 
