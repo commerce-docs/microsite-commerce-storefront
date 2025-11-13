@@ -20,36 +20,18 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { execSync, execFileSync } from 'child_process';
+import { execSync } from 'child_process';
 
 // Import shared utilities
 import { getProjectRoot } from './lib/generator-core.js';
 import { ensureParentDirectoryExists } from './lib/utils.js';
+import { cloneOrUpdateBoilerplate } from './lib/repository.js';
 
 const projectRoot = getProjectRoot();
 
 // ============================================================================
 // REPOSITORY MANAGEMENT
 // ============================================================================
-
-/**
- * Clone or update the boilerplate repository
- */
-function cloneBoilerplate() {
-    const boilerplatePath = join(projectRoot, '.temp-repos', 'aem-boilerplate-commerce');
-
-    console.log('\n📦 Cloning/updating AEM Commerce boilerplate...');
-
-    if (!existsSync(boilerplatePath)) {
-        console.log('  Cloning boilerplate repository...');
-        execFileSync('git', ['clone', '--depth', '1', 'https://github.com/hlxsites/aem-boilerplate-commerce.git', boilerplatePath], { stdio: 'inherit' });
-    } else {
-        console.log('  Using existing boilerplate repository...');
-        // Skip git pull to avoid network/certificate issues - existing repo is sufficient
-    }
-
-    return boilerplatePath;
-}
 
 // ============================================================================
 // CONFIGURATION EXTRACTION
@@ -690,9 +672,25 @@ function extractCommerceBlocks(boilerplatePath) {
 // ============================================================================
 
 /**
- * Get boilerplate version from git tag
+ * Get boilerplate version from package.json
+ * This provides a consistent semantic version (e.g., 4.0.1) rather than
+ * git tags which may be descriptive (e.g., "fix-headers")
  */
 function getBoilerplateVersion(boilerplatePath) {
+    try {
+        // Primary: Use package.json version (semantic versioning)
+        const packageJsonPath = join(boilerplatePath, 'package.json');
+        if (existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            if (packageJson.version) {
+                return packageJson.version;
+            }
+        }
+    } catch (error) {
+        console.warn('  ⚠️  Could not read package.json version');
+    }
+
+    // Fallback: Try git tag (only if package.json fails)
     try {
         const tag = execSync('git describe --tags --abbrev=0', {
             cwd: boilerplatePath,
@@ -700,17 +698,7 @@ function getBoilerplateVersion(boilerplatePath) {
         }).trim();
         // Remove 'v' prefix if present
         return tag.replace(/^v/, '');
-    } catch (error) {
-        // Fallback: try to get from package.json
-        try {
-            const packageJsonPath = join(boilerplatePath, 'package.json');
-            if (existsSync(packageJsonPath)) {
-                const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-                return packageJson.version || 'latest';
-            }
-        } catch {
-            return 'latest';
-        }
+    } catch {
         return 'latest';
     }
 }
@@ -719,7 +707,7 @@ function getBoilerplateVersion(boilerplatePath) {
  * Mapping of blocks to their setup/tutorial guides
  */
 const setupGuideMapping = {
-    'product-recommendations': '/merchants/get-started/product-recommendations/'
+    'product-recommendations': '/merchants/commerce-blocks/product-recommendations/'
 };
 
 /**
@@ -757,7 +745,7 @@ Before using this block, see the [${block.displayName} setup guide](${setupGuide
     }
 
     content += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${boilerplateVersion}</strong>
+<strong>Boilerplate version: ${boilerplateVersion}</strong>
 </div>
 
 `;
@@ -863,7 +851,7 @@ try {
     console.log('='.repeat(60));
 
     // Clone/update boilerplate
-    const boilerplatePath = cloneBoilerplate();
+    const { path: boilerplatePath } = cloneOrUpdateBoilerplate();
 
     // Extract blocks
     const blocks = extractCommerceBlocks(boilerplatePath);

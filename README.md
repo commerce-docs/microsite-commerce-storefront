@@ -34,9 +34,9 @@ This documentation site includes a collection of custom Astro components that en
 - **[Screenshot](/src/content/docs/dropins/user-auth/recaptcha.mdx)** - Displays screenshots with captions
 - **[Summary](/src/content/docs/dropins/all/branding.mdx)** - Summary or overview section
 - **[TableWrapper](/src/content/docs/dropins/all/events.mdx)** - Wrapper for responsive table displays
-- **[Task](/src/content/docs/dropins/wishlist/installation.mdx)** - Individual task item for Tasks component
-- **[Tasks](/src/content/docs/dropins/wishlist/installation.mdx)** - Task list component
-- **[Vocabulary](/src/content/docs/dropins/cart/installation.mdx)** - Defines and explains technical terms
+- **[Task](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Individual task item for Tasks component
+- **[Tasks](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Task list component
+- **[Vocabulary](/src/content/docs/dropins/cart/quick-start.mdx)** - Defines and explains technical terms
 
 ### Using custom components
 
