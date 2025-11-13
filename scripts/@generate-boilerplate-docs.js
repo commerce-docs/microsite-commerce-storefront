@@ -846,8 +846,9 @@ try {
     // See /boilerplate/customizing-blocks/ for implementation guidance
 
     // Generate additional documentation
-    generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
-    generateBuildDocs(boilerplateVersion, join(outputDir, 'build-process.mdx'));
+    // NOTE: structure.mdx and build-process.mdx have been consolidated into boilerplate-project.mdx
+    // generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
+    // generateBuildDocs(boilerplateVersion, join(outputDir, 'build-process.mdx'));
     generateConfigDocs(boilerplateVersion, join(outputDir, 'configuration.mdx'));
 
     // Update sidebar
@@ -867,8 +868,6 @@ try {
     console.log('\n📝 Generated Documentation:\n');
     console.log(`   📂 /boilerplate/`);
     console.log(`      📄 index.mdx (Overview)`);
-    console.log(`      📄 structure.mdx`);
-    console.log(`      📄 build-process.mdx`);
     console.log(`      📄 configuration.mdx`);
     console.log(`      📂 blocks/`);
     console.log(`         📄 index.mdx (Overview for ${blocks.length} blocks)`);
