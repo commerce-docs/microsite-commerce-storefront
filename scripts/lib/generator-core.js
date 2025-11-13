@@ -16,7 +16,8 @@ import { DROPIN_REPOS } from './dropin-config.js';
 import {
     cloneOrUpdateBoilerplate,
     getBoilerplatePackageVersions,
-    cloneDropinAtVersion
+    cloneDropinAtVersion,
+    useExistingDropinRepo
 } from './repository.js';
 import { ensureParentDirectoryExists, cleanVersion } from './utils.js';
 import { logger } from './logger.js';
@@ -93,27 +94,34 @@ async function processSingleDropin(config) {
 
     // Get version from boilerplate
     const version = packageVersions[repoConfig.packageName];
+
+    let cloneResult;
+    let repoPath;
+    let actualVersion;
+    let isExactMatch;
+
     if (!version) {
-        logger.skipping(
-            repoConfig.packageName,
-            'This drop-in may not be included in the current boilerplate version.'
-        );
-        return;
-    }
+        // B2B drop-ins aren't in boilerplate - use existing standalone repo
+        console.log(`  Not found in boilerplate, using standalone repository...`);
+        cloneResult = useExistingDropinRepo(repoName, repoConfig);
+        repoPath = cloneResult.path;
+        actualVersion = cloneResult.actualVersion;
+        isExactMatch = cloneResult.isExactMatch;
+    } else {
+        // B2C drop-ins are in boilerplate - use version from there
+        cloneResult = cloneDropinAtVersion(repoName, repoConfig, version);
+        repoPath = cloneResult.path;
+        actualVersion = cloneResult.actualVersion;
+        isExactMatch = cloneResult.isExactMatch;
 
-    // Clone repository at version
-    const cloneResult = cloneDropinAtVersion(repoName, repoConfig, version);
-    const repoPath = cloneResult.path;
-    const actualVersion = cloneResult.actualVersion;
-    const isExactMatch = cloneResult.isExactMatch;
-
-    // Warn if version mismatch
-    if (!isExactMatch) {
-        const cleanRequestedVersion = cleanVersion(version);
-        logger.warn(
-            `Documentation generated from ${actualVersion} instead of requested version ${cleanRequestedVersion}`,
-            'Version mismatch may cause documentation inaccuracies'
-        );
+        // Warn if version mismatch
+        if (!isExactMatch) {
+            const cleanRequestedVersion = cleanVersion(version);
+            logger.warn(
+                `Documentation generated from ${actualVersion} instead of requested version ${cleanRequestedVersion}`,
+                'Version mismatch may cause documentation inaccuracies'
+            );
+        }
     }
 
     // Load enrichment data
