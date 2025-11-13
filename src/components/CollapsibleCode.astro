@@ -1,0 +1,109 @@
+---
+/**
+ * CollapsibleCode component for displaying collapsible code blocks with syntax highlighting
+ * Uses Astro's Code component for proper formatting
+ *
+ * Usage:
+ *   <CollapsibleCode title="Type Scales" lang="css">
+ *   ```css
+ *   --token: value
+ *   --token2: value2
+ *   ```
+ *   </CollapsibleCode>
+ */
+
+import { Code } from "@astrojs/starlight/components";
+
+interface Props {
+  title: string;
+  lang?: string;
+  frame?: "none";
+}
+
+const { title, lang = "css", frame = "none" } = Astro.props;
+const codeContent = await Astro.slots.render("default");
+
+// Extract code from markdown code fence if present
+let cleanCode = codeContent;
+const codeFenceMatch = codeContent.match(/```[\w]*\n([\s\S]*?)\n```/);
+if (codeFenceMatch) {
+  cleanCode = codeFenceMatch[1];
+} else {
+  // Just trim whitespace if no code fence
+  cleanCode = codeContent.trim();
+}
+---
+
+<details class="collapsible-code">
+  <summary>
+    <strong>{title}</strong>
+  </summary>
+  <div class="collapsible-code__content">
+    <Code code={cleanCode} lang={lang} frame={frame} />
+  </div>
+</details>
+
+<style>
+  .collapsible-code {
+    margin: 1.5rem 0;
+    border: 2px solid #3a3f4b;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #1e2127;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .collapsible-code summary {
+    cursor: pointer;
+    padding: 1rem 1.25rem;
+    background: #2a2f3a;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #3a3f4b;
+    transition: background-color 0.2s ease;
+  }
+
+  .collapsible-code summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .collapsible-code summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.75rem;
+    transition: transform 0.2s ease;
+    font-size: 0.875em;
+    color: #8ab4f8;
+    font-weight: bold;
+  }
+
+  .collapsible-code[open] summary::before {
+    transform: rotate(90deg);
+  }
+
+  .collapsible-code summary:hover {
+    background: #343947;
+  }
+
+  .collapsible-code summary strong {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: #e8eaed;
+  }
+
+  .collapsible-code__content {
+    padding: 0;
+  }
+
+  /* Remove default margins from Code component inside collapsible */
+  .collapsible-code__content :global(.expressive-code) {
+    margin: 0 !important;
+  }
+
+  .collapsible-code__content :global(.expressive-code .frame) {
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+</style>

@@ -169,13 +169,17 @@ export function truncate(text, maxLength, suffix = '...') {
 }
 
 /**
- * Clean version string (remove ~ ^ etc)
+ * Clean version string (remove ~ ^ v etc)
  * 
- * @param {string} version - Version string (e.g., '^1.0.0')
+ * @param {string} version - Version string (e.g., '^1.0.0', 'v1.0.0')
  * @returns {string} Clean version string (e.g., '1.0.0')
  */
 export function cleanVersion(version) {
-    return version.replace(/^[\^~]/, '');
+    // Handle non-string inputs gracefully
+    if (!version || typeof version !== 'string') {
+        return 'unknown';
+    }
+    return version.replace(/^[\^~v]/, '');
 }
 
 /**

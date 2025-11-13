@@ -1,0 +1,69 @@
+---
+title: Centralized FetchGraphQL instance management
+description: Hot fix release notes for centralized FetchGraphQL instance management in the Commerce boilerplate.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+
+Released: October 29, 2024
+
+This hotfix centralizes header management. Instead of configuring request headers separately for each drop-in, configure them once at the endpoint service level. FetchGraphQL instances (Catalog Services and Core) are created and exported from `scripts/commerce.js`.
+
+## What changed
+
+<Steps>
+
+1. **Centralized management**: FetchGraphQL instances (Catalog Services and Core) are now created and exported from `scripts/commerce.js`
+2. **Instance assignment**: Each drop-in initializer receives its designated instance type:
+   - Catalog Services instance for product/catalog operations
+   - Core instance for checkout, customer, and other operations
+3. **Instance-level configuration**: Apply headers and settings at the instance level, affecting all drop-ins that use that instance
+4. **Bug fix**: Resolves issues with the Customer Group ID header handling
+5. **ACO support**: Adds support for the viewId field in ACO storefronts
+6. **Credit card fix**: Fixes the Credit Card server error on ACCS checkouts
+
+</Steps>
+
+## Benefits
+
+This update enables you to:
+
+- Configure headers once at the service endpoint level rather than per drop-in
+- Reduce configuration duplication across drop-ins
+- Explicitly control which fetcher instance each drop-in uses
+- Simplify authorization header management across Core drop-ins
+
+## Usage examples
+
+### Drop-in initializer
+
+```javascript
+import { CORE_FETCH_GRAPHQL } from '../commerce.js';
+
+// Set Fetch GraphQL (Core)
+setEndpoint(CORE_FETCH_GRAPHQL);
+```
+
+### Setting instance-wide headers
+
+```javascript
+import { CORE_FETCH_GRAPHQL } from '../commerce.js';
+
+CORE_FETCH_GRAPHQL.setHeader('My-Header', 'Core Rulez!')
+```
+
+### Configuring Customer Group ID
+
+```javascript
+import { CS_FETCH_GRAPHQL } from '../commerce.js';
+
+events.on('auth/group-uid', (uid) => {
+  CS_FETCH_GRAPHQL.setHeader('Customer-Group-Id', uid);
+});
+```
+
+## More information
+
+See the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/releases/tag/fix-headers" text="full release notes" /> on GitHub.
+
