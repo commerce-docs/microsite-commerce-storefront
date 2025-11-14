@@ -97,15 +97,19 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
         
-        // Use data URI for immediate availability (no async loading)
-        const dataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(enhancedSvg)));
+        // Use Blob URL instead of data URI - works better with zoom modal
+        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = dataUri;
+        img.src = blobUrl;
         img.alt = 'Mermaid diagram';
+        
+        // Store blob URL for zoom (don't revoke until zoom is done)
+        img.dataset.blobUrl = blobUrl;
         
         // Set the calculated dimensions on the img element
         const finalWidth = svgElement?.getAttribute('width') || '1920';
@@ -137,8 +141,20 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
         
-        // The zoom plugin should already be initialized and watching for new elements
-        // No need to dispatch events or wait for async operations
+        // Manually wire up zoom functionality - use blob URL for zoom modal
+        zoomButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Use blob URL for zoom (more reliable than data URI)
+          const imageSrc = img.dataset.blobUrl || img.src;
+          
+          // Find zoom modal when clicked (it exists by the time user clicks)
+          const zoomModal = document.querySelector('starlight-image-zoom-modal');
+          if (zoomModal && typeof zoomModal.open === 'function') {
+            zoomModal.open(imageSrc, img.alt || 'Mermaid diagram');
+          }
+        });
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);
