@@ -141,20 +141,25 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
         
-        // Manually wire up zoom functionality - use blob URL for zoom modal
-        zoomButton.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+        img.onload = () => {
+          // The blob URL needs to stay alive for the zoom modal to work
+          // Clean up on page unload or navigation
+          window.addEventListener('beforeunload', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
           
-          // Use blob URL for zoom (more reliable than data URI)
-          const imageSrc = img.dataset.blobUrl || img.src;
+          // Also clean up on Astro page navigation
+          document.addEventListener('astro:before-preparation', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
           
-          // Find zoom modal when clicked (it exists by the time user clicks)
-          const zoomModal = document.querySelector('starlight-image-zoom-modal');
-          if (zoomModal && typeof zoomModal.open === 'function') {
-            zoomModal.open(imageSrc, img.alt || 'Mermaid diagram');
-          }
-        });
+          // Trigger the zoom plugin to re-scan after our dynamic image is added
+          setTimeout(() => {
+            // Dispatch the same event the plugin listens to for re-scanning
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+          }, 100);
+        };
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);
