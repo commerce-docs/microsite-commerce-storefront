@@ -364,6 +364,9 @@ function scanForInitialization(repoPath, repoConfig) {
 function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, enrichmentData = null) {
     const { configProps, models } = initData;
 
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
+
     // Use simplified template for drop-ins with no custom configuration
     if (configProps.length === 0 && models.length === 0) {
         return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo);
@@ -530,10 +533,12 @@ Refer to the [Configuration options](#configuration-options) table for descripti
         `The **${repoConfig.displayName} initializer** configures the drop-in with global settings. Pass configuration options to the \`initialize()\` function during drop-in setup to customize language definitions, data models, and drop-in-specific behaviors.`;
 
     // Create version display with warning if mismatch
-    let versionDisplay = cleanVersion(versionInfo.requested);
+    // For B2B drop-ins, versionInfo.requested doesn't exist, so use actual version
+    const requestedVersion = typeof versionInfo === 'object' && versionInfo.requested ? versionInfo.requested : version;
+    let versionDisplay = cleanVersion(requestedVersion);
     let versionWarning = '';
 
-    if (!versionInfo.isExactMatch) {
+    if (typeof versionInfo === 'object' && !versionInfo.isExactMatch && versionInfo.requested) {
         versionDisplay = `${cleanVersion(versionInfo.requested)} (documented from ${versionInfo.actual})`;
         versionWarning = `
 <Aside type="caution" title="Version Mismatch">
@@ -615,7 +620,8 @@ ${configType.definition}
  * @returns {string} Generated MDX content
  */
 function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo) {
-    const versionDisplay = cleanVersion(versionInfo.requested);
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
+    const versionDisplay = cleanVersion(version);
 
     return `---
 title: ${repoConfig.displayName} initialization

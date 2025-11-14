@@ -103,6 +103,8 @@ export function getBoilerplatePackageVersions(boilerplatePath) {
  * Use existing drop-in repository without version constraints
  * This is used for B2B drop-ins that aren't in the boilerplate
  * 
+ * Reads the version from the drop-in's own package.json to ensure accurate version display
+ * 
  * @param {string} repoName - Name of the drop-in (e.g., 'purchase-order', 'company-management')
  * @param {Object} repoConfig - Repository configuration object with gitUrl
  * @returns {Object} Object with { path: string, actualVersion: string, isExactMatch: boolean }
@@ -113,27 +115,48 @@ export function useExistingDropinRepo(repoName, repoConfig) {
     if (!existsSync(dropinPath)) {
         console.log(`  Repository not found at ${dropinPath}`);
         console.log(`  Cloning from default branch...`);
-        execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        try {
+            execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        } catch (error) {
+            throw new Error(`Failed to clone repository ${repoConfig.gitUrl}: ${error.message}`);
+        }
     }
 
-    // Get current ref/branch/tag
+    // Read version from the drop-in's package.json
     let actualVersion;
     try {
-        // Try to get exact tag
+        const packageJsonPath = join(dropinPath, 'package.json');
+        if (existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            actualVersion = packageJson.version || 'unknown';
+            console.log(`  Using version: ${actualVersion} (from package.json)`);
+            return { path: dropinPath, actualVersion, isExactMatch: true };
+        }
+    } catch (error) {
+        console.log(`  ⚠️  Could not read package.json: ${error.message}`);
+    }
+
+    // Fallback to git information if package.json is not available
+    try {
         actualVersion = execFileSync('git', ['describe', '--tags', '--exact-match'],
             { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
-        console.log(`  Using version: ${actualVersion}`);
+        console.log(`  Using version: ${actualVersion} (from git tag)`);
         return { path: dropinPath, actualVersion, isExactMatch: true };
     } catch {
-        // Not on a tag, get branch or commit
         try {
             actualVersion = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
                 { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
-            console.log(`  Using branch: ${actualVersion}`);
+            console.log(`  Using branch: ${actualVersion} (fallback)`);
         } catch {
-            actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
-                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
-            console.log(`  Using commit: ${actualVersion}`);
+            try {
+                actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                    { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+                console.log(`  Using commit: ${actualVersion} (fallback)`);
+            } catch {
+                // All git commands failed - repository might be in bad state
+                console.log(`  ⚠️  Warning: Could not determine version from git, using 'unknown'`);
+                actualVersion = 'unknown';
+            }
         }
         return { path: dropinPath, actualVersion, isExactMatch: false };
     }
