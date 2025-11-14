@@ -9,6 +9,7 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
 
 The **Adobe Commerce boilerplate** provides a production-ready foundation for Edge Delivery Services storefronts. This reference covers its architecture, runtime dependencies, and pre-integrated Commerce blocks.
 
@@ -44,6 +45,43 @@ Building a modern commerce storefront from scratch requires integrating multiple
 ### The composable architecture advantage
 
 Unlike traditional commerce platforms that tightly couple content and commerce, the boilerplate uses a **composable 4-layer architecture**:
+
+<Diagram type="mermaid" caption="The composable 4-layer architecture separates content authoring from commerce functionality, enabling independent workflows and optimal performance." code={`
+graph TB
+    subgraph L1["1. Content Layer"]
+        Author["Business User<br/><small>Creates pages in documents</small>"]
+        Doc["Document<br/><small>Word, Google Docs, etc.</small>"]
+        Author --> Doc
+    end
+    
+    subgraph L2["2. Integration Layer"]
+        EDS["Edge Delivery Services<br/><small>Server-side transformation</small>"]
+        Blocks["29 Commerce Blocks<br/><small>Connect documents to commerce</small>"]
+        Doc --> EDS
+        EDS --> Blocks
+    end
+    
+    subgraph L3["3. Component Layer"]
+        Dropins["Drop-in Components<br/><small>Cart, Checkout, PDP, Search, etc.</small>"]
+        Blocks --> Dropins
+    end
+    
+    subgraph L4["4. Backend Layer"]
+        Commerce["Adobe Commerce<br/><small>Catalog, Pricing, Inventory, Orders</small>"]
+        Dropins --> Commerce
+        Commerce --> Dropins
+    end
+    
+    Browser["Browser<br/><small>Renders at edge speed</small>"]
+    EDS --> Browser
+    Dropins --> Browser
+    
+    style L1 fill:#E3F2FD,stroke:#2196F3,stroke-width:3px
+    style L2 fill:#F3E5F5,stroke:#9C27B0,stroke-width:3px
+    style L3 fill:#FFF9C4,stroke:#FBC02D,stroke-width:3px
+    style L4 fill:#E8F5E9,stroke:#4CAF50,stroke-width:3px
+    style Browser fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+`} />
 
 1. **Content layer** - Authors create pages using simple tables in documents.
 2. **Integration layer** - 29 Commerce blocks connect documents to commerce functionality.
