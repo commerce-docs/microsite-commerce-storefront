@@ -995,7 +995,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     const { functions } = scannedData;
 
     if (functions.length === 0) {
-        return generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo.requested);
+        return generateEmptyFunctionsDocs(repoName, repoConfig, version);
     }
 
     // Create validation report for source-first validation
@@ -1804,7 +1804,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(versionInfo.requested),
+        DROPIN_VERSION: cleanVersion(version),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
         FUNCTIONS_CONTENT: functionsContent + dataModelsSection

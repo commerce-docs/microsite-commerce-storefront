@@ -1183,18 +1183,21 @@ async function main() {
             // Get version from boilerplate package.json
             const version = packageVersions[repoConfig.packageName];
             let dropinPath;
+            let actualVersion;
 
             if (!version) {
                 // B2B drop-ins aren't in boilerplate - use existing standalone repo
                 console.log(`  Not found in boilerplate, using standalone repository...`);
-                dropinPath = useExistingDropinRepo(repoName, repoConfig);
+                const result = useExistingDropinRepo(repoName, repoConfig);
+                dropinPath = result.path;
+                actualVersion = result.actualVersion;
             } else {
                 // B2C drop-ins are in boilerplate - use version from there
                 dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
+                actualVersion = version;
             }
             const eventsData = scanForEvents(dropinPath);
-            // Use 'latest' for B2B drop-ins without boilerplate versions
-            const versionToUse = version || 'latest';
+            const versionToUse = actualVersion;
             const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, versionToUse);
 
             // Write to the appropriate location in docs
