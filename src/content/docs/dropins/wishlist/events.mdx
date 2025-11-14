@@ -30,51 +30,51 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Wishlist** drop-in uses the [event bus](/dropins/all/events/) to emit and listen to events for communication between drop-ins and external integrations. For common events shared across multiple drop-ins (such as `locale`, `error`, `authenticated`, etc.), see the [Common events reference](/dropins/all/events/#common-events-reference).
+The **Wishlist** drop-in emits wishlist state changes when items are added, removed, or updated, enabling synchronization with other storefront components and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 2.0.1</strong>
 </div>
 
 <Aside type="tip">
-**New to drop-in events?** Learn about the [event system architecture](/dropins/all/events/), including the publish-subscribe pattern, subscription configuration, and best practices for event handling.
+For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
 </Aside>
 
 ## Events reference
+
+Drop-ins communicate via the [event bus](/sdk/reference/events/).
 
 {/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [wishlist/initialized](#wishlistinitialized-emits) | Emits | Emitted when the component completes initialization |
-| [wishlist/alert](#wishlistalert-emits-and-listens) | Emits and listens | Triggered when an alert or notification is triggered |
-| [wishlist/data](#wishlistdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes |
-| [wishlist/reset](#wishlistreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset |
+| [wishlist/initialized](#wishlistinitialized-emits) | Emits | Emitted when the component completes initialization. |
+| [wishlist/alert](#wishlistalert-emits-and-listens) | Emits and listens | Triggered when an alert or notification is triggered. |
+| [wishlist/data](#wishlistdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [wishlist/reset](#wishlistreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset. |
 
 </TableWrapper>
 {/* EVENTS_TABLE_END */}
 
 ## Event details
 
-The following sections provide detailed information about each event, including its direction, data payload structure, and usage examples.
-
 
 ### `wishlist/alert` (emits and listens)
 
-Triggered when an alert or notification is triggered
+Triggered when an alert or notification is triggered.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 WishlistActionPayload | null
 ```
 
+See [`WishlistActionPayload`](#wishlistactionpayload) for full type definition.
+
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -90,19 +90,19 @@ wishlistAlertListener.off();
 
 ### `wishlist/data` (emits and listens)
 
-Triggered when data is available or changes
+Emitted when wishlist data is updated or retrieved. This event is triggered after operations like adding items, removing items, or updating quantities in the wishlist.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 Wishlist | null
 ```
 
+See [`Wishlist`](#wishlist) for full type definition.
+
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -118,19 +118,19 @@ wishlistDataListener.off();
 
 ### `wishlist/initialized` (emits)
 
-Emitted when the component completes initialization
+Emitted when the wishlist component completes initialization. This indicates the wishlist is ready to display items and accept user interactions.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 Wishlist | null
 ```
 
+See [`Wishlist`](#wishlist) for full type definition.
+
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -146,9 +146,9 @@ wishlistInitializedListener.off();
 
 ### `wishlist/reset` (emits and listens)
 
-Triggered when the component state is reset
+Triggered when the component state is reset.
 
-#### Data payload
+#### Event payload
 
 ```typescript
 void
@@ -157,8 +157,6 @@ void
 
 
 #### Usage
-
-Listen to this event in your storefront:
 
 ```javascript
 import { events } from '@dropins/tools/event-bus.js';
@@ -170,5 +168,46 @@ const wishlistResetListener = events.on('wishlist/reset', (data) => {
 
 // Later, when you want to stop listening
 wishlistResetListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### Wishlist
+
+Used in: [`wishlist/data`](#wishlistdata-emits-and-listens), [`wishlist/initialized`](#wishlistinitialized-emits).
+
+```ts
+interface Wishlist {
+  id: string;
+  updated_at: string;
+  sharing_code: string;
+  items_count: number;
+  items: Item[];
+}
+```
+
+### WishlistActionPayload
+
+Used in: [`wishlist/alert`](#wishlistalert-emits-and-listens).
+
+```ts
+interface WishlistActionPayload {
+    action: WishlistAlertProps.action;
+    item: WishlistAlertProps.item;
+  }
 ```
 

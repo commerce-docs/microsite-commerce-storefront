@@ -21,12 +21,13 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
 import { join, dirname, basename } from 'path';
-import { execSync } from 'child_process';
 
 // Import shared utilities
 import { getProjectRoot } from './lib/generator-core.js';
 import { ensureParentDirectoryExists, formatDate } from './lib/utils.js';
 import { applyStandardTransforms } from './lib/content-transforms.js';
+import { DROPIN_REPOS } from './lib/dropin-config.js';
+import { cloneOrUpdateBoilerplate } from './lib/repository.js';
 
 const projectRoot = getProjectRoot();
 
@@ -35,22 +36,61 @@ const projectRoot = getProjectRoot();
 // ============================================================================
 
 /**
- * Clone or update the boilerplate repository
+ * Map drop-in package name to documentation path
+ * @param {string} packageName - Package name (e.g., 'storefront-cart', 'tools')
+ * @returns {string|null} Documentation path (e.g., 'cart') or null if not found
  */
-function cloneBoilerplate() {
-    const boilerplatePath = join(projectRoot, '.temp-repos', 'aem-boilerplate-commerce');
-
-    console.log('\n📦 Cloning/updating AEM Commerce boilerplate...');
-
-    if (!existsSync(boilerplatePath)) {
-        console.log('  Cloning boilerplate repository...');
-        execSync('git clone --depth 1 https://github.com/hlxsites/aem-boilerplate-commerce.git ' + boilerplatePath, { stdio: 'inherit' });
-    } else {
-        console.log('  Updating boilerplate repository...');
-        execSync(`cd ${boilerplatePath} && git pull`, { stdio: 'inherit' });
+function getDropinDocPath(packageName) {
+    // Handle 'tools' package - it doesn't have its own documentation page
+    if (packageName === 'tools') {
+        return null; // Skip linking to tools
     }
 
-    return boilerplatePath;
+    // Find the drop-in config entry that matches this package name
+    for (const [docPath, config] of Object.entries(DROPIN_REPOS)) {
+        // Extract package name without @dropins/ prefix
+        const configPackageName = config.packageName.replace('@dropins/', '');
+        if (configPackageName === packageName) {
+            return docPath;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Extract version from boilerplate package.json
+ */
+function extractBoilerplateVersion(boilerplatePath) {
+    const packageJsonPath = join(boilerplatePath, 'package.json');
+
+    if (!existsSync(packageJsonPath)) {
+        console.warn('  ⚠️  package.json not found, using "latest" as version');
+        return 'latest';
+    }
+
+    try {
+        const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+        // Use the boilerplate's own version field
+        const version = packageJson.version || 'latest';
+        return version;
+    } catch (error) {
+        console.warn('  ⚠️  Error reading package.json:', error.message);
+        return 'latest';
+    }
+}
+
+/**
+ * Load template file
+ */
+function loadTemplate(templateName) {
+    const templatePath = join(projectRoot, '_dropin-templates', templateName);
+
+    if (!existsSync(templatePath)) {
+        throw new Error(`Template not found: ${templateName}`);
+    }
+
+    return readFileSync(templatePath, 'utf8');
 }
 
 // ============================================================================
@@ -75,8 +115,8 @@ function analyzeBlockCode(jsPath) {
 
     const code = readFileSync(jsPath, 'utf8');
 
-    // Extract drop-in imports
-    const dropinImportPattern = /import\s+(?:{[^}]+}|\w+)\s+from\s+['"]@dropins\/([\w-]+)(?:\/(.+?))?['"]/g;
+    // Extract drop-in imports (handles: import {}, import name, import * as name, import name, { ... })
+    const dropinImportPattern = /import\s+(?:(?:\*\s+as\s+\w+)|(?:{[^}]+})|(?:\w+(?:\s*,\s*{[^}]+})?))\s+from\s+['"]@dropins\/([\w-]+)(?:\/[^'"]+)?['"]/g;
     let match;
     while ((match = dropinImportPattern.exec(code)) !== null) {
         const dropin = match[1];
@@ -140,8 +180,8 @@ function extractCommerceBlocks(boilerplatePath) {
         const cssPath = join(blockPath, `${blockName}.css`);
 
         // Only process commerce-related blocks
-        if (!blockName.startsWith('commerce-') && 
-            !blockName.includes('product') && 
+        if (!blockName.startsWith('commerce-') &&
+            !blockName.includes('product') &&
             !blockName.includes('cart') &&
             !blockName.includes('checkout')) {
             continue;
@@ -151,7 +191,10 @@ function extractCommerceBlocks(boilerplatePath) {
 
         blocks.push({
             name: blockName,
-            displayName: blockName.split('-').map(word => 
+            displayName: blockName.split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
             ).join(' '),
             path: blockPath,
@@ -166,24 +209,33 @@ function extractCommerceBlocks(boilerplatePath) {
 }
 
 /**
- * Extract initializers from scripts directory
+ * Extract initializers from scripts/initializers directory
  */
 function extractInitializers(boilerplatePath) {
     console.log('\n🔍 Analyzing initializers...');
 
-    const scriptsDir = join(boilerplatePath, 'scripts');
+    const initializersDir = join(boilerplatePath, 'scripts', 'initializers');
     const initializers = [];
 
-    const initFiles = ['commerce.js', 'initializers.js'];
-    
-    for (const file of initFiles) {
-        const filePath = join(scriptsDir, file);
-        if (existsSync(filePath)) {
-            initializers.push({
-                name: file,
-                path: filePath
-            });
+    if (existsSync(initializersDir)) {
+        const files = readdirSync(initializersDir);
+
+        for (const file of files) {
+            if (file.endsWith('.js')) {
+                const filePath = join(initializersDir, file);
+                const stats = statSync(filePath);
+
+                if (stats.isFile()) {
+                    initializers.push({
+                        name: file,
+                        path: `scripts/initializers/${file}` // Relative path for display
+                    });
+                }
+            }
         }
+
+        // Sort alphabetically for consistent output
+        initializers.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     console.log(`  ✓ Found ${initializers.length} initializer files`);
@@ -195,180 +247,342 @@ function extractInitializers(boilerplatePath) {
 // ============================================================================
 
 /**
- * Generate overview page with CardGrid
+ * Generate overview page with table of blocks
  */
-function generateOverview(blocks, initializers, outputPath) {
+function generateOverview(blocks, initializers, boilerplateVersion, outputPath) {
     console.log('\n📝 Generating overview page...');
 
-    const generationDate = formatDate(new Date());
-    
-    let content = `---
-title: Boilerplate Reference
-description: Complete reference for the AEM Commerce boilerplate project, including all commerce blocks and configuration.
-sidebar:
-  label: Overview
-  order: 1
----
+    // Load template
+    let content = loadTemplate('boilerplate-overview.mdx');
 
-import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+    // Build table for commerce blocks
+    let tableContent = '| Block | Drop-ins used |\n';
+    tableContent += '|-------|---------------|\n';
 
-<Aside type="note">
-Auto-generated on ${generationDate}. This documentation is generated from the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) repository.
-</Aside>
-
-## Commerce Blocks
-
-The boilerplate includes **${blocks.length} commerce blocks** that implement various e-commerce functionality using drop-in components.
-
-<CardGrid>
-`;
-
-    // Add cards for each block
     for (const block of blocks) {
-        const dropinList = block.analysis.dropins.length > 0 
+        const blockLink = `[${block.displayName}](/boilerplate/blocks/${block.name}/)`;
+        const dropinList = block.analysis.dropins.length > 0
             ? block.analysis.dropins.join(', ')
             : 'None';
-        
-        content += `  <Card title="${block.displayName}" icon="seti:html">
-    [View documentation](/boilerplate/blocks/${block.name}/)
-    
-    **Drop-ins**: ${dropinList}
-  </Card>
-`;
+
+        tableContent += `| ${blockLink} | ${dropinList} |\n`;
     }
 
-    content += `</CardGrid>
+    // Build initializers list
+    let initializersList = '';
+    if (initializers.length > 0) {
+        for (const init of initializers) {
+            initializersList += `- **${init.name}** - ${init.path}\n`;
+        }
+    } else {
+        initializersList = '- No initializers found\n';
+    }
 
-## Additional Documentation
-
-<CardGrid>
-  <Card title="Project Structure" icon="seti:folder">
-    Learn about the boilerplate project structure and file organization.
-    
-    [View structure docs](/boilerplate/structure/)
-  </Card>
-  <Card title="Build Process" icon="seti:config">
-    Understand the build and deployment process for the boilerplate.
-    
-    [View build docs](/boilerplate/build-process/)
-  </Card>
-  <Card title="Configuration" icon="seti:json">
-    Learn about head configuration, importmaps, and initializers.
-    
-    [View config docs](/boilerplate/configuration/)
-  </Card>
-</CardGrid>
-
-## Quick Links
-
-- [AEM Commerce Boilerplate Repository](https://github.com/hlxsites/aem-boilerplate-commerce)
-- [Drop-in Components Documentation](/dropins/all/)
-- [Edge Delivery Services Documentation](https://www.aem.live/docs/)
-`;
-
-    // Apply standard transforms
-    content = applyStandardTransforms(content);
+    // Replace placeholders
+    content = content
+        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
+        .replace(/BLOCK_COUNT/g, blocks.length.toString())
+        .replace(/COMMERCE_BLOCKS_TABLE/g, tableContent)
+        .replace(/INITIALIZERS_LIST/g, initializersList);
 
     // Write file
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
+}
+
+/**
+ * Generate blocks overview page with grouped technical reference
+ */
+function generateBlocksOverview(blocks, outputPath) {
+    console.log('\n📝 Generating blocks overview page...');
+
+    // Load template
+    let content = loadTemplate('boilerplate-blocks-overview.mdx');
+
+    // Group blocks by category
+    const categories = {
+        'Shopping Experience': ['product-list-page', 'product-details', 'product-recommendations', 'commerce-cart', 'commerce-mini-cart', 'commerce-checkout'],
+        'Customer Account': ['commerce-login', 'commerce-create-account', 'commerce-confirm-account', 'commerce-forgot-password', 'commerce-create-password', 'commerce-account-header', 'commerce-account-sidebar', 'commerce-addresses', 'commerce-customer-information', 'commerce-customer-details'],
+        'Order Management': ['commerce-orders-list', 'commerce-search-order', 'commerce-order-header', 'commerce-order-status', 'commerce-order-product-list', 'commerce-order-cost-summary', 'commerce-shipping-status'],
+        'Returns & Exchanges': ['commerce-returns-list', 'commerce-create-return', 'commerce-order-returns', 'commerce-return-header'],
+        'Gift Options': ['commerce-gift-options'],
+        'Wishlist': ['commerce-wishlist']
+    };
+
+    // Build grouped table
+    let tableContent = '<TableWrapper nowrap={[0]}>\n\n';
+    tableContent += '| Block | Primary Drop-ins | Key Features |\n';
+    tableContent += '|-------|-----------------|--------------|\n';
+
+    for (const [category, blockNames] of Object.entries(categories)) {
+        tableContent += `| **${category}** | | |\n`;
+
+        for (const blockName of blockNames) {
+            const block = blocks.find(b => b.name === blockName);
+            if (block) {
+                const blockLink = `[${block.sidebarLabel}](/boilerplate/blocks/${block.name}/)`;
+                const primaryDropins = block.analysis.dropins.slice(0, 3).join(', ') || 'tools';
+
+                // Generate key features based on block name
+                const features = getBlockFeatures(block.name);
+
+                tableContent += `| ${blockLink} | ${primaryDropins} | ${features} |\n`;
+            }
+        }
+    }
+
+    tableContent += '\n</TableWrapper>';
+
+    // Replace placeholder
+    content = content.replace('BLOCKS_TABLE', tableContent);
+
+    // Write file
+    ensureParentDirectoryExists(outputPath);
+    writeFileSync(outputPath, content, 'utf8');
+
+    console.log(`  ✅ Generated ${outputPath}`);
+}
+
+/**
+ * Get key features description for a block
+ */
+function getBlockFeatures(blockName) {
+    const features = {
+        'product-list-page': 'Search, filtering, sorting, pagination, wishlist integration',
+        'product-details': 'Product options, pricing, add to cart, wishlist toggle',
+        'product-recommendations': 'AI-powered recommendations, multiple page types',
+        'commerce-cart': 'Item management, coupon codes, gift options, move to wishlist',
+        'commerce-mini-cart': 'Dropdown cart summary, quick view, checkout navigation',
+        'commerce-checkout': 'Complete checkout flow, shipping, payment, order review',
+        'commerce-login': 'Email/password authentication, redirect handling',
+        'commerce-create-account': 'Registration form, validation, account creation',
+        'commerce-confirm-account': 'Email confirmation landing, account activation',
+        'commerce-forgot-password': 'Password reset request, email trigger',
+        'commerce-create-password': 'Password reset form, token validation',
+        'commerce-account-header': 'Customer name display, logout functionality',
+        'commerce-account-sidebar': 'Account navigation menu, active state management',
+        'commerce-addresses': 'Address CRUD operations, default address management',
+        'commerce-customer-information': 'Profile editing, email/name updates',
+        'commerce-customer-details': 'Customer info display in order context',
+        'commerce-orders-list': 'Order history, status display, order details navigation',
+        'commerce-search-order': 'Guest order lookup, email and order number validation',
+        'commerce-order-header': 'Order number, date, status badge',
+        'commerce-order-status': 'Detailed status, tracking info, delivery estimates',
+        'commerce-order-product-list': 'Line items, reorder functionality, product images',
+        'commerce-order-cost-summary': 'Subtotal, taxes, shipping, discounts, grand total',
+        'commerce-shipping-status': 'Shipment tracking, carrier info, delivery status',
+        'commerce-returns-list': 'Return history, status tracking, return details navigation',
+        'commerce-create-return': 'Return request form, item selection, reason codes',
+        'commerce-order-returns': 'Return details for specific order',
+        'commerce-return-header': 'Return number, date, status display',
+        'commerce-gift-options': 'Gift messages, gift wrapping, gift receipt options',
+        'commerce-wishlist': 'Saved items, move to cart, item management'
+    };
+
+    return features[blockName] || 'Commerce functionality';
+}
+
+/**
+ * Parse README file for a block to extract configuration, events, and other details
+ */
+function parseBlockReadme(blockPath) {
+    const readmePath = join(blockPath, 'README.md');
+
+    if (!existsSync(readmePath)) {
+        return {
+            hasReadme: false,
+            configuration: null,
+            events: { listeners: [], emitters: [] },
+            urlParams: [],
+            localStorage: [],
+            behaviorPatterns: null,
+            errorHandling: null
+        };
+    }
+
+    const readmeContent = readFileSync(readmePath, 'utf8');
+
+    return {
+        hasReadme: true,
+        configuration: extractConfigurationTable(readmeContent),
+        events: extractEvents(readmeContent),
+        urlParams: extractUrlParams(readmeContent),
+        localStorage: extractLocalStorage(readmeContent),
+        behaviorPatterns: extractSection(readmeContent, '## Behavior Patterns'),
+        errorHandling: extractSection(readmeContent, '### Error Handling')
+    };
+}
+
+/**
+ * Extract configuration table from README
+ */
+function extractConfigurationTable(content) {
+    const configMatch = content.match(/\| Configuration Key \| Type \| Default \| Description \| Required \| Side Effects \|([\s\S]*?)(?=\n##|\n<!--|$)/);
+    if (!configMatch) return null;
+
+    const tableContent = configMatch[0];
+    const rows = tableContent.split('\n').filter(line => line.trim() && !line.includes('|---'));
+
+    if (rows.length <= 1) return null; // Only header row
+
+    return tableContent;
+}
+
+/**
+ * Extract events (listeners and emitters) from README
+ */
+function extractEvents(content) {
+    const events = { listeners: [], emitters: [] };
+
+    // Extract event listeners
+    const listenersMatch = content.match(/#### Event Listeners([\s\S]*?)(?=####|##|$)/);
+    if (listenersMatch) {
+        const listenerLines = listenersMatch[1].match(/- `events\.on\(['"](.*?)['"].*?\)` - (.*?)$/gm);
+        if (listenerLines) {
+            events.listeners = listenerLines.map(line => {
+                const match = line.match(/- `events\.on\(['"](.*?)['"].*?\)` - (.*)$/);
+                if (match) {
+                    return { name: match[1], description: match[2] };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+    }
+
+    // Extract event emitters
+    const emittersMatch = content.match(/#### Event Emitters([\s\S]*?)(?=##|$)/);
+    if (emittersMatch) {
+        const emitterLines = emittersMatch[1].match(/- `.*?\)` - (.*?)$/gm);
+        if (emitterLines) {
+            events.emitters = emitterLines.map(line => {
+                const match = line.match(/- `(.*?)\)` - (.*)$/);
+                if (match) {
+                    return { name: match[1], description: match[2] };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+    }
+
+    return events;
+}
+
+/**
+ * Extract URL parameters from README
+ */
+function extractUrlParams(content) {
+    const urlMatch = content.match(/### URL Parameters([\s\S]*?)(?=###|##|$)/);
+    if (!urlMatch || urlMatch[1].includes('No URL parameters')) return [];
+
+    const paramLines = urlMatch[1].match(/- `.*?` - .*$/gm);
+    if (!paramLines) return [];
+
+    return paramLines.map(line => {
+        const match = line.match(/- `(.*?)` - (.*)$/);
+        if (match) {
+            return { name: match[1], description: match[2] };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+/**
+ * Extract local storage usage from README
+ */
+function extractLocalStorage(content) {
+    const storageMatch = content.match(/### Local Storage([\s\S]*?)(?=###|##|$)/);
+    if (!storageMatch || storageMatch[1].includes('No localStorage')) return [];
+
+    const storageLines = storageMatch[1].match(/- `.*?` - .*$/gm);
+    if (!storageLines) return [];
+
+    return storageLines.map(line => {
+        const match = line.match(/- `(.*?)` - (.*)$/);
+        if (match) {
+            return { key: match[1], description: match[2] };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+/**
+ * Extract a section from README by heading
+ */
+function extractSection(content, heading) {
+    const pattern = new RegExp(`${heading}([\\s\\S]*?)(?=\\n## |$)`);
+    const match = content.match(pattern);
+    return match ? match[1].trim() : null;
+}
+
+/**
+ * Get a specific, meaningful description for a block
+ */
+function getBlockDescription(blockName) {
+    const descriptions = {
+        'product-list-page': 'Displays product listings with advanced search, filtering, sorting, and pagination capabilities. Integrates with Adobe Commerce Live Search and Product Recommendations for intelligent product discovery.',
+        'product-details': 'Renders complete product information including images, pricing, configurable options, and add-to-cart functionality. Supports simple, configurable, grouped, and bundle product types with wishlist integration.',
+        'product-recommendations': 'Displays AI-powered product recommendations based on Adobe Sensei machine learning. Adapts recommendations by page type (PDP, cart, homepage) and supports multiple recommendation units per page.',
+        'commerce-cart': 'Provides full shopping cart functionality with item management, quantity updates, coupon codes, gift options, and move-to-wishlist capabilities. Displays real-time pricing and inventory status.',
+        'commerce-mini-cart': 'Shows a dropdown cart summary typically placed in the site header. Provides quick cart overview, item count, subtotal, and one-click checkout navigation without leaving the current page.',
+        'commerce-checkout': 'Delivers the complete checkout experience including shipping address, shipping methods, payment options, and order review. Integrates with Adobe Payment Services for secure payment processing.',
+        'commerce-login': 'Provides customer authentication with email and password. Handles session management, redirect after login, and integrates with the storefront authentication system.',
+        'commerce-create-account': 'Enables new customer registration with email validation, password requirements, and privacy policy consent. Handles email confirmation flow and redirects authenticated users to their account page.',
+        'commerce-confirm-account': 'Serves as the email confirmation landing page after registration. Validates confirmation tokens and activates customer accounts, completing the registration process.',
+        'commerce-forgot-password': 'Initiates the password reset workflow by collecting the customer email address and triggering a password reset email with a secure token.',
+        'commerce-create-password': 'Completes the password reset process by validating the reset token and allowing customers to set a new password. Includes password strength requirements and confirmation.',
+        'commerce-account-header': 'Displays the logged-in customer name and provides logout functionality. Typically used at the top of account dashboard pages for consistent navigation.',
+        'commerce-account-sidebar': 'Renders the account section navigation menu with links to orders, addresses, account information, and wishlist. Highlights the active section for easy navigation.',
+        'commerce-addresses': 'Manages customer shipping and billing addresses with full CRUD operations. Allows setting default addresses and validates address data before saving.',
+        'commerce-customer-information': 'Enables customers to view and edit their profile information including name, email, and password. Validates changes and requires current password for email updates.',
+        'commerce-customer-details': 'Displays read-only customer information within the order details context, including name, email, and contact information associated with the order.',
+        'commerce-orders-list': 'Shows the complete order history with order numbers, dates, status, totals, and quick links to order details. Supports pagination for customers with many orders.',
+        'commerce-search-order': 'Allows guest customers to look up orders using order number and email address, providing access to order tracking without requiring account login.',
+        'commerce-order-header': 'Displays essential order information at the top of order details pages, including order number, order date, and current order status with visual status indicators.',
+        'commerce-order-status': 'Provides detailed order status information including processing status, shipment tracking, and delivery estimates. Updates dynamically as order progresses through fulfillment.',
+        'commerce-order-product-list': 'Lists all products in an order with images, names, quantities, prices, and options. Displays gift options for each item and provides links to product detail pages.',
+        'commerce-order-cost-summary': 'Breaks down order costs including subtotal, taxes, shipping fees, discounts, and grand total. Shows both order-time pricing and any applied promotions.',
+        'commerce-shipping-status': 'Displays shipment tracking information including carrier details, tracking numbers, and delivery status. Links to carrier tracking pages for detailed shipment updates.',
+        'commerce-returns-list': 'Shows all return requests with return numbers, dates, status, and links to return details. Helps customers track the progress of their return requests.',
+        'commerce-create-return': 'Enables customers to initiate return requests by selecting items from eligible orders, specifying quantities, and providing return reasons. Validates return eligibility.',
+        'commerce-order-returns': 'Displays return information specific to an order, showing which items have been returned or have pending return requests within the order details context.',
+        'commerce-return-header': 'Shows key return request information at the top of return details pages, including return number, request date, and current return status.',
+        'commerce-gift-options': 'Displays read-only gift options from order data in order-related pages. Shows gift messages and wrapping selections with secondary view styling for order context.',
+        'commerce-wishlist': 'Manages saved items for future purchase with options to move items to cart, remove items, and view product details. Supports both authenticated and guest users with automatic wishlist merging upon sign-in.'
+    };
+
+    return descriptions[blockName] || `Provides ${blockName.replace(/-/g, ' ')} functionality for the storefront.`;
 }
 
 /**
  * Generate documentation for individual blocks
  */
-function generateBlockDocs(block, outputDir) {
-    const generationDate = formatDate(new Date());
-    
-    let content = `---
-title: ${block.displayName}
-description: Documentation for the ${block.displayName} block in the AEM Commerce boilerplate.
-sidebar:
-  label: ${block.displayName}
----
+function generateBlockDocs(block, boilerplateVersion, outputDir) {
+    // Load template
+    let content = loadTemplate('boilerplate-block.mdx');
 
-import { Aside, Code } from '@astrojs/starlight/components';
+    // Parse README for rich information
+    const readme = parseBlockReadme(block.path);
 
-<Aside type="note">
-Auto-generated on ${generationDate}. This block is part of the [AEM Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce).
-</Aside>
+    // Build description
+    const description = getBlockDescription(block.name);
 
-## Overview
+    // Build streamlined sections
+    const quickStartSection = buildQuickStartSection(block.name);
+    const integrationSection = buildStreamlinedIntegrationSection(block, readme);
+    const customizationSection = buildCustomizationSection(block);
 
-The **${block.displayName}** block provides commerce functionality using drop-in components.
-
-`;
-
-    // Add drop-ins section
-    if (block.analysis.dropins.length > 0) {
-        content += `## Drop-ins Used
-
-This block uses the following drop-in components:
-
-`;
-        for (const dropin of block.analysis.dropins) {
-            content += `- [\`@dropins/${dropin}\`](/dropins/${dropin}/)\n`;
-        }
-        content += '\n';
-    }
-
-    // Add containers section
-    if (block.analysis.containers.length > 0) {
-        content += `## Containers
-
-The following containers are rendered:
-
-`;
-        for (const container of block.analysis.containers) {
-            content += `- **${container}**\n`;
-        }
-        content += '\n';
-    }
-
-    // Add events section
-    if (block.analysis.events.length > 0) {
-        content += `## Events
-
-This block listens to the following events:
-
-`;
-        for (const event of block.analysis.events) {
-            content += `- \`${event}\`\n`;
-        }
-        content += '\n';
-    }
-
-    // Add API calls section
-    if (block.analysis.apiCalls.length > 0) {
-        content += `## API Functions
-
-This block uses the following API functions:
-
-`;
-        for (const apiCall of block.analysis.apiCalls) {
-            content += `- \`${apiCall}()\`\n`;
-        }
-        content += '\n';
-    }
-
-    content += `## Implementation
-
-Block location: \`/blocks/${block.name}/\`
-
-- **JavaScript**: ${block.hasJs ? '✓' : '✗'}
-- **CSS**: ${block.hasCss ? '✓' : '✗'}
-
-## Related Documentation
-
-- [All Drop-ins](/dropins/all/)
-- [Boilerplate Overview](/boilerplate/)
-- [View source code](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/${block.name})
-`;
-
-    // Apply standard transforms
-    content = applyStandardTransforms(content);
+    // Replace placeholders
+    content = content
+        .replace(/BLOCK_DISPLAY_NAME/g, block.displayName)
+        .replace(/SIDEBAR_LABEL/g, block.sidebarLabel)
+        .replace(/BLOCK_NAME/g, block.name)
+        .replace(/BLOCK_DESCRIPTION/g, description)
+        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
+        .replace(/QUICK_START_SECTION/g, quickStartSection)
+        .replace(/INTEGRATION_SECTION/g, integrationSection)
+        .replace(/CUSTOMIZATION_SECTION/g, customizationSection);
 
     // Write file
     const outputPath = join(outputDir, 'blocks', `${block.name}.mdx`);
@@ -377,276 +591,222 @@ Block location: \`/blocks/${block.name}/\`
 }
 
 /**
+ * Build Quick Start section
+ */
+function buildQuickStartSection(blockName) {
+    return `## Quick start
+
+This block is included in the boilerplate and works out of the box.
+
+- **Block:** \`blocks/${blockName}/${blockName}.js\`
+- **Styles:** \`blocks/${blockName}/${blockName}.css\`
+
+<Aside type="tip" title="For merchants">
+See the [merchant documentation](/merchants/blocks/${blockName}/) for how to add this block to pages.
+</Aside>`;
+}
+
+/**
+ * Build streamlined How it works section - combines drop-ins, events, config, and behavior
+ */
+function buildStreamlinedIntegrationSection(block, readme) {
+    let section = '## How it works\n\n';
+
+    // Drop-ins
+    if (block.analysis.dropins && block.analysis.dropins.length > 0) {
+        section += '### Drop-ins used\n\n';
+        for (const dropin of block.analysis.dropins) {
+            const docPath = getDropinDocPath(dropin);
+            const dropinPurpose = getDropinPurpose(dropin);
+            if (docPath) {
+                section += `- **${dropinPurpose}:** [\`@dropins/${dropin}\`](/dropins/${docPath}/)\n`;
+            } else {
+                section += `- **${dropinPurpose}:** \`@dropins/${dropin}\`\n`;
+            }
+        }
+        section += '\n';
+    }
+
+    // Events (if any)
+    const hasListeners = readme.events.listeners && readme.events.listeners.length > 0;
+    const hasEmitters = readme.events.emitters && readme.events.emitters.length > 0;
+
+    if (hasListeners || hasEmitters) {
+        section += '### Events\n\n';
+
+        if (hasListeners) {
+            section += 'Listens to:\n\n';
+            for (const event of readme.events.listeners) {
+                section += `- \`${event.name}\` - ${event.description}\n`;
+            }
+            section += '\n';
+        }
+
+        if (hasEmitters) {
+            section += 'Emits:\n\n';
+            for (const event of readme.events.emitters) {
+                section += `- \`${event.name}\` - ${event.description}\n`;
+            }
+            section += '\n';
+        }
+    }
+
+    // Configuration (if any)
+    if (readme.configuration) {
+        section += '### Configuration options\n\n';
+        section += '<TableWrapper nowrap={[0]}>\n\n';
+        section += readme.configuration;
+        section += '\n\n</TableWrapper>\n\n';
+    }
+
+    // Key behavior patterns (concise)
+    if (readme.behaviorPatterns) {
+        const contextDetection = readme.behaviorPatterns.match(/### Page Context Detection([\s\S]*?)(?=###|$)/);
+        if (contextDetection) {
+            section += '### Key behaviors\n\n';
+            section += contextDetection[1].trim() + '\n\n';
+        }
+    }
+
+    return section;
+}
+
+/**
+ * Build Customization section
+ */
+function buildCustomizationSection(block) {
+    const blockName = block.name;
+
+    let section = '## Customization\n\n';
+
+    section += 'Common approaches:\n\n';
+    section += `- **Modify behavior**: Edit \`blocks/${blockName}/${blockName}.js\`\n`;
+    section += `- **Update styles**: Edit \`blocks/${blockName}/${blockName}.css\`\n`;
+
+    if (block.analysis.dropins.length > 0) {
+        section += '- **Extend drop-ins**: Use [drop-in slots and events](/dropins/all/quick-start/#slots-and-events) for custom behavior\n';
+    }
+
+    section += '\n';
+    section += `See the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/${blockName}" text="source code" /> for implementation details.\n`;
+
+    return section;
+}
+
+/**
+ * Get purpose description for a drop-in
+ */
+function getDropinPurpose(dropin) {
+    const purposes = {
+        'storefront-cart': 'Cart management and operations',
+        'storefront-checkout': 'Checkout flow and order placement',
+        'storefront-order': 'Order management and history',
+        'storefront-pdp': 'Product detail page functionality',
+        'storefront-product-discovery': 'Product search and filtering',
+        'storefront-recommendations': 'AI-powered product recommendations',
+        'storefront-account': 'Customer account management',
+        'storefront-auth': 'Authentication and authorization',
+        'storefront-wishlist': 'Wishlist management',
+        'storefront-payment-services': 'Payment processing',
+        'tools': 'Shared utilities and components'
+    };
+    return purposes[dropin] || 'Commerce functionality';
+}
+
+/**
  * Generate structure documentation
  */
-function generateStructureDocs(boilerplatePath, outputPath) {
+function generateStructureDocs(boilerplateVersion, outputPath) {
     console.log('\n📝 Generating project structure documentation...');
 
-    const generationDate = formatDate(new Date());
-    
-    const content = `---
-title: Project Structure
-description: Understand the file and directory structure of the AEM Commerce boilerplate.
-sidebar:
-  label: Structure
-  order: 2
----
+    // Load template
+    let content = loadTemplate('boilerplate-structure.mdx');
 
-import { Aside, FileTree } from '@astrojs/starlight/components';
+    // Build file tree content
+    const fileTreeContent = `<FileTree>
+- blocks/ _-- Content and Commerce blocks_
+  - commerce-cart/ _-- Cart block_
+  - commerce-checkout/ _-- Checkout block_
+  - product-details/ _-- PDP block_
+  - product-list-page/ _-- PLP block_
+  - ... _-- More commerce blocks_
+- scripts/ _-- JavaScript files_
+  - __dropins__/ _-- Imported drop-in components_
+  - initializers/ _-- Drop-in initialization_
+  - aem.js _-- AEM site functions_
+  - commerce.js _-- Commerce functionality_
+  - configs.js _-- Configuration functions_
+  - scripts.js _-- Core AEM functionality_
+- styles/ _-- CSS files_
+  - fonts.css _-- Typography_
+  - lazy-styles.css _-- Deferred styles_
+  - styles.css _-- Global design tokens_
+- tools/ _-- Commerce tooling_
+  - picker/ _-- Commerce Picker_
+  - sidekick/ _-- Sidekick config_
+- head.html _-- Site-wide head configuration_
+- package.json _-- Dependencies and scripts_
+</FileTree>`;
 
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
-
-## Directory Structure
-
-The AEM Commerce boilerplate follows the standard AEM Edge Delivery Services structure with commerce-specific additions:
-
-<FileTree>
-- blocks/ Commerce blocks
-  - commerce-cart/
-  - commerce-checkout/
-  - product-details/
-  - ...
-- scripts/ JavaScript utilities
-  - commerce.js Initializers
-  - initializers.js Loader
-- styles/ Global CSS
-- head.html Site-wide head configuration
-- fstab.yaml Content source configuration
-</FileTree>
-
-## Key Directories
-
-### /blocks
-
-Contains all UI blocks, including commerce-specific blocks that integrate with drop-in components.
-
-### /scripts
-
-Core JavaScript files for:
-- Drop-in initialization
-- Commerce configuration
-- Event handling
-
-### /styles
-
-Global CSS and design tokens that can be customized for branding.
-
-## Related Documentation
-
-- [Configuration](/boilerplate/configuration/)
-- [Build Process](/boilerplate/build-process/)
-- [Commerce Blocks](/boilerplate/)
-`;
+    // Replace placeholders
+    content = content
+        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
+        .replace(/FILE_TREE_CONTENT/g, fileTreeContent);
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
 /**
  * Generate build process documentation
  */
-function generateBuildDocs(outputPath) {
+function generateBuildDocs(boilerplateVersion, outputPath) {
     console.log('\n📝 Generating build process documentation...');
 
-    const generationDate = formatDate(new Date());
-    
-    const content = `---
-title: Build Process
-description: Learn about the build and deployment process for the AEM Commerce boilerplate.
-sidebar:
-  label: Build Process
-  order: 3
----
+    // Load template
+    let content = loadTemplate('boilerplate-build-process.mdx');
 
-import { Aside, Steps } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
-
-## Overview
-
-The AEM Commerce boilerplate uses Edge Delivery Services' build system, which automatically handles:
-
-- JavaScript and CSS optimization
-- Asset delivery via CDN
-- Server-side rendering
-- Progressive enhancement
-
-## Build Steps
-
-<Steps>
-
-1. **Code Push**
-   
-   Push code changes to your GitHub repository.
-
-2. **Automatic Build**
-   
-   Edge Delivery Services detects changes and triggers a build.
-
-3. **Optimization**
-   
-   - JavaScript is bundled and minified
-   - CSS is optimized and purged
-   - Assets are CDN-optimized
-
-4. **Deployment**
-   
-   Changes are deployed to the Edge network within seconds.
-
-</Steps>
-
-## Development Workflow
-
-1. Clone the boilerplate repository
-2. Make changes locally
-3. Test using \`aem up\` (local development server)
-4. Commit and push to GitHub
-5. Changes automatically deploy to preview URL
-
-## Production Deployment
-
-Production deployment requires:
-- Repository connected to Adobe Experience Manager
-- Custom domain configuration (optional)
-- Performance monitoring setup
-
-## Related Documentation
-
-- [Project Structure](/boilerplate/structure/)
-- [Configuration](/boilerplate/configuration/)
-- [Edge Delivery Services Documentation](https://www.aem.live/docs/)
-`;
+    // Replace placeholders
+    content = content
+        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
+        .replace(/TOOLS_VERSION/g, boilerplateVersion); // Use same version
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
 /**
  * Generate configuration documentation
  */
-function generateConfigDocs(initializers, outputPath) {
+function generateConfigDocs(boilerplateVersion, outputPath) {
     console.log('\n📝 Generating configuration documentation...');
 
-    const generationDate = formatDate(new Date());
-    
-    const content = `---
-title: Configuration
-description: Learn about configuration options for the AEM Commerce boilerplate.
-sidebar:
-  label: Configuration
-  order: 4
----
+    // Load template
+    let content = loadTemplate('boilerplate-configuration.mdx');
 
-import { Aside, Code } from '@astrojs/starlight/components';
-
-<Aside type="note">
-Auto-generated on ${generationDate}.
-</Aside>
-
-## Head Configuration
-
-The \`head.html\` file contains:
-
-- **Importmap**: Maps drop-in package names to CDN URLs
-- **Meta tags**: SEO and social sharing metadata
-- **Scripts**: Analytics, tracking, and initialization
-
-### Importmap Example
-
-\`\`\`html
-<script type="importmap">
-{
-  "imports": {
-    "@dropins/storefront-cart/": "/scripts/__dropins__/storefront-cart/",
-    "@dropins/storefront-checkout/": "/scripts/__dropins__/storefront-checkout/",
-    "@dropins/tools/": "/scripts/__dropins__/tools/"
-  }
-}
-</script>
-\`\`\`
-
-## Initializers
-
-Drop-ins are initialized in \`scripts/commerce.js\`:
-
-${initializers.map(init => `- \`${init.name}\``).join('\n')}
-
-### Initialization Pattern
-
-Each drop-in follows this pattern:
-
-1. Import tools and drop-in packages
-2. Configure endpoint and headers
-3. Register initializer
-4. Mount drop-in
-
-## Environment Variables
-
-Configure your environment using:
-
-- **GraphQL Endpoint**: Commerce backend URL
-- **Store Code**: Multi-store configuration
-- **API Keys**: Third-party integrations
-
-## Related Documentation
-
-- [Project Structure](/boilerplate/structure/)
-- [Build Process](/boilerplate/build-process/)
-- [Drop-in Installation](/dropins/cart/installation/)
-`;
+    // Replace placeholders
+    content = content.replace(/BOILERPLATE_VERSION/g, boilerplateVersion);
 
     ensureParentDirectoryExists(outputPath);
     writeFileSync(outputPath, content, 'utf8');
-    
+
     console.log(`  ✅ Generated ${outputPath}`);
 }
 
 /**
  * Update sidebar navigation
+ * Note: Individual block pages removed - only overview page remains
  */
 function updateSidebarNavigation(blocks) {
     console.log('\n📝 Updating sidebar navigation...');
-
-    const configPath = join(projectRoot, 'astro.config.mjs');
-    let config = readFileSync(configPath, 'utf8');
-
-    // Find the boilerplate sidebar section
-    const boilerplatePattern = /label:\s*['"]Boilerplate['"]\s*,\s*items:\s*\[[\s\S]*?\]/;
-    
-    const blockItems = blocks.map(block => 
-        `{ label: '${block.displayName}', slug: 'boilerplate/blocks/${block.name}' }`
-    ).join(',\n            ');
-
-    const newBoilerplateSection = `label: 'Boilerplate',
-        items: [
-          { label: 'Overview', slug: 'boilerplate/index' },
-          { label: 'Structure', slug: 'boilerplate/structure' },
-          { label: 'Build Process', slug: 'boilerplate/build-process' },
-          { label: 'Configuration', slug: 'boilerplate/configuration' },
-          {
-            label: 'Blocks',
-            collapsed: true,
-            items: [
-              ${blockItems}
-            ]
-          }
-        ]`;
-
-    if (boilerplatePattern.test(config)) {
-        config = config.replace(boilerplatePattern, newBoilerplateSection);
-        writeFileSync(configPath, config, 'utf8');
-        console.log('  ✅ Updated sidebar navigation');
-    } else {
-        console.log('  ⚠️  Could not find boilerplate section in sidebar');
-    }
+    console.log('  ℹ️  Individual block pages removed - sidebar will be manually managed');
+    console.log('  ℹ️  Commerce blocks are now consolidated in /boilerplate/blocks/');
+    // Sidebar is now manually managed in astro.config.mjs
+    // No automatic updates needed for blocks section
 }
 
 // ============================================================================
@@ -658,8 +818,12 @@ try {
     console.log('  AEM COMMERCE BOILERPLATE DOCUMENTATION GENERATOR');
     console.log('='.repeat(60));
 
-    // Clone/update boilerplate
-    const boilerplatePath = cloneBoilerplate();
+    // Clone/update boilerplate using shared function
+    const { path: boilerplatePath } = cloneOrUpdateBoilerplate();
+
+    // Extract version
+    const boilerplateVersion = extractBoilerplateVersion(boilerplatePath);
+    console.log(`\n📦 Boilerplate version: ${boilerplateVersion}`);
 
     // Extract information
     const blocks = extractCommerceBlocks(boilerplatePath);
@@ -672,21 +836,20 @@ try {
     ensureParentDirectoryExists(join(outputDir, 'blocks', 'placeholder.md'));
 
     // Generate overview
-    generateOverview(blocks, initializers, join(outputDir, 'index.mdx'));
+    generateOverview(blocks, initializers, boilerplateVersion, join(outputDir, 'index.mdx'));
 
-    // Generate block documentation
-    console.log('\n📝 Generating block documentation...');
-    let blockCount = 0;
-    blocks.forEach(block => {
-        generateBlockDocs(block, outputDir);
-        blockCount++;
-    });
-    console.log(`  ✅ Generated ${blockCount} block docs`);
+    // Generate blocks overview page
+    generateBlocksOverview(blocks, join(outputDir, 'blocks', 'index.mdx'));
+
+    // Individual block documentation removed - consolidated into overview page
+    // See /boilerplate/blocks/ for complete block reference
+    // See /boilerplate/customizing-blocks/ for implementation guidance
 
     // Generate additional documentation
-    generateStructureDocs(boilerplatePath, join(outputDir, 'structure.mdx'));
-    generateBuildDocs(join(outputDir, 'build-process.mdx'));
-    generateConfigDocs(initializers, join(outputDir, 'configuration.mdx'));
+    // NOTE: structure.mdx and build-process.mdx have been consolidated into boilerplate-project.mdx
+    // generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
+    // generateBuildDocs(boilerplateVersion, join(outputDir, 'build-process.mdx'));
+    generateConfigDocs(boilerplateVersion, join(outputDir, 'configuration.mdx'));
 
     // Update sidebar
     updateSidebarNavigation(blocks);
@@ -695,23 +858,21 @@ try {
     console.log('\n' + '='.repeat(60));
     console.log('\n📊 Generation Summary:\n');
     console.log(`✅ Overview page: 1`);
-    console.log(`✅ Commerce blocks: ${blocks.length}`);
+    console.log(`✅ Blocks overview page: 1 (${blocks.length} blocks listed)`);
     console.log(`✅ Structure docs: 1`);
     console.log(`✅ Build docs: 1`);
     console.log(`✅ Configuration docs: 1`);
-    console.log(`✅ Sidebar navigation: Updated`);
-    console.log(`📄 Total: ${blocks.length + 4} pages`);
+    console.log(`ℹ️  Sidebar navigation: Manually managed`);
+    console.log(`📄 Total: 5 pages`);
 
     console.log('\n📝 Generated Documentation:\n');
     console.log(`   📂 /boilerplate/`);
     console.log(`      📄 index.mdx (Overview)`);
-    console.log(`      📄 structure.mdx`);
-    console.log(`      📄 build-process.mdx`);
     console.log(`      📄 configuration.mdx`);
     console.log(`      📂 blocks/`);
-    blocks.forEach(block => {
-        console.log(`         📄 ${block.name}.mdx`);
-    });
+    console.log(`         📄 index.mdx (Overview for ${blocks.length} blocks)`);
+    console.log(`\n   ℹ️  Individual block pages removed - see /boilerplate/blocks/`);
+    console.log(`   ℹ️  Customization guide at /boilerplate/customizing-blocks/`);
 
     console.log('\n✨ Boilerplate documentation generation complete!\n');
 

@@ -49,15 +49,21 @@ const generators = [
         estimatedTime: '2-3 minutes'
     },
     {
+        name: 'Styles',
+        command: 'npm run generate-styles-docs',
+        description: 'CSS styling documentation for all drop-ins',
+        estimatedTime: '2-3 minutes'
+    },
+    {
         name: 'Dictionary',
         command: 'npm run generate-dictionary-docs',
         description: 'i18n keys documentation for all drop-ins',
         estimatedTime: '2-3 minutes'
     },
     {
-        name: 'Installation',
-        command: 'npm run generate-installation-docs',
-        description: 'Installation guides for all drop-ins',
+        name: 'Quick Start',
+        command: 'npm run generate-quick-start-docs',
+        description: 'Quick start reference pages for all drop-ins',
         estimatedTime: '2-3 minutes'
     },
     {

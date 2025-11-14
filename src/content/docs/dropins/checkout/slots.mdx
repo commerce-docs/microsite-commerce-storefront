@@ -1,209 +1,178 @@
 ---
-title: Checkout slots
-description: Learn about the slots provided in the checkout drop-in component.
+title: Checkout Slots
+description: Customize UI sections in the Checkout drop-in using slots.
+sidebar:
+  label: Slots
+  order: 5
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
-import Aside from '@components/Aside.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-Learn about the slots provided in the checkout drop-in component.
+The Checkout drop-in exposes **3 slots** in **4 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
-[Extending drop-in components](/dropins/all/extending/) describes the default properties available to all slots.
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.1.0</strong>
+</div>
 
-## Title slots
+<table>
+<thead>
+<tr>
+<th style="white-space: nowrap;">Container</th>
+<th>Slots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="white-space: nowrap;"><a href="#loginform-slots"><code>LoginForm</code></a></td>
+<td><code>Heading</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#paymentmethods-slots"><code>PaymentMethods</code></a></td>
+<td>None</td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#placeorder-slots"><code>PlaceOrder</code></a></td>
+<td><code>Content</code></td>
+</tr>
+<tr>
+<td style="white-space: nowrap;"><a href="#termsandconditions-slots"><code>TermsAndConditions</code></a></td>
+<td><code>Agreements</code></td>
+</tr>
+</tbody>
+</table>
 
-The `TitleProps` interface defines slots for the [`Title`](/dropins/checkout/containers/) component. These slots enable you to customize the title content displayed in specific containers.
-
-```ts
-export interface TitleProps {
-  displayTitle?: boolean;
-  slots?: {
-    Title?: SlotProps;
-  };
-}
-```
-
-### Title
-
-The `Title` property is a callback function that renders custom title content. It receives the default context implementing the `DefaultSlotContext` interface:
-
-```ts
-interface DefaultSlotContext<T> extends PrivateContext<T> {
-  dictionary: Lang;
-  getSlotElement: (key: string) => SlotElement;
-  replaceWith: MutateElement;
-  appendChild: MutateElement;
-  prependChild: MutateElement;
-  appendSibling: MutateElement;
-  prependSibling: MutateElement;
-  onRender: (cb: (next: T & DefaultSlotContext<T>) => void) => void;
-  onChange: (cb: (next: T & DefaultSlotContext<T>) => void) => void;
-}
-
-export type SlotProps<T = any> = (
-  ctx: T & DefaultSlotContext<T>,
-  element: HTMLDivElement | null
-) => Promise<void> | void;
-```
-
-<Aside type="note">
-Some containers extend their props interface to use the `TitleProps` slot to customize the title content. You will find some examples on those specific containers.
-</Aside>
 
 ## LoginForm slots
 
-The LoginFormProps interface defines the available slots for the [`LoginForm`](/dropins/checkout/containers/login-form/) container. The slots allow setting the heading content dynamically based on the user authentication status.
+```js {4}
+interface LoginFormProps
 
-```ts
-export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitleProps {
-  . . .
-  slots?: {
-    Heading?: SlotProps<{
-      authenticated: boolean;
-    }>;
-  } & TitleProps['slots'];
-}
+slots?: {
+  Heading?: SlotProps<{
+    authenticated: boolean;
+  }>;
+};
 ```
 
-### Heading
-
-The `Heading` property is a callback function that renders custom heading content based on the authentication status provided by the context. The `Heading` slot receives a boolean as a context indicating whether the user is authenticated.
-
-<Aside type="note">
-See the [`LoginForm`](/dropins/checkout/containers/login-form/) container to learn more about the properties and how to override the slots to configure and customize the login form.
-</Aside>
+---
 
 ## PaymentMethods slots
 
-The slots for the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container are defined in the `PaymentMethodsProps` interface shown below. The slots allow you to customize the list of payment methods to show during the checkout process.
+The `PaymentMethodsSlot` type uses an index signature where keys dynamically become slot names. Unlike standard slots with fixed names at compile time, this pattern determines slot names at runtime. You configure each slot with an object containing specific properties and render functions.
 
-```ts
-export interface PaymentMethodsProps extends HTMLAttributes<HTMLDivElement>, TitleProps {
-  . . .
-  slots?: {
+```js
+interface PaymentMethodsProps
+
+slots?: {
     Methods?: PaymentMethodsSlot;
-  } & TitleProps['slots'];
-}
+};
 ```
 
-### Methods
+### Methods example
 
-The `Methods` property is an object which implements the `PaymentMethodsSlot` interface:
+This example from the Commerce Checkout block shows how to customize the `Methods` slot:
 
-```ts
-export interface PaymentMethodsSlot {
-  [code: string]: PaymentMethodConfig;
-}
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+// Note: `commerceCoreEndpoint`, `getUserTokenCookie`, and `creditCardFormRef` should be defined in your block context
+
+provider.render(PaymentMethods, {
+  slots: {
+    Methods: {
+      [PaymentMethodCode.CREDIT_CARD]: {
+        render: (ctx) => {
+          const $creditCard = document.createElement('div');
+          PaymentServices.render(CreditCard, {
+            apiUrl: commerceCoreEndpoint,
+            getCustomerToken: getUserTokenCookie,
+            getCartId: () => ctx.cartId,
+            creditCardFormRef,
+          })($creditCard);
+          ctx.replaceHTML($creditCard);
+        },
+      },
+      [PaymentMethodCode.SMART_BUTTONS]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.APPLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.GOOGLE_PAY]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.VAULT]: {
+        enabled: false,
+      },
+      [PaymentMethodCode.FASTLANE]: {
+        enabled: false,
+      },
+    }
+  }
+})(document.querySelector('.payment-methods'));
 ```
 
-It consists on a list of payment method codes providing a set of configurations to customize the payment method. Each payment method will have its own set of configurations implementing the `PaymentMethodConfig` interface:
-
-```ts
-export interface PaymentMethodConfig {
-  displayLabel?: boolean;
-  enabled?: boolean;
-  icon?: string;
-  autoSync?: boolean;
-  render?: SlotProps<PaymentMethodRenderCtx>;
-}
-```
-
-Finally the `render` property is a callback function used to render and configure the payment method in case of being selected. The `render` slot receives a context implementing the following `PaymentMethodRenderCtx` interface:
-
-```ts
-export type SlotProps<T = any> = (
-  ctx: T & DefaultSlotContext<T>,
-  element: HTMLDivElement | null
-) => Promise<void> | void;
-
-export interface PaymentMethodRenderCtx {
-  cartId: string;
-  replaceHTML: (domElement: HTMLElement) => void;
-}
-```
-
-The context object passed to the `render` slot includes a _replaceHTML_ property that is a callback function and the _cartId_ got from the internal state.
-
-<Aside type="note">
-Please visit the [`PaymentMethods`](/dropins/checkout/containers/payment-methods/) container page to learn more about of the properties, and how to override the slots to configure and customize payment methods described on different examples.
-</Aside>
-
-<Aside type="note">
-See the [add payment method](/dropins/checkout/tutorials/add-payment-method/) tutorial for more information on how to configure the Braintree payment method.
-</Aside>
+---
 
 ## PlaceOrder slots
 
-The slots for the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container are defined in the `PlaceOrderProps` interface shown below. The slots allow you to set the container content dynamically based on the selected payment method.
+```js {4}
+interface PlaceOrderProps
 
-```ts
-export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
-  . . .
-  slots?: {
-    Content?: SlotProps<ContentSlotContext>;
-  };
-}
+slots?: {
+  Content?: SlotProps<ContentSlotContext>;
+};
 ```
 
-### Content
-
-The `Content` property is a callback function used to render the container content. The `Content` slot receives a context implementing the following `ContentSlotContext` interface:
-
-```ts
-export type SlotProps<T = any> = (
-  ctx: T & DefaultSlotContext<T>,
-  element: HTMLDivElement | null
-) => Promise<void> | void;
-
-export interface ContentSlotContext {
-  code: string;
-}
-```
-
-The context object passed to the `Content` slot includes the _code_ got from the selected payment method.
-
-<Aside type="note">
-Please visit the [`PlaceOrder`](/dropins/checkout/containers/place-order/) container page to learn more about of the properties, and how to override the slots to configure and customize the place order button described on different examples.
-</Aside>
+---
 
 ## TermsAndConditions slots
 
-The `TermsAndConditionsProps` interface defines the available slots for the [`TermsAndConditions`](/dropins/checkout/containers/terms-and-conditions/) container. These slots enable you to specify terms and conditions that customers must accept before completing their order.
+```js {4}
+interface TermsAndConditionsProps
 
-```ts
-export interface TermsAndConditionsProps {
-  slots?: {
-    Agreements?: SlotProps<{
-      appendAgreement: SlotMethod<{
-        name: string;
-        mode: AgreementMode;
-        text?: string;
-        translationId?: string;
-      }>;
-    }>;
-  };
-}
+slots?: {
+  Agreements?: SlotProps<{
+    appendAgreement: SlotMethod<{
+    name: string;
+    mode: AgreementMode;
+    translationId?: string;
+    text?: string;
+  }>;
+  }>;
+};
 ```
 
-### Agreements
+### Agreements example
 
-The `Agreements` property is a callback function that configures and renders a list of agreements. It provides context by including the `appendAgreement()` method to add a new agreement based on the `SlotMethod` type:
+This example from the Commerce Checkout block shows how to customize the `Agreements` slot:
 
-```ts
-export type SlotMethod<P = any> = (
-  callback: (next: unknown, state: State) => P
-) => void;
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import TermsAndConditions from '@dropins/storefront-checkout/containers/TermsAndConditions.js';
 
-export enum AgreementMode {
-  MANUAL = 'manual',
-  AUTO = 'auto',
-}
+provider.render(TermsAndConditions, {
+  slots: {
+    Agreements: (ctx) => {
+      ctx.appendAgreement(() => ({
+        name: 'default',
+        mode: 'manual',
+        translationId: 'Checkout.TermsAndConditions.label',
+      }));
+    }
+  }
+})(document.querySelector('.terms-and-conditions'));
 ```
 
-The context object passed to the `appendAgreement` slot method includes the required information to configure an agreement.
+---
 
-<Aside type="note">
-See the [`TermsAndConditions`](/dropins/checkout/containers/terms-and-conditions/) container to learn more about the properties and how to override the slots to configure and customize a list of agreements.
-</Aside>
+
+
+{/* This documentation is auto-generated from: REPO_URL */}

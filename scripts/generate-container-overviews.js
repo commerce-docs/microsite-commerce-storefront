@@ -17,7 +17,7 @@
  * - Called automatically by prebuild hook
  */
 
-import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
+import { cleanVersion } from './lib/utils.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -52,7 +52,7 @@ function getVersion(dropinKey) {
         );
         const packageName = `@dropins/storefront-${dropinKey}`;
         const version = packageJson.dependencies?.[packageName] || '1.0.0';
-        return version.replace(/[~^]/g, '');
+        return cleanVersion(version);
     } catch {
         return '1.0.0';
     }
