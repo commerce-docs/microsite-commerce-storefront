@@ -68,7 +68,6 @@ async function config() {
       '/customize/slots': `${basePath}/dropins/all/extending`,
       '/customize/style': `${basePath}/dropins/all/styling`,
       '/customize': `${basePath}/dropins/all/introduction`,
-      '/dropins': `${basePath}/dropins/all/introduction`,
       '/dropins/all/installing': `${basePath}/dropins/all/quick-start`,
       '/dropins/cart/cart-introduction': `${basePath}/dropins/cart`,
       '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
@@ -324,7 +323,7 @@ async function config() {
                     collapsed: true,
                     items: [
                       {
-                        label: 'Setup overview',
+                        label: 'Overview',
                         link: '/setup/',
                       },
                       {
@@ -379,7 +378,7 @@ async function config() {
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
-                    collapsed: true,
+                    collapsed: false,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
@@ -403,6 +402,7 @@ async function config() {
                     label: 'Drop-ins',
                     collapsed: true,
                     items: [
+                      { label: 'Overview', link: '/dropins/' },
                       {
                         label: 'Cart',
                         collapsed: true,
