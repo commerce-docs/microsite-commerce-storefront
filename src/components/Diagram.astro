@@ -97,15 +97,19 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
         
-        // Use data URI for immediate availability (no async loading)
-        const dataUri = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(enhancedSvg)));
+        // Use Blob URL instead of data URI - works better with zoom modal
+        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = dataUri;
+        img.src = blobUrl;
         img.alt = 'Mermaid diagram';
+        
+        // Store blob URL for zoom (don't revoke until zoom is done)
+        img.dataset.blobUrl = blobUrl;
         
         // Set the calculated dimensions on the img element
         const finalWidth = svgElement?.getAttribute('width') || '1920';
@@ -137,8 +141,25 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
         
-        // The zoom plugin should already be initialized and watching for new elements
-        // No need to dispatch events or wait for async operations
+        // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+        img.onload = () => {
+          // The blob URL needs to stay alive for the zoom modal to work
+          // Clean up on page unload or navigation
+          window.addEventListener('beforeunload', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          
+          // Also clean up on Astro page navigation
+          document.addEventListener('astro:before-preparation', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          
+          // Trigger the zoom plugin to re-scan after our dynamic image is added
+          setTimeout(() => {
+            // Dispatch the same event the plugin listens to for re-scanning
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+          }, 100);
+        };
         
       } catch (error) {
         console.error('Error rendering mermaid diagram:', error);
