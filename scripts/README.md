@@ -665,6 +665,38 @@ npm run regenerate-b2b-overviews
 
 ---
 
+### Boilerplate Version Updater
+
+Updates version numbers in manually-maintained boilerplate documentation files while preserving all other content.
+
+```bash
+# Update all boilerplate documentation versions
+npm run update-boilerplate-versions
+```
+
+**Output**: Updates version numbers in `src/content/docs/boilerplate/*.mdx` files
+
+**Features**:
+- Extracts current version from boilerplate's `package.json`
+- Updates only version numbers, leaving all other content unchanged
+- Reports which files were updated
+- Runs automatically as part of `generate-all-docs`
+
+**When to Use**:
+- After a boilerplate release to update version badges
+- Manually when you want to update only versions (not regenerate full docs)
+- Automatically runs when you execute `npm run generate-all-docs`
+
+**Files Updated**:
+- `/boilerplate/index.mdx` (Overview)
+- `/boilerplate/getting-started.mdx`
+- `/boilerplate/configuration.mdx`
+- `/boilerplate/blocks-reference.mdx`
+- `/boilerplate/customizing-blocks.mdx`
+- `/boilerplate/updates.mdx`
+
+---
+
 **⚠️ Important: Overview Pages Require Manual Completion**
 
 The bootstrap script creates overview pages (`index.mdx`) using `_dropin-templates/dropin-overview-minimal.mdx`. These pages are **intentionally incomplete** and require the drop-in developer to:
@@ -700,7 +732,6 @@ npm run generate-b2b-docs
 # Replace placeholders with actual content
 # See Cart overview for reference: src/content/docs/dropins/cart/index.mdx
 ```
-
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
