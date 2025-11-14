@@ -846,7 +846,7 @@ try {
     // See /boilerplate/customizing-blocks/ for implementation guidance
 
     // Generate additional documentation
-    // NOTE: structure.mdx and build-process.mdx have been consolidated into boilerplate-project.mdx
+    // NOTE: structure.mdx and build-process.mdx have been consolidated into working-with-boilerplate.mdx
     // generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
     // generateBuildDocs(boilerplateVersion, join(outputDir, 'build-process.mdx'));
     generateConfigDocs(boilerplateVersion, join(outputDir, 'configuration.mdx'));

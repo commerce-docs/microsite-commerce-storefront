@@ -595,6 +595,36 @@ npm run generate-merchant-block-docs
 - Multi-file output (29+ block pages)
 - Complements technical boilerplate documentation
 
+### Boilerplate Version Updater
+
+Updates version numbers in manually-maintained boilerplate documentation files while preserving all other content.
+
+```bash
+# Update all boilerplate documentation versions
+npm run update-boilerplate-versions
+```
+
+**Output**: Updates version numbers in `src/content/docs/boilerplate/*.mdx` files
+
+**Features**:
+- Extracts current version from boilerplate's `package.json`
+- Updates only version numbers, leaving all other content unchanged
+- Reports which files were updated
+- Runs automatically as part of `generate-all-docs`
+
+**When to Use**:
+- After a boilerplate release to update version badges
+- Manually when you want to update only versions (not regenerate full docs)
+- Automatically runs when you execute `npm run generate-all-docs`
+
+**Files Updated**:
+- `/boilerplate/index.mdx` (Overview)
+- `/boilerplate/getting-started.mdx`
+- `/boilerplate/configuration.mdx`
+- `/boilerplate/blocks-reference.mdx`
+- `/boilerplate/customizing-blocks.mdx`
+- `/boilerplate/updates.mdx`
+
 >>>>>>> origin/develop
 ## Enrichment System
 
