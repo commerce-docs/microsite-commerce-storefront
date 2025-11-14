@@ -185,6 +185,12 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
     for (const containerInfo of containers) {
         const enrichment = enrichmentData?.[containerInfo.containerName] || null;
 
+        // Skip generation if enrichment specifies override_template
+        if (enrichment?.override_template === true) {
+            console.log(`  ⏭️  Skipping ${containerInfo.containerName} (override_template: true)`);
+            continue;
+        }
+
         // Build configurations table using shared library
         const configurationsTable = generatePropertyTable(containerInfo.props, {
             nowrapColumns: [0, 1],
