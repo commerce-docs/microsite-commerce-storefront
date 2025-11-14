@@ -355,6 +355,8 @@ time: "15 minutes"            # Estimated reading/completion time
 
 Standard Markdown is supported, plus MDX extensions for interactive components.
 
+**Important:** Always use the Steps component for all ordered lists.
+
 **Headings:**
 ```markdown
 # Page Title (H1 - used once per page)
