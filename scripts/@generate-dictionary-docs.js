@@ -177,7 +177,9 @@ function generateCustomizationExample(dictionaryJson) {
     }
 }
 
-function generateDictionaryMDX(repoName, repoConfig, dictionaryData, version, enrichmentData = null) {
+function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo, enrichmentData = null) {
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-dictionary.mdx');
 
     // If no dictionary found, generate placeholder page

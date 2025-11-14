@@ -14,6 +14,7 @@
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, rmSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
+import { validatePage } from './validate-sidebar-updates.js';
 
 const TEST_OUTPUT_DIR = '_test-generated';
 const GENERATORS = [
@@ -124,16 +125,27 @@ const validationScripts = [
     { name: 'Event Payloads', script: 'validate-event-payloads.js' },
     { name: 'Function Types', script: 'validate-function-types.js' },
     { name: 'Parameter Patterns', script: 'validate-parameter-patterns.js' },
+    { name: 'Sidebar Updates', script: 'validate-sidebar-updates.js', testPath: '/dropins/cart/quick-start/' },
 ];
 
 for (const validator of validationScripts) {
     try {
         console.log(`Testing: ${validator.name} validator...`);
-        execSync(`node scripts/${validator.script}`, {
-            encoding: 'utf8',
-            stdio: 'pipe'
-        });
-        console.log(`✅ ${validator.name} validator works\n`);
+        if (validator.testPath) {
+            // For sidebar validator, test with a specific path
+            const result = validatePage(validator.testPath);
+            if (result) {
+                console.log(`✅ ${validator.name} validator works\n`);
+            } else {
+                console.log(`⚠️  ${validator.name} validator found missing entry (may be expected)\n`);
+            }
+        } else {
+            execSync(`node scripts/${validator.script}`, {
+                encoding: 'utf8',
+                stdio: 'pipe'
+            });
+            console.log(`✅ ${validator.name} validator works\n`);
+        }
     } catch (error) {
         console.log(`⚠️  ${validator.name} validator found issues (expected)\n`);
     }

@@ -94,17 +94,22 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        // Convert enhanced SVG to data URI for instant zoom loading
+        // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
-        // Encode as data URI instead of blob URL to eliminate fetch lag when zooming
-        const svgDataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(enhancedSvg);
+        
+        // Use Blob URL instead of data URI - works better with zoom modal
+        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
         
         // Create the same structure as working images
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
         
         const img = document.createElement('img');
-        img.src = svgDataUri;
+        img.src = blobUrl;
         img.alt = 'Mermaid diagram';
+        
+        // Store blob URL for zoom (don't revoke until zoom is done)
+        img.dataset.blobUrl = blobUrl;
         
         // Set the calculated dimensions on the img element
         const finalWidth = svgElement?.getAttribute('width') || '1920';
@@ -118,7 +123,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           display: block;
         `;
         
-        // Create zoom button like the working images
+        // Create zoom button
         const zoomButton = document.createElement('button');
         zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
         zoomButton.className = 'starlight-image-zoom-control';
@@ -135,12 +140,21 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Replace loading with the zoomable wrapper
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
-
-        // Store the enhanced SVG content for modal use
-        img.dataset.svgContent = enhancedSvg;
         
         // Trigger the zoom plugin to re-scan for images after our dynamic image is added
         img.onload = () => {
+          // The blob URL needs to stay alive for the zoom modal to work
+          // Clean up on page unload or navigation
+          window.addEventListener('beforeunload', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          
+          // Also clean up on Astro page navigation
+          document.addEventListener('astro:before-preparation', () => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          
+          // Trigger the zoom plugin to re-scan after our dynamic image is added
           setTimeout(() => {
             // Dispatch the same event the plugin listens to for re-scanning
             document.dispatchEvent(new CustomEvent('astro:after-swap'));

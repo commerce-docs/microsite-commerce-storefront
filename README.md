@@ -2,6 +2,66 @@
 
 Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs.
 
+## Custom components
+
+This documentation site includes a collection of custom Astro components that enhance content presentation and interactivity. Below is a complete list of available components with links to examples of their usage:
+
+- **[Aside](/src/content/docs/dropins/all/labeling.mdx)** - Callout boxes for tips, warnings, notes, and other highlighted content
+- **[Callouts](/src/content/docs/dropins/all/extend-or-create.mdx)** - Visual callout elements for emphasizing important information
+- **[Card](/src/content/docs/dropins/all/branding.mdx)** - Content card component for displaying information in a contained format
+- **[CardGrid](/src/content/docs/dropins/all/branding.mdx)** - Grid layout for displaying multiple cards
+- **[Checklist](/src/content/docs/setup/launch/index.mdx)** - Interactive checklist component for tracking tasks
+- **[CodeExample](/src/content/docs/dropins/all/branding.mdx)** - Code snippet display with syntax highlighting
+- **[CodeImport](/src/content/docs/dropins/all/_eventbus.mdx)** - Imports code from external files
+- **[CodeInclude](/src/content/docs/dropins/all/labeling.mdx)** - Includes code snippets from repositories
+- **[Diagram](/src/content/docs/dropins/all/branding.mdx)** - Visual diagrams and flowcharts
+- **[Embed](/src/content/docs/get-started/create-storefront.mdx)** - Embeds external content like videos
+- **[ExternalLink](/src/content/docs/dropins/all/creating.mdx)** - External link component with custom styling
+- **[FileTree](/src/content/docs/dropins/all/branding.mdx)** - Displays file and folder structures
+- **[Flex](/src/content/docs/sdk/components/overview.mdx)** - Flexbox layout container
+- **[FullWidthContainer](/src/content/docs/playgrounds/commerce-optimizer.mdx)** - Full-width content container
+- **[GraphiQLEditor](/src/content/docs/playgrounds/commerce-optimizer.mdx)** - Interactive GraphQL query editor
+- **[IFrame](/src/content/docs/sdk/components/accordion.mdx)** - Embeds external content in an iframe
+- **[Link](/src/content/docs/get-started/browser-compatibility.mdx)** - Internal link component
+- **[LinkCard](/src/content/docs/dropins/all/introduction.mdx)** - Card component with link functionality
+- **[List](/src/content/docs/dropins/product-details/index.mdx)** - Styled list component
+- **[Option](/src/content/docs/dropins/all/extend-or-create.mdx)** - Individual option element for Options component
+- **[Options](/src/content/docs/dropins/all/extend-or-create.mdx)** - Options selector component
+- **[OptionsTable](/src/content/docs/dropins/all/labeling.mdx)** - Table displaying configuration options
+- **[Panel](/src/content/docs/sdk/components/overview.mdx)** - Content panel with optional header and styling
+- **[PDFViewer](/src/content/docs/merchants/storefront-builder/create-content.mdx)** - Embeds PDF documents
+- **[Prerequisites](/src/content/docs/dropins/all/branding.mdx)** - Lists prerequisites for a feature or tutorial
+- **[Screenshot](/src/content/docs/dropins/user-auth/recaptcha.mdx)** - Displays screenshots with captions
+- **[Summary](/src/content/docs/dropins/all/branding.mdx)** - Summary or overview section
+- **[TableWrapper](/src/content/docs/dropins/all/events.mdx)** - Wrapper for responsive table displays
+- **[Task](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Individual task item for Tasks component
+- **[Tasks](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Task list component
+- **[Vocabulary](/src/content/docs/dropins/cart/quick-start.mdx)** - Defines and explains technical terms
+
+### Using custom components
+
+To use a custom component in your documentation page:
+
+1. Import the component in your MDX file after the frontmatter:
+
+   ```mdx
+   ---
+   title: Your Page Title
+   description: Your page description
+   ---
+
+   import Aside from '@components/Aside.astro';
+   import Diagram from '@components/Diagram.astro';
+   ```
+
+2. Use the component in your content:
+
+   ```mdx
+   <Aside type="tip" title="Pro Tip">
+   This is helpful information for the reader.
+   </Aside>
+   ```
+
 ## Prerequisites
 
 Install node and pnpm:

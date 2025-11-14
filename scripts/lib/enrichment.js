@@ -109,13 +109,13 @@ export function loadDictionaryEnrichments(dropinName) {
 }
 
 /**
- * Load installation enrichments for a drop-in
+ * Load quick start enrichments for a drop-in
  * 
  * @param {string} dropinName - Name of the drop-in
- * @returns {Object|null} Installation enrichment data
+ * @returns {Object|null} Quick start enrichment data
  */
 export function loadInstallationEnrichments(dropinName) {
-    return loadEnrichmentData(dropinName, 'installation');
+    return loadEnrichmentData(dropinName, 'quick-start');
 }
 
 /**

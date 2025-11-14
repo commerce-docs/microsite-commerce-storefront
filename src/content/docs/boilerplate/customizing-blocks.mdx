@@ -1,0 +1,518 @@
+---
+title: Customizing blocks
+description: Learn how to customize Commerce block behavior, styling, and drop-in integration in your storefront.
+sidebar:
+  label: Customizing blocks
+  order: 5
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+All Commerce blocks in the boilerplate work out of the box, but you can customize them to match your business requirements. This guide covers the main customization approaches.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Boilerplate version: 4.0.1</strong>
+</div>
+
+## Three ways to customize
+
+### 1. CSS styling
+
+Modify block styles by editing the CSS file in the block directory:
+
+```css
+/* blocks/commerce-cart/commerce-cart.css */
+.commerce-cart {
+  padding: var(--spacing-large) 0;
+  position: relative;
+}
+
+.cart__wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-4-gutters);
+}
+```
+
+#### Design tokens
+
+Use CSS variables from your theme for consistent styling:
+
+```css
+/* Common design tokens */
+var(--spacing-small)              /* 16px */
+var(--spacing-medium)             /* 24px */
+var(--spacing-large)              /* 64px */
+var(--color-brand-500)            /* #454545 - Brand color */
+var(--color-neutral-100)          /* #fafafa - Light background */
+var(--type-body-1-default-font)   /* 16px/24px - Body text */
+```
+
+### 2. JavaScript behavior
+
+Modify block logic by editing the JavaScript file in the block directory:
+
+```javascript
+// blocks/commerce-cart/commerce-cart.js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+
+export default async function decorate(block) {
+  // Read configuration from document authoring
+  const config = readBlockConfig(block);
+  
+  // Your custom logic here
+  const maxItems = parseInt(config['max-items'], 10) || 10;
+  
+  // Create container element
+  const $list = document.createElement('div');
+  $list.className = 'cart__list';
+  block.appendChild($list);
+  
+  // Render drop-in container to the list element
+  await provider.render(CartSummaryList, {
+    maxItems,
+    enableRemoveItem: true,
+  })($list);
+}
+```
+
+### 3. Drop-in customization
+
+Use drop-in slots and events for advanced customization.
+
+#### Slots
+
+Inject custom content into drop-in containers by passing slot functions in the configuration:
+
+```javascript
+// Inside the decorate function for your block
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+
+// Create container element
+const $list = document.createElement('div');
+$list.className = 'cart__list';
+block.appendChild($list);
+
+// Render cart with custom slot
+await provider.render(CartSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Add custom content to cart item footer
+      const customElement = document.createElement('div');
+      customElement.className = 'custom-promotion';
+      customElement.textContent = 'Free shipping over $50!';
+      ctx.appendChild(customElement);
+    },
+  },
+})($list);
+```
+
+#### Events
+
+Listen to and respond to drop-in events using the event bus:
+
+```javascript
+// Inside the decorate function for your block or at the module level
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('cart/data', (cartData) => {
+  console.log('Cart updated:', cartData);
+  
+  // Example: Show notification when cart has items
+  if (cartData.totalQuantity > 0) {
+    console.log(`You have ${cartData.totalQuantity} items in your cart`);
+  }
+});
+```
+
+## Creating DOM elements
+
+The boilerplate uses two approaches for creating DOM elements. **The key distinction: use `createContextualFragment` for multiple elements, `createElement()` for single elements.**
+
+### Template literals with `createContextualFragment`
+
+Use this approach when creating **two or more elements** or **complex nested structures**.
+
+```javascript
+// Best for: Complex layout structures with multiple nested elements
+const fragment = document.createRange().createContextualFragment(`
+  <div class="cart__notification"></div>
+  <div class="cart__wrapper">
+    <div class="cart__left-column">
+      <div class="cart__list"></div>
+    </div>
+    <div class="cart__right-column">
+      <div class="cart__order-summary"></div>
+    </div>
+  </div>
+`);
+
+const $list = fragment.querySelector('.cart__list');
+block.appendChild(fragment);
+```
+
+#### When to use
+
+- Creating **two or more elements** at once.
+- Setting up initial block structure with nested elements.
+- HTML hierarchy visualization improves code readability.
+
+#### Why this approach
+
+- More efficient than multiple `createElement()` calls.
+- Clear visual representation of HTML structure.
+- Easier to maintain complex layouts.
+
+#### Boilerplate examples
+- <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L62-L75" text="commerce-cart.js (lines 62-75)" />
+- <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.js#L86-L110" text="product-details.js (lines 86-110)" />
+
+### `document.createElement()`
+
+Use this approach when creating **a single element**. This is cleaner and more explicit than template literals for one element.
+
+```javascript
+// Best for: Single elements created dynamically
+// Inside a drop-in slot function
+const $wishlistToggle = document.createElement('div');
+$wishlistToggle.classList.add('cart__action--wishlist-toggle');
+
+wishlistRender.render(WishlistToggle, {
+  product: ctx.item,
+  size: 'medium',
+})($wishlistToggle);
+
+ctx.appendChild($wishlistToggle);
+```
+
+#### When to use
+
+- Creating **a single element** (most common case).
+- Adding elements inside drop-in slots.
+- Building elements in event handlers or callbacks.
+- Creating elements conditionally.
+
+#### Why this approach
+
+- More explicit and type-safe than template literals.
+- Cleaner for single elements (no unnecessary parsing).
+- Easier to set properties programmatically.
+
+#### Boilerplate examples
+- <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L221-L232" text="commerce-cart.js (lines 221-232)" /> - Creating wishlist container
+- <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-cart/commerce-cart.js#L206-L217" text="commerce-cart.js (lines 206-217)" /> - Creating edit link container
+
+## Common customization patterns
+
+### Adding block configuration
+
+Enable merchants to configure blocks through document authoring by reading configuration values:
+
+```javascript
+import { readBlockConfig } from '../../scripts/aem.js';
+
+export default async function decorate(block) {
+  const {
+    'custom-option': customOption = 'default',
+    'max-items': maxItems = '10',
+    'enable-feature': enableFeature = 'false',
+  } = readBlockConfig(block);
+  
+  // Use configuration values
+  if (enableFeature === 'true') {
+    // Enable the feature
+  }
+}
+```
+
+Merchants can then configure the block in their documents:
+
+| Commerce Cart |
+|---------------|
+| custom-option | premium |
+| max-items | 5 |
+| enable-feature | true |
+
+### Customizing empty states
+
+Customize what users see when a block has no content:
+
+```javascript
+// Inside the decorate function for your block
+const $emptyCart = document.querySelector('.cart__empty-cart');
+
+// Create custom empty state
+const emptyState = document.createElement('div');
+emptyState.className = 'cart__empty-message';
+emptyState.innerHTML = `
+  <h3>Your cart is empty</h3>
+  <p>Start shopping to add items to your cart.</p>
+  <a href="/products" class="button">Browse Products</a>
+`;
+
+$emptyCart.appendChild(emptyState);
+```
+
+### Adding custom analytics
+
+Track custom events for analytics:
+
+```javascript
+// Add to your block file or scripts/analytics.js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('cart/data', (cartData) => {
+  // Custom analytics tracking
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'cart_updated',
+      cart_total: cartData.totalQuantity,
+      cart_value: cartData.total.includingTax.value,
+      currency: cartData.total.includingTax.currency,
+    });
+  }
+});
+```
+
+### Using multiple drop-ins
+
+Combine multiple drop-ins for complex functionality:
+
+```javascript
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { WishlistToggle } from '@dropins/storefront-wishlist/containers/WishlistToggle.js';
+
+export default async function decorate(block) {
+  // Create container element
+  const $list = document.createElement('div');
+  $list.className = 'cart__list';
+  block.appendChild($list);
+  
+  // Render cart with wishlist integration
+  await provider.render(CartSummaryList, {
+    slots: {
+      Footer: (ctx) => {
+        // Add wishlist toggle to each cart item
+        const wishlistContainer = document.createElement('div');
+        wishlistContainer.className = 'cart__action--wishlist-toggle';
+        
+        wishlistRender.render(WishlistToggle, {
+          product: ctx.item,
+          size: 'medium',
+        })(wishlistContainer);
+        
+        ctx.appendChild(wishlistContainer);
+      },
+    },
+  })($list);
+}
+```
+
+## Block-specific configuration
+
+Some blocks accept configuration options that change their behavior. These are defined in the block README and can be set through document authoring.
+
+### Commerce Cart
+
+<TableWrapper nowrap={[0,2]}>
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `hide-heading` | string | `false` | Controls whether the cart heading is hidden |
+| `max-items` | string | — | Maximum number of items to display in cart |
+| `hide-attributes` | string | `''` | Comma-separated list of product attributes to hide |
+| `enable-item-quantity-update` | string | `false` | Enables quantity update controls for cart items |
+| `enable-item-remove` | string | `true` | Enables remove item functionality |
+| `enable-estimate-shipping` | string | `false` | Enables shipping estimation functionality |
+| `start-shopping-url` | string | `''` | URL for "Start Shopping" button when cart is empty |
+| `checkout-url` | string | `''` | URL for checkout button |
+| `enable-updating-product` | string | `false` | Enables product editing via mini-PDP modal |
+| `undo-remove-item` | string | `false` | Enables undo functionality when removing items |
+
+</TableWrapper>
+
+### Commerce Checkout
+
+The Checkout block uses events for customization rather than configuration options.
+
+#### Example: Add custom validation before checkout
+
+```javascript
+// Add to the decorate function for your checkout block
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/values', (values) => {
+  // Custom validation logic
+  if (values.email && !values.email.includes('@')) {
+    console.error('Invalid email format');
+  }
+  
+  // Log when payment method is selected
+  if (values.selectedPaymentMethod) {
+    console.log('Payment method:', values.selectedPaymentMethod.code);
+  }
+});
+```
+
+### Simple blocks
+
+Many blocks (Login, Create Account, Forgot Password, and other account management blocks) are thin wrappers around drop-ins with no document-based configuration options. These blocks do not use `readBlockConfig()` and cannot be configured through document authoring. Customize these blocks by modifying their JavaScript to change drop-in options, or by using CSS and drop-in slots.
+
+## Real-world examples
+
+### Example 1: Add promotional banner to cart
+
+```javascript
+// blocks/commerce-cart/commerce-cart.js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import CartSummaryList from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+import { getProductLink } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  // Read block configuration
+  const {
+    'hide-heading': hideHeading = 'false',
+    'max-items': maxItems,
+    'enable-item-quantity-update': enableUpdateItemQuantity = 'false',
+    'enable-item-remove': enableRemoveItem = 'true',
+  } = readBlockConfig(block);
+  
+  // Create cart layout with promotional banner
+  const fragment = document.createRange().createContextualFragment(`
+    <div class="cart__promo-banner">
+      <p>🎉 Free shipping on orders over $50!</p>
+    </div>
+    <div class="cart__list"></div>
+  `);
+  
+  const $list = fragment.querySelector('.cart__list');
+  
+  // Clear block and append new layout
+  block.innerHTML = '';
+  block.appendChild(fragment);
+  
+  // Helper to create product links
+  const createProductLink = (product) => getProductLink(product.url.urlKey, product.topLevelSku);
+  
+  // Render cart with full configuration
+  await provider.render(CartSummaryList, {
+    hideHeading: hideHeading === 'true',
+    routeProduct: createProductLink,
+    maxItems: parseInt(maxItems, 10) || undefined,
+    enableUpdateItemQuantity: enableUpdateItemQuantity === 'true',
+    enableRemoveItem: enableRemoveItem === 'true',
+  })($list);
+}
+```
+
+```css
+/* blocks/commerce-cart/commerce-cart.css */
+.cart__promo-banner {
+  background: var(--color-positive-200);
+  padding: var(--spacing-medium);
+  text-align: center;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-medium);
+}
+```
+
+### Example 2: Custom checkout success tracking
+
+```javascript
+// Add to blocks/commerce-checkout/commerce-checkout.js
+// Place this event listener in your decorate function
+import { events } from '@dropins/tools/event-bus.js';
+
+// Listen for order placement
+events.on('order/placed', (orderData) => {
+  // Send purchase event to Google Analytics
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'purchase',
+      transaction_id: orderData.number,
+      value: orderData.grandTotal.value,
+      currency: orderData.grandTotal.currency,
+      items: orderData.items.map(item => ({
+        item_id: item.productSku,
+        item_name: item.productName,
+        quantity: item.quantityOrdered,
+        price: item.price.value,
+      })),
+    });
+  }
+  
+  // Update page title
+  document.title = 'Order Confirmation';
+});
+```
+
+### Example 3: Customize product gallery images
+
+```javascript
+// blocks/product-details/product-details.js
+// Imports (these should already exist at the top of the file)
+import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
+import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
+import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
+
+// Inside your decorate function
+export default async function decorate(block) {
+  // Create container element
+  const $gallery = document.createElement('div');
+  $gallery.className = 'product-details__gallery';
+  block.appendChild($gallery);
+  
+  // Define custom image slot with AEM Assets
+  const gallerySlots = {
+    CarouselMainImage: (ctx) => {
+      // Customize main carousel images
+      tryRenderAemAssetsImage(ctx, {
+        alias: ctx.data.sku,
+        imageProps: ctx.defaultImageProps,
+        params: {
+          width: ctx.defaultImageProps.width,
+          height: ctx.defaultImageProps.height,
+        },
+      });
+    },
+  };
+  
+  // Render gallery with custom slots
+  await pdpRendered.render(ProductGallery, {
+    controls: 'thumbnailsColumn',
+    arrows: true,
+    imageParams: {
+      width: 960,
+      height: 1191,
+    },
+    slots: gallerySlots,
+  })($gallery);
+}
+```
+
+## Next steps
+
+<Steps>
+
+1. Browse the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks" text="Commerce blocks source code" /> to see implementation patterns.
+
+1. Review the [drop-in documentation](/dropins/all/quick-start/) for slots, events, and API functions.
+
+1. Check individual <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks" text="block README files" /> for configuration options and behavior details.
+
+1. Test customizations locally before deploying to production.
+
+</Steps>
+
+<Aside type="tip">
+Start with CSS customization for visual changes, then move to JavaScript behavior modification only when necessary. This keeps your customizations maintainable and easier to upgrade when new boilerplate versions are released.
+</Aside>
+
