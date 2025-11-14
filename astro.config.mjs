@@ -36,6 +36,7 @@ const sdkComponentEntries = sdkComponentFiles.map((file) => {
 });
 
 // https://astro.build/config
+/** @returns {Promise<import('astro').AstroUserConfig>} */
 async function config() {
   const compressIntegration = (await import('@playform/compress')).default({
     CSS: false,
@@ -428,7 +429,7 @@ async function config() {
                               { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
                               { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
                               { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
-                              { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
+                              { label: 'MiniCart', link: '/dropins/cart/containers/mini-cart/' },
                               { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
                               { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
                             ],
@@ -515,9 +516,11 @@ async function config() {
                               { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
                               { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
                               { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
+                              { label: 'OrderHeader', link: '/dropins/order/containers/order-header/' },
                               { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
                               { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
                               { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
+                              { label: 'OrderStatus', link: '/dropins/order/containers/order-status/' },
                               { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
                               { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
                             ],
@@ -537,6 +540,7 @@ async function config() {
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
+                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Styles', link: '/dropins/payment-services/styles/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
@@ -587,9 +591,11 @@ async function config() {
                             items: [
                               { label: 'Overview', link: '/dropins/product-details/containers/' },
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                              { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                               { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                               { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
-                              { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
+                              { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
+                              { label: 'ProductGiftcardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
                               { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
                               { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                               { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
