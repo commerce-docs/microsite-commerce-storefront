@@ -1623,7 +1623,16 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                         returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects or \`null\`.`;
                     } else {
                         // For other complex types with the model
-                        returnsContent = `Returns \`${actualType}\`. See [\`${modelName}\`](#${modelAnchor}).`;
+                        // Check if we should use a code block
+                        const isComplexObject = actualType.includes('{') && actualType.split(';').length > 2;
+                        const isMultiLine = actualType.includes('\n');
+                        const isLong = actualType.length > 100;
+
+                        if (isComplexObject || isMultiLine || isLong) {
+                            returnsContent = '```ts\n' + actualType + '\n```\n\nSee [`' + modelName + '`](#' + modelAnchor + ').';
+                        } else {
+                            returnsContent = `Returns \`${actualType}\`. See [\`${modelName}\`](#${modelAnchor}).`;
+                        }
                     }
                     break;
                 }
@@ -1688,11 +1697,30 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     // Type contains 'any' but wasn't caught by GenericTypeHandler (e.g., 'any | null')
                     // Use enrichment text if available
                     returnsContent = `Returns ${enrichment.returns}.`;
-                } else if (actualType.length < 100) {
-                    returnsContent = `Returns \`${actualType}\`.`;
                 } else {
-                    // For very long types, show in code block
-                    returnsContent = 'Returns:\n\n```ts\n' + actualType + '\n```';
+                    // Determine if we should use a code block:
+                    // - Complex object types (contains { with multiple properties)
+                    // - Multi-line types
+                    // - Very long types (> 100 chars)
+                    const isComplexObject = actualType.includes('{') && actualType.split(';').length > 2;
+                    const isMultiLine = actualType.includes('\n');
+                    const isLong = actualType.length > 100;
+
+                    if (isComplexObject || isMultiLine || isLong) {
+                        // Show complex types in code block for better readability
+                        returnsContent = '```ts\n' + actualType + '\n```';
+
+                        // Add model reference if type references a known model
+                        const modelMatch = actualType.match(/(\w+Model)(?:\[\])?/);
+                        if (modelMatch && allModels.has(modelMatch[1])) {
+                            const modelName = modelMatch[1];
+                            const anchor = modelName.toLowerCase();
+                            returnsContent += `\n\nSee [\`${modelName}\`](#${anchor}).`;
+                        }
+                    } else {
+                        // Simple types stay inline
+                        returnsContent = `Returns \`${actualType}\`.`;
+                    }
                 }
             }
         } else {
