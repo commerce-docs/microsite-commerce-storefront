@@ -1,0 +1,303 @@
+---
+title: Purchase Order Data & Events
+description: Learn about the events used by the Purchase Order and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Purchase Order, Purchase Order, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Purchase Order** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: latest</strong>
+</div>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [order/data](#orderdata-emits) | Emits | Emitted when data is available or changes. |
+| [purchase-order/error](#purchase-ordererror-emits) | Emits | Emitted when an error occurs. |
+| [purchase-order/placed](#purchase-orderplaced-emits) | Emits | Emitted when an order is placed. |
+| [auth/permissions](#authpermissions-emits-and-listens) | Emits and listens | Triggered when permissions are updated. |
+| [purchase-order/data](#purchase-orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [purchase-order/refresh](#purchase-orderrefresh-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+
+### `auth/permissions` (emits and listens)
+
+Triggered when permissions are updated.
+
+#### Event payload
+
+```typescript
+{
+  admin?: boolean;
+  [key: string]: boolean | undefined;
+}
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authPermissionsListener = events.on('auth/permissions', (data) => {
+  console.log('auth/permissions event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+authPermissionsListener.off();
+```
+
+### `order/data` (emits)
+
+Emitted when data is available or changes.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel['quote']
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const orderDataListener = events.on('order/data', (data) => {
+  console.log('order/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+orderDataListener.off();
+```
+
+### `purchase-order/data` (emits and listens)
+
+Triggered when data is available or changes.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const purchaseOrderDataListener = events.on('purchase-order/data', (data) => {
+  console.log('purchase-order/data event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+purchaseOrderDataListener.off();
+```
+
+### `purchase-order/error` (emits)
+
+Emitted when an error occurs.
+
+#### Event payload
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const purchaseOrderErrorListener = events.on('purchase-order/error', (data) => {
+  console.log('purchase-order/error event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+purchaseOrderErrorListener.off();
+```
+
+### `purchase-order/placed` (emits)
+
+Emitted when an order is placed.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const purchaseOrderPlacedListener = events.on('purchase-order/placed', (data) => {
+  console.log('purchase-order/placed event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+purchaseOrderPlacedListener.off();
+```
+
+### `purchase-order/refresh` (emits and listens)
+
+Emitted and consumed for internal and external communication.
+
+#### Event payload
+
+```typescript
+Boolean
+```
+
+
+
+#### Usage
+
+Listen to this event in your storefront:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const purchaseOrderRefreshListener = events.on('purchase-order/refresh', (data) => {
+  console.log('purchase-order/refresh event received:', data);
+  // Add your custom logic here
+});
+
+// Later, when you want to stop listening
+purchaseOrderRefreshListener.off();
+```
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### PurchaseOrderModel
+
+Used in: [`order/data`](#orderdata-emits), [`purchase-order/data`](#purchase-orderdata-emits-and-listens), [`purchase-order/placed`](#purchase-orderplaced-emits).
+
+```ts
+interface PurchaseOrderModel {
+  typename: string;
+  uid: string;
+  number: string;
+  status: string;
+  availableActions: string[];
+  approvalFlow:
+    | {
+        ruleName: string;
+        events: Array<{
+          message: string;
+          name: string;
+          role: string;
+          status: string;
+          updatedAt: string;
+        }>;
+      }[]
+    | [];
+  comments?: Array<{
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+    text: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  historyLog?: Array<{
+    activity: string;
+    createdAt: string;
+    message: string;
+    uid: string;
+  }>;
+  quote: QuoteProps | null;
+  order: {
+    orderNumber: string;
+    id: string;
+  };
+}
+```
+
