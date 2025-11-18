@@ -32,6 +32,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadSlotEnrichments } from './lib/enrichment.js';
 import { updateSidebarForSlots } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
+import { toKebabCase } from './lib/utils.js';
 import { cleanVersion } from './lib/utils.js';
 
 // Import Phase 2 shared libraries
@@ -127,10 +128,12 @@ function scanForSlots(repoPath) {
  * Generate slots content for documentation
  * 
  * @param {Array} containers - Array of containers with slots
+ * @param {string} repoName - Drop-in name
+ * @param {Object} repoConfig - Repository configuration
  * @param {Object} enrichmentData - Optional enrichment data for slots
  * @returns {string} Generated MDX content for slots
  */
-function generateSlotsContent(containers, enrichmentData = null) {
+function generateSlotsContent(containers, repoName, repoConfig, enrichmentData = null) {
     if (containers.length === 0) {
         return ''; // No additional content needed for empty slots
     }
@@ -144,10 +147,12 @@ function generateSlotsContent(containers, enrichmentData = null) {
         content += `interface ${container.containerName}Props {\n`;
         content += '  slots?: {\n';
 
-        // Indent the slots interface content
+        // Normalize and indent the slots interface content
         const indentedSlots = container.slotsInterface
             .split('\n')
-            .map(line => line.trim() ? `    ${line}` : '')
+            .map(line => line.trim())
+            .filter(line => line) // Remove empty lines
+            .map(line => `    ${line}`) // Add consistent 4-space indentation
             .join('\n');
         content += indentedSlots;
 
@@ -200,10 +205,12 @@ function generateSlotsContent(containers, enrichmentData = null) {
                     content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
                 }
 
-                // Add example
+                // Add example with proper imports based on boilerplate
                 content += `#### Example\n\n`;
                 content += '```js\n';
-                content += ` provider.render(${container.containerName}, {\n`;
+                content += `import { render as provider } from '${repoConfig.packageName}/render.js';\n`;
+                content += `import { ${container.containerName} } from '${repoConfig.packageName}/containers/${container.containerName}.js';\n\n`;
+                content += `await provider.render(${container.containerName}, {\n`;
                 content += '  slots: {\n';
                 content += `    ${slotName}: (ctx) => {\n`;
                 content += '      // Your custom implementation\n';
@@ -212,7 +219,7 @@ function generateSlotsContent(containers, enrichmentData = null) {
                 content += '      ctx.appendChild(element);\n';
                 content += '    }\n';
                 content += '  }\n';
-                content += '});\n';
+                content += '})(block);\n';
                 content += '```\n\n';
             }
         }
@@ -277,7 +284,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
 
     // Generate summary table, examples, and detailed content
     const summaryTable = generateSummaryTable(containers);
-    const slotsContent = generateSlotsContent(containers, enrichmentData);
+    const slotsContent = generateSlotsContent(containers, repoName, repoConfig, enrichmentData);
 
     // Generate intro text based on whether slots exist
     let introText;

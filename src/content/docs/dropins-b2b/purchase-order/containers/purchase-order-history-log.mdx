@@ -7,42 +7,83 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
 
-## Overview
+The PurchaseOrderHistoryLog container displays all history logs associated with the currently selected purchase order.  The container requires no props.  It listens for the `purchase-order/data` event emitted by the purchase order initializer and uses the event payload to render its content.
 
-The PurchaseOrderHistoryLog container component for the drop-in.
+After receiving the event, the container displays a heading for each history log (including the performed action and time) and the history log details (text).  If the total number of history logs exceeds the `visibleRecordsLimit`, a **View More** button is shown to toggle expansion.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.0.1</strong>
-</div>
+<Diagram caption="PurchaseOrderHistoryLog container">
+  ![PurchaseOrderHistoryLog container](../images/history-log.png)
+</Diagram>
+
+### Displayed information
+
+- A heading for each history log (including performed action and time)
+- The history log details (text)
+- A **View More** button (shown only when the number of history logs exceeds the visibleRecordsLimit)
+### Available actions
+
+- View More / View Less (toggle to expand or collapse the history logs list when total exceeds visibleRecordsLimit)
+### ACL permissions
+
+Access to the container is governed by the following ACL permission:
+
+- `Magento_PurchaseOrder::view_purchase_orders`
+
+## Integration example
+
+#### Basic
+
+```javascript
+import { PurchaseOrderHistoryLog } from '@dropins/storefront-purchase-order/containers/PurchaseOrderHistoryLog.js';
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+
+await provider.render(PurchaseOrderHistoryLog, {
+  withHeader: true,
+  withWrapper: true,
+  visibleRecordsLimit: 5,
+})(element);
+```
+
+#### Compact
+
+```javascript
+await provider.render(PurchaseOrderHistoryLog, {
+  withHeader: true,
+  withWrapper: true,
+  visibleRecordsLimit: 3,
+})(element);
+```
+
+#### Minimal
+
+```javascript
+await provider.render(PurchaseOrderHistoryLog, {
+  withHeader: false,
+  withWrapper: false,
+  visibleRecordsLimit: 2,
+  className: 'custom-history-log',
+})(element);
+```
+
 
 ## Configuration
 
-The `PurchaseOrderHistoryLog` container provides the following configuration options:
+<TableWrapper nowrap={[0,1]}>
 
-{/* 
-  IMPORTANT: Do not wrap | No configurations | - | - | - | in TableWrapper or add a table header.
-  The generator's generatePropertyTable() function already includes both.
-  Adding them here will cause nested TableWrapper components and duplicate headers.
-*/}
-| No configurations | - | - | - |
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `visibleRecordsLimit` | `number` | No | Number of history records shown initially before the **Show more** button appears. Use `5` (default) for standard purchase order details page, `3` for compact displays or dashboard widgets, `10` or higher to show all records without toggle (for short histories), or `1` for minimal preview with expand option. |
+| `withHeader` | `boolean` | No | Shows or hides the section header. Use `true` (default) for a standalone section on purchase order details. Use `false` when embedding in another component with its own header. |
+| `withWrapper` | `boolean` | No | Wraps content in a Card component with secondary styling. Use `true` (default) for standard page layout with visual separation. Use `false` when embedding inside another card or container. |
+| `className` | `string` | No | Additional CSS classes for custom styling. |
 
-## Slots
+</TableWrapper>
 
-This container does not currently expose any customizable slots.
+## Admin panel configuration
 
-## Usage
+The Purchase Order (B2B) feature must be enabled at both the store and company levels:
 
-The following example demonstrates how to use the `PurchaseOrderHistoryLog` container:
-
-```jsx
-import { PurchaseOrderHistoryLog } from '@dropins/storefront-purchase-order';
-
-export default function MyComponent() {
-  return (
-    <PurchaseOrderHistoryLog/>
-  );
-}
-```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}
+- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
+- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders

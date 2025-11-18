@@ -6,44 +6,262 @@ sidebar:
   order: 6
 tableOfContents:
   minHeadingLevel: 2
-  maxHeadingLevel: 3
+  maxHeadingLevel: 2
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-This drop-in currently has no functions defined.
+The Company Switcher drop-in provides **3 API functions** for managing company context and headers in multi-company B2B scenarios.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.4</strong>
 </div>
+
+## Available functions
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getCustomerCompanyInfo`](#getcustomercompanyinfo) | Retrieves the customer's current company context information |
+| [`setCompanyHeaders`](#setcompanyheaders) | Sets company-specific headers for GraphQL requests |
+| [`setGroupHeaders`](#setgroupheaders) | Sets customer group headers for GraphQL requests |
+
+</TableWrapper>
+
+---
+
+## getCustomerCompanyInfo
+
+Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user.
+
+### Signature
+
+```typescript
+function getCustomerCompanyInfo(): Promise<CustomerCompanyInfo>
+```
+
+### Returns
+
+Returns a Promise that resolves to a `CustomerCompanyInfo` object containing:
+
+```typescript
+{
+  currentCompany: {
+    companyId: string;
+    companyName: string;
+  };
+  customerCompanies: Array<{
+    value: string;  // Company ID
+    text: string;   // Company name
+  }>;
+}
+```
+
+### Example
+
+```js
+import { getCustomerCompanyInfo } from '@dropins/storefront-company-switcher/api.js';
+
+// Get current company context
+const info = await getCustomerCompanyInfo();
+console.log('Active company:', info.currentCompany.companyName);
+console.log('Company ID:', info.currentCompany.companyId);
+console.log('Available companies:', info.customerCompanies.length);
+
+// Use context to load company-specific data
+if (info.currentCompany.companyId) {
+  loadCompanyData(info.currentCompany.companyId);
+}
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Usage scenarios
+
+- Determine which company is currently active
+- Load company-specific data on page load
+- Check if user has company access
+- Display current company information
+- Conditional rendering based on company context
+- Populate company dropdown selector with available companies
+
+---
+
+## setCompanyHeaders
+
+Sets the company-specific headers that will be included in subsequent GraphQL requests. This ensures all API calls operate within the context of the specified company.
+
+### Signature
+
+```typescript
+function setCompanyHeaders(companyId: string | null): void
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `companyId` | `string \| null` | Yes | The unique identifier of the company to set as active context. Pass `null` to remove company headers. |
+
+</TableWrapper>
+
+### Returns
+
+Returns `void`.
+
+### Example
+
+```js
+import { setCompanyHeaders } from '@dropins/storefront-company-switcher/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+// Switch to a specific company
+const newCompanyId = 'company-123';
+setCompanyHeaders(newCompanyId);
+
+// Remove company headers (switch to no-company context)
+setCompanyHeaders(null);
+
+// Listen for context changes
+events.on('companyContext/changed', (companyId) => {
+  if (companyId) {
+    console.log('Switched to company:', companyId);
+  } else {
+    console.log('Company context removed');
+  }
+  
+  // Refresh all company-dependent data
+  refreshCompanyData();
+});
+```
+
+### Events
+
+Emits the [`companyContext/changed`](/dropins-b2b/company-switcher/events/#companycontextchanged) event after successfully setting or removing the company headers.
+
+### Usage scenarios
+
+- Switch between companies for multi-company users
+- Set company context after user selection
+- Initialize company context on page load
+- Change active company from a dropdown selector
+- Restore company context from session storage
+- Remove company context by passing `null`
+
+<Aside type="caution">
+After calling `setCompanyHeaders()`, all subsequent GraphQL requests will operate in the context of the specified company. Ensure you refresh all company-dependent data after switching companies.
+</Aside>
+
+<Aside type="note">
+Passing `null` to `setCompanyHeaders()` removes the company context headers from all GraphQL requests. This is useful when logging out or switching to a non-company user context.
+</Aside>
+
+---
+
+## setGroupHeaders
+
+Sets the customer group headers that will be included in subsequent GraphQL requests. This is used to ensure proper pricing and catalog visibility based on customer group.
+
+### Signature
+
+```typescript
+function setGroupHeaders(groupId: string | null): void
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `groupId` | `string \| null` | Yes | The unique identifier of the customer group to set. Pass `null` to remove group headers. |
+
+</TableWrapper>
+
+### Returns
+
+Returns `void`.
+
+### Example
+
+```js
+import { setGroupHeaders } from '@dropins/storefront-company-switcher/api.js';
+
+// Set customer group for pricing
+const customerGroupId = 'wholesale';
+setGroupHeaders(customerGroupId);
+
+// Subsequent requests will use this group context
+// Prices and catalog visibility will reflect group settings
+await loadProducts(); // Products will show group-specific prices
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Usage scenarios
+
+- Set customer group context for proper pricing
+- Apply group-specific catalog rules
+- Initialize group context on login
+- Switch groups for testing or admin purposes
+- Coordinate with company context changes
+
+<Aside type="note">
+Customer group changes typically happen automatically based on the company context. You usually only need to call `setGroupHeaders()` directly in advanced scenarios like admin impersonation or testing.
+</Aside>
+
+---
+
+## Integration with Company Context
+
+The Company Switcher functions work together to manage the complete company and group context:
+
+```js
+import { 
+  getCustomerCompanyInfo,
+  setCompanyHeaders,
+  setGroupHeaders 
+} from '@dropins/storefront-company-switcher/api.js';
+
+// Complete company switch workflow
+async function switchCompany(companyId, groupId) {
+  // 1. Set the company headers
+  setCompanyHeaders(companyId);
+  
+  // 2. Set the group headers
+  if (groupId) {
+    setGroupHeaders(groupId);
+  }
+  
+  // 3. Verify the context
+  const info = await getCustomerCompanyInfo();
+  console.log('Switched to:', info.currentCompany.companyName);
+  
+  // 4. Refresh all company-dependent data
+  await Promise.all([
+    refreshPurchaseOrders(),
+    refreshQuotes(),
+    refreshRequisitionLists(),
+    refreshCompanyUsers()
+  ]);
+}
+```
+
+## Related documentation
+
+- [Events](/dropins-b2b/company-switcher/events/) - Events emitted by Company Switcher
+- [Initialization](/dropins-b2b/company-switcher/initialization/) - Setting up the drop-in
+- [Company Management](/dropins-b2b/company-management/) - Managing company data
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 

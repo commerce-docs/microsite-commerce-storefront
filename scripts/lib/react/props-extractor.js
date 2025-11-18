@@ -220,6 +220,9 @@ export function findPropsInTypeFiles(repoPath, componentName) {
         join(repoPath, 'src', 'types', 'containers.ts'),
         join(repoPath, 'src', 'types', 'components.ts'),
         join(repoPath, 'src', 'types', `${componentName}.ts`),
+        // CamelCase patterns directly in src/types (Company Management pattern)
+        join(repoPath, 'src', 'types', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', `${componentName}.types.ts`),
         // Additional patterns for B2B drop-ins (e.g., Purchase Order)
         join(repoPath, 'src', 'types', 'containers', `${camelCaseName}.types.ts`),
         join(repoPath, 'src', 'types', 'containers', `${componentName}.types.ts`),

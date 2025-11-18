@@ -42,11 +42,12 @@ function getLatestBoilerplateTag(boilerplatePath) {
 }
 
 /**
- * Clone or update the boilerplate repository at the latest release tag
+ * Clone or update the boilerplate repository at the latest release tag or specific branch
  * 
- * @returns {Object} Object with path and tag
+ * @param {string} [branch] - Optional branch name (e.g., 'b2b-integration'). If not provided, uses latest release tag.
+ * @returns {Object} Object with path and tag/branch
  */
-export function cloneOrUpdateBoilerplate() {
+export function cloneOrUpdateBoilerplate(branch = null) {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
     const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
 
@@ -62,10 +63,6 @@ export function cloneOrUpdateBoilerplate() {
         execFileSync('git', ['fetch', '--all', '--tags'], { cwd: boilerplatePath, stdio: 'pipe' });
     }
 
-    // Get and checkout the latest release tag
-    const latestTag = getLatestBoilerplateTag(boilerplatePath);
-    console.log(`  Using boilerplate release: ${latestTag}`);
-
     // Clean working directory before checkout (discard uncommitted changes from npm install)
     try {
         execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
@@ -73,18 +70,38 @@ export function cloneOrUpdateBoilerplate() {
         console.warn(`  ⚠️  Could not reset working directory: ${error.message}`);
     }
 
-    try {
-        execFileSync('git', ['checkout', latestTag], { cwd: boilerplatePath, stdio: 'pipe' });
-        console.log(`  ✓ Checked out ${latestTag}`);
-    } catch (error) {
-        console.warn(`  ⚠️  Could not checkout ${latestTag}, staying on current branch`);
-        console.warn(`     Reason: ${error.message}`);
+    let targetRef;
+    if (branch) {
+        // Use specific branch (for B2B integration)
+        targetRef = branch;
+        console.log(`  Using boilerplate branch: ${branch}`);
+
+        try {
+            execFileSync('git', ['checkout', branch], { cwd: boilerplatePath, stdio: 'pipe' });
+            execFileSync('git', ['pull', 'origin', branch], { cwd: boilerplatePath, stdio: 'pipe' });
+            console.log(`  ✓ Checked out and updated ${branch}`);
+        } catch (error) {
+            console.warn(`  ⚠️  Could not checkout ${branch}, staying on current branch`);
+            console.warn(`     Reason: ${error.message}`);
+        }
+    } else {
+        // Use latest release tag (for B2C drop-ins)
+        targetRef = getLatestBoilerplateTag(boilerplatePath);
+        console.log(`  Using boilerplate release: ${targetRef}`);
+
+        try {
+            execFileSync('git', ['checkout', targetRef], { cwd: boilerplatePath, stdio: 'pipe' });
+            console.log(`  ✓ Checked out ${targetRef}`);
+        } catch (error) {
+            console.warn(`  ⚠️  Could not checkout ${targetRef}, staying on current branch`);
+            console.warn(`     Reason: ${error.message}`);
+        }
     }
 
     console.log(`  Installing boilerplate dependencies...`);
     execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
 
-    return { path: boilerplatePath, tag: latestTag };
+    return { path: boilerplatePath, tag: targetRef };
 }
 
 /**

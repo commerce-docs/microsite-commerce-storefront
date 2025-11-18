@@ -387,6 +387,7 @@ function scanForFunctions(repoPath) {
             // Look for function MDX file
             const mdxPath = join(entryPath, `${entry}.mdx`);
             const tsPath = join(entryPath, `${entry}.ts`);
+            const dtsPath = join(entryPath, `${entry}.d.ts`);
 
             if (existsSync(mdxPath)) {
                 const mdxContent = readFileSync(mdxPath, 'utf8');
@@ -414,6 +415,27 @@ function scanForFunctions(repoPath) {
                     signature,
                     mdxPath: mdxPath.replace(repoPath, '')
                 });
+            } else if (existsSync(tsPath) || existsSync(dtsPath)) {
+                // No .mdx file, but .ts or .d.ts file exists - extract TypeScript-only function
+                const actualTsPath = existsSync(tsPath) ? tsPath : dtsPath;
+                const tsContent = readFileSync(actualTsPath, 'utf8');
+                const signature = extractFunctionSignature(tsContent, entry);
+
+                // Skip non-exported functions (respect public API boundary)
+                if (!signature) {
+                    console.log(`  ⚠️  Skipping ${entry} - function is not exported (not part of public API)`);
+                    continue;
+                }
+
+                console.log(`  ✓ Found TypeScript-only function: ${entry}`);
+
+                functions.push({
+                    name: entry,
+                    mdxContent: null,  // No MDX content available
+                    signature,
+                    mdxPath: null,
+                    tsOnly: true  // Flag to indicate this is TypeScript-only
+                });
             }
         }
 
@@ -440,13 +462,14 @@ function extractFunctionSignature(tsContent, functionName) {
 
     // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
+        { regex: new RegExp(`export\\s+declare\\s+const\\s+${functionName}\\s*:\\s*\\(`, 's'), isAsync: true, isArrow: true, isDeclare: true },
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(`, 's'), isAsync: true, isArrow: true },
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(`, 's'), isAsync: false, isArrow: true },
         { regex: new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: true, isArrow: false },
         { regex: new RegExp(`export\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: false, isArrow: false },
     ];
 
-    for (const { regex, isAsync, isArrow } of patterns) {
+    for (const { regex, isAsync, isArrow, isDeclare } of patterns) {
         const match = tsContent.match(regex);
         if (match) {
             const startIndex = match.index + match[0].length - 1; // Position of opening paren
@@ -503,7 +526,40 @@ function extractFunctionSignature(tsContent, functionName) {
             }
 
             // Check for explicit return type annotation ": Type"
-            if (tsContent[i] === ':') {
+            // For declare statements, the format is: (params) => ReturnType (not : ReturnType)
+            if (isDeclare && tsContent.substring(i, i + 2) === '=>') {
+                // Skip the =>
+                i += 2;
+                // Skip whitespace
+                while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                    i++;
+                }
+
+                // Extract return type until we find ; or end of line
+                let returnTypeStr = '';
+                let angleCount = 0;
+                let braceCount = 0;
+
+                while (i < tsContent.length) {
+                    const char = tsContent[i];
+
+                    if (char === '<') angleCount++;
+                    else if (char === '>') angleCount--;
+                    else if (char === '{') braceCount++;
+                    else if (char === '}') braceCount--;
+
+                    // Stop at ; or newline when not inside brackets
+                    if (angleCount === 0 && braceCount === 0) {
+                        if (char === ';' || char === '\n') {
+                            returnType = returnTypeStr.trim();
+                            break;
+                        }
+                    }
+
+                    returnTypeStr += char;
+                    i++;
+                }
+            } else if (tsContent[i] === ':') {
                 i++; // Skip the colon
                 // Skip whitespace
                 while (i < tsContent.length && /\s/.test(tsContent[i])) {
@@ -1205,7 +1261,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
 
         // Use enriched description if available, otherwise extract and clean from MDX
         let description = enrichment && enrichment.description ? enrichment.description : null;
-        if (!description) {
+        if (!description && func.mdxContent) {
+            // Only try to extract from MDX if it exists (not TypeScript-only functions)
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
         if (description) {
@@ -1825,7 +1882,30 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     validationReport.printSummary();
 
     // Read template and replace placeholders
-    const template = readTemplate('dropin-functions.mdx');
+    let template = readTemplate('dropin-functions.mdx');
+
+    // CRITICAL FIX: Remove template comment block BEFORE replacing placeholders
+    // The comment block contains placeholder names as documentation examples,
+    // which would otherwise be replaced by actual values, causing duplication
+    const commentStart = template.indexOf('{/*');
+    const commentEnd = template.indexOf('*/}');
+
+    console.log(`🔍 DEBUG: commentStart=${commentStart}, commentEnd=${commentEnd}`);
+
+    if (commentStart !== -1 && commentEnd !== -1) {
+        // Check if this is the template guide comment (contains "TEMPLATE USAGE GUIDE")
+        const commentBlock = template.substring(commentStart, commentEnd + 3);
+        console.log(`🔍 DEBUG: commentBlock length=${commentBlock.length}, contains guide=${commentBlock.includes('TEMPLATE USAGE GUIDE')}`);
+
+        if (commentBlock.includes('TEMPLATE USAGE GUIDE')) {
+            // Remove the entire comment block
+            const beforeLength = template.length;
+            template = template.substring(0, commentStart) +
+                template.substring(commentEnd + 3);
+            const afterLength = template.length;
+            console.log(`✅ DEBUG: Removed comment block: ${beforeLength} → ${afterLength} (removed ${beforeLength - afterLength} chars)`);
+        }
+    }
 
     const introText = `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
 

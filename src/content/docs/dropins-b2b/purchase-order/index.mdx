@@ -8,45 +8,46 @@ sidebar:
 import { Badge } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 
-<Aside type="caution" title="Content needs completion">
-This overview page was auto-generated and requires the drop-in developer to complete the following sections:
-
-1. **Drop-in description** - Add 1-2 paragraphs explaining what this drop-in does and its key capabilities
-2. **Supported features table** - List all Adobe Commerce features this drop-in supports
-3. **Section descriptions** - Add brief descriptions for each documentation section
-
-See the [Cart drop-in overview](/dropins/cart/) for a complete example.
-
-**✅ Safe to edit:** This file is created once during bootstrapping and will **never be overwritten** by generators. Your manual edits are protected.
-</Aside>
-
-## What does this drop-in do?
-
-**[Drop-in developer]:** Replace this paragraph with a clear description of what the Purchase Order drop-in provides. Include:
-- What business problems it solves
-- Key functionality and capabilities
-- What Commerce features it integrates with
-- Who should use this drop-in (buyers, sellers, administrators, etc.)
-
-**Example:** "The Quote Management drop-in enables B2B buyers to request negotiable quotes from their shopping cart, manage quote lifecycle (submit, review, negotiate), view quote history and comments, and convert approved quotes to orders. It provides complete UI containers for quote request forms, quote management interfaces, and quote listing tables."
+The Purchase Order B2B drop-in enables full purchase order functionality, including purchase order creation, approval rules, conditional checkout logic for placing purchase orders, the purchase order list, and the purchase order details containers.
 
 ## Supported Commerce features
 
-**[Drop-in developer]:** List all Adobe Commerce features this drop-in supports. Use `<Badge text="Supported" variant="tip" />` for available features and `<Badge text="Roadmap" variant="caution" />` for planned features.
+The following table provides an overview of the Adobe Commerce features that the Purchase Order drop-in supports:
 
-The following table provides an overview of the Adobe Commerce features that the Purchase Order supports:
+| Feature | Status |
+| ------- | ------ |
+| Purchase order creation | <Badge text="Supported" variant="tip" /> |
+| Purchase order approval rules | <Badge text="Supported" variant="tip" /> |
+| Purchase order approval workflows | <Badge text="Supported" variant="tip" /> |
+| Purchase order comments and history | <Badge text="Supported" variant="tip" /> |
+| Purchase order list views | <Badge text="Supported" variant="tip" /> |
+| Purchase order details view | <Badge text="Supported" variant="tip" /> |
+| Conditional checkout logic | <Badge text="Supported" variant="tip" /> |
+| Company and subordinate views | <Badge text="Supported" variant="tip" /> |
+| Bulk approve/reject actions | <Badge text="Supported" variant="tip" /> |
+| Convert purchase order to order | <Badge text="Supported" variant="tip" /> |
+| ACL permission-based access control | <Badge text="Supported" variant="tip" /> |
+| GraphQL API integration | <Badge text="Supported" variant="tip" /> |
 
-| Feature                                                          | Status                                     |
-| ---------------------------------------------------------------- | ------------------------------------------ |
-| **[FEATURE NAME 1]**                                             | <Badge text="Supported" variant="tip" />   |
-| **[FEATURE NAME 2]**                                             | <Badge text="Supported" variant="tip" />   |
-| **[FEATURE NAME 3]**                                             | <Badge text="Roadmap" variant="caution" /> |
+## Key events
 
-**Examples of features to list:**
-- Core functionality (e.g., "Request negotiable quote", "View quote history", "Add quote comments")
-- Product types supported (e.g., "Simple products", "Configurable products", "Bundle products")
-- Integration features (e.g., "Customer authentication required", "Multi-currency support")
-- API capabilities (e.g., "GraphQL API integration", "REST API support")
+The Purchase Order drop-in exposes the following key events through the boilerplate:
+
+### purchase-order/data
+
+Emitted by the purchase order initializer.
+
+Requires passing a `poRef` (Purchase Order UID) to the initializer.
+The event contains the full purchase order payload used by the purchase order details container.
+After loading and transforming the purchase order data, it also emits an `order/data` event, which is required to initialize the following Order drop-in containers (used on the purchase order details page):
+  - **CustomerDetails**
+  - **OrderCostSummary**
+  - **OrderProductList**
+
+### purchase-order/refresh
+
+Should be emitted when all purchase order containers need to refresh their data (e.g., when the company context changes).
+
 
 ## Section topics
 
@@ -54,61 +55,33 @@ The topics in this section will help you understand how to customize and use the
 
 ### Quick Start
 
-Provides quick reference information and getting started guide for the Purchase Order drop-in. This topic covers package details, import paths, and basic usage examples to help you integrate Purchase Order functionality into your site. Visit the [Purchase Order quick start](/dropins-b2b/purchase-order/quick-start/) page to get started.
+Provides quick reference information and getting started guide for the Purchase Order drop-in. This topic covers package details, import paths, and basic usage examples to help you integrate Purchase Order functionality into your site.
 
 ### Initialization
 
-**[Drop-in developer]:** Add 1-2 sentences describing what configuration options are available and what needs to be set up before using this drop-in.
-
-**Example:** "Explains how to initialize the Quote Management drop-in with required providers (authentication, GraphQL endpoint), configure quote-specific settings (approval workflows, negotiation rules), and set up event handlers for quote lifecycle events."
-
-Visit the [Purchase Order initialization](/dropins-b2b/purchase-order/initialization/) page to learn more.
+Explains how to initialize the Purchase Order drop-in with configuration options including language definitions for internationalization, custom data models for type transformations, and the `poRef` parameter for loading specific purchase order details. The initializer emits key events (`purchase-order/data` and `order/data`) that are used by containers to display purchase order information.
 
 ### Containers
 
-**[Drop-in developer]:** Add 1-2 sentences listing the main UI containers and what they're used for.
-
-**Example:** "Describes the 4 main UI containers: RequestNegotiableQuoteForm (for initiating quotes), ManageNegotiableQuote (for quote lifecycle management), ItemsQuoted (for displaying quoted products), and QuotesListTable (for browsing multiple quotes)."
-
-Visit the [Purchase Order containers](/dropins-b2b/purchase-order/containers/) page to learn more.
+Describes the 12 UI containers including: approval rule management (ApprovalRuleDetails, ApprovalRuleForm, ApprovalRulesList), purchase order lists (CompanyPurchaseOrders, CustomerPurchaseOrders, RequireApprovalPurchaseOrders), and purchase order details components (PurchaseOrderStatus, PurchaseOrderApprovalFlow, PurchaseOrderCommentForm, PurchaseOrderCommentsList, PurchaseOrderHistoryLog, PurchaseOrderConfirmation). Each container is optimized for specific user roles and workflows based on ACL permissions.
 
 ### Functions
 
-**[Drop-in developer]:** Add 1-2 sentences describing the main API functions and what operations they enable.
-
-**Example:** "Documents the API functions for creating quotes, updating quote items, submitting quotes for review, adding comments, managing quote status, and converting quotes to orders."
-
-Visit the [Purchase Order functions](/dropins-b2b/purchase-order/functions/) page to learn more.
+Documents the 17 API functions for managing purchase orders including creating and placing purchase orders, managing approval rules (create, update, delete, retrieve), performing purchase order actions (approve, reject, cancel, validate), adding comments, converting purchase orders to orders, and retrieving purchase order data with filtering and pagination support.
 
 ### Events
 
-**[Drop-in developer]:** Add 1-2 sentences describing what events are emitted and when they trigger.
-
-**Example:** "Explains the events emitted during quote lifecycle: quote requested, quote updated, quote submitted, quote approved/declined, quote converted to order, and error handling events."
-
-Visit the [Purchase Order events](/dropins-b2b/purchase-order/events/) page to learn more.
+Explains the events emitted during purchase order lifecycle: `purchase-order/data` (emitted by the initializer with full purchase order payload), `purchase-order/refresh` (triggers data refresh across all containers), and `purchase-order/placed` (emitted when a new purchase order is created from a cart). The `purchase-order/data` event also triggers an `order/data` event to initialize Order drop-in containers on the details page.
 
 ### Slots
 
-**[Drop-in developer]:** Add 1-2 sentences describing what parts of the UI can be customized with slots.
-
-**Example:** "Describes the customization slots for replacing or extending UI sections like quote item display, quote totals, approval buttons, comment forms, and empty state messages."
-
-Visit the [Purchase Order slots](/dropins-b2b/purchase-order/slots/) page to learn more.
+Describes the customization slots available for extending UI functionality, including the PurchaseOrderActions slot in the PurchaseOrderStatus container for customizing action buttons (approve, reject, cancel, place order) or adding additional custom actions with business logic.
 
 ### Dictionary
 
-**[Drop-in developer]:** Add 1-2 sentences describing the i18n keys and what they're used for.
-
-**Example:** "Explains the internationalization keys for translating quote-related UI text including button labels, status messages, form field labels, validation errors, and confirmation messages."
-
-Visit the [Purchase Order dictionary](/dropins-b2b/purchase-order/dictionary/) page to learn more.
+Explains the 251 internationalization keys for translating purchase order UI text including approval rule labels, purchase order status messages, form field labels, action button text, validation errors, and empty state messages. Supports full localization for multi-language B2B storefronts.
 
 ### Styles
 
-**[Drop-in developer]:** Add 1-2 sentences describing what visual elements can be styled.
-
-**Example:** "Describes how to customize the appearance of quote forms, quote tables, status badges, quote item cards, and action buttons using CSS variables and design tokens."
-
-Visit the [Purchase Order styles](/dropins-b2b/purchase-order/styles/) page to learn more.
+Describes how to customize the appearance of purchase order containers including approval rule forms and lists, purchase order tables, status badges, action buttons, comment forms, history logs, and approval flow displays using CSS variables and design tokens. Covers styling for all 12 container components with detailed CSS class references.
 

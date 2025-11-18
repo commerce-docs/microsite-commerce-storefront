@@ -39,7 +39,7 @@ import { logger } from './lib/logger.js';
 import { extractPropsFromComponent } from './lib/react/props-extractor.js';
 import { generatePropertyDescription } from './lib/description-generator.js';
 import { generatePropertyTable, generateSlotsTable } from './lib/markdown/table-generator.js';
-import { generateReactExample } from './lib/markdown/example-generator.js';
+import { generateContainerExample } from './lib/markdown/example-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -58,20 +58,20 @@ const IMAGE_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];
  */
 function splitDescription(description) {
     if (!description) return '';
-    
+
     // Split by sentences (periods followed by space or end of string)
     const sentences = description.match(/[^.!?]+[.!?]+/g) || [description];
-    
+
     if (sentences.length <= 2) {
         // Short description, keep as is
         return description;
     }
-    
+
     // Split roughly in half (first 2-3 sentences in first paragraph)
     const midPoint = Math.ceil(sentences.length / 2);
     const firstParagraph = sentences.slice(0, midPoint).join(' ').trim();
     const secondParagraph = sentences.slice(midPoint).join(' ').trim();
-    
+
     return `${firstParagraph}\n\n${secondParagraph}`;
 }
 
@@ -86,17 +86,17 @@ function splitDescription(description) {
  */
 function findImageForContainer(containerName, repoName, basePath) {
     const imagesDir = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'images');
-    
+
     if (!existsSync(imagesDir)) {
         return null;
     }
-    
+
     // Get all files in images directory
     const files = readdirSync(imagesDir);
-    
+
     // Convert container name to kebab-case
     const kebabName = toKebabCase(containerName);
-    
+
     // Look for exact match: container-name.{ext}
     for (const ext of IMAGE_EXTENSIONS) {
         const expectedFileName = `${kebabName}${ext}`;
@@ -104,7 +104,7 @@ function findImageForContainer(containerName, repoName, basePath) {
             return expectedFileName;
         }
     }
-    
+
     return null;
 }
 
@@ -114,6 +114,48 @@ function findImageForContainer(containerName, repoName, basePath) {
 // Note: Most extraction logic has been moved to shared Phase 2 libraries:
 // - extractPropsFromComponent() - from lib/react/props-extractor.js
 // - generatePropertyDescription() - from lib/description-generator.js
+
+/**
+ * Extract description from JSDoc comment or component source
+ */
+function extractContainerDescription(filePath, containerName) {
+    try {
+        const content = readFileSync(filePath, 'utf8');
+
+        // Try to find JSDoc comment above the main export
+        const exportPattern = new RegExp(`/\\*\\*[\\s\\S]*?\\*/\\s*export\\s+(?:const|function)\\s+${containerName}`, 'g');
+        const match = exportPattern.exec(content);
+
+        if (match) {
+            const jsdocMatch = match[0].match(/\/\*\*([\s\S]*?)\*\//);
+            if (jsdocMatch) {
+                const jsdocContent = jsdocMatch[1];
+                // Extract first line that isn't @param, @returns, etc.
+                const lines = jsdocContent.split('\n')
+                    .map(line => line.replace(/^\s*\*\s?/, '').trim())
+                    .filter(line => line && !line.startsWith('@'));
+
+                if (lines.length > 0) {
+                    return lines[0];
+                }
+            }
+        }
+
+        // Fallback: Try to find component description comment near the export
+        const descriptionPattern = /\/\/\s*(.+?)\s*\n\s*export\s+/;
+        const descMatch = descriptionPattern.exec(content);
+        if (descMatch) {
+            return descMatch[1].trim();
+        }
+
+        // Last resort: Return null to indicate no description available
+        // This signals that enrichment data should be added
+        return null;
+
+    } catch (error) {
+        return `Container for ${containerName}.`;
+    }
+}
 
 /**
  * Extract container information from a file
@@ -132,8 +174,8 @@ function extractContainerInfo(filePath, containerName, repoPath) {
             }
         );
 
-        // Generate a basic description
-        const description = `The ${containerName} container component for the drop-in.`;
+        // Extract description from JSDoc or generate from component name
+        const description = extractContainerDescription(filePath, containerName);
 
         return {
             containerName,
@@ -193,7 +235,7 @@ function scanForContainers(repoPath) {
 // Note: Most generation logic has been moved to shared Phase 2 libraries:
 // - generatePropertyTable() - from lib/markdown/table-generator.js
 // - generateSlotsTable() - from lib/markdown/table-generator.js
-// - generateReactExample() - from lib/markdown/example-generator.js
+// - generateContainerExample() - from lib/markdown/example-generator.js
 
 /**
  * Generate slots content section
@@ -270,13 +312,13 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
         // Build slots content
         const slotsContent = generateSlotsContent(containerInfo.containerName, containerInfo.slots);
 
-        // Build usage example using shared library
-        const usageExample = generateReactExample({
+        // Build usage example using boilerplate provider.render() pattern
+        const usageExample = generateContainerExample({
             componentName: containerInfo.containerName,
             packageName: repoConfig.packageName,
             props: containerInfo.props,
-            selfClosing: true,
-            maxProps: 3
+            maxProps: 3,
+            includeSlots: containerInfo.slots.length > 0
         });
 
         // Use enriched description if available
@@ -284,7 +326,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 
         // Build image section if image exists
         const diagramImport = hasImage ? "import Diagram from '@components/Diagram.astro';\n" : '';
-        const imageSection = hasImage 
+        const imageSection = hasImage
             ? `\n<Diagram caption="${containerInfo.containerName} container">\n  ![${containerInfo.containerName} container](../images/${imageName})\n</Diagram>\n`
             : '';
 
@@ -324,7 +366,12 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
         containerDocs.set(fileName, mdxContent);
     }
 
-    return containerDocs;
+    // Return both the docs and the original data for overview generation
+    return {
+        containerDocs,
+        containersArray: containers,
+        enrichmentData
+    };
 }
 
 // ============================================================================
@@ -334,7 +381,10 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 /**
  * Custom write handler for containers (generates multiple files)
  */
-function writeContainerDocs(repoName, repoConfig, containerDocs, versionInfo) {
+function writeContainerDocs(repoName, repoConfig, containerDocsData, versionInfo) {
+    // containerDocsData includes: containerDocs Map, containersArray, enrichmentData
+    const { containerDocs, containersArray, enrichmentData } = containerDocsData;
+
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
@@ -354,30 +404,50 @@ function writeContainerDocs(repoName, repoConfig, containerDocs, versionInfo) {
         logger.generated(outputPath, relativeUrl);
     }
 
-    // Also generate overview page
-    generateOverviewPage(repoName, repoConfig, containerDocs, version, outputDir, basePath);
+    // Also generate overview page (pass containers array and enrichment for descriptions)
+    generateOverviewPage(repoName, repoConfig, containerDocs, containersArray, enrichmentData, version, outputDir, basePath);
 }
 
 /**
  * Generate containers overview page
  */
-function generateOverviewPage(repoName, repoConfig, containerDocs, versionInfo, outputDir, basePath) {
+function generateOverviewPage(repoName, repoConfig, containerDocs, containersArray, enrichmentData, versionInfo, outputDir, basePath) {
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const overviewTemplate = readTemplate('container-overview.mdx');
 
-    // Build list of containers
-    let containersList = '';
-    for (const [fileName] of containerDocs) {
-        const displayName = capitalize(fileName.replace(/-/g, ' '));
-        containersList += `- [${displayName}](/${basePath}/${repoName}/containers/${fileName}/)\n`;
+    // Build table of containers with descriptions
+    // Use containersArray instead of containerDocs to include all containers (even those with override_template)
+    let containersTable = '| Container | Description |\n';
+    containersTable += '| --------- | ----------- |\n';
+
+    for (const containerInfo of containersArray) {
+        const fileName = toKebabCase(containerInfo.containerName);
+        const displayName = containerInfo.containerName; // Use actual PascalCase name
+
+        // Get description from enrichment or fallback to scanned description
+        const enrichment = enrichmentData?.[containerInfo.containerName];
+        let description = enrichment?.description || containerInfo.description;
+
+        // If no description available, indicate enrichment is needed
+        if (!description) {
+            description = '*Enrichment needed - add description to `_dropin-enrichments/' + repoName + '/containers.json`*';
+        } else {
+            // Extract first sentence for the table
+            const firstSentence = description.split(/\.\s+/)[0];
+            description = firstSentence.length > 150
+                ? firstSentence.substring(0, 147) + '...'
+                : firstSentence + '.';
+        }
+
+        containersTable += `| [${displayName}](/${basePath}/${repoName}/containers/${fileName}/) | ${description} |\n`;
     }
 
     const overviewContent = replacePlaceholders(overviewTemplate, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_VERSION': cleanVersion(version),
-        'CONTAINERS_LIST': containersList,
-        'CONTAINER_COUNT': containerDocs.size.toString()
+        'CONTAINERS_LIST': containersTable,
+        'CONTAINER_COUNT': containersArray.length.toString()
     });
 
     const overviewPath = join(outputDir, 'index.mdx');

@@ -1,139 +1,443 @@
 ---
-title: Company Management Data & Events
-description: Learn about the events used by the Company Management and the data available within the events.
+title: Company Management Events
+description: Events emitted by the Company Management drop-in for tracking state changes and user actions.
 sidebar:
   label: Events
-  order: 5
+  order: 4
 ---
-
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/generate-events-docs.js to generate event documentation.
-  
-  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
-  - Section headings and descriptive text (used as-is)
-  - Import statements
-  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
-  - Placeholders: Company Management, Company Management, EVENT_NAME, etc.
-  
-  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
-  - Table contents between START/END markers (example rows are for reference only)
-  - Event-specific data (names, descriptions, payloads from source repos)
-  
-  TO CHANGE:
-  - Section text/descriptions → Edit this template
-  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
-  - Both template and script must be kept in sync for table structure changes
-*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Company Management** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
+The Company Management drop-in emits **2 events** to the event bus, allowing you to track and respond to changes in company data and structure.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: latest</strong>
+<strong>Version: 1.0.0-beta16</strong>
 </div>
 
-## Events reference
+## Available events
 
-{/* EVENTS_TABLE_START */}
-<TableWrapper nowrap={[0, 1]}>
+<TableWrapper nowrap={[0]}>
 
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| [company/updated](#companyupdated-emits) | Emits | Emitted when the component state is updated. |
-| [companyStructure/updated](#companystructureupdated-emits) | Emits | Emitted when the component state is updated. |
-| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
+| Event Name | Description |
+|------------|-------------|
+| [`company/updated`](#companyupdated) | Emitted when company information is updated |
+| [`companyStructure/updated`](#companystructureupdated) | Emitted when the company organizational structure is updated |
 
 </TableWrapper>
-{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+### company/updated
 
-
-### `company/updated` (emits)
-
-Emitted when the component state is updated.
+Emitted when company information is successfully updated through the `updateCompany()` function.
 
 #### Event payload
 
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const companyUpdatedListener = events.on('company/updated', (data) => {
-  console.log('company/updated event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-companyUpdatedListener.off();
+```typescript
+{
+  eventType: 'company/updated',
+  data: CompanyModel // Updated company data
+}
 ```
 
-### `companyContext/changed` (listens)
+#### When triggered
 
-Fired by Company Context (`companyContext`) when a change occurs.
+- After successful company profile update
+- After updating company legal address
+- After updating company contact information
+- After updating sales representative information
 
-#### Event payload
+#### Example 1: Basic company update handler
 
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const companyContextChangedListener = events.on('companyContext/changed', (data) => {
-  console.log('companyContext/changed event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-companyContextChangedListener.off();
-```
-
-### `companyStructure/updated` (emits)
-
-Emitted when the component state is updated.
-
-#### Event payload
-
-
-
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-const companyStructureUpdatedListener = events.on('companyStructure/updated', (data) => {
-  console.log('companyStructure/updated event received:', data);
-  // Add your custom logic here
-});
-
-// Later, when you want to stop listening
-companyStructureUpdatedListener.off();
-```
-
-
-{/* 
-  DATA MODELS SECTION
-  The Data Models section is automatically generated and appended after this template.
-  It includes all TypeScript interfaces/types referenced in event payloads, extracted
-  from source code with editorial descriptions from enrichment files.
+// Listen for company updates
+events.on('company/updated', (payload) => {
+  console.log('Company updated:', payload.data);
   
-  To add/edit model descriptions, update the "models" section in the enrichment file:
-  _dropin-enrichments/{dropin}/events.json
-*/}
+  // Update UI or trigger other actions
+  refreshCompanyDisplay();
+});
+```
+
+#### Example 2: Update with notification and error handling
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { updateCompany } from '@dropins/storefront-company-management/api.js';
+
+async function updateCompanyProfile(updates) {
+  try {
+    // Show loading state
+    showLoadingIndicator('Updating company profile...');
+    
+    // Update the company
+    await updateCompany(updates);
+    
+    // Listen for successful update
+    events.once('company/updated', (payload) => {
+      hideLoadingIndicator();
+      showSuccessNotification('Company profile updated successfully');
+      
+      // Update the displayed company information
+      document.querySelector('.company-name').textContent = payload.data.companyName;
+      document.querySelector('.company-email').textContent = payload.data.email;
+      
+      // Track the update in analytics
+      trackEvent('company_profile_updated', {
+        companyId: payload.data.id,
+        fieldsUpdated: Object.keys(updates)
+      });
+    });
+    
+  } catch (error) {
+    hideLoadingIndicator();
+    showErrorNotification('Failed to update company profile: ' + error.message);
+    console.error('Company update error:', error);
+  }
+}
+
+// Usage
+updateCompanyProfile({
+  companyName: 'Acme Corporation',
+  email: 'info@acme.com',
+  telephone: '+1-555-0123'
+});
+```
+
+#### Example 3: Real-time multi-component sync
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Central company data manager
+class CompanyDataManager {
+  constructor() {
+    this.subscribers = [];
+    
+    // Listen for company updates
+    events.on('company/updated', this.handleCompanyUpdate.bind(this));
+  }
+  
+  handleCompanyUpdate(payload) {
+    const companyData = payload.data;
+    
+    // Update all subscribed components
+    this.subscribers.forEach(callback => {
+      try {
+        callback(companyData);
+      } catch (error) {
+        console.error('Error updating subscriber:', error);
+      }
+    });
+    
+    // Update local storage for offline support
+    localStorage.setItem('companyData', JSON.stringify(companyData));
+    
+    // Sync with external CRM
+    this.syncWithCRM(companyData);
+  }
+  
+  subscribe(callback) {
+    this.subscribers.push(callback);
+  }
+  
+  async syncWithCRM(companyData) {
+    try {
+      await fetch('/api/crm/update-company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(companyData)
+      });
+    } catch (error) {
+      console.error('CRM sync failed:', error);
+    }
+  }
+}
+
+// Initialize manager
+const companyManager = new CompanyDataManager();
+
+// Subscribe components
+companyManager.subscribe((data) => {
+  // Update header component
+  document.querySelector('.header-company-name').textContent = data.companyName;
+});
+
+companyManager.subscribe((data) => {
+  // Update sidebar widget
+  updateCompanySidebarWidget(data);
+});
+```
+
+#### Usage scenarios
+
+- Refresh company profile display after edits
+- Trigger analytics tracking for profile changes
+- Update related UI components (headers, sidebars, widgets)
+- Sync company data with external systems (CRM, ERP)
+- Show success notifications to users
+- Update cached data and local storage
+- Refresh company-dependent permissions
+- Update breadcrumbs and navigation with company name
+
+---
+
+### companyStructure/updated
+
+Emitted when the company organizational structure is updated, including team changes, user assignments, or hierarchy modifications.
+
+#### Event payload
+
+```typescript
+{
+  eventType: 'companyStructure/updated',
+  data: CompanyStructureModel // Updated structure data
+}
+```
+
+#### When triggered
+
+- After creating a new team
+- After updating team information
+- After deleting a team
+- After creating a new user
+- After updating user details
+- After moving users between teams
+- After changing team hierarchy
+
+####Example 1: Basic structure update handler
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Listen for structure updates
+events.on('companyStructure/updated', (payload) => {
+  console.log('Company structure updated:', payload.data);
+  
+  // Reload the structure tree
+  reloadCompanyStructureTree();
+  
+  // Update navigation or permissions
+  updateUserPermissions();
+});
+```
+
+#### Example 2: Interactive structure tree with live updates
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { getCompanyStructure } from '@dropins/storefront-company-management/api.js';
+
+class CompanyStructureTree {
+  constructor(containerElement) {
+    this.container = containerElement;
+    this.structureData = null;
+    
+    // Listen for structure updates
+    events.on('companyStructure/updated', this.handleUpdate.bind(this));
+    
+    // Initial load
+    this.loadStructure();
+  }
+  
+  async loadStructure() {
+    try {
+      this.showLoading();
+      this.structureData = await getCompanyStructure();
+      this.render();
+    } catch (error) {
+      this.showError('Failed to load company structure');
+      console.error(error);
+    }
+  }
+  
+  async handleUpdate(payload) {
+    console.log('Structure updated:', payload.data);
+    
+    // Highlight the updated section
+    const updatedNodeId = payload.data.updatedNodeId;
+    if (updatedNodeId) {
+      this.highlightNode(updatedNodeId);
+    }
+    
+    // Reload the full structure
+    await this.loadStructure();
+    
+    // Show success message
+    this.showNotification('Organization structure updated', 'success');
+    
+    // Refresh permissions for all users in the tree
+    await this.refreshPermissions();
+  }
+  
+  highlightNode(nodeId) {
+    const nodeElement = this.container.querySelector(`[data-node-id="${nodeId}"]`);
+    if (nodeElement) {
+      nodeElement.classList.add('highlight-update');
+      setTimeout(() => nodeElement.classList.remove('highlight-update'), 2000);
+    }
+  }
+  
+  render() {
+    // Render the structure tree
+    this.container.innerHTML = this.buildTreeHTML(this.structureData);
+    this.attachEventListeners();
+  }
+  
+  buildTreeHTML(structure) {
+    // Build hierarchical HTML for the structure
+    return `<div class="structure-tree">...</div>`;
+  }
+  
+  async refreshPermissions() {
+    // Refresh permissions after structure change
+    events.emit('permissions/refresh-needed');
+  }
+  
+  showLoading() {
+    this.container.innerHTML = '<div class="loading">Loading structure...</div>';
+  }
+  
+  showError(message) {
+    this.container.innerHTML = `<div class="error">${message}</div>`;
+  }
+  
+  showNotification(message, type) {
+    // Show toast notification
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+  
+  attachEventListeners() {
+    // Add drag-and-drop, expand/collapse, etc.
+  }
+}
+
+// Initialize the tree
+const tree = new CompanyStructureTree(document.querySelector('#company-structure'));
+```
+
+#### Example 3: Team-based notification system
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Track structure changes and notify affected users
+events.on('companyStructure/updated', async (payload) => {
+  const { data } = payload;
+  
+  // Determine what changed
+  const changeType = determineChangeType(data);
+  
+  switch (changeType) {
+    case 'team-created':
+      notifyTeamCreation(data.newTeam);
+      break;
+    case 'team-deleted':
+      notifyTeamDeletion(data.deletedTeam);
+      break;
+    case 'user-moved':
+      notifyUserReassignment(data.user, data.oldTeam, data.newTeam);
+      break;
+    case 'hierarchy-changed':
+      notifyHierarchyChange(data.affectedTeams);
+      break;
+  }
+  
+  // Update all team-based UI components
+  updateTeamSelectors();
+  updateUserFilters();
+  refreshTeamDashboards();
+  
+  // Log for audit trail
+  logStructureChange({
+    timestamp: new Date(),
+    changeType,
+    userId: getCurrentUserId(),
+    details: data
+  });
+});
+
+function determineChangeType(data) {
+  // Logic to determine what type of change occurred
+  if (data.newTeam) return 'team-created';
+  if (data.deletedTeam) return 'team-deleted';
+  if (data.userMoved) return 'user-moved';
+  return 'hierarchy-changed';
+}
+
+async function notifyUserReassignment(user, oldTeam, newTeam) {
+  const message = `${user.name} has been moved from ${oldTeam.name} to ${newTeam.name}`;
+  
+  // Notify team managers
+  await sendNotification([oldTeam.managerId, newTeam.managerId], message);
+  
+  // Notify the user
+  await sendNotification([user.id], `You have been assigned to ${newTeam.name}`);
+  
+  // Update UI
+  showToast(message, 'info');
+}
+
+function logStructureChange(logEntry) {
+  // Send to audit log
+  fetch('/api/audit/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(logEntry)
+  });
+}
+```
+
+#### Usage scenarios
+
+- Refresh the company structure tree display in real-time
+- Update user access controls based on new hierarchy
+- Trigger notifications to affected team members
+- Log organizational changes for audit and compliance
+- Update cached structure data and local storage
+- Refresh team-based dropdowns and filters
+- Update permission matrices after reassignments
+- Highlight changes in the structure visualization
+- Trigger workflow updates (approval chains, etc.)
+- Sync organizational structure with external HR systems
+
+---
+
+## Listening to events
+
+All Company Management events are emitted through the centralized event bus. Subscribe to events using the `events.on()` method:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Single event listener
+events.on('company/updated', (payload) => {
+  // Handle company update
+});
+
+// Multiple event listeners
+events.on('company/updated', handleCompanyUpdate);
+events.on('companyStructure/updated', handleStructureUpdate);
+
+// Remove listeners when no longer needed
+events.off('company/updated', handleCompanyUpdate);
+```
+
+<Aside type="tip">
+Event listeners remain active until explicitly removed with `events.off()`. Clean up listeners when components unmount to prevent memory leaks.
+</Aside>
+
+## Related documentation
+
+- [Functions](/dropins-b2b/company-management/functions/) - API functions that emit these events
+- [Containers](/dropins-b2b/company-management/containers/) - UI components that respond to events
+- [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
+
+{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-company-management */}

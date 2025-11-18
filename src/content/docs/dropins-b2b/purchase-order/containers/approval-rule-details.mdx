@@ -7,42 +7,181 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
 
-## Overview
+The ApprovalRuleDetails container displays a read-only view of a purchase order approval rule.  When the `approvalRuleID` prop is provided, the container retrieves the approval rule details using a customer GraphQL query.
 
-The ApprovalRuleDetails container component for the drop-in.
+Once the data is loaded, the container displays the approval rule details in a read-only format, including the rule name, status, description, applicable roles, conditions, and approvers.  The only available action within the ApprovalRuleDetails container is the **Back to Rules List** button, which redirects to the approval rules list page powered by the ApprovalRulesList container.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.0.1</strong>
-</div>
+<Diagram caption="ApprovalRuleDetails container">
+  ![ApprovalRuleDetails container](../images/approval-rule-details.png)
+</Diagram>
+
+### Displayed information
+
+- Rule name and status (enabled/disabled)
+- Rule description
+- Applicable roles
+- Rule conditions (e.g., order total, shipping including tax)
+- Approver roles
+### ACL permissions
+
+Access to the container is governed by the following ACL permission:
+
+- `Magento_PurchaseOrderRule::view_approval_rules`
+
+## Integration example
+
+#### Full Display
+
+```javascript
+import { ApprovalRuleDetails } from '@dropins/storefront-purchase-order/containers/ApprovalRuleDetails.js';
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+
+await provider.render(ApprovalRuleDetails, {
+  approvalRuleID: 'rule-123',
+  routeApprovalRulesList: () => '/approval-rules',
+  withHeader: true,
+  withWrapper: true,
+})(element);
+```
+
+#### Without Header
+
+```javascript
+await provider.render(ApprovalRuleDetails, {
+  approvalRuleID: 'rule-123',
+  routeApprovalRulesList: () => '/approval-rules',
+  withHeader: false,
+  withWrapper: true,
+})(element);
+```
+
+#### From Url
+
+```javascript
+const ruleId = new URLSearchParams(window.location.search).get('id');
+await provider.render(ApprovalRuleDetails, {
+  approvalRuleID: ruleId,
+  routeApprovalRulesList: () => '/company/approval-rules',
+  withHeader: true,
+  withWrapper: true,
+})(element);
+```
+
 
 ## Configuration
 
-The `ApprovalRuleDetails` container provides the following configuration options:
+<TableWrapper nowrap={[0,1]}>
 
-{/* 
-  IMPORTANT: Do not wrap | No configurations | - | - | - | in TableWrapper or add a table header.
-  The generator's generatePropertyTable() function already includes both.
-  Adding them here will cause nested TableWrapper components and duplicate headers.
-*/}
-| No configurations | - | - | - |
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `withHeader` | `boolean` | No | Shows or hides the section header. Use `true` (default) when displaying as a standalone page. Use `false` when embedding in a dialog or another container with its own header. |
+| `withWrapper` | `boolean` | No | Wraps content in a Card component with secondary styling. Use `true` (default) for standard page layout. Use `false` when embedding inside another card or modal. |
+| `className` | `string` | No | Additional CSS classes for custom styling. Use to add spacing or layout adjustments for specific integration contexts, or apply custom theme styles. |
+| `approvalRuleID` | `string` | No | Unique identifier of the approval rule to display. Pass the rule ID from URL parameters when viewing the rule details page or when navigating from the approval rules list. |
+| `routeApprovalRulesList` | `() => string` | Yes | Function that returns the URL to redirect to the approval rules list page. Provide the callback to handle **Back to Rules List** button navigation. |
 
-## Slots
+</TableWrapper>
 
-This container does not currently expose any customizable slots.
+## Complete integration example
 
-## Usage
+This example from the AEM boilerplate shows a complete implementation with authentication, permissions, and event handling:
 
-The following example demonstrates how to use the `ApprovalRuleDetails` container:
+```js
+import { render as purchaseOrderRenderer } from '@dropins/storefront-purchase-order/render.js';
+import { ApprovalRuleDetails } from '@dropins/storefront-purchase-order/containers/ApprovalRuleDetails.js';
+import { PO_PERMISSIONS } from '@dropins/storefront-purchase-order/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
+import {
+  checkIsAuthenticated,
+  CUSTOMER_LOGIN_PATH,
+  CUSTOMER_ACCOUNT_PATH,
+  CUSTOMER_PO_RULES_PATH,
+  rootLink,
+} from '../../scripts/commerce.js';
 
-```jsx
-import { ApprovalRuleDetails } from '@dropins/storefront-purchase-order';
+// Initialize dropins
+import '../../scripts/initializers/purchase-order.js';
 
-export default function MyComponent() {
-  return (
-    <ApprovalRuleDetails/>
-  );
+const redirectToLogin = () => {
+  window.location.href = rootLink(CUSTOMER_LOGIN_PATH);
+};
+
+const redirectToAccountDashboard = () => {
+  window.location.href = rootLink(CUSTOMER_ACCOUNT_PATH);
+};
+
+const redirectToApprovalRulesList = () => {
+  window.location.href = rootLink(CUSTOMER_PO_RULES_PATH);
+};
+
+/**
+ * Renders the Approval Rule Details with permission checks
+ */
+const renderApprovalRuleDetails = async (blockElement, permissions = {}) => {
+  const isB2BEnabled = getConfigValue('commerce-b2b-enabled');
+  const hasAccess = permissions.admin || permissions[PO_PERMISSIONS.VIEW_RULES];
+
+  // Check if user has access
+  if (!isB2BEnabled || !hasAccess) {
+    redirectToAccountDashboard();
+    return;
+  }
+
+  // Get rule ID from URL
+  const approvalRuleID = new URLSearchParams(window.location.search).get('ruleRef') || '';
+  if (!approvalRuleID) {
+    redirectToApprovalRulesList();
+    return;
+  }
+
+  // Render the container
+  await purchaseOrderRenderer.render(ApprovalRuleDetails, {
+    approvalRuleID,
+    withWrapper: false,
+    routeApprovalRulesList: () => rootLink(CUSTOMER_PO_RULES_PATH),
+  })(blockElement);
+};
+
+export default async function decorate(block) {
+  // Redirect guest users immediately
+  if (!checkIsAuthenticated()) {
+    redirectToLogin();
+    return;
+  }
+
+  // Get initial permissions from event bus
+  const initialPermissions = events.lastPayload('auth/permissions');
+  await renderApprovalRuleDetails(block, initialPermissions);
+
+  // React to permission updates (e.g., role changes)
+  events.on('auth/permissions', async (updatedPermissions) => {
+    await renderApprovalRuleDetails(block, updatedPermissions);
+  });
+
+  // Handle logout during interaction
+  events.on('authenticated', (isAuthenticated) => {
+    if (!isAuthenticated) redirectToLogin();
+  });
 }
 ```
 
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}
+### Key patterns demonstrated
+
+1. **Authentication Check**: Redirects unauthenticated users before rendering
+2. **Permission Validation**: Checks both B2B enablement and specific PO permissions
+3. **URL Parameter Handling**: Extracts `ruleRef` from query string
+4. **Event-Driven Updates**: Reacts to permission and authentication changes
+5. **Graceful Redirects**: Routes users appropriately based on access level
+6. **Initialization**: Imports initializer to set up the drop-in
+
+---
+
+## Admin panel configuration
+
+The Purchase Order (B2B) feature must be enabled at both the store and company levels:
+
+- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
+- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders
