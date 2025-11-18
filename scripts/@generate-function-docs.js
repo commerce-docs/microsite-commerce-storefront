@@ -377,48 +377,48 @@ function scanForFunctions(repoPath) {
         const apiIndexDts = join(apiPath, 'index.d.ts');
         if (existsSync(apiIndexDts)) {
             const indexContent = readFileSync(apiIndexDts, 'utf8');
-            
+
             // Look for subdirectory exports: export * from './customerCompanyContext';
             const exportPattern = /export\s+\*\s+from\s+['"]\.\/([\w-]+)['"]/g;
             let match;
             const exportedDirs = [];
-            
+
             while ((match = exportPattern.exec(indexContent)) !== null) {
                 exportedDirs.push(match[1]);
             }
-            
+
             // For each exported directory, find the actual function names
             for (const dirName of exportedDirs) {
                 const dirPath = join(apiPath, dirName);
                 if (!existsSync(dirPath)) continue;
-                
+
                 // Check for index.d.ts or dirName.d.ts in this subdirectory
                 const subIndexDts = join(dirPath, 'index.d.ts');
                 const subFileDts = join(dirPath, `${dirName}.d.ts`);
-                const dtsFile = existsSync(subFileDts) ? subFileDts : 
-                              (existsSync(subIndexDts) ? subIndexDts : null);
-                
+                const dtsFile = existsSync(subFileDts) ? subFileDts :
+                    (existsSync(subIndexDts) ? subIndexDts : null);
+
                 if (!dtsFile) continue;
-                
+
                 const dtsContent = readFileSync(dtsFile, 'utf8');
-                
+
                 // Extract function names: export declare const functionName: ...
                 const funcPattern = /export\s+declare\s+const\s+(\w+)\s*:/g;
                 let funcMatch;
-                
+
                 while ((funcMatch = funcPattern.exec(dtsContent)) !== null) {
                     const functionName = funcMatch[1];
-                    
+
                     // Skip internal functions
                     if (functionName.startsWith('_') || functionName.includes('Internal')) {
                         continue;
                     }
-                    
+
                     console.log(`  ✓ Found .d.ts-only function: ${functionName} (in ${dirName}/)`);
-                    
+
                     // Extract signature
                     const signature = extractFunctionSignature(dtsContent, functionName);
-                    
+
                     if (signature) {
                         functions.push({
                             name: functionName,
