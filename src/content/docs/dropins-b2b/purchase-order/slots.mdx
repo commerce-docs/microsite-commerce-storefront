@@ -12,17 +12,75 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Purchase Order drop-in does not expose any slots for customization.
-
-## Why no slots?
-
-This drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the drop-in's feature set expands.
+The Purchase Order drop-in exposes **1 slot** in **1 container** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.0.1</strong>
+<strong>Version: 1.0.0-beta1</strong>
 </div>
 
+<TableWrapper nowrap={[0]}>
 
+| Container | Slots |
+|-----------|-------|
+| [`PurchaseOrderStatus`](#purchaseorderstatus-slots) | `PurchaseOrderActions` |
+
+</TableWrapper>
+
+
+
+## PurchaseOrderStatus slots
+
+The slots for the `PurchaseOrderStatus` container allow you to customize its appearance and behavior.
+
+```typescript
+interface PurchaseOrderStatusProps {
+  slots?: {
+    PurchaseOrderActions: SlotProps<PurchaseOrderStatusSlotContext>;
+  };
+}
+```
+
+### PurchaseOrderActions slot
+
+Customizes the action buttons displayed in the PurchaseOrderStatus container. Use this slot to override default action buttons (Approve, Reject, Cancel, Place Order) or add custom actions with custom business logic.
+
+#### Context properties
+
+The slot receives the following context properties:
+
+- **`loading`** - Loading flag indicating whether purchase order data is being initialized.
+- **`availableActions`** - List of available purchase order actions returned by the backend. Actions are filtered based on the current purchase order status and user permissions.
+- **`handleApprove`** - Callback function to approve the purchase order. Triggers the approve purchase order GraphQL mutation.
+- **`handleReject`** - Callback function to reject the purchase order. Triggers the reject purchase order GraphQL mutation.
+- **`handleCancel`** - Callback function to cancel the purchase order. Triggers the cancel purchase order GraphQL mutation.
+- **`handlePlaceOrder`** - Callback function to place an order for the purchase order. Triggers the place order GraphQL mutation.
+
+#### Usage scenarios
+
+- Override default action buttons with custom styling or layout
+- Add additional custom actions beyond the standard approve/reject/cancel/place order
+- Conditionally render actions based on custom business rules
+- Integrate third-party approval workflows or external systems
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { PurchaseOrderStatus } from '@dropins/storefront-purchase-order/containers/PurchaseOrderStatus.js';
+
+await provider.render(PurchaseOrderStatus, {
+  slots: {
+    PurchaseOrderActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom PurchaseOrderActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
 
 
 

@@ -7,42 +7,87 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
 
-## Overview
+The ApprovalRuleForm container manages purchase order approval rules.  It supports two modes of operation: creating a new approval rule (when `approvalRuleID` is not provided) or editing an existing rule (when `approvalRuleID` is provided).
 
-The ApprovalRuleForm container component for the drop-in.
+The container displays a comprehensive form for defining rule name, description, status, applicable roles, rule type, conditions, and approver roles.  Two actions are available: **Save** (creates or updates the rule, then redirects) and **Cancel** (discards changes and redirects).
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.0.1</strong>
-</div>
+<Diagram caption="ApprovalRuleForm container">
+  ![ApprovalRuleForm container](../images/approval-rule-form.png)
+</Diagram>
+
+### Form features
+
+- Create a new approval rule or edit an existing one by ID
+- Define rule name, description, and status (enabled/disabled)
+- Specify who the rule applies to (all users or specific roles)
+- Configure rule type (e.g., order total, shipping amount, number of SKUs)
+- Set conditions with operators (greater than, less than, etc.)
+- Assign approver roles
+- Perform Save or Cancel actions with basic validation (required fields)
+### ACL permissions
+
+Access to the container is governed by the following ACL permission:
+
+- `Magento_PurchaseOrderRule::manage_approval_rules`
+
+## Integration example
+
+#### Create New
+
+```javascript
+import { ApprovalRuleForm } from '@dropins/storefront-purchase-order/containers/ApprovalRuleForm.js';
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+
+await provider.render(ApprovalRuleForm, {
+  routeApprovalRulesList: () => '/company/approval-rules',
+  withHeader: true,
+  withWrapper: true,
+})(element);
+```
+
+#### Edit Existing
+
+```javascript
+await provider.render(ApprovalRuleForm, {
+  approvalRuleID: 'rule-123',
+  routeApprovalRulesList: () => '/company/approval-rules',
+  withHeader: true,
+  withWrapper: true,
+})(element);
+```
+
+#### With Callbacks
+
+```javascript
+await provider.render(ApprovalRuleForm, {
+  routeApprovalRulesList: () => '/company/approval-rules',
+  onSubmit: (data) => console.log('Form submitted:', data),
+  onChange: (formData) => console.log('Form changed:', formData),
+})(element);
+```
+
 
 ## Configuration
 
-The `ApprovalRuleForm` container provides the following configuration options:
+<TableWrapper nowrap={[0,1]}>
 
-{/* 
-  IMPORTANT: Do not wrap | No configurations | - | - | - | in TableWrapper or add a table header.
-  The generator's generatePropertyTable() function already includes both.
-  Adding them here will cause nested TableWrapper components and duplicate headers.
-*/}
-| No configurations | - | - | - |
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `withHeader` | `boolean` | No | Shows or hides the form header. Use `true` (default) for a standalone form page. Use `false` when embedding in a modal or another container. |
+| `withWrapper` | `boolean` | No | Wraps form content in a Card component. Use `true` (default) for standard page layout. Use `false` when embedding inside another card. |
+| `className` | `string` | No | Additional CSS classes for custom styling. Apply custom spacing or layout adjustments, or add theme-specific styles. |
+| `approvalRuleID` | `string` | No | ID of the approval rule to edit. If not provided, the form creates a new rule. Omit when creating a new approval rule. Pass the rule ID from URL parameters when editing an existing rule. |
+| `routeApprovalRulesList` | `() => string` | Yes | Function that returns the URL to redirect after canceling or saving. Return the approval rules list page URL. Used by the Cancel button and after successful save. |
+| `onSubmit` | `(formValues: FormValuesParams) => Promise<void>` | No | Callback function triggered when the form is successfully submitted. Use to track form submissions for analytics, show custom success messages, or trigger additional actions after save. |
+| `onChange` | `(formValues: FormValuesParams) => void` | No | Callback function triggered when any form field changes. Use to track user interactions, enable auto-save drafts, or sync form state with external storage. |
 
-## Slots
+</TableWrapper>
 
-This container does not currently expose any customizable slots.
+## Admin panel configuration
 
-## Usage
+The Purchase Order (B2B) feature must be enabled at both the store and company levels:
 
-The following example demonstrates how to use the `ApprovalRuleForm` container:
-
-```jsx
-import { ApprovalRuleForm } from '@dropins/storefront-purchase-order';
-
-export default function MyComponent() {
-  return (
-    <ApprovalRuleForm/>
-  );
-}
-```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}
+- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
+- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders

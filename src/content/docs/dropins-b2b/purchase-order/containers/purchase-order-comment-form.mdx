@@ -7,42 +7,66 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
 
-## Overview
+The PurchaseOrderCommentForm container displays a form that allows users to add a comment to the currently selected purchase order.  The container requires no props.  It listens for the `purchase-order/data` event emitted by the purchase order initializer.
 
-The PurchaseOrderCommentForm container component for the drop-in.
+The event is used only to determine when the drop-in is ready - no data from the event is required.  After receiving the event, the container displays a single text-area comment field and an **Add Comment** submit button.  This container provides one action: **submit**.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.0.1</strong>
-</div>
+<Diagram caption="PurchaseOrderCommentForm container">
+  ![PurchaseOrderCommentForm container](../images/comment-form.png)
+</Diagram>
+
+### Displayed information
+
+- A single text-area comment field
+- An **Add Comment** submit button
+### ACL permissions
+
+Access to the container is governed by the following ACL permission:
+
+- `Magento_PurchaseOrder::view_purchase_orders`
+
+## Integration example
+
+#### Basic
+
+```javascript
+import { PurchaseOrderCommentForm } from '@dropins/storefront-purchase-order/containers/PurchaseOrderCommentForm.js';
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+
+await provider.render(PurchaseOrderCommentForm, {
+  withHeader: true,
+  withWrapper: true,
+})(element);
+```
+
+#### Minimal
+
+```javascript
+await provider.render(PurchaseOrderCommentForm, {
+  withHeader: false,
+  withWrapper: false,
+  className: 'custom-comment-form',
+})(element);
+```
+
 
 ## Configuration
 
-The `PurchaseOrderCommentForm` container provides the following configuration options:
+<TableWrapper nowrap={[0,1]}>
 
-{/* 
-  IMPORTANT: Do not wrap | No configurations | - | - | - | in TableWrapper or add a table header.
-  The generator's generatePropertyTable() function already includes both.
-  Adding them here will cause nested TableWrapper components and duplicate headers.
-*/}
-| No configurations | - | - | - |
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `withHeader` | `boolean` | No | Shows or hides the section header **Add Comment**. Use `true` (default) for a standalone section on the purchase order details page. Use `false` when embedding in another component that already has its own header. |
+| `withWrapper` | `boolean` | No | Wraps content in a Card component with secondary styling. Use `true` (default) for standard page layout with visual separation. Use `false` when embedding inside another card or container to avoid nested cards. |
+| `className` | `string` | No | Additional CSS classes for custom styling of the container. Use to apply custom spacing, margins, or other styles. Useful for adjusting layout in specific contexts. |
 
-## Slots
+</TableWrapper>
 
-This container does not currently expose any customizable slots.
+## Admin panel configuration
 
-## Usage
+The Purchase Order (B2B) feature must be enabled at both the store and company levels:
 
-The following example demonstrates how to use the `PurchaseOrderCommentForm` container:
-
-```jsx
-import { PurchaseOrderCommentForm } from '@dropins/storefront-purchase-order';
-
-export default function MyComponent() {
-  return (
-    <PurchaseOrderCommentForm/>
-  );
-}
-```
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}
+- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
+- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders

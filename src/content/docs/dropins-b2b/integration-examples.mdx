@@ -1,0 +1,797 @@
+---
+title: B2B Integration Examples
+description: Real-world integration examples showing how to use B2B drop-ins together in production scenarios.
+sidebar:
+  label: Integration Examples
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide provides comprehensive, real-world examples for integrating B2B drop-ins in production scenarios. Each example is based on patterns from the Adobe Commerce boilerplate.
+
+## Authentication and permissions
+
+All B2B drop-ins require proper authentication and permission checks. Here is the standard pattern:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
+import { PO_PERMISSIONS } from '@dropins/storefront-purchase-order/api.js';
+
+function checkIsAuthenticated() {
+  return document.cookie.includes('auth_dropin_user_token');
+}
+
+function redirectToLogin() {
+  window.location.href = '/customer/login';
+}
+
+function redirectToAccount() {
+  window.location.href = '/customer/account';
+}
+
+// Check if user has access
+export async function checkB2BAccess(requiredPermission = null) {
+  // Check authentication first
+  if (!checkIsAuthenticated()) {
+    redirectToLogin();
+    return false;
+  }
+  
+  // Check if B2B is enabled
+  const isB2BEnabled = getConfigValue('commerce-b2b-enabled');
+  if (!isB2BEnabled) {
+    redirectToAccount();
+    return false;
+  }
+  
+  // Check specific permission if required
+  if (requiredPermission) {
+    const permissions = events.lastPayload('auth/permissions');
+    const hasAccess = permissions?.admin || permissions?.[requiredPermission];
+    
+    if (!hasAccess) {
+      redirectToAccount();
+      return false;
+    }
+  }
+  
+  return true;
+}
+```
+
+<Aside type="tip">
+Use `events.lastPayload('auth/permissions')` to get the most recent permissions without waiting for an event emission.
+</Aside>
+
+## Company Management integration
+
+### 1. Company registration form with validation
+
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyRegistration } from '@dropins/storefront-company-management/containers/CompanyRegistration.js';
+import { validateCompanyEmail, createCompany } from '@dropins/storefront-company-management/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+// Initialize the company management drop-in
+import '../../scripts/initializers/company.js';
+
+export default async function decorate(block) {
+  const isAuthenticated = checkIsAuthenticated();
+  
+  // Render the registration form
+  await provider.render(CompanyRegistration, {
+    isAuthenticated,
+    onRedirectLogin: () => redirectToLogin(),
+    onRedirectAccount: () => redirectToAccount(),
+    slots: {
+      // Customize email input with real-time validation
+      CompanyFormInput_companyEmail: (ctx) => {
+        const { formData, handleInputChange, errors } = ctx;
+        
+        const emailInput = document.createElement('input');
+        emailInput.type = 'email';
+        emailInput.value = formData.companyEmail || '';
+        emailInput.className = 'company-email-input';
+        emailInput.placeholder = 'Enter company email';
+        
+        // Real-time validation on blur
+        emailInput.addEventListener('blur', async () => {
+          const email = emailInput.value;
+          if (email) {
+            try {
+              const { isValid } = await validateCompanyEmail(email);
+              if (!isValid) {
+                emailInput.classList.add('error');
+                showFieldError(emailInput, 'This email is already registered');
+              } else {
+                emailInput.classList.remove('error');
+                clearFieldError(emailInput);
+              }
+            } catch (error) {
+              console.error('Email validation error:', error);
+            }
+          }
+        });
+        
+        // Update form data on change
+        emailInput.addEventListener('change', (e) => {
+          handleInputChange({ companyEmail: e.target.value });
+        });
+        
+        ctx.replaceWith(emailInput);
+      }
+    }
+  })(block);
+  
+  // Listen for successful company creation
+  events.on('company/created', (payload) => {
+    const { companyId } = payload.data;
+    
+    // Track conversion
+    trackAnalytics('company_registration_complete', { companyId });
+    
+    // Redirect to success page
+    window.location.href = '/company/registration-success';
+  });
+}
+
+function showFieldError(input, message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'field-error';
+  errorDiv.textContent = message;
+  input.parentNode.appendChild(errorDiv);
+}
+
+function clearFieldError(input) {
+  const errorDiv = input.parentNode.querySelector('.field-error');
+  if (errorDiv) {
+    errorDiv.remove();
+  }
+}
+```
+
+### 2. Company structure management
+
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyStructure } from '@dropins/storefront-company-management/containers/CompanyStructure.js';
+import { 
+  getCompanyStructure, 
+  createCompanyTeam,
+  updateCompanyStructure,
+  deleteCompanyTeam 
+} from '@dropins/storefront-company-management/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+export default async function decorate(block) {
+  // Check access
+  const hasAccess = await checkB2BAccess();
+  if (!hasAccess) return;
+  
+  // Render the structure
+  await provider.render(CompanyStructure, {
+    isAuthenticated: true,
+    onRedirectLogin: () => redirectToLogin(),
+    onRedirectAccount: () => redirectToAccount(),
+    slots: {
+      // Custom structure actions
+      StructureData: (ctx) => {
+        const { structureData } = ctx;
+        
+        const container = document.createElement('div');
+        container.className = 'structure-tree';
+        
+        // Render tree with drag-and-drop
+        renderStructureTree(container, structureData, {
+          onDrop: async (nodeId, newParentId) => {
+            try {
+              await updateCompanyStructure({
+                treeId: nodeId,
+                parentTreeId: newParentId
+              });
+              showNotification('Team moved successfully', 'success');
+            } catch (error) {
+              showNotification('Failed to move team: ' + error.message, 'error');
+            }
+          },
+          onDelete: async (teamId) => {
+            if (confirm('Are you sure you want to delete this team?')) {
+              try {
+                await deleteCompanyTeam(teamId);
+                showNotification('Team deleted', 'success');
+              } catch (error) {
+                showNotification('Failed to delete team: ' + error.message, 'error');
+              }
+            }
+          }
+        });
+        
+        ctx.appendChild(container);
+      }
+    }
+  })(block);
+  
+  // Listen for structure updates
+  events.on('companyStructure/updated', async () => {
+    // Refresh the structure display
+    const updatedStructure = await getCompanyStructure();
+    updateStructureDisplay(updatedStructure);
+    
+    // Show notification
+    showNotification('Organization structure updated', 'info');
+  });
+}
+
+function renderStructureTree(container, data, actions) {
+  // Implement tree rendering with drag-and-drop
+  // This is a simplified example - implement based on your UI framework
+  container.innerHTML = `<div class="tree-root">...</div>`;
+}
+```
+
+## Purchase Order integration
+
+### 1. Purchase order checkout flow
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { PurchaseOrderForm } from '@dropins/storefront-purchase-order/containers/PurchaseOrderForm.js';
+import { placePurchaseOrder, checkApprovalRequired } from '@dropins/storefront-purchase-order/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+import { getCart } from '@dropins/storefront-cart/api.js';
+
+export default async function decorate(block) {
+  const hasAccess = await checkB2BAccess();
+  if (!hasAccess) return;
+  
+  // Get cart data
+  const cart = await getCart();
+  
+  // Check if approval is required
+  const { requiresApproval } = await checkApprovalRequired({
+    cartId: cart.id,
+    totalAmount: cart.total
+  });
+  
+  // Show approval warning if needed
+  if (requiresApproval) {
+    showApprovalWarning('This order requires approval before processing');
+  }
+  
+  // Render PO form
+  await provider.render(PurchaseOrderForm, {
+    cartId: cart.id,
+    requiresApproval,
+    onSuccess: async (purchaseOrderNumber) => {
+      // Clear cart
+      events.emit('cart/clear');
+      
+      // Redirect to success page
+      if (requiresApproval) {
+        window.location.href = `/purchase-orders/${purchaseOrderNumber}?pending=true`;
+      } else {
+        window.location.href = `/orders/${purchaseOrderNumber}`;
+      }
+    },
+    onError: (error) => {
+      showErrorNotification('Failed to place purchase order: ' + error.message);
+    }
+  })(block);
+  
+  // Listen for placement
+  events.on('purchase-order/placed', (payload) => {
+    const { purchaseOrderNumber, requiresApproval, totalAmount } = payload.data;
+    
+    // Track conversion
+    trackAnalytics('purchase_order_placed', {
+      orderNumber: purchaseOrderNumber,
+      requiresApproval,
+      value: totalAmount
+    });
+    
+    // Send notification to approvers
+    if (requiresApproval && payload.data.approvers) {
+      notifyApprovers(payload.data.approvers, purchaseOrderNumber);
+    }
+  });
+}
+
+async function notifyApprovers(approvers, orderNumber) {
+  // Send notifications to all approvers
+  await Promise.all(
+    approvers.map(approver => 
+      fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: approver.id,
+          type: 'purchase-order-approval',
+          orderNumber
+        })
+      })
+    )
+  );
+}
+```
+
+### 2. Approval workflow
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { PurchaseOrderStatus } from '@dropins/storefront-purchase-order/containers/PurchaseOrderStatus.js';
+import { approvePurchaseOrder, rejectPurchaseOrder } from '@dropins/storefront-purchase-order/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+import { PO_PERMISSIONS } from '@dropins/storefront-purchase-order/api.js';
+
+export default async function decorate(block) {
+  const hasAccess = await checkB2BAccess(PO_PERMISSIONS.APPROVE);
+  if (!hasAccess) return;
+  
+  await provider.render(PurchaseOrderStatus, {
+    onApprove: async (purchaseOrderUid, comment) => {
+      try {
+        showLoadingOverlay('Approving purchase order...');
+        
+        await approvePurchaseOrder({
+          purchaseOrderUid,
+          comment
+        });
+        
+        hideLoadingOverlay();
+        showSuccessNotification('Purchase order approved');
+        
+        // Refresh the list
+        refreshPurchaseOrderList();
+        
+      } catch (error) {
+        hideLoadingOverlay();
+        showErrorNotification('Failed to approve: ' + error.message);
+      }
+    },
+    onReject: async (purchaseOrderUid, comment) => {
+      if (!comment) {
+        alert('Please provide a reason for rejection');
+        return;
+      }
+      
+      try {
+        showLoadingOverlay('Rejecting purchase order...');
+        
+        await rejectPurchaseOrder({
+          purchaseOrderUid,
+          comment
+        });
+        
+        hideLoadingOverlay();
+        showSuccessNotification('Purchase order rejected');
+        
+        // Refresh the list
+        refreshPurchaseOrderList();
+        
+      } catch (error) {
+        hideLoadingOverlay();
+        showErrorNotification('Failed to reject: ' + error.message);
+      }
+    }
+  })(block);
+  
+  // Listen for status changes
+  events.on('purchase-order/data', (payload) => {
+    const { status } = payload.data;
+    
+    // Update UI based on status
+    updatePurchaseOrderStatusUI(status);
+    
+    // Notify relevant parties
+    if (status === 'approved') {
+      notifyOrderCreator('Your purchase order has been approved');
+    } else if (status === 'rejected') {
+      notifyOrderCreator('Your purchase order has been rejected');
+    }
+  });
+}
+```
+
+## Quote Management integration
+
+### 1. Request a quote from cart
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+import { createNegotiableQuote } from '@dropins/storefront-quote-management/api.js';
+import { getCart } from '@dropins/storefront-cart/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+export default async function decorate(block) {
+  const hasAccess = await checkB2BAccess();
+  if (!hasAccess) return;
+  
+  // Get cart
+  const cart = await getCart();
+  
+  if (!cart || cart.items.length === 0) {
+    showMessage('Your cart is empty. Add items to request a quote.');
+    return;
+  }
+  
+  // Render quote request form
+  await provider.render(RequestNegotiableQuoteForm, {
+    cartId: cart.id,
+    onSuccess: (quoteUid) => {
+      // Clear cart
+      events.emit('cart/clear');
+      
+      // Redirect to quote details
+      window.location.href = `/quotes/${quoteUid}`;
+    },
+    onCancel: () => {
+      window.location.href = '/cart';
+    }
+  })(block);
+  
+  // Listen for quote creation
+  events.on('negotiableQuote/created', (payload) => {
+    const { quoteUid, quoteName } = payload.data;
+    
+    // Track analytics
+    trackAnalytics('quote_requested', {
+      quoteUid,
+      quoteName,
+      itemCount: cart.items.length,
+      totalValue: cart.total
+    });
+    
+    // Show success message
+    showSuccessNotification(`Quote "${quoteName}" created successfully`);
+  });
+}
+```
+
+### 2. Quote negotiation workflow
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+import { 
+  updateNegotiableQuote,
+  submitNegotiableQuote,
+  addQuoteComment 
+} from '@dropins/storefront-quote-management/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+export default async function decorate(block) {
+  const hasAccess = await checkB2BAccess();
+  if (!hasAccess) return;
+  
+  // Get quote UID from URL
+  const quoteUid = new URLSearchParams(window.location.search).get('uid');
+  
+  await provider.render(ManageNegotiableQuote, {
+    quoteUid,
+    onUpdateQuantity: async (lineItemUid, quantity) => {
+      try {
+        await updateNegotiableQuote({
+          quoteUid,
+          quoteLineItems: [{
+            lineItemUid,
+            quantity
+          }]
+        });
+        
+        showNotification('Quantity updated', 'success');
+      } catch (error) {
+        showNotification('Failed to update: ' + error.message, 'error');
+      }
+    },
+    onSubmit: async () => {
+      try {
+        await submitNegotiableQuote(quoteUid);
+        showNotification('Quote submitted for review', 'success');
+      } catch (error) {
+        showNotification('Failed to submit: ' + error.message, 'error');
+      }
+    },
+    onAddComment: async (comment) => {
+      try {
+        await addQuoteComment({
+          quoteUid,
+          comment
+        });
+        showNotification('Comment added', 'success');
+      } catch (error) {
+        showNotification('Failed to add comment: ' + error.message, 'error');
+      }
+    }
+  })(block);
+  
+  // Listen for quote updates
+  events.on('negotiableQuote/updated', (payload) => {
+    const { status, updatedBy } = payload.data;
+    
+    // Show notification based on who updated
+    if (updatedBy === 'seller') {
+      showNotification('The seller has updated your quote', 'info');
+      
+      // Optionally play sound or show desktop notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Quote Updated', {
+          body: 'Your quote has been updated by the seller',
+          icon: '/icons/quote.png'
+        });
+      }
+    }
+  });
+}
+```
+
+## Requisition List integration
+
+### 1. Add to requisition list from product page
+
+```js
+import { addProductsToRequisitionList, getRequisitionLists } from '@dropins/storefront-requisition-list/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+// Add button to product page
+function addRequisitionListButton(productContainer) {
+  const button = document.createElement('button');
+  button.className = 'add-to-list-button';
+  button.textContent = 'Add to Requisition List';
+  
+  button.addEventListener('click', async () => {
+    await showRequisitionListSelector();
+  });
+  
+  productContainer.appendChild(button);
+}
+
+async function showRequisitionListSelector() {
+  try {
+    // Get user's lists
+    const { items: lists } = await getRequisitionLists({
+      currentPage: 1,
+      pageSize: 50
+    });
+    
+    // Show modal with list selection
+    const selectedListUid = await showListSelectionModal(lists);
+    
+    if (selectedListUid) {
+      // Add product to selected list
+      const productSku = getCurrentProductSku();
+      const quantity = getSelectedQuantity();
+      
+      await addProductsToRequisitionList({
+        requisitionListUid: selectedListUid,
+        items: [{
+          sku: productSku,
+          quantity,
+          selectedOptions: getSelectedOptions()
+        }]
+      });
+      
+      showSuccessNotification('Added to requisition list');
+    }
+    
+  } catch (error) {
+    showErrorNotification('Failed to add to list: ' + error.message);
+  }
+}
+
+// Listen for requisition list updates
+events.on('requisitionList/itemAdded', (payload) => {
+  const { listName, itemCount } = payload.data;
+  
+  // Track analytics
+  trackAnalytics('added_to_requisition_list', {
+    listName,
+    product: getCurrentProductSku()
+  });
+  
+  // Update list badge
+  updateListBadge(itemCount);
+});
+```
+
+### 2. Add requisition list to cart
+
+```js
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import { RequisitionListView } from '@dropins/storefront-requisition-list/containers/RequisitionListView.js';
+import { addRequisitionListItemsToCart, getRequisitionList } from '@dropins/storefront-requisition-list/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+export default async function decorate(block) {
+  const hasAccess = await checkB2BAccess();
+  if (!hasAccess) return;
+  
+  const listUid = new URLSearchParams(window.location.search).get('uid');
+  
+  await provider.render(RequisitionListView, {
+    requisitionListUid: listUid,
+    routeRequisitionListGrid: () => '/requisition-lists',
+    // The RequisitionListView container handles "Add to Cart" internally
+    // No custom onAddToCart handler needed
+  })(block);
+  
+  // Listen for cart additions
+  events.on('cart/updated', (payload) => {
+    const { itemCount } = payload.data;
+    
+    // Update cart badge
+    updateCartBadge(itemCount);
+  });
+}
+```
+
+## Company Switcher coordination
+
+When implementing Company Switcher, coordinate all B2B drop-ins to refresh their data:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { setCompanyHeaders } from '@dropins/storefront-company-switcher/api.js';
+
+// Initialize company switcher dropdown
+function initCompanySwitcher() {
+  const dropdown = document.querySelector('#company-selector');
+  
+  dropdown.addEventListener('change', async (e) => {
+    const companyId = e.target.value;
+    const companyName = e.target.selectedOptions[0].text;
+    
+    // Show loading state
+    showLoadingOverlay(`Switching to ${companyName}...`);
+    
+    // Set company headers (triggers companyContext/changed event)
+    setCompanyHeaders(companyId);
+  });
+  
+  // Listen for company context changes
+  events.on('companyContext/changed', async (payload) => {
+    const { companyId, companyName } = payload.data;
+    
+    try {
+      // Clear all caches
+      clearB2BCaches();
+      
+      // Refresh all B2B data in parallel
+      await Promise.all([
+        refreshCompanyManagement(),
+        refreshPurchaseOrders(),
+        refreshQuotes(),
+        refreshRequisitionLists()
+      ]);
+      
+      // Update UI
+      updateCompanyDisplay(companyName);
+      
+      hideLoadingOverlay();
+      showSuccessNotification(`Switched to ${companyName}`);
+      
+    } catch (error) {
+      hideLoadingOverlay();
+      showErrorNotification('Failed to switch company: ' + error.message);
+    }
+  });
+}
+
+function clearB2BCaches() {
+  // Clear all company-specific cached data
+  sessionStorage.removeItem('currentCompanyData');
+  localStorage.removeItem('company_structure');
+  localStorage.removeItem('purchase_orders');
+  // ... clear other caches
+}
+```
+
+## Best practices
+
+### 1. Error handling
+
+Always implement comprehensive error handling:
+
+```js
+try {
+  await someB2BApiCall();
+} catch (error) {
+  // Log for debugging
+  console.error('API call failed:', error);
+  
+  // Show user-friendly message
+  if (error.message.includes('permission')) {
+    showErrorNotification('You do not have permission for this action');
+  } else if (error.message.includes('network')) {
+    showErrorNotification('Network error. Please check your connection');
+  } else {
+    showErrorNotification('An error occurred. Please try again');
+  }
+  
+  // Track error for monitoring
+  trackError('b2b_api_error', {
+    function: 'someB2BApiCall',
+    error: error.message
+  });
+}
+```
+
+### 2. Loading states
+
+Provide clear feedback during async operations:
+
+```js
+async function performB2BAction() {
+  const button = document.querySelector('#action-button');
+  
+  // Disable button and show loading
+  button.disabled = true;
+  button.textContent = 'Processing...';
+  button.classList.add('loading');
+  
+  try {
+    await someAsyncOperation();
+    showSuccessNotification('Action completed');
+  } catch (error) {
+    showErrorNotification('Action failed: ' + error.message);
+  } finally {
+    // Re-enable button
+    button.disabled = false;
+    button.textContent = 'Submit';
+    button.classList.remove('loading');
+  }
+}
+```
+
+### 3. Event coordination
+
+Use events to coordinate between drop-ins:
+
+```js
+// In one component
+events.emit('custom/action-completed', { 
+  type: 'purchase-order', 
+  id: 'PO-123' 
+});
+
+// In another component
+events.on('custom/action-completed', (payload) => {
+  if (payload.data.type === 'purchase-order') {
+    refreshRelatedData();
+  }
+});
+```
+
+### 4. Permission checks
+
+Always check permissions before rendering sensitive components:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { PO_PERMISSIONS } from '@dropins/storefront-purchase-order/api.js';
+
+async function renderAdminComponent() {
+  const permissions = events.lastPayload('auth/permissions');
+  
+  if (!permissions?.admin && !permissions?.[PO_PERMISSIONS.APPROVE]) {
+    showMessage('Access denied');
+    return;
+  }
+  
+  // Render component
+  await provider.render(AdminComponent, {...})(block);
+}
+```
+
+## Additional resources
+
+- [Company Management API](/dropins-b2b/company-management/functions/)
+- [Purchase Order API](/dropins-b2b/purchase-order/functions/)
+- [Quote Management API](/dropins-b2b/quote-management/functions/)
+- [Requisition List API](/dropins-b2b/requisition-list/functions/)
+- [Company Switcher API](/dropins-b2b/company-switcher/functions/)
+- [Event Bus Documentation](/sdk/event-bus/)
+

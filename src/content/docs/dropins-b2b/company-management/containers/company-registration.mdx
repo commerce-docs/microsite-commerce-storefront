@@ -8,9 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-## Overview
-
-The CompanyRegistration container component for the drop-in.
+[ADD DESCRIPTION] - Container that displays company registration.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta16</strong>
@@ -55,25 +53,56 @@ This container exposes the following slots for customization:
 
 | Slot | Type | Required | Description |
 |------|------|----------|-------------|
-| `slots` | `CompanyFormSlots` | No | Custom slot for rendering slots |
+| `slots` | `CompanyFormSlots` | No | Object containing custom slot implementations for individual form fields. Use the pattern `CompanyFormInput_{fieldCode}` to customize specific form inputs (e.g., `CompanyFormInput_companyName`, `CompanyFormInput_companyEmail`). |
 
+### Form field slots
+
+The `CompanyFormSlots` type allows you to customize individual form input fields within the registration form. Each slot is keyed by the pattern `CompanyFormInput_{fieldCode}` where `fieldCode` corresponds to the form field you want to customize.
+
+Common field codes include:
+- `companyName` - Company name input
+- `companyEmail` - Company email input
+- `companyAdminFirstName` - Admin first name input
+- `companyAdminLastName` - Admin last name input
+- `companyAdminEmail` - Admin email input
+- `street` - Street address inputs
+- `city` - City input
+- `region` - Region/state selector
+- `postcode` - Postal code input
+- `countryCode` - Country selector
+- `telephone` - Telephone input
 
 ## Usage
 
 The following example demonstrates how to use the `CompanyRegistration` container:
 
-```jsx
-import { CompanyRegistration } from '@dropins/storefront-company-management';
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyRegistration } from '@dropins/storefront-company-management/containers/CompanyRegistration.js';
 
-export default function MyComponent() {
-  return (
-    <CompanyRegistration
-      isAuthenticated={true}
-      onRedirectLogin={() => console.log('RedirectLogin')}
-      onRedirectAccount={() => console.log('RedirectAccount')}
-    />
-  );
-}
+await provider.render(CompanyRegistration, {
+  isAuthenticated: true,
+  onRedirectLogin: () => console.log('RedirectLogin'),
+  onRedirectAccount: () => console.log('RedirectAccount'),
+  slots: {
+    // Customize the company name field
+    CompanyFormInput_companyName: (ctx) => {
+      const { formData, handleInputChange, errors } = ctx;
+      const customInput = document.createElement('input');
+      customInput.type = 'text';
+      customInput.value = formData.companyName || '';
+      customInput.className = 'custom-company-name-input';
+      customInput.onchange = (e) => handleInputChange({ companyName: e.target.value });
+      ctx.replaceWith(customInput);
+    },
+    // Customize the company email field  
+    CompanyFormInput_companyEmail: (ctx) => {
+      const customField = document.createElement('div');
+      customField.innerHTML = '<label>Business Email</label><input type="email" />';
+      ctx.replaceWith(customField);
+    }
+  }
+})(block);
 ```
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-company-management */}

@@ -248,8 +248,14 @@ export async function runGenerator(options) {
     // Parse CLI and filter drop-ins
     const { dropins, isSingleDropin } = parseAndFilterDropins(name);
 
+    // Determine if we're processing B2B drop-ins
+    const hasB2BDropins = Object.values(dropins).some(config => config.type === 'B2B');
+    const hasB2CDropins = Object.values(dropins).some(config => config.type !== 'B2B');
+
     // Setup boilerplate (once for all drop-ins)
-    const { path: boilerplatePath, tag: boilerplateTag } = cloneOrUpdateBoilerplate();
+    // Use b2b-integration branch if processing B2B drop-ins, otherwise use latest release tag
+    const boilerplateBranch = hasB2BDropins && !hasB2CDropins ? 'b2b-integration' : null;
+    const { path: boilerplatePath, tag: boilerplateTag } = cloneOrUpdateBoilerplate(boilerplateBranch);
     const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
     logger.boilerplateLoaded();
 

@@ -12,17 +12,113 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Company Management drop-in does not expose any slots for customization.
-
-## Why no slots?
-
-This drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the drop-in's feature set expands.
+The Company Management drop-in exposes **2 slots** in **2 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta16</strong>
 </div>
 
+<TableWrapper nowrap={[0]}>
 
+| Container | Slots |
+|-----------|-------|
+| [`CompanyProfile`](#companyprofile-slots) | `CompanyData` |
+| [`CompanyStructure`](#companystructure-slots) | `StructureData` |
+
+</TableWrapper>
+
+
+
+## CompanyProfile slots
+
+The slots for the `CompanyProfile` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CompanyProfileProps {
+  slots?: {
+    CompanyData?: SlotProps<CompanyDataContext & { Default?: any }>;
+  };
+}
+```
+
+### CompanyData slot
+
+The `CompanyData` slot allows you to customize the company data display section of the `CompanyProfile` container. The slot receives context with an array of company data properties including name, label, and value for each field.
+
+#### Context properties
+
+The slot receives the following context properties:
+
+- **`companyData`** - Array of company data properties, each containing:
+  - `name` - Field name identifier
+  - `label` - Display label for the field
+  - `value` - Current value of the field
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyProfile } from '@dropins/storefront-company-management/containers/CompanyProfile.js';
+
+await provider.render(CompanyProfile, {
+  slots: {
+    CompanyData: (ctx) => {
+      // Access company data from context
+      const { companyData } = ctx;
+      
+      // Create custom display
+      const element = document.createElement('div');
+      element.className = 'custom-company-data';
+      
+      companyData.forEach(item => {
+        const field = document.createElement('div');
+        field.innerHTML = `<strong>${item.label}:</strong> ${item.value}`;
+        element.appendChild(field);
+      });
+      
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## CompanyStructure slots
+
+The slots for the `CompanyStructure` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CompanyStructureProps {
+  slots?: {
+    StructureData?: SlotProps<CompanyStructureDataContext & { Default?: any }>;
+  };
+}
+```
+
+### StructureData slot
+
+The `StructureData` slot allows you to customize the structure data section of the `CompanyStructure` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyStructure } from '@dropins/storefront-company-management/containers/CompanyStructure.js';
+
+await provider.render(CompanyStructure, {
+  slots: {
+    StructureData: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom StructureData';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
 
 
 

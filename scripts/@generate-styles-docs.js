@@ -239,7 +239,7 @@ function generateComponentClassesSection(stylesData, dropinName, repoConfig) {
                 .replace('git@github.com:', 'https://github.com/')
                 .replace('.git', '');
             const packageName = repoConfig.packageName.split('/')[1];
-            output += `For the source CSS files, see the [${packageName} repository](${repoUrl}/tree/main/src).\n`;
+            output += `For the source CSS files, see the <Link href="${repoUrl}/tree/main/src" text="${packageName} repository" />.\n`;
         }
     }
 
