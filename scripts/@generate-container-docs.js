@@ -44,6 +44,71 @@ import { generateReactExample } from './lib/markdown/example-generator.js';
 const projectRoot = getProjectRoot();
 
 // ============================================================================
+// IMAGE DISCOVERY FOR CONTAINERS
+// ============================================================================
+
+// Supported image formats for container diagrams
+const IMAGE_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];
+
+/**
+ * Split long descriptions into two paragraphs for better readability
+ * 
+ * @param {string} description - The description text
+ * @returns {string} - Description split into 2 paragraphs if long enough
+ */
+function splitDescription(description) {
+    if (!description) return '';
+    
+    // Split by sentences (periods followed by space or end of string)
+    const sentences = description.match(/[^.!?]+[.!?]+/g) || [description];
+    
+    if (sentences.length <= 2) {
+        // Short description, keep as is
+        return description;
+    }
+    
+    // Split roughly in half (first 2-3 sentences in first paragraph)
+    const midPoint = Math.ceil(sentences.length / 2);
+    const firstParagraph = sentences.slice(0, midPoint).join(' ').trim();
+    const secondParagraph = sentences.slice(midPoint).join(' ').trim();
+    
+    return `${firstParagraph}\n\n${secondParagraph}`;
+}
+
+/**
+ * Automatically discover image for a container
+ * Convention: ContainerName -> container-name.{png,webp,jpg}
+ * 
+ * @param {string} containerName - PascalCase container name
+ * @param {string} repoName - Drop-in repository name
+ * @param {string} basePath - Base path (dropins or dropins-b2b)
+ * @returns {string|null} - Image filename if found, null otherwise
+ */
+function findImageForContainer(containerName, repoName, basePath) {
+    const imagesDir = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'images');
+    
+    if (!existsSync(imagesDir)) {
+        return null;
+    }
+    
+    // Get all files in images directory
+    const files = readdirSync(imagesDir);
+    
+    // Convert container name to kebab-case
+    const kebabName = toKebabCase(containerName);
+    
+    // Look for exact match: container-name.{ext}
+    for (const ext of IMAGE_EXTENSIONS) {
+        const expectedFileName = `${kebabName}${ext}`;
+        if (files.includes(expectedFileName)) {
+            return expectedFileName;
+        }
+    }
+    
+    return null;
+}
+
+// ============================================================================
 // UNIQUE SCANNING LOGIC
 // ============================================================================
 // Note: Most extraction logic has been moved to shared Phase 2 libraries:
@@ -165,6 +230,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const template = readTemplate('dropin-container.mdx');
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
 
     // Validate template: Check if it contains TableWrapper around CONFIGURATIONS_TABLE
     // This would cause nested wrappers since generatePropertyTable() already adds them
@@ -191,6 +257,10 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             continue;
         }
 
+        // Auto-discover image for this container
+        const imageName = findImageForContainer(containerInfo.containerName, repoName, basePath);
+        const hasImage = imageName !== null;
+
         // Build configurations table using shared library
         const configurationsTable = generatePropertyTable(containerInfo.props, {
             nowrapColumns: [0, 1],
@@ -212,19 +282,42 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
         // Use enriched description if available
         const description = enrichment?.description || containerInfo.description;
 
+        // Build image section if image exists
+        const diagramImport = hasImage ? "import Diagram from '@components/Diagram.astro';\n" : '';
+        const imageSection = hasImage 
+            ? `\n<Diagram caption="${containerInfo.containerName} container">\n  ![${containerInfo.containerName} container](../images/${imageName})\n</Diagram>\n`
+            : '';
+
         // Replace placeholders
-        const mdxContent = replacePlaceholders(template, {
+        let mdxContent = replacePlaceholders(template, {
             'DROPIN_NAME': repoConfig.displayName,
             'DROPIN_PACKAGE': repoConfig.packageName,
             'CONTAINER_NAME': containerInfo.containerName,
             'CONTAINER_DISPLAY_NAME': capitalize(containerInfo.containerName),
             'DROPIN_VERSION': cleanVersion(version),
-            'CONTAINER_DESCRIPTION': description,
+            'CONTAINER_DESCRIPTION': splitDescription(description),
             'CONFIGURATIONS_TABLE': configurationsTable,
             'SLOTS_CONTENT': slotsContent,
             'USAGE_EXAMPLE': usageExample,
             'REPO_URL': repoConfig.gitUrl.replace('.git', '')
         });
+
+        // Add Diagram import after other imports if image exists
+        if (hasImage) {
+            mdxContent = mdxContent.replace(
+                /(import.*from '@astrojs\/starlight\/components';)/,
+                `$1\n${diagramImport}`
+            );
+        }
+
+        // Add image section after container description (after the description line, before version badge)
+        if (hasImage) {
+            // Insert after description line and before the version badge div
+            mdxContent = mdxContent.replace(
+                /(^## Overview\n\n[\s\S]*?\n)(\n<div style="background-color)/m,
+                `$1${imageSection}$2`
+            );
+        }
 
         // Use kebab-case for file name
         const fileName = toKebabCase(containerInfo.containerName);
