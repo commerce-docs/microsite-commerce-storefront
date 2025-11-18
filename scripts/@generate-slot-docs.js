@@ -125,8 +125,12 @@ function scanForSlots(repoPath) {
 
 /**
  * Generate slots content for documentation
+ * 
+ * @param {Array} containers - Array of containers with slots
+ * @param {Object} enrichmentData - Optional enrichment data for slots
+ * @returns {string} Generated MDX content for slots
  */
-function generateSlotsContent(containers) {
+function generateSlotsContent(containers, enrichmentData = null) {
     if (containers.length === 0) {
         return ''; // No additional content needed for empty slots
     }
@@ -136,11 +140,19 @@ function generateSlotsContent(containers) {
     for (const container of containers) {
         content += `## ${container.containerName} slots\n\n`;
         content += `The slots for the \`${container.containerName}\` container allow you to customize its appearance and behavior.\n\n`;
-        content += '```js\n';
-        content += `interface ${container.containerName}Props\n\n`;
-        content += 'slots?: {\n';
-        content += container.slotsInterface;
-        content += '\n};\n';
+        content += '```typescript\n';
+        content += `interface ${container.containerName}Props {\n`;
+        content += '  slots?: {\n';
+
+        // Indent the slots interface content
+        const indentedSlots = container.slotsInterface
+            .split('\n')
+            .map(line => line.trim() ? `    ${line}` : '')
+            .join('\n');
+        content += indentedSlots;
+
+        content += '\n  };\n';
+        content += '}\n';
         content += '```\n\n';
 
         // Parse individual slots for detailed documentation sections
@@ -152,11 +164,44 @@ function generateSlotsContent(containers) {
             slots.push(match[1]);
         }
 
-        // Generate placeholder sections for each slot
+        // Generate sections for each slot
         if (slots.length > 0) {
             for (const slotName of slots) {
                 content += `### ${slotName} slot\n\n`;
-                content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
+
+                // Use enrichment data if available
+                const slotEnrichment = enrichmentData?.[slotName];
+
+                if (slotEnrichment?.description) {
+                    // Use enriched description
+                    content += `${slotEnrichment.description}\n\n`;
+
+                    // Add context properties section if available
+                    if (slotEnrichment.context_properties && Object.keys(slotEnrichment.context_properties).length > 0) {
+                        content += `#### Context properties\n\n`;
+                        content += `The slot receives the following context properties:\n\n`;
+
+                        for (const [propName, propData] of Object.entries(slotEnrichment.context_properties)) {
+                            content += `- **\`${propName}\`** - ${propData.description}\n`;
+                        }
+                        content += `\n`;
+                    }
+
+                    // Add usage scenarios if available
+                    if (slotEnrichment.usage_scenarios && slotEnrichment.usage_scenarios.length > 0) {
+                        content += `#### Usage scenarios\n\n`;
+                        for (const scenario of slotEnrichment.usage_scenarios) {
+                            content += `- ${scenario}\n`;
+                        }
+                        content += `\n`;
+                    }
+                } else {
+                    // Fallback to generic description
+                    content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
+                }
+
+                // Add example
+                content += `#### Example\n\n`;
                 content += '```js\n';
                 content += ` provider.render(${container.containerName}, {\n`;
                 content += '  slots: {\n';
@@ -186,14 +231,9 @@ function generateSummaryTable(containers) {
         return '';
     }
 
-    let table = '<table>\n';
-    table += '<thead>\n';
-    table += '<tr>\n';
-    table += '<th style="white-space: nowrap;">Container</th>\n';
-    table += '<th>Slots</th>\n';
-    table += '</tr>\n';
-    table += '</thead>\n';
-    table += '<tbody>\n';
+    let table = '<TableWrapper nowrap={[0]}>\n\n';
+    table += '| Container | Slots |\n';
+    table += '|-----------|-------|\n';
 
     for (const container of containers) {
         // Parse slot names from the interface
@@ -203,23 +243,18 @@ function generateSummaryTable(containers) {
         const slots = [];
 
         while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
-            slots.push(`<code>${match[1]}</code>`);
+            slots.push(`\`${match[1]}\``);
         }
 
         const slotsList = slots.length > 0 ? slots.join(', ') : 'None';
 
         // Create anchor link to the container's section
         const anchorId = `${container.containerName.toLowerCase()}-slots`;
-        const containerLink = `<a href="#${anchorId}"><code>${container.containerName}</code></a>`;
 
-        table += '<tr>\n';
-        table += `<td style="white-space: nowrap;">${containerLink}</td>\n`;
-        table += `<td>${slotsList}</td>\n`;
-        table += '</tr>\n';
+        table += `| [\`${container.containerName}\`](#${anchorId}) | ${slotsList} |\n`;
     }
 
-    table += '</tbody>\n';
-    table += '</table>\n';
+    table += '\n</TableWrapper>\n\n';
 
     return table;
 }
@@ -242,7 +277,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
 
     // Generate summary table, examples, and detailed content
     const summaryTable = generateSummaryTable(containers);
-    const slotsContent = generateSlotsContent(containers);
+    const slotsContent = generateSlotsContent(containers, enrichmentData);
 
     // Generate intro text based on whether slots exist
     let introText;
@@ -276,7 +311,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
+        'DROPIN_VERSION': cleanVersion(version),
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
         'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example
