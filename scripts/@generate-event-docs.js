@@ -1065,6 +1065,47 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
 
+        // Generate WHEN_TRIGGERED_SECTION from enrichment
+        let whenTriggeredSection = '';
+        // Reuse eventEnrichment already declared earlier
+        if (eventEnrichment?.whenTriggered && eventEnrichment.whenTriggered.length > 0) {
+            whenTriggeredSection += '#### When triggered\n\n';
+            eventEnrichment.whenTriggered.forEach(item => {
+                whenTriggeredSection += `- ${item}\n`;
+            });
+            whenTriggeredSection += '\n';
+        }
+        eventSection = eventSection.replace(/WHEN_TRIGGERED_SECTION/g, whenTriggeredSection);
+
+        // Generate EXAMPLES_SECTION from enrichment
+        let examplesSection = '';
+        if (eventEnrichment?.examples && eventEnrichment.examples.length > 0) {
+            eventEnrichment.examples.forEach((example, index) => {
+                const exampleNumber = eventEnrichment.examples.length > 1 ? ` ${index + 1}` : '';
+                examplesSection += `#### Example${exampleNumber}: ${example.title}\n\n`;
+                examplesSection += `${example.code}\n\n`;
+            });
+        } else {
+            // Fallback: generate basic example if no enrichment
+            examplesSection += '#### Example\n\n';
+            examplesSection += '```js\n';
+            examplesSection += `import { events } from '@dropins/tools/event-bus.js';\n\n`;
+            examplesSection += `events.on('${eventName}', (payload) => {\n`;
+            examplesSection += `  console.log('${eventName} event received:', payload);\n`;
+            examplesSection += `  // Add your custom logic here\n`;
+            examplesSection += `});\n`;
+            examplesSection += '```\n\n';
+        }
+        eventSection = eventSection.replace(/EXAMPLES_SECTION/g, examplesSection);
+
+        // Generate USAGE_SCENARIOS_SECTION from enrichment
+        let usageScenariosSection = '';
+        if (eventEnrichment?.usageScenarios) {
+            usageScenariosSection += '#### Usage scenarios\n\n';
+            usageScenariosSection += `${eventEnrichment.usageScenarios}\n\n`;
+        }
+        eventSection = eventSection.replace(/USAGE_SCENARIOS_SECTION/g, usageScenariosSection);
+
         eventsContent += eventSection;
     });
 
