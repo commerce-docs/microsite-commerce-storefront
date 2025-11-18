@@ -1,4 +1,88 @@
 {
-  "overview": "The **Requisition List** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations. These events enable real-time updates for requisition list operations, including list creation, item management, and cart integration."
+  "overview": "The **Requisition List** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations. These events enable real-time updates for requisition list operations, including list creation, item management, and cart integration.",
+  "requisitionList/alert": {
+    "whenTriggered": [
+      "After successful list operations (create, update, delete)",
+      "After adding items to cart from a list",
+      "After item operations (add, update, remove)",
+      "On operation errors or validation failures"
+    ],
+    "examples": [
+      {
+        "title": "Example",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\nevents.on('requisitionList/alert', (payload) => {\n  const { type, message } = payload.data;\n  \n  // Display alert using your notification system\n  showNotification({\n    type,\n    message,\n    duration: type === 'error' ? 5000 : 3000\n  });\n  \n  console.log(`${type.toUpperCase()}: ${message}`);\n});\n```"
+      }
+    ],
+    "usageScenarios": "- Display toast notifications\n- Show inline error messages\n- Log user actions for analytics\n- Trigger accessibility announcements\n- Update status indicators\n\n---"
+  },
+  "requisitionList/data": {
+    "whenTriggered": [
+      "After loading a requisition list",
+      "After adding items to the list",
+      "After removing items from the list",
+      "After updating item quantities",
+      "After updating list details (name, description)"
+    ],
+    "examples": [
+      {
+        "title": "Basic list data handler",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\nevents.on('requisitionList/data', (payload) => {\n  const list = payload.data;\n  \n  console.log(`List \"${list.name}\" updated`);\n  console.log(`Total items: ${list.items.length}`);\n  \n  // Update the UI\n  updateListDisplay(list);\n  \n  // Update item count badge\n  updateItemCount(list.items.length);\n  \n  // Refresh totals\n  calculateListTotals(list.items);\n});\n```"
+      },
+      {
+        "title": "Add entire requisition list to cart",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\nimport { addRequisitionListItemsToCart } from '@dropins/storefront-requisition-list/api.js';\n\nclass QuickCartIntegration {\n  constructor() {\n    events.on('requisitionList/data', this.handleListData.bind(this));\n    events.on('cart/updated', this.handleCartUpdated.bind(this));\n  }\n  \n  handleListData(payload) {\n    const list = payload.data;\n    \n    // Add quick-add button to UI\n    this.renderQuickAddButton(list);\n  }\n  \n  renderQuickAddButton(list) {\n    const button = document.createElement('button');\n    button.className = 'quick-add-to-cart';\n    button.textContent = `Add all ${list.items.length} items to cart`;\n    button.onclick = () => this.addAllToCart(list);\n    \n    document.querySelector('#list-actions').appendChild(button);\n  }\n  \n  async addAllToCart(list) {\n    try {\n      showLoadingOverlay('Adding items to cart...');\n      \n      // Add all items from requisition list to cart\n      await addRequisitionListItemsToCart({\n        requisitionListUid: list.uid,\n        requisitionListItems: list.items.map(item => ({\n          uid: item.uid,\n          quantity: item.quantity\n        }))\n      });\n      \n      hideLoadingOverlay();\n      showSuccessNotification(`Added ${list.items.length} items to cart`);\n      \n      // Redirect to cart\n      setTimeout(() => window.location.href = '/cart', 1500);\n      \n    } catch (error) {\n      hideLoadingOverlay();\n      showErrorNotification('Failed to add items: ' + error.message);\n    }\n  }\n  \n  handleCartUpdated(payload) {\n    // Update cart badge\n    document.querySelector('.cart-count').textContent = payload.data.itemCount;\n  }\n}\n\nconst quickCart = new QuickCartIntegration();\n```"
+      },
+      {
+        "title": "Selective cart integration with inventory check",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\nimport { addToCart } from '@dropins/storefront-cart/api.js';\n\nclass SelectiveCartManager {\n  constructor() {\n    this.selectedItems = new Set();\n    \n    events.on('requisitionList/data', this.handleListData.bind(this));\n  }\n  \n  handleListData(payload) {\n    const list = payload.data;\n    \n    // Render list with selection checkboxes\n    this.renderSelectableList(list);\n  }\n  \n  renderSelectableList(list) {\n    const container = document.querySelector('#list-items');\n    \n    container.innerHTML = list.items.map(item => `\n      <div class=\"list-item ${item.available ? '' : 'out-of-stock'}\">\n        <input \n          type=\"checkbox\" \n          data-sku=\"${item.sku}\"\n          ${item.available ? '' : 'disabled'}\n          onchange=\"window.cartManager.toggleItem('${item.sku}', this.checked)\"\n        />\n        <div class=\"item-info\">\n          <h4>${item.name}</h4>\n          <p>SKU: ${item.sku} | Qty: ${item.quantity}</p>\n          ${!item.available ? '<span class=\"badge\">Out of Stock</span>' : ''}\n        </div>\n      </div>\n    `).join('');\n    \n    // Add bulk action button\n    this.addBulkActionButton();\n  }\n  \n  toggleItem(sku, checked) {\n    if (checked) {\n      this.selectedItems.add(sku);\n    } else {\n      this.selectedItems.delete(sku);\n    }\n    this.updateBulkButton();\n  }\n  \n  addBulkActionButton() {\n    const button = document.createElement('button');\n    button.id = 'add-selected';\n    button.textContent = 'Add selected to cart';\n    button.disabled = true;\n    button.onclick = () => this.addSelectedToCart();\n    \n    document.querySelector('#bulk-actions').appendChild(button);\n  }\n  \n  updateBulkButton() {\n    const button = document.querySelector('#add-selected');\n    const count = this.selectedItems.size;\n    \n    button.disabled = count === 0;\n    button.textContent = count > 0 \n      ? `Add ${count} selected items to cart`\n      : 'Select items to add';\n  }\n  \n  async addSelectedToCart() {\n    const items = Array.from(this.selectedItems);\n    \n    try {\n      showLoadingOverlay(`Adding ${items.length} items...`);\n      \n      for (const sku of items) {\n        const item = this.findItemBySku(sku);\n        await addToCart({\n          sku: item.sku,\n          quantity: item.quantity,\n          selectedOptions: item.selectedOptions\n        });\n      }\n      \n      hideLoadingOverlay();\n      showSuccessNotification(`Added ${items.length} items to cart`);\n      \n      // Clear selection\n      this.selectedItems.clear();\n      this.updateBulkButton();\n      \n      // Redirect\n      window.location.href = '/cart';\n      \n    } catch (error) {\n      hideLoadingOverlay();\n      showErrorNotification('Failed to add items: ' + error.message);\n    }\n  }\n  \n  findItemBySku(sku) {\n    // Helper to find item data\n    return this.currentList.items.find(item => item.sku === sku);\n  }\n}\n\n// Make globally accessible\nwindow.cartManager = new SelectiveCartManager();\n```"
+      }
+    ],
+    "usageScenarios": "- Refresh list details view after changes\n- Update item count displays and badges\n- Recalculate list totals and pricing\n- Update caching or local storage\n- Enable/disable action buttons based on list state\n- Add entire requisition lists to cart with one click\n- Implement selective item-to-cart workflows\n- Handle inventory availability in real-time\n- Track cart conversions from requisition lists\n- Show progress during bulk add operations\n\n---"
+  },
+  "requisitionList/initialized": {
+    "whenTriggered": [
+      "After `initialize()` function completes",
+      "On drop-in first load",
+      "After configuration is applied"
+    ],
+    "examples": [
+      {
+        "title": "Example",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\nevents.on('requisitionList/initialized', () => {\n  console.log('Requisition List drop-in ready');\n  \n  // Load initial data\n  loadRequisitionLists();\n  \n  // Enable UI interactions\n  enableRequisitionListFeatures();\n  \n  // Track analytics\n  trackRequisitionListEnabled();\n});\n```"
+      }
+    ],
+    "usageScenarios": "- Load initial requisition lists\n- Enable feature-specific UI elements\n- Initialize dependent components\n- Track feature availability\n- Set up additional event listeners\n\n---"
+  },
+  "requisitionList/redirect": {
+    "whenTriggered": [
+      "After creating a new requisition list",
+      "After adding items to cart from a list",
+      "After deleting a list",
+      "On navigation between list views",
+      "After successful operations requiring page change"
+    ],
+    "examples": [
+      {
+        "title": "Example",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\nevents.on('requisitionList/redirect', (payload) => {\n  const { url, type } = payload.data;\n  \n  console.log(`Redirect request: ${type} -> ${url}`);\n  \n  // Handle different redirect types\n  switch (type) {\n    case 'cart':\n      // Navigate to cart page\n      window.location.href = url;\n      break;\n    case 'list-view':\n      // Navigate to specific list\n      navigateToList(url);\n      break;\n    case 'lists-overview':\n      // Navigate to lists overview\n      navigateToListsOverview(url);\n      break;\n    default:\n      // Standard navigation\n      window.location.href = url;\n  }\n});\n```"
+      }
+    ],
+    "usageScenarios": "- Navigate after list creation\n- Redirect to cart after adding items\n- Return to lists overview after deletion\n- Handle post-operation navigation\n- Implement custom routing logic\n\n---"
+  },
+  "requisitionLists/data": {
+    "whenTriggered": [
+      "After loading requisition lists",
+      "After creating a new list",
+      "After deleting a list",
+      "After list collection changes",
+      "On pagination or filtering"
+    ],
+    "examples": [
+      {
+        "title": "Example",
+        "code": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\nevents.on('requisitionLists/data', (payload) => {\n  const { items, totalCount } = payload.data;\n  \n  console.log(`${totalCount} requisition lists loaded`);\n  \n  // Update lists display\n  renderRequisitionLists(items);\n  \n  // Update pagination\n  updatePagination({\n    total: totalCount,\n    current: payload.data.currentPage,\n    pageSize: payload.data.pageSize\n  });\n  \n  // Update empty state\n  if (items.length === 0) {\n    showEmptyState();\n  } else {\n    hideEmptyState();\n  }\n});\n```"
+      }
+    ],
+    "usageScenarios": "- Render lists grid or table\n- Update list count displays\n- Handle pagination\n- Show/hide empty states\n- Update filters and sorting\n- Cache lists data\n\n---\n\n## Listening to events\n\nAll Requisition List events are emitted through the centralized event bus:\n\n```js\nimport { events } from '@dropins/tools/event-bus.js';\n\n// Listen to list data events\nevents.on('requisitionList/data', handleListUpdate);\nevents.on('requisitionLists/data', handleListsUpdate);\n\n// Listen to UI events\nevents.on('requisitionList/alert', handleAlert);\nevents.on('requisitionList/redirect', handleRedirect);\n\n// Listen to initialization\nevents.on('requisitionList/initialized', handleInit);\n\n// Clean up listeners when done\nevents.off('requisitionList/data', handleListUpdate);\nevents.off('requisitionList/alert', handleAlert);\n```\n\n<Aside type=\"tip\">\nThe `requisitionList/alert` event provides a standardized way to display feedback to users. Consider implementing a global alert handler rather than handling alerts in individual components.\n</Aside>\n\n<Aside type=\"note\">\nThe `requisitionList/redirect` event is advisory - your application controls whether to honor the redirect request. This allows you to implement custom routing logic or prevent navigation in certain scenarios.\n</Aside>\n\n## Event flow examples"
+  }
 }
-
