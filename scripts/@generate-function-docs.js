@@ -372,18 +372,29 @@ function scanForFunctions(repoPath) {
     }
 
     try {
-        // SPECIAL CASE: Check for index.d.ts with all exports (e.g., Company Switcher)
-        // Some drop-ins export all functions from a single index.d.ts instead of individual directories
+        // SPECIAL CASE: Check for index.ts or index.d.ts with all exports (e.g., Company Switcher)
+        // Some drop-ins export all functions from a single index file instead of individual directories
+        const apiIndexTs = join(apiPath, 'index.ts');
         const apiIndexDts = join(apiPath, 'index.d.ts');
-        if (existsSync(apiIndexDts)) {
-            const indexContent = readFileSync(apiIndexDts, 'utf8');
+        const apiIndexFile = existsSync(apiIndexTs) ? apiIndexTs : (existsSync(apiIndexDts) ? apiIndexDts : null);
+        
+        if (apiIndexFile) {
+            const indexContent = readFileSync(apiIndexFile, 'utf8');
 
-            // Look for subdirectory exports: export * from './customerCompanyContext';
-            const exportPattern = /export\s+\*\s+from\s+['"]\.\/([\w-]+)['"]/g;
+            // Look for subdirectory exports: 
+            // - export * from './customerCompanyContext';
+            // - export * from '@/company-switcher/api/customerCompanyContext';
+            const relativePattern = /export\s+\*\s+from\s+['"]\.\/([\w-]+)['"]/g;
+            const absolutePattern = /export\s+\*\s+from\s+['"]@\/[\w-]+\/api\/([\w-]+)['"]/g;
             let match;
             const exportedDirs = [];
-
-            while ((match = exportPattern.exec(indexContent)) !== null) {
+            
+            while ((match = relativePattern.exec(indexContent)) !== null) {
+                exportedDirs.push(match[1]);
+            }
+            
+            // Reset lastIndex for second pattern
+            while ((match = absolutePattern.exec(indexContent)) !== null) {
                 exportedDirs.push(match[1]);
             }
 
@@ -392,40 +403,54 @@ function scanForFunctions(repoPath) {
                 const dirPath = join(apiPath, dirName);
                 if (!existsSync(dirPath)) continue;
 
-                // Check for index.d.ts or dirName.d.ts in this subdirectory
+                // Check for .ts or .d.ts files in this subdirectory
+                const subIndexTs = join(dirPath, 'index.ts');
                 const subIndexDts = join(dirPath, 'index.d.ts');
+                const subFileTs = join(dirPath, `${dirName}.ts`);
                 const subFileDts = join(dirPath, `${dirName}.d.ts`);
-                const dtsFile = existsSync(subFileDts) ? subFileDts :
-                    (existsSync(subIndexDts) ? subIndexDts : null);
+                
+                const sourceFile = existsSync(subFileTs) ? subFileTs :
+                                 (existsSync(subFileDts) ? subFileDts :
+                                 (existsSync(subIndexTs) ? subIndexTs :
+                                 (existsSync(subIndexDts) ? subIndexDts : null)));
+                
+                if (!sourceFile) continue;
+                
+                const sourceContent = readFileSync(sourceFile, 'utf8');
 
-                if (!dtsFile) continue;
-
-                const dtsContent = readFileSync(dtsFile, 'utf8');
-
-                // Extract function names: export declare const functionName: ...
-                const funcPattern = /export\s+declare\s+const\s+(\w+)\s*:/g;
+                // Extract function names from both .ts and .d.ts files:
+                // - .d.ts: export declare const functionName: ...
+                // - .ts: export const functionName = ...
+                const funcPatterns = [
+                    /export\s+declare\s+const\s+(\w+)\s*:/g,  // .d.ts format
+                    /export\s+const\s+(\w+)\s*=/g              // .ts format
+                ];
                 let funcMatch;
 
-                while ((funcMatch = funcPattern.exec(dtsContent)) !== null) {
-                    const functionName = funcMatch[1];
+                for (const funcPattern of funcPatterns) {
+                    while ((funcMatch = funcPattern.exec(sourceContent)) !== null) {
+                        const functionName = funcMatch[1];
 
-                    // Skip internal functions
-                    if (functionName.startsWith('_') || functionName.includes('Internal')) {
-                        continue;
-                    }
+                        // Skip internal functions or classes
+                        if (functionName.startsWith('_') || functionName.includes('Internal') || 
+                            // Skip classes (they start with uppercase)
+                            functionName[0] === functionName[0].toUpperCase()) {
+                            continue;
+                        }
 
-                    console.log(`  ✓ Found .d.ts-only function: ${functionName} (in ${dirName}/)`);
+                        console.log(`  ✓ Found .ts function: ${functionName} (in ${dirName}/)`);
 
-                    // Extract signature
-                    const signature = extractFunctionSignature(dtsContent, functionName);
+                        // Extract signature
+                        const signature = extractFunctionSignature(sourceContent, functionName);
 
-                    if (signature) {
-                        functions.push({
-                            name: functionName,
-                            mdxContent: null,
-                            signature,
-                            mdxPath: null
-                        });
+                        if (signature) {
+                            functions.push({
+                                name: functionName,
+                                mdxContent: null,
+                                signature,
+                                mdxPath: null
+                            });
+                        }
                     }
                 }
             }
@@ -521,9 +546,12 @@ function extractFunctionSignature(tsContent, functionName) {
 
     // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
+        // .d.ts format: export declare const functionName: (...) => ...
         { regex: new RegExp(`export\\s+declare\\s+const\\s+${functionName}\\s*:\\s*\\(`, 's'), isAsync: true, isArrow: true, isDeclare: true },
+        // Arrow functions
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(`, 's'), isAsync: true, isArrow: true },
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(`, 's'), isAsync: false, isArrow: true },
+        // Regular functions
         { regex: new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: true, isArrow: false },
         { regex: new RegExp(`export\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: false, isArrow: false },
     ];
