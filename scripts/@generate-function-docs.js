@@ -377,7 +377,7 @@ function scanForFunctions(repoPath) {
         const apiIndexTs = join(apiPath, 'index.ts');
         const apiIndexDts = join(apiPath, 'index.d.ts');
         const apiIndexFile = existsSync(apiIndexTs) ? apiIndexTs : (existsSync(apiIndexDts) ? apiIndexDts : null);
-        
+
         if (apiIndexFile) {
             const indexContent = readFileSync(apiIndexFile, 'utf8');
 
@@ -388,11 +388,11 @@ function scanForFunctions(repoPath) {
             const absolutePattern = /export\s+\*\s+from\s+['"]@\/[\w-]+\/api\/([\w-]+)['"]/g;
             let match;
             const exportedDirs = [];
-            
+
             while ((match = relativePattern.exec(indexContent)) !== null) {
                 exportedDirs.push(match[1]);
             }
-            
+
             // Reset lastIndex for second pattern
             while ((match = absolutePattern.exec(indexContent)) !== null) {
                 exportedDirs.push(match[1]);
@@ -408,14 +408,14 @@ function scanForFunctions(repoPath) {
                 const subIndexDts = join(dirPath, 'index.d.ts');
                 const subFileTs = join(dirPath, `${dirName}.ts`);
                 const subFileDts = join(dirPath, `${dirName}.d.ts`);
-                
+
                 const sourceFile = existsSync(subFileTs) ? subFileTs :
-                                 (existsSync(subFileDts) ? subFileDts :
-                                 (existsSync(subIndexTs) ? subIndexTs :
-                                 (existsSync(subIndexDts) ? subIndexDts : null)));
-                
+                    (existsSync(subFileDts) ? subFileDts :
+                        (existsSync(subIndexTs) ? subIndexTs :
+                            (existsSync(subIndexDts) ? subIndexDts : null)));
+
                 if (!sourceFile) continue;
-                
+
                 const sourceContent = readFileSync(sourceFile, 'utf8');
 
                 // Extract function names from both .ts and .d.ts files:
@@ -432,7 +432,7 @@ function scanForFunctions(repoPath) {
                         const functionName = funcMatch[1];
 
                         // Skip internal functions or classes
-                        if (functionName.startsWith('_') || functionName.includes('Internal') || 
+                        if (functionName.startsWith('_') || functionName.includes('Internal') ||
                             // Skip classes (they start with uppercase)
                             functionName[0] === functionName[0].toUpperCase()) {
                             continue;
