@@ -1,0 +1,1836 @@
+---
+title: Quote Management Slots
+description: Customize UI sections in the Quote Management drop-in using slots.
+sidebar:
+  label: Slots
+  order: 5
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Quote Management drop-in exposes **79 slots** in **8 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.0-beta1</strong>
+</div>
+
+<TableWrapper nowrap={[0]}>
+
+| Container | Slots |
+|-----------|-------|
+| [`ItemsQuoted`](#itemsquoted-slots) | `ProductListTable`, `QuotePricesSummary` |
+| [`ItemsQuotedTemplate`](#itemsquotedtemplate-slots) | `ProductListTable`, `QuotePricesSummary` |
+| [`ManageNegotiableQuote`](#managenegotiablequote-slots) | `QuoteName`, `QuoteStatus`, `Banner`, `Details`, `ActionBar`, `QuoteContent`, `ItemsQuotedTab`, `CommentsTab`, `HistoryLogTab`, `ShippingInformationTitle`, `ShippingInformation`, `QuoteCommentsTitle`, `QuoteComments`, `AttachFilesField`, `AttachedFilesList`, `Footer` |
+| [`ManageNegotiableQuoteTemplate`](#managenegotiablequotetemplate-slots) | `TemplateName`, `TemplateId`, `Banner`, `Details`, `ActionBar`, `ReferenceDocumentsTitle`, `ReferenceDocuments`, `ItemsTable`, `ItemsQuotedTab`, `CommentsTab`, `HistoryLogTab`, `CommentsTitle`, `Comments`, `HistoryLogTitle`, `HistoryLog`, `Footer` |
+| [`QuoteSummaryList`](#quotesummarylist-slots) | `Heading`, `Footer`, `Thumbnail`, `ProductAttributes`, `QuoteSummaryFooter`, `QuoteItem`, `ItemTitle`, `ItemPrice`, `ItemTotal`, `ItemSku` |
+| [`QuoteTemplatesListTable`](#quotetemplateslisttable-slots) | `Name`, `State`, `Status`, `ValidUntil`, `MinQuoteTotal`, `OrdersPlaced`, `LastOrdered`, `Actions`, `EmptyTemplates`, `ItemRange`, `PageSizePicker`, `Pagination` |
+| [`QuotesListTable`](#quoteslisttable-slots) | `QuoteName`, `Created`, `CreatedBy`, `Status`, `LastUpdated`, `QuoteTemplate`, `QuoteTotal`, `Actions`, `EmptyQuotes`, `ItemRange`, `PageSizePicker`, `Pagination` |
+| [`RequestNegotiableQuoteForm`](#requestnegotiablequoteform-slots) | `ErrorBanner`, `SuccessBanner`, `Title`, `CommentField`, `QuoteNameField`, `AttachFileField`, `AttachedFilesList`, `RequestButton`, `SaveDraftButton` |
+
+</TableWrapper>
+
+
+
+## ItemsQuoted slots
+
+The slots for the `ItemsQuoted` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ItemsQuotedProps {
+  slots?: {
+    ProductListTable?: SlotProps<{
+    items: NegotiableQuoteModel['items'];
+    canEdit: boolean;
+    readOnly?: boolean;
+    onItemCheckboxChange?: (
+    item: NegotiableQuoteCartItem,
+    isSelected: boolean
+    ) => void;
+    onItemDropdownChange?: (
+    item: NegotiableQuoteCartItem,
+    action: string
+    ) => void;
+    onQuantityChange?: (
+    item: NegotiableQuoteCartItem,
+    newQuantity: number
+    ) => void;
+    onUpdate?: (e: SubmitEvent) => void;
+    dropdownSelections?: Record<string, string | undefined>;
+    }>;
+    QuotePricesSummary?: SlotProps<{
+    items: NegotiableQuoteModel['items'];
+    prices: NegotiableQuoteModel['prices'];
+    }>;
+  };
+}
+```
+
+### QuotePricesSummary slot
+
+The `QuotePricesSummary` slot allows you to customize the quote prices summary section of the `ItemsQuoted` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ItemsQuoted } from '@dropins/storefront-quote-management/containers/ItemsQuoted.js';
+
+await provider.render(ItemsQuoted, {
+  slots: {
+    QuotePricesSummary: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuotePricesSummary';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## ItemsQuotedTemplate slots
+
+The slots for the `ItemsQuotedTemplate` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ItemsQuotedTemplateProps {
+  slots?: {
+    ProductListTable?: SlotProps<{
+    items: NegotiableQuoteTemplateModel['items'];
+    canEdit: boolean;
+    onItemDropdownChange?: (item: any, action: string) => void;
+    dropdownSelections?: Record<string, string>;
+    }>;
+    QuotePricesSummary?: SlotProps<{
+    items: NegotiableQuoteTemplateModel['items'];
+    prices: NegotiableQuoteTemplateModel['prices'];
+    }>;
+  };
+}
+```
+
+### QuotePricesSummary slot
+
+The `QuotePricesSummary` slot allows you to customize the quote prices summary section of the `ItemsQuotedTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ItemsQuotedTemplate } from '@dropins/storefront-quote-management/containers/ItemsQuotedTemplate.js';
+
+await provider.render(ItemsQuotedTemplate, {
+  slots: {
+    QuotePricesSummary: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuotePricesSummary';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## ManageNegotiableQuote slots
+
+The slots for the `ManageNegotiableQuote` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ManageNegotiableQuoteProps {
+  slots?: {
+    QuoteName?: SlotProps<{
+    quoteName?: string;
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    QuoteStatus?: SlotProps<{
+    quoteStatus?: string;
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    Banner?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    Details?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    ActionBar?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    actionsBarDropdownValue?: string;
+    }>;
+    QuoteContent?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    ItemsQuotedTab?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    CommentsTab?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    HistoryLogTab?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    ShippingInformationTitle?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    ShippingInformation?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    loading?: boolean;
+    setLoading?: (loading: boolean) => void;
+    }>;
+    QuoteCommentsTitle?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    QuoteComments?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    }>;
+    AttachFilesField?: SlotProps<{
+    onFileChange: (files: File[]) => void;
+    attachedFiles: AttachedFile[];
+    fileUploadError: string | undefined;
+    disabled?: boolean;
+    }>;
+    AttachedFilesList?: SlotProps<{
+    files: AttachedFile[];
+    onRemove: (key: string) => void;
+    disabled?: boolean;
+    }>;
+    Footer?: SlotProps<{
+    quoteData?: NegotiableQuoteModel;
+    comment?: string;
+    isSubmitting?: boolean;
+    attachments?: AttachedFile[];
+    handleSendForReview: () => void;
+    }>;
+  };
+}
+```
+
+### QuoteName slot
+
+The `QuoteName` slot allows you to customize the quote name section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    QuoteName: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteName';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteStatus slot
+
+The `QuoteStatus` slot allows you to customize the quote status section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    QuoteStatus: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteStatus';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Banner slot
+
+The `Banner` slot allows you to customize the banner section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    Banner: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Banner';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Details slot
+
+The `Details` slot allows you to customize the details section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    Details: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Details';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ActionBar slot
+
+The `ActionBar` slot allows you to customize the action bar section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    ActionBar: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ActionBar';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteContent slot
+
+The `QuoteContent` slot allows you to customize the quote content section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    QuoteContent: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteContent';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemsQuotedTab slot
+
+The `ItemsQuotedTab` slot allows you to customize the items quoted tab section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    ItemsQuotedTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemsQuotedTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CommentsTab slot
+
+The `CommentsTab` slot allows you to customize the comments tab section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    CommentsTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CommentsTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### HistoryLogTab slot
+
+The `HistoryLogTab` slot allows you to customize the history log tab section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    HistoryLogTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom HistoryLogTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShippingInformationTitle slot
+
+The `ShippingInformationTitle` slot allows you to customize the shipping information title section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    ShippingInformationTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShippingInformationTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteCommentsTitle slot
+
+The `QuoteCommentsTitle` slot allows you to customize the quote comments title section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    QuoteCommentsTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteCommentsTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteComments slot
+
+The `QuoteComments` slot allows you to customize the quote comments section of the `ManageNegotiableQuote` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
+
+await provider.render(ManageNegotiableQuote, {
+  slots: {
+    QuoteComments: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteComments';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## ManageNegotiableQuoteTemplate slots
+
+The slots for the `ManageNegotiableQuoteTemplate` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ManageNegotiableQuoteTemplateProps {
+  slots?: {
+    TemplateName?: SlotProps<{
+    templateName?: string;
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    TemplateId?: SlotProps<{
+    templateId?: string;
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    Banner?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    Details?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    ActionBar?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    ReferenceDocumentsTitle?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    ReferenceDocuments?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    ItemsTable?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    ItemsQuotedTab?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    CommentsTab?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    HistoryLogTab?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    CommentsTitle?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    Comments?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    HistoryLogTitle?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    HistoryLog?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    }>;
+    Footer?: SlotProps<{
+    templateData?: NegotiableQuoteTemplateModel;
+    comment?: string;
+    isSubmitting?: boolean;
+    }>;
+  };
+}
+```
+
+### TemplateName slot
+
+The `TemplateName` slot allows you to customize the template name section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    TemplateName: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom TemplateName';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### TemplateId slot
+
+The `TemplateId` slot allows you to customize the template id section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    TemplateId: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom TemplateId';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Banner slot
+
+The `Banner` slot allows you to customize the banner section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    Banner: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Banner';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Details slot
+
+The `Details` slot allows you to customize the details section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    Details: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Details';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ActionBar slot
+
+The `ActionBar` slot allows you to customize the action bar section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    ActionBar: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ActionBar';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReferenceDocumentsTitle slot
+
+The `ReferenceDocumentsTitle` slot allows you to customize the reference documents title section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    ReferenceDocumentsTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReferenceDocumentsTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReferenceDocuments slot
+
+The `ReferenceDocuments` slot allows you to customize the reference documents section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    ReferenceDocuments: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReferenceDocuments';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemsTable slot
+
+The `ItemsTable` slot allows you to customize the items table section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    ItemsTable: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemsTable';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemsQuotedTab slot
+
+The `ItemsQuotedTab` slot allows you to customize the items quoted tab section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    ItemsQuotedTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemsQuotedTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CommentsTab slot
+
+The `CommentsTab` slot allows you to customize the comments tab section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    CommentsTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CommentsTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### HistoryLogTab slot
+
+The `HistoryLogTab` slot allows you to customize the history log tab section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    HistoryLogTab: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom HistoryLogTab';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CommentsTitle slot
+
+The `CommentsTitle` slot allows you to customize the comments title section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    CommentsTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CommentsTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Comments slot
+
+The `Comments` slot allows you to customize the comments section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    Comments: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Comments';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### HistoryLogTitle slot
+
+The `HistoryLogTitle` slot allows you to customize the history log title section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    HistoryLogTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom HistoryLogTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### HistoryLog slot
+
+The `HistoryLog` slot allows you to customize the history log section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    HistoryLog: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom HistoryLog';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The `Footer` slot allows you to customize the footer section of the `ManageNegotiableQuoteTemplate` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
+
+await provider.render(ManageNegotiableQuoteTemplate, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## QuoteSummaryList slots
+
+The slots for the `QuoteSummaryList` container allow you to customize its appearance and behavior.
+
+```typescript
+interface QuoteSummaryListProps {
+  slots?: {
+    Heading?: SlotProps<{ count: number; quoteId: string }>;
+    Footer?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+    Thumbnail?: SlotProps<{
+    item: NegotiableQuoteItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+    ProductAttributes?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+    QuoteSummaryFooter?: SlotProps<{
+    displayMaxItems: boolean;
+    }>;
+    QuoteItem?: SlotProps;
+    ItemTitle?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+    ItemPrice?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+    ItemTotal?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+    ItemSku?: SlotProps<{ item: NegotiableQuoteItemModel }>;
+  };
+}
+```
+
+### Heading slot
+
+The `Heading` slot allows you to customize the heading section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    Heading: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Footer slot
+
+The `Footer` slot allows you to customize the footer section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Thumbnail slot
+
+The `Thumbnail` slot allows you to customize the thumbnail section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    Thumbnail: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Thumbnail';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ProductAttributes slot
+
+The `ProductAttributes` slot allows you to customize the product attributes section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    ProductAttributes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ProductAttributes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteSummaryFooter slot
+
+The `QuoteSummaryFooter` slot allows you to customize the quote summary footer section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    QuoteSummaryFooter: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteSummaryFooter';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteItem slot
+
+The `QuoteItem` slot allows you to customize the quote item section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    QuoteItem: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteItem';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemTitle slot
+
+The `ItemTitle` slot allows you to customize the item title section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    ItemTitle: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTitle';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemPrice slot
+
+The `ItemPrice` slot allows you to customize the item price section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    ItemPrice: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemPrice';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemTotal slot
+
+The `ItemTotal` slot allows you to customize the item total section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    ItemTotal: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemTotal';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemSku slot
+
+The `ItemSku` slot allows you to customize the item sku section of the `QuoteSummaryList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteSummaryList } from '@dropins/storefront-quote-management/containers/QuoteSummaryList.js';
+
+await provider.render(QuoteSummaryList, {
+  slots: {
+    ItemSku: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemSku';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## QuoteTemplatesListTable slots
+
+The slots for the `QuoteTemplatesListTable` container allow you to customize its appearance and behavior.
+
+```typescript
+interface QuoteTemplatesListTableProps {
+  slots?: {
+    Name?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    State?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    Status?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    ValidUntil?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    MinQuoteTotal?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    OrdersPlaced?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    LastOrdered?: SlotProps<{ template: NegotiableQuoteTemplateListEntry }>;
+    Actions?: SlotProps<{
+    template: NegotiableQuoteTemplateListEntry;
+    onViewQuoteTemplate?: (id: string, name: string, status: string) => void;
+    onGenerateQuoteFromTemplate?: (id: string, name: string) => void;
+    }>;
+    EmptyTemplates?: SlotProps;
+    ItemRange?: SlotProps<{
+    startItem: number;
+    endItem: number;
+    totalCount: number;
+    currentPage: number;
+    pageSize: number;
+    }>;
+    PageSizePicker?: SlotProps<{
+    pageSize: number;
+    pageSizeOptions: number[];
+    onPageSizeChange?: (pageSize: number) => void;
+    }>;
+    Pagination?: SlotProps<{
+    currentPage: number;
+    totalPages: number;
+    onChange?: (page: number) => void;
+    }>;
+  };
+}
+```
+
+### Name slot
+
+The `Name` slot allows you to customize the name section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    Name: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Name';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### State slot
+
+The `State` slot allows you to customize the state section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    State: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom State';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Status slot
+
+The `Status` slot allows you to customize the status section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    Status: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Status';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ValidUntil slot
+
+The `ValidUntil` slot allows you to customize the valid until section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    ValidUntil: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ValidUntil';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### MinQuoteTotal slot
+
+The `MinQuoteTotal` slot allows you to customize the min quote total section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    MinQuoteTotal: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom MinQuoteTotal';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### OrdersPlaced slot
+
+The `OrdersPlaced` slot allows you to customize the orders placed section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    OrdersPlaced: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom OrdersPlaced';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### LastOrdered slot
+
+The `LastOrdered` slot allows you to customize the last ordered section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    LastOrdered: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom LastOrdered';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### EmptyTemplates slot
+
+The `EmptyTemplates` slot allows you to customize the empty templates section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    EmptyTemplates: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom EmptyTemplates';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemRange slot
+
+The `ItemRange` slot allows you to customize the item range section of the `QuoteTemplatesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuoteTemplatesListTable } from '@dropins/storefront-quote-management/containers/QuoteTemplatesListTable.js';
+
+await provider.render(QuoteTemplatesListTable, {
+  slots: {
+    ItemRange: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemRange';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## QuotesListTable slots
+
+The slots for the `QuotesListTable` container allow you to customize its appearance and behavior.
+
+```typescript
+interface QuotesListTableProps {
+  slots?: {
+    QuoteName?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    Created?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    CreatedBy?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    Status?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    LastUpdated?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    QuoteTemplate?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    QuoteTotal?: SlotProps<{ quote: NegotiableQuoteListEntry }>;
+    Actions?: SlotProps<{
+    quote: NegotiableQuoteListEntry;
+    onViewQuote?: (id: string, name: string, status: string) => void;
+    }>;
+    EmptyQuotes?: SlotProps;
+    ItemRange?: SlotProps<{
+    startItem: number;
+    endItem: number;
+    totalCount: number;
+    currentPage: number;
+    pageSize: number;
+    }>;
+    PageSizePicker?: SlotProps<{
+    pageSize: number;
+    pageSizeOptions: number[];
+    onPageSizeChange?: (pageSize: number) => void;
+    }>;
+    Pagination?: SlotProps<{
+    currentPage: number;
+    totalPages: number;
+    onChange?: (page: number) => void;
+    }>;
+  };
+}
+```
+
+### QuoteName slot
+
+The `QuoteName` slot allows you to customize the quote name section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    QuoteName: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteName';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Created slot
+
+The `Created` slot allows you to customize the created section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    Created: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Created';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CreatedBy slot
+
+The `CreatedBy` slot allows you to customize the created by section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    CreatedBy: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CreatedBy';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Status slot
+
+The `Status` slot allows you to customize the status section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    Status: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Status';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### LastUpdated slot
+
+The `LastUpdated` slot allows you to customize the last updated section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    LastUpdated: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom LastUpdated';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteTemplate slot
+
+The `QuoteTemplate` slot allows you to customize the quote template section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    QuoteTemplate: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteTemplate';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteTotal slot
+
+The `QuoteTotal` slot allows you to customize the quote total section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    QuoteTotal: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteTotal';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### EmptyQuotes slot
+
+The `EmptyQuotes` slot allows you to customize the empty quotes section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    EmptyQuotes: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom EmptyQuotes';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ItemRange slot
+
+The `ItemRange` slot allows you to customize the item range section of the `QuotesListTable` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { QuotesListTable } from '@dropins/storefront-quote-management/containers/QuotesListTable.js';
+
+await provider.render(QuotesListTable, {
+  slots: {
+    ItemRange: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ItemRange';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## RequestNegotiableQuoteForm slots
+
+The slots for the `RequestNegotiableQuoteForm` container allow you to customize its appearance and behavior.
+
+```typescript
+interface RequestNegotiableQuoteFormProps {
+  slots?: {
+    ErrorBanner?: SlotProps<{
+    message: string,
+    }>;
+    SuccessBanner?: SlotProps<{
+    message: string,
+    }>;
+    Title?: SlotProps<{
+    text: string,
+    }>;
+    CommentField?: SlotProps<{
+    formErrors: Record<string, string>;
+    isFormDisabled: boolean;
+    setFormErrors: (errors: Record<string, string>) => void;
+    }>;
+    QuoteNameField?: SlotProps<{
+    formErrors: Record<string, string>;
+    isFormDisabled: boolean;
+    setFormErrors: (errors: Record<string, string>) => void;
+    }>;
+    AttachFileField?: SlotProps<{
+    onChange: (files: File[]) => void, formErrors: Record<string, string>,
+    isFormDisabled: boolean,
+    attachedFiles: AttachedFile[]
+    }>;
+    AttachedFilesList?: SlotProps<{
+    files: AttachedFile[];
+    onRemove: (key: string) => void;
+    disabled?: boolean;
+    }>;
+    RequestButton?: SlotProps<{
+    requestNegotiableQuote: typeof requestNegotiableQuote;
+    formErrors: Record<string, string>;
+    isFormDisabled: boolean;
+    setIsFormDisabled: (isFormDisabled: boolean) => void;
+    }>;
+    SaveDraftButton?: SlotProps<{
+    requestNegotiableQuote: typeof requestNegotiableQuote;
+    formErrors: Record<string, string>;
+    isFormDisabled: boolean;
+    setIsFormDisabled: (isFormDisabled: boolean) => void;
+    }>;
+  };
+}
+```
+
+### ErrorBanner slot
+
+The `ErrorBanner` slot allows you to customize the error banner section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    ErrorBanner: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ErrorBanner';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SuccessBanner slot
+
+The `SuccessBanner` slot allows you to customize the success banner section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    SuccessBanner: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SuccessBanner';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Title slot
+
+The `Title` slot allows you to customize the title section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    Title: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Title';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CommentField slot
+
+The `CommentField` slot allows you to customize the comment field section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    CommentField: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CommentField';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### QuoteNameField slot
+
+The `QuoteNameField` slot allows you to customize the quote name field section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    QuoteNameField: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom QuoteNameField';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RequestButton slot
+
+The `RequestButton` slot allows you to customize the request button section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    RequestButton: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom RequestButton';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### SaveDraftButton slot
+
+The `SaveDraftButton` slot allows you to customize the save draft button section of the `RequestNegotiableQuoteForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-quote-management/render.js';
+import { RequestNegotiableQuoteForm } from '@dropins/storefront-quote-management/containers/RequestNegotiableQuoteForm.js';
+
+await provider.render(RequestNegotiableQuoteForm, {
+  slots: {
+    SaveDraftButton: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom SaveDraftButton';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-quote-management */}
