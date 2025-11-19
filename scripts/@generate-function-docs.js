@@ -422,9 +422,11 @@ function scanForFunctions(repoPath) {
                 // Extract function names from both .ts and .d.ts files:
                 // - .d.ts: export declare const functionName: ...
                 // - .ts: export const functionName = ...
+                // - index.ts re-exports: export { functionName } from './file'
                 const funcPatterns = [
                     /export\s+declare\s+const\s+(\w+)\s*:/g,  // .d.ts format
-                    /export\s+const\s+(\w+)\s*=/g              // .ts format
+                    /export\s+const\s+(\w+)\s*=/g,             // .ts format
+                    /export\s+\{\s*(\w+)\s*\}\s+from/g         // re-export format
                 ];
                 let funcMatch;
 
@@ -441,8 +443,22 @@ function scanForFunctions(repoPath) {
 
                         console.log(`  ✓ Found .ts function: ${functionName} (in ${dirName}/)`);
 
+                        // For re-exported functions, try to find the actual implementation file
+                        let signatureContent = sourceContent;
+                        if (funcPattern.source.includes('from')) {
+                            // This is a re-export, try to find the actual implementation
+                            const reExportMatch = sourceContent.match(new RegExp(`export\\s+\\{[^}]*\\b${functionName}\\b[^}]*\\}\\s+from\\s+['"]\\./(\\w+)['"]`));
+                            if (reExportMatch) {
+                                const implFileName = reExportMatch[1];
+                                const implFilePath = join(dirPath, `${implFileName}.ts`);
+                                if (existsSync(implFilePath)) {
+                                    signatureContent = readFileSync(implFilePath, 'utf8');
+                                }
+                            }
+                        }
+
                         // Extract signature
-                        const signature = extractFunctionSignature(sourceContent, functionName);
+                        const signature = extractFunctionSignature(signatureContent, functionName);
 
                         if (signature && !processedFunctions.has(functionName)) {
                             processedFunctions.add(functionName);
