@@ -606,22 +606,24 @@ No customizable models are available for this drop-in.
             ? `beyond the standard ${standardOptionsList.join(' and ')}`
             : '';
 
+        const enrichedIntro = enrichmentData?.intro ||
+            `Configure the **${repoConfig.displayName}** drop-in ${standardOptionsText.replace('beyond the standard', 'with')}. All configuration options are optional unless marked as required.`;
+
         customConfigSection = `## Drop-in-specific configuration
 
-The **${repoConfig.displayName}** drop-in provides additional configuration options ${standardOptionsText}. These options customize drop-in-specific behaviors and features.
+${enrichedIntro}
 
 \`\`\`javascript title="scripts/initializers/${repoName}.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '${repoConfig.packageName}';
 
 await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-${configProps.map(prop => `  ${prop.name}: ${getExampleValue(prop.type)},`).join('\n')}
+${configProps.map(prop => `  ${prop.name}: ${getExampleValue(prop.type, prop.name)},`).join('\n')}
 });
 \`\`\`
 
 <Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
+Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
 </Aside>
 
 `;
@@ -776,10 +778,27 @@ You can customize text and labels using the standard \`langDefinitions\` option.
  * @param {string} type - TypeScript type string
  * @returns {string} Example value
  */
-function getExampleValue(type) {
+function getExampleValue(type, paramName = '') {
     const lowerType = type.toLowerCase();
+    const lowerParamName = paramName.toLowerCase();
 
-    if (lowerType.includes('string')) return "'value'";
+    // Context-specific string examples
+    if (lowerType.includes('string')) {
+        // ID/UID parameters
+        if (lowerParamName.includes('id') || lowerParamName.includes('uid') || lowerParamName.includes('ref')) {
+            return "'abc123'"; // Example ID
+        }
+        // Header parameters
+        if (lowerParamName.includes('header')) {
+            return "'X-Custom-Header'"; // Example header name
+        }
+        // Key parameters  
+        if (lowerParamName.includes('key')) {
+            return "'customKey'"; // Example key
+        }
+        return "'value'"; // Generic fallback
+    }
+
     if (lowerType.includes('number')) return '123';
     if (lowerType.includes('boolean')) return 'true';
     if (lowerType.includes('[]') || lowerType.includes('array')) return '[]';

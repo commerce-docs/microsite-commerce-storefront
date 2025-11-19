@@ -120,7 +120,7 @@ export function getBoilerplatePackageVersions(boilerplatePath) {
  * Use existing drop-in repository without version constraints
  * This is used for B2B drop-ins that aren't in the boilerplate
  * 
- * Reads the version from the drop-in's own package.json to ensure accurate version display
+ * Reads the version from the package.json for the drop-in to ensure accurate version display
  * 
  * @param {string} repoName - Name of the drop-in (e.g., 'purchase-order', 'company-management')
  * @param {Object} repoConfig - Repository configuration object with gitUrl
@@ -139,7 +139,7 @@ export function useExistingDropinRepo(repoName, repoConfig) {
         }
     }
 
-    // Read version from the drop-in's package.json
+    // Read version from package.json for the drop-in
     let actualVersion;
     try {
         const packageJsonPath = join(dropinPath, 'package.json');
