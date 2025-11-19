@@ -73,6 +73,12 @@ const generators = [
         estimatedTime: '2-3 minutes'
     },
     {
+        name: 'Drop-ins Overview',
+        command: 'npm run generate-dropins-overview',
+        description: 'Overview page for all drop-in components',
+        estimatedTime: '< 1 minute'
+    },
+    {
         name: 'Boilerplate',
         command: 'npm run generate-boilerplate-docs',
         description: 'Technical documentation for boilerplate blocks (33 pages)',
@@ -83,6 +89,12 @@ const generators = [
         command: 'npm run generate-merchant-block-docs',
         description: 'Business user documentation for blocks (29 pages)',
         estimatedTime: '1-2 minutes'
+    },
+    {
+        name: 'Boilerplate Versions',
+        command: 'npm run update-boilerplate-versions',
+        description: 'Update version numbers in boilerplate documentation files',
+        estimatedTime: '< 1 minute'
     }
 ];
 

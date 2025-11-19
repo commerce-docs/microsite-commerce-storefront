@@ -36,6 +36,7 @@ const sdkComponentEntries = sdkComponentFiles.map((file) => {
 });
 
 // https://astro.build/config
+/** @returns {Promise<import('astro').AstroUserConfig>} */
 async function config() {
   const compressIntegration = (await import('@playform/compress')).default({
     CSS: false,
@@ -68,7 +69,6 @@ async function config() {
       '/customize/slots': `${basePath}/dropins/all/extending`,
       '/customize/style': `${basePath}/dropins/all/styling`,
       '/customize': `${basePath}/dropins/all/introduction`,
-      '/dropins': `${basePath}/dropins/all/introduction`,
       '/dropins/all/installing': `${basePath}/dropins/all/quick-start`,
       '/dropins/cart/cart-introduction': `${basePath}/dropins/cart`,
       '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
@@ -76,7 +76,14 @@ async function config() {
       '/dropins/user-auth/userauth-introduction': `${basePath}/dropins/user-auth`,
       '/faq': `${basePath}/troubleshooting/faq`,
       '/get-started/launch-checklist': `${basePath}/launch`,
-      '/get-started/requirements': `${basePath}/setup/discovery/architecture`,
+      '/get-started/requirements': `${basePath}/get-started/architecture`,
+      '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
+      '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
+      '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+      '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+      '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
+      '/boilerplate/update-boilerplate': `${basePath}/boilerplate/updates`,
+      '/boilerplate/blocks': `${basePath}/boilerplate/blocks-reference`,
       '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
       '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
       '/merchants/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -107,7 +114,7 @@ async function config() {
       '/product-details/pdp-introduction': `${basePath}/dropins/product-details/`,
       '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
       '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
-      '/references/requirements': `${basePath}/setup/discovery/architecture`,
+      '/references/requirements': `${basePath}/get-started/architecture`,
       '/dropins/cart/cart-installation': `${basePath}/dropins/cart/quick-start`,
       '/dropins/cart/cart-styles': `${basePath}/dropins/cart/styles`,
       '/dropins/cart/cart-containers': `${basePath}/dropins/cart/containers`,
@@ -165,7 +172,7 @@ async function config() {
       '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
       '/setup/aem-assets-integration': `${basePath}/merchants/storefront-builder/visual-editor`,
       '/discovery': `${basePath}/setup`,
-      '/discovery/architecture': `${basePath}/setup/discovery/architecture`,
+      '/discovery/architecture': `${basePath}/get-started/architecture`,
       '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
       '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
       '/dropins/all/eventbus': `${basePath}/dropins/all/events`,
@@ -295,7 +302,7 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/get-started/' },
                       { label: 'Create a storefront', link: '/get-started/create-storefront' },
-                      { label: 'Learn the architecture', link: '/setup/discovery/architecture/' },
+                      { label: 'Learn the architecture', link: '/get-started/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
                     ],
@@ -305,11 +312,11 @@ async function config() {
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/boilerplate/' },
-                      { label: 'Getting started', link: '/get-started/boilerplate-project/' },
+                      { label: 'Getting started', link: '/boilerplate/getting-started/' },
                       { label: 'Configuration', link: '/boilerplate/configuration/' },
-                      { label: 'Commerce blocks', link: '/boilerplate/blocks/' },
+                      { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
                       { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
-                      { label: 'Update the boilerplate', link: '/get-started/update-boilerplate/' },
+                      { label: 'Updates', link: '/boilerplate/updates/' },
                     ],
                   },
                   {
@@ -317,7 +324,7 @@ async function config() {
                     collapsed: true,
                     items: [
                       {
-                        label: 'Setup overview',
+                        label: 'Overview',
                         link: '/setup/',
                       },
                       {
@@ -376,7 +383,7 @@ async function config() {
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
-                    collapsed: true,
+                    collapsed: false,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
@@ -400,6 +407,7 @@ async function config() {
                     label: 'Drop-ins for B2C',
                     collapsed: true,
                     items: [
+                      { label: 'Overview', link: '/dropins/' },
                       {
                         label: 'Cart',
                         collapsed: true,
@@ -425,7 +433,7 @@ async function config() {
                               { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
                               { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
                               { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
-                              { label: 'MiniCart', link: '/dropins/cart/containers/minicart/' },
+                              { label: 'MiniCart', link: '/dropins/cart/containers/mini-cart/' },
                               { label: 'OrderSummary', link: '/dropins/cart/containers/order-summary/' },
                               { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
                             ],
@@ -512,9 +520,11 @@ async function config() {
                               { label: 'CustomerDetails', link: '/dropins/order/containers/customer-details/' },
                               { label: 'OrderCancelForm', link: '/dropins/order/containers/order-cancel-form/' },
                               { label: 'OrderCostSummary', link: '/dropins/order/containers/order-cost-summary/' },
+                              { label: 'OrderHeader', link: '/dropins/order/containers/order-header/' },
                               { label: 'OrderProductList', link: '/dropins/order/containers/order-product-list/' },
                               { label: 'OrderReturns', link: '/dropins/order/containers/order-returns/' },
                               { label: 'OrderSearch', link: '/dropins/order/containers/order-search/' },
+                              { label: 'OrderStatus', link: '/dropins/order/containers/order-status/' },
                               { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
                               { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
                             ],
@@ -534,6 +544,7 @@ async function config() {
                           { label: 'Installation', link: '/dropins/payment-services/installation/' },
                           { label: 'Initialization', link: '/dropins/payment-services/initialization/' },
                           { label: 'Functions', link: '/dropins/payment-services/functions/' },
+                          { label: 'Events', link: '/dropins/payment-services/events/' },
                           { label: 'Slots', link: '/dropins/payment-services/slots/' },
                           { label: 'Styles', link: '/dropins/payment-services/styles/' },
                           { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
@@ -584,9 +595,11 @@ async function config() {
                             items: [
                               { label: 'Overview', link: '/dropins/product-details/containers/' },
                               { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                              { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                               { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                               { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
-                              { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
+                              { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
+                              { label: 'ProductGiftcardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
                               { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
                               { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                               { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
@@ -748,6 +761,7 @@ async function config() {
                         label: 'Company Management',
                         collapsed: true,
                         items: [
+                          { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
                           { label: 'Events', link: '/dropins-b2b/company-management/events/' },
                         ],
                       },
