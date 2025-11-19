@@ -12,7 +12,7 @@ import { Aside } from '@astrojs/starlight/components';
 The **Quote Management initializer** configures the drop-in for managing negotiable quotes, quote templates, and quote workflows. Use initialization to set quote identifiers, customize data models, and enable internationalization for multi-language B2B storefronts.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.0-beta1</strong>
+<strong>Version: 0.0.0</strong>
 </div>
 
 
@@ -26,7 +26,6 @@ The following table describes the configuration options available for the **Quot
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
 | `quoteId` | `string` | No | Quote identifier used to load and display a specific negotiable quote. Pass this to initialize the drop-in with quote details on page load. |
 | `quoteTemplateId` | `string` | No | Quote template identifier used to load and display a specific quote template. Pass this to initialize the drop-in with template details on page load. |
 
@@ -108,7 +107,7 @@ await initializers.mountImmediately(initialize, { models });
 
 ## Drop-in-specific configuration
 
-The **Quote Management** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **Quote Management** drop-in provides additional configuration options beyond the standard `langDefinitions`. These options customize drop-in-specific behaviors and features.
 
 ```javascript title="scripts/initializers/quote-management.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -116,6 +115,7 @@ import { initialize } from '@dropins/storefront-quote-management';
 
 await initializers.mountImmediately(initialize, {
   // Drop-in-specific configuration
+  langDefinitions: {},
   quoteId: 'value',
   quoteTemplateId: 'value',
 });
@@ -143,16 +143,6 @@ langDefinitions?: {
 };
 ```
 
-### models
-
-Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
-
-```typescript
-models?: {
-  [modelName: string]: Model<any>;
-};
-```
-
 
 ## Model definitions
 
@@ -161,7 +151,58 @@ The following TypeScript definitions show the structure of each customizable mod
 ### NegotiableQuoteModel
 
 ```typescript
-undefined
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  isVirtual: boolean;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  totalQuantity: number;
+  comments?: {
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+    };
+    text: string;
+    attachments?: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    appliedDiscounts?: Discount[];
+    appliedTaxes?: Tax[];
+    discount?: Currency;
+    grandTotal?: Currency;
+    grandTotalExcludingTax?: Currency;
+    shippingExcludingTax?: Currency;
+    shippingIncludingTax?: Currency;
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    totalTax?: Currency;
+  };
+  items: NegotiableQuoteCartItem[];
+  shippingAddresses?: ShippingAddress[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+  lockedForEditing?: boolean;
+  canDelete: boolean;
+  canClose: boolean;
+  canUpdateQuote: boolean;
+  readOnly: boolean;
+}
 ```
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-quote-management */}

@@ -12,7 +12,7 @@ import { Aside } from '@astrojs/starlight/components';
 The **Purchase Order initializer** configures the drop-in for managing purchase order workflows, approval rules, and order tracking. Use initialization to set the purchase order reference, customize data models, and enable internationalization for multi-language B2B storefronts.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.0-beta2</strong>
+<strong>Version: 0.0.0</strong>
 </div>
 
 
@@ -26,7 +26,6 @@ The following table describes the configuration options available for the **Purc
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
 | `poRef` | `string` | No | Purchase order reference identifier used to load and display a specific purchase order. Pass this to initialize the drop-in with purchase order details on page load. |
 
 </TableWrapper>
@@ -107,7 +106,7 @@ await initializers.mountImmediately(initialize, { models });
 
 ## Drop-in-specific configuration
 
-The **Purchase Order** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **Purchase Order** drop-in provides additional configuration options beyond the standard `langDefinitions`. These options customize drop-in-specific behaviors and features.
 
 ```javascript title="scripts/initializers/purchase-order.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -115,6 +114,7 @@ import { initialize } from '@dropins/storefront-purchase-order';
 
 await initializers.mountImmediately(initialize, {
   // Drop-in-specific configuration
+  langDefinitions: {},
   poRef: 'value',
 });
 ```
@@ -141,16 +141,6 @@ langDefinitions?: {
 };
 ```
 
-### models
-
-Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
-
-```typescript
-models?: {
-  [modelName: string]: Model<any>;
-};
-```
-
 
 ## Model definitions
 
@@ -159,7 +149,53 @@ The following TypeScript definitions show the structure of each customizable mod
 ### PurchaseOrderModel
 
 ```typescript
-undefined
+interface PurchaseOrderModel {
+  typename: string;
+  uid: string;
+  number: string;
+  status: string;
+  availableActions: string[];
+  approvalFlow:
+    | {
+        ruleName: string;
+        events: Array<{
+          message: string;
+          name: string;
+          role: string;
+          status: string;
+          updatedAt: string;
+        }>;
+      }[]
+    | [];
+  comments?: Array<{
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+    text: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  historyLog?: Array<{
+    activity: string;
+    createdAt: string;
+    message: string;
+    uid: string;
+  }>;
+  quote: QuoteProps | null;
+  order: {
+    orderNumber: string;
+    id: string;
+  };
+}
 ```
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}

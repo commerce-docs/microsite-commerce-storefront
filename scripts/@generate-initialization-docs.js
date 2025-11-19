@@ -68,8 +68,8 @@ function extractConfigProps(repoPath) {
         return [];
     }
 
-    // Extract ConfigProps type definition with balanced braces
-    const configPropsPattern = /type\s+ConfigProps\s*=\s*\{/;
+    // Extract ConfigProps type or interface definition with balanced braces
+    const configPropsPattern = /(type\s+ConfigProps\s*=\s*\{|interface\s+ConfigProps\s*\{)/;
     const match = initializeContent.match(configPropsPattern);
 
     if (!match) {
@@ -101,9 +101,6 @@ function extractConfigProps(repoPath) {
     const customOptions = [];
     const lines = propsContent.split('\n');
 
-    // Standard options that should be excluded (they're added separately)
-    const standardOptionNames = ['langDefinitions', 'models'];
-
     // Track brace depth to avoid extracting nested properties
     let braceDepth = 0;
     let currentProp = null;
@@ -129,12 +126,6 @@ function extractConfigProps(repoPath) {
             if (propMatch) {
                 const [, propName, optional, rest] = propMatch;
                 const name = propName.trim();
-
-                // Skip standard options (langDefinitions, models)
-                if (standardOptionNames.includes(name)) {
-                    braceDepth += openBraces - closeBraces;
-                    continue;
-                }
 
                 // Check if this is an inline object type definition
                 if (rest.trim().startsWith('{')) {
@@ -378,21 +369,32 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
     const template = readTemplate('dropin-initialization.mdx');
 
-    // Always include standard options with links to their definitions
-    const standardOptions = [
-        {
+    // Build standard options dynamically based on what's in source ConfigProps
+    const standardOptions = [];
+
+    // Check if langDefinitions exists in source
+    const hasLangDefinitions = configProps.some(p => p.name === 'langDefinitions');
+    if (hasLangDefinitions) {
+        const langDefProp = configProps.find(p => p.name === 'langDefinitions');
+        standardOptions.push({
             name: 'langDefinitions',
             type: '__LINK__[`LangDefinitions`](#langdefinitions)',
-            required: false,
+            required: langDefProp?.required || false,
             description: 'Language definitions for internationalization (i18n). Override dictionary keys for localization or branding.'
-        },
-        {
+        });
+    }
+
+    // Check if models exists in source
+    const hasModels = configProps.some(p => p.name === 'models');
+    if (hasModels) {
+        const modelsProp = configProps.find(p => p.name === 'models');
+        standardOptions.push({
             name: 'models',
             type: '__LINK__[`Record<string, any>`](#models)',
-            required: false,
+            required: modelsProp?.required || false,
             description: 'Custom data models for type transformations. Extend or modify default models with custom fields and transformers.'
-        }
-    ];
+        });
+    }
 
     // Merge with drop-in specific options
     const allOptions = [...standardOptions];
@@ -430,8 +432,8 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Extract model names for linking
     const modelNames = models.map(m => m.name);
 
-    // Add drop-in specific config props if they exist
-    configProps.forEach(prop => {
+    // Add drop-in specific config props if they exist (skip langDefinitions and models as they're added as standardOptions)
+    configProps.filter(p => p.name !== 'langDefinitions' && p.name !== 'models').forEach(prop => {
         // Check if enrichment has a description for this property
         const enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
 
@@ -537,12 +539,22 @@ No customizable models are available for this drop-in.
 </Aside>`;
     }
 
-    // Generate custom config section if there are drop-in specific options
+    // Generate custom config section if there are drop-in specific options (excluding standard ones)
     let customConfigSection = '';
-    if (configProps.length > 0) {
+    const dropinSpecificProps = configProps.filter(p => p.name !== 'langDefinitions' && p.name !== 'models');
+    if (dropinSpecificProps.length > 0) {
+        // Build the text mentioning which standard options exist
+        const standardOptionsList = [];
+        if (hasLangDefinitions) standardOptionsList.push('`langDefinitions`');
+        if (hasModels) standardOptionsList.push('`models`');
+
+        const standardOptionsText = standardOptionsList.length > 0
+            ? `beyond the standard ${standardOptionsList.join(' and ')}`
+            : '';
+
         customConfigSection = `## Drop-in-specific configuration
 
-The **${repoConfig.displayName}** drop-in provides additional configuration options beyond the standard \`langDefinitions\` and \`models\`. These options customize drop-in-specific behaviors and features.
+The **${repoConfig.displayName}** drop-in provides additional configuration options ${standardOptionsText}. These options customize drop-in-specific behaviors and features.
 
 \`\`\`javascript title="scripts/initializers/${repoName}.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -580,24 +592,28 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 `;
     }
 
-    // Add standard type definitions for langDefinitions and models
-    configTypesWithDefinitions.push({
-        name: 'langDefinitions',
-        definition: `langDefinitions?: {
+    // Add standard type definitions only if they exist in source
+    if (hasLangDefinitions) {
+        configTypesWithDefinitions.push({
+            name: 'langDefinitions',
+            definition: `langDefinitions?: {
   [locale: string]: {
     [key: string]: string;
   };
 };`,
-        description: 'Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.'
-    });
+            description: 'Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.'
+        });
+    }
 
-    configTypesWithDefinitions.push({
-        name: 'models',
-        definition: `models?: {
+    if (hasModels) {
+        configTypesWithDefinitions.push({
+            name: 'models',
+            definition: `models?: {
   [modelName: string]: Model<any>;
 };`,
-        description: 'Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.'
-    });
+            description: 'Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.'
+        });
+    }
 
     // Generate Configuration types section
     let configTypeDefinitions = '';
