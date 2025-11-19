@@ -64,6 +64,64 @@ export async function setupBoilerplate(boilerplatePath, branch = null) {
 }
 
 /**
+ * Load package versions from boilerplate package.json
+ * @param {string} boilerplatePath - Path to boilerplate repo
+ * @param {string} branch - Branch to read package.json from
+ * @returns {Object} - Package dependencies object
+ */
+export async function loadPackageVersions(boilerplatePath, branch) {
+    const { readFileSync } = await import('fs');
+    const { execSync } = await import('child_process');
+
+    try {
+        if (branch) {
+            // Load from specific branch without checking it out
+            console.log(`📦 Loading package versions from ${branch} branch...`);
+            const packageJsonContent = execSync(
+                `git show origin/${branch}:package.json`,
+                { cwd: boilerplatePath, encoding: 'utf8', stdio: 'pipe' }
+            );
+            const packageJson = JSON.parse(packageJsonContent);
+            return packageJson.dependencies || {};
+        } else {
+            // Load from current checkout
+            const packageJsonPath = join(boilerplatePath, 'package.json');
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            return packageJson.dependencies || {};
+        }
+    } catch (error) {
+        console.error(`  ⚠️  Warning: Could not load versions from ${branch || 'current branch'}: ${error.message}`);
+        return {};
+    }
+}
+
+/**
+ * Populate drop-in versions from boilerplate
+ * @param {Array<Object>} dropins - Array of drop-in configurations
+ * @param {string} boilerplatePath - Path to boilerplate repo
+ * @returns {Promise<Array<Object>>} - Drop-ins with version property added
+ */
+export async function populateDropinVersions(dropins, boilerplatePath) {
+    // Load versions from both main branch (B2C) and b2b-suite-release1 branch (B2B)
+    const b2cVersions = await loadPackageVersions(boilerplatePath, null); // Current checkout
+    const b2bVersions = await loadPackageVersions(boilerplatePath, 'b2b-suite-release1');
+
+    // Merge both version sets (B2B versions take precedence)
+    const allVersions = { ...b2cVersions, ...b2bVersions };
+
+    // Add version to each drop-in
+    return dropins.map(dropin => {
+        const version = allVersions[dropin.packageName];
+        if (version) {
+            // Clean version string (remove ~ ^ etc)
+            const cleanVersion = version.replace(/[~^]/g, '');
+            return { ...dropin, version: cleanVersion };
+        }
+        return { ...dropin, version: '0.0.0' };
+    });
+}
+
+/**
  * Parse CLI arguments
  * @param {Array<string>} args - Process arguments
  * @returns {Object} - Parsed arguments { type: 'B2B'|'B2C'|'all', dropins: Array<string> }
@@ -212,6 +270,10 @@ export async function runGenerator(config) {
     // Setup boilerplate
     await setupBoilerplate(boilerplatePath, boilerplateBranch);
 
+    // Populate drop-in versions from boilerplate
+    const dropinsWithVersions = await populateDropinVersions(dropins, boilerplatePath);
+    repoConfig.dropins = dropinsWithVersions;
+
     // Filter dropins
     const targetDropins = filterDropinsByType(
         repoConfig.dropins,
@@ -272,6 +334,8 @@ export async function runGenerator(config) {
 export default {
     getBoilerplateBranch,
     setupBoilerplate,
+    loadPackageVersions,
+    populateDropinVersions,
     parseCliArgs,
     filterDropinsByType,
     getDropinRepoPath,
