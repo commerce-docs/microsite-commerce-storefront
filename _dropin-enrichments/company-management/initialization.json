@@ -1,0 +1,23 @@
+{
+  "intro": "The **Company Management initializer** configures the drop-in for managing company accounts, organizational structures, user roles, and permissions. Use initialization to customize how company data is displayed and enable internationalization for multi-language B2B storefronts.",
+  "config": {
+    "langDefinitions": {
+      "description": "Language definitions for internationalization (i18n). Override dictionary keys for localization or branding."
+    }
+  },
+  "models": {
+    "CompanyModel": {
+      "description": "Transforms company data from GraphQL including company profile, legal address, contact information, and settings. Use this to add custom fields or modify existing company data structures.",
+      "definition": "export interface CompanyModel extends Company {\n  // Extended properties for UI and permissions (from Customer context)\n  canEditAccount: boolean;\n  canEditAddress: boolean;\n  customerRole?: CompanyRoleModel;\n  customerStatus?: string;\n  permissionsFlags: {\n    canViewAccount: boolean;\n    canEditAccount: boolean;\n    canViewAddress: boolean;\n    canEditAddress: boolean;\n    canViewContacts: boolean;\n    canViewPaymentInformation: boolean;\n    canViewShippingInformation: boolean;\n    // Structure permissions for users/teams\n    canViewUsers: boolean;\n    canEditUsers: boolean;\n    canViewRoles: boolean;\n    canManageRoles: boolean;\n  };\n}\n\nexport interface Company {\n  id: string;\n  name: string;\n  email: string;\n  legalName?: string;\n  vatTaxId?: string;\n  resellerId?: string;\n  legalAddress?: CompanyLegalAddressModel;\n  companyAdmin?: CompanyContact;\n  salesRepresentative?: CompanySalesRepresentative;\n  availablePaymentMethods?: { code: string; title: string }[];\n  availableShippingMethods?: { code: string; title: string }[];\n}"
+    },
+    "CompanyUserModel": {
+      "description": "Transforms company user data including user details, roles, permissions, and team assignments. Use this to add custom fields or modify user data structures.",
+      "definition": "export interface CompanyUserModel extends CompanyUser {\n  isCompanyAdmin?: boolean;\n}\n\nexport interface CompanyUser {\n  id: string;\n  email: string;\n  firstName: string;\n  lastName: string;\n  jobTitle?: string | null;\n  telephone?: string | null;\n  status?: string | null;\n  role?: {\n    id: string;\n    name: string;\n  } | null;\n}"
+    },
+    "CompanyStructureNode": {
+      "description": "Transforms company organizational structure data including teams, hierarchy, and user assignments. Use this to add custom fields or modify structure data.",
+      "definition": "export interface CompanyStructureNode {\n  id: string; // structure uid (base64)\n  parentId: string | null; // structure uid (base64) or null for root\n  label: string;\n  type: CompanyStructureNodeType;\n  entityId?: string; // entity uid for team/customer\n  description?: string | null; // team description if available\n}\n\nexport type CompanyStructureNodeType = 'team' | 'user';"
+    }
+  }
+}
+

@@ -209,6 +209,9 @@ export function extractSlotsFromInterface(interfaceContent) {
  * // Returns: { content: 'sku: string; ...', fullText: 'export interface CartProps { ... }' }
  */
 export function findPropsInTypeFiles(repoPath, componentName) {
+    // Convert PascalCase to camelCase for some naming patterns
+    const camelCaseName = componentName.charAt(0).toLowerCase() + componentName.slice(1);
+
     const possiblePaths = [
         join(repoPath, 'src', 'containers', componentName, 'types.ts'),
         join(repoPath, 'src', 'containers', componentName, `${componentName}.types.ts`),
@@ -216,7 +219,15 @@ export function findPropsInTypeFiles(repoPath, componentName) {
         join(repoPath, 'src', 'components', componentName, `${componentName}.types.ts`),
         join(repoPath, 'src', 'types', 'containers.ts'),
         join(repoPath, 'src', 'types', 'components.ts'),
-        join(repoPath, 'src', 'types', `${componentName}.ts`)
+        join(repoPath, 'src', 'types', `${componentName}.ts`),
+        // CamelCase patterns directly in src/types (Company Management pattern)
+        join(repoPath, 'src', 'types', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', `${componentName}.types.ts`),
+        // Additional patterns for B2B drop-ins (e.g., Purchase Order)
+        join(repoPath, 'src', 'types', 'containers', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', 'containers', `${componentName}.types.ts`),
+        join(repoPath, 'src', 'types', 'components', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', 'components', `${componentName}.types.ts`)
     ];
 
     for (const path of possiblePaths) {
@@ -224,12 +235,34 @@ export function findPropsInTypeFiles(repoPath, componentName) {
             const content = readFileSync(path, 'utf8');
 
             // Look for Props interface (with or without export)
-            const propsInterfaceMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{([\s\S]*?)^\s*}/m);
-            if (propsInterfaceMatch) {
-                return {
-                    content: propsInterfaceMatch[1],
-                    fullText: content
-                };
+            const propsInterfaceStartMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{/);
+
+            if (propsInterfaceStartMatch) {
+                // Find the position right after the opening brace
+                const startPos = propsInterfaceStartMatch.index + propsInterfaceStartMatch[0].length;
+
+                // Use balanced brace matching to find the closing brace
+                let braceCount = 1;
+                let endPos = startPos;
+
+                while (endPos < content.length && braceCount > 0) {
+                    const char = content[endPos];
+                    if (char === '{') {
+                        braceCount++;
+                    } else if (char === '}') {
+                        braceCount--;
+                    }
+                    endPos++;
+                }
+
+                if (braceCount === 0) {
+                    // Successfully found matching closing brace
+                    const interfaceContent = content.substring(startPos, endPos - 1);
+                    return {
+                        content: interfaceContent,
+                        fullText: content
+                    };
+                }
             }
         }
     }
