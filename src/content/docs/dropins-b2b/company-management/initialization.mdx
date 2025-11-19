@@ -161,19 +161,78 @@ The following TypeScript definitions show the structure of each customizable mod
 ### CompanyModel
 
 ```typescript
-undefined
+export interface CompanyModel extends Company {
+  // Extended properties for UI and permissions (from Customer context)
+  canEditAccount: boolean;
+  canEditAddress: boolean;
+  customerRole?: CompanyRoleModel;
+  customerStatus?: string;
+  permissionsFlags: {
+    canViewAccount: boolean;
+    canEditAccount: boolean;
+    canViewAddress: boolean;
+    canEditAddress: boolean;
+    canViewContacts: boolean;
+    canViewPaymentInformation: boolean;
+    canViewShippingInformation: boolean;
+    // Structure permissions for users/teams
+    canViewUsers: boolean;
+    canEditUsers: boolean;
+    canViewRoles: boolean;
+    canManageRoles: boolean;
+  };
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  legalName?: string;
+  vatTaxId?: string;
+  resellerId?: string;
+  legalAddress?: CompanyLegalAddressModel;
+  companyAdmin?: CompanyContact;
+  salesRepresentative?: CompanySalesRepresentative;
+  availablePaymentMethods?: { code: string; title: string }[];
+  availableShippingMethods?: { code: string; title: string }[];
+}
 ```
 
 ### CompanyUserModel
 
 ```typescript
-undefined
+export interface CompanyUserModel extends CompanyUser {
+  isCompanyAdmin?: boolean;
+}
+
+export interface CompanyUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  jobTitle?: string | null;
+  telephone?: string | null;
+  status?: string | null;
+  role?: {
+    id: string;
+    name: string;
+  } | null;
+}
 ```
 
 ### CompanyStructureNode
 
 ```typescript
-undefined
+export interface CompanyStructureNode {
+  id: string; // structure uid (base64)
+  parentId: string | null; // structure uid (base64) or null for root
+  label: string;
+  type: CompanyStructureNodeType;
+  entityId?: string; // entity uid for team/customer
+  description?: string | null; // team description if available
+}
+
+export type CompanyStructureNodeType = 'team' | 'user';
 ```
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-company-management */}
