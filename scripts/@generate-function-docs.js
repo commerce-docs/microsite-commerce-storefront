@@ -1124,6 +1124,94 @@ function normalizeDescriptionToVerb(description, functionName) {
 }
 
 /**
+ * Generate complete function documentation from enrichment only
+ * Used for TypeScript-only functions without .mdx files
+ * 
+ * @param {Object} func - Function data with signature
+ * @param {Object} enrichment - Enrichment data for the function
+ * @returns {string} Generated function section
+ */
+function generateFunctionFromEnrichment(func, enrichment) {
+    let content = '';
+
+    // Function name heading
+    content += `## ${func.name}\n\n`;
+
+    // Description
+    if (enrichment.description) {
+        content += `${enrichment.description}\n\n`;
+    }
+
+    // Signature
+    if (func.signature) {
+        content += `### Signature\n\n`;
+        content += `\`\`\`typescript\n`;
+        content += `function ${func.name}(${func.signature.params || ''}): ${func.signature.returnType || 'void'}\n`;
+        content += `\`\`\`\n\n`;
+    }
+
+    // Parameters table (if parameters exist)
+    if (func.signature && func.signature.params && enrichment.parameters) {
+        content += `### Parameters\n\n`;
+        content += `<TableWrapper nowrap={[0,1]}>\n\n`;
+        content += `| Parameter | Type | Required | Description |\n`;
+        content += `|---|---|---|---|\n`;
+
+        // Parse parameters from signature
+        const paramPattern = /(\w+)(\??)\s*:\s*([^,)]+)/g;
+        let match;
+        while ((match = paramPattern.exec(func.signature.params)) !== null) {
+            const paramName = match[1];
+            const optional = match[2] === '?';
+            const paramType = match[3].trim();
+            const required = !optional;
+            const description = enrichment.parameters[paramName]?.description || '';
+
+            content += `| \`${paramName}\` | \`${paramType}\` | ${required ? 'Yes' : 'No'} | ${description} |\n`;
+        }
+
+        content += `\n</TableWrapper>\n\n`;
+    }
+
+    // Returns
+    if (enrichment.returns) {
+        content += `### Returns\n\n`;
+        content += `${enrichment.returns}\n\n`;
+    }
+
+    // Example
+    if (enrichment.example) {
+        content += `### Example\n\n`;
+        content += `${enrichment.example}\n\n`;
+    }
+
+    // Events
+    if (enrichment.events) {
+        content += `### Events\n\n`;
+        content += `${enrichment.events}\n\n`;
+    }
+
+    // Usage scenarios
+    if (enrichment.usageScenarios) {
+        content += `### Usage scenarios\n\n`;
+        content += `${enrichment.usageScenarios}\n\n`;
+    }
+
+    // Asides
+    if (enrichment.asides && enrichment.asides.length > 0) {
+        enrichment.asides.forEach(aside => {
+            content += `<Aside type="${aside.type}">\n`;
+            content += `${aside.content}\n`;
+            content += `</Aside>\n\n`;
+        });
+    }
+
+    content += `---\n\n`;
+
+    return content;
+}
+
+/**
  * Generate functions MDX content
  * 
  * @param {string} repoName - Repository name (e.g., 'cart')
@@ -1234,6 +1322,13 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     functions.forEach(func => {
         // Check for enrichment data for this function
         const enrichment = enrichmentData && enrichmentData[func.name] ? enrichmentData[func.name] : null;
+
+        // SPECIAL CASE: TypeScript-only functions with enrichment (no .mdx file)
+        // Generate complete documentation from enrichment
+        if (!func.mdxContent && enrichment) {
+            functionsContent += generateFunctionFromEnrichment(func, enrichment);
+            return; // Skip normal processing
+        }
 
         // Collect input models from enrichment data
         if (enrichment && enrichment.input_models) {
@@ -1994,7 +2089,23 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         }
     }
 
-    const introText = `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
+    // Add additional sections from enrichment (e.g., integration examples)
+    let additionalContent = '';
+    if (enrichmentData && enrichmentData.additionalSections) {
+        if (enrichmentData.additionalSections.integrationExample) {
+            const ie = enrichmentData.additionalSections.integrationExample;
+            additionalContent += `\n## ${ie.title}\n\n`;
+            if (ie.intro) {
+                additionalContent += `${ie.intro}\n\n`;
+            }
+            additionalContent += `${ie.code}\n\n`;
+        }
+    }
+
+    // Use enriched overview text if available
+    const introText = enrichmentData && enrichmentData.overview
+        ? enrichmentData.overview
+        : `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
 
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
@@ -2002,7 +2113,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         DROPIN_VERSION: cleanVersion(version),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
-        FUNCTIONS_CONTENT: functionsContent + dataModelsSection
+        FUNCTIONS_CONTENT: functionsContent + dataModelsSection + additionalContent
     });
 }
 

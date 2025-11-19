@@ -7,88 +7,67 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
-import Diagram from '@components/Diagram.astro';
 
-The PurchaseOrderStatus container displays the status of the currently selected purchase order along with any available actions.  The container requires no props.  It listens for the `purchase-order/data` event emitted by the purchase order initializer and uses the event payload to render its content.
 
-After receiving the event, the container shows a heading with the purchase order status, a status description message, and a set of action buttons (or a message if no actions are available).  The container supports four native actions: **Approve Purchase Order**, **Reject Purchase Order**, **Cancel Purchase Order**, and **Place Order for the purchase order**.  Action availability is controlled by the backend.
 
-<Diagram caption="PurchaseOrderStatus container">
-  ![PurchaseOrderStatus container](../images/status.png)
-</Diagram>
-
-### Displayed information
-
-- A heading with the purchase order status
-- A status description message
-- A set of action buttons (or a message if no actions are available)
-### Available actions
-
-- Approve Purchase Order
-- Reject Purchase Order
-- Cancel Purchase Order
-- Place Order for the purchase order
-### ACL permissions
-
-Access to the container is governed by the following ACL permission:
-
-- `Magento_PurchaseOrder::view_purchase_orders`
-
-## Integration example
-
-#### Basic
-
-```javascript
-import { PurchaseOrderStatus } from '@dropins/storefront-purchase-order/containers/PurchaseOrderStatus.js';
-import { render as provider } from '@dropins/storefront-purchase-order/render.js';
-
-await provider.render(PurchaseOrderStatus, {
-  withHeader: true,
-  withWrapper: true,
-})(element);
-```
-
-#### Minimal
-
-```javascript
-await provider.render(PurchaseOrderStatus, {
-  withHeader: false,
-  withWrapper: false,
-  className: 'custom-po-status',
-})(element);
-```
-
-#### Custom Actions
-
-```javascript
-await provider.render(PurchaseOrderStatus, {
-  slots: {
-    PurchaseOrderActions: (ctx) => {
-      const customButton = document.createElement('button');
-      customButton.innerText = 'Additional Action';
-      ctx.appendChild(customButton);
-    },
-  },
-})(element);
-```
-
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 0.0.1</strong>
+</div>
 
 ## Configuration
 
+The `PurchaseOrderStatus` container provides the following configuration options:
+
+{/* 
+  IMPORTANT: Do not wrap <TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
+
+</TableWrapper> in TableWrapper or add a table header.
+  The generator's generatePropertyTable() function already includes both.
+  Adding them here will cause nested TableWrapper components and duplicate headers.
+*/}
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `className` | `string` | No | Additional CSS classes for custom styling. |
-| `withHeader` | `boolean` | No | Shows or hides the section header. Use `true` (default) for a standalone section on purchase order details. Use `false` when embedding in another component with its own header. |
-| `withWrapper` | `boolean` | No | Wraps content in a Card component with secondary styling. Use `true` (default) for standard page layout with visual separation. Use `false` when embedding inside another card or container. |
-| `slots.PurchaseOrderActions` | `any` | No | Slot allowing you to override action buttons. Context includes: `loading` (loading flag), `availableActions` (list of available purchase order actions from backend), `handleApprove`, `handleReject`, `handleCancel`, `handlePlaceOrder` (action callbacks). Use to override default action buttons or introduce custom actions with custom business logic in addition to default ones. |
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
 
 </TableWrapper>
 
-## Admin panel configuration
+## Slots
 
-The Purchase Order (B2B) feature must be enabled at both the store and company levels:
+This container exposes the following slots for customization:
 
-- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
-- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders
+| Slot | Type | Required | Description |
+|------|------|----------|-------------|
+| `slots` | `\{ PurchaseOrderActions: SlotProps&lt;PurchaseOrderStatusSlotContext&gt;` | No | Custom slot for rendering slots |
+
+
+## Usage
+
+The following example demonstrates how to use the `PurchaseOrderStatus` container:
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { PurchaseOrderStatus } from '@dropins/storefront-purchase-order/containers/PurchaseOrderStatus.js';
+
+await provider.render(PurchaseOrderStatus, {
+  className: "Example Name",
+  withHeader: true,
+  withWrapper: true,
+  slots: {
+    // Add custom slot implementations here
+  }
+})(block);
+```
+
+
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}

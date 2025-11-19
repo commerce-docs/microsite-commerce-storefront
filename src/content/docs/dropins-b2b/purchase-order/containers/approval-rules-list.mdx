@@ -7,87 +7,73 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
-import Diagram from '@components/Diagram.astro';
 
-The ApprovalRulesList container displays all company purchase order approval rules in a paginated table.  When rendered, the container automatically retrieves approval rules data using a customer GraphQL query.
 
-Each approval rule is presented as a line item displaying the rule name, type, status, applicable roles, approver roles, and creator.  Actions available for each rule depend on the customer's assigned ACL permissions: **View** (opens details page), **Edit** (opens form in edit mode), **Delete** (removes the rule), and **Add New Rule** (creates a new rule).
 
-<Diagram caption="ApprovalRulesList container">
-  ![ApprovalRulesList container](../images/approval-rules-list.png)
-</Diagram>
-
-### Displayed information
-
-- Rule name, type, status
-- Roles the rule applies to
-- Approver roles
-- Rule creator
-- Edit, Delete, and View actions (depending on ACL permissions)
-- Pagination with configurable page size
-- Empty state when no rules exist
-### ACL permissions
-
-Access to the container is governed by the following ACL permissions:
-
-- `Magento_PurchaseOrderRule::view_approval_rules`
-- `Magento_PurchaseOrderRule::manage_approval_rules`
-
-## Integration example
-
-#### Basic
-
-```javascript
-import { ApprovalRulesList } from '@dropins/storefront-purchase-order/containers/ApprovalRulesList.js';
-import { render as provider } from '@dropins/storefront-purchase-order/render.js';
-
-await provider.render(ApprovalRulesList, {
-  routeCreateApprovalRule: (id) => '/approval-rules/create',
-  routeEditApprovalRule: (id) => `/approval-rules/edit?ruleRef=${id}`,
-  routeApprovalRuleDetails: (id) => `/approval-rules/details?ruleRef=${id}`,
-  withHeader: true,
-  withWrapper: true,
-})(element);
-```
-
-#### Custom Page Size
-
-```javascript
-await provider.render(ApprovalRulesList, {
-  routeCreateApprovalRule: (id) => '/approval-rules/create',
-  routeEditApprovalRule: (id) => `/approval-rules/edit?ruleRef=${id}`,
-  routeApprovalRuleDetails: (id) => `/approval-rules/details?ruleRef=${id}`,
-  initialPageSize: [
-    { text: '10', value: '10', selected: false },
-    { text: '20', value: '20', selected: true },
-    { text: '50', value: '50', selected: false },
-  ],
-})(element);
-```
-
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 0.0.1</strong>
+</div>
 
 ## Configuration
 
+The `ApprovalRulesList` container provides the following configuration options:
+
+{/* 
+  IMPORTANT: Do not wrap <TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `initialPageSize` | `PageSizeListProps[]` | No | Configuration for initial page size |
+| `routeCreateApprovalRule` | `(id: string) => string` | No | Callback function for route create approval rule |
+| `routeEditApprovalRule` | `(id: string) => string` | No | Callback function for route edit approval rule |
+| `routeApprovalRuleDetails` | `(id: string) => string` | No | Callback function for route approval rule details |
+| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Callback function for set columns |
+| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Data object for set rows |
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
+| `skeletonRowCount` | `number` | No | Number of skeleton row |
+
+</TableWrapper> in TableWrapper or add a table header.
+  The generator's generatePropertyTable() function already includes both.
+  Adding them here will cause nested TableWrapper components and duplicate headers.
+*/}
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `initialPageSize` | `PageSizeListProps[]` | No | Configuration for page size dropdown options. Customize available page sizes (e.g., 10, 20, 50 items per page) and set the default selected page size with `selected: true`. The default is typically 20 items per page. |
-| `routeCreateApprovalRule` | `(id: string) => string` | No | Function that generates the URL for creating a new approval rule. Return the path to the create approval rule form page. The ID parameter allows for potential pre-filled data. |
-| `routeEditApprovalRule` | `(id: string) => string` | No | Function that generates the URL for editing an approval rule. Return the path to the edit form with the rule ID in the URL. Used by the Edit action button in each table row. |
-| `routeApprovalRuleDetails` | `(id: string) => string` | No | Function that generates the URL for viewing approval rule details. Return the path to the rule details page with the rule ID. Used by the View action button in each table row. |
-| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Function to customize table columns configuration. Use to reorder columns by returning a custom column array, hide specific columns by excluding them, or add custom columns for additional data. |
-| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Function to transform or enhance row data before display. Use to add calculated fields to each row, format or transform existing data, or inject custom properties for special rendering. |
-| `className` | `string` | No | Additional CSS classes for custom styling. Apply custom layout or spacing adjustments, or add theme-specific styles. |
-| `withHeader` | `boolean` | No | Shows or hides the section header. Use `true` (default) for a standalone rules list page. Use `false` when embedding in another component. |
-| `withWrapper` | `boolean` | No | Wraps the table in a Card component. Use `true` (default) for standard page layout. Use `false` when embedding inside another card. |
-| `skeletonRowCount` | `number` | No | Number of skeleton rows shown during loading. Use `5` (default) for a typical loading state. Increase for larger page sizes to match expected content. |
+| `initialPageSize` | `PageSizeListProps[]` | No | Configuration for initial page size |
+| `routeCreateApprovalRule` | `(id: string) => string` | No | Callback function for route create approval rule |
+| `routeEditApprovalRule` | `(id: string) => string` | No | Callback function for route edit approval rule |
+| `routeApprovalRuleDetails` | `(id: string) => string` | No | Callback function for route approval rule details |
+| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Callback function for set columns |
+| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Data object for set rows |
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
+| `skeletonRowCount` | `number` | No | Number of skeleton row |
 
 </TableWrapper>
 
-## Admin panel configuration
+## Slots
 
-The Purchase Order (B2B) feature must be enabled at both the store and company levels:
+This container does not currently expose any customizable slots.
 
-- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
-- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders
+## Usage
+
+The following example demonstrates how to use the `ApprovalRulesList` container:
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { ApprovalRulesList } from '@dropins/storefront-purchase-order/containers/ApprovalRulesList.js';
+
+await provider.render(ApprovalRulesList, {
+  initialPageSize: [],
+  routeCreateApprovalRule: () => {},
+  routeEditApprovalRule: () => {},
+})(block);
+```
+
+
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}

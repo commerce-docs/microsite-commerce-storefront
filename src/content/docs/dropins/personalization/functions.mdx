@@ -9,31 +9,7 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
+
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
@@ -52,11 +28,37 @@ The Personalization drop-in provides API functions that enable you to programmat
 | Function | Description |
 | --- | --- |
 | [`fetchPersonalizationData`](#fetchpersonalizationdata) | Request the customer group, applied segments, and cart rules from Adobe Commerce based on the cart ID.. |
+| [`fetchPersonalizationData`](#fetchpersonalizationdata) | Request the customer group, applied segments, and cart rules from Adobe Commerce based on the cart ID.. |
+| [`getPersonalizationData`](#getpersonalizationdata) | Retrieves the saved personalization data from a cookie.. |
 | [`getPersonalizationData`](#getpersonalizationdata) | Retrieves the saved personalization data from a cookie.. |
 | [`getStoreConfig`](#getstoreconfig) | Returns information about the store configuration related to personalization.. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about the store configuration related to personalization.. |
+| [`savePersonalizationData`](#savepersonalizationdata) | Saves the personalization data to a cookie for later retrieval.. |
 | [`savePersonalizationData`](#savepersonalizationdata) | Saves the personalization data to a cookie for later retrieval.. |
 
 </TableWrapper>
+
+## fetchPersonalizationData
+
+The `fetchPersonalizationData` can be used to request the customer group, applied segments, and cart rules from Adobe Commerce based on the cart ID.
+
+### Signature
+
+```typescript
+function fetchPersonalizationData(cartId: string): Promise<PersonalizationData | null>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `cartId` | `string` | Yes | The ID of the shopping cart. |
+
+</TableWrapper>
+
+---
 
 ## fetchPersonalizationData
 
@@ -90,6 +92,18 @@ Returns [`PersonalizationData`](#personalizationdata) or `null`.
 
 The `getPersonalizationData` function retrieves the saved personalization data from a cookie.
 
+### Signature
+
+```typescript
+function getPersonalizationData(): PersonalizationData
+```
+
+---
+
+## getPersonalizationData
+
+The `getPersonalizationData` function retrieves the saved personalization data from a cookie.
+
 ```ts
 const getPersonalizationData = async (): PersonalizationData
 ```
@@ -108,6 +122,18 @@ Returns [`PersonalizationData`](#personalizationdata).
 
 The `getStoreConfig` function returns information about the store configuration related to personalization.
 
+### Signature
+
+```typescript
+function getStoreConfig(): Promise<StoreConfigModel | null>
+```
+
+---
+
+## getStoreConfig
+
+The `getStoreConfig` function returns information about the store configuration related to personalization.
+
 ```ts
 const getStoreConfig = async (): Promise<StoreConfigModel | null>
 ```
@@ -119,6 +145,32 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
+
+---
+
+## savePersonalizationData
+
+The `savePersonalizationData` function saves the personalization data to a cookie for later retrieval.
+
+### Signature
+
+```typescript
+function savePersonalizationData(data: PersonalizationData): Promise<void>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `data` | `PersonalizationData` | Yes | Personalization data containing groups, segment, and cart price rules. |
+
+</TableWrapper>
+
+### Events
+
+Emits the **personalization-updated** event with the saved personalization data, including customer segments, groups, and cart rules.
 
 ---
 
@@ -158,7 +210,7 @@ The following data models are used by functions in this drop-in.
 
 ### PersonalizationData
 
-The `PersonalizationData` object is returned by the following functions: [`fetchPersonalizationData`](#fetchpersonalizationdata), [`getPersonalizationData`](#getpersonalizationdata).
+The `PersonalizationData` object is returned by the following functions: [`fetchPersonalizationData`](#fetchpersonalizationdata), [`fetchPersonalizationData`](#fetchpersonalizationdata), [`getPersonalizationData`](#getpersonalizationdata), [`getPersonalizationData`](#getpersonalizationdata).
 
 ```ts
 interface PersonalizationData {
@@ -170,7 +222,7 @@ interface PersonalizationData {
 
 ### StoreConfigModel
 
-The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig), [`getStoreConfig`](#getstoreconfig).
 
 ```ts
 interface StoreConfigModel {

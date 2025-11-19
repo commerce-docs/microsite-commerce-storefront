@@ -7,85 +7,69 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
-import Diagram from '@components/Diagram.astro';
 
-The CompanyPurchaseOrders container displays purchase orders placed by company users.  Depending on ACL permissions, it shows all company purchase orders or only those created by subordinate users.  No special props are required to initialize the container.  It automatically loads and retrieves purchase order data using a customer GraphQL query (field: `customer.
 
-purchase_orders`, filter: `company_purchase_orders`).  The container displays purchase orders in a tabular format with expandable rows.  Two bulk action buttons - **Approve selected** and **Reject selected** - are available only to company administrators (based on ACL permissions).
 
-<Diagram caption="CompanyPurchaseOrders container">
-  ![CompanyPurchaseOrders container](../images/company-purchase-orders.png)
-</Diagram>
-
-### Displayed information
-
-- Checkbox Selector (company admins only)
-- PO# (Purchase Order number)
-- Status (current status)
-- Created By (user who created the PO)
-- Action (Show/Hide to expand/collapse)
-- Expanded row: Order Number, Created Date, Updated Date, Total, View action
-### Available actions
-
-- Approve selected (bulk action, company admins only)
-- Reject selected (bulk action, company admins only)
-- View (row-level action, redirects to PO details)
-### ACL permissions
-
-Access to the container is governed by the following ACL permissions:
-
-- `Magento_PurchaseOrder::view_purchase_orders_for_subordinates`
-- `Magento_PurchaseOrder::view_purchase_orders_for_company`
-
-## Integration example
-
-#### Basic
-
-```javascript
-import { CompanyPurchaseOrders } from '@dropins/storefront-purchase-order/containers/CompanyPurchaseOrders.js';
-import { render as provider } from '@dropins/storefront-purchase-order/render.js';
-
-await provider.render(CompanyPurchaseOrders, {
-  routePurchaseOrderDetails: (poId) => `/purchase-order/details?poRef=${poId}`,
-  withHeader: true,
-  withWrapper: true,
-})(element);
-```
-
-#### Custom Page Size
-
-```javascript
-await provider.render(CompanyPurchaseOrders, {
-  routePurchaseOrderDetails: (poId) => `/purchase-order/details?poRef=${poId}`,
-  initialPageSize: [
-    { text: '5', value: '5', selected: true },
-    { text: '10', value: '10', selected: false },
-    { text: '20', value: '20', selected: false },
-  ],
-})(element);
-```
-
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 0.0.1</strong>
+</div>
 
 ## Configuration
 
+The `CompanyPurchaseOrders` container provides the following configuration options:
+
+{/* 
+  IMPORTANT: Do not wrap <TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `initialPageSize` | `PageSizeListProps[]` | Yes | Configuration for initial page size |
+| `routePurchaseOrderDetails` | `(poId: string) => string` | No | Callback function for route purchase order details |
+| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Callback function for set columns |
+| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Data object for set rows |
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
+| `skeletonRowCount` | `number` | No | Number of skeleton row |
+
+</TableWrapper> in TableWrapper or add a table header.
+  The generator's generatePropertyTable() function already includes both.
+  Adding them here will cause nested TableWrapper components and duplicate headers.
+*/}
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `initialPageSize` | `PageSizeListProps[]` | Yes | Configuration for page size dropdown options. Customize available page sizes (e.g., 5, 10, 20 items per page) and set the default selected page size with `selected: true`. |
-| `routePurchaseOrderDetails` | `(poId: string) => string` | No | Function that generates the URL for the purchase order details page. Return the path to the PO details page with the PO ID. Used by the View action button in each table row. |
-| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Function to customize table columns configuration. Use to reorder columns, hide specific columns, or customize column labels. |
-| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Function to transform or enhance row data before display. Use to add calculated fields, format dates or currency values, or inject custom properties. |
-| `className` | `string` | No | Additional CSS classes for custom styling. Apply custom layout adjustments or add theme-specific styles. |
-| `withHeader` | `boolean` | No | Shows or hides the section header. Use `true` (default) for a standalone page. Use `false` when embedding in another component. |
-| `withWrapper` | `boolean` | No | Wraps the table in a Card component. Use `true` (default) for standard page layout. Use `false` when embedding inside another card. |
-| `skeletonRowCount` | `number` | No | Number of skeleton rows shown during loading. Use `5` (default) for a typical loading state. Match to the expected page size for consistent UX. |
+| `initialPageSize` | `PageSizeListProps[]` | Yes | Configuration for initial page size |
+| `routePurchaseOrderDetails` | `(poId: string) => string` | No | Callback function for route purchase order details |
+| `setColumns` | `(defaultColumns: Column[]) => Column[]` | No | Callback function for set columns |
+| `setRowsData` | `(defaultRows: Row[]) => Row[]` | No | Data object for set rows |
+| `className` | `string` | No | Additional CSS classes to apply to the container |
+| `withHeader` | `boolean` | No | Configuration for with header |
+| `withWrapper` | `boolean` | No | Configuration for with wrapper |
+| `skeletonRowCount` | `number` | No | Number of skeleton row |
 
 </TableWrapper>
 
-## Admin panel configuration
+## Slots
 
-The Purchase Order (B2B) feature must be enabled at both the store and company levels:
+This container does not currently expose any customizable slots.
 
-- **Store level**: Stores > Settings > Configuration > General > B2B Features > Order Approval Configuration > Enable Purchase Orders
-- **Company level**: Customers > Companies > Edit Company > Advanced Settings > Enable Purchase Orders
+## Usage
+
+The following example demonstrates how to use the `CompanyPurchaseOrders` container:
+
+```js
+import { render as provider } from '@dropins/storefront-purchase-order/render.js';
+import { CompanyPurchaseOrders } from '@dropins/storefront-purchase-order/containers/CompanyPurchaseOrders.js';
+
+await provider.render(CompanyPurchaseOrders, {
+  initialPageSize: [],
+  routePurchaseOrderDetails: () => {},
+  setColumns: [],
+})(block);
+```
+
+
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-purchase-order */}

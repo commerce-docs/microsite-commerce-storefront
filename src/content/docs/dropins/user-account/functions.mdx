@@ -9,31 +9,7 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
+
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
@@ -52,20 +28,55 @@ The User Account drop-in provides API functions that enable you to programmatica
 | Function | Description |
 | --- | --- |
 | [`createCustomerAddress`](#createcustomeraddress) | Creates an address for an existing customer using the CustomerAddressesModel object as an argument. |
+| [`createCustomerAddress`](#createcustomeraddress) | Creates an address for an existing customer using the CustomerAddressesModel object as an argument. |
+| [`getAttributesForm`](#getattributesform) | Calls the attributesForm query to retrieve EAV attributes associated with customer and customer address frontend forms. |
 | [`getAttributesForm`](#getattributesform) | Calls the attributesForm query to retrieve EAV attributes associated with customer and customer address frontend forms. |
 | [`getCountries`](#getcountries) | Calls the countries query to retrieve a list of countries.. |
+| [`getCountries`](#getcountries) | Calls the countries query to retrieve a list of countries.. |
+| [`getCustomer`](#getcustomer) | Retrieves the customer information for the logged-in customer. |
 | [`getCustomer`](#getcustomer) | Retrieves the customer information for the logged-in customer. |
 | [`getCustomerAddress`](#getcustomeraddress) | Returns an array of addresses associated with the current customer. |
+| [`getCustomerAddress`](#getcustomeraddress) | Returns an array of addresses associated with the current customer. |
+| [`getOrderHistoryList`](#getorderhistorylist) | Is an asynchronous function that retrieves a list of customer orders using the customer query. |
 | [`getOrderHistoryList`](#getorderhistorylist) | Is an asynchronous function that retrieves a list of customer orders using the customer query. |
 | [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country.. |
+| [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country.. |
+| [`getStoreConfig`](#getstoreconfig) | Calls the storeConfig query to retrieve details about password requirements.. |
 | [`getStoreConfig`](#getstoreconfig) | Calls the storeConfig query to retrieve details about password requirements.. |
 | [`removeCustomerAddress`](#removecustomeraddress) | Removes an address associated with the current customer. |
+| [`removeCustomerAddress`](#removecustomeraddress) | Removes an address associated with the current customer. |
+| [`updateCustomer`](#updatecustomer) | Updates the logged-in customer. |
 | [`updateCustomer`](#updatecustomer) | Updates the logged-in customer. |
 | [`updateCustomerAddress`](#updatecustomeraddress) | Updates an address associated with the current customer. |
+| [`updateCustomerAddress`](#updatecustomeraddress) | Updates an address associated with the current customer. |
 | [`updateCustomerEmail`](#updatecustomeremail) | Updates the email address of the logged-in customer. |
+| [`updateCustomerEmail`](#updatecustomeremail) | Updates the email address of the logged-in customer. |
+| [`updateCustomerPassword`](#updatecustomerpassword) | Updates the password of the logged-in customer. |
 | [`updateCustomerPassword`](#updatecustomerpassword) | Updates the password of the logged-in customer. |
 
 </TableWrapper>
+
+## createCustomerAddress
+
+The `createCustomerAddress` function creates an address for an existing customer using the `CustomerAddressesModel` object as an argument. The function calls the [`createCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/create-address/) mutation.
+
+### Signature
+
+```typescript
+function createCustomerAddress(address: CustomerAddressesModel): Promise<string>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `address` | `CustomerAddressesModel` | Yes | The new address details including street, city, region, country, postal code, and optional fields like company name and phone number. |
+
+</TableWrapper>
+
+---
 
 ## createCustomerAddress
 
@@ -92,6 +103,28 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `string`.
+
+---
+
+## getAttributesForm
+
+The `getAttributesForm` function calls the [`attributesForm`](https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/) query to retrieve EAV attributes associated with customer and customer address frontend forms. The `formCode` parameter must be one of the following values: `customer_account_create`, `customer_account_edit`, `customer_address_create`, or `customer_address_edit`.
+
+### Signature
+
+```typescript
+function getAttributesForm(formCode: string): Promise<AttributesFormModel[]>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `formCode` | `string` | Yes | One of "customer_account_create", "customer_account_edit", "customer_address_create", "customer_address_edit". |
+
+</TableWrapper>
 
 ---
 
@@ -125,6 +158,22 @@ Returns `AttributesFormModel[]`.
 
 ## getCountries
 
+The `getCountries` function calls the [`countries`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/) query to retrieve a list of countries.
+
+### Signature
+
+```typescript
+function getCountries(): Promise<{
+  availableCountries: Country[] | [];
+  countriesWithRequiredRegion: string[];
+  optionalZipCountries: string[];
+}>
+```
+
+---
+
+## getCountries
+
 The `getCountries` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/" text="countries" /> query to retrieve a list of countries.
 
 ```ts
@@ -141,11 +190,27 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `Promise<{
+```ts
+Promise<{
   availableCountries: Country[] | [];
   countriesWithRequiredRegion: string[];
   optionalZipCountries: string[];
-}>`. See [`Country`](#country).
+}>
+```
+
+See [`Country`](#country).
+
+---
+
+## getCustomer
+
+The `getCustomer` function retrieves the customer information for the logged-in customer. The function calls the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+### Signature
+
+```typescript
+function getCustomer(): Promise<CustomerDataModelShort>
+```
 
 ---
 
@@ -169,6 +234,20 @@ Returns [`CustomerDataModelShort`](#customerdatamodelshort).
 
 ## getCustomerAddress
 
+The `getCustomerAddress` function returns an array of addresses associated with the current customer. The function calls the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.
+
+### Signature
+
+```typescript
+function getCustomerAddress(): Promise<
+  CustomerAddressesModel[]
+>
+```
+
+---
+
+## getCustomerAddress
+
 The `getCustomerAddress` function returns an array of addresses associated with the current customer. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/" text="customer" /> query.
 
 ```ts
@@ -183,9 +262,37 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `Promise<
+```ts
+Promise<
   CustomerAddressesModel[]
->`. See [`CustomerAddressesModel`](#customeraddressesmodel).
+>
+```
+
+See [`CustomerAddressesModel`](#customeraddressesmodel).
+
+---
+
+## getOrderHistoryList
+
+The `getOrderHistoryList` function is an asynchronous function that retrieves a list of customer orders using the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query. It optionally takes parameters for pagination and filtering.
+
+### Signature
+
+```typescript
+function getOrderHistoryList(pageSize: number, selectOrdersDate: string, currentPage: number): Promise<OrderHistoryModel | null>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `pageSize` | `number` | Yes | The maximum number of results to return at once. The default value is 20. |
+| `selectOrdersDate` | `string` | Yes | Represents a date filter for the orders. |
+| `currentPage` | `number` | Yes | The current page of the order history list. The default value is 1. |
+
+</TableWrapper>
 
 ---
 
@@ -223,6 +330,28 @@ Returns [`OrderHistoryModel`](#orderhistorymodel) or `null`.
 
 ## getRegions
 
+The `getRegions` function calls the [`country`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/) query to retrieve a list of states or provinces for a specific country.
+
+### Signature
+
+```typescript
+function getRegions(countryCode: string): Promise<RegionTransform[] | []>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `countryCode` | `string` | Yes | A two-letter abbreviation for the country ID. |
+
+</TableWrapper>
+
+---
+
+## getRegions
+
 The `getRegions` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/country/" text="country" /> query to retrieve a list of states or provinces for a specific country.
 
 ```ts
@@ -251,6 +380,18 @@ Returns `RegionTransform[] | []`. See [`RegionTransform`](#regiontransform).
 
 ## getStoreConfig
 
+The `getStoreConfig` function calls the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query to retrieve details about password requirements.
+
+### Signature
+
+```typescript
+function getStoreConfig(): Promise<StoreConfigModel>
+```
+
+---
+
+## getStoreConfig
+
 The `getStoreConfig` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/" text="storeConfig" /> query to retrieve details about password requirements.
 
 ```ts
@@ -264,6 +405,28 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`StoreConfigModel`](#storeconfigmodel).
+
+---
+
+## removeCustomerAddress
+
+The `removeCustomerAddress` function removes an address associated with the current customer. The function calls the [`deleteCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/delete-address/) mutation.
+
+### Signature
+
+```typescript
+function removeCustomerAddress(addressId: number): Promise<boolean>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `addressId` | `number` | Yes | An internal ID for the address. |
+
+</TableWrapper>
 
 ---
 
@@ -292,6 +455,30 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `boolean`.
+
+---
+
+## updateCustomer
+
+The `updateCustomer` function updates the logged-in customer. The function calls the [`updateCustomerV2`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-v2/) mutation.
+
+The `form` object keys are converted to snake_case using the `convertKeysCase` utility with specific mappings for `firstName`, `lastName`, `middleName`, and `custom_attributesV2`.
+
+### Signature
+
+```typescript
+function updateCustomer(form: Record<string, string>): Promise<string>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `form` | `Record<string` | Yes | The customer attributes to update, such as firstName, lastName, email, date of birth, and custom attributes. |
+
+</TableWrapper>
 
 ---
 
@@ -328,6 +515,30 @@ Returns `string`.
 
 ## updateCustomerAddress
 
+The `updateCustomerAddress` function updates an address associated with the current customer. The function calls the [`updateCustomerAddress`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-address/) mutation.
+
+The `forms` object includes an `addressId`, which is a number representing the ID of the address to be updated and other address details as defined in `CustomerAddressesModel`.
+
+### Signature
+
+```typescript
+function updateCustomerAddress(forms: ExtendedAddressFormProps): Promise<string>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `forms` | `ExtendedAddressFormProps` | Yes | The addressId and address attributes to update, such as street, city, region, country, and postal code. |
+
+</TableWrapper>
+
+---
+
+## updateCustomerAddress
+
 The `updateCustomerAddress` function updates an address associated with the current customer. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-address/" text="updateCustomerAddress" /> mutation.
 
 The `forms` object includes an `addressId`, which is a number representing the ID of the address to be updated and other address details as defined in `CustomerAddressesModel`.
@@ -358,6 +569,28 @@ Returns `string`.
 
 ## updateCustomerEmail
 
+The `updateCustomerEmail` function updates the email address of the logged-in customer. The function calls the [`updateCustomerEmail`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-email/) mutation.
+
+### Signature
+
+```typescript
+function updateCustomerEmail({ email, password, }: { email: string; password: string; }): Promise<string>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `email` | `string; password: string; }` | Yes | The new email address of the customer. |
+
+</TableWrapper>
+
+---
+
+## updateCustomerEmail
+
 The `updateCustomerEmail` function updates the email address of the logged-in customer. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/update-email/" text="updateCustomerEmail" /> mutation.
 
 ```ts
@@ -381,6 +614,27 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `string`.
+
+---
+
+## updateCustomerPassword
+
+The `updateCustomerPassword` function updates the password of the logged-in customer. The function calls the [`changeCustomerPassword`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/change-password/) mutation.
+
+### Signature
+
+```typescript
+function updateCustomerPassword({ currentPassword, newPassword, }: ChangeCustomerPasswordProps): Promise<string>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+
+</TableWrapper>
 
 ---
 
@@ -418,7 +672,7 @@ The following data models are used by functions in this drop-in.
 
 ### Country
 
-The `Country` object is returned by the following functions: [`getCountries`](#getcountries).
+The `Country` object is returned by the following functions: [`getCountries`](#getcountries), [`getCountries`](#getcountries).
 
 ```ts
 type Country = {
@@ -434,7 +688,7 @@ type Country = {
 
 ### CustomerAddressesModel
 
-The `CustomerAddressesModel` object is returned by the following functions: [`getCustomerAddress`](#getcustomeraddress).
+The `CustomerAddressesModel` object is returned by the following functions: [`getCustomerAddress`](#getcustomeraddress), [`getCustomerAddress`](#getcustomeraddress).
 
 ```ts
 interface CustomerAddressesModel {
@@ -458,7 +712,7 @@ interface CustomerAddressesModel {
 
 ### CustomerDataModelShort
 
-The `CustomerDataModelShort` object is returned by the following functions: [`getCustomer`](#getcustomer).
+The `CustomerDataModelShort` object is returned by the following functions: [`getCustomer`](#getcustomer), [`getCustomer`](#getcustomer).
 
 ```ts
 interface CustomerDataModelShort {
@@ -477,7 +731,7 @@ interface CustomerDataModelShort {
 
 ### OrderHistoryModel
 
-The `OrderHistoryModel` object is returned by the following functions: [`getOrderHistoryList`](#getorderhistorylist).
+The `OrderHistoryModel` object is returned by the following functions: [`getOrderHistoryList`](#getorderhistorylist), [`getOrderHistoryList`](#getorderhistorylist).
 
 ```ts
 interface OrderHistoryModel {
@@ -490,7 +744,7 @@ interface OrderHistoryModel {
 
 ### RegionTransform
 
-The `RegionTransform` object is returned by the following functions: [`getRegions`](#getregions).
+The `RegionTransform` object is returned by the following functions: [`getRegions`](#getregions), [`getRegions`](#getregions).
 
 ```ts
 interface RegionTransform {
@@ -502,7 +756,7 @@ interface RegionTransform {
 
 ### StoreConfigModel
 
-The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig), [`getStoreConfig`](#getstoreconfig).
 
 ```ts
 interface StoreConfigModel {
