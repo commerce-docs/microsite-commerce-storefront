@@ -1,0 +1,287 @@
+---
+title: Company Switcher Data & Events
+description: Learn about the events used by the Company Switcher and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Company Switcher, Company Switcher, EVENT_NAME, and so on.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Company Switcher** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.5</strong>
+</div>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
+| [company/updated](#companyupdated-listens) | Listens | Fired by Company (`company`) when the component state is updated. |
+| [companyContext/changed](#companycontextchanged-emits-and-listens) | Emits and listens | Triggered when a change occurs. |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+
+### `checkout/initialized` (listens)
+
+Fired by Checkout (`checkout`) when the component completes initialization.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `company/updated` (listens)
+
+Fired by Company (`company`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+{
+  company: {
+  id: string;
+  name: string;
+  email: string;
+  legalAddress: {
+  street: string[];
+  city: string;
+  region: {
+  region: string;
+  regionCode: string;
+  regionId: number;
+}
+  countryCode: string;
+  postcode: string;
+  telephone: string;
+}
+  companyAdmin: {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  salesRepresentative: {
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  availablePaymentMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  availableShippingMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  canEditAccount: boolean;
+  canEditAddress: boolean;
+  permissionsFlags: {
+  canViewAccount: boolean;
+  canEditAccount: boolean;
+  canViewAddress: boolean;
+  canEditAddress: boolean;
+  canViewContacts: boolean;
+  canViewPaymentInformation: boolean;
+  canViewShippingInformation: boolean;
+}
+  customerRole: {
+  id: string;
+  name: string;
+  permissions: any[];
+}
+  customerStatus: string;
+}
+}
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('company/updated', (payload) => {
+  console.log('company/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `companyContext/changed` (emits and listens)
+
+Triggered when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null
+```
+
+
+
+#### When triggered
+
+- After user selects a different company from the switcher
+- On initial page load when company context is established
+- After successful company context update
+- When company headers are set via `setCompanyHeaders()`
+- When company headers are removed by passing `null` to `setCompanyHeaders()`
+
+
+
+#### Example: Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('companyContext/changed', (companyId) => {
+  if (companyId) {
+    console.log(`Company context changed to: ${companyId}`);
+    
+    // Refresh all company-specific data
+    refreshCompanyData(companyId);
+    
+    // Update permissions for new company
+    refreshUserPermissions();
+    
+    // Reload company-specific UI components
+    reloadCompanyDependentData();
+    
+    // Track analytics
+    trackCompanySwitch(companyId);
+  } else {
+    console.log('Company context removed');
+    
+    // Clear company-specific caches
+    clearCompanyCache();
+  }
+});
+```
+
+
+
+#### Usage scenarios
+
+- Refresh company-specific data across the application.
+- Update user permissions for the new company context.
+- Reload company-dependent drop-ins (Purchase Order, Quote Management, and so on).
+- Clear cached data from previous company.
+- Update navigation and menu items based on new company.
+- Track company switching behavior in analytics.
+- Update session storage or cookies.
+- Refresh company structure and hierarchy displays.
+- Update approval rules and workflows.
+- Reload requisition lists for new company.
+
+---
+
+## Integration with other drop-ins
+
+The `companyContext/changed` event is critical for coordinating multiple B2B drop-ins. When this event fires, other drop-ins should refresh their data:
+
+
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
