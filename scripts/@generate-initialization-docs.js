@@ -487,12 +487,14 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Pick first model for example, or use a generic placeholder  
     const primaryModel = models.length > 0 ? models[0].name : 'CustomModel';
 
-    // Merge enrichment descriptions with extracted models
+    // Merge enrichment descriptions and definitions with extracted models
     const enrichedModels = models.map(model => {
         const enrichedDesc = enrichmentData?.models?.[model.name]?.description;
+        const enrichedDef = enrichmentData?.models?.[model.name]?.definition;
         return {
             ...model,
-            description: enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`
+            description: enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`,
+            definition: enrichedDef || model.definition || 'undefined'
         };
     });
 
@@ -656,7 +658,7 @@ function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, 
     const versionDisplay = cleanVersion(version);
 
     // Use enrichment intro if available, otherwise use default text
-    const introText = enrichmentData?.intro || 
+    const introText = enrichmentData?.intro ||
         `The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.`;
 
     return `---
