@@ -365,6 +365,7 @@ function extractEventsFromSource(repoPath, functionName) {
 function scanForFunctions(repoPath) {
     const apiPath = join(repoPath, 'src', 'api');
     const functions = [];
+    const processedFunctions = new Set(); // Track processed function names to prevent duplicates
 
     if (!existsSync(apiPath)) {
         console.log(`  ⚠️  No src/api directory found`);
@@ -372,6 +373,107 @@ function scanForFunctions(repoPath) {
     }
 
     try {
+        // SPECIAL CASE: Check for index.ts or index.d.ts with all exports (e.g., Company Switcher)
+        // Some drop-ins export all functions from a single index file instead of individual directories
+        const apiIndexTs = join(apiPath, 'index.ts');
+        const apiIndexDts = join(apiPath, 'index.d.ts');
+        const apiIndexFile = existsSync(apiIndexTs) ? apiIndexTs : (existsSync(apiIndexDts) ? apiIndexDts : null);
+
+        if (apiIndexFile) {
+            const indexContent = readFileSync(apiIndexFile, 'utf8');
+
+            // Look for subdirectory exports: 
+            // - export * from './customerCompanyContext';
+            // - export * from '@/company-switcher/api/customerCompanyContext';
+            const relativePattern = /export\s+\*\s+from\s+['"]\.\/([\w-]+)['"]/g;
+            const absolutePattern = /export\s+\*\s+from\s+['"]@\/[\w-]+\/api\/([\w-]+)['"]/g;
+            let match;
+            const exportedDirs = [];
+
+            while ((match = relativePattern.exec(indexContent)) !== null) {
+                exportedDirs.push(match[1]);
+            }
+
+            // Reset lastIndex for second pattern
+            while ((match = absolutePattern.exec(indexContent)) !== null) {
+                exportedDirs.push(match[1]);
+            }
+
+            // For each exported directory, find the actual function names
+            for (const dirName of exportedDirs) {
+                const dirPath = join(apiPath, dirName);
+                if (!existsSync(dirPath)) continue;
+
+                // Check for .ts or .d.ts files in this subdirectory
+                const subIndexTs = join(dirPath, 'index.ts');
+                const subIndexDts = join(dirPath, 'index.d.ts');
+                const subFileTs = join(dirPath, `${dirName}.ts`);
+                const subFileDts = join(dirPath, `${dirName}.d.ts`);
+
+                const sourceFile = existsSync(subFileTs) ? subFileTs :
+                    (existsSync(subFileDts) ? subFileDts :
+                        (existsSync(subIndexTs) ? subIndexTs :
+                            (existsSync(subIndexDts) ? subIndexDts : null)));
+
+                if (!sourceFile) continue;
+
+                const sourceContent = readFileSync(sourceFile, 'utf8');
+
+                // Extract function names from both .ts and .d.ts files:
+                // - .d.ts: export declare const functionName: ...
+                // - .ts: export const functionName = ...
+                // - index.ts re-exports: export { functionName } from './file'
+                const funcPatterns = [
+                    /export\s+declare\s+const\s+(\w+)\s*:/g,  // .d.ts format
+                    /export\s+const\s+(\w+)\s*=/g,             // .ts format
+                    /export\s+\{\s*(\w+)\s*\}\s+from/g         // re-export format
+                ];
+                let funcMatch;
+
+                for (const funcPattern of funcPatterns) {
+                    while ((funcMatch = funcPattern.exec(sourceContent)) !== null) {
+                        const functionName = funcMatch[1];
+
+                        // Skip internal functions or classes
+                        if (functionName.startsWith('_') || functionName.includes('Internal') ||
+                            // Skip classes (they start with uppercase)
+                            functionName[0] === functionName[0].toUpperCase()) {
+                            continue;
+                        }
+
+                        console.log(`  ✓ Found .ts function: ${functionName} (in ${dirName}/)`);
+
+                        // For re-exported functions, try to find the actual implementation file
+                        let signatureContent = sourceContent;
+                        if (funcPattern.source.includes('from')) {
+                            // This is a re-export, try to find the actual implementation
+                            const reExportMatch = sourceContent.match(new RegExp(`export\\s+\\{[^}]*\\b${functionName}\\b[^}]*\\}\\s+from\\s+['"]\\./(\\w+)['"]`));
+                            if (reExportMatch) {
+                                const implFileName = reExportMatch[1];
+                                const implFilePath = join(dirPath, `${implFileName}.ts`);
+                                if (existsSync(implFilePath)) {
+                                    signatureContent = readFileSync(implFilePath, 'utf8');
+                                }
+                            }
+                        }
+
+                        // Extract signature
+                        const signature = extractFunctionSignature(signatureContent, functionName);
+
+                        if (signature && !processedFunctions.has(functionName)) {
+                            processedFunctions.add(functionName);
+                            functions.push({
+                                name: functionName,
+                                mdxContent: null,
+                                signature,
+                                mdxPath: null
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
         const entries = readdirSync(apiPath);
 
         for (const entry of entries) {
@@ -387,6 +489,7 @@ function scanForFunctions(repoPath) {
             // Look for function MDX file
             const mdxPath = join(entryPath, `${entry}.mdx`);
             const tsPath = join(entryPath, `${entry}.ts`);
+            const dtsPath = join(entryPath, `${entry}.d.ts`);
 
             if (existsSync(mdxPath)) {
                 const mdxContent = readFileSync(mdxPath, 'utf8');
@@ -408,12 +511,41 @@ function scanForFunctions(repoPath) {
                     continue;
                 }
 
-                functions.push({
-                    name: entry,
-                    mdxContent,
-                    signature,
-                    mdxPath: mdxPath.replace(repoPath, '')
-                });
+                // Only add if not already processed
+                if (!processedFunctions.has(entry)) {
+                    processedFunctions.add(entry);
+                    functions.push({
+                        name: entry,
+                        mdxContent,
+                        signature,
+                        mdxPath: mdxPath.replace(repoPath, '')
+                    });
+                }
+            } else if (existsSync(tsPath) || existsSync(dtsPath)) {
+                // No .mdx file, but .ts or .d.ts file exists - extract TypeScript-only function
+                const actualTsPath = existsSync(tsPath) ? tsPath : dtsPath;
+                const tsContent = readFileSync(actualTsPath, 'utf8');
+                const signature = extractFunctionSignature(tsContent, entry);
+
+                // Skip non-exported functions (respect public API boundary)
+                if (!signature) {
+                    console.log(`  ⚠️  Skipping ${entry} - function is not exported (not part of public API)`);
+                    continue;
+                }
+
+                console.log(`  ✓ Found TypeScript-only function: ${entry}`);
+
+                // Only add if not already processed
+                if (!processedFunctions.has(entry)) {
+                    processedFunctions.add(entry);
+                    functions.push({
+                        name: entry,
+                        mdxContent: null,  // No MDX content available
+                        signature,
+                        mdxPath: null,
+                        tsOnly: true  // Flag to indicate this is TypeScript-only
+                    });
+                }
             }
         }
 
@@ -440,13 +572,17 @@ function extractFunctionSignature(tsContent, functionName) {
 
     // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
+        // .d.ts format: export declare const functionName: (...) => ...
+        { regex: new RegExp(`export\\s+declare\\s+const\\s+${functionName}\\s*:\\s*\\(`, 's'), isAsync: true, isArrow: true, isDeclare: true },
+        // Arrow functions
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*async\\s*\\(`, 's'), isAsync: true, isArrow: true },
         { regex: new RegExp(`export\\s+const\\s+${functionName}\\s*=\\s*\\(`, 's'), isAsync: false, isArrow: true },
+        // Regular functions
         { regex: new RegExp(`export\\s+async\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: true, isArrow: false },
         { regex: new RegExp(`export\\s+function\\s+${functionName}\\s*\\(`, 's'), isAsync: false, isArrow: false },
     ];
 
-    for (const { regex, isAsync, isArrow } of patterns) {
+    for (const { regex, isAsync, isArrow, isDeclare } of patterns) {
         const match = tsContent.match(regex);
         if (match) {
             const startIndex = match.index + match[0].length - 1; // Position of opening paren
@@ -503,7 +639,40 @@ function extractFunctionSignature(tsContent, functionName) {
             }
 
             // Check for explicit return type annotation ": Type"
-            if (tsContent[i] === ':') {
+            // For declare statements, the format is: (params) => ReturnType (not : ReturnType)
+            if (isDeclare && tsContent.substring(i, i + 2) === '=>') {
+                // Skip the =>
+                i += 2;
+                // Skip whitespace
+                while (i < tsContent.length && /\s/.test(tsContent[i])) {
+                    i++;
+                }
+
+                // Extract return type until we find ; or end of line
+                let returnTypeStr = '';
+                let angleCount = 0;
+                let braceCount = 0;
+
+                while (i < tsContent.length) {
+                    const char = tsContent[i];
+
+                    if (char === '<') angleCount++;
+                    else if (char === '>') angleCount--;
+                    else if (char === '{') braceCount++;
+                    else if (char === '}') braceCount--;
+
+                    // Stop at ; or newline when not inside brackets
+                    if (angleCount === 0 && braceCount === 0) {
+                        if (char === ';' || char === '\n') {
+                            returnType = returnTypeStr.trim();
+                            break;
+                        }
+                    }
+
+                    returnTypeStr += char;
+                    i++;
+                }
+            } else if (tsContent[i] === ':') {
                 i++; // Skip the colon
                 // Skip whitespace
                 while (i < tsContent.length && /\s/.test(tsContent[i])) {
@@ -981,6 +1150,94 @@ function normalizeDescriptionToVerb(description, functionName) {
 }
 
 /**
+ * Generate complete function documentation from enrichment only
+ * Used for TypeScript-only functions without .mdx files
+ * 
+ * @param {Object} func - Function data with signature
+ * @param {Object} enrichment - Enrichment data for the function
+ * @returns {string} Generated function section
+ */
+function generateFunctionFromEnrichment(func, enrichment) {
+    let content = '';
+
+    // Function name heading
+    content += `## ${func.name}\n\n`;
+
+    // Description
+    if (enrichment.description) {
+        content += `${enrichment.description}\n\n`;
+    }
+
+    // Signature
+    if (func.signature) {
+        content += `### Signature\n\n`;
+        content += `\`\`\`typescript\n`;
+        content += `function ${func.name}(${func.signature.params || ''}): ${func.signature.returnType || 'void'}\n`;
+        content += `\`\`\`\n\n`;
+    }
+
+    // Parameters table (if parameters exist)
+    if (func.signature && func.signature.params && enrichment.parameters) {
+        content += `### Parameters\n\n`;
+        content += `<TableWrapper nowrap={[0,1]}>\n\n`;
+        content += `| Parameter | Type | Required | Description |\n`;
+        content += `|---|---|---|---|\n`;
+
+        // Parse parameters from signature
+        const paramPattern = /(\w+)(\??)\s*:\s*([^,)]+)/g;
+        let match;
+        while ((match = paramPattern.exec(func.signature.params)) !== null) {
+            const paramName = match[1];
+            const optional = match[2] === '?';
+            const paramType = match[3].trim();
+            const required = !optional;
+            const description = enrichment.parameters[paramName]?.description || '';
+
+            content += `| \`${paramName}\` | \`${paramType}\` | ${required ? 'Yes' : 'No'} | ${description} |\n`;
+        }
+
+        content += `\n</TableWrapper>\n\n`;
+    }
+
+    // Returns
+    if (enrichment.returns) {
+        content += `### Returns\n\n`;
+        content += `${enrichment.returns}\n\n`;
+    }
+
+    // Example
+    if (enrichment.example) {
+        content += `### Example\n\n`;
+        content += `${enrichment.example}\n\n`;
+    }
+
+    // Events
+    if (enrichment.events) {
+        content += `### Events\n\n`;
+        content += `${enrichment.events}\n\n`;
+    }
+
+    // Usage scenarios
+    if (enrichment.usageScenarios) {
+        content += `### Usage scenarios\n\n`;
+        content += `${enrichment.usageScenarios}\n\n`;
+    }
+
+    // Asides
+    if (enrichment.asides && enrichment.asides.length > 0) {
+        enrichment.asides.forEach(aside => {
+            content += `<Aside type="${aside.type}">\n`;
+            content += `${aside.content}\n`;
+            content += `</Aside>\n\n`;
+        });
+    }
+
+    content += `---\n\n`;
+
+    return content;
+}
+
+/**
  * Generate functions MDX content
  * 
  * @param {string} repoName - Repository name (e.g., 'cart')
@@ -995,7 +1252,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     const { functions } = scannedData;
 
     if (functions.length === 0) {
-        return generateEmptyFunctionsDocs(repoName, repoConfig, versionInfo.requested);
+        return generateEmptyFunctionsDocs(repoName, repoConfig, version);
     }
 
     // Create validation report for source-first validation
@@ -1064,7 +1321,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
 
         // Get description (from enrichment or extract from MDX)
         let description = enrichment && enrichment.description ? enrichment.description : null;
-        if (!description) {
+        if (!description && func.mdxContent) {
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
 
@@ -1091,6 +1348,13 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     functions.forEach(func => {
         // Check for enrichment data for this function
         const enrichment = enrichmentData && enrichmentData[func.name] ? enrichmentData[func.name] : null;
+
+        // SPECIAL CASE: TypeScript-only functions with enrichment (no .mdx file)
+        // Generate complete documentation from enrichment
+        if (!func.mdxContent && enrichment) {
+            functionsContent += generateFunctionFromEnrichment(func, enrichment);
+            return; // Skip normal processing
+        }
 
         // Collect input models from enrichment data
         if (enrichment && enrichment.input_models) {
@@ -1169,18 +1433,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
 
         // Check if original MDX has usage examples
         const originalMDX = func.mdxContent;
-        const hasOriginalUsage = /^#{2,4}\s+Usage/m.test(originalMDX);
-        const hasOriginalExamples = /^#{2,4}\s+Examples/m.test(originalMDX);
+        const hasOriginalUsage = originalMDX && /^#{2,4}\s+Usage/m.test(originalMDX);
+        const hasOriginalExamples = originalMDX && /^#{2,4}\s+Examples/m.test(originalMDX);
 
         // Simplified strategy: Extract ONLY text descriptions from original MDX
         // Discard ALL code blocks, signatures, tables, and structured sections
         // We're generating those fresh from source code
 
-        let funcContent = originalMDX;
+        let funcContent = originalMDX || '';
 
-        // Remove Storybook imports and Meta tags
-        funcContent = funcContent.replace(/import\s+{\s*Meta\s*}\s+from\s+['"]@storybook\/blocks['"];?\s*/g, '');
-        funcContent = funcContent.replace(/<Meta\s+title=["'][^"']*["']\s*\/>/g, '');
+        // Remove Storybook imports and Meta tags (only if we have content)
+        if (funcContent) {
+            funcContent = funcContent.replace(/import\s+{\s*Meta\s*}\s+from\s+['"]@storybook\/blocks['"];?\s*/g, '');
+            funcContent = funcContent.replace(/<Meta\s+title=["'][^"']*["']\s*\/>/g, '');
+        }
 
         // Remove ALL code blocks (imports, usage, signatures, examples, etc.)
         funcContent = funcContent.replace(/```[\s\S]*?```/gm, '');
@@ -1205,7 +1471,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
 
         // Use enriched description if available, otherwise extract and clean from MDX
         let description = enrichment && enrichment.description ? enrichment.description : null;
-        if (!description) {
+        if (!description && func.mdxContent) {
+            // Only try to extract from MDX if it exists (not TypeScript-only functions)
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
         if (description) {
@@ -1516,13 +1783,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                 // Per-dropin mapping of bidirectional events (emits-and-listens)
                 // Events can be bidirectional in one dropin but only emit in another
                 const emitsAndListensByDropin = {
+                    // B2C drop-ins
                     'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
                     'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
                     'order': ['order/data'],
                     'product-details': ['pdp/data', 'pdp/values'],
                     'recommendations': ['recommendations/data'],
                     'product-discovery': ['search/error', 'search/loading', 'search/result'],
-                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                    'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset'],
+                    // B2B drop-ins
+                    'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
+                    'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
+                    'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                    'company-switcher': ['companyContext/changed'],
+                    'company-management': ['auth/permissions']
                 };
 
                 // Default to -emits since most events only have an "Emits" section
@@ -1533,7 +1807,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                 }
 
                 // Link to the events page with full anchor (use absolute path for proper link validation)
-                return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
+                //  Use /dropins-b2b/ for B2B drop-ins, /dropins/ for B2C
+                const basePath = repoConfig.type === 'B2B' ? '/dropins-b2b' : '/dropins';
+                return `[\`${eventName}\`](${basePath}/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
             });
 
             // Auto-link model names to their definitions (first occurrence only)
@@ -1568,13 +1844,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     // Per-dropin mapping of bidirectional events (emits-and-listens)
                     // Events can be bidirectional in one dropin but only emit in another
                     const emitsAndListensByDropin = {
+                        // B2C drop-ins
                         'cart': ['cart/data', 'cart/merged', 'cart/reset', 'cart/updated', 'shipping/estimate'],
                         'checkout': ['cart/data', 'checkout/error', 'checkout/initialized', 'checkout/updated', 'shipping/estimate'],
                         'order': ['order/data'],
                         'product-details': ['pdp/data', 'pdp/values'],
                         'recommendations': ['recommendations/data'],
                         'product-discovery': ['search/error', 'search/loading', 'search/result'],
-                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset']
+                        'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset'],
+                        // B2B drop-ins
+                        'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
+                        'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
+                        'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                        'company-switcher': ['companyContext/changed'],
+                        'company-management': ['auth/permissions']
                     };
 
                     // Default to -emits since most events only have an "Emits" section
@@ -1583,7 +1866,9 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     if (dropinBidirectionalEvents.includes(eventName)) {
                         anchorSuffix = '-emits-and-listens';
                     }
-                    return `[\`${eventName}\`](/dropins/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
+                    // Use /dropins-b2b/ for B2B drop-ins, /dropins/ for B2C
+                    const basePath = repoConfig.type === 'B2B' ? '/dropins-b2b' : '/dropins';
+                    return `[\`${eventName}\`](${basePath}/${repoName}/events/#${baseAnchor}${anchorSuffix})`;
                 });
             }
         }
@@ -1623,7 +1908,16 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                         returnsContent = `Returns an array of [\`${modelName}\`](#${modelAnchor}) objects or \`null\`.`;
                     } else {
                         // For other complex types with the model
-                        returnsContent = `Returns \`${actualType}\`. See [\`${modelName}\`](#${modelAnchor}).`;
+                        // Check if we should use a code block
+                        const isComplexObject = actualType.includes('{') && actualType.split(';').length > 2;
+                        const isMultiLine = actualType.includes('\n');
+                        const isLong = actualType.length > 100;
+
+                        if (isComplexObject || isMultiLine || isLong) {
+                            returnsContent = '```ts\n' + actualType + '\n```\n\nSee [`' + modelName + '`](#' + modelAnchor + ').';
+                        } else {
+                            returnsContent = `Returns \`${actualType}\`. See [\`${modelName}\`](#${modelAnchor}).`;
+                        }
                     }
                     break;
                 }
@@ -1688,11 +1982,30 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     // Type contains 'any' but wasn't caught by GenericTypeHandler (e.g., 'any | null')
                     // Use enrichment text if available
                     returnsContent = `Returns ${enrichment.returns}.`;
-                } else if (actualType.length < 100) {
-                    returnsContent = `Returns \`${actualType}\`.`;
                 } else {
-                    // For very long types, show in code block
-                    returnsContent = 'Returns:\n\n```ts\n' + actualType + '\n```';
+                    // Determine if we should use a code block:
+                    // - Complex object types (contains { with multiple properties)
+                    // - Multi-line types
+                    // - Very long types (> 100 chars)
+                    const isComplexObject = actualType.includes('{') && actualType.split(';').length > 2;
+                    const isMultiLine = actualType.includes('\n');
+                    const isLong = actualType.length > 100;
+
+                    if (isComplexObject || isMultiLine || isLong) {
+                        // Show complex types in code block for better readability
+                        returnsContent = '```ts\n' + actualType + '\n```';
+
+                        // Add model reference if type references a known model
+                        const modelMatch = actualType.match(/(\w+Model)(?:\[\])?/);
+                        if (modelMatch && allModels.has(modelMatch[1])) {
+                            const modelName = modelMatch[1];
+                            const anchor = modelName.toLowerCase();
+                            returnsContent += `\n\nSee [\`${modelName}\`](#${anchor}).`;
+                        }
+                    } else {
+                        // Simple types stay inline
+                        returnsContent = `Returns \`${actualType}\`.`;
+                    }
                 }
             }
         } else {
@@ -1779,17 +2092,56 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     validationReport.printSummary();
 
     // Read template and replace placeholders
-    const template = readTemplate('dropin-functions.mdx');
+    let template = readTemplate('dropin-functions.mdx');
 
-    const introText = `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
+    // CRITICAL FIX: Remove template comment block BEFORE replacing placeholders
+    // The comment block contains placeholder names as documentation examples,
+    // which would otherwise be replaced by actual values, causing duplication
+    const commentStart = template.indexOf('{/*');
+    const commentEnd = template.indexOf('*/}');
+
+    console.log(`🔍 DEBUG: commentStart=${commentStart}, commentEnd=${commentEnd}`);
+
+    if (commentStart !== -1 && commentEnd !== -1) {
+        // Check if this is the template guide comment (contains "TEMPLATE USAGE GUIDE")
+        const commentBlock = template.substring(commentStart, commentEnd + 3);
+        console.log(`🔍 DEBUG: commentBlock length=${commentBlock.length}, contains guide=${commentBlock.includes('TEMPLATE USAGE GUIDE')}`);
+
+        if (commentBlock.includes('TEMPLATE USAGE GUIDE')) {
+            // Remove the entire comment block
+            const beforeLength = template.length;
+            template = template.substring(0, commentStart) +
+                template.substring(commentEnd + 3);
+            const afterLength = template.length;
+            console.log(`✅ DEBUG: Removed comment block: ${beforeLength} → ${afterLength} (removed ${beforeLength - afterLength} chars)`);
+        }
+    }
+
+    // Add additional sections from enrichment (e.g., integration examples)
+    let additionalContent = '';
+    if (enrichmentData && enrichmentData.additionalSections) {
+        if (enrichmentData.additionalSections.integrationExample) {
+            const ie = enrichmentData.additionalSections.integrationExample;
+            additionalContent += `\n## ${ie.title}\n\n`;
+            if (ie.intro) {
+                additionalContent += `${ie.intro}\n\n`;
+            }
+            additionalContent += `${ie.code}\n\n`;
+        }
+    }
+
+    // Use enriched overview text if available
+    const introText = enrichmentData && enrichmentData.overview
+        ? enrichmentData.overview
+        : `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
 
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(versionInfo.requested),
+        DROPIN_VERSION: cleanVersion(version),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
-        FUNCTIONS_CONTENT: functionsContent + dataModelsSection
+        FUNCTIONS_CONTENT: functionsContent + dataModelsSection + additionalContent
     });
 }
 

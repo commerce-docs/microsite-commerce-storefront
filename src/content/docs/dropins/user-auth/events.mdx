@@ -15,7 +15,7 @@ sidebar:
   - Section headings and descriptive text (used as-is)
   - Import statements
   - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
-  - Placeholders: User Auth, User Auth, EVENT_NAME, etc.
+  - Placeholders: User Auth, User Auth, EVENT_NAME, and so on.
   
   WHAT THE SCRIPT GENERATES INDEPENDENTLY:
   - Table contents between START/END markers (example rows are for reference only)
@@ -30,19 +30,13 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **User Auth** drop-in emits authentication state changes, enabling other drop-ins to respond to login, logout, and authentication validation events across your storefront.
+The **User Auth** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.1.5</strong>
+<strong>Version: 3.0.0-beta1</strong>
 </div>
 
-<Aside type="tip">
-For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
-</Aside>
-
 ## Events reference
-
-Drop-ins communicate via the [event bus](/sdk/reference/events/).
 
 {/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
@@ -51,11 +45,14 @@ Drop-ins communicate via the [event bus](/sdk/reference/events/).
 |-------|-----------|-------------|
 | [auth/error](#autherror-emits) | Emits | Emitted when an error occurs. |
 | [auth/group-uid](#authgroup-uid-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [auth/permissions](#authpermissions-emits) | Emits | Emitted when permissions are updated. |
 
 </TableWrapper>
 {/* EVENTS_TABLE_END */}
 
 ## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
 ### `auth/error` (emits)
@@ -70,19 +67,22 @@ Emitted when an error occurs.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const authErrorListener = events.on('auth/error', (data) => {
-  console.log('auth/error event received:', data);
+events.on('auth/error', (payload) => {
+  console.log('auth/error event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-authErrorListener.off();
 ```
+
+
+
+
 
 ### `auth/group-uid` (emits)
 
@@ -96,19 +96,53 @@ string
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const authGroupUidListener = events.on('auth/group-uid', (data) => {
-  console.log('auth/group-uid event received:', data);
+events.on('auth/group-uid', (payload) => {
+  console.log('auth/group-uid event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-authGroupUidListener.off();
 ```
+
+
+
+
+
+### `auth/permissions` (emits)
+
+Emitted when permissions are updated.
+
+#### Event payload
+
+```typescript
+PermissionsModel
+```
+
+See [`PermissionsModel`](#permissionsmodel) for full type definition.
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('auth/permissions', (payload) => {
+  console.log('auth/permissions event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
 
 
 {/* 
@@ -120,3 +154,21 @@ authGroupUidListener.off();
   To add/edit model descriptions, update the "models" section in the enrichment file:
   _dropin-enrichments/{dropin}/events.json
 */}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### PermissionsModel
+
+Used in: [`auth/permissions`](#authpermissions-emits).
+
+```ts
+interface PermissionsModel {
+  all?: boolean;
+  admin?: boolean;
+  [key: string]: boolean;
+}
+```
+
