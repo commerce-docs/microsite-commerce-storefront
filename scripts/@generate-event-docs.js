@@ -949,7 +949,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         let enrichmentPayloadOverride = enrichments?.[eventName]?.payload;
         let hasPayloadOverride = typeof enrichmentPayloadOverride === 'string';
 
-        // If not found in current drop-in's enrichment, check if it's a cross-dropin event
+        // If not found in enrichment for the current drop-in, check if it's a cross-dropin event
         // Also check cross-dropin if the current type is generic (essentially untyped/incomplete)
         let isCrossDropinEvent = false;
         const currentType = typedEvents.get(eventName);
@@ -978,7 +978,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             // For cross-dropin events, link to the source dropin's events page
             // For same-dropin events, extract and track models locally
             if (isCrossDropinEvent) {
-                // Generate external links to source drop-in's events page
+                // Generate external links to events page for the source drop-in
                 if (referencedTypes.size > 0) {
                     const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
                     const typeLinks = CrossDropinResolver.generateExternalLinks(sourceDropin, referencedTypes, 'events');
