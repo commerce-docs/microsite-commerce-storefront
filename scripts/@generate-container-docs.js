@@ -321,6 +321,24 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             includeSlots: containerInfo.slots.length > 0
         });
 
+        // Build complete example section if enrichment provides it
+        let completeExample = '';
+        if (enrichment?.completeExample) {
+            const ce = enrichment.completeExample;
+            completeExample = `\n## ${ce.title}\n\n`;
+            if (ce.intro) {
+                completeExample += `${ce.intro}\n\n`;
+            }
+            completeExample += `${ce.code}\n\n`;
+            if (ce.keyPoints && ce.keyPoints.length > 0) {
+                completeExample += `### Key patterns demonstrated\n\n`;
+                ce.keyPoints.forEach((point, index) => {
+                    completeExample += `${index + 1}. ${point}\n`;
+                });
+                completeExample += `\n---\n`;
+            }
+        }
+
         // Use enriched description if available
         const description = enrichment?.description || containerInfo.description;
 
@@ -341,6 +359,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             'CONFIGURATIONS_TABLE': configurationsTable,
             'SLOTS_CONTENT': slotsContent,
             'USAGE_EXAMPLE': usageExample,
+            'COMPLETE_EXAMPLE': completeExample,
             'REPO_URL': repoConfig.gitUrl.replace('.git', '')
         });
 

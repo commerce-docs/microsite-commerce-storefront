@@ -1,0 +1,58 @@
+{
+  "overview": "The Company Switcher drop-in provides **3 API functions** for managing company context and headers in multi-company B2B scenarios.",
+  "getCustomerCompanyInfo": {
+    "description": "Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user.",
+    "returns": "Returns a Promise that resolves to a `CustomerCompanyInfo` object containing:\n\n```typescript\n{\n  currentCompany: {\n    companyId: string;\n    companyName: string;\n  };\n  customerCompanies: Array<{\n    value: string;  // Company ID\n    text: string;   // Company name\n  }>;\n}\n```",
+    "example": "```js\nimport { getCustomerCompanyInfo } from '@dropins/storefront-company-switcher/api.js';\n\n// Get current company context\nconst info = await getCustomerCompanyInfo();\nconsole.log('Active company:', info.currentCompany.companyName);\nconsole.log('Company ID:', info.currentCompany.companyId);\nconsole.log('Available companies:', info.customerCompanies.length);\n\n// Use context to load company-specific data\nif (info.currentCompany.companyId) {\n  loadCompanyData(info.currentCompany.companyId);\n}\n```",
+    "events": "Does not emit any drop-in events.",
+    "usageScenarios": "- Determine which company is currently active\n- Load company-specific data on page load\n- Check if user has company access\n- Display current company information\n- Conditional rendering based on company context\n- Populate company dropdown selector with available companies"
+  },
+  "setCompanyHeaders": {
+    "description": "Sets the company-specific headers that will be included in subsequent GraphQL requests. This ensures all API calls operate within the context of the specified company.",
+    "parameters": {
+      "companyId": {
+        "description": "The unique identifier of the company to set as active context. Pass `null` to remove company headers."
+      }
+    },
+    "returns": "Returns `void`.",
+    "example": "```js\nimport { setCompanyHeaders } from '@dropins/storefront-company-switcher/api.js';\nimport { events } from '@dropins/tools/event-bus.js';\n\n// Switch to a specific company\nconst newCompanyId = 'company-123';\nsetCompanyHeaders(newCompanyId);\n\n// Remove company headers (switch to no-company context)\nsetCompanyHeaders(null);\n\n// Listen for context changes\nevents.on('companyContext/changed', (companyId) => {\n  if (companyId) {\n    console.log('Switched to company:', companyId);\n  } else {\n    console.log('Company context removed');\n  }\n  \n  // Refresh all company-dependent data\n  refreshCompanyData();\n});\n```",
+    "events": "Emits the [`companyContext/changed`](/dropins-b2b/company-switcher/events/#companycontextchanged) event after successfully setting or removing the company headers.",
+    "usageScenarios": "- Switch between companies for multi-company users\n- Set company context after user selection\n- Initialize company context on page load\n- Change active company from a dropdown selector\n- Restore company context from session storage\n- Remove company context by passing `null`",
+    "asides": [
+      {
+        "type": "caution",
+        "content": "After calling `setCompanyHeaders()`, all subsequent GraphQL requests will operate in the context of the specified company. Ensure you refresh all company-dependent data after switching companies."
+      },
+      {
+        "type": "note",
+        "content": "Passing `null` to `setCompanyHeaders()` removes the company context headers from all GraphQL requests. This is useful when logging out or switching to a non-company user context."
+      }
+    ]
+  },
+  "setGroupHeaders": {
+    "description": "Sets the customer group headers that will be included in subsequent GraphQL requests. This is used to ensure proper pricing and catalog visibility based on customer group.",
+    "parameters": {
+      "groupId": {
+        "description": "The unique identifier of the customer group to set. Pass `null` to remove group headers."
+      }
+    },
+    "returns": "Returns `void`.",
+    "example": "```js\nimport { setGroupHeaders } from '@dropins/storefront-company-switcher/api.js';\n\n// Set customer group for pricing\nconst customerGroupId = 'wholesale';\nsetGroupHeaders(customerGroupId);\n\n// Subsequent requests will use this group context\n// Prices and catalog visibility will reflect group settings\nawait loadProducts(); // Products will show group-specific prices\n```",
+    "events": "Does not emit any drop-in events.",
+    "usageScenarios": "- Set customer group context for proper pricing\n- Apply group-specific catalog rules\n- Initialize group context on login\n- Switch groups for testing or admin purposes\n- Coordinate with company context changes",
+    "asides": [
+      {
+        "type": "note",
+        "content": "Customer group changes typically happen automatically based on the company context. You usually only need to call `setGroupHeaders()` directly in advanced scenarios like admin impersonation or testing."
+      }
+    ]
+  },
+  "additionalSections": {
+    "integrationExample": {
+      "title": "Integration with Company Context",
+      "intro": "The Company Switcher functions work together to manage the complete company and group context:",
+      "code": "```js\nimport { \n  getCustomerCompanyInfo,\n  setCompanyHeaders,\n  setGroupHeaders \n} from '@dropins/storefront-company-switcher/api.js';\n\n// Complete company switch workflow\nasync function switchCompany(companyId, groupId) {\n  // 1. Set the company headers\n  setCompanyHeaders(companyId);\n  \n  // 2. Set the group headers\n  if (groupId) {\n    setGroupHeaders(groupId);\n  }\n  \n  // 3. Verify the context\n  const info = await getCustomerCompanyInfo();\n  console.log('Switched to:', info.currentCompany.companyName);\n  \n  // 4. Refresh all company-dependent data\n  await Promise.all([\n    refreshPurchaseOrders(),\n    refreshQuotes(),\n    refreshRequisitionLists(),\n    refreshCompanyUsers()\n  ]);\n}\n```"
+    }
+  }
+}
+

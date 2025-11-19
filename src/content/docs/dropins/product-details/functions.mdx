@@ -9,31 +9,7 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
+
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
@@ -52,15 +28,46 @@ The Product Details drop-in provides API functions that enable you to programmat
 | Function | Description |
 | --- | --- |
 | [`fetchProductData`](#fetchproductdata) | Fetches product data for a given SKU. |
+| [`fetchProductData`](#fetchproductdata) | Fetches product data for a given SKU. |
+| [`getFetchedProductData`](#getfetchedproductdata) | Returns previously fetched product data from cache.. |
 | [`getFetchedProductData`](#getfetchedproductdata) | Returns previously fetched product data from cache.. |
 | [`getProductConfigurationValues`](#getproductconfigurationvalues) | Returns the current product configuration values.. |
+| [`getProductConfigurationValues`](#getproductconfigurationvalues) | Returns the current product configuration values.. |
+| [`getProductData`](#getproductdata) | Returns the product data for a given product SKU. |
 | [`getProductData`](#getproductdata) | Returns the product data for a given product SKU. |
 | [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
+| [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
+| [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid.. |
 | [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid.. |
 | [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes.. |
+| [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes.. |
+| [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change.. |
 | [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change.. |
 
 </TableWrapper>
+
+## fetchProductData
+
+The `fetchProductData` function fetches product data for a given SKU. It can fetch either simple product data or refined product data with selected options.
+
+### Signature
+
+```typescript
+function fetchProductData(sku: string, options?: Options): Promise<any>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `options` | `Options` | No | Optional configuration including `anchors` (anchor options), `optionsUIDs` (selected option IDs), `preselectFirstOption` (whether to preselect first option), `isBundle` (whether product is a bundle), and `skipTransform` (whether to skip data transformation). |
+
+</TableWrapper>
+
+---
 
 ## fetchProductData
 
@@ -96,6 +103,28 @@ Returns `void`.
 
 The `getFetchedProductData` function returns previously fetched product data from cache.
 
+### Signature
+
+```typescript
+function getFetchedProductData({ scope, }: { scope?: string } = {}): Promise<ProductModel | null>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `scope` | `string } = {}` | No |  |
+
+</TableWrapper>
+
+---
+
+## getFetchedProductData
+
+The `getFetchedProductData` function returns previously fetched product data from cache.
+
 ```ts
 const getFetchedProductData = async (
   { scope, }: { scope?: string } = {}
@@ -117,6 +146,28 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`ProductModel`](#productmodel) or `null`.
+
+---
+
+## getProductConfigurationValues
+
+The `getProductConfigurationValues` function returns the current product configuration values.
+
+### Signature
+
+```typescript
+function getProductConfigurationValues({ scope, }: { scope?: string } = {}): ValuesModel | null
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `scope` | `string } = {}` | No |  |
+
+</TableWrapper>
 
 ---
 
@@ -150,6 +201,30 @@ Returns [`ValuesModel`](#valuesmodel) or `null`.
 
 ## getProductData
 
+The `getProductData` function returns the product data for a given product SKU. It fetches data from Adobe Commerce and optionally preselects the first available option. The function calls the [`products`](https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/products/) query.
+
+### Signature
+
+```typescript
+function getProductData(sku: string, options?: { preselectFirstOption?: boolean; optionsUIDs?: string[]; }, raw?: boolean): Promise<ProductModel | null>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `options` | `{ preselectFirstOption?: boolean; optionsUIDs?: string[]; }` | No |  |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+</TableWrapper>
+
+---
+
+## getProductData
+
 The `getProductData` function returns the product data for a given product SKU. It fetches data from Adobe Commerce and optionally preselects the first available option. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/products/" text="products" /> query.
 
 ```ts
@@ -178,6 +253,31 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`ProductModel`](#productmodel) or `null`.
+
+---
+
+## getRefinedProduct
+
+The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen. The function calls the [`refineProduct`](https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/refine-product/) query.
+
+### Signature
+
+```typescript
+function getRefinedProduct(sku: string, optionUIDs: string[], anchorOptions?: string[], raw?: boolean): Promise<ProductModel | null>
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `sku` | `string` | Yes | The SKU (Stock Keeping Unit) of the product to fetch. |
+| `optionUIDs` | `string[]` | Yes | An array of option UIDs representing the selected variant. |
+| `anchorOptions` | `string[]` | No | Anchor options for the product selection. |
+| `raw` | `boolean` | No | Whether to return raw GraphQL data without transformation. |
+
+</TableWrapper>
 
 ---
 
@@ -219,6 +319,28 @@ Returns [`ProductModel`](#productmodel) or `null`.
 
 The `isProductConfigurationValid` function checks if the current product configuration is valid.
 
+### Signature
+
+```typescript
+function isProductConfigurationValid({ scope, }: { scope?: string } = {}): boolean | null
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `scope` | `string } = {}` | No |  |
+
+</TableWrapper>
+
+---
+
+## isProductConfigurationValid
+
+The `isProductConfigurationValid` function checks if the current product configuration is valid.
+
 ```ts
 const isProductConfigurationValid = async (
   { scope, }: { scope?: string } = {}
@@ -240,6 +362,29 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `boolean | null`.
+
+---
+
+## setProductConfigurationValid
+
+The `setProductConfigurationValid` function sets a callback to be called when product configuration validity changes.
+
+### Signature
+
+```typescript
+function setProductConfigurationValid(callback: (prev: boolean) => boolean, options?: { scope?: string }): any
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `callback` | `(prev: boolean` | Yes | A callback function that receives the validity status of the product configuration. |
+| `options` | `{ scope?: string }` | No |  |
+
+</TableWrapper>
 
 ---
 
@@ -269,6 +414,29 @@ Emits the [`pdp/valid`](/dropins/product-details/events/#pdpvalid-emits) event.
 ### Returns
 
 Returns `void`.
+
+---
+
+## setProductConfigurationValues
+
+The `setProductConfigurationValues` function sets a callback to be called when product configuration values change.
+
+### Signature
+
+```typescript
+function setProductConfigurationValues(callback: (prev: ValuesModel) => ValuesModel, options?: { scope?: string }): any
+```
+
+### Parameters
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `callback` | `(prev: ValuesModel` | Yes | A callback function that receives the updated product configuration values. |
+| `options` | `{ scope?: string }` | No |  |
+
+</TableWrapper>
 
 ---
 
@@ -307,7 +475,7 @@ The following data models are used by functions in this drop-in.
 
 ### ProductModel
 
-The `ProductModel` object is returned by the following functions: [`getFetchedProductData`](#getfetchedproductdata), [`getProductData`](#getproductdata), [`getRefinedProduct`](#getrefinedproduct).
+The `ProductModel` object is returned by the following functions: [`getFetchedProductData`](#getfetchedproductdata), [`getFetchedProductData`](#getfetchedproductdata), [`getProductData`](#getproductdata), [`getProductData`](#getproductdata), [`getRefinedProduct`](#getrefinedproduct), [`getRefinedProduct`](#getrefinedproduct).
 
 ```ts
 interface ProductModel {
@@ -337,7 +505,7 @@ interface ProductModel {
 
 ### ValuesModel
 
-The `ValuesModel` object is returned by the following functions: [`getProductConfigurationValues`](#getproductconfigurationvalues).
+The `ValuesModel` object is returned by the following functions: [`getProductConfigurationValues`](#getproductconfigurationvalues), [`getProductConfigurationValues`](#getproductconfigurationvalues).
 
 ```ts
 interface ValuesModel {
