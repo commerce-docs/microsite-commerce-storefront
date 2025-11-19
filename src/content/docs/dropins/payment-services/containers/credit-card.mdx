@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 ... See 'CardType' from @adobe-commerce/payment-services-sdk/payment.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.3</strong>
+<strong>Version: 2.0.0</strong>
 </div>
 
 ## Configuration
@@ -23,12 +23,10 @@ The `CreditCard` container provides the following configuration options:
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `apiUrl` | `string` | Yes | The URL to the Adobe Commerce GraphQL endpoint, such as "https://example.com/graphql". |
 | `getCartId` | `() => Promise<string>` | Yes | Should return a promise that resolves to the shopper\`s cart ID. |
-| `getCustomerToken` | `(() => string \| null) \| null` | No | Should return a promise that resolves to the shopper\`s cart ID. |
 | `creditCardFormRef` | `RefObject<CreditCardFormRef>` | Yes | Credit card form reference. Initially, \{ current: null \} should be passed. Once rendered, the credit card container will set the 'current' property to a \{ validate: () =&gt; boolean; submit: () =&gt; Promise&lt;void&gt; \} object, which parent containers should use to (programmatically) validate and submit the credit card form. |
-| `onSuccess` | `() => void` | Yes | Called when payment flow is successful. |
-| `onError` | `(error: Error) => void` | Yes | Called when payment flow was aborted due to an error. |
+| `onSuccess` | `(result: { cartId: string }) => void` | Yes | Called when payment flow is successful. |
+| `onError` | `(localizedError: LocalizedError) => void` | Yes | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.CreditCard.errors" language definitions. |
 
 </TableWrapper> in TableWrapper or add a table header.
   The generator's generatePropertyTable() function already includes both.
@@ -38,12 +36,10 @@ The `CreditCard` container provides the following configuration options:
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `apiUrl` | `string` | Yes | The URL to the Adobe Commerce GraphQL endpoint, such as "https://example.com/graphql". |
 | `getCartId` | `() => Promise<string>` | Yes | Should return a promise that resolves to the shopper\`s cart ID. |
-| `getCustomerToken` | `(() => string \| null) \| null` | No | Should return a promise that resolves to the shopper\`s cart ID. |
 | `creditCardFormRef` | `RefObject<CreditCardFormRef>` | Yes | Credit card form reference. Initially, \{ current: null \} should be passed. Once rendered, the credit card container will set the 'current' property to a \{ validate: () =&gt; boolean; submit: () =&gt; Promise&lt;void&gt; \} object, which parent containers should use to (programmatically) validate and submit the credit card form. |
-| `onSuccess` | `() => void` | Yes | Called when payment flow is successful. |
-| `onError` | `(error: Error) => void` | Yes | Called when payment flow was aborted due to an error. |
+| `onSuccess` | `(result: { cartId: string }) => void` | Yes | Called when payment flow is successful. |
+| `onError` | `(localizedError: LocalizedError) => void` | Yes | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.CreditCard.errors" language definitions. |
 
 </TableWrapper>
 
@@ -60,9 +56,9 @@ import { render as provider } from '@dropins/storefront-payment-services/render.
 import { CreditCard } from '@dropins/storefront-payment-services/containers/CreditCard.js';
 
 await provider.render(CreditCard, {
-  apiUrl: "https://example.com",
   getCartId: () => {},
   creditCardFormRef: {},
+  onSuccess: () => console.log('Success'),
 })(block);
 ```
 

@@ -1,45 +1,71 @@
 ---
-title: Company Management Events
-description: Events emitted by the Company Management drop-in for tracking state changes and user actions.
+title: Company Management Data & Events
+description: Learn about the events used by the Company Management and the data available within the events.
 sidebar:
   label: Events
-  order: 4
+  order: 5
 ---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Company Management, Company Management, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Company Management drop-in emits **2 events** to the event bus, allowing you to track and respond to changes in company data and structure.
+The **Company Management** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.0-beta16</strong>
+<strong>Version: 1.0.0-beta17</strong>
 </div>
 
-## Available events
+## Events reference
 
-<TableWrapper nowrap={[0]}>
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
 
-| Event Name | Description |
-|------------|-------------|
-| [`company/updated`](#companyupdated) | Emitted when company information is updated |
-| [`companyStructure/updated`](#companystructureupdated) | Emitted when the company organizational structure is updated |
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [company/updated](#companyupdated-emits) | Emits | Emitted when the component state is updated. |
+| [companyStructure/updated](#companystructureupdated-emits) | Emits | Emitted when the component state is updated. |
+| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-### company/updated
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-Emitted when company information is successfully updated through the `updateCompany()` function.
+
+### `company/updated` (emits)
+
+Emitted when the component state is updated.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'company/updated',
-  data: CompanyModel // Updated company data
-}
+{ company?: unknown; message?: string; error?: unknown }
 ```
+
+
 
 #### When triggered
 
@@ -47,6 +73,8 @@ Emitted when company information is successfully updated through the `updateComp
 - After updating company legal address
 - After updating company contact information
 - After updating sales representative information
+
+
 
 #### Example 1: Basic company update handler
 
@@ -172,6 +200,8 @@ companyManager.subscribe((data) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Refresh company profile display after edits
@@ -185,18 +215,56 @@ companyManager.subscribe((data) => {
 
 ---
 
-### companyStructure/updated
 
-Emitted when the company organizational structure is updated, including team changes, user assignments, or hierarchy modifications.
+
+### `companyContext/changed` (listens)
+
+Fired by Company Context (`companyContext`) when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null | undefined
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `companyStructure/updated` (emits)
+
+Emitted when the component state is updated.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'companyStructure/updated',
-  data: CompanyStructureModel // Updated structure data
+  message?: string;
+  action?: 'move' | 'remove' | 'add';
+  nodeId?: string;
+  newParentId?: string;
+  nodeIds?: string[];
+  nodes?: unknown[];
+  error?: unknown;
 }
 ```
+
+
 
 #### When triggered
 
@@ -208,24 +276,9 @@ Emitted when the company organizational structure is updated, including team cha
 - After moving users between teams
 - After changing team hierarchy
 
-####Example 1: Basic structure update handler
 
-```js
-import { events } from '@dropins/tools/event-bus.js';
 
-// Listen for structure updates
-events.on('companyStructure/updated', (payload) => {
-  console.log('Company structure updated:', payload.data);
-  
-  // Reload the structure tree
-  reloadCompanyStructureTree();
-  
-  // Update navigation or permissions
-  updateUserPermissions();
-});
-```
-
-#### Example 2: Interactive structure tree with live updates
+#### Example 1: Interactive structure tree with live updates
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -323,7 +376,7 @@ class CompanyStructureTree {
 const tree = new CompanyStructureTree(document.querySelector('#company-structure'));
 ```
 
-#### Example 3: Team-based notification system
+#### Example 2: Team-based notification system
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -395,6 +448,8 @@ function logStructureChange(logEntry) {
 }
 ```
 
+
+
 #### Usage scenarios
 
 - Refresh the company structure tree display in real-time
@@ -441,3 +496,16 @@ Event listeners remain active until explicitly removed with `events.off()`. Clea
 - [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
 
 {/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-company-management */}
+
+
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
