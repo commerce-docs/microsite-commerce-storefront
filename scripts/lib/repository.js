@@ -42,11 +42,12 @@ function getLatestBoilerplateTag(boilerplatePath) {
 }
 
 /**
- * Clone or update the boilerplate repository at the latest release tag
+ * Clone or update the boilerplate repository at the latest release tag or specific branch
  * 
- * @returns {Object} Object with path and tag
+ * @param {string} [branch] - Optional branch name (e.g., 'b2b-integration'). If not provided, uses latest release tag.
+ * @returns {Object} Object with path and tag/branch
  */
-export function cloneOrUpdateBoilerplate() {
+export function cloneOrUpdateBoilerplate(branch = null) {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
     const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
 
@@ -62,10 +63,6 @@ export function cloneOrUpdateBoilerplate() {
         execFileSync('git', ['fetch', '--all', '--tags'], { cwd: boilerplatePath, stdio: 'pipe' });
     }
 
-    // Get and checkout the latest release tag
-    const latestTag = getLatestBoilerplateTag(boilerplatePath);
-    console.log(`  Using boilerplate release: ${latestTag}`);
-
     // Clean working directory before checkout (discard uncommitted changes from npm install)
     try {
         execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
@@ -73,18 +70,38 @@ export function cloneOrUpdateBoilerplate() {
         console.warn(`  ⚠️  Could not reset working directory: ${error.message}`);
     }
 
-    try {
-        execFileSync('git', ['checkout', latestTag], { cwd: boilerplatePath, stdio: 'pipe' });
-        console.log(`  ✓ Checked out ${latestTag}`);
-    } catch (error) {
-        console.warn(`  ⚠️  Could not checkout ${latestTag}, staying on current branch`);
-        console.warn(`     Reason: ${error.message}`);
+    let targetRef;
+    if (branch) {
+        // Use specific branch (for B2B integration)
+        targetRef = branch;
+        console.log(`  Using boilerplate branch: ${branch}`);
+
+        try {
+            execFileSync('git', ['checkout', branch], { cwd: boilerplatePath, stdio: 'pipe' });
+            execFileSync('git', ['pull', 'origin', branch], { cwd: boilerplatePath, stdio: 'pipe' });
+            console.log(`  ✓ Checked out and updated ${branch}`);
+        } catch (error) {
+            console.warn(`  ⚠️  Could not checkout ${branch}, staying on current branch`);
+            console.warn(`     Reason: ${error.message}`);
+        }
+    } else {
+        // Use latest release tag (for B2C drop-ins)
+        targetRef = getLatestBoilerplateTag(boilerplatePath);
+        console.log(`  Using boilerplate release: ${targetRef}`);
+
+        try {
+            execFileSync('git', ['checkout', targetRef], { cwd: boilerplatePath, stdio: 'pipe' });
+            console.log(`  ✓ Checked out ${targetRef}`);
+        } catch (error) {
+            console.warn(`  ⚠️  Could not checkout ${targetRef}, staying on current branch`);
+            console.warn(`     Reason: ${error.message}`);
+        }
     }
 
     console.log(`  Installing boilerplate dependencies...`);
     execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
 
-    return { path: boilerplatePath, tag: latestTag };
+    return { path: boilerplatePath, tag: targetRef };
 }
 
 /**
@@ -97,6 +114,69 @@ export function getBoilerplatePackageVersions(boilerplatePath) {
     const packageJsonPath = join(boilerplatePath, 'package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
     return packageJson.dependencies || {};
+}
+
+/**
+ * Use existing drop-in repository without version constraints
+ * This is used for B2B drop-ins that aren't in the boilerplate
+ * 
+ * Reads the version from the package.json for the drop-in to ensure accurate version display
+ * 
+ * @param {string} repoName - Name of the drop-in (e.g., 'purchase-order', 'company-management')
+ * @param {Object} repoConfig - Repository configuration object with gitUrl
+ * @returns {Object} Object with { path: string, actualVersion: string, isExactMatch: boolean }
+ */
+export function useExistingDropinRepo(repoName, repoConfig) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Repository not found at ${dropinPath}`);
+        console.log(`  Cloning from default branch...`);
+        try {
+            execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+        } catch (error) {
+            throw new Error(`Failed to clone repository ${repoConfig.gitUrl}: ${error.message}`);
+        }
+    }
+
+    // Read version from package.json for the drop-in
+    let actualVersion;
+    try {
+        const packageJsonPath = join(dropinPath, 'package.json');
+        if (existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            actualVersion = packageJson.version || 'unknown';
+            console.log(`  Using version: ${actualVersion} (from package.json)`);
+            return { path: dropinPath, actualVersion, isExactMatch: true };
+        }
+    } catch (error) {
+        console.log(`  ⚠️  Could not read package.json: ${error.message}`);
+    }
+
+    // Fallback to git information if package.json is not available
+    try {
+        actualVersion = execFileSync('git', ['describe', '--tags', '--exact-match'],
+            { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+        console.log(`  Using version: ${actualVersion} (from git tag)`);
+        return { path: dropinPath, actualVersion, isExactMatch: true };
+    } catch {
+        try {
+            actualVersion = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using branch: ${actualVersion} (fallback)`);
+        } catch {
+            try {
+                actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                    { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+                console.log(`  Using commit: ${actualVersion} (fallback)`);
+            } catch {
+                // All git commands failed - repository might be in bad state
+                console.log(`  ⚠️  Warning: Could not determine version from git, using 'unknown'`);
+                actualVersion = 'unknown';
+            }
+        }
+        return { path: dropinPath, actualVersion, isExactMatch: false };
+    }
 }
 
 /**

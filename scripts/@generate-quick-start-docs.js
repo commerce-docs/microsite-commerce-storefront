@@ -192,11 +192,11 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     }
 
     // Replace placeholders
-    return replacePlaceholders(template, {
+    let content = replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_SLUG': repoName,
         'DROPIN_PACKAGE': packageName,
-        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
+        'DROPIN_VERSION': cleanVersion(version),
         'CONTAINER_EXAMPLE': containerExample,
         'IMPORT_EXAMPLE': importExample,
         'INITIALIZER_NAME': initializerName,
@@ -206,6 +206,17 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
         'CUSTOM_SECTIONS_BEFORE': customSectionsBefore,
         'CUSTOM_SECTIONS_AFTER': customSectionsAfter
     });
+
+    // Fix paths for B2B drop-ins: /dropins/ -> /dropins-b2b/
+    // But keep /dropins/all/ as-is (shared documentation)
+    if (repoConfig.type === 'B2B') {
+        content = content.replace(/\/dropins\/(?!all\/)/g, '/dropins-b2b/');
+
+        // Remove "Next steps" section for B2B drop-ins (only contains internal links)
+        content = content.replace(/## Next steps\n\n[\s\S]*?(?=\{\/\*)/m, '');
+    }
+
+    return content;
 }
 
 // ============================================================================
