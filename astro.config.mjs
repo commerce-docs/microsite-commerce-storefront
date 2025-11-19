@@ -480,7 +480,9 @@ async function config() {
                               { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
                               { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
                               { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                              { label: 'PaymentOnAccount', link: '/dropins/checkout/containers/payment-on-account/' },
                               { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                              { label: 'PurchaseOrder', link: '/dropins/checkout/containers/purchase-order/' },
                               { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
                               { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                               { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
@@ -762,20 +764,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'RequestNegotiableQuoteForm', link: '/dropins-b2b/container/request-negotiable-quote-form/' },
-                        ],
-                      },
-                      {
-                        label: 'Checkout',
-                        collapsed: true,
-                        items: [
-                          {
-                            label: 'Containers',
-                            collapsed: false,
-                            items: [
-                              { label: 'PaymentOnAccount', link: '/dropins-b2b/checkout/containers/payment-on-account/' },
-                              { label: 'PurchaseOrder', link: '/dropins-b2b/checkout/containers/purchase-order/' },
-                            ],
-                          },
                         ],
                       },
                       {

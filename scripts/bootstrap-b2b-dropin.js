@@ -30,10 +30,14 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
+
+// Import drop-in configuration
+import { DROPIN_REPOS } from './lib/dropin-config.js';
 
 // ============================================================================
 // CONFIGURATION
@@ -42,6 +46,7 @@ const projectRoot = join(__dirname, '..');
 const B2B_BASE_PATH = 'src/content/docs/dropins-b2b';
 const CONFIG_FILE = 'astro.config.mjs';
 const TEMPLATE_FILE = '_dropin-templates/dropin-overview-minimal.mdx';
+const TEMP_CLONE_DIR = '.temp-repo-clone';
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -67,6 +72,98 @@ function replacePlaceholders(content, placeholders) {
     return result;
 }
 
+/**
+ * Extract description from README.md
+ */
+function extractDescriptionFromReadme(readmeContent) {
+    if (!readmeContent) return null;
+    
+    // Try to find first meaningful paragraph after title
+    const lines = readmeContent.split('\n');
+    let description = '';
+    let foundTitle = false;
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        // Skip empty lines
+        if (!trimmed) continue;
+        
+        // Skip title (first # heading)
+        if (trimmed.startsWith('#') && !foundTitle) {
+            foundTitle = true;
+            continue;
+        }
+        
+        // Skip badges, images, links at start
+        if (trimmed.startsWith('[![') || trimmed.startsWith('[!') || trimmed.startsWith('![')) {
+            continue;
+        }
+        
+        // Found first paragraph - use it
+        if (foundTitle && trimmed.length > 50 && !trimmed.startsWith('#')) {
+            description = trimmed;
+            break;
+        }
+    }
+    
+    return description || null;
+}
+
+/**
+ * Get drop-in information from repository
+ */
+function getDropinInfo(dropinSlug) {
+    const repoConfig = DROPIN_REPOS[dropinSlug];
+    
+    if (!repoConfig) {
+        console.log(`⚠️  No repository config found for: ${dropinSlug}`);
+        return { description: null, repoConfig: null };
+    }
+    
+    // If it's a public repo, try to fetch README
+    if (repoConfig.isPublic) {
+        try {
+            const tempDir = join(projectRoot, TEMP_CLONE_DIR, dropinSlug);
+            
+            // Clean up any existing temp directory
+            if (existsSync(tempDir)) {
+                execSync(`rm -rf "${tempDir}"`);
+            }
+            
+            mkdirSync(tempDir, { recursive: true });
+            
+            // Clone repo shallowly (just latest commit, faster)
+            console.log(`  📥 Fetching README from: ${repoConfig.gitUrl}`);
+            execSync(`git clone --depth 1 "${repoConfig.gitUrl}" "${tempDir}"`, { 
+                stdio: 'pipe' 
+            });
+            
+            // Read README
+            const readmePath = join(tempDir, 'README.md');
+            if (existsSync(readmePath)) {
+                const readmeContent = readFileSync(readmePath, 'utf8');
+                const description = extractDescriptionFromReadme(readmeContent);
+                
+                // Clean up
+                execSync(`rm -rf "${tempDir}"`);
+                
+                if (description) {
+                    console.log(`  ✓ Extracted description from README`);
+                    return { description, repoConfig };
+                }
+            }
+            
+            // Clean up
+            execSync(`rm -rf "${tempDir}"`);
+        } catch (error) {
+            console.log(`  ⚠️  Could not fetch README: ${error.message}`);
+        }
+    }
+    
+    return { description: null, repoConfig };
+}
+
 // ============================================================================
 // MAIN LOGIC
 // ============================================================================
@@ -75,6 +172,9 @@ function createOverviewPage(dropinName) {
     const dropinSlug = toKebabCase(dropinName);
     const dropinDisplay = toTitleCase(dropinSlug);
 
+    // Get drop-in information from repository
+    const { description, repoConfig } = getDropinInfo(dropinSlug);
+
     // Read template
     const templatePath = join(projectRoot, TEMPLATE_FILE);
     if (!existsSync(templatePath)) {
@@ -82,7 +182,16 @@ function createOverviewPage(dropinName) {
         process.exit(1);
     }
 
-    const template = readFileSync(templatePath, 'utf8');
+    let template = readFileSync(templatePath, 'utf8');
+
+    // If we have a description from README, replace the placeholder paragraph
+    if (description) {
+        // Replace the [Drop-in developer] placeholder paragraph with actual description
+        template = template.replace(
+            /\*\*\[Drop-in developer\]:\*\*.*?(?=\n\n##)/s,
+            description
+        );
+    }
 
     // Replace placeholders
     const content = replacePlaceholders(template, {

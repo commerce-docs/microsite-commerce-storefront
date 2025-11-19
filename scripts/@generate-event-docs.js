@@ -85,6 +85,43 @@ function getBoilerplatePackageVersions(boilerplatePath) {
     return packageJson.dependencies || {};
 }
 
+/**
+ * Load B2B drop-in versions from the b2b-suite-release1 branch
+ * This is necessary because B2B drop-ins are not in the main branch
+ */
+function getB2BPackageVersions() {
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
+    const b2bBranch = 'b2b-suite-release1';
+
+    console.log(`\n📦 Loading B2B versions from ${b2bBranch} branch...`);
+
+    if (!existsSync(boilerplatePath)) {
+        console.log(`  Cloning boilerplate...`);
+        mkdirSync(dirname(boilerplatePath), { recursive: true });
+        execFileSync('git', ['clone', boilerplateUrl, boilerplatePath], { stdio: 'pipe' });
+    }
+
+    try {
+        // Fetch the B2B branch
+        execFileSync('git', ['fetch', 'origin', b2bBranch], { cwd: boilerplatePath, stdio: 'pipe' });
+
+        // Get package.json from B2B branch without checking it out
+        const packageJsonContent = execFileSync(
+            'git',
+            ['show', `origin/${b2bBranch}:package.json`],
+            { cwd: boilerplatePath, encoding: 'utf8', stdio: 'pipe' }
+        );
+
+        const packageJson = JSON.parse(packageJsonContent);
+        console.log(`  ✅ Loaded B2B versions from ${b2bBranch}`);
+        return packageJson.dependencies || {};
+    } catch (error) {
+        console.error(`  ⚠️  Warning: Could not load B2B versions: ${error.message}`);
+        return {};
+    }
+}
+
 function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
@@ -119,6 +156,41 @@ function cloneDropinAtVersion(repoName, repoConfig, version) {
                 console.error(`  ⚠️  Warning: Could not checkout ${cleanVersionStr}, repository may be at outdated version`);
                 // Continue anyway - the repo might already be at the correct version
             }
+        }
+    }
+
+    return dropinPath;
+}
+
+/**
+ * Use existing drop-in repository without version constraints
+ * This is used for B2B drop-ins that aren't in the boilerplate
+ */
+function useExistingDropinRepo(repoName, repoConfig) {
+    const dropinPath = join(projectRoot, '.temp-repos', repoName);
+
+    if (!existsSync(dropinPath)) {
+        console.log(`  Repository not found at ${dropinPath}`);
+        console.log(`  Cloning from default branch...`);
+        execFileSync('git', ['clone', repoConfig.gitUrl, dropinPath], { stdio: 'inherit' });
+    }
+
+    // Get current ref/branch/tag
+    try {
+        // Try to get exact tag
+        const actualVersion = execFileSync('git', ['describe', '--tags', '--exact-match'],
+            { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+        console.log(`  Using version: ${actualVersion}`);
+    } catch {
+        // Not on a tag, get branch or commit
+        try {
+            const actualVersion = execFileSync('git', ['symbolic-ref', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using branch: ${actualVersion}`);
+        } catch {
+            const actualVersion = execFileSync('git', ['rev-parse', '--short', 'HEAD'],
+                { cwd: dropinPath, encoding: 'utf8', stdio: 'pipe' }).trim();
+            console.log(`  Using commit: ${actualVersion}`);
         }
     }
 
@@ -877,7 +949,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
         let enrichmentPayloadOverride = enrichments?.[eventName]?.payload;
         let hasPayloadOverride = typeof enrichmentPayloadOverride === 'string';
 
-        // If not found in current drop-in's enrichment, check if it's a cross-dropin event
+        // If not found in enrichment for the current drop-in, check if it's a cross-dropin event
         // Also check cross-dropin if the current type is generic (essentially untyped/incomplete)
         let isCrossDropinEvent = false;
         const currentType = typedEvents.get(eventName);
@@ -906,7 +978,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             // For cross-dropin events, link to the source dropin's events page
             // For same-dropin events, extract and track models locally
             if (isCrossDropinEvent) {
-                // Generate external links to source drop-in's events page
+                // Generate external links to events page for the source drop-in
                 if (referencedTypes.size > 0) {
                     const sourceDropin = detectSourceDropin(eventName, eventEmits, dropinName);
                     const typeLinks = CrossDropinResolver.generateExternalLinks(sourceDropin, referencedTypes, 'events');
@@ -931,12 +1003,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                     }
                 });
 
-                // Generate links to Data Models section for referenced types
+                // Generate links to Data Models section for referenced types (only if they have definitions)
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
         } else if (typedEvents.has(eventName)) {
@@ -966,12 +1041,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                     }
                 });
 
-                // Generate links to Data Models section for referenced types
+                // Generate links to Data Models section for referenced types (only if they have definitions)
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
         } else {
@@ -1010,16 +1088,60 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 });
 
                 if (referencedTypes.size > 0) {
-                    const typeLinks = Array.from(referencedTypes)
-                        .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
-                        .join(', ');
-                    payloadSection += `See ${typeLinks} for full type definition${referencedTypes.size > 1 ? 's' : ''}.\n\n`;
+                    const typesWithDefinitions = Array.from(referencedTypes).filter(typeName => modelDefinitions.has(typeName));
+                    if (typesWithDefinitions.length > 0) {
+                        const typeLinks = typesWithDefinitions
+                            .map(typeName => `[\`${typeName}\`](#${typeName.toLowerCase()})`)
+                            .join(', ');
+                        payloadSection += `See ${typeLinks} for full type definition${typesWithDefinitions.length > 1 ? 's' : ''}.\n\n`;
+                    }
                 }
             }
             // If no type found (neither defined nor inferred), leave payload section empty
         }
 
         eventSection = eventSection.replace(/EVENT_PAYLOAD_SECTION/g, payloadSection);
+
+        // Generate WHEN_TRIGGERED_SECTION from enrichment
+        let whenTriggeredSection = '';
+        // Reuse eventEnrichment already declared earlier
+        if (eventEnrichment?.whenTriggered && eventEnrichment.whenTriggered.length > 0) {
+            whenTriggeredSection += '#### When triggered\n\n';
+            eventEnrichment.whenTriggered.forEach(item => {
+                whenTriggeredSection += `- ${item}\n`;
+            });
+            whenTriggeredSection += '\n';
+        }
+        eventSection = eventSection.replace(/WHEN_TRIGGERED_SECTION/g, whenTriggeredSection);
+
+        // Generate EXAMPLES_SECTION from enrichment
+        let examplesSection = '';
+        if (eventEnrichment?.examples && eventEnrichment.examples.length > 0) {
+            eventEnrichment.examples.forEach((example, index) => {
+                const exampleNumber = eventEnrichment.examples.length > 1 ? ` ${index + 1}` : '';
+                examplesSection += `#### Example${exampleNumber}: ${example.title}\n\n`;
+                examplesSection += `${example.code}\n\n`;
+            });
+        } else {
+            // Fallback: generate basic example if no enrichment
+            examplesSection += '#### Example\n\n';
+            examplesSection += '```js\n';
+            examplesSection += `import { events } from '@dropins/tools/event-bus.js';\n\n`;
+            examplesSection += `events.on('${eventName}', (payload) => {\n`;
+            examplesSection += `  console.log('${eventName} event received:', payload);\n`;
+            examplesSection += `  // Add your custom logic here\n`;
+            examplesSection += `});\n`;
+            examplesSection += '```\n\n';
+        }
+        eventSection = eventSection.replace(/EXAMPLES_SECTION/g, examplesSection);
+
+        // Generate USAGE_SCENARIOS_SECTION from enrichment
+        let usageScenariosSection = '';
+        if (eventEnrichment?.usageScenarios) {
+            usageScenariosSection += '#### Usage scenarios\n\n';
+            usageScenariosSection += `${eventEnrichment.usageScenarios}\n\n`;
+        }
+        eventSection = eventSection.replace(/USAGE_SCENARIOS_SECTION/g, usageScenariosSection);
 
         eventsContent += eventSection;
     });
@@ -1060,7 +1182,20 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             if (modelData.events.length > 0) {
                 dataModelsSection += `Used in: `;
                 dataModelsSection += modelData.events
-                    .map(eventName => `[\`${eventName}\`](#${eventName.replace(/\//g, '')}-${eventEmits.has(eventName) && eventListeners.has(eventName) ? 'emits-and-listens' : eventEmits.has(eventName) ? 'emits' : 'listens'})`)
+                    .map(eventName => {
+                        // Determine direction
+                        let direction;
+                        if (eventEmits.has(eventName) && eventListeners.has(eventName)) {
+                            direction = 'emits-and-listens';
+                        } else if (eventEmits.has(eventName)) {
+                            direction = 'emits';
+                        } else {
+                            direction = 'listens';
+                        }
+                        // Use eventNameToAnchor for consistency
+                        const anchor = eventNameToAnchor(eventName, direction);
+                        return `[\`${eventName}\`](#${anchor})`;
+                    })
                     .join(', ');
                 dataModelsSection += '.\n\n';
             }
@@ -1073,7 +1208,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     }
 
     // Assemble final content with Data Models section
-    return beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
+    let finalContent = beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
+
+    // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+    // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+    if (repoConfig.type === 'B2B') {
+        finalContent = finalContent.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+    }
+
+    return finalContent;
 }
 
 async function main() {
@@ -1081,13 +1224,23 @@ async function main() {
     console.log('================================\n');
 
     // Parse command-line arguments
-    const targetDropin = process.argv[2];
+    const args = process.argv.slice(2);
+    const targetDropin = args.find(arg => !arg.startsWith('--'));
+    const typeFilter = args.find(arg => arg.startsWith('--type='))?.split('=')[1];
 
-    // Filter drop-ins based on target
+    // Filter drop-ins based on type if specified (e.g., --type=B2B or --type=B2C)
     let dropinsToProcess = DROPIN_REPOS;
+    if (typeFilter) {
+        const upperTypeFilter = typeFilter.toUpperCase();
+        dropinsToProcess = Object.fromEntries(
+            Object.entries(DROPIN_REPOS).filter(([_, config]) => config.type === upperTypeFilter)
+        );
+        console.log(`🔍 Filtering by type: ${upperTypeFilter}\n`);
+    }
 
+    // Filter by specific drop-in if specified
     if (targetDropin) {
-        if (!DROPIN_REPOS[targetDropin]) {
+        if (!dropinsToProcess[targetDropin]) {
             console.error(`❌ Error: Drop-in "${targetDropin}" not found.\n`);
             console.log('Available drop-ins:');
             Object.keys(DROPIN_REPOS).forEach(name => {
@@ -1095,17 +1248,23 @@ async function main() {
             });
             process.exit(1);
         }
-        dropinsToProcess = { [targetDropin]: DROPIN_REPOS[targetDropin] };
+        dropinsToProcess = { [targetDropin]: dropinsToProcess[targetDropin] };
         console.log(`🎯 Processing single drop-in: ${targetDropin}\n`);
     } else {
-        console.log(`📦 Processing all ${Object.keys(DROPIN_REPOS).length} drop-ins\n`);
+        console.log(`📦 Processing all ${Object.keys(dropinsToProcess).length} drop-ins\n`);
     }
 
     // Clone/update boilerplate once for all drop-ins
     const boilerplatePath = cloneOrUpdateBoilerplate();
 
-    // Get package versions from boilerplate
+    // Get package versions from boilerplate (B2C drop-ins)
     const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
+
+    // Get B2B package versions from b2b-suite-release1 branch
+    const b2bPackageVersions = getB2BPackageVersions();
+
+    // Merge both version sets
+    const allPackageVersions = { ...packageVersions, ...b2bPackageVersions };
     console.log(`\n📦 Loaded package versions from boilerplate\n`);
 
     // Process each drop-in
@@ -1113,19 +1272,25 @@ async function main() {
         try {
             console.log(`\n📦 Processing ${repoConfig.displayName}...`);
 
-            // Get version from boilerplate package.json
-            const version = packageVersions[repoConfig.packageName];
+            // Get version from boilerplate package.json (includes both B2C and B2B)
+            const version = allPackageVersions[repoConfig.packageName];
+            let dropinPath;
+            let actualVersion;
 
             if (!version) {
-                console.log(`  ⚠️  Skipping: ${repoConfig.packageName} not found in boilerplate`);
-                console.log(`     This drop-in may not be included in the current boilerplate version.\n`);
-                continue;
+                // Drop-in not found in any branch - use existing standalone repo
+                console.log(`  Not found in boilerplate, using standalone repository...`);
+                const result = useExistingDropinRepo(repoName, repoConfig);
+                dropinPath = result.path;
+                actualVersion = result.actualVersion;
+            } else {
+                // Drop-in found in boilerplate - use version from there
+                dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
+                actualVersion = version;
             }
-
-            // Clone git repo at specific version
-            const dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
             const eventsData = scanForEvents(dropinPath);
-            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, version);
+            const versionToUse = actualVersion;
+            const mdxContent = generateEventsMDX(repoName, repoConfig, eventsData, versionToUse);
 
             // Write to the appropriate location in docs
             const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
