@@ -32,7 +32,9 @@ export class TypeExtractor {
     findEventTypeFile() {
         const possiblePaths = [
             join(this.dropinPath, 'src/types/events.d.ts'),
-            join(this.dropinPath, 'src/types/event-bus.d.ts')
+            join(this.dropinPath, 'src/types/event-bus.d.ts'),
+            join(this.dropinPath, 'src/types/events.ts'),
+            join(this.dropinPath, 'src/types/event-bus.ts')
         ];
 
         for (const path of possiblePaths) {

@@ -595,6 +595,76 @@ npm run generate-merchant-block-docs
 - Multi-file output (29+ block pages)
 - Complements technical boilerplate documentation
 
+### B2B Documentation Generator
+
+Runs all documentation generators for B2B drop-ins only, without touching B2C drop-in documentation.
+
+```bash
+# Generate all B2B documentation
+npm run generate-b2b-docs
+
+# Or generate only B2B functions (faster)
+npm run generate-function-docs -- --type=B2B
+```
+
+**Output**: Updates documentation files in `src/content/docs/dropins-b2b/`
+
+**Features**:
+- Filters generators to only process B2B drop-ins
+- Runs all 8 generators (Functions, Events, Containers, Slots, Styles, Dictionary, Quick Start, Initialization)
+- Skips all B2C drop-ins in `/dropins/` directory
+- Uses the same enrichment files and templates as standard generators
+
+**When to Use**:
+- After adding or updating B2B drop-in source code
+- When you want to update B2B docs without regenerating B2C docs (saves time)
+- When working on B2B-specific features or documentation
+
+**How it Works**:
+- Passes `--type=B2B` flag to each generator
+- Generators filter the drop-in registry to only include `type: 'B2B'` entries
+- All output goes to `/dropins-b2b/` paths instead of `/dropins/`
+
+**Time**: Approximately 8-12 minutes for all B2B generators
+
+---
+
+### `regenerate-b2b-overviews` - Regenerate All B2B Overview Pages
+
+**Purpose**: Completely regenerates all B2B drop-in overview pages (`index.mdx`) from the improved template.
+
+**Usage**:
+```bash
+npm run regenerate-b2b-overviews
+```
+
+**What it does**:
+1. **Backs up** all existing overview files (timestamped in `.backups/`)
+2. **Deletes** old overview files (only root `index.mdx`, not `containers/index.mdx`)
+3. **Bootstraps** all 5 B2B drop-ins to create new overview pages
+4. **Regenerates** all other documentation files (~8-12 minutes)
+
+**When to use**:
+- After updating `_dropin-templates/dropin-overview-minimal.mdx`
+- To standardize all overview pages with the new template
+- When overview pages need to be reset to template defaults
+
+**Files affected**:
+- `src/content/docs/dropins-b2b/company-management/index.mdx`
+- `src/content/docs/dropins-b2b/company-switcher/index.mdx`
+- `src/content/docs/dropins-b2b/purchase-order/index.mdx`
+- `src/content/docs/dropins-b2b/quote-management/index.mdx`
+- `src/content/docs/dropins-b2b/requisition-list/index.mdx`
+
+**Safety features**:
+- Creates timestamped backups before deletion
+- 5-second countdown before execution (Ctrl+C to cancel)
+- Clear output showing what was created/modified
+
+**Time**: Approximately 10-15 minutes total (including full B2B doc generation)
+
+---
+
 ### Boilerplate Version Updater
 
 Updates version numbers in manually-maintained boilerplate documentation files while preserving all other content.
@@ -625,7 +695,43 @@ npm run update-boilerplate-versions
 - `/boilerplate/customizing-blocks.mdx`
 - `/boilerplate/updates.mdx`
 
->>>>>>> origin/develop
+---
+
+**⚠️ Important: Overview Pages Require Manual Completion**
+
+The bootstrap script creates overview pages (`index.mdx`) using `_dropin-templates/dropin-overview-minimal.mdx`. These pages are **intentionally incomplete** and require the drop-in developer to:
+
+1. **Add drop-in description** - Explain what the drop-in does, what problems it solves, and who should use it
+2. **List supported features** - Complete the features table with all Adobe Commerce features the drop-in supports
+3. **Describe each section** - Add brief descriptions for Initialization, Containers, Functions, Events, Slots, Dictionary, and Styles sections
+
+**The template includes:**
+- A visible warning callout that content needs completion
+- Clear instructions with `[Drop-in developer: ...]` placeholders
+- Real-world examples for each section
+- Link to the Cart drop-in overview as a reference
+
+**✅ Protected from Overwriting:**
+- The bootstrap script checks if `index.mdx` exists before creating it
+- No generators write to the root `index.mdx` file
+- Once you edit the overview, it's safe - generators will never overwrite it
+- Generators only update specific files: `functions.mdx`, `events.mdx`, `containers/*.mdx`, `slots.mdx`, `styles.mdx`, `dictionary.mdx`, `quick-start.mdx`, `initialization.mdx`
+
+**Example workflow:**
+```bash
+# 1. Bootstrap a new B2B drop-in
+npm run bootstrap-b2b-dropin
+# Creates structure with placeholder overview
+
+# 2. Generate documentation from source code
+npm run generate-b2b-docs
+# Populates Functions, Events, Containers, etc.
+
+# 3. Complete the overview page manually
+# Edit src/content/docs/dropins-b2b/{dropin-name}/index.mdx
+# Replace placeholders with actual content
+# See Cart overview for reference: src/content/docs/dropins/cart/index.mdx
+```
 ## Enrichment System
 
 Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
