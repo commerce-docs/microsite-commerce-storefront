@@ -1,0 +1,233 @@
+---
+title: Requisition List initialization
+description: Configure the Requisition List drop-in with language definitions, custom data models, and drop-in-specific options.
+sidebar:
+  label: Initialization
+  order: 3
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The **Requisition List initializer** configures the drop-in for managing saved product lists and recurring orders. Use initialization to customize how requisition list data is displayed and enable internationalization for multi-language B2B storefronts.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.0-beta1</strong>
+</div>
+
+
+
+## Configuration options
+
+The following table describes the configuration options available for the **Requisition List** initializer:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+
+</TableWrapper>
+
+## Basic initialization
+
+Initialize the drop-in with default settings:
+
+```javascript title="scripts/initializers/requisition-list.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-requisition-list';
+
+await initializers.mountImmediately(initialize, {});
+```
+
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+
+```javascript title="scripts/initializers/requisition-list.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-requisition-list';
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+<Aside type="tip">
+For complete dictionary customization including all available keys and multi-language support, see the [Requisition List Dictionary](/dropins-b2b/requisition-list/dictionary/) page.
+</Aside>
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<TableWrapper nowrap={[0]}>
+
+| Model | Description |
+|---|---|
+| [`RequisitionListModel`](#requisitionlistmodel) | Transforms requisition list data from GraphQL including list details, items, quantities, and metadata. Use this to add custom fields or modify existing requisition list data structures. |
+| [`RequisitionListItemModel`](#requisitionlistitemmodel) | Transforms requisition list item data including product details, quantities, and custom options. Use this to add custom fields or modify item data structures. |
+
+</TableWrapper>
+
+The following example shows how to customize the `RequisitionListModel` model for the **Requisition List** drop-in:
+
+```javascript title="scripts/initializers/requisition-list.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-requisition-list';
+
+const models = {
+  RequisitionListModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+
+## Model definitions
+
+The following TypeScript definitions show the structure of each customizable model:
+
+### RequisitionListModel
+
+```typescript
+export interface RequisitionList {
+  uid: string;
+  name: string;
+  description: string;
+  updated_at: string;
+  items_count: number;
+  items: Item[];
+  page_info?: PageInfo;
+}
+
+export interface PageInfo {
+  page_size: number;
+  current_page: number;
+  total_pages: number;
+}
+```
+
+### RequisitionListItemModel
+
+```typescript
+export interface Item {
+  uid: string;
+  sku: string;
+  product: Product;
+  quantity: number;
+  customizable_options?: {
+    uid: string;
+    is_required: boolean;
+    label: string;
+    sort_order: number;
+    type: string;
+    values: {
+      uid: string;
+      label: string;
+      price: { type: string; units: string; value: number };
+      value: string;
+    }[];
+  }[];
+  bundle_options?: {
+    uid: string;
+    label: string;
+    type: string;
+    values: {
+      uid: string;
+      label: string;
+      original_price: { value: number; currency: string };
+      priceV2: { value: number; currency: string };
+      quantity: number;
+    }[];
+  }[];
+  configurable_options?: {
+    option_uid: string;
+    option_label: string;
+    value_uid: string;
+    value_label: string;
+  }[];
+  links?: {
+    uid: string;
+    price?: number;
+    sample_url?: string;
+    sort_order?: number;
+    title?: string;
+  }[];
+  samples?: {
+    url?: string;
+    sort_order?: number;
+    title?: string;
+  }[];
+  gift_card_options?: {
+    amount?: { value?: number; currency?: string; };
+    custom_giftcard_amount?: { value?: number; currency?: string; };
+    message?: string;
+    recipient_email?: string;
+    recipient_name?: string;
+    sender_name?: string;
+    sender_email?: string;
+  };
+}
+
+export interface Product {
+  sku: string;
+  parent_sku: string;
+  name: string;
+  shortDescription: string;
+  metaDescription: string;
+  metaKeyword: string;
+  metaTitle: string;
+  description: string;
+  addToCartAllowed: boolean;
+  url: string;
+  urlKey: string;
+  externalId: string;
+  images: {
+    url: string;
+    label: string;
+    roles: string[];
+  }[];
+}
+```
+
+{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-requisition-list */}
