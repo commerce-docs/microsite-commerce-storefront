@@ -367,8 +367,12 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
 
-    // Use simplified template for drop-ins with no custom configuration
-    if (configProps.length === 0 && models.length === 0) {
+    // Check if enrichment provides config or models
+    const hasEnrichmentConfig = enrichmentData?.config && Object.keys(enrichmentData.config).length > 0;
+    const hasEnrichmentModels = enrichmentData?.models && Object.keys(enrichmentData.models).length > 0;
+
+    // Use simplified template only if no custom configuration in repo AND no enrichment data
+    if (configProps.length === 0 && models.length === 0 && !hasEnrichmentConfig && !hasEnrichmentModels) {
         return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, enrichmentData);
     }
 
@@ -395,6 +399,33 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
     // Track configuration types that need full definitions at the bottom
     const configTypesWithDefinitions = [];
+
+    // Merge enrichment-only config options (those not found in repo scan)
+    if (enrichmentData?.config) {
+        Object.keys(enrichmentData.config).forEach(configName => {
+            // Skip if already in configProps
+            if (!configProps.find(p => p.name === configName)) {
+                configProps.push({
+                    name: configName,
+                    type: configName === 'langDefinitions' ? 'LangDefinitions' : 'any',
+                    required: false
+                });
+            }
+        });
+    }
+
+    // Merge enrichment-only models (those not found in repo scan)
+    if (enrichmentData?.models) {
+        Object.keys(enrichmentData.models).forEach(modelName => {
+            // Skip if already in models
+            if (!models.find(m => m.name === modelName)) {
+                models.push({
+                    name: modelName,
+                    description: enrichmentData.models[modelName].description || `Data model for ${modelName}.`
+                });
+            }
+        });
+    }
 
     // Extract model names for linking
     const modelNames = models.map(m => m.name);
