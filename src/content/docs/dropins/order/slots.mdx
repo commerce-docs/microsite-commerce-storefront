@@ -12,206 +12,487 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Order drop-in exposes **11 slots** in **6 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The Order drop-in exposes **17 slots** in **5 containers** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.4.0</strong>
+<strong>Version: 1.5.0-beta1</strong>
 </div>
 
-<table>
-<thead>
-<tr>
-<th style="white-space: nowrap;">Container</th>
-<th>Slots</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="white-space: nowrap;"><a href="#returnorderproductlist-slots"><code>ReturnOrderProductList</code></a></td>
-<td><code>Footer</code>, <code>ReturnOrderItem</code>, <code>CartSummaryItemImage</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#keyssortorder-slots"><code>KeysSortOrder</code></a></td>
-<td><code>OrderReturnInformation</code>, <code>PaymentMethodIcon</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#orderproductlist-slots"><code>OrderProductList</code></a></td>
-<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#orderproductlistcontent-slots"><code>OrderProductListContent</code></a></td>
-<td><code>Footer</code>, <code>CartSummaryItemImage</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#orderstatus-slots"><code>OrderStatus</code></a></td>
-<td><code>OrderActions</code></td>
-</tr>
-<tr>
-<td style="white-space: nowrap;"><a href="#orderstatuscontent-slots"><code>OrderStatusContent</code></a></td>
-<td><code>OrderActions</code></td>
-</tr>
-</tbody>
-</table>
+<TableWrapper nowrap={[0]}>
+
+| Container | Slots |
+|-----------|-------|
+| [`CreateReturn`](#createreturn-slots) | `Footer`, `ReturnOrderItem`, `ReturnFormActions`, `ReturnReasonFormImage`, `CartSummaryItemImage` |
+| [`OrderProductList`](#orderproductlist-slots) | `Footer`, `CartSummaryItemImage` |
+| [`OrderStatus`](#orderstatus-slots) | `OrderActions` |
+| [`ReturnsList`](#returnslist-slots) | `ReturnItemsDetails`, `DetailsActionParams`, `ReturnListImage` |
+| [`ShippingStatus`](#shippingstatus-slots) | `DeliveryTimeLine`, `DeliveryTrackActions`, `ReturnItemsDetails`, `ShippingStatusCardImage`, `NotYetShippedProductImage`, `ShippingStatusReturnCardImage` |
+
+</TableWrapper>
 
 
-## ReturnOrderProductList slots
 
-```js {4,5,6}
-interface ReturnOrderProductListProps
+## CreateReturn slots
 
-slots?: {
-  Footer: SlotProps;
-  ReturnOrderItem: SlotProps;
-  CartSummaryItemImage?: SlotProps<{
+The slots for the `CreateReturn` container allow you to customize its appearance and behavior.
+
+```typescript
+interface CreateReturnProps {
+  slots?: {
+    Footer: SlotProps;
+    ReturnOrderItem: SlotProps;
+    ReturnFormActions: SlotProps<{
+    handleChangeStep: (value: StepsTypes) => void;
+    }>;
+    ReturnReasonFormImage?: SlotProps<{
     data: OrderItemModel;
     defaultImageProps: ImageProps;
-  }>;
-};
+    }>;
+    CartSummaryItemImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
 ```
 
----
+### Footer slot
 
-## KeysSortOrder slots
+The `Footer` slot allows you to customize the footer section of the `CreateReturn` container.
 
-```js {4,5}
-interface KeysSortOrderProps
+#### Example
 
-slots?: {
-  OrderReturnInformation: SlotProps<OrdersReturnPropsModel | undefined>;
-  PaymentMethodIcon: SlotProps<Record<string, string>>;
-};
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { CreateReturn } from '@dropins/storefront-order/containers/CreateReturn.js';
+
+await provider.render(CreateReturn, {
+  slots: {
+    Footer: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnOrderItem slot
+
+The `ReturnOrderItem` slot allows you to customize the return order item section of the `CreateReturn` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { CreateReturn } from '@dropins/storefront-order/containers/CreateReturn.js';
+
+await provider.render(CreateReturn, {
+  slots: {
+    ReturnOrderItem: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnOrderItem';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnReasonFormImage slot
+
+The `ReturnReasonFormImage` slot allows you to customize the return reason form image section of the `CreateReturn` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { CreateReturn } from '@dropins/storefront-order/containers/CreateReturn.js';
+
+await provider.render(CreateReturn, {
+  slots: {
+    ReturnReasonFormImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnReasonFormImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### CartSummaryItemImage slot
+
+The `CartSummaryItemImage` slot allows you to customize the cart summary item image section of the `CreateReturn` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { CreateReturn } from '@dropins/storefront-order/containers/CreateReturn.js';
+
+await provider.render(CreateReturn, {
+  slots: {
+    CartSummaryItemImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryItemImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ---
 
 ## OrderProductList slots
 
-```js {4,5}
-interface OrderProductListProps
+The slots for the `OrderProductList` container allow you to customize its appearance and behavior.
 
-slots?: {
-  Footer: SlotProps;
-  CartSummaryItemImage?: SlotProps<{
+```typescript
+interface OrderProductListProps {
+  slots?: {
+    Footer: SlotProps;
+    CartSummaryItemImage?: SlotProps<{
     data: OrderItemModel;
     defaultImageProps: ImageProps;
-  }>;
-};
+    }>;
+  };
+}
 ```
 
-### Footer example
+### Footer slot
 
-This example from the Commerce Order Product List block shows how to customize the `Footer` slot:
+The `Footer` slot allows you to customize the footer section of the `OrderProductList` container.
+
+#### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-order/render.js';
-import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
-import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
-import { render as CartProvider } from '@dropins/storefront-cart/render.js';
-import GiftOptions from '@dropins/storefront-cart/containers/GiftOptions.js';
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
 
-provider.render(OrderProductList, {
+await provider.render(OrderProductList, {
   slots: {
     Footer: (ctx) => {
-      const giftOptions = document.createElement('div');
-      CartProvider.render(GiftOptions, {
-        item: ctx.item,
-        view: 'product',
-        dataSource: 'order',
-        isEditable: false,
-        slots: {
-          SwatchImage: (swatchCtx) => {
-            const { defaultImageProps, imageSwatchContext } = swatchCtx;
-            tryRenderAemAssetsImage(swatchCtx, {
-              alias: imageSwatchContext.label,
-              imageProps: defaultImageProps,
-              wrapper: document.createElement('span'),
-              params: {
-                width: defaultImageProps.width,
-                height: defaultImageProps.height,
-              },
-            });
-          },
-        },
-      })(giftOptions);
-      ctx.appendChild(giftOptions);
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Footer';
+      ctx.appendChild(element);
     }
   }
-})(document.querySelector('.order-product-list'));
+})(block);
 ```
 
-### CartSummaryItemImage example
+### CartSummaryItemImage slot
 
-This example from the Commerce Order Product List block shows how to customize the `CartSummaryItemImage` slot:
+The `CartSummaryItemImage` slot allows you to customize the cart summary item image section of the `OrderProductList` container.
+
+#### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-order/render.js';
-import OrderProductList from '@dropins/storefront-order/containers/OrderProductList.js';
-import { tryRenderAemAssetsImage } from '@dropins/tools/lib/aem/assets.js';
-import { getProductLink } from '../../scripts/commerce.js';
-const createProductLink = (item) => getProductLink(item.urlKey, item.sku);
+import { OrderProductList } from '@dropins/storefront-order/containers/OrderProductList.js';
 
-provider.render(OrderProductList, {
+await provider.render(OrderProductList, {
   slots: {
     CartSummaryItemImage: (ctx) => {
-      const { data, defaultImageProps } = ctx;
-      const anchor = document.createElement('a');
-      anchor.href = createProductLink(data);
-      tryRenderAemAssetsImage(ctx, {
-        alias: data.product.sku,
-        imageProps: defaultImageProps,
-        wrapper: anchor,
-        params: {
-          width: defaultImageProps.width,
-          height: defaultImageProps.height,
-        },
-      });
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom CartSummaryItemImage';
+      ctx.appendChild(element);
     }
   }
-})(document.querySelector('.order-product-list'));
-```
-
----
-
-## OrderProductListContent slots
-
-```js {4,5}
-interface OrderProductListContentProps
-
-slots?: {
-  Footer: SlotProps;
-  CartSummaryItemImage?: SlotProps<{
-    data: OrderItemModel;
-    defaultImageProps: ImageProps;
-  }>;
-};
+})(block);
 ```
 
 ---
 
 ## OrderStatus slots
 
-```js {4}
-interface OrderStatusProps
+The slots for the `OrderStatus` container allow you to customize its appearance and behavior.
 
-slots?: {
-  OrderActions: SlotProps<DefaultSlotContext>;
-};
+```typescript
+interface OrderStatusProps {
+  slots?: {
+    OrderActions: SlotProps<DefaultSlotContext>;
+  };
+}
+```
+
+### OrderActions slot
+
+The `OrderActions` slot allows you to customize the order actions section of the `OrderStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { OrderStatus } from '@dropins/storefront-order/containers/OrderStatus.js';
+
+await provider.render(OrderStatus, {
+  slots: {
+    OrderActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom OrderActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ---
 
-## OrderStatusContent slots
+## ReturnsList slots
 
-```js {4}
-interface OrderStatusContentProps
+The slots for the `ReturnsList` container allow you to customize its appearance and behavior.
 
-slots?: {
-  OrderActions: SlotProps<DefaultSlotContext>;
-};
+```typescript
+interface ReturnsListProps {
+  slots?: {
+    ReturnItemsDetails?: SlotProps<{
+    items: OrdersReturnItemsPropsModel[];
+    }>;
+    DetailsActionParams?: SlotProps<{
+    returnOrderItem: OrdersReturnPropsModel;
+    }>;
+    ReturnListImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot allows you to customize the return items details section of the `ReturnsList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ReturnsList } from '@dropins/storefront-order/containers/ReturnsList.js';
+
+await provider.render(ReturnsList, {
+  slots: {
+    ReturnItemsDetails: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnItemsDetails';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### DetailsActionParams slot
+
+The `DetailsActionParams` slot allows you to customize the details action params section of the `ReturnsList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ReturnsList } from '@dropins/storefront-order/containers/ReturnsList.js';
+
+await provider.render(ReturnsList, {
+  slots: {
+    DetailsActionParams: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DetailsActionParams';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnListImage slot
+
+The `ReturnListImage` slot allows you to customize the return list image section of the `ReturnsList` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ReturnsList } from '@dropins/storefront-order/containers/ReturnsList.js';
+
+await provider.render(ReturnsList, {
+  slots: {
+    ReturnListImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnListImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+---
+
+## ShippingStatus slots
+
+The slots for the `ShippingStatus` container allow you to customize its appearance and behavior.
+
+```typescript
+interface ShippingStatusProps {
+  slots?: {
+    DeliveryTimeLine?: SlotProps;
+    DeliveryTrackActions?: SlotProps;
+    ReturnItemsDetails?: SlotProps;
+    ShippingStatusCardImage?: SlotProps<{
+    data: ShipmentItemsModel;
+    defaultImageProps: ImageProps;
+    }>;
+    NotYetShippedProductImage?: SlotProps<{
+    data: OrderItemModel;
+    defaultImageProps: ImageProps;
+    }>;
+    ShippingStatusReturnCardImage?: SlotProps<{
+    data: OrdersReturnItemsPropsModel;
+    defaultImageProps: ImageProps;
+    }>;
+  };
+}
+```
+
+### DeliveryTimeLine slot
+
+The `DeliveryTimeLine` slot allows you to customize the delivery time line section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    DeliveryTimeLine: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DeliveryTimeLine';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### DeliveryTrackActions slot
+
+The `DeliveryTrackActions` slot allows you to customize the delivery track actions section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    DeliveryTrackActions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom DeliveryTrackActions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ReturnItemsDetails slot
+
+The `ReturnItemsDetails` slot allows you to customize the return items details section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ReturnItemsDetails: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ReturnItemsDetails';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShippingStatusCardImage slot
+
+The `ShippingStatusCardImage` slot allows you to customize the shipping status card image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ShippingStatusCardImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShippingStatusCardImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### NotYetShippedProductImage slot
+
+The `NotYetShippedProductImage` slot allows you to customize the not yet shipped product image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    NotYetShippedProductImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom NotYetShippedProductImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShippingStatusReturnCardImage slot
+
+The `ShippingStatusReturnCardImage` slot allows you to customize the shipping status return card image section of the `ShippingStatus` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-order/render.js';
+import { ShippingStatus } from '@dropins/storefront-order/containers/ShippingStatus.js';
+
+await provider.render(ShippingStatus, {
+  slots: {
+    ShippingStatusReturnCardImage: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom ShippingStatusReturnCardImage';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ---
 
 
 
-{/* This documentation is auto-generated from: REPO_URL */}
+{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-order */}

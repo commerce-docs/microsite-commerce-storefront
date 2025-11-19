@@ -380,6 +380,12 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             );
         }
 
+        // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+        // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+        if (repoConfig.type === 'B2B') {
+            mdxContent = mdxContent.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+        }
+
         // Use kebab-case for file name
         const fileName = toKebabCase(containerInfo.containerName);
         containerDocs.set(fileName, mdxContent);

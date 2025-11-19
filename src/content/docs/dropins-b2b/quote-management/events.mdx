@@ -1,67 +1,194 @@
 ---
-title: Quote Management Events
-description: Events emitted by the Quote Management drop-in for tracking quote and template lifecycle changes.
+title: Quote Management Data & Events
+description: Learn about the events used by the Quote Management and the data available within the events.
 sidebar:
   label: Events
-  order: 4
+  order: 5
 ---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Quote Management, Quote Management, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Quote Management drop-in emits **19 events** to the event bus, providing comprehensive tracking of quote and quote template operations throughout their lifecycle.
+The **Quote Management** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta1</strong>
 </div>
 
-## Available events
+## Events reference
 
-<TableWrapper nowrap={[0]}>
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
 
-| Event Name | Description |
-|------------|-------------|
-| [`quote-management/initialized`](#quote-managementinitialized) | Drop-in initialization complete |
-| [`quote-management/line-item-note-set`](#quote-managementline-item-note-set) | Line item note was set |
-| [`quote-management/negotiable-quote-closed`](#quote-managementnegotiable-quote-closed) | Quote was closed |
-| [`quote-management/negotiable-quote-deleted`](#quote-managementnegotiable-quote-deleted) | Quote was deleted |
-| [`quote-management/negotiable-quote-requested`](#quote-managementnegotiable-quote-requested) | New quote requested |
-| [`quote-management/permissions`](#quote-managementpermissions) | Permissions updated |
-| [`quote-management/quantities-updated`](#quote-managementquantities-updated) | Item quantities updated |
-| [`quote-management/quote-data`](#quote-managementquote-data) | Quote data changed |
-| [`quote-management/quote-data/initialized`](#quote-managementquote-datainitialized) | Quote data initialized |
-| [`quote-management/quote-duplicated`](#quote-managementquote-duplicated) | Quote was duplicated |
-| [`quote-management/quote-items-removed`](#quote-managementquote-items-removed) | Items removed from quote |
-| [`quote-management/quote-renamed`](#quote-managementquote-renamed) | Quote was renamed |
-| [`quote-management/quote-sent-for-review`](#quote-managementquote-sent-for-review) | Quote sent for review |
-| [`quote-management/quote-template-data`](#quote-managementquote-template-data) | Template data changed |
-| [`quote-management/quote-template-deleted`](#quote-managementquote-template-deleted) | Template was deleted |
-| [`quote-management/quote-template-generated`](#quote-managementquote-template-generated) | Quote generated from template |
-| [`quote-management/quote-templates-data`](#quote-managementquote-templates-data) | Templates list data changed |
-| [`quote-management/shipping-address-set`](#quote-managementshipping-address-set) | Shipping address was set |
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [quote-management/file-upload-error](#quote-managementfile-upload-error-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/line-item-note-set](#quote-managementline-item-note-set-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/negotiable-quote-delete-error](#quote-managementnegotiable-quote-delete-error-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/negotiable-quote-deleted](#quote-managementnegotiable-quote-deleted-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/negotiable-quote-requested](#quote-managementnegotiable-quote-requested-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/quote-data/error](#quote-managementquote-dataerror-emits) | Emits | Emitted when an error occurs. |
+| [quote-management/quote-data/initialized](#quote-managementquote-datainitialized-emits) | Emits | Emitted when the component completes initialization. |
+| [quote-management/quote-template-data/error](#quote-managementquote-template-dataerror-emits) | Emits | Emitted when an error occurs. |
+| [quote-management/quote-template-deleted](#quote-managementquote-template-deleted-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/quote-template-generated](#quote-managementquote-template-generated-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [quote-management/quote-templates-data](#quote-managementquote-templates-data-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [auth/permissions](#authpermissions-listens) | Listens | Fired by Auth (`auth`) when permissions are updated. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
+| [quote-management/initialized](#quote-managementinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
+| [quote-management/negotiable-quote-close-error](#quote-managementnegotiable-quote-close-error-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/negotiable-quote-closed](#quote-managementnegotiable-quote-closed-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/permissions](#quote-managementpermissions-emits-and-listens) | Emits and listens | Triggered when permissions are updated. |
+| [quote-management/quantities-updated](#quote-managementquantities-updated-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-data](#quote-managementquote-data-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-duplicated](#quote-managementquote-duplicated-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-items-removed](#quote-managementquote-items-removed-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-renamed](#quote-managementquote-renamed-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-sent-for-review](#quote-managementquote-sent-for-review-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/quote-template-data](#quote-managementquote-template-data-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+| [quote-management/shipping-address-set](#quote-managementshipping-address-set-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
 
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-### quote-management/initialized
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-Emitted when the Quote Management drop-in completes initialization.
+
+### `auth/permissions` (listens)
+
+Fired by Auth (`auth`) when permissions are updated.
+
+#### Event payload
+
+```typescript
+AuthPermissionsPayload
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('auth/permissions', (payload) => {
+  console.log('auth/permissions event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/file-upload-error` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/initialized'
+  error: string;
+  fileName?: string;
 }
 ```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/file-upload-error', (payload) => {
+  console.log('quote-management/file-upload-error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/initialized` (emits and listens)
+
+Triggered when the component completes initialization.
+
+#### Event payload
+
+```typescript
+{}
+```
+
+
 
 #### When triggered
 
 - After `initialize()` function completes
 - On drop-in first load
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -74,29 +201,40 @@ events.on('quote-management/initialized', () => {
 
 ---
 
-### quote-management/line-item-note-set
 
-Emitted when a note is set on a quote line item.
+
+
+
+### `quote-management/line-item-note-set` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/line-item-note-set',
-  data: {
-    quoteId: string,
-    itemId: string,
-    note: string
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  itemUid: string;
+  note: string;
+  quantity?: number;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `setLineItemNote()`
 - When merchant or buyer adds/updates item notes
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/line-item-note-set', (payload) => {
@@ -107,28 +245,65 @@ events.on('quote-management/line-item-note-set', (payload) => {
 
 ---
 
-### quote-management/negotiable-quote-closed
 
-Emitted when a negotiable quote is closed.
+
+
+
+### `quote-management/negotiable-quote-close-error` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/negotiable-quote-closed',
-  data: {
-    quoteId: string,
-    status: string
-  }
+  error: Error;
+  attemptedQuoteUids: string[];
 }
 ```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/negotiable-quote-close-error', (payload) => {
+  console.log('quote-management/negotiable-quote-close-error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/negotiable-quote-closed` (emits and listens)
+
+Emitted and consumed for internal and external communication.
+
+#### Event payload
+
+```typescript
+{
+  closedQuoteUids: string[];
+  resultStatus: string;
+}
+```
+
+
 
 #### When triggered
 
 - After calling `closeNegotiableQuote()`
 - When quote reaches final state
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/negotiable-quote-closed', (payload) => {
@@ -139,27 +314,65 @@ events.on('quote-management/negotiable-quote-closed', (payload) => {
 
 ---
 
-### quote-management/negotiable-quote-deleted
 
-Emitted when a negotiable quote is deleted.
+
+
+
+### `quote-management/negotiable-quote-delete-error` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/negotiable-quote-deleted',
-  data: {
-    quoteId: string
-  }
+  error: Error;
+  attemptedQuoteUids: string[];
 }
 ```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/negotiable-quote-delete-error', (payload) => {
+  console.log('quote-management/negotiable-quote-delete-error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/negotiable-quote-deleted` (emits)
+
+Emitted when a specific condition or state change occurs.
+
+#### Event payload
+
+```typescript
+{
+  deletedQuoteUids: string[];
+  resultStatus: string;
+}
+```
+
+
 
 #### When triggered
 
 - After calling `deleteQuote()`
 - After successful quote deletion
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/negotiable-quote-deleted', (payload) => {
@@ -170,28 +383,41 @@ events.on('quote-management/negotiable-quote-deleted', (payload) => {
 
 ---
 
-### quote-management/negotiable-quote-requested
 
-Emitted when a new negotiable quote is requested.
+
+
+
+### `quote-management/negotiable-quote-requested` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/negotiable-quote-requested',
-  data: {
-    quoteId: string,
-    quoteName: string
-  }
+  quote: NegotiableQuoteModel | null;
+  input: {
+  cartId: string;
+  quoteName: string;
+  comment?: string;
+  attachments?: { key: string }[];
+  isDraft?: boolean;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `requestNegotiableQuote()`
 - When buyer submits quote request
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/negotiable-quote-requested', (payload) => {
@@ -203,20 +429,21 @@ events.on('quote-management/negotiable-quote-requested', (payload) => {
 
 ---
 
-### quote-management/permissions
 
-Emitted when quote-related permissions are updated.
+
+
+
+### `quote-management/permissions` (emits and listens)
+
+Triggered when permissions are updated.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'quote-management/permissions',
-  data: {
-    permissions: string[]
-  }
-}
+typeof state.permissions
 ```
+
+
 
 #### When triggered
 
@@ -224,7 +451,9 @@ Emitted when quote-related permissions are updated.
 - On user role updates
 - After company context switches
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/permissions', (payload) => {
@@ -235,28 +464,38 @@ events.on('quote-management/permissions', (payload) => {
 
 ---
 
-### quote-management/quantities-updated
 
-Emitted when item quantities in a quote are updated.
+
+
+
+### `quote-management/quantities-updated` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quantities-updated',
-  data: {
-    quoteId: string,
-    items: Array<{ itemId: string, quantity: number }>
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  items: Array<{ quoteItemUid: string; quantity: number }>;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `updateQuantities()`
 - When buyer or merchant updates quantities
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quantities-updated', (payload) => {
@@ -267,18 +506,26 @@ events.on('quote-management/quantities-updated', (payload) => {
 
 ---
 
-### quote-management/quote-data
 
-Emitted when quote data changes or is loaded.
+
+
+
+### `quote-management/quote-data` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-data',
-  data: NegotiableQuoteModel
+  quote: NegotiableQuoteModel;
+  permissions: typeof state.permissions;
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
@@ -286,7 +533,9 @@ Emitted when quote data changes or is loaded.
 - After any quote modification
 - After status changes
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-data', (payload) => {
@@ -297,25 +546,66 @@ events.on('quote-management/quote-data', (payload) => {
 
 ---
 
-### quote-management/quote-data/initialized
 
-Emitted when quote data is first initialized and loaded.
+
+
+
+### `quote-management/quote-data/error` (emits)
+
+Emitted when an error occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-data/initialized',
-  data: NegotiableQuoteModel
+  error: Error;
 }
 ```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-data/error', (payload) => {
+  console.log('quote-management/quote-data/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/quote-data/initialized` (emits)
+
+Emitted when the component completes initialization.
+
+#### Event payload
+
+```typescript
+{
+  quote: NegotiableQuoteModel;
+  permissions: typeof state.permissions;
+}
+```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - On first load of quote details
 - After quote context is established
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-data/initialized', (payload) => {
@@ -326,28 +616,38 @@ events.on('quote-management/quote-data/initialized', (payload) => {
 
 ---
 
-### quote-management/quote-duplicated
 
-Emitted when a quote is duplicated.
+
+
+
+### `quote-management/quote-duplicated` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-duplicated',
-  data: {
-    originalQuoteId: string,
-    newQuoteId: string
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  duplicatedQuoteUid: string;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `duplicateQuote()`
 - When creating copy of existing quote
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-duplicated', (payload) => {
@@ -358,28 +658,36 @@ events.on('quote-management/quote-duplicated', (payload) => {
 
 ---
 
-### quote-management/quote-items-removed
 
-Emitted when items are removed from a quote.
+
+
+
+### `quote-management/quote-items-removed` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-items-removed',
-  data: {
-    quoteId: string,
-    removedItemIds: string[]
-  }
+  quote: NegotiableQuoteModel;
+  removedItemUids: string[];
+  input: RemoveNegotiableQuoteItemsInput;
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `removeNegotiableQuoteItems()`
 - When items are deleted from quote
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-items-removed', (payload) => {
@@ -390,28 +698,39 @@ events.on('quote-management/quote-items-removed', (payload) => {
 
 ---
 
-### quote-management/quote-renamed
 
-Emitted when a quote is renamed.
+
+
+
+### `quote-management/quote-renamed` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-renamed',
-  data: {
-    quoteId: string,
-    newName: string
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  quoteName: string;
+  quoteComment?: string;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `renameNegotiableQuote()`
 - When quote name is updated
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-renamed', (payload) => {
@@ -422,28 +741,39 @@ events.on('quote-management/quote-renamed', (payload) => {
 
 ---
 
-### quote-management/quote-sent-for-review
 
-Emitted when a quote is sent for merchant review.
+
+
+
+### `quote-management/quote-sent-for-review` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-sent-for-review',
-  data: {
-    quoteId: string,
-    comment: string
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  comment?: string;
+  attachments?: { key: string }[];
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `sendForReview()`
 - When buyer submits quote for negotiation
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-sent-for-review', (payload) => {
@@ -455,18 +785,26 @@ events.on('quote-management/quote-sent-for-review', (payload) => {
 
 ---
 
-### quote-management/quote-template-data
 
-Emitted when quote template data changes or is loaded.
+
+
+
+### `quote-management/quote-template-data` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-template-data',
-  data: QuoteTemplateModel
+  quoteTemplate: NegotiableQuoteTemplateModel;
+  permissions: typeof state.permissions;
 }
 ```
+
+See [`NegotiableQuoteTemplateModel`](#negotiablequotetemplatemodel) for full type definition.
+
+
 
 #### When triggered
 
@@ -474,7 +812,9 @@ Emitted when quote template data changes or is loaded.
 - After template modifications
 - After template status changes
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-template-data', (payload) => {
@@ -485,27 +825,63 @@ events.on('quote-management/quote-template-data', (payload) => {
 
 ---
 
-### quote-management/quote-template-deleted
 
-Emitted when a quote template is deleted.
+
+
+
+### `quote-management/quote-template-data/error` (emits)
+
+Emitted when an error occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-template-deleted',
-  data: {
-    templateId: string
-  }
+  error: Error;
 }
 ```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-template-data/error', (payload) => {
+  console.log('quote-management/quote-template-data/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `quote-management/quote-template-deleted` (emits)
+
+Emitted when a specific condition or state change occurs.
+
+#### Event payload
+
+```typescript
+{
+  templateId: string;
+}
+```
+
+
 
 #### When triggered
 
 - After calling `deleteQuoteTemplate()`
 - After successful template deletion
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-template-deleted', (payload) => {
@@ -516,26 +892,30 @@ events.on('quote-management/quote-template-deleted', (payload) => {
 
 ---
 
-### quote-management/quote-template-generated
 
-Emitted when a new quote is generated from a template.
+
+
+
+### `quote-management/quote-template-generated` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-template-generated',
-  data: {
-    templateId: string,
-    quoteId: string
-  }
+  quoteId: string;
 }
 ```
+
+
 
 #### When triggered
 
 - After calling `generateQuoteFromTemplate()`
 - When creating quote from template
+
+
 
 #### Example 1: Basic template generation
 
@@ -608,7 +988,7 @@ class QuoteTemplateCatalog {
           <span class="item-count">${template.items.length} items</span>
         </div>
         <div class="template-meta">
-          <span class="total">Total: $${template.prices.grandTotal.value}</span>
+          <span class="total">Total: ${template.prices.grandTotal.value}</span>
           <span class="date">Created: ${formatDate(template.createdAt)}</span>
         </div>
         <div class="template-actions">
@@ -854,6 +1234,8 @@ recurringOrders.scheduleRecurringOrder('template-uid-123', {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - One-click quote generation from commonly used templates
@@ -865,21 +1247,24 @@ recurringOrders.scheduleRecurringOrder('template-uid-123', {
 
 ---
 
-### quote-management/quote-templates-data
 
-Emitted when the list of quote templates changes or is loaded.
+
+### `quote-management/quote-templates-data` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/quote-templates-data',
-  data: {
-    templates: QuoteTemplateModel[],
-    totalCount: number
-  }
+  quoteTemplates: NegotiableQuoteTemplatesListModel;
+  permissions: typeof state.permissions;
 }
 ```
+
+See [`NegotiableQuoteTemplatesListModel`](#negotiablequotetemplateslistmodel) for full type definition.
+
+
 
 #### When triggered
 
@@ -887,7 +1272,9 @@ Emitted when the list of quote templates changes or is loaded.
 - After template creation/deletion
 - After template status changes
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/quote-templates-data', (payload) => {
@@ -898,28 +1285,39 @@ events.on('quote-management/quote-templates-data', (payload) => {
 
 ---
 
-### quote-management/shipping-address-set
 
-Emitted when a shipping address is set on a quote.
+
+
+
+### `quote-management/shipping-address-set` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'quote-management/shipping-address-set',
-  data: {
-    quoteId: string,
-    address: AddressModel
-  }
+  quote: NegotiableQuoteModel;
+  input: {
+  quoteUid: string;
+  addressId?: number;
+  addressData?: AddressInput;
+}
 }
 ```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
 
 #### When triggered
 
 - After calling `setShippingAddress()`
 - When shipping address is updated
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 events.on('quote-management/shipping-address-set', (payload) => {
@@ -965,35 +1363,158 @@ Template events (`quote-template-*`) are separate from quote events. A template 
 
 ## Event flow examples
 
-### Creating and submitting a new quote
 
-```mermaid
-sequenceDiagram
-    User->>System: Request new quote
-    System->>EventBus: quote-management/negotiable-quote-requested
-    User->>System: Add items and notes
-    System->>EventBus: quote-management/line-item-note-set
-    User->>System: Set shipping address
-    System->>EventBus: quote-management/shipping-address-set
-    User->>System: Send for review
-    System->>EventBus: quote-management/quote-sent-for-review
-    System->>EventBus: quote-management/quote-data (status: submitted)
+
+
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### NegotiableQuoteModel
+
+Used in: [`quote-management/line-item-note-set`](#quote-managementline-item-note-set-emits), [`quote-management/negotiable-quote-requested`](#quote-managementnegotiable-quote-requested-emits), [`quote-management/quantities-updated`](#quote-managementquantities-updated-emits-and-listens), [`quote-management/quote-data`](#quote-managementquote-data-emits-and-listens), [`quote-management/quote-data/initialized`](#quote-managementquote-datainitialized-emits), [`quote-management/quote-duplicated`](#quote-managementquote-duplicated-emits-and-listens), [`quote-management/quote-items-removed`](#quote-managementquote-items-removed-emits-and-listens), [`quote-management/quote-renamed`](#quote-managementquote-renamed-emits-and-listens), [`quote-management/quote-sent-for-review`](#quote-managementquote-sent-for-review-emits-and-listens), [`quote-management/shipping-address-set`](#quote-managementshipping-address-set-emits-and-listens).
+
+```ts
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  isVirtual: boolean;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  totalQuantity: number;
+  comments?: {
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+    };
+    text: string;
+    attachments?: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    appliedDiscounts?: Discount[];
+    appliedTaxes?: Tax[];
+    discount?: Currency;
+    grandTotal?: Currency;
+    grandTotalExcludingTax?: Currency;
+    shippingExcludingTax?: Currency;
+    shippingIncludingTax?: Currency;
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    totalTax?: Currency;
+  };
+  items: NegotiableQuoteCartItem[];
+  shippingAddresses?: ShippingAddress[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+  lockedForEditing?: boolean;
+  canDelete: boolean;
+  canClose: boolean;
+  canUpdateQuote: boolean;
+  readOnly: boolean;
+}
 ```
 
-### Generating quote from template
+### NegotiableQuoteTemplateModel
 
-```mermaid
-sequenceDiagram
-    User->>System: Generate quote from template
-    System->>EventBus: quote-management/quote-template-generated
-    System->>EventBus: quote-management/quote-data/initialized
-    System->>EventBus: quote-management/quote-data
+Used in: [`quote-management/quote-template-data`](#quote-managementquote-template-data-emits-and-listens).
+
+```ts
+interface NegotiableQuoteTemplateModel {
+  id: string;
+  uid: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  expirationDate?: string;
+  status: NegotiableQuoteTemplateStatus;
+  salesRepName: string;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  comments?: QuoteTemplateComment[];
+  history?: QuoteTemplateHistoryEntry[];
+  prices: {
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    grandTotal?: Currency;
+    appliedTaxes?: {
+      amount: Currency;
+      label: string;
+    }[];
+  };
+  items: QuoteTemplateCartItem[];
+  shippingAddresses?: ShippingAddress[];
+  referenceDocuments?: {
+    uid: string;
+    name: string;
+    url: string;
+  }[];
+  // Template-specific fields
+  quantityThresholds?: {
+    min?: number;
+    max?: number;
+  };
+  canAccept: boolean;
+  canDelete: boolean;
+  canReopen: boolean;
+  canCancel: boolean;
+  canSendForReview: boolean;
+  canGenerateQuoteFromTemplate: boolean;
+  canEditTemplateItems: boolean;
+}
 ```
 
-## Related documentation
+### NegotiableQuoteTemplatesListModel
 
-- [Functions](/dropins-b2b/quote-management/functions/) - API functions that emit these events
-- [Containers](/dropins-b2b/quote-management/containers/) - UI components that respond to events
-- [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
+Used in: [`quote-management/quote-templates-data`](#quote-managementquote-templates-data-emits).
 
-{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-quote-management */}
+```ts
+interface NegotiableQuoteTemplatesListModel {
+  items: NegotiableQuoteTemplateListEntry[];
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  totalCount: number;
+  paginationInfo?: PaginationInfo;
+  sortFields?: {
+    default: string;
+    options: Array<{
+      label: string;
+      value: string;
+    }>;
+  };
+}
+```
+

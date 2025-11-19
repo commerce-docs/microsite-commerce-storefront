@@ -639,6 +639,10 @@ ${configType.definition}
     // But keep /dropins/all/ as-is (shared documentation)
     if (repoConfig.type === 'B2B') {
         content = content.replace(/\/dropins\/(?!all\/)/g, '/dropins-b2b/');
+
+        // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+        // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+        content = content.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
     }
 
     return content;

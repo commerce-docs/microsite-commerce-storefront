@@ -1171,7 +1171,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     }
 
     // Assemble final content with Data Models section
-    return beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
+    let finalContent = beforeRepeat + eventsContent + afterRepeat + dataModelsSection;
+
+    // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+    // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+    if (repoConfig.type === 'B2B') {
+        finalContent = finalContent.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+    }
+
+    return finalContent;
 }
 
 async function main() {

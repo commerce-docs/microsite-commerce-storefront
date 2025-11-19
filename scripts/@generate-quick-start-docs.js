@@ -211,6 +211,9 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     // But keep /dropins/all/ as-is (shared documentation)
     if (repoConfig.type === 'B2B') {
         content = content.replace(/\/dropins\/(?!all\/)/g, '/dropins-b2b/');
+
+        // Remove "Next steps" section for B2B drop-ins (only contains internal links)
+        content = content.replace(/## Next steps\n\n[\s\S]*?(?=\{\/\*)/m, '');
     }
 
     return content;

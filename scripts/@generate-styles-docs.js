@@ -912,6 +912,12 @@ function generateStylesMDX(repoName, repoConfig, cssFiles, versionInfo, enrichme
         CUSTOM_CSS_EXAMPLES: customCSSExamples
     });
 
+    // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+    // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+    if (repoConfig.type === 'B2B') {
+        content = content.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+    }
+
     return content;
 }
 

@@ -30,19 +30,13 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Cart** drop-in emits events when items are added, removed, or updated, and listens to checkout events to maintain synchronization across your storefront.
+The **Cart** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.5.1</strong>
+<strong>Version: 3.0.0-beta1</strong>
 </div>
 
-<Aside type="tip">
-For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
-</Aside>
-
 ## Events reference
-
-Drop-ins communicate via the [event bus](/sdk/reference/events/).
 
 {/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
@@ -56,6 +50,7 @@ Drop-ins communicate via the [event bus](/sdk/reference/events/).
 | [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization. |
 | [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
+| [requisitionList/alert](#requisitionlistalert-listens) | Listens | Fired by Requisition List (`requisitionList`) when an alert or notification is triggered. |
 | [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
 | [cart/merged](#cartmerged-emits-and-listens) | Emits and listens | Triggered when data is merged. |
 | [cart/reset](#cartreset-emits-and-listens) | Emits and listens | Triggered when the component state is reset. |
@@ -66,6 +61,8 @@ Drop-ins communicate via the [event bus](/sdk/reference/events/).
 {/* EVENTS_TABLE_END */}
 
 ## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
 ### `cart/data` (emits and listens)
@@ -82,19 +79,22 @@ See [`CartModel`](#cartmodel) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartDataListener = events.on('cart/data', (data) => {
-  console.log('cart/data event received:', data);
+events.on('cart/data', (payload) => {
+  console.log('cart/data event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartDataListener.off();
 ```
+
+
+
+
 
 ### `cart/initialized` (emits)
 
@@ -110,19 +110,22 @@ See [`CartModel`](#cartmodel) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartInitializedListener = events.on('cart/initialized', (data) => {
-  console.log('cart/initialized event received:', data);
+events.on('cart/initialized', (payload) => {
+  console.log('cart/initialized event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartInitializedListener.off();
 ```
+
+
+
+
 
 ### `cart/merged` (emits and listens)
 
@@ -141,19 +144,22 @@ See [`Item`](#item), [`CartModel`](#cartmodel) for full type definitions.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartMergedListener = events.on('cart/merged', (data) => {
-  console.log('cart/merged event received:', data);
+events.on('cart/merged', (payload) => {
+  console.log('cart/merged event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartMergedListener.off();
 ```
+
+
+
+
 
 ### `cart/product/added` (emits)
 
@@ -169,19 +175,22 @@ See [`Item`](#item) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartProductAddedListener = events.on('cart/product/added', (data) => {
-  console.log('cart/product/added event received:', data);
+events.on('cart/product/added', (payload) => {
+  console.log('cart/product/added event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartProductAddedListener.off();
 ```
+
+
+
+
 
 ### `cart/product/removed` (emits)
 
@@ -191,19 +200,22 @@ Emitted when an item is removed.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartProductRemovedListener = events.on('cart/product/removed', (data) => {
-  console.log('cart/product/removed event received:', data);
+events.on('cart/product/removed', (payload) => {
+  console.log('cart/product/removed event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartProductRemovedListener.off();
 ```
+
+
+
+
 
 ### `cart/product/updated` (emits)
 
@@ -219,19 +231,22 @@ See [`Item`](#item) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartProductUpdatedListener = events.on('cart/product/updated', (data) => {
-  console.log('cart/product/updated event received:', data);
+events.on('cart/product/updated', (payload) => {
+  console.log('cart/product/updated event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartProductUpdatedListener.off();
 ```
+
+
+
+
 
 ### `cart/reset` (emits and listens)
 
@@ -245,19 +260,22 @@ void
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartResetListener = events.on('cart/reset', (data) => {
-  console.log('cart/reset event received:', data);
+events.on('cart/reset', (payload) => {
+  console.log('cart/reset event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartResetListener.off();
 ```
+
+
+
+
 
 ### `cart/updated` (emits and listens)
 
@@ -273,19 +291,22 @@ See [`CartModel`](#cartmodel) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartUpdatedListener = events.on('cart/updated', (data) => {
-  console.log('cart/updated event received:', data);
+events.on('cart/updated', (payload) => {
+  console.log('cart/updated event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartUpdatedListener.off();
 ```
+
+
+
+
 
 ### `checkout/initialized` (listens)
 
@@ -297,23 +318,26 @@ Fired by Checkout (`checkout`) when the component completes initialization.
 Cart | NegotiableQuote | null
 ```
 
-See [`Cart`](/dropins/checkout/events/#cart), [`NegotiableQuote`](/dropins/checkout/events/#negotiablequote) for full type definitions.
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
-  console.log('checkout/initialized event received:', data);
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutInitializedListener.off();
 ```
+
+
+
+
 
 ### `checkout/updated` (listens)
 
@@ -325,23 +349,26 @@ Fired by Checkout (`checkout`) when the component state is updated.
 Cart | NegotiableQuote | null
 ```
 
-See [`Cart`](/dropins/checkout/events/#cart), [`NegotiableQuote`](/dropins/checkout/events/#negotiablequote) for full type definitions.
+See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
-  console.log('checkout/updated event received:', data);
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutUpdatedListener.off();
 ```
+
+
+
+
 
 ### `companyContext/changed` (listens)
 
@@ -351,19 +378,47 @@ Fired by Company Context (`companyContext`) when a change occurs.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const companyContextChangedListener = events.on('companyContext/changed', (data) => {
-  console.log('companyContext/changed event received:', data);
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-companyContextChangedListener.off();
 ```
+
+
+
+
+
+### `requisitionList/alert` (listens)
+
+Fired by Requisition List (`requisitionList`) when an alert or notification is triggered.
+
+#### Event payload
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('requisitionList/alert', (payload) => {
+  console.log('requisitionList/alert event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
 
 ### `shipping/estimate` (emits and listens)
 
@@ -382,19 +437,22 @@ See [`PartialAddress`](#partialaddress), [`ShippingMethod`](#shippingmethod) for
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const shippingEstimateListener = events.on('shipping/estimate', (data) => {
-  console.log('shipping/estimate event received:', data);
+events.on('shipping/estimate', (payload) => {
+  console.log('shipping/estimate event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-shippingEstimateListener.off();
 ```
+
+
+
+
 
 
 {/* 

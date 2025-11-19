@@ -1,50 +1,77 @@
 ---
-title: Purchase Order Events
-description: Events emitted by the Purchase Order drop-in for tracking purchase order lifecycle and permission changes.
+title: Purchase Order Data & Events
+description: Learn about the events used by the Purchase Order and the data available within the events.
 sidebar:
   label: Events
-  order: 4
+  order: 5
 ---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Purchase Order, Purchase Order, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Purchase Order drop-in emits **5 events** to the event bus, allowing you to track and respond to purchase order state changes, order placement, and permission updates.
+The **Purchase Order** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.0-beta1</strong>
+<strong>Version: 1.0.0-beta2</strong>
 </div>
 
-## Available events
+## Events reference
 
-<TableWrapper nowrap={[0]}>
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
 
-| Event Name | Description |
-|------------|-------------|
-| [`auth/permissions`](#authpermissions) | Emitted when user permissions are updated or refreshed |
-| [`order/data`](#orderdata) | Emitted when order data associated with a purchase order changes |
-| [`purchase-order/data`](#purchase-orderdata) | Emitted when purchase order data is loaded or updated |
-| [`purchase-order/placed`](#purchase-orderplaced) | Emitted when a purchase order is successfully placed |
-| [`purchase-order/refresh`](#purchase-orderrefresh) | Emitted to trigger a refresh of purchase order data |
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [order/data](#orderdata-emits) | Emits | Emitted when data is available or changes. |
+| [purchase-order/error](#purchase-ordererror-emits) | Emits | Emitted when an error occurs. |
+| [purchase-order/placed](#purchase-orderplaced-emits) | Emits | Emitted when an order is placed. |
+| [auth/permissions](#authpermissions-emits-and-listens) | Emits and listens | Triggered when permissions are updated. |
+| [purchase-order/data](#purchase-orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [purchase-order/refresh](#purchase-orderrefresh-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
 
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-### auth/permissions
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-Emitted when user permissions related to purchase orders are updated or need to be refreshed.
+
+### `auth/permissions` (emits and listens)
+
+Triggered when permissions are updated.
 
 #### Event payload
 
 ```typescript
 {
-  eventType: 'auth/permissions',
-  data: {
-    permissions: string[] // Array of permission codes
-  }
+  admin?: boolean;
+  [key: string]: boolean | undefined;
 }
 ```
+
+
 
 #### When triggered
 
@@ -53,7 +80,9 @@ Emitted when user permissions related to purchase orders are updated or need to 
 - After approval rule permissions are modified
 - After company context switches
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -70,6 +99,8 @@ events.on('auth/permissions', (payload) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Show/hide purchase order action buttons
@@ -79,18 +110,21 @@ events.on('auth/permissions', (payload) => {
 
 ---
 
-### order/data
 
-Emitted when standard order data associated with a purchase order changes or is loaded.
+
+### `order/data` (emits)
+
+Emitted when data is available or changes.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'order/data',
-  data: OrderModel // Order data object
-}
+PurchaseOrderModel['quote']
 ```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
 
 #### When triggered
 
@@ -98,7 +132,9 @@ Emitted when standard order data associated with a purchase order changes or is 
 - When loading order confirmation details
 - After order status updates
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -114,6 +150,8 @@ events.on('order/data', (payload) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Display order confirmation after PO placement
@@ -123,18 +161,21 @@ events.on('order/data', (payload) => {
 
 ---
 
-### purchase-order/data
 
-Emitted when purchase order data is loaded, updated, or changes state.
+
+### `purchase-order/data` (emits and listens)
+
+Triggered when data is available or changes.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'purchase-order/data',
-  data: PurchaseOrderModel // Purchase order data
-}
+PurchaseOrderModel
 ```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
 
 #### When triggered
 
@@ -145,7 +186,9 @@ Emitted when purchase order data is loaded, updated, or changes state.
 - After adding comments to a purchase order
 - After updating purchase order status
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -164,6 +207,8 @@ events.on('purchase-order/data', (payload) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Refresh purchase order details view
@@ -174,27 +219,53 @@ events.on('purchase-order/data', (payload) => {
 
 ---
 
-### purchase-order/placed
 
-Emitted when a purchase order is successfully placed from the cart.
+
+### `purchase-order/error` (emits)
+
+Emitted when an error occurs.
+
+#### Event payload
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('purchase-order/error', (payload) => {
+  console.log('purchase-order/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `purchase-order/placed` (emits)
+
+Emitted when an order is placed.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'purchase-order/placed',
-  data: {
-    purchaseOrderNumber: string,
-    requiresApproval: boolean,
-    status: string
-  }
-}
+PurchaseOrderModel
 ```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
 
 #### When triggered
 
 - After successfully calling `placePurchaseOrder()`
 - After converting a cart to a purchase order
+
+
 
 #### Example 1: Basic purchase order placement
 
@@ -406,7 +477,7 @@ class PurchaseOrderDashboard {
           <span class="order-status status-${order.status}">${order.status}</span>
         </div>
         <div class="order-details">
-          <span>Total: $${order.total}</span>
+          <span>Total: ${order.total}</span>
           <span>Date: ${formatDate(order.placedAt)}</span>
         </div>
       </div>
@@ -457,6 +528,8 @@ class PurchaseOrderDashboard {
 const dashboard = new PurchaseOrderDashboard();
 ```
 
+
+
 #### Usage scenarios
 
 - Display success confirmation with order details
@@ -474,20 +547,19 @@ const dashboard = new PurchaseOrderDashboard();
 
 ---
 
-### purchase-order/refresh
 
-Emitted to signal that purchase order data should be refreshed from the server.
+
+### `purchase-order/refresh` (emits and listens)
+
+Emitted and consumed for internal and external communication.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'purchase-order/refresh',
-  data: {
-    purchaseOrderId?: string // Optional specific PO to refresh
-  }
-}
+Boolean
 ```
+
+
 
 #### When triggered
 
@@ -496,7 +568,9 @@ Emitted to signal that purchase order data should be refreshed from the server.
 - On user request (manual refresh)
 - After significant state changes
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -517,6 +591,8 @@ events.on('purchase-order/refresh', async (payload) => {
   }
 });
 ```
+
+
 
 #### Usage scenarios
 
@@ -561,3 +637,76 @@ Purchase order events integrate with the standard Order drop-in events. A purcha
 - [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
 
 {/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-purchase-order */}
+
+
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### PurchaseOrderModel
+
+Used in: [`order/data`](#orderdata-emits), [`purchase-order/data`](#purchase-orderdata-emits-and-listens), [`purchase-order/placed`](#purchase-orderplaced-emits).
+
+```ts
+interface PurchaseOrderModel {
+  typename: string;
+  uid: string;
+  number: string;
+  status: string;
+  availableActions: string[];
+  approvalFlow:
+    | {
+        ruleName: string;
+        events: Array<{
+          message: string;
+          name: string;
+          role: string;
+          status: string;
+          updatedAt: string;
+        }>;
+      }[]
+    | [];
+  comments?: Array<{
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+    text: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  historyLog?: Array<{
+    activity: string;
+    createdAt: string;
+    message: string;
+    uid: string;
+  }>;
+  quote: QuoteProps | null;
+  order: {
+    orderNumber: string;
+    id: string;
+  };
+}
+```
+

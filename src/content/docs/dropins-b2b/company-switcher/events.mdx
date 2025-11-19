@@ -1,43 +1,213 @@
 ---
-title: Company Switcher Events
-description: Events emitted by the Company Switcher drop-in for tracking company context changes.
+title: Company Switcher Data & Events
+description: Learn about the events used by the Company Switcher and the data available within the events.
 sidebar:
   label: Events
-  order: 4
+  order: 5
 ---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Company Switcher, Company Switcher, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Company Switcher drop-in emits **1 event** to the event bus, enabling you to track and respond to company context changes when users switch between companies.
+The **Company Switcher** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.4</strong>
+<strong>Version: 1.0.5</strong>
 </div>
 
-## Available events
+## Events reference
 
-<TableWrapper nowrap={[0]}>
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
 
-| Event Name | Description |
-|------------|-------------|
-| [`companyContext/changed`](#companycontextchanged) | Emitted when the active company context changes |
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the component completes initialization. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the component state is updated. |
+| [company/updated](#companyupdated-listens) | Listens | Fired by Company (`company`) when the component state is updated. |
+| [companyContext/changed](#companycontextchanged-emits-and-listens) | Emits and listens | Triggered when a change occurs. |
 
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-### companyContext/changed
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-Emitted when the user switches to a different company or when the company context is initially established. This event signals that all company-specific data should be refreshed.
+
+### `checkout/initialized` (listens)
+
+Fired by Checkout (`checkout`) when the component completes initialization.
 
 #### Event payload
 
 ```typescript
-string | null | undefined
+null
 ```
 
-The event payload is the company ID (as a string) when a company is selected, or `null`/`undefined` when the company context is removed.
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `checkout/updated` (listens)
+
+Fired by Checkout (`checkout`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+null
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `company/updated` (listens)
+
+Fired by Company (`company`) when the component state is updated.
+
+#### Event payload
+
+```typescript
+{
+  company: {
+  id: string;
+  name: string;
+  email: string;
+  legalAddress: {
+  street: string[];
+  city: string;
+  region: {
+  region: string;
+  regionCode: string;
+  regionId: number;
+}
+  countryCode: string;
+  postcode: string;
+  telephone: string;
+}
+  companyAdmin: {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  salesRepresentative: {
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+  availablePaymentMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  availableShippingMethods: Array<{
+  code: string;
+  title: string;
+  }>;
+  canEditAccount: boolean;
+  canEditAddress: boolean;
+  permissionsFlags: {
+  canViewAccount: boolean;
+  canEditAccount: boolean;
+  canViewAddress: boolean;
+  canEditAddress: boolean;
+  canViewContacts: boolean;
+  canViewPaymentInformation: boolean;
+  canViewShippingInformation: boolean;
+}
+  customerRole: {
+  id: string;
+  name: string;
+  permissions: any[];
+}
+  customerStatus: string;
+}
+}
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('company/updated', (payload) => {
+  console.log('company/updated event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+### `companyContext/changed` (emits and listens)
+
+Triggered when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null
+```
+
+
 
 #### When triggered
 
@@ -47,7 +217,9 @@ The event payload is the company ID (as a string) when a company is selected, or
 - When company headers are set via `setCompanyHeaders()`
 - When company headers are removed by passing `null` to `setCompanyHeaders()`
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -76,6 +248,8 @@ events.on('companyContext/changed', (companyId) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Refresh company-specific data across the application
@@ -95,311 +269,15 @@ events.on('companyContext/changed', (companyId) => {
 
 The `companyContext/changed` event is critical for coordinating multiple B2B drop-ins. When this event fires, other drop-ins should refresh their data:
 
-### Company Management
 
-```js
-events.on('companyContext/changed', async () => {
-  // Reload company profile and structure
-  await fetchUserPermissions();
-  await getCompanyStructure();
-});
-```
 
-### Purchase Order
 
-```js
-events.on('companyContext/changed', () => {
-  // Refresh purchase orders for new company
-  refreshPurchaseOrders();
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
   
-  // Reload approval rules
-  refreshApprovalRules();
-});
-```
-
-### Quote Management
-
-```js
-events.on('companyContext/changed', () => {
-  // Reload quotes for new company
-  refreshNegotiableQuotes();
-  
-  // Refresh quote templates
-  refreshQuoteTemplates();
-});
-```
-
-### Requisition List
-
-```js
-events.on('companyContext/changed', () => {
-  // Reload requisition lists for new company
-  refreshRequisitionLists();
-});
-```
-
----
-
-## Listening to events
-
-The Company Switcher event is emitted through the centralized event bus:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-
-// Listen for company context changes
-const handleCompanyChange = async (payload) => {
-  const { companyId, companyName } = payload.data;
-  
-  // Show loading state
-  showLoadingIndicator('Switching to ' + companyName);
-  
-  // Refresh all company-dependent data
-  await Promise.all([
-    refreshUserPermissions(),
-    refreshCompanyData(companyId),
-    refreshPurchaseOrders(),
-    refreshQuotes(),
-    refreshRequisitionLists()
-  ]);
-  
-  // Hide loading state
-  hideLoadingIndicator();
-  
-  // Show success message
-  showSuccess(`Switched to ${companyName}`);
-};
-
-events.on('companyContext/changed', handleCompanyChange);
-
-// Clean up when component unmounts
-events.off('companyContext/changed', handleCompanyChange);
-```
-
-<Aside type="caution" title="Critical Integration Point">
-The `companyContext/changed` event must be handled by all company-specific features in your storefront. Failing to refresh data after this event can lead to displaying data from the wrong company, which is a serious security and data integrity issue.
-</Aside>
-
-<Aside type="tip">
-Consider implementing a global loading state when the company context changes, as multiple data refreshes may be triggered. This provides better user experience during the transition.
-</Aside>
-
-## Boilerplate Integration Patterns
-
-The Adobe Commerce boilerplate uses a simple, decentralized approach where each component independently handles company context changes. Here are the actual patterns from the `b2b-integration` branch:
-
-### Pattern 1: Quote Management Page
-
-When switching companies, clear the current quote and reload:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-
-// Listen for company context changes
-events.on('companyContext/changed', () => {
-  // Clear quoteid from URL
-  const url = new URL(window.location.href);
-  url.searchParams.delete('quoteid');
-  
-  // Update URL and reload page
-  window.history.replaceState({}, '', url.toString());
-  window.location.href = url.toString();
-});
-```
-
-**Source**: `blocks/commerce-b2b-negotiable-quote/commerce-b2b-negotiable-quote.js`
-
-**Why this works**: Quotes are company-specific. A full page reload with cleared state ensures the quote list renders correctly for the new company.
-
-### Pattern 2: Account Navigation
-
-Reset authentication cache and refresh permissions:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-
-// Force a refresh of the permissions when company changes
-events.on('companyContext/changed', () => {
-  import('@dropins/storefront-auth/api.js').then((module) => {
-    module._resetCache();
-    module.getCustomerRolePermissions();
-  });
-});
-```
-
-**Source**: `blocks/commerce-account-nav/commerce-account-nav.js`
-
-**Why this works**: Permissions are company-specific. Clearing the auth cache ensures fresh permission data is fetched for the new company context.
-
-### Pattern 3: Product Search/List Pages
-
-Re-run search with current filters:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-
-// Listen for company context changes and reload search data
-events.on('companyContext/changed', async () => {
-  await performInitialSearch(config, {
-    q,
-    page,
-    sort,
-    filter
-  });
-});
-```
-
-**Source**: `blocks/product-list-page/product-list-page.js`
-
-**Why this works**: Product availability and pricing may differ by company. Re-running the search ensures correct company-specific results.
-
-### Pattern 4: Company Roles & Permissions Page
-
-Automatically refresh data and manage form states:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-
-// Listen via useCompanyContextListener hook
-events.on('companyContext/changed', async () => {
-  // Reset to first page
-  setCurrentPage(1);
-  
-  // Refresh roles data for new company
-  await refreshRolesData();
-  
-  // Handle form states intelligently:
-  // - Keep create/duplicate forms open (preserved data)
-  // - Close edit forms (role doesn't exist in new company)
-  // - Close delete modals (for safety)
-  manageFormStates();
-});
-```
-
-**Source**: `blocks/commerce-company-roles-permissions/` (via hooks)
-
-**Why this works**: Company roles are company-specific. Smart form management prevents confusion when switching contexts while editing.
-
-### Complete Example: Company Switcher Dropdown
-
-Here's how to implement a company switcher using the boilerplate pattern:
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-import { setCompanyHeaders } from '@dropins/storefront-company-switcher/api.js';
-
-// Initialize company switcher dropdown
-function initCompanySwitcher() {
-  const dropdown = document.querySelector('#company-selector');
-  
-  dropdown.addEventListener('change', (e) => {
-    const companyId = e.target.value;
-    const companyName = e.target.selectedOptions[0].text;
-    
-    // Set company headers - this emits companyContext/changed event
-    setCompanyHeaders(companyId);
-    
-    // Optional: Show loading indicator
-    document.body.classList.add('switching-company');
-  });
-}
-
-// Initialize on page load
-initCompanySwitcher();
-```
-
-Each page/component that needs to react will handle `companyContext/changed` independently using one of the patterns above.
-
-## Best practices
-
-### 1. Keep it simple and focused
-
-Each component should handle only its own refresh logic. The boilerplate demonstrates that simple, decentralized event handling is easier to maintain than complex orchestration.
-
-```js
-// Good: Component handles its own specific needs
-events.on('companyContext/changed', async () => {
-  await refreshMyComponentData();
-});
-
-// Avoid: Over-engineering with complex coordinators
-// (unless you have specific requirements for it)
-```
-
-### 2. Use page reloads for complex state
-
-For pages with complex state (like quote details), a full page reload is simpler and more reliable:
-
-```js
-events.on('companyContext/changed', () => {
-  // Clear page-specific parameters
-  const url = new URL(window.location.href);
-  url.searchParams.delete('id');
-  
-  // Reload with clean state
-  window.location.href = url.toString();
-});
-```
-
-### 3. Reset caches appropriately
-
-Different modules may cache company-specific data. Reset only what you need:
-
-```js
-events.on('companyContext/changed', () => {
-  // Import and reset only the module you need
-  import('@dropins/storefront-auth/api.js').then((module) => {
-    module._resetCache();
-  });
-});
-```
-
-### 4. Handle errors gracefully
-
-Always handle potential errors during refresh:
-
-```js
-events.on('companyContext/changed', async () => {
-  try {
-    await refreshMyData();
-  } catch (error) {
-    console.error('Failed to refresh:', error);
-    // Optionally show user-friendly message
-    showErrorToast('Please refresh the page');
-  }
-});
-```
-
-### 5. Provide visual feedback
-
-Show users that something is happening during company switches:
-
-```js
-const dropdown = document.querySelector('#company-selector');
-
-dropdown.addEventListener('change', (e) => {
-  // Show loading state immediately
-  document.body.classList.add('switching-company');
-  dropdown.disabled = true;
-  
-  // Set company headers (triggers the event)
-  setCompanyHeaders(e.target.value);
-  
-  // Optional: Remove loading after a delay or on next event
-  setTimeout(() => {
-    document.body.classList.remove('switching-company');
-    dropdown.disabled = false;
-  }, 1000);
-});
-```
-
----
-
-## Related documentation
-
-- [Initialization](/dropins-b2b/company-switcher/initialization/) - Setting up the Company Switcher
-- [Functions](/dropins-b2b/company-switcher/functions/) - API functions for company switching
-- [Company Management](/dropins-b2b/company-management/) - Managing company data
-- [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
-
-{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-company-switcher */}
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}

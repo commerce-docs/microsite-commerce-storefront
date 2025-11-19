@@ -1,51 +1,75 @@
 ---
-title: Requisition List Events
-description: Events emitted by the Requisition List drop-in for tracking list operations and state changes.
+title: Requisition List Data & Events
+description: Learn about the events used by the Requisition List and the data available within the events.
 sidebar:
   label: Events
-  order: 4
+  order: 5
 ---
+
+{/*
+  ⚠️ TEMPLATE USAGE GUIDE ⚠️
+  
+  This template is used by scripts/generate-events-docs.js to generate event documentation.
+  
+  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
+  - Section headings and descriptive text (used as-is)
+  - Import statements
+  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
+  - Placeholders: Requisition List, Requisition List, EVENT_NAME, etc.
+  
+  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
+  - Table contents between START/END markers (example rows are for reference only)
+  - Event-specific data (names, descriptions, payloads from source repos)
+  
+  TO CHANGE:
+  - Section text/descriptions → Edit this template
+  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
+  - Both template and script must be kept in sync for table structure changes
+*/}
 
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Requisition List drop-in emits **5 events** to the event bus, allowing you to track and respond to requisition list operations, data changes, and user interactions.
+The **Requisition List** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 0.8.0-beta</strong>
+<strong>Version: 1.0.0-beta1</strong>
 </div>
 
-## Available events
+## Events reference
 
-<TableWrapper nowrap={[0]}>
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
 
-| Event Name | Description |
-|------------|-------------|
-| [`requisitionList/alert`](#requisitionlistalert) | Alert message to display to the user |
-| [`requisitionList/data`](#requisitionlistdata) | Requisition list data changed |
-| [`requisitionList/initialized`](#requisitionlistinitialized) | Drop-in initialization complete |
-| [`requisitionList/redirect`](#requisitionlistredirect) | Request to redirect to another page |
-| [`requisitionLists/data`](#requisitionlistsdata) | Lists collection data changed |
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [requisitionList/redirect](#requisitionlistredirect-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [requisitionList/alert](#requisitionlistalert-emits-and-listens) | Emits and listens | Triggered when an alert or notification is triggered. |
+| [requisitionList/data](#requisitionlistdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [requisitionList/initialized](#requisitionlistinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
+| [requisitionLists/data](#requisitionlistsdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
 
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
 
 ## Event details
 
-### requisitionList/alert
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-Emitted when an alert message should be displayed to the user, such as success confirmations, warnings, or error messages.
+
+### `requisitionList/alert` (emits and listens)
+
+Triggered when an alert or notification is triggered.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'requisitionList/alert',
-  data: {
-    type: 'success' | 'error' | 'warning' | 'info',
-    message: string
-  }
-}
+RequisitionListActionPayload
 ```
+
+See [`RequisitionListActionPayload`](#requisitionlistactionpayload) for full type definition.
+
+
 
 #### When triggered
 
@@ -54,7 +78,9 @@ Emitted when an alert message should be displayed to the user, such as success c
 - After item operations (add, update, remove)
 - On operation errors or validation failures
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -73,6 +99,8 @@ events.on('requisitionList/alert', (payload) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Display toast notifications
@@ -83,18 +111,21 @@ events.on('requisitionList/alert', (payload) => {
 
 ---
 
-### requisitionList/data
 
-Emitted when data for a single requisition list changes or is loaded.
+
+### `requisitionList/data` (emits and listens)
+
+Triggered when data is available or changes.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'requisitionList/data',
-  data: RequisitionListModel // Complete list data including items
-}
+RequisitionList | null
 ```
+
+See [`RequisitionList`](#requisitionlist) for full type definition.
+
+
 
 #### When triggered
 
@@ -103,6 +134,8 @@ Emitted when data for a single requisition list changes or is loaded.
 - After removing items from the list
 - After updating item quantities
 - After updating list details (name, description)
+
+
 
 #### Example 1: Basic list data handler
 
@@ -301,6 +334,8 @@ class SelectiveCartManager {
 window.cartManager = new SelectiveCartManager();
 ```
 
+
+
 #### Usage scenarios
 
 - Refresh list details view after changes
@@ -316,17 +351,15 @@ window.cartManager = new SelectiveCartManager();
 
 ---
 
-### requisitionList/initialized
 
-Emitted when the Requisition List drop-in completes initialization.
+
+### `requisitionList/initialized` (emits and listens)
+
+Triggered when the component completes initialization.
 
 #### Event payload
 
-```typescript
-{
-  eventType: 'requisitionList/initialized'
-}
-```
+
 
 #### When triggered
 
@@ -334,7 +367,9 @@ Emitted when the Requisition List drop-in completes initialization.
 - On drop-in first load
 - After configuration is applied
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -353,6 +388,8 @@ events.on('requisitionList/initialized', () => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Load initial requisition lists
@@ -363,21 +400,15 @@ events.on('requisitionList/initialized', () => {
 
 ---
 
-### requisitionList/redirect
 
-Emitted to request a redirect to another page, typically after completing an operation.
+
+### `requisitionList/redirect` (emits)
+
+Emitted when a specific condition or state change occurs.
 
 #### Event payload
 
-```typescript
-{
-  eventType: 'requisitionList/redirect',
-  data: {
-    url: string,
-    type?: 'list-view' | 'lists-overview' | 'cart' | 'external'
-  }
-}
-```
+
 
 #### When triggered
 
@@ -387,7 +418,9 @@ Emitted to request a redirect to another page, typically after completing an ope
 - On navigation between list views
 - After successful operations requiring page change
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -418,6 +451,8 @@ events.on('requisitionList/redirect', (payload) => {
 });
 ```
 
+
+
 #### Usage scenarios
 
 - Navigate after list creation
@@ -428,23 +463,21 @@ events.on('requisitionList/redirect', (payload) => {
 
 ---
 
-### requisitionLists/data
 
-Emitted when the collection of requisition lists changes or is loaded.
+
+### `requisitionLists/data` (emits and listens)
+
+Triggered when data is available or changes.
 
 #### Event payload
 
 ```typescript
-{
-  eventType: 'requisitionLists/data',
-  data: {
-    items: RequisitionListModel[], // Array of lists
-    totalCount: number,
-    currentPage?: number,
-    pageSize?: number
-  }
-}
+RequisitionList[] | null
 ```
+
+See [`RequisitionList`](#requisitionlist) for full type definition.
+
+
 
 #### When triggered
 
@@ -454,7 +487,9 @@ Emitted when the collection of requisition lists changes or is loaded.
 - After list collection changes
 - On pagination or filtering
 
-#### Example
+
+
+#### Example: Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -482,6 +517,8 @@ events.on('requisitionLists/data', (payload) => {
   }
 });
 ```
+
+
 
 #### Usage scenarios
 
@@ -527,34 +564,51 @@ The `requisitionList/redirect` event is advisory - your application controls whe
 
 ## Event flow examples
 
-### Adding items to cart
 
-```mermaid
-sequenceDiagram
-    User->>System: Click "Add to Cart"
-    System->>API: addRequisitionListItemsToCart()
-    API->>EventBus: requisitionList/data (updated)
-    API->>EventBus: requisitionList/alert (success)
-    API->>EventBus: requisitionList/redirect (to cart)
-    EventBus->>UI: Redirect to cart page
+
+
+{/* 
+  DATA MODELS SECTION
+  The Data Models section is automatically generated and appended after this template.
+  It includes all TypeScript interfaces/types referenced in event payloads, extracted
+  from source code with editorial descriptions from enrichment files.
+  
+  To add/edit model descriptions, update the "models" section in the enrichment file:
+  _dropin-enrichments/{dropin}/events.json
+*/}
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### RequisitionList
+
+Used in: [`requisitionList/data`](#requisitionlistdata-emits-and-listens), [`requisitionLists/data`](#requisitionlistsdata-emits-and-listens).
+
+```ts
+interface RequisitionList {
+  uid: string;
+  name: string;
+  description: string;
+  updated_at: string;
+  items_count: number;
+  items: Item[];
+  page_info?: PageInfo;
+}
 ```
 
-### Creating a new list
+### RequisitionListActionPayload
 
-```mermaid
-sequenceDiagram
-    User->>System: Create new list
-    System->>API: createRequisitionList()
-    API->>EventBus: requisitionLists/data (with new list)
-    API->>EventBus: requisitionList/alert (success)
-    API->>EventBus: requisitionList/redirect (to new list)
-    EventBus->>UI: Navigate to list view
+Used in: [`requisitionList/alert`](#requisitionlistalert-emits-and-listens).
+
+```ts
+interface RequisitionListActionPayload {
+    action: 'add' | 'delete' | 'update' | 'move';
+    type: 'success' | 'error';
+    context: 'product' | 'requisitionList';
+    skus?: string[]; // for product-related actions
+    message?: string[]; // for uncontrolled/custom messages
+  }
 ```
 
-## Related documentation
-
-- [Functions](/dropins-b2b/requisition-list/functions/) - API functions that emit these events
-- [Containers](/dropins-b2b/requisition-list/containers/) - UI components that respond to events
-- [Event bus documentation](/dropins/all/extending/#event-bus) - Learn more about the event system
-
-{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-requisition-list */}
