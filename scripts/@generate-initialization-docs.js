@@ -20,7 +20,7 @@
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 
 // Import shared utilities
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
@@ -69,33 +69,83 @@ function extractConfigProps(repoPath) {
     }
 
     // Extract ConfigProps type or interface definition with balanced braces
-    const configPropsPattern = /(type\s+ConfigProps\s*=\s*\{|interface\s+ConfigProps\s*\{)/;
-    const match = initializeContent.match(configPropsPattern);
+    let configPropsPattern = /(type\s+ConfigProps\s*=\s*\{|interface\s+ConfigProps\s*\{)/;
+    let match = initializeContent.match(configPropsPattern);
 
+    // If ConfigProps is not found inline, check if it's imported from another file
+    let propsContent = null;
     if (!match) {
-        return [];
-    }
-
-    // Find the complete type definition using balanced brace matching
-    const startPos = match.index + match[0].length;
-    let braceCount = 1;
-    let endPos = startPos;
-
-    while (endPos < initializeContent.length && braceCount > 0) {
-        const char = initializeContent[endPos];
-        if (char === '{') {
-            braceCount++;
-        } else if (char === '}') {
-            braceCount--;
+        // Look for imported config type (e.g., "config: CompanyDropinConfig")
+        const importedConfigMatch = initializeContent.match(/(?:const|export\s+const)\s+initialize\s*=\s*async\s*\(\s*config:\s*(\w+)/);
+        if (importedConfigMatch) {
+            const configTypeName = importedConfigMatch[1];
+            // Find the import statement for this type
+            const importMatch = initializeContent.match(new RegExp(`import\\s+\\{[^}]*\\b${configTypeName}\\b[^}]*\\}\\s+from\\s+['"]([^'"]+)['"]`));
+            if (importMatch) {
+                const importPath = importMatch[1];
+                // Resolve relative path from initialize.ts directory
+                const initializeDir = dirname(foundPath);
+                const typesFilePath = join(initializeDir, importPath + '.ts');
+                if (existsSync(typesFilePath)) {
+                    const typesContent = readFileSync(typesFilePath, 'utf8');
+                    // Extract the interface/type definition from the types file
+                    const typesPattern = new RegExp(`(export\\s+interface\\s+${configTypeName}\\s*\\{|export\\s+type\\s+${configTypeName}\\s*=\\s*\\{)`);
+                    const typesMatch = typesContent.match(typesPattern);
+                    if (typesMatch) {
+                        const startPos = typesMatch.index + typesMatch[0].length;
+                        let braceCount = 1;
+                        let endPos = startPos;
+                        while (endPos < typesContent.length && braceCount > 0) {
+                            const char = typesContent[endPos];
+                            if (char === '{') braceCount++;
+                            else if (char === '}') braceCount--;
+                            endPos++;
+                        }
+                        if (braceCount === 0) {
+                            propsContent = typesContent.substring(startPos, endPos - 1);
+                        }
+                    }
+                }
+            }
         }
-        endPos++;
+
+        if (!propsContent) {
+            return [];
+        }
+    } else {
+        // ConfigProps found inline - extract it
+        const startPos = match.index + match[0].length;
+        let braceCount = 1;
+        let endPos = startPos;
+
+        while (endPos < initializeContent.length && braceCount > 0) {
+            const char = initializeContent[endPos];
+            if (char === '{') {
+                braceCount++;
+            } else if (char === '}') {
+                braceCount--;
+            }
+            endPos++;
+        }
+
+        if (braceCount !== 0) {
+            return [];
+        }
+
+        propsContent = initializeContent.substring(startPos, endPos - 1);
     }
 
-    if (braceCount !== 0) {
-        return [];
+    // Detect if defaults are provided in the init function
+    const defaultsMatch = initializeContent.match(/const\s+defaultConfig\s*=\s*\{([^}]+(?:\{[^}]+\})*)\}/s);
+    const defaultKeys = new Set();
+    if (defaultsMatch) {
+        const defaultsContent = defaultsMatch[1];
+        // Extract property names from defaults (e.g., "companyHeader: 'value'")
+        const keyMatches = defaultsContent.matchAll(/(\w+)\s*:/g);
+        for (const keyMatch of keyMatches) {
+            defaultKeys.add(keyMatch[1]);
+        }
     }
-
-    const propsContent = initializeContent.substring(startPos, endPos - 1);
 
     // Parse individual properties (only top-level, not nested)
     const customOptions = [];
@@ -127,12 +177,16 @@ function extractConfigProps(repoPath) {
                 const [, propName, optional, rest] = propMatch;
                 const name = propName.trim();
 
+                // Determine if property is required: it's required if NOT optional AND doesn't have a default value
+                const hasDefault = defaultKeys.has(name);
+                const isRequired = !optional && !hasDefault;
+
                 // Check if this is an inline object type definition
                 if (rest.trim().startsWith('{')) {
                     currentProp = {
                         name: name,
                         type: 'object',
-                        required: !optional,
+                        required: isRequired,
                         description: '',
                         inlineDefinition: null
                     };
@@ -151,7 +205,7 @@ function extractConfigProps(repoPath) {
                     customOptions.push({
                         name: name,
                         type: rest.replace(/[;,]$/, '').trim(),
-                        required: !optional,
+                        required: isRequired,
                         description: ''
                     });
                 }
