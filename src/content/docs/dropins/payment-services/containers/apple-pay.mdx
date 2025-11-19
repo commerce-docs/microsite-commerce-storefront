@@ -1,90 +1,75 @@
 ---
-title: ApplePay container
-description: Use the ApplePay container to render an Apple Pay button
+title: ApplePay Container
+description: Learn about the ApplePay container in the Payment Services drop-in.
+sidebar:
+  label: ApplePay
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
-import Link from '@components/Link.astro';
 
-The `ApplePay` container renders a button that macOS/iOS users can use to check out using <Link href="https://www.apple.com/apple-pay/" text="Apple Pay" />.
 
-## ApplePay configurations
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 2.0.0</strong>
+</div>
+
+## Configuration
 
 The `ApplePay` container provides the following configuration options:
 
-<TableWrapper nowrap={[0, 1, 2]}>
+{/* 
+  IMPORTANT: Do not wrap <TableWrapper nowrap={[0,1]}>
 
-| Option | Type | Req? | Description |
-|--------|------|------|-------------|
-| `location` | string | Yes | Location where the Apple Pay button will be rendered. Must be either `CHECKOUT` or `PRODUCT_DETAIL`. |
-| `getCartId` | function | Maybe | Required if `createCart` not provided. Should return a promise that resolves to the shopper's cart ID. |
-| `createCart` | object | Maybe | Required if `getCartId` not provided. The object must define a single `getCartItems` property, which must be a function that returns a list of cart items to purchase. The list must contain at least one cart item. Cart items must be provided as objects with at minimum a `sku` (string) and a `quantity` (number). See the "Cart item object" section for more information. |
-| `onSuccess` | function | No | Called when the payment flow finishes successfully. The function receives an `{ cartId: string }` object as an argument. If the function returns a promise, the promise will be awaited before marking the payment as "completed successfully" in the Apple Pay sheet. If the promise rejects, the payment will be marked as "failed" in the Apple Pay sheet and the error will be propagated to the `onError` callback, if provided. |
-| `onError` | function | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties: `{name: string, message: string}`, containing the localized error name and message. Both properties are user-facing and can be translated using the `PaymentServices.ApplePay.errors` [language definitions](/dropins/payment-services/dictionary/). |
-| `hidden` | boolean | No | Whether the button is hidden. Set this to `true` to hide the Apple Pay button (default: `false`). |
-| `disabled` | boolean | No | Whether the button is disabled. Set this to `true` to disable the Apple Pay button (default: `false`). |
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `location` | `PaymentLocation` | Yes | Location where the Apple Pay button is to be rendered. |
+| `getCartId` | `() => Promise<string>` | No | Required if createCart not provided. Should return a promise that resolves to the shopper's cart ID. |
+| `createCart` | `{ getCartItems: () => CartItem[]` | No | Location where the Apple Pay button is to be rendered. |
+| `onButtonClick` | `(showPaymentSheet: () => void) => void` | No | Called when the user clicks the Apple Pay button. This callback receives a 'showPaymentSheet' function as its only argument that must be called to begin the Apple Pay session and show the payment sheet. IMPORTANT: The 'showPaymentSheet' function must be called synchronously. If called asynchronously, it will throw ... an exception "Must create a newApplePaySession from a user gesture handler." |
+| `onSuccess` | `(result: { cartId: string }) => void` | No | Called when payment flow is successful. |
+| `onError` | `(localizedError: LocalizedError) => void` | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.ApplePay.errors" language definitions. |
+| `hidden` | `boolean` | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.ApplePay.errors" language definitions. |
+| `disabled` | `boolean` | No | Whether the button is hidden. Set this to true to hide the Apple Pay button (default: false). |
+
+</TableWrapper> in TableWrapper or add a table header.
+  The generator's generatePropertyTable() function already includes both.
+  Adding them here will cause nested TableWrapper components and duplicate headers.
+*/}
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `location` | `PaymentLocation` | Yes | Location where the Apple Pay button is to be rendered. |
+| `getCartId` | `() => Promise<string>` | No | Required if createCart not provided. Should return a promise that resolves to the shopper's cart ID. |
+| `createCart` | `{ getCartItems: () => CartItem[]` | No | Location where the Apple Pay button is to be rendered. |
+| `onButtonClick` | `(showPaymentSheet: () => void) => void` | No | Called when the user clicks the Apple Pay button. This callback receives a 'showPaymentSheet' function as its only argument that must be called to begin the Apple Pay session and show the payment sheet. IMPORTANT: The 'showPaymentSheet' function must be called synchronously. If called asynchronously, it will throw ... an exception "Must create a newApplePaySession from a user gesture handler." |
+| `onSuccess` | `(result: { cartId: string }) => void` | No | Called when payment flow is successful. |
+| `onError` | `(localizedError: LocalizedError) => void` | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.ApplePay.errors" language definitions. |
+| `hidden` | `boolean` | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and can be translated using the "PaymentServices.ApplePay.errors" language definitions. |
+| `disabled` | `boolean` | No | Whether the button is hidden. Set this to true to hide the Apple Pay button (default: false). |
 
 </TableWrapper>
 
-### Cart item object
+## Slots
 
-The cart items that `getCartItems` returns should be objects with the following properties:
+This container does not currently expose any customizable slots.
 
-<TableWrapper nowrap={[0, 1, 2]}>
+## Usage
 
-| Property | Type | Req? | Description |
-|----------|------|------|-------------|
-| `sku` | string | Yes | The product SKU. |
-| `quantity` | number | Yes | The quantity of the product. |
-| `parentSku` | string | No | The parent product SKU. |
-| `selectedOptions` | `(string \| number)[]` | No | Selected product options. |
-| `enteredOptions` | `{ uid: string \| number; value: string }[]` | No | Entered product options. |
-
-</TableWrapper>
-
-## Checkout page example
+The following example demonstrates how to use the `ApplePay` container:
 
 ```js
-import ApplePay from '@dropins/storefront-payment-services/containers/ApplePay.js';
-import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
-import * as orderApi from '@dropins/storefront-order/api.js';
-import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
+import { render as provider } from '@dropins/storefront-payment-services/render.js';
+import { ApplePay } from '@dropins/storefront-payment-services/containers/ApplePay.js';
 
-const cart = events.lastPayload('checkout/initialized');
-
-if (cart) {
-  const $content = document.createElement('div');
-  PaymentServices.render(ApplePay, {
-    location: PaymentLocation.CHECKOUT,
-    getCartId: async () => cart.id,
-    onSuccess: () => orderApi.placeOrder(cart.id),
-    onError: (error) => { console.error(error) },
-  })($content);
-}
+await provider.render(ApplePay, {
+  location: location,
+  getCartId: () => {},
+  createCart: [],
+})(block);
 ```
 
-## Product details page example
 
-```js
-import ApplePay from '@dropins/storefront-payment-services/containers/ApplePay.js';
-import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
-import * as orderApi from '@dropins/storefront-order/api.js';
-import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
 
-const product = events.lastPayload('pdp/values');
-
-if (product) {
-  const $content = document.createElement('div');
-  PaymentServices.render(ApplePay, {
-    location: PaymentLocation.PRODUCT_DETAIL,
-    createCart: {
-      getCartItems: () => [{
-        sku: product.sku,
-        quantity: 1,
-      }],
-    },
-    onSuccess: ({cartId}) => orderApi.placeOrder(cartId),
-    onError: (error) => { console.error(error) },
-  })($content);
-}
-```
+{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-payment-services */}

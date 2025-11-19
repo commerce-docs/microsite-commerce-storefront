@@ -1,81 +1,90 @@
 /**
- * Generic Type Handler
+ * GenericTypeHandler
  * 
- * Detects and handles generic/useless types like 'any', 'unknown', 'object'.
- * Used by all generators to ensure type quality in documentation.
- * 
- * @module lib/core/generic-type-handler
- */
-
-/**
- * Handles detection and validation of generic types
+ * Utility for identifying and filtering out "generic" or unhelpful TypeScript types
+ * from documentation (e.g., `any`, `unknown`, `Record<string, any>`)
  */
 export class GenericTypeHandler {
     /**
-     * Check if a type is generic/useless
-     * 
-     * @param {string} typeString - The type to check
-     * @returns {boolean} True if the type is generic
-     * 
-     * @example
-     * GenericTypeHandler.isGenericType('any') // true
-     * GenericTypeHandler.isGenericType('string') // false
-     * GenericTypeHandler.isGenericType('{ oldCartItems: any[] }') // true
-     * GenericTypeHandler.isGenericType('{ [key: string]: any }') // false (legitimate)
+     * Check if a type string is considered "generic" or unhelpful for documentation
+     * @param {string} typeString - The type string to check
+     * @returns {boolean} - True if the type is generic/unhelpful
      */
     static isGenericType(typeString) {
-        if (!typeString) return false;
-
-        const trimmed = typeString.trim();
-
-        // Standalone generic types
-        if (['any', 'unknown', 'object', 'Object'].includes(trimmed)) {
+        if (!typeString || typeof typeString !== 'string') {
             return true;
         }
 
-        // Contains 'any' in properties (but check for legitimate uses first)
+        const trimmed = typeString.trim();
+
+        // Empty or just whitespace
+        if (!trimmed || trimmed === '') {
+            return true;
+        }
+
+        // Exact matches for unhelpful types
+        const exactGenericTypes = [
+            'any',
+            'unknown',
+            'never',
+            'void',
+            'undefined',
+            'null',
+            'object',
+            'Object',
+            'Function',
+        ];
+
+        if (exactGenericTypes.includes(trimmed)) {
+            return true;
+        }
+
+        // Check for 'any' in the type (but allow legitimate uses like any[])
         if (trimmed.includes('any')) {
+            // Check if it's a legitimate usage of 'any'
             if (this.isLegitimateAnyUsage(trimmed)) {
                 return false;
             }
             // Has 'any' and it's not legitimate
-            if (trimmed.includes(': any') || trimmed.includes('): any')) {
+            // But allow 'any[]' (array of any) as it's much less problematic
+            if ((trimmed.includes(': any') || trimmed.includes('): any')) &&
+                !trimmed.includes(': any[')) {
                 return true;
             }
         }
 
+        // Check for generic Record types
+        if (trimmed.match(/^Record<string,\s*(any|unknown)>$/)) {
+            return true;
+        }
+
+        // Check for generic object literals with only 'any' values
+        if (trimmed.match(/^\{\s*\[.*\]:\s*any\s*\}$/)) {
+            return true;
+        }
+
         return false;
     }
 
     /**
-     * Check if 'any' usage is legitimate
-     * 
-     * Legitimate cases include:
-     * - Index signatures: { [key: string]: any }
-     * - Record types: Record<string, any>
-     * - Complex mapped types with dynamic keys
-     * 
+     * Check if a usage of 'any' is legitimate (e.g., in array types, generics)
      * @param {string} typeString - The type string to check
-     * @returns {boolean} True if 'any' usage is legitimate
-     * 
-     * @example
-     * GenericTypeHandler.isLegitimateAnyUsage('{ [key: string]: any }') // true
-     * GenericTypeHandler.isLegitimateAnyUsage('Record<string, any>') // true
-     * GenericTypeHandler.isLegitimateAnyUsage('{ foo: any }') // false
+     * @returns {boolean} - True if the 'any' usage is acceptable
      */
     static isLegitimateAnyUsage(typeString) {
-        // Index signatures like { [key: string]: any }
-        if (typeString.match(/\[key:\s*string\]:\s*any/)) {
+        // Array of any is acceptable (any[])
+        if (typeString.includes('any[]')) {
             return true;
         }
 
-        // Record types like Record<string, any> or Record<K, any>
-        if (typeString.match(/Record<[^,]+,\s*any>/)) {
+        // Array<any> is acceptable
+        if (typeString.includes('Array<any>')) {
             return true;
         }
 
-        // Allow [key: string]: any with various spacing
-        if (typeString.match(/\[\s*key\s*:\s*string\s*\]\s*:\s*any/)) {
+        // Generic with any as type parameter in complex types
+        // e.g., Promise<any>, Observable<any>
+        if (typeString.match(/\w+<any>/)) {
             return true;
         }
 
@@ -83,47 +92,47 @@ export class GenericTypeHandler {
     }
 
     /**
-     * Should this type be displayed to users?
-     * 
-     * @param {string} typeString - The type to check
-     * @returns {boolean} True if type should be displayed, false if it should be hidden
-     * 
-     * @example
-     * GenericTypeHandler.shouldDisplayType('string') // true
-     * GenericTypeHandler.shouldDisplayType('any') // false
-     * GenericTypeHandler.shouldDisplayType('CartModel | null') // true
+     * Extract a clean type string, filtering out generic types
+     * @param {string} typeString - The type string to clean
+     * @returns {string|null} - Cleaned type string or null if generic
      */
-    static shouldDisplayType(typeString) {
-        return !this.isGenericType(typeString);
+    static extractCleanType(typeString) {
+        if (this.isGenericType(typeString)) {
+            return null;
+        }
+        return typeString.trim();
     }
 
     /**
-     * Get a list of forbidden type strings
-     * 
-     * @returns {string[]} Array of forbidden type names
+     * Validate and clean a type definition for documentation
+     * @param {string} typeString - The type string to validate
+     * @param {string} context - Context for logging (e.g., "Event payload")
+     * @returns {Object} - { isValid: boolean, cleanType: string|null, reason: string }
      */
-    static getForbiddenTypes() {
-        return ['any', 'unknown', 'object', 'Object'];
-    }
+    static validateType(typeString, context = '') {
+        if (!typeString) {
+            return {
+                isValid: false,
+                cleanType: null,
+                reason: 'Empty type string',
+            };
+        }
 
-    /**
-     * Check if a type contains any forbidden type
-     * 
-     * @param {string} typeString - The type to check
-     * @returns {boolean} True if contains forbidden types
-     */
-    static containsForbiddenType(typeString) {
-        if (!typeString) return false;
+        const cleanType = this.extractCleanType(typeString);
 
-        const forbidden = this.getForbiddenTypes();
-        return forbidden.some(type => {
-            const regex = new RegExp(`\\b${type}\\b`);
-            if (regex.test(typeString)) {
-                // Found forbidden type, but check if it's legitimate
-                return !this.isLegitimateAnyUsage(typeString);
-            }
-            return false;
-        });
+        if (!cleanType) {
+            return {
+                isValid: false,
+                cleanType: null,
+                reason: `Generic or unhelpful type: ${typeString}`,
+            };
+        }
+
+        return {
+            isValid: true,
+            cleanType,
+            reason: 'Valid type',
+        };
     }
 }
 
