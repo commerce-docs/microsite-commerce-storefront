@@ -482,6 +482,7 @@ async function config() {
                               { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
                               { label: 'PaymentOnAccount', link: '/dropins/checkout/containers/payment-on-account/' },
                               { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                              { label: 'PurchaseOrder', link: '/dropins/checkout/containers/purchase-order/' },
                               { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
                               { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                               { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
