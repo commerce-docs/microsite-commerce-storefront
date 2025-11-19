@@ -239,7 +239,7 @@ function generateComponentClassesSection(stylesData, dropinName, repoConfig) {
                 .replace('git@github.com:', 'https://github.com/')
                 .replace('.git', '');
             const packageName = repoConfig.packageName.split('/')[1];
-            output += `For the source CSS files, see the [${packageName} repository](${repoUrl}/tree/main/src).\n`;
+            output += `For the source CSS files, see the <Link href="${repoUrl}/tree/main/src" text="${packageName} repository" />.\n`;
         }
     }
 
@@ -911,6 +911,12 @@ function generateStylesMDX(repoName, repoConfig, cssFiles, versionInfo, enrichme
         COMPONENT_CLASSES_SECTION: componentClassesSection,
         CUSTOM_CSS_EXAMPLES: customCSSExamples
     });
+
+    // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+    // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+    if (repoConfig.type === 'B2B') {
+        content = content.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+    }
 
     return content;
 }

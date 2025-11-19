@@ -15,7 +15,7 @@ sidebar:
   - Section headings and descriptive text (used as-is)
   - Import statements
   - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
-  - Placeholders: Checkout, Checkout, EVENT_NAME, etc.
+  - Placeholders: Checkout, Checkout, EVENT_NAME, and so on.
   
   WHAT THE SCRIPT GENERATES INDEPENDENTLY:
   - Table contents between START/END markers (example rows are for reference only)
@@ -30,19 +30,13 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Checkout** drop-in emits checkout state changes and listens to cart events, maintaining synchronization between the checkout flow and cart data throughout the order process.
+The **Checkout** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.1.0</strong>
+<strong>Version: 3.0.0-beta1</strong>
 </div>
 
-<Aside type="tip">
-For information about event architecture, subscription patterns, and best practices, see the [Events guide](/dropins/all/events/).
-</Aside>
-
 ## Events reference
-
-Drop-ins communicate via the [event bus](/sdk/reference/events/).
 
 {/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
@@ -53,6 +47,7 @@ Drop-ins communicate via the [event bus](/sdk/reference/events/).
 | [cart/initialized](#cartinitialized-listens) | Listens | Fired by Cart (`cart`) when the component completes initialization. |
 | [cart/merged](#cartmerged-listens) | Listens | Fired by Cart (`cart`) when data is merged. |
 | [cart/reset](#cartreset-listens) | Listens | Fired by Cart (`cart`) when the component state is reset. |
+| [quote-management/quote-data](#quote-managementquote-data-listens) | Listens | Fired by Quote-management (`quote-management`) when a specific condition or state change occurs. |
 | [cart/data](#cartdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
 | [checkout/error](#checkouterror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
 | [checkout/initialized](#checkoutinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
@@ -63,6 +58,8 @@ Drop-ins communicate via the [event bus](/sdk/reference/events/).
 {/* EVENTS_TABLE_END */}
 
 ## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
 ### `cart/data` (emits and listens)
@@ -79,19 +76,22 @@ See [`Cart`](#cart) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartDataListener = events.on('cart/data', (data) => {
-  console.log('cart/data event received:', data);
+events.on('cart/data', (payload) => {
+  console.log('cart/data event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartDataListener.off();
 ```
+
+
+
+
 
 ### `cart/initialized` (listens)
 
@@ -107,19 +107,22 @@ See [`CartModel`](#cartmodel) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartInitializedListener = events.on('cart/initialized', (data) => {
-  console.log('cart/initialized event received:', data);
+events.on('cart/initialized', (payload) => {
+  console.log('cart/initialized event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartInitializedListener.off();
 ```
+
+
+
+
 
 ### `cart/merged` (listens)
 
@@ -128,29 +131,27 @@ Fired by Cart (`cart`) when data is merged.
 #### Event payload
 
 ```typescript
-{
-  oldCartItems: Item[] | null;
-  newCart: CartModel | null;
-}
+{ oldCartItems: any[] }
 ```
 
-See [`Item`](/dropins/cart/events/#item), [`CartModel`](/dropins/cart/events/#cartmodel) for full type definitions.
 
 
 
-#### Usage
 
-```javascript
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartMergedListener = events.on('cart/merged', (data) => {
-  console.log('cart/merged event received:', data);
+events.on('cart/merged', (payload) => {
+  console.log('cart/merged event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartMergedListener.off();
 ```
+
+
+
+
 
 ### `cart/reset` (listens)
 
@@ -158,25 +159,24 @@ Fired by Cart (`cart`) when the component state is reset.
 
 #### Event payload
 
-```typescript
-void
-```
 
 
 
-#### Usage
 
-```javascript
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const cartResetListener = events.on('cart/reset', (data) => {
-  console.log('cart/reset event received:', data);
+events.on('cart/reset', (payload) => {
+  console.log('cart/reset event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-cartResetListener.off();
 ```
+
+
+
+
 
 ### `checkout/error` (emits and listens)
 
@@ -192,19 +192,22 @@ See [`CheckoutError`](#checkouterror) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutErrorListener = events.on('checkout/error', (data) => {
-  console.log('checkout/error event received:', data);
+events.on('checkout/error', (payload) => {
+  console.log('checkout/error event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutErrorListener.off();
 ```
+
+
+
+
 
 ### `checkout/initialized` (emits and listens)
 
@@ -220,19 +223,22 @@ See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definit
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutInitializedListener = events.on('checkout/initialized', (data) => {
-  console.log('checkout/initialized event received:', data);
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutInitializedListener.off();
 ```
+
+
+
+
 
 ### `checkout/updated` (emits and listens)
 
@@ -248,19 +254,22 @@ See [`Cart`](#cart), [`NegotiableQuote`](#negotiablequote) for full type definit
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutUpdatedListener = events.on('checkout/updated', (data) => {
-  console.log('checkout/updated event received:', data);
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutUpdatedListener.off();
 ```
+
+
+
+
 
 ### `checkout/values` (emits)
 
@@ -276,19 +285,61 @@ See [`ValuesModel`](#valuesmodel) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const checkoutValuesListener = events.on('checkout/values', (data) => {
-  console.log('checkout/values event received:', data);
+events.on('checkout/values', (payload) => {
+  console.log('checkout/values event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-checkoutValuesListener.off();
 ```
+
+
+
+
+
+### `quote-management/quote-data` (listens)
+
+Fired by Quote-management (`quote-management`) when a specific condition or state change occurs.
+
+#### Event payload
+
+```typescript
+{
+  quote: NegotiableQuoteModel;
+  permissions: {
+  requestQuote: boolean;
+  editQuote: boolean;
+  deleteQuote: boolean;
+  checkoutQuote: boolean;
+}
+}
+```
+
+See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-data', (payload) => {
+  console.log('quote-management/quote-data event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
 
 ### `shipping/estimate` (emits and listens)
 
@@ -304,19 +355,22 @@ See [`ShippingEstimate`](#shippingestimate) for full type definition.
 
 
 
-#### Usage
 
-```javascript
+
+#### Example
+
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
-const shippingEstimateListener = events.on('shipping/estimate', (data) => {
-  console.log('shipping/estimate event received:', data);
+events.on('shipping/estimate', (payload) => {
+  console.log('shipping/estimate event received:', payload);
   // Add your custom logic here
 });
-
-// Later, when you want to stop listening
-shippingEstimateListener.off();
 ```
+
+
+
+
 
 
 {/* 
@@ -342,6 +396,7 @@ Used in: [`cart/data`](#cartdata-emits-and-listens), [`checkout/initialized`](#c
 
 ```ts
 interface Cart {
+  type: 'cart';
   availablePaymentMethods?: PaymentMethod[];
   billingAddress?: CartAddress;
   email?: string;
@@ -421,6 +476,7 @@ Used in: [`checkout/initialized`](#checkoutinitialized-emits-and-listens), [`che
 
 ```ts
 interface NegotiableQuote {
+  type: 'quote';
   availablePaymentMethods?: PaymentMethod[];
   billingAddress?: Address;
   email?: string;
@@ -431,6 +487,58 @@ interface NegotiableQuote {
   shippingAddresses: ShippingAddress[];
   status: NegotiableQuoteStatus;
   uid: string;
+}
+```
+
+### NegotiableQuoteModel
+
+Used in: [`quote-management/quote-data`](#quote-managementquote-data-listens).
+
+```ts
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  comments?: {
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+    };
+    text: string;
+    attachments?: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    appliedDiscounts?: Discount[];
+    appliedTaxes?: Tax[];
+    discount?: Currency;
+    grandTotal?: Currency;
+    grandTotalExcludingTax?: Currency;
+    shippingExcludingTax?: Currency;
+    shippingIncludingTax?: Currency;
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    totalTax?: Currency;
+  };
+  items: NegotiableQuoteCartItem[];
+  shippingAddresses?: ShippingAddress[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
 }
 ```
 
