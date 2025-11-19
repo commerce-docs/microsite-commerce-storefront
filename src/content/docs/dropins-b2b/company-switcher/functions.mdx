@@ -15,10 +15,10 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Company Switcher drop-in provides **3 API functions** for managing company context and headers in multi-company B2B scenarios.
+The Company Switcher drop-in provides **4 API functions** for managing company context and headers in multi-company B2B scenarios.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.5</strong>
+<strong>Version: 0.0.0</strong>
 </div>
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
@@ -27,22 +27,96 @@ The Company Switcher drop-in provides **3 API functions** for managing company c
 
 | Function | Description |
 | --- | --- |
-| [`getCompanyHeaderManager`](#getcompanyheadermanager) | API function for the drop-in.. |
+| [`getCompanyHeaderManager`](#getcompanyheadermanager) | Returns the singleton CompanyHeaderManager instance that manages company-specific headers for all configured GraphQL modules. |
 | [`getCustomerCompanyInfo`](#getcustomercompanyinfo) | Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user.. |
-| [`getGroupHeaderManager`](#getgroupheadermanager) | API function for the drop-in.. |
+| [`getGroupHeaderManager`](#getgroupheadermanager) | Returns the singleton GroupHeaderManager instance that manages customer group headers for all configured GraphQL modules. |
 | [`updateCustomerGroup`](#updatecustomergroup) | API function for the drop-in.. |
 
 </TableWrapper>
 
 ## getCompanyHeaderManager
 
-### Events
+Returns the singleton CompanyHeaderManager instance that manages company-specific headers for all configured GraphQL modules. Use the returned manager to set, remove, or check company headers.
 
-Does not emit any drop-in events.
+### Signature
+
+```typescript
+function getCompanyHeaderManager(): any
+```
 
 ### Returns
 
-Returns `void`.
+Returns a `CompanyHeaderManager` instance with the following methods:
+
+```typescript
+{
+  setCompanyHeaders(companyId: string | null): void;
+  removeCompanyHeaders(): void;
+  isCompanyHeaderSet(): boolean;
+  setHeaderKey(headerKey: string): void;
+  setFetchGraphQlModules(modules: FetchGraphQL[]): void;
+}
+```
+
+### Example
+
+```js
+import { getCompanyHeaderManager } from '@dropins/storefront-company-switcher/api.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+// Get the manager instance
+const manager = getCompanyHeaderManager();
+
+// Switch to a specific company
+manager.setCompanyHeaders('company-123');
+
+// Remove company headers (switch to no-company context)
+manager.setCompanyHeaders(null);
+
+// Check if headers are set
+if (manager.isCompanyHeaderSet()) {
+  console.log('Company context is active');
+}
+
+// Listen for context changes
+events.on('companyContext/changed', (companyId) => {
+  if (companyId) {
+    console.log('Switched to company:', companyId);
+  } else {
+    console.log('Company context removed');
+  }
+  
+  // Refresh all company-dependent data
+  refreshCompanyData();
+});
+```
+
+### Events
+
+The manager's `setCompanyHeaders()` method emits the [`companyContext/changed`](/dropins-b2b/company-switcher/events/#companycontextchanged) event after successfully setting or removing the company headers.
+
+### Usage scenarios
+
+- Switch between companies for multi-company users
+- Set company context after user selection
+- Initialize company context on page load
+- Change active company from a dropdown selector
+- Restore company context from session storage
+- Remove company context by passing `null`
+- Check current company header state
+- Configure custom header keys dynamically
+
+<Aside type="caution">
+After calling `manager.setCompanyHeaders()`, all subsequent GraphQL requests will operate in the context of the specified company. Ensure you refresh all company-dependent data after switching companies.
+</Aside>
+
+<Aside type="note">
+Passing `null` to `setCompanyHeaders()` removes the company context headers from all GraphQL requests. This is useful when logging out or switching to a non-company user context.
+</Aside>
+
+<Aside type="tip">
+The CompanyHeaderManager is a singleton - calling `getCompanyHeaderManager()` multiple times returns the same instance, ensuring consistent header management across your application.
+</Aside>
 
 ---
 
@@ -107,17 +181,81 @@ Does not emit any drop-in events.
 
 ## getGroupHeaderManager
 
+Returns the singleton GroupHeaderManager instance that manages customer group headers for all configured GraphQL modules. Use the returned manager to set, remove, or check group headers for proper pricing and catalog visibility.
+
+### Signature
+
+```typescript
+function getGroupHeaderManager(): any
+```
+
+### Returns
+
+Returns a `GroupHeaderManager` instance with the following methods:
+
+```typescript
+{
+  setGroupHeaders(groupId: string | null): void;
+  removeGroupHeaders(): void;
+  isGroupHeaderSet(): boolean;
+  setHeaderKey(headerKey: string): void;
+  setFetchGraphQlModules(modules: FetchGraphQL[]): void;
+}
+```
+
+### Example
+
+```js
+import { getGroupHeaderManager } from '@dropins/storefront-company-switcher/api.js';
+
+// Get the manager instance
+const manager = getGroupHeaderManager();
+
+// Set customer group for pricing
+manager.setGroupHeaders('wholesale-group-id');
+
+// Subsequent requests will use this group context
+// Prices and catalog visibility will reflect group settings
+await loadProducts(); // Products will show group-specific prices
+
+// Remove group headers
+manager.setGroupHeaders(null);
+
+// Check if headers are set
+if (manager.isGroupHeaderSet()) {
+  console.log('Group context is active');
+}
+```
+
 ### Events
 
 Does not emit any drop-in events.
 
-### Returns
+### Usage scenarios
 
-Returns `void`.
+- Set customer group context for proper pricing
+- Apply group-specific catalog rules
+- Initialize group context on login
+- Switch groups for testing or admin purposes
+- Coordinate with company context changes
+- Check current group header state
+- Configure custom header keys dynamically
+
+<Aside type="note">
+Customer group changes typically happen automatically based on the company context. You usually only need to call `manager.setGroupHeaders()` directly in advanced scenarios like admin impersonation or testing.
+</Aside>
+
+<Aside type="tip">
+The GroupHeaderManager is a singleton - calling `getGroupHeaderManager()` multiple times returns the same instance, ensuring consistent header management across your application.
+</Aside>
 
 ---
 
 ## updateCustomerGroup
+
+```ts
+const updateCustomerGroup = async (): Promise<string | null>
+```
 
 ### Events
 
@@ -153,18 +291,22 @@ The Company Switcher functions work together to manage the complete company and 
 ```js
 import { 
   getCustomerCompanyInfo,
-  setCompanyHeaders,
-  setGroupHeaders 
+  getCompanyHeaderManager,
+  getGroupHeaderManager
 } from '@dropins/storefront-company-switcher/api.js';
+
+// Get manager instances
+const companyManager = getCompanyHeaderManager();
+const groupManager = getGroupHeaderManager();
 
 // Complete company switch workflow
 async function switchCompany(companyId, groupId) {
   // 1. Set the company headers
-  setCompanyHeaders(companyId);
+  companyManager.setCompanyHeaders(companyId);
   
   // 2. Set the group headers
   if (groupId) {
-    setGroupHeaders(groupId);
+    groupManager.setGroupHeaders(groupId);
   }
   
   // 3. Verify the context

@@ -1,6 +1,6 @@
 ---
 title: Company Switcher initialization
-description: Configure the Company Switcher drop-in with language definitions, custom data models, and drop-in-specific options.
+description: Configure the Company Switcher drop-in with language definitions, company headers, session storage, and GraphQL module integration.
 sidebar:
   label: Initialization
   order: 3
@@ -26,8 +26,12 @@ The following table describes the configuration options available for the **Comp
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `langDefinitions` | `LangDefinitions` | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `companyHeader` | `string` | No | HTTP header name for company identification. Defaults to `'X-Adobe-Company'`. |
+| `customerGroupHeader` | `string` | No | HTTP header name for customer group identification. Defaults to `'Magento-Customer-Group'`. |
+| `companySessionStorageKey` | `string` | No | Session storage key for persisting company context. Defaults to `'DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT'`. |
+| `groupSessionStorageKey` | `string` | No | Session storage key for persisting group context. Defaults to `'DROPIN__COMPANYSWITCHER__GROUP__CONTEXT'`. |
+| `fetchGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have company headers applied. Defaults to `[]`. |
+| `groupGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have group headers applied. Defaults to `[]`. |
 
 </TableWrapper>
 
@@ -67,60 +71,30 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 For complete dictionary customization including all available keys and multi-language support, see the [Company Switcher Dictionary](/dropins-b2b/company-switcher/dictionary/) page.
 </Aside>
 
-## Customizing data models
-
-Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
-
-### Available models
-
-The following models can be customized through the `models` configuration option:
-
-
-<TableWrapper nowrap={[0]}>
-
-| Model | Description |
-|---|---|
-| [`CustomerCompanyInfo`](#customercompanyinfo) | Transforms customer company context data from GraphQL including current company ID, company name, and list of available companies. Use this to add custom fields or modify company context data structures. |
-
-</TableWrapper>
-
-The following example shows how to customize the `CustomerCompanyInfo` model for the **Company Switcher** drop-in:
-
-```javascript title="scripts/initializers/company-switcher.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-company-switcher';
-
-const models = {
-  CustomerCompanyInfo: {
-    transformer: (data) => ({
-      // Add custom fields from backend data
-      customField: data?.custom_field,
-      promotionBadge: data?.promotion?.label,
-      // Transform existing fields
-      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
-    }),
-  },
-};
-
-await initializers.mountImmediately(initialize, { models });
-```
-
 ## Drop-in-specific configuration
 
-The **Company Switcher** drop-in provides additional configuration options beyond the standard `langDefinitions` and `models`. These options customize drop-in-specific behaviors and features.
+The **Company Switcher** drop-in provides additional configuration options beyond the standard `langDefinitions`. These options customize company context management, header injection, and session persistence.
 
 ```javascript title="scripts/initializers/company-switcher.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-company-switcher';
+import { fetchGraphQl as cartFetchGraphQl } from '@dropins/storefront-cart/api.js';
+import { fetchGraphQl as checkoutFetchGraphQl } from '@dropins/storefront-checkout/api.js';
 
 await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-  langDefinitions: {},
+  // Apply company headers to Cart and Checkout GraphQL requests
+  fetchGraphQlModules: [cartFetchGraphQl, checkoutFetchGraphQl],
+  // Customize header names if needed
+  companyHeader: 'X-Adobe-Company',
+  customerGroupHeader: 'Magento-Customer-Group',
+  // Customize session storage keys if needed
+  companySessionStorageKey: 'DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT',
+  groupSessionStorageKey: 'DROPIN__COMPANYSWITCHER__GROUP__CONTEXT',
 });
 ```
 
 <Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
+The `fetchGraphQlModules` array determines which drop-ins will have company context headers automatically applied to their GraphQL requests. This ensures that company-specific data is correctly scoped across your application.
 </Aside>
 
 
@@ -139,36 +113,6 @@ langDefinitions?: {
     [key: string]: string;
   };
 };
-```
-
-### models
-
-Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
-
-```typescript
-models?: {
-  [modelName: string]: Model<any>;
-};
-```
-
-
-## Model definitions
-
-The following TypeScript definitions show the structure of each customizable model:
-
-### CustomerCompanyInfo
-
-```typescript
-export interface CustomerCompanyInfo {
-  currentCompany: {
-    companyId: string;
-    companyName: string;
-  };
-  customerCompanies: Array<{
-    value: string;  // Company ID
-    text: string;   // Company name
-  }>;
-}
 ```
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-company-switcher */}
