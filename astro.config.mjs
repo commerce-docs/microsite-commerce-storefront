@@ -775,7 +775,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/quote-management/' },
-                          { label: 'Quick Start', link: '/dropins-b2b/quote-management/quick-start/' },
                           { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
                           { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
                           { label: 'Events', link: '/dropins-b2b/quote-management/events/' },
@@ -811,7 +810,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/purchase-order/' },
-                          { label: 'Quick Start', link: '/dropins-b2b/purchase-order/quick-start/' },
                           { label: 'Initialization', link: '/dropins-b2b/purchase-order/initialization/' },
                           { label: 'Functions', link: '/dropins-b2b/purchase-order/functions/' },
                           { label: 'Events', link: '/dropins-b2b/purchase-order/events/' },
@@ -844,7 +842,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/requisition-list/' },
-                          { label: 'Quick Start', link: '/dropins-b2b/requisition-list/quick-start/' },
                           { label: 'Initialization', link: '/dropins-b2b/requisition-list/initialization/' },
                           { label: 'Functions', link: '/dropins-b2b/requisition-list/functions/' },
                           { label: 'Events', link: '/dropins-b2b/requisition-list/events/' },
@@ -871,7 +868,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/company-management/' },
-                          { label: 'Quick Start', link: '/dropins-b2b/company-management/quick-start/' },
                           { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
                           { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
                           { label: 'Events', link: '/dropins-b2b/company-management/events/' },
@@ -899,7 +895,6 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Overview', link: '/dropins-b2b/company-switcher/' },
-                          { label: 'Quick Start', link: '/dropins-b2b/company-switcher/quick-start/' },
                           { label: 'Initialization', link: '/dropins-b2b/company-switcher/initialization/' },
                           { label: 'Functions', link: '/dropins-b2b/company-switcher/functions/' },
                           { label: 'Events', link: '/dropins-b2b/company-switcher/events/' },
