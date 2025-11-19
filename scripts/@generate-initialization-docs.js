@@ -369,7 +369,7 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
     // Use simplified template for drop-ins with no custom configuration
     if (configProps.length === 0 && models.length === 0) {
-        return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo);
+        return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, enrichmentData);
     }
 
     const template = readTemplate('dropin-initialization.mdx');
@@ -617,11 +617,16 @@ ${configType.definition}
  * @param {string} repoName - Repository name (kebab-case)
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} versionInfo - Version info object
+ * @param {Object} enrichmentData - Enrichment data with intro text
  * @returns {string} Generated MDX content
  */
-function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo) {
+function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, enrichmentData = null) {
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
     const versionDisplay = cleanVersion(version);
+
+    // Use enrichment intro if available, otherwise use default text
+    const introText = enrichmentData?.intro || 
+        `The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.`;
 
     return `---
 title: ${repoConfig.displayName} initialization
@@ -633,7 +638,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.
+${introText}
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: ${versionDisplay}</strong>
