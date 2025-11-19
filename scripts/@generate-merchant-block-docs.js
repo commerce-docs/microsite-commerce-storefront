@@ -730,6 +730,7 @@ sidebar:
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
 
 ${description} This block integrates with Adobe Commerce to provide a seamless shopping experience for your customers.
 
@@ -831,8 +832,8 @@ This block requires no configuration. Add it to your page and it will automatica
     // Add related links
     content += `## Related resources
 
-- [AEM Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce)
-- [Edge Delivery Services](https://www.aem.live/docs/)
+- <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="AEM Commerce Boilerplate" />
+- <Link href="https://www.aem.live/docs/" text="Edge Delivery Services" />
 `;
 
     // Write file

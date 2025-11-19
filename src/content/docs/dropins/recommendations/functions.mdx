@@ -9,31 +9,7 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
+
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
@@ -58,29 +34,27 @@ The Recommendations drop-in provides API functions that enable you to programmat
 
 ## getRecommendations
 
-The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/recommendations/" text="recommendations" /> query.
+The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format. The function calls the [`recommendations`](https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/recommendations/) query.
 
-```ts
-const getRecommendations = async (
-  params: GetRecommendationsProps
-): Promise<RecommendationUnitModel[] | null>
+### Signature
+
+```typescript
+function getRecommendations(params: GetRecommendationsProps): Promise<RecommendationUnitModel[] | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
+| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including `pageType` (where recommendations are shown), `currentSku` (product being viewed), `cartSkus` (items in cart), `userPurchaseHistory` (previous purchases), and `userViewHistory` (previously viewed products). |
 
 </TableWrapper>
 
 ### Events
 
-Emits the [`recommendations/data`](/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
-
-### Returns
-
-Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+Emits the `recommendations/data` event with the transformed recommendations data as the payload.
 
 ---
 
@@ -88,44 +62,21 @@ Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) object
 
 The `publishRecsItemAddToCartClick` function publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.
 
-```ts
-const publishRecsItemAddToCartClick = async (
-  params: PublishParams
-): any
+### Signature
+
+```typescript
+function publishRecsItemAddToCartClick(params: PublishParams): any
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
 | `params` | `PublishParams` | Yes | Parameters for the add-to-cart event including the recommended product details and recommendation unit information. |
 
 </TableWrapper>
-
-### Examples
-
-From product recommendations block:
-
-```js
-import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api';
-
-publishRecsItemAddToCartClick({
-  recommendationUnit,
-  pagePlacement: 'product-list',
-  yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
-  yOffsetBottom:
-  addToCart.getBoundingClientRect().bottom ?? 0,
-  productId: ctx.index,
-})
-```
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `void`.
 
 ---
 

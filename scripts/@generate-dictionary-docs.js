@@ -59,6 +59,22 @@ function findDictionaryFile(repoPath) {
 }
 
 /**
+ * Count leaf values (translatable strings) in dictionary JSON
+ * 
+ * @param {Object} obj - Dictionary object
+ * @returns {number} Count of leaf string values
+ */
+function countLeafValues(obj) {
+    if (typeof obj !== 'object' || obj === null) {
+        return typeof obj === 'string' ? 1 : 0;
+    }
+
+    return Object.values(obj).reduce((count, value) => {
+        return count + countLeafValues(value);
+    }, 0);
+}
+
+/**
  * Scan repository for dictionary file
  * 
  * @param {string} repoPath - Path to the repository
@@ -75,8 +91,8 @@ function scanForDictionary(repoPath) {
         const content = readFileSync(dictionaryPath, 'utf8');
         const json = JSON.parse(content);
 
-        // Count the number of keys (for logging)
-        const keyCount = JSON.stringify(json).split(':').length - 1;
+        // Count only leaf values (translatable strings)
+        const keyCount = countLeafValues(json);
 
         return {
             content: JSON.stringify(json, null, 2),

@@ -1,18 +1,33 @@
 ---
 title: Personalization initialization
-description: Configure the Personalization drop-in with language definitions and custom data models.
+description: Configure the Personalization drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Personalization** drop-in has no drop-in-specific configuration options or customizable models.
+The **Personalization initializer** configures personalization features including user preferences, behavioral tracking, and content customization. Use initialization to customize personalization data models and enhance user experience.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.1</strong>
 </div>
+
+
+
+## Configuration options
+
+The following table describes the configuration options available for the **Personalization** initializer:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+
+</TableWrapper>
 
 ## Basic initialization
 
@@ -25,8 +40,83 @@ import { initialize } from '@dropins/storefront-personalization';
 await initializers.mountImmediately(initialize, {});
 ```
 
-<Aside type="note" title="Standard options">
-You can customize text and labels using the standard `langDefinitions` option. See other drop-in initialization pages for examples.
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+
+```javascript title="scripts/initializers/personalization.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-personalization';
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+<Aside type="tip">
+For complete dictionary customization including all available keys and multi-language support, see the [Personalization Dictionary](/dropins/personalization/dictionary/) page.
 </Aside>
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
+
+The following example shows how to customize the `CustomModel` model for the **Personalization** drop-in:
+
+```javascript title="scripts/initializers/personalization.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-personalization';
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+
 
 {/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-personalization */}

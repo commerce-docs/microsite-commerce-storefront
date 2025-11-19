@@ -1,18 +1,36 @@
 ---
 title: Payment Services initialization
-description: Configure the Payment Services drop-in with language definitions and custom data models.
+description: Configure the Payment Services drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
 ---
 
+import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Payment Services** drop-in has no drop-in-specific configuration options or customizable models.
+The **Payment Services initializer** configures payment processing features including payment methods, payment providers, and transaction handling. Use initialization to integrate payment gateways and customize payment data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.2</strong>
+<strong>Version: 2.0.0</strong>
 </div>
+
+
+
+## Configuration options
+
+The following table describes the configuration options available for the **Payment Services** initializer:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
+| `apiUrl` | `string` | No | Configuration for apiUrl. |
+| `getCustomerToken` | `(() => string \| null) \| null` | No | Configuration for getCustomerToken. |
+| `storeViewCode` | `string` | No | Configuration for storeViewCode. |
+
+</TableWrapper>
 
 ## Basic initialization
 
@@ -25,8 +43,103 @@ import { initialize } from '@dropins/storefront-payment-services';
 await initializers.mountImmediately(initialize, {});
 ```
 
-<Aside type="note" title="Standard options">
-You can customize text and labels using the standard `langDefinitions` option. See other drop-in initialization pages for examples.
+## Language definitions
+
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+
+```javascript title="scripts/initializers/payment-services.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-payment-services';
+
+const customStrings = {
+  'AddToCart': 'Add to Bag',
+  'Checkout': 'Complete Purchase',
+  'Price': 'Cost',
+};
+
+const langDefinitions = {
+  default: customStrings,
+};
+
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+<Aside type="tip">
+For complete dictionary customization including all available keys and multi-language support, see the [Payment Services Dictionary](/dropins/payment-services/dictionary/) page.
 </Aside>
+
+## Customizing data models
+
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
+
+The following example shows how to customize the `CustomModel` model for the **Payment Services** drop-in:
+
+```javascript title="scripts/initializers/payment-services.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-payment-services';
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in-specific configuration
+
+The **Payment Services initializer** configures payment processing features including payment methods, payment providers, and transaction handling. Use initialization to integrate payment gateways and customize payment data models.
+
+```javascript title="scripts/initializers/payment-services.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-payment-services';
+
+await initializers.mountImmediately(initialize, {
+  apiUrl: 'value',
+  getCustomerToken: 'value',
+  storeViewCode: 'value',
+  langDefinitions: {},
+});
+```
+
+<Aside type="note">
+Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
+</Aside>
+
+
+
+## Configuration types
+
+The following TypeScript definitions show the structure of each configuration object:
+
+### langDefinitions
+
+Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.
+
+```typescript
+langDefinitions?: {
+  [locale: string]: {
+    [key: string]: string;
+  };
+};
+```
+
+
 
 {/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-payment-services */}
