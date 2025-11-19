@@ -85,6 +85,43 @@ function getBoilerplatePackageVersions(boilerplatePath) {
     return packageJson.dependencies || {};
 }
 
+/**
+ * Load B2B drop-in versions from the b2b-suite-release1 branch
+ * This is necessary because B2B drop-ins are not in the main branch
+ */
+function getB2BPackageVersions() {
+    const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
+    const b2bBranch = 'b2b-suite-release1';
+
+    console.log(`\n📦 Loading B2B versions from ${b2bBranch} branch...`);
+
+    if (!existsSync(boilerplatePath)) {
+        console.log(`  Cloning boilerplate...`);
+        mkdirSync(dirname(boilerplatePath), { recursive: true });
+        execFileSync('git', ['clone', boilerplateUrl, boilerplatePath], { stdio: 'pipe' });
+    }
+
+    try {
+        // Fetch the B2B branch
+        execFileSync('git', ['fetch', 'origin', b2bBranch], { cwd: boilerplatePath, stdio: 'pipe' });
+
+        // Get package.json from B2B branch without checking it out
+        const packageJsonContent = execFileSync(
+            'git',
+            ['show', `origin/${b2bBranch}:package.json`],
+            { cwd: boilerplatePath, encoding: 'utf8', stdio: 'pipe' }
+        );
+
+        const packageJson = JSON.parse(packageJsonContent);
+        console.log(`  ✅ Loaded B2B versions from ${b2bBranch}`);
+        return packageJson.dependencies || {};
+    } catch (error) {
+        console.error(`  ⚠️  Warning: Could not load B2B versions: ${error.message}`);
+        return {};
+    }
+}
+
 function cloneDropinAtVersion(repoName, repoConfig, version) {
     const dropinPath = join(projectRoot, '.temp-repos', repoName);
 
@@ -1220,8 +1257,14 @@ async function main() {
     // Clone/update boilerplate once for all drop-ins
     const boilerplatePath = cloneOrUpdateBoilerplate();
 
-    // Get package versions from boilerplate
+    // Get package versions from boilerplate (B2C drop-ins)
     const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
+
+    // Get B2B package versions from b2b-suite-release1 branch
+    const b2bPackageVersions = getB2BPackageVersions();
+
+    // Merge both version sets
+    const allPackageVersions = { ...packageVersions, ...b2bPackageVersions };
     console.log(`\n📦 Loaded package versions from boilerplate\n`);
 
     // Process each drop-in
@@ -1229,19 +1272,19 @@ async function main() {
         try {
             console.log(`\n📦 Processing ${repoConfig.displayName}...`);
 
-            // Get version from boilerplate package.json
-            const version = packageVersions[repoConfig.packageName];
+            // Get version from boilerplate package.json (includes both B2C and B2B)
+            const version = allPackageVersions[repoConfig.packageName];
             let dropinPath;
             let actualVersion;
 
             if (!version) {
-                // B2B drop-ins aren't in boilerplate - use existing standalone repo
+                // Drop-in not found in any branch - use existing standalone repo
                 console.log(`  Not found in boilerplate, using standalone repository...`);
                 const result = useExistingDropinRepo(repoName, repoConfig);
                 dropinPath = result.path;
                 actualVersion = result.actualVersion;
             } else {
-                // B2C drop-ins are in boilerplate - use version from there
+                // Drop-in found in boilerplate - use version from there
                 dropinPath = cloneDropinAtVersion(repoName, repoConfig, version);
                 actualVersion = version;
             }
