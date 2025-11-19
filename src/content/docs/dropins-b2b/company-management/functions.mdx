@@ -15,7 +15,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Company Management drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+The Company Management drop-in provides **26 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta17</strong>
@@ -38,13 +38,13 @@ The Company Management drop-in provides API functions that enable you to program
 | [`deleteCompanyTeam`](#deletecompanyteam) | Deletes a company team by entity ID.. |
 | [`deleteCompanyUser`](#deletecompanyuser) | API function for the drop-in.. |
 | [`fetchUserPermissions`](#fetchuserpermissions) | API function retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
-| [`getCompany`](#getcompany) | API function for the drop-in.. |
+| [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
 | [`getCompanyAclResources`](#getcompanyaclresources) | API function for the drop-in.. |
-| [`getCompanyCredit`](#getcompanycredit) | API function for the drop-in.. |
+| [`getCompanyCredit`](#getcompanycredit) | Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. |
 | [`getCompanyCreditHistory`](#getcompanycredithistory) | API function for the drop-in.. |
 | [`getCompanyRole`](#getcompanyrole) | API function for the drop-in.. |
 | [`getCompanyRoles`](#getcompanyroles) | API function for the drop-in.. |
-| [`getCompanyStructure`](#getcompanystructure) | Fetches the company structure with teams and users. |
+| [`getCompanyStructure`](#getcompanystructure) | Retrieves the hierarchical organization structure of the company including all teams, divisions, and reporting relationships. |
 | [`getCompanyTeam`](#getcompanyteam) | Fetches details for a single company team by entity ID.. |
 | [`getCompanyUser`](#getcompanyuser) | Fetches details for a single company user by entity ID.. |
 | [`getCompanyUsers`](#getcompanyusers) | API function for the drop-in.. |
@@ -116,57 +116,41 @@ Returns `boolean`.
 
 ## createCompany
 
-```ts
-const createCompany = async (
-  formData: any
-): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
+### Signature
+
+```typescript
+function createCompany(formData: any): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `formData` | `any` | Yes | See function signature above |
+| `formData` | `any` | Yes | An object containing the company registration information including company name, legal name, email, VAT/TAX ID, and resale number. The structure depends on your store's company registration requirements. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-```ts
-{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }
-```
-
-See [`CompanyRegistrationModel`](#companyregistrationmodel).
 
 ---
 
 ## createCompanyRole
 
-```ts
-const createCompanyRole = async (
-  input: CompanyRoleCreateInputModel
-): Promise<CompanyRoleModel>
+### Signature
+
+```typescript
+function createCompanyRole(input: CompanyRoleCreateInputModel): Promise<CompanyRoleModel>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `input` | `CompanyRoleCreateInputModel` | Yes | Input parameters for the operation. |
+| `input` | `CompanyRoleCreateInputModel` | Yes |  |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ---
 
@@ -228,27 +212,21 @@ Returns `void`.
 
 ## deleteCompanyRole
 
-```ts
-const deleteCompanyRole = async (
-  variables: DeleteCompanyRoleVariables
-): Promise<boolean>
+### Signature
+
+```typescript
+function deleteCompanyRole(variables: DeleteCompanyRoleVariables): Promise<boolean>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `variables` | `DeleteCompanyRoleVariables` | Yes | See function signature above |
+| `variables` | `DeleteCompanyRoleVariables` | Yes | An object of type `DeleteCompanyRoleVariables` containing the role ID to delete. See the type definition for the exact structure. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `boolean`.
 
 ---
 
@@ -266,7 +244,7 @@ const deleteCompanyTeam = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `id` | `string` | Yes | See function signature above |
+| `id` | `string` | Yes | The unique identifier for the company team (structure node) to delete. This removes the team and may reassign team members depending on your company's configuration. |
 
 </TableWrapper>
 
@@ -282,27 +260,21 @@ Returns `void`.
 
 ## deleteCompanyUser
 
-```ts
-const deleteCompanyUser = async (
-  params: DeleteCompanyUserParams
-): Promise<DeleteCompanyUserResponse>
+### Signature
+
+```typescript
+function deleteCompanyUser(params: DeleteCompanyUserParams): Promise<DeleteCompanyUserResponse>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `params` | `DeleteCompanyUserParams` | Yes | See function signature above |
+| `params` | `DeleteCompanyUserParams` | Yes | An object of type `DeleteCompanyUserParams` containing the user ID to delete and any additional parameters required for user deletion. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`DeleteCompanyUserResponse`](#deletecompanyuserresponse).
 
 ---
 
@@ -326,6 +298,8 @@ Returns `void`.
 
 ## getCompany
 
+Retrieves complete information about the current company including name, structure, settings, and metadata. Returns the full company profile for the authenticated user's company context.
+
 ```ts
 const getCompany = async (): Promise<any>
 ```
@@ -336,7 +310,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `void`.
+Returns a Promise that resolves to a `CompanyModel` object containing comprehensive company details.
 
 ---
 
@@ -358,101 +332,83 @@ Returns an array of [`CompanyAclResourceModel`](#companyaclresourcemodel) object
 
 ## getCompanyCredit
 
-```ts
-const getCompanyCredit = async (): Promise<CompanyCreditInfo | null>
+Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. This is used to display company credit status and validate purchase limits.
+
+### Signature
+
+```typescript
+function getCompanyCredit(): Promise<CompanyCreditInfo | null>
 ```
-
-### Events
-
-Does not emit any drop-in events.
 
 ### Returns
 
-Returns [`CompanyCreditInfo`](#companycreditinfo) or `null`.
+Returns a Promise that resolves to a `CompanyCreditModel` object containing credit details.
 
 ---
 
 ## getCompanyCreditHistory
 
-```ts
-const getCompanyCreditHistory = async (
-  params: GetCompanyCreditHistoryParams = {}
-): Promise<CompanyCreditHistory | null>
+### Signature
+
+```typescript
+function getCompanyCreditHistory(params: GetCompanyCreditHistoryParams = {}): Promise<CompanyCreditHistory | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `params` | `GetCompanyCreditHistoryParams` | No | See function signature above |
+| `params` | `GetCompanyCreditHistoryParams = {}` | Yes | An optional object of type `GetCompanyCreditHistoryParams` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyCreditHistory`](#companycredithistory) or `null`.
 
 ---
 
 ## getCompanyRole
 
-```ts
-const getCompanyRole = async (
-  variables: GetCompanyRoleVariables
-): Promise<CompanyRoleModel>
+### Signature
+
+```typescript
+function getCompanyRole(variables: GetCompanyRoleVariables): Promise<CompanyRoleModel>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `variables` | `GetCompanyRoleVariables` | Yes | See function signature above |
+| `variables` | `GetCompanyRoleVariables` | Yes | An object of type `GetCompanyRoleVariables` containing the role ID to retrieve. Returns complete role details including permissions and assigned users. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ---
 
 ## getCompanyRoles
 
-```ts
-const getCompanyRoles = async (
-  variables: GetCompanyRolesVariables = {}
-): Promise<CompanyRolesResponseModel>
+### Signature
+
+```typescript
+function getCompanyRoles(variables: GetCompanyRolesVariables = {}): Promise<CompanyRolesResponseModel>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `variables` | `GetCompanyRolesVariables` | No | See function signature above |
+| `variables` | `GetCompanyRolesVariables = {}` | Yes | An optional object of type `GetCompanyRolesVariables` containing pagination and filter parameters. Omit to retrieve all company roles with default pagination. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyRolesResponseModel`](#companyrolesresponsemodel).
 
 ---
 
 ## getCompanyStructure
 
-Fetches the company structure with teams and users. Returns entity-centric items that include both entity and structure identifiers.
+Retrieves the hierarchical organization structure of the company including all teams, divisions, and reporting relationships. Returns the complete company tree structure.
 
 ```ts
 const getCompanyStructure = async (): Promise<any>
@@ -464,7 +420,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `void`.
+Returns a Promise that resolves to a `CompanyStructureModel` object representing the organizational hierarchy.
 
 ---
 
@@ -482,7 +438,7 @@ const getCompanyTeam = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `id` | `string` | Yes | See function signature above |
+| `id` | `string` | Yes | The unique identifier for the company team to retrieve. Returns detailed information about the team including its name, members, and position in the company hierarchy. |
 
 </TableWrapper>
 
@@ -510,7 +466,7 @@ const getCompanyUser = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `id` | `string` | Yes | See function signature above |
+| `id` | `string` | Yes | The unique identifier for the company user to retrieve. Returns complete user profile including role, team assignment, and permissions. |
 
 </TableWrapper>
 
@@ -526,27 +482,21 @@ Returns `void`.
 
 ## getCompanyUsers
 
-```ts
-const getCompanyUsers = async (
-  params: CompanyUsersParams = {}
-): Promise<CompanyUsersResponse>
+### Signature
+
+```typescript
+function getCompanyUsers(params: CompanyUsersParams = {}): Promise<CompanyUsersResponse>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `params` | `CompanyUsersParams` | No | See function signature above |
+| `params` | `CompanyUsersParams = {}` | Yes | An optional object of type `CompanyUsersParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyUsersResponse`](#companyusersresponse).
 
 ---
 
@@ -614,27 +564,21 @@ Returns [`StoreConfigModel`](#storeconfigmodel).
 
 ## initialize
 
-```ts
-const initialize = async (
-  config: CompanyDropinConfig = {}
-): Promise<any>
+### Signature
+
+```typescript
+function initialize(config: CompanyDropinConfig = {}): Promise<any>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `config` | `CompanyDropinConfig` | No | See function signature above |
+| `config` | `CompanyDropinConfig = {}` | Yes | An optional configuration object of type `CompanyDropinConfig` containing initialization settings such as langDefinitions for internationalization. If omitted, default configuration is used. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `void`.
 
 ---
 
@@ -656,27 +600,21 @@ Returns `boolean`.
 
 ## isCompanyRoleNameAvailable
 
-```ts
-const isCompanyRoleNameAvailable = async (
-  variables: IsCompanyRoleNameAvailableVariables
-): Promise<boolean>
+### Signature
+
+```typescript
+function isCompanyRoleNameAvailable(variables: IsCompanyRoleNameAvailableVariables): Promise<boolean>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `variables` | `IsCompanyRoleNameAvailableVariables` | Yes | See function signature above |
+| `variables` | `IsCompanyRoleNameAvailableVariables` | Yes | An object of type `IsCompanyRoleNameAvailableVariables` containing the role name to check for availability. Returns a boolean indicating whether the name can be used for a new role. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `boolean`.
 
 ---
 
@@ -750,27 +688,21 @@ Returns `CompanyModel`.
 
 ## updateCompanyRole
 
-```ts
-const updateCompanyRole = async (
-  input: CompanyRoleUpdateInputModel
-): Promise<CompanyRoleModel>
+### Signature
+
+```typescript
+function updateCompanyRole(input: CompanyRoleUpdateInputModel): Promise<CompanyRoleModel>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `input` | `CompanyRoleUpdateInputModel` | Yes | Input parameters for the operation. |
+| `input` | `CompanyRoleUpdateInputModel` | Yes |  |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ---
 
@@ -860,27 +792,21 @@ Returns `void`.
 
 ## updateCompanyUserStatus
 
-```ts
-const updateCompanyUserStatus = async (
-  params: UpdateCompanyUserStatusParams
-): Promise<UpdateCompanyUserStatusResponse>
+### Signature
+
+```typescript
+function updateCompanyUserStatus(params: UpdateCompanyUserStatusParams): Promise<UpdateCompanyUserStatusResponse>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `params` | `UpdateCompanyUserStatusParams` | Yes | See function signature above |
+| `params` | `UpdateCompanyUserStatusParams` | Yes | An object of type `UpdateCompanyUserStatusParams` containing the user ID and the new status value (active, inactive). Used to enable or disable user access to company resources. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns [`UpdateCompanyUserStatusResponse`](#updatecompanyuserstatusresponse).
 
 ---
 

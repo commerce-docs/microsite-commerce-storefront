@@ -15,7 +15,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Requisition List drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
+The Requisition List drop-in provides **11 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, and managing list metadata.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta1</strong>
@@ -43,239 +43,174 @@ The Requisition List drop-in provides API functions that enable you to programma
 
 ## addProductsToRequisitionList
 
-```ts
-const addProductsToRequisitionList = async (
-  requisitionListUid: string,
-  requisitionListItems: Array<RequisitionListItemsInput>
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function addProductsToRequisitionList(requisitionListUid: string, requisitionListItems: Array<RequisitionListItemsInput>): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
-| `requisitionListItems` | `Array<RequisitionListItemsInput>` | Yes | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to which products will be added. This UID is returned when creating or retrieving requisition lists. |
+| `requisitionListItems` | `Array<RequisitionListItemsInput>` | Yes | An array of product objects to add to the requisition list. Each object includes the product SKU, quantity, and optional configuration like parent SKU for configurable products, selected options (color, size), and entered options (custom text fields). |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## addRequisitionListItemsToCart
 
-```ts
-const addRequisitionListItemsToCart = async (
-  requisitionListUid: string,
-  requisitionListItemUids: Array<string>
-): Promise<Array<string> | null>
+### Signature
+
+```typescript
+function addRequisitionListItemsToCart(requisitionListUid: string, requisitionListItemUids: Array<string>): Promise<Array<string> | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
-| `requisitionListItemUids` | `Array<string>` | Yes | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list containing the items to add to the cart. |
+| `requisitionListItemUids` | `Array<string>` | Yes | An array of requisition list item UIDs to add to the cart. These are the unique identifiers for specific items within the list, not product SKUs. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `Array<string> | null`.
 
 ---
 
 ## createRequisitionList
 
-```ts
-const createRequisitionList = async (
-  name: string,
-  description?: string
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function createRequisitionList(name: string, description?: string): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `name` | `string` | Yes | See function signature above |
-| `description` | `string` | No | A text description. |
+| `name` | `string` | Yes | The display name for the new requisition list. This helps users identify and organize their lists (e.g., **Office Supplies Q1**, **Weekly Inventory Restock**). |
+| `description` | `string` | No | An optional text description providing additional context about the requisition list's purpose or contents (e.g., **Monthly recurring orders for maintenance supplies**). |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## deleteRequisitionList
 
-```ts
-const deleteRequisitionList = async (
-  requisitionListUid: string
-): Promise<{
+### Signature
+
+```typescript
+function deleteRequisitionList(requisitionListUid: string): Promise<{
   items: RequisitionList[];
   page_info: any;
   status: any;
 } | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to delete. This operation is permanent and removes the list and all its items. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionLists/data` event.
-
-### Returns
-
-```ts
-Promise<{
-  items: RequisitionList[];
-  page_info: any;
-  status: any;
-} | null>
-```
-
-See [`RequisitionList`](#requisitionlist).
 
 ---
 
 ## deleteRequisitionListItems
 
-```ts
-const deleteRequisitionListItems = async (
-  requisitionListUid: string,
-  items: Array<string>,
-  pageSize: number,
-  currentPage: number
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function deleteRequisitionListItems(requisitionListUid: string, items: Array<string>, pageSize: number, currentPage: number): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
-| `items` | `Array<string>` | Yes | An array of items to remove. |
-| `pageSize` | `number` | Yes | See function signature above |
-| `currentPage` | `number` | Yes | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list from which items will be removed. |
+| `items` | `Array<string>` | Yes | An array of requisition list item UIDs to remove. These are the unique identifiers returned in the list's items array, not product SKUs. |
+| `pageSize` | `number` | Yes | The number of items to return per page in the updated requisition list response. |
+| `currentPage` | `number` | Yes | The page number for pagination (1-indexed). Used to retrieve a specific page of items after deletion. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## getProductData
 
-```ts
-const getProductData = async (
-  skus: string[]
-): Promise<Product[] | null>
+### Signature
+
+```typescript
+function getProductData(skus: string[]): Promise<Product[] | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `skus` | `string[]` | Yes | See function signature above |
+| `skus` | `string[]` | Yes | An array of product SKUs (stock keeping units) to retrieve product details for. Used to fetch product information including prices, stock status, and configuration options. |
 
 </TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `Product[] | null`.
 
 ---
 
 ## getRequisitionList
 
-```ts
-const getRequisitionList = async (
-  requisitionListID: string,
-  currentPage?: number,
-  pageSize?: number
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function getRequisitionList(requisitionListID: string, currentPage?: number, pageSize?: number): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListID` | `string` | Yes | See function signature above |
-| `currentPage` | `number` | No | See function signature above |
-| `pageSize` | `number` | No | See function signature above |
+| `requisitionListID` | `string` | Yes | The unique identifier for the requisition list to retrieve. Returns the list metadata and all items. |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Defaults to page 1 if not specified. |
+| `pageSize` | `number` | No | The number of items to return per page. Controls pagination of the requisition list items. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## getRequisitionLists
 
-```ts
-const getRequisitionLists = async (
-  currentPage?: number,
-  pageSize?: number
-): Promise<RequisitionList[] | null>
+### Signature
+
+```typescript
+function getRequisitionLists(currentPage?: number, pageSize?: number): Promise<RequisitionList[] | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `currentPage` | `number` | No | See function signature above |
-| `pageSize` | `number` | No | See function signature above |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Used to navigate through multiple pages of requisition lists. |
+| `pageSize` | `number` | No | The number of requisition lists to return per page. Controls how many lists appear on each page. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionLists/data` event.
-
-### Returns
-
-Returns an array of [`RequisitionList`](#requisitionlist) objects or `null`.
 
 ---
 
@@ -297,67 +232,48 @@ Returns `void`.
 
 ## updateRequisitionList
 
-```ts
-const updateRequisitionList = async (
-  requisitionListUid: string,
-  name: string,
-  description?: string,
-  pageSize?: number,
-  currentPage?: number
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function updateRequisitionList(requisitionListUid: string, name: string, description?: string, pageSize?: number, currentPage?: number): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
-| `name` | `string` | Yes | See function signature above |
-| `description` | `string` | No | A text description. |
-| `pageSize` | `number` | No | See function signature above |
-| `currentPage` | `number` | No | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to update. |
+| `name` | `string` | Yes | The new display name for the requisition list. Updates the list's title. |
+| `description` | `string` | No | The new text description for the requisition list. Updates the list's purpose or context information. |
+| `pageSize` | `number` | No | The number of items to return per page in the updated requisition list response. |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed) in the updated requisition list response. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## updateRequisitionListItems
 
-```ts
-const updateRequisitionListItems = async (
-  requisitionListUid: string,
-  requisitionListItems: Array<UpdateRequisitionListItemsInput>,
-  pageSize: number,
-  currentPage: number
-): Promise<RequisitionList | null>
+### Signature
+
+```typescript
+function updateRequisitionListItems(requisitionListUid: string, requisitionListItems: Array<UpdateRequisitionListItemsInput>, pageSize: number, currentPage: number): Promise<RequisitionList | null>
 ```
+
+### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Req? | Description |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `requisitionListUid` | `string` | Yes | See function signature above |
-| `requisitionListItems` | `Array<UpdateRequisitionListItemsInput>` | Yes | See function signature above |
-| `pageSize` | `number` | Yes | See function signature above |
-| `currentPage` | `number` | Yes | See function signature above |
+| `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list containing the items to update. |
+| `requisitionListItems` | `Array<UpdateRequisitionListItemsInput>` | Yes | An array of requisition list items to update. Each object includes the item UID and the fields to modify (such as quantity, selected options, or entered options). |
+| `pageSize` | `number` | Yes | The number of items to return per page in the updated requisition list response. |
+| `currentPage` | `number` | Yes | The page number for pagination (1-indexed) in the updated requisition list response. |
 
 </TableWrapper>
-
-### Events
-
-Emits the `requisitionList/data` event.
-
-### Returns
-
-Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
