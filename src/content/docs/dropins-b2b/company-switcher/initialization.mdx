@@ -1,6 +1,6 @@
 ---
 title: Company Switcher initialization
-description: Configure the Company Switcher drop-in with language definitions, company headers, session storage, and GraphQL module integration.
+description: Configure the Company Switcher drop-in with language definitions, custom data models, and drop-in-specific options.
 sidebar:
   label: Initialization
   order: 3
@@ -9,10 +9,10 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The **Company Switcher initializer** configures the drop-in for managing multi-company contexts in B2B storefronts. Use initialization to customize how company selection is handled and enable internationalization for the company switcher interface.
+The **Company Switcher initializer** configures the drop-in for managing multi-company contexts in B2B storefronts. Use initialization to customize company context management, header injection, session persistence, and GraphQL module integration.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.5</strong>
+<strong>Version: 0.0.0</strong>
 </div>
 
 
@@ -26,12 +26,12 @@ The following table describes the configuration options available for the **Comp
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `companyHeader` | `string` | No | HTTP header name for company identification. Defaults to `'X-Adobe-Company'`. |
-| `customerGroupHeader` | `string` | No | HTTP header name for customer group identification. Defaults to `'Magento-Customer-Group'`. |
-| `companySessionStorageKey` | `string` | No | Session storage key for persisting company context. Defaults to `'DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT'`. |
-| `groupSessionStorageKey` | `string` | No | Session storage key for persisting group context. Defaults to `'DROPIN__COMPANYSWITCHER__GROUP__CONTEXT'`. |
-| `fetchGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have company headers applied. Defaults to `[]`. |
-| `groupGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have group headers applied. Defaults to `[]`. |
+| `companyHeader` | `string` | Yes | HTTP header name for company identification. Defaults to \`'X-Adobe-Company'\`. |
+| `customerGroupHeader` | `string` | Yes | HTTP header name for customer group identification. Defaults to \`'Magento-Customer-Group'\`. |
+| `companySessionStorageKey` | `string` | Yes | Session storage key for persisting company context. Defaults to \`'DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT'\`. |
+| `groupSessionStorageKey` | `string` | Yes | Session storage key for persisting group context. Defaults to \`'DROPIN__COMPANYSWITCHER__GROUP__CONTEXT'\`. |
+| `fetchGraphQlModules` | `FetchGraphQL[]` | Yes | GraphQL modules that will have company headers applied. Defaults to \`\[\]\`. |
+| `groupGraphQlModules` | `FetchGraphQL[]` | Yes | GraphQL modules that will have group headers applied. Defaults to \`\[\]\`. |
 
 </TableWrapper>
 
@@ -71,30 +71,62 @@ await initializers.mountImmediately(initialize, { langDefinitions });
 For complete dictionary customization including all available keys and multi-language support, see the [Company Switcher Dictionary](/dropins-b2b/company-switcher/dictionary/) page.
 </Aside>
 
-## Drop-in-specific configuration
+## Customizing data models
 
-The **Company Switcher** drop-in provides additional configuration options beyond the standard `langDefinitions`. These options customize company context management, header injection, and session persistence.
+Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
+
+### Available models
+
+The following models can be customized through the `models` configuration option:
+
+
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
+
+The following example shows how to customize the `CustomModel` model for the **Company Switcher** drop-in:
 
 ```javascript title="scripts/initializers/company-switcher.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-company-switcher';
-import { fetchGraphQl as cartFetchGraphQl } from '@dropins/storefront-cart/api.js';
-import { fetchGraphQl as checkoutFetchGraphQl } from '@dropins/storefront-checkout/api.js';
+
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
+```
+
+## Drop-in-specific configuration
+
+The **Company Switcher** drop-in provides additional configuration options beyond the standard `langDefinitions`. These options customize drop-in-specific behaviors and features.
+
+```javascript title="scripts/initializers/company-switcher.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-company-switcher';
 
 await initializers.mountImmediately(initialize, {
-  // Apply company headers to Cart and Checkout GraphQL requests
-  fetchGraphQlModules: [cartFetchGraphQl, checkoutFetchGraphQl],
-  // Customize header names if needed
-  companyHeader: 'X-Adobe-Company',
-  customerGroupHeader: 'Magento-Customer-Group',
-  // Customize session storage keys if needed
-  companySessionStorageKey: 'DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT',
-  groupSessionStorageKey: 'DROPIN__COMPANYSWITCHER__GROUP__CONTEXT',
+  // Drop-in-specific configuration
+  langDefinitions: {},
+  companyHeader: 'value',
+  customerGroupHeader: 'value',
+  companySessionStorageKey: 'value',
+  groupSessionStorageKey: 'value',
+  fetchGraphQlModules: [],
+  groupGraphQlModules: [],
 });
 ```
 
 <Aside type="note">
-The `fetchGraphQlModules` array determines which drop-ins will have company context headers automatically applied to their GraphQL requests. This ensures that company-specific data is correctly scoped across your application.
+Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
 </Aside>
 
 
@@ -114,5 +146,7 @@ langDefinitions?: {
   };
 };
 ```
+
+
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-company-switcher */}
