@@ -753,30 +753,6 @@ async function config() {
                     ],
                   },
 
-                  // ---------- DROP-INS (B2B) ----------
-                  {
-                    label: 'Drop-ins for B2B',
-                    collapsed: true,
-                    items: [
-                      { label: 'Overview', link: '/dropins-b2b/' },
-                      {
-                        label: 'B2B Containers',
-                        collapsed: true,
-                        items: [
-                          { label: 'RequestNegotiableQuoteForm', link: '/dropins-b2b/container/request-negotiable-quote-form/' },
-                        ],
-                      },
-                      {
-                        label: 'Company Management',
-                        collapsed: true,
-                        items: [
-                          { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
-                          { label: 'Events', link: '/dropins-b2b/company-management/events/' },
-                        ],
-                      },
-                    ],
-                  },
-
                   // ---------- DROP-INS SDK ----------
                   {
                     label: 'Drop-ins SDK',
