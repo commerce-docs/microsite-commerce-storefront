@@ -27,116 +27,167 @@ The Purchase Order drop-in provides **12 API functions** for managing the comple
 
 | Function | Description |
 | --- | --- |
-| [`addPurchaseOrderComment`](#addpurchaseordercomment) | API function for the drop-in.. |
-| [`addPurchaseOrderItemsToCart`](#addpurchaseorderitemstocart) | API function for the drop-in.. |
-| [`approvePurchaseOrders`](#approvepurchaseorders) | API function for the drop-in.. |
-| [`cancelPurchaseOrders`](#cancelpurchaseorders) | API function for the drop-in.. |
-| [`createPurchaseOrderApprovalRule`](#createpurchaseorderapprovalrule) | API function for the drop-in.. |
-| [`currencyInfo`](#currencyinfo) | API function for the drop-in.. |
-| [`deletePurchaseOrderApprovalRule`](#deletepurchaseorderapprovalrule) | API function for the drop-in.. |
-| [`getPurchaseOrder`](#getpurchaseorder) | API function for the drop-in.. |
-| [`getPurchaseOrderApprovalRule`](#getpurchaseorderapprovalrule) | API function for the drop-in.. |
-| [`getPurchaseOrderApprovalRuleMetadata`](#getpurchaseorderapprovalrulemetadata) | API function for the drop-in.. |
-| [`getPurchaseOrderApprovalRules`](#getpurchaseorderapprovalrules) | API function for the drop-in.. |
-| [`getPurchaseOrders`](#getpurchaseorders) | API function for the drop-in.. |
-| [`placeOrderForPurchaseOrder`](#placeorderforpurchaseorder) | API function for the drop-in.. |
-| [`placePurchaseOrder`](#placepurchaseorder) | API function for the drop-in.. |
-| [`rejectPurchaseOrders`](#rejectpurchaseorders) | API function for the drop-in.. |
-| [`updatePurchaseOrderApprovalRule`](#updatepurchaseorderapprovalrule) | API function for the drop-in.. |
-| [`validatePurchaseOrders`](#validatepurchaseorders) | API function for the drop-in.. |
+| [`addPurchaseOrderComment`](#addpurchaseordercomment) | Adds a comment to a purchase order.. |
+| [`addPurchaseOrderItemsToCart`](#addpurchaseorderitemstocart) | Adds purchase order items to a cart.. |
+| [`approvePurchaseOrders`](#approvepurchaseorders) | Approves one or more purchase orders.. |
+| [`cancelPurchaseOrders`](#cancelpurchaseorders) | Cancels one or more purchase orders.. |
+| [`createPurchaseOrderApprovalRule`](#createpurchaseorderapprovalrule) | Creates a new purchase order approval rule.. |
+| [`currencyInfo`](#currencyinfo) | An async function that fetches currency information including the base currency code and available currency codes from GraphQL API.. |
+| [`deletePurchaseOrderApprovalRule`](#deletepurchaseorderapprovalrule) | Deletes one or more purchase order approval rules.. |
+| [`getPurchaseOrder`](#getpurchaseorder) | Gets a single purchase order by UID.. |
+| [`getPurchaseOrderApprovalRule`](#getpurchaseorderapprovalrule) | Retrieves a specific purchase order approval rule by its unique identifier. |
+| [`getPurchaseOrderApprovalRuleMetadata`](#getpurchaseorderapprovalrulemetadata) | Gets the current user's purchase order approval rule metadata.. |
+| [`getPurchaseOrderApprovalRules`](#getpurchaseorderapprovalrules) | Gets the current user's purchase order approval rules with pagination support.. |
+| [`getPurchaseOrders`](#getpurchaseorders) | Gets a list of purchase orders with optional filtering and pagination.. |
+| [`placeOrderForPurchaseOrder`](#placeorderforpurchaseorder) | Places an order from an approved purchase order.. |
+| [`placePurchaseOrder`](#placepurchaseorder) | Places a purchase order from a cart.. |
+| [`rejectPurchaseOrders`](#rejectpurchaseorders) | Rejects one or more purchase orders.. |
+| [`updatePurchaseOrderApprovalRule`](#updatepurchaseorderapprovalrule) | Updates an existing purchase order approval rule.. |
+| [`validatePurchaseOrders`](#validatepurchaseorders) | Validates one or more purchase orders.. |
 
 </TableWrapper>
 
 ## addPurchaseOrderComment
 
-### Signature
+Adds a comment to a purchase order.
 
-```typescript
-function addPurchaseOrderComment(uid: string, comment: string): Promise<PurchaseOrderCommentModel>
+```ts
+const addPurchaseOrderComment = async (
+  uid: string,
+  comment: string
+): Promise<PurchaseOrderCommentModel>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `uid` | `string` | Yes | The unique identifier for the purchase order to which the comment will be added. |
 | `comment` | `string` | Yes | The text content of the comment to add to the purchase order. Use this to provide context, approval notes, or communication between team members reviewing the purchase order. |
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`PurchaseOrderCommentModel`](#purchaseordercommentmodel).
+
 ---
 
 ## addPurchaseOrderItemsToCart
 
-### Signature
+Adds purchase order items to a cart.
 
-```typescript
-function addPurchaseOrderItemsToCart(purchaseOrderUid: string, cartId: string, replaceExistingCartItems: boolean = false): Promise<CartModel>
+```ts
+const addPurchaseOrderItemsToCart = async (
+  purchaseOrderUid: string,
+  cartId: string,
+  replaceExistingCartItems: boolean = false
+): Promise<CartModel>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `purchaseOrderUid` | `string` | Yes | The unique identifier for the purchase order containing the items to add to the cart. |
 | `cartId` | `string` | Yes | The unique identifier for the shopping cart. This ID is used to track and persist cart data across sessions. |
-| `replaceExistingCartItems` | `boolean = false` | Yes | A boolean flag controlling cart merge behavior. When `true`, replaces all existing cart items with the purchase order items. When `false` (default), appends the purchase order items to existing cart contents. |
+| `replaceExistingCartItems` | `boolean` | No | A boolean flag controlling cart merge behavior. When \`true\`, replaces all existing cart items with the purchase order items. When \`false\` (default), appends the purchase order items to existing cart contents. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel).
 
 ---
 
 ## approvePurchaseOrders
 
-### Signature
+Approves one or more purchase orders.
 
-```typescript
-function approvePurchaseOrders(uids: string | string[]): Promise<{
+```ts
+const approvePurchaseOrders = async (
+  uids: string | string[]
+): Promise<{
   errors: { message: string; type: string }[];
   purchaseOrders: PurchaseOrderModel[];
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `uids` | `string | string[]` | Yes | One or more purchase order unique identifiers to approve. Can be a single UID string or an array of UIDs for batch approval operations. |
+| `uids` | `string \| string[]` | Yes | One or more purchase order unique identifiers to approve. Can be a single UID string or an array of UIDs for batch approval operations. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  errors: { message: string; type: string }[];
+  purchaseOrders: PurchaseOrderModel[];
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
 
 ---
 
 ## cancelPurchaseOrders
 
-### Signature
+Cancels one or more purchase orders.
 
-```typescript
-function cancelPurchaseOrders(uids: string | string[]): Promise<{
+```ts
+const cancelPurchaseOrders = async (
+  uids: string | string[]
+): Promise<{
   errors: { message: string; type: string }[];
   purchaseOrders: PurchaseOrderModel[];
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `uids` | `string | string[]` | Yes | One or more purchase order unique identifiers to cancel. Can be a single UID string or an array of UIDs for batch cancellation operations. |
+| `uids` | `string \| string[]` | Yes | One or more purchase order unique identifiers to cancel. Can be a single UID string or an array of UIDs for batch cancellation operations. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  errors: { message: string; type: string }[];
+  purchaseOrders: PurchaseOrderModel[];
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
 
 ---
 
 ## createPurchaseOrderApprovalRule
+
+Creates a new purchase order approval rule.
 
 ```ts
 const createPurchaseOrderApprovalRule = async (
@@ -164,6 +215,8 @@ Returns [`PurchaseOrderApprovalRuleModel`](#purchaseorderapprovalrulemodel).
 
 ## currencyInfo
 
+An async function that fetches currency information including the base currency code and available currency codes from GraphQL API.
+
 ```ts
 const currencyInfo = async (): Promise<{
   baseCurrencyCode: string;
@@ -188,71 +241,109 @@ Promise<{
 
 ## deletePurchaseOrderApprovalRule
 
-### Signature
+Deletes one or more purchase order approval rules.
 
-```typescript
-function deletePurchaseOrderApprovalRule(uids: string | string[]): Promise<{
+```ts
+const deletePurchaseOrderApprovalRule = async (
+  uids: string | string[]
+): Promise<{
   deletePurchaseOrderApprovalRule: {
     errors: { message?: string; type?: string }[];
   };
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `uids` | `string | string[]` | Yes | One or more approval rule unique identifiers to delete. Can be a single UID string or an array of UIDs for batch deletion. This permanently removes the approval rules from the purchase order workflow. |
+| `uids` | `string \| string[]` | Yes | One or more approval rule unique identifiers to delete. Can be a single UID string or an array of UIDs for batch deletion. This permanently removes the approval rules from the purchase order workflow. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  deletePurchaseOrderApprovalRule: {
+    errors: { message?: string; type?: string }[];
+  };
+}>
+```
 
 ---
 
 ## getPurchaseOrder
 
-### Signature
+Gets a single purchase order by UID.
 
-```typescript
-function getPurchaseOrder(uid: string): Promise<{
+```ts
+const getPurchaseOrder = async (
+  uid: string
+): Promise<{
   purchaseOrder: PurchaseOrderModel;
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `uid` | `string` | Yes | The unique identifier for the purchase order to retrieve. Returns complete purchase order details including items, status, history, comments, and approval information. |
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  purchaseOrder: PurchaseOrderModel;
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
+
 ---
 
 ## getPurchaseOrderApprovalRule
 
-### Signature
+Retrieves a specific purchase order approval rule by its unique identifier. This function fetches detailed information about an approval rule including its configuration, applicable roles, approval conditions, and approvers.
 
-```typescript
-function getPurchaseOrderApprovalRule(id: string): Promise<PurchaseOrderApprovalRuleModel>
+```ts
+const getPurchaseOrderApprovalRule = async (
+  id: string
+): Promise<PurchaseOrderApprovalRuleModel>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `id` | `string` | Yes |  |
+| `id` | `string` | Yes | See function signature above |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`PurchaseOrderApprovalRuleModel`](#purchaseorderapprovalrulemodel).
 
 ---
 
 ## getPurchaseOrderApprovalRuleMetadata
+
+Gets the current user's purchase order approval rule metadata.
 
 ```ts
 const getPurchaseOrderApprovalRuleMetadata = async (): Promise<PurchaseOrderApprovalRuleMetadataModel>
@@ -270,10 +361,13 @@ Returns [`PurchaseOrderApprovalRuleMetadataModel`](#purchaseorderapprovalrulemet
 
 ## getPurchaseOrderApprovalRules
 
-### Signature
+Gets the current user's purchase order approval rules with pagination support.
 
-```typescript
-function getPurchaseOrderApprovalRules(currentPage: number = DEFAULT_PAGE_INFO.currentPage, pageSize: number = DEFAULT_PAGE_INFO.pageSize): Promise<{
+```ts
+const getPurchaseOrderApprovalRules = async (
+  currentPage: number = DEFAULT_PAGE_INFO.currentPage,
+  pageSize: number = DEFAULT_PAGE_INFO.pageSize
+): Promise<{
   totalCount: number;
   pageInfo: {
     currentPage: number;
@@ -284,25 +378,47 @@ function getPurchaseOrderApprovalRules(currentPage: number = DEFAULT_PAGE_INFO.c
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `currentPage` | `number = DEFAULT_PAGE_INFO.currentPage` | Yes | The page number for pagination (1-indexed). Used to navigate through multiple pages of approval rules. |
-| `pageSize` | `number = DEFAULT_PAGE_INFO.pageSize` | Yes | The number of approval rules to return per page. Controls how many rules appear on each page of results. |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Used to navigate through multiple pages of approval rules. |
+| `pageSize` | `number` | No | The number of approval rules to return per page. Controls how many rules appear on each page of results. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  totalCount: number;
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  items: PurchaseOrderApprovalRuleModel[];
+}>
+```
+
+See [`PurchaseOrderApprovalRuleModel`](#purchaseorderapprovalrulemodel).
 
 ---
 
 ## getPurchaseOrders
 
-### Signature
+Gets a list of purchase orders with optional filtering and pagination.
 
-```typescript
-function getPurchaseOrders(filter?: any, pageSize: number = 20, currentPage: number = 1): Promise<{
+```ts
+const getPurchaseOrders = async (
+  filter?: any,
+  pageSize: number = 20,
+  currentPage: number = 1
+): Promise<{
   totalCount: number;
   pageInfo: {
     currentPage: number;
@@ -313,41 +429,69 @@ function getPurchaseOrders(filter?: any, pageSize: number = 20, currentPage: num
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `filter` | `any` | No |  |
-| `pageSize` | `number = 20` | Yes | The number of purchase orders to return per page. Controls how many orders appear on each page of results. |
-| `currentPage` | `number = 1` | Yes | The page number for pagination (1-indexed). Used to navigate through multiple pages of purchase orders. |
+| `filter` | `any` | No | See function signature above |
+| `pageSize` | `number` | No | The number of purchase orders to return per page. Controls how many orders appear on each page of results. |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Used to navigate through multiple pages of purchase orders. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  totalCount: number;
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  purchaseOrderItems: PurchaseOrderModel[];
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
 
 ---
 
 ## placeOrderForPurchaseOrder
 
-### Signature
+Places an order from an approved purchase order.
 
-```typescript
-function placeOrderForPurchaseOrder(purchaseOrderUid: string): Promise<CustomerOrderModel>
+```ts
+const placeOrderForPurchaseOrder = async (
+  purchaseOrderUid: string
+): Promise<CustomerOrderModel>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `purchaseOrderUid` | `string` | Yes |  |
+| `purchaseOrderUid` | `string` | Yes | See function signature above |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CustomerOrderModel`](#customerordermodel).
 
 ---
 
 ## placePurchaseOrder
+
+Places a purchase order from a cart.
 
 ```ts
 const placePurchaseOrder = async (
@@ -375,28 +519,45 @@ Returns `{ purchaseOrder: PurchaseOrderModel }`. See [`PurchaseOrderModel`](#pur
 
 ## rejectPurchaseOrders
 
-### Signature
+Rejects one or more purchase orders.
 
-```typescript
-function rejectPurchaseOrders(uids: string | string[]): Promise<{
+```ts
+const rejectPurchaseOrders = async (
+  uids: string | string[]
+): Promise<{
   errors: { message: string; type: string }[];
   purchaseOrders: PurchaseOrderModel[];
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `uids` | `string | string[]` | Yes | One or more purchase order unique identifiers to reject. Can be a single UID string or an array of UIDs for batch rejection operations. |
+| `uids` | `string \| string[]` | Yes | One or more purchase order unique identifiers to reject. Can be a single UID string or an array of UIDs for batch rejection operations. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  errors: { message: string; type: string }[];
+  purchaseOrders: PurchaseOrderModel[];
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
 
 ---
 
 ## updatePurchaseOrderApprovalRule
+
+Updates an existing purchase order approval rule.
 
 ```ts
 const updatePurchaseOrderApprovalRule = async (
@@ -424,24 +585,39 @@ Returns [`PurchaseOrderApprovalRuleModel`](#purchaseorderapprovalrulemodel).
 
 ## validatePurchaseOrders
 
-### Signature
+Validates one or more purchase orders.
 
-```typescript
-function validatePurchaseOrders(uids: string | string[]): Promise<{
+```ts
+const validatePurchaseOrders = async (
+  uids: string | string[]
+): Promise<{
   errors: { message: string; type: string }[];
   purchaseOrders: PurchaseOrderModel[];
 }>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `uids` | `string | string[]` | Yes | One or more purchase order unique identifiers to validate. Checks whether the purchase orders exist, are in a valid state, and can be processed for the requested operation. |
+| `uids` | `string \| string[]` | Yes | One or more purchase order unique identifiers to validate. Checks whether the purchase orders exist, are in a valid state, and can be processed for the requested operation. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+Promise<{
+  errors: { message: string; type: string }[];
+  purchaseOrders: PurchaseOrderModel[];
+}>
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel).
 
 ---
 
