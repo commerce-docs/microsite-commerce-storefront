@@ -29,20 +29,25 @@ The following table describes the configuration options available for the **Requ
 
 </TableWrapper>
 
-## Basic initialization
+## Default configuration
 
-Initialize the drop-in with default settings:
+The initializer runs with these defaults when no configuration is provided:
 
 ```javascript title="scripts/initializers/requisition-list.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-requisition-list';
 
-await initializers.mountImmediately(initialize, {});
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  
+});
 ```
 
 ## Language definitions
 
-Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
 
 ```javascript title="scripts/initializers/requisition-list.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -92,11 +97,14 @@ import { initialize } from '@dropins/storefront-requisition-list';
 const models = {
   RequisitionListModel: {
     transformer: (data) => ({
-      // Add custom fields from backend data
-      customField: data?.custom_field,
-      promotionBadge: data?.promotion?.label,
-      // Transform existing fields
-      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+      // Add formatted last updated date
+      lastUpdatedDisplay: data?.updated_at ? 
+        new Date(data.updated_at).toLocaleDateString() : null,
+      // Add total items summary
+      itemsSummary: `${data?.items_count || 0} items`,
+      // Add list description preview (first 50 chars)
+      descriptionPreview: data?.description ? 
+        data.description.substring(0, 50) + '...' : null,
     }),
   },
 };
