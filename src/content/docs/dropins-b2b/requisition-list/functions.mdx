@@ -27,120 +27,166 @@ The Requisition List drop-in provides **11 API functions** for managing requisit
 
 | Function | Description |
 | --- | --- |
-| [`addProductsToRequisitionList`](#addproductstorequisitionlist) | API function for the drop-in.. |
-| [`addRequisitionListItemsToCart`](#addrequisitionlistitemstocart) | API function for the drop-in.. |
-| [`createRequisitionList`](#createrequisitionlist) | API function for the drop-in.. |
-| [`deleteRequisitionList`](#deleterequisitionlist) | API function for the drop-in.. |
-| [`deleteRequisitionListItems`](#deleterequisitionlistitems) | API function for the drop-in.. |
+| [`addProductsToRequisitionList`](#addproductstorequisitionlist) | Adds products to a requisition list.. |
+| [`addRequisitionListItemsToCart`](#addrequisitionlistitemstocart) | This function adds the chosen items from a requisition list to the logged-in user cart.. |
+| [`createRequisitionList`](#createrequisitionlist) | This function creates a new requisition list with the name and description provided for a logged-in user.. |
+| [`deleteRequisitionList`](#deleterequisitionlist) | This function deletes a requisition list identified by uid.. |
+| [`deleteRequisitionListItems`](#deleterequisitionlistitems) | Deletes items from a requisition list.. |
 | [`getProductData`](#getproductdata) | API function for the drop-in.. |
-| [`getRequisitionList`](#getrequisitionlist) | API function for the drop-in.. |
-| [`getRequisitionLists`](#getrequisitionlists) | API function for the drop-in.. |
+| [`getRequisitionList`](#getrequisitionlist) | This function returns information about the desired requisition list from a logged-in user,.. |
+| [`getRequisitionLists`](#getrequisitionlists) | This function returns the requisition lists from a logged-in user.. |
 | [`getStoreConfig`](#getstoreconfig) | API function for the drop-in.. |
-| [`updateRequisitionList`](#updaterequisitionlist) | API function for the drop-in.. |
-| [`updateRequisitionListItems`](#updaterequisitionlistitems) | API function for the drop-in.. |
+| [`updateRequisitionList`](#updaterequisitionlist) | This function updates an existing requisition list with the name and description provided for a logged-in user.. |
+| [`updateRequisitionListItems`](#updaterequisitionlistitems) | This function updates the items of an existing requisition list with the quantity and options provided for a logged-in user.. |
 
 </TableWrapper>
 
 ## addProductsToRequisitionList
 
-### Signature
+Adds products to a requisition list.
 
-```typescript
-function addProductsToRequisitionList(requisitionListUid: string, requisitionListItems: Array<RequisitionListItemsInput>): Promise<RequisitionList | null>
+```ts
+const addProductsToRequisitionList = async (
+  requisitionListUid: string,
+  requisitionListItems: Array<RequisitionListItemsInput>
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to which products will be added. This UID is returned when creating or retrieving requisition lists. |
 | `requisitionListItems` | `Array<RequisitionListItemsInput>` | Yes | An array of product objects to add to the requisition list. Each object includes the product SKU, quantity, and optional configuration like parent SKU for configurable products, selected options (color, size), and entered options (custom text fields). |
 
 </TableWrapper>
 
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
+
 ---
 
 ## addRequisitionListItemsToCart
 
-### Signature
+This function adds the chosen items from a requisition list to the logged-in user cart.
 
-```typescript
-function addRequisitionListItemsToCart(requisitionListUid: string, requisitionListItemUids: Array<string>): Promise<Array<string> | null>
+```ts
+const addRequisitionListItemsToCart = async (
+  requisitionListUid: string,
+  requisitionListItemUids: Array<string>
+): Promise<Array<string> | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list containing the items to add to the cart. |
 | `requisitionListItemUids` | `Array<string>` | Yes | An array of requisition list item UIDs to add to the cart. These are the unique identifiers for specific items within the list, not product SKUs. |
 
 </TableWrapper>
 
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Array<string> | null`.
+
 ---
 
 ## createRequisitionList
 
-### Signature
+This function creates a new requisition list with the name and description provided for a logged-in user.
 
-```typescript
-function createRequisitionList(name: string, description?: string): Promise<RequisitionList | null>
+```ts
+const createRequisitionList = async (
+  name: string,
+  description?: string
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `name` | `string` | Yes | The display name for the new requisition list. This helps users identify and organize their lists (e.g., **Office Supplies Q1**, **Weekly Inventory Restock**). |
-| `description` | `string` | No | An optional text description providing additional context about the requisition list's purpose or contents (e.g., **Monthly recurring orders for maintenance supplies**). |
+| `name` | `string` | Yes | The display name for the new requisition list. This helps users identify and organize their lists (e.g., \*\*Office Supplies Q1\*\*, \*\*Weekly Inventory Restock\*\*). |
+| `description` | `string` | No | An optional text description providing additional context about the requisition list's purpose or contents (e.g., \*\*Monthly recurring orders for maintenance supplies\*\*). |
 
 </TableWrapper>
+
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
 ## deleteRequisitionList
 
-### Signature
+This function deletes a requisition list identified by uid.
 
-```typescript
-function deleteRequisitionList(requisitionListUid: string): Promise<{
+```ts
+const deleteRequisitionList = async (
+  requisitionListUid: string
+): Promise<{
   items: RequisitionList[];
   page_info: any;
   status: any;
 } | null>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to delete. This operation is permanent and removes the list and all its items. |
 
 </TableWrapper>
 
+### Events
+
+Emits the `requisitionLists/data` event.
+
+### Returns
+
+```ts
+Promise<{
+  items: RequisitionList[];
+  page_info: any;
+  status: any;
+} | null>
+```
+
+See [`RequisitionList`](#requisitionlist).
+
 ---
 
 ## deleteRequisitionListItems
 
-### Signature
+Deletes items from a requisition list.
 
-```typescript
-function deleteRequisitionListItems(requisitionListUid: string, items: Array<string>, pageSize: number, currentPage: number): Promise<RequisitionList | null>
+```ts
+const deleteRequisitionListItems = async (
+  requisitionListUid: string,
+  items: Array<string>,
+  pageSize: number,
+  currentPage: number
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list from which items will be removed. |
 | `items` | `Array<string>` | Yes | An array of requisition list item UIDs to remove. These are the unique identifiers returned in the list's items array, not product SKUs. |
@@ -148,6 +194,14 @@ function deleteRequisitionListItems(requisitionListUid: string, items: Array<str
 | `currentPage` | `number` | Yes | The page number for pagination (1-indexed). Used to retrieve a specific page of items after deletion. |
 
 </TableWrapper>
+
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
@@ -173,17 +227,19 @@ function getProductData(skus: string[]): Promise<Product[] | null>
 
 ## getRequisitionList
 
-### Signature
+This function returns information about the desired requisition list from a logged-in user,
 
-```typescript
-function getRequisitionList(requisitionListID: string, currentPage?: number, pageSize?: number): Promise<RequisitionList | null>
+```ts
+const getRequisitionList = async (
+  requisitionListID: string,
+  currentPage?: number,
+  pageSize?: number
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListID` | `string` | Yes | The unique identifier for the requisition list to retrieve. Returns the list metadata and all items. |
 | `currentPage` | `number` | No | The page number for pagination (1-indexed). Defaults to page 1 if not specified. |
@@ -191,26 +247,43 @@ function getRequisitionList(requisitionListID: string, currentPage?: number, pag
 
 </TableWrapper>
 
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
+
 ---
 
 ## getRequisitionLists
 
-### Signature
+This function returns the requisition lists from a logged-in user.
 
-```typescript
-function getRequisitionLists(currentPage?: number, pageSize?: number): Promise<RequisitionList[] | null>
+```ts
+const getRequisitionLists = async (
+  currentPage?: number,
+  pageSize?: number
+): Promise<RequisitionList[] | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `currentPage` | `number` | No | The page number for pagination (1-indexed). Used to navigate through multiple pages of requisition lists. |
 | `pageSize` | `number` | No | The number of requisition lists to return per page. Controls how many lists appear on each page. |
 
 </TableWrapper>
+
+### Events
+
+Emits the `requisitionLists/data` event.
+
+### Returns
+
+Returns an array of [`RequisitionList`](#requisitionlist) objects or `null`.
 
 ---
 
@@ -232,17 +305,21 @@ Returns `void`.
 
 ## updateRequisitionList
 
-### Signature
+This function updates an existing requisition list with the name and description provided for a logged-in user.
 
-```typescript
-function updateRequisitionList(requisitionListUid: string, name: string, description?: string, pageSize?: number, currentPage?: number): Promise<RequisitionList | null>
+```ts
+const updateRequisitionList = async (
+  requisitionListUid: string,
+  name: string,
+  description?: string,
+  pageSize?: number,
+  currentPage?: number
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list to update. |
 | `name` | `string` | Yes | The new display name for the requisition list. Updates the list's title. |
@@ -252,21 +329,32 @@ function updateRequisitionList(requisitionListUid: string, name: string, descrip
 
 </TableWrapper>
 
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
+
 ---
 
 ## updateRequisitionListItems
 
-### Signature
+This function updates the items of an existing requisition list with the quantity and options provided for a logged-in user.
 
-```typescript
-function updateRequisitionListItems(requisitionListUid: string, requisitionListItems: Array<UpdateRequisitionListItemsInput>, pageSize: number, currentPage: number): Promise<RequisitionList | null>
+```ts
+const updateRequisitionListItems = async (
+  requisitionListUid: string,
+  requisitionListItems: Array<UpdateRequisitionListItemsInput>,
+  pageSize: number,
+  currentPage: number
+): Promise<RequisitionList | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `requisitionListUid` | `string` | Yes | The unique identifier for the requisition list containing the items to update. |
 | `requisitionListItems` | `Array<UpdateRequisitionListItemsInput>` | Yes | An array of requisition list items to update. Each object includes the item UID and the fields to modify (such as quantity, selected options, or entered options). |
@@ -274,6 +362,14 @@ function updateRequisitionListItems(requisitionListUid: string, requisitionListI
 | `currentPage` | `number` | Yes | The page number for pagination (1-indexed) in the updated requisition list response. |
 
 </TableWrapper>
+
+### Events
+
+Emits the `requisitionList/data` event.
+
+### Returns
+
+Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ---
 
