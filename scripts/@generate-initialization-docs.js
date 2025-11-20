@@ -690,6 +690,28 @@ ${configType.definition}
         }).join('\n\n')}`;
     }
 
+    // Generate custom model example from enrichment, or use generic fallback
+    let customModelExample = '';
+    if (enrichmentData?.customModelExample) {
+        // Use custom example from enrichment
+        customModelExample = enrichmentData.customModelExample;
+    } else {
+        // Generate generic fallback
+        customModelExample = `const models = {\n  ${primaryModel}: {\n    transformer: (data) => ({\n      // Add custom fields from backend data\n      customField: data?.custom_field,\n      promotionBadge: data?.promotion?.label,\n      // Transform existing fields\n      displayPrice: data?.price?.value ? \`\$\${data.price.value}\` : 'N/A',\n    }),\n  },\n};\n\nawait initializers.mountImmediately(initialize, { models });`;
+    }
+
+    // Generate default config comment based on drop-in-specific options
+    const dropinSpecificOptions = configProps.filter(p => 
+        p.name !== 'langDefinitions' && p.name !== 'models'
+    );
+    let defaultConfigComment = '';
+    if (dropinSpecificOptions.length > 0) {
+        const defaultValues = dropinSpecificOptions.map(opt => 
+            `  // ${opt.name}: undefined // See configuration options below`
+        ).join('\n');
+        defaultConfigComment = `// Drop-in-specific defaults:\n${defaultValues}`;
+    }
+
     // Replace placeholders
     let content = replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
@@ -704,6 +726,8 @@ ${configType.definition}
         'MODEL_DEFINITIONS': modelDefinitions,
         'CONFIG_TYPE_DEFINITIONS': configTypeDefinitions,
         'CUSTOM_CONFIG_SECTION': customConfigSection,
+        'CUSTOM_MODEL_EXAMPLE': customModelExample,
+        'DEFAULT_CONFIG_COMMENT': defaultConfigComment,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
 
