@@ -753,6 +753,90 @@ async function config() {
                     ],
                   },
 
+                  // ---------- DROP-INS (B2B) ----------
+                  {
+                    label: 'Drop-ins for B2B',
+                    collapsed: true,
+                    items: [
+                      { label: 'Overview', link: '/dropins-b2b/' },
+                      {
+                        label: 'Company Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/company-management/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/company-management/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
+                          { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/company-management/events/' },
+                          { label: 'Containers', link: '/dropins-b2b/company-management/containers/' },
+                          { label: 'Slots', link: '/dropins-b2b/company-management/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/company-management/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company-management/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Company Switcher',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/company-switcher/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/company-switcher/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/company-switcher/initialization/' },
+                          { label: 'Functions', link: '/dropins-b2b/company-switcher/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/company-switcher/events/' },
+                          { label: 'Containers', link: '/dropins-b2b/company-switcher/containers/' },
+                          { label: 'Slots', link: '/dropins-b2b/company-switcher/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/company-switcher/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company-switcher/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Purchase Order',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/purchase-order/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/purchase-order/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/purchase-order/initialization/' },
+                          { label: 'Functions', link: '/dropins-b2b/purchase-order/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/purchase-order/events/' },
+                          { label: 'Containers', link: '/dropins-b2b/purchase-order/containers/' },
+                          { label: 'Slots', link: '/dropins-b2b/purchase-order/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/purchase-order/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/purchase-order/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Quote Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/quote-management/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/quote-management/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
+                          { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/quote-management/events/' },
+                          { label: 'Containers', link: '/dropins-b2b/quote-management/containers/' },
+                          { label: 'Slots', link: '/dropins-b2b/quote-management/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/quote-management/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Requisition List',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/requisition-list/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/requisition-list/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/requisition-list/initialization/' },
+                          { label: 'Functions', link: '/dropins-b2b/requisition-list/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/requisition-list/events/' },
+                          { label: 'Containers', link: '/dropins-b2b/requisition-list/containers/' },
+                          { label: 'Slots', link: '/dropins-b2b/requisition-list/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/requisition-list/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/requisition-list/dictionary/' },
+                        ],
+                      },
+                    ],
+                  },
+
                   // ---------- DROP-INS SDK ----------
                   {
                     label: 'Drop-ins SDK',
