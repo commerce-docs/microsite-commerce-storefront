@@ -511,8 +511,17 @@ function scanForFunctions(repoPath) {
                     continue;
                 }
 
-                // Only add if not already processed
-                if (!processedFunctions.has(entry)) {
+                // Check if already processed (from index.ts scan)
+                if (processedFunctions.has(entry)) {
+                    // UPDATE existing entry with MDX content (fixes bug where index.ts scan added it first)
+                    const existingFunc = functions.find(f => f.name === entry);
+                    if (existingFunc) {
+                        existingFunc.mdxContent = mdxContent;
+                        existingFunc.mdxPath = mdxPath.replace(repoPath, '');
+                        console.log(`  ✓ Updated ${entry} with MDX content (was processed from index.ts first)`);
+                    }
+                } else {
+                    // Add new function
                     processedFunctions.add(entry);
                     functions.push({
                         name: entry,
