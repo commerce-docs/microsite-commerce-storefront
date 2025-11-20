@@ -235,7 +235,10 @@ export function findPropsInTypeFiles(repoPath, componentName) {
             const content = readFileSync(path, 'utf8');
 
             // Look for Props interface (with or without export)
-            const propsInterfaceStartMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{/);
+            // Specifically match {ComponentName}Props to avoid matching wrong interfaces
+            const componentPropsRegex = new RegExp(`(?:export\\s+)?interface\\s+${componentName}Props\\s*(?:extends\\s+[^{]+)?\\s*{`);
+            const genericPropsRegex = /(?:export\s+)?interface\s+Props\s*(?:extends\s+[^{]+)?\s*{/;
+            const propsInterfaceStartMatch = content.match(componentPropsRegex) || content.match(genericPropsRegex);
 
             if (propsInterfaceStartMatch) {
                 // Find the position right after the opening brace
@@ -307,7 +310,10 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
 
         // Match both "interface Props" and "export interface Props"
         // Also handle interfaces that extend other interfaces
-        const propsInterfaceStartMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{/);
+        // Specifically match {ComponentName}Props to avoid matching wrong interfaces
+        const componentPropsRegex = new RegExp(`(?:export\\s+)?interface\\s+${componentName}Props\\s*(?:extends\\s+[^{]+)?\\s*{`);
+        const genericPropsRegex = /(?:export\s+)?interface\s+Props\s*(?:extends\s+[^{]+)?\s*{/;
+        const propsInterfaceStartMatch = content.match(componentPropsRegex) || content.match(genericPropsRegex);
 
         if (propsInterfaceStartMatch) {
             // Find the position right after the opening brace
