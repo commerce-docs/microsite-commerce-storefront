@@ -151,26 +151,40 @@ function generateIntroSummary(data, dropinName) {
 
     /**
      * Build summary following CONTRIBUTING.md writing rules:
+     * - Rule 14: "Be clear and direct" - use short, clear sentences
+     * - Rule 4: "Omit needless words" - each sentence makes one clear point
      * - Rule 1: Use active voice ("enables" not "is enabled by")
-     * - Rule 6: Express parallel ideas in parallel form (all gerunds)
-     * - Rule 5: Keep related words together (subject-verb-object)
-     * - Grammar Rule 1: Use articles appropriately (the drop-in, for Adobe Commerce)
+     * - Rule 9: "Vary sentence structure" - mix simple sentences
      * 
-     * Pattern: "The [Name] drop-in enables [action1], [action2], and [action3] for Adobe Commerce storefronts."
+     * Pattern: 2-3 short sentences totaling 20-40 words
+     * - Sentence 1: Core purpose with 1-2 top features
+     * - Sentence 2 (optional): Additional capabilities or outcome
      */
+
+    // First sentence: Core purpose with 1-2 top features
+    // Use "enables" for gerunds (requesting, managing), "provides" for nouns (management, tracking)
     let summary = `The ${displayName} drop-in enables `;
 
-    if (featureDescriptions.length === 1) {
-        summary += `${featureDescriptions[0]}`;
+    if (featureDescriptions.length === 0) {
+        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce storefronts.`;
+    } else if (featureDescriptions.length === 1) {
+        summary += `${featureDescriptions[0]} for Adobe Commerce storefronts.`;
     } else if (featureDescriptions.length === 2) {
-        summary += `${featureDescriptions[0]} and ${featureDescriptions[1]}`;
+        summary += `${featureDescriptions[0]} and ${featureDescriptions[1]} for Adobe Commerce storefronts.`;
     } else {
-        const lastFeature = featureDescriptions[featureDescriptions.length - 1];
-        const otherFeatures = featureDescriptions.slice(0, -1).join(', ');
-        summary += `${otherFeatures}, and ${lastFeature}`;
-    }
+        // 3+ features: First sentence with top 2, second sentence with additional
+        const primaryFeatures = featureDescriptions.slice(0, 2);
+        const additionalFeatures = featureDescriptions.slice(2);
 
-    summary += ' for Adobe Commerce storefronts.';
+        summary += `${primaryFeatures[0]} and ${primaryFeatures[1]} for Adobe Commerce storefronts. `;
+
+        // Second sentence with additional capabilities (using "supports" for variety)
+        if (additionalFeatures.length === 1) {
+            summary += `It also supports ${additionalFeatures[0]}.`;
+        } else if (additionalFeatures.length === 2) {
+            summary += `It also supports ${additionalFeatures[0]} and ${additionalFeatures[1]}.`;
+        }
+    }
 
     return summary;
 }
