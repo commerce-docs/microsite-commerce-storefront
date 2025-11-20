@@ -113,8 +113,34 @@ export function generatePropertyTable(items, options = {}) {
 
     // Handle empty items
     if (!items || items.length === 0) {
+        // Return a properly formatted table with TableWrapper and headers
+        let table = '';
+        
+        // Add TableWrapper if nowrap specified
+        if (nowrapColumns.length > 0) {
+            const nowrapArray = JSON.stringify(nowrapColumns);
+            table += `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
+        }
+        
+        // Add header row
+        table += includeRequired
+            ? '| Parameter | Type | Req? | Description |\n'
+            : '| Parameter | Type | Description |\n';
+        
+        table += includeRequired
+            ? '|---|---|---|---|\n'
+            : '|---|---|---|\n';
+        
+        // Add single row with message
         const requiredCol = includeRequired ? ' - |' : '';
-        return `| ${emptyMessage} | - |${requiredCol} - |`;
+        table += `| ${emptyMessage} | - |${requiredCol} - |\n`;
+        
+        // Close TableWrapper if opened
+        if (nowrapColumns.length > 0) {
+            table += '\n</TableWrapper>';
+        }
+        
+        return table;
     }
 
     // Start with TableWrapper if nowrap columns specified
