@@ -1792,7 +1792,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     'product-discovery': ['search/error', 'search/loading', 'search/result'],
                     'wishlist': ['wishlist/alert', 'wishlist/data', 'wishlist/reset'],
                     // B2B drop-ins
-                    'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
+                    'quote-management': [
+                        'quote-management/initialized',
+                        'quote-management/negotiable-quote-close-error',
+                        'quote-management/negotiable-quote-closed',
+                        'quote-management/permissions',
+                        'quote-management/quantities-updated',
+                        'quote-management/quote-data',
+                        'quote-management/quote-duplicated',
+                        'quote-management/quote-items-removed',
+                        'quote-management/quote-renamed',
+                        'quote-management/quote-sent-for-review',
+                        'quote-management/quote-template-data',
+                        'quote-management/shipping-address-set'
+                    ],
                     'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
                     'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
                     'company-switcher': ['companyContext/changed'],
