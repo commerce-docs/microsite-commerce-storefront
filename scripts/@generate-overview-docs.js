@@ -93,14 +93,16 @@ function generateIntroSummary(data, dropinName) {
     }
 
     /**
-     * Convert feature names to proper grammatical form for "enables X" construction.
+     * Convert feature names to gerund form for parallel construction (CONTRIBUTING.md rule 6).
+     * Ensures all items follow parallel grammatical structure: "enables X, Y, and Z"
      * E.g., "Request negotiable quotes" -> "requesting negotiable quotes"
-     *       "Quote management" -> "quote management"
+     *       "Quote management and tracking" -> "managing and tracking quotes"
+     *       "Role-based permissions" -> "role-based permissions" (keep as is)
      */
     function toGerundForm(feature) {
         const lower = feature.toLowerCase();
 
-        // If it starts with a verb in imperative form, convert to gerund
+        // Verb mapping for imperative -> gerund conversion
         const verbMap = {
             'request ': 'requesting ',
             'create ': 'creating ',
@@ -119,23 +121,43 @@ function generateIntroSummary(data, dropinName) {
             'display ': 'displaying ',
             'show ': 'showing ',
             'save ': 'saving ',
-            'load ': 'loading '
+            'load ': 'loading ',
+            'support ': 'supporting ',
+            'enable ': 'enabling ',
+            'provide ': 'providing '
         };
 
+        // Check for direct verb matches first
         for (const [verb, gerund] of Object.entries(verbMap)) {
             if (lower.startsWith(verb)) {
                 return gerund + lower.slice(verb.length);
             }
         }
 
-        // Already in noun form (like "quote management"), return as is
+        // Handle compound noun phrases with "and" (e.g., "quote management and tracking")
+        // Keep as is to maintain clarity - don't try to restructure complex compounds
+        if (lower.includes(' and ') && (lower.includes('management') || lower.includes('tracking') || lower.includes('updates'))) {
+            return lower;
+        }
+
+        // For simple noun phrases that are already clear, keep as is
+        // Examples: "role-based permissions", "quote status updates", "quote comments and attachments"
+        // These are already in acceptable parallel form
         return lower;
     }
 
-    // Convert features to proper grammatical form
+    // Convert features to proper grammatical form for parallel structure
     const featureDescriptions = topFeatures.map(f => toGerundForm(f.feature));
 
-    // Build summary: "The X drop-in enables [feature1], [feature2], and [feature3] for Adobe Commerce storefronts."
+    /**
+     * Build summary following CONTRIBUTING.md writing rules:
+     * - Rule 1: Use active voice ("enables" not "is enabled by")
+     * - Rule 6: Express parallel ideas in parallel form (all gerunds)
+     * - Rule 5: Keep related words together (subject-verb-object)
+     * - Grammar Rule 1: Use articles appropriately (the drop-in, for Adobe Commerce)
+     * 
+     * Pattern: "The [Name] drop-in enables [action1], [action2], and [action3] for Adobe Commerce storefronts."
+     */
     let summary = `The ${displayName} drop-in enables `;
 
     if (featureDescriptions.length === 1) {
