@@ -27,16 +27,16 @@ The Company Management drop-in provides **26 API functions** for managing compan
 
 | Function | Description |
 | --- | --- |
-| [`allowCompanyRegistration`](#allowcompanyregistration) | API function for the drop-in.. |
-| [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | API function for the drop-in.. |
-| [`companyEnabled`](#companyenabled) | API function for the drop-in.. |
+| [`allowCompanyRegistration`](#allowcompanyregistration) | Return whether the backend allows company self-registration per store configuration.. |
+| [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company.. |
+| [`companyEnabled`](#companyenabled) | Return whether the Company feature is enabled in store configuration.. |
 | [`createCompany`](#createcompany) | API function for the drop-in.. |
 | [`createCompanyRole`](#createcompanyrole) | API function for the drop-in.. |
 | [`createCompanyTeam`](#createcompanyteam) | Creates a new company team under an optional target structure node.. |
 | [`createCompanyUser`](#createcompanyuser) | Creates a new company user and optionally places them under a target structure node.. |
 | [`deleteCompanyRole`](#deletecompanyrole) | API function for the drop-in.. |
 | [`deleteCompanyTeam`](#deletecompanyteam) | Deletes a company team by entity ID.. |
-| [`deleteCompanyUser`](#deletecompanyuser) | API function for the drop-in.. |
+| [`deleteCompanyUser`](#deletecompanyuser) | Deletes a company user by their ID with automatic base64 encoding.. |
 | [`fetchUserPermissions`](#fetchuserpermissions) | API function retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
 | [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
 | [`getCompanyAclResources`](#getcompanyaclresources) | API function for the drop-in.. |
@@ -47,26 +47,28 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`getCompanyStructure`](#getcompanystructure) | Retrieves the hierarchical organization structure of the company including all teams, divisions, and reporting relationships. |
 | [`getCompanyTeam`](#getcompanyteam) | Fetches details for a single company team by entity ID.. |
 | [`getCompanyUser`](#getcompanyuser) | Fetches details for a single company user by entity ID.. |
-| [`getCompanyUsers`](#getcompanyusers) | API function for the drop-in.. |
-| [`getCountries`](#getcountries) | API function for the drop-in.. |
+| [`getCompanyUsers`](#getcompanyusers) | Fetches the list of company users with their roles and team information, supporting pagination and status filtering.. |
+| [`getCountries`](#getcountries) | ## Overview.. |
 | [`getCustomerCompany`](#getcustomercompany) | Fetches simplified customer company information for display on the account information page.. |
 | [`getStoreConfig`](#getstoreconfig) | API function for the drop-in.. |
-| [`initialize`](#initialize) | API function for the drop-in.. |
-| [`isCompanyAdmin`](#iscompanyadmin) | API function for the drop-in.. |
+| [`initialize`](#initialize) | Initializes the Company drop-in with optional language definitions and data model metadata.. |
+| [`isCompanyAdmin`](#iscompanyadmin) | Check if the current authenticated customer is a company administrator in any company.. |
 | [`isCompanyRoleNameAvailable`](#iscompanyrolenameavailable) | API function for the drop-in.. |
-| [`isCompanyUser`](#iscompanyuser) | API function for the drop-in.. |
+| [`isCompanyUser`](#iscompanyuser) | Check if the current authenticated customer belongs to any company.. |
 | [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | API function for the drop-in.. |
 | [`updateCompany`](#updatecompany) | API function for the drop-in.. |
 | [`updateCompanyRole`](#updatecompanyrole) | API function for the drop-in.. |
 | [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree.. |
 | [`updateCompanyTeam`](#updatecompanyteam) | Updates a company team's name and/or description.. |
 | [`updateCompanyUser`](#updatecompanyuser) | Updates company user fields such as name, email, telephone, role, and status.. |
-| [`updateCompanyUserStatus`](#updatecompanyuserstatus) | API function for the drop-in.. |
-| [`validateCompanyEmail`](#validatecompanyemail) | API function for the drop-in.. |
+| [`updateCompanyUserStatus`](#updatecompanyuserstatus) | Updates a company user's status between Active and Inactive with automatic base64 encoding.. |
+| [`validateCompanyEmail`](#validatecompanyemail) | Validates if a company email is available.. |
 
 </TableWrapper>
 
 ## allowCompanyRegistration
+
+Return whether the backend allows company self-registration per store configuration.
 
 ```ts
 const allowCompanyRegistration = async (): Promise<boolean>
@@ -84,6 +86,8 @@ Returns `boolean`.
 
 ## checkCompanyCreditEnabled
 
+Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company.
+
 ```ts
 const checkCompanyCreditEnabled = async (): Promise<CheckCompanyCreditEnabledResponse>
 ```
@@ -99,6 +103,8 @@ Returns [`CheckCompanyCreditEnabledResponse`](#checkcompanycreditenabledresponse
 ---
 
 ## companyEnabled
+
+Return whether the Company feature is enabled in store configuration.
 
 ```ts
 const companyEnabled = async (): Promise<boolean>
@@ -116,21 +122,31 @@ Returns `boolean`.
 
 ## createCompany
 
-### Signature
-
-```typescript
-function createCompany(formData: any): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
+```ts
+const createCompany = async (
+  formData: any
+): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `formData` | `any` | Yes | An object containing the company registration information including company name, legal name, email, VAT/TAX ID, and resale number. The structure depends on your store's company registration requirements. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+```ts
+{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }
+```
+
+See [`CompanyRegistrationModel`](#companyregistrationmodel).
 
 ---
 
@@ -260,21 +276,29 @@ Returns `void`.
 
 ## deleteCompanyUser
 
-### Signature
+Deletes a company user by their ID with automatic base64 encoding.
 
-```typescript
-function deleteCompanyUser(params: DeleteCompanyUserParams): Promise<DeleteCompanyUserResponse>
+```ts
+const deleteCompanyUser = async (
+  params: DeleteCompanyUserParams
+): Promise<DeleteCompanyUserResponse>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `DeleteCompanyUserParams` | Yes | An object of type `DeleteCompanyUserParams` containing the user ID to delete and any additional parameters required for user deletion. |
+| `params` | `DeleteCompanyUserParams` | Yes | An object of type \`DeleteCompanyUserParams\` containing the user ID to delete and any additional parameters required for user deletion. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`DeleteCompanyUserResponse`](#deletecompanyuserresponse).
 
 ---
 
@@ -334,35 +358,43 @@ Returns an array of [`CompanyAclResourceModel`](#companyaclresourcemodel) object
 
 Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. This is used to display company credit status and validate purchase limits.
 
-### Signature
-
-```typescript
-function getCompanyCredit(): Promise<CompanyCreditInfo | null>
+```ts
+const getCompanyCredit = async (): Promise<CompanyCreditInfo | null>
 ```
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 
-Returns a Promise that resolves to a `CompanyCreditModel` object containing credit details.
+Returns [`CompanyCreditInfo`](#companycreditinfo) or `null`.
 
 ---
 
 ## getCompanyCreditHistory
 
-### Signature
-
-```typescript
-function getCompanyCreditHistory(params: GetCompanyCreditHistoryParams = {}): Promise<CompanyCreditHistory | null>
+```ts
+const getCompanyCreditHistory = async (
+  params: GetCompanyCreditHistoryParams = {}
+): Promise<CompanyCreditHistory | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `GetCompanyCreditHistoryParams = {}` | Yes | An optional object of type `GetCompanyCreditHistoryParams` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
+| `params` | `GetCompanyCreditHistoryParams` | No | An optional object of type \`GetCompanyCreditHistoryParams\` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyCreditHistory`](#companycredithistory) or `null`.
 
 ---
 
@@ -482,25 +514,35 @@ Returns `void`.
 
 ## getCompanyUsers
 
-### Signature
+Fetches the list of company users with their roles and team information, supporting pagination and status filtering.
 
-```typescript
-function getCompanyUsers(params: CompanyUsersParams = {}): Promise<CompanyUsersResponse>
+```ts
+const getCompanyUsers = async (
+  params: CompanyUsersParams = {}
+): Promise<CompanyUsersResponse>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `CompanyUsersParams = {}` | Yes | An optional object of type `CompanyUsersParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
+| `params` | `CompanyUsersParams` | No | An optional object of type \`CompanyUsersParams\` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CompanyUsersResponse`](#companyusersresponse).
 
 ---
 
 ## getCountries
+
+## Overview
 
 ```ts
 const getCountries = async (): Promise<{
@@ -564,25 +606,35 @@ Returns [`StoreConfigModel`](#storeconfigmodel).
 
 ## initialize
 
-### Signature
+Initializes the Company drop-in with optional language definitions and data model metadata.
 
-```typescript
-function initialize(config: CompanyDropinConfig = {}): Promise<any>
+```ts
+const initialize = async (
+  config: CompanyDropinConfig = {}
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `config` | `CompanyDropinConfig = {}` | Yes | An optional configuration object of type `CompanyDropinConfig` containing initialization settings such as langDefinitions for internationalization. If omitted, default configuration is used. |
+| `config` | `CompanyDropinConfig` | No | An optional configuration object of type \`CompanyDropinConfig\` containing initialization settings such as langDefinitions for internationalization. If omitted, default configuration is used. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ---
 
 ## isCompanyAdmin
+
+Check if the current authenticated customer is a company administrator in any company.
 
 ```ts
 const isCompanyAdmin = async (): Promise<boolean>
@@ -619,6 +671,8 @@ function isCompanyRoleNameAvailable(variables: IsCompanyRoleNameAvailableVariabl
 ---
 
 ## isCompanyUser
+
+Check if the current authenticated customer belongs to any company.
 
 ```ts
 const isCompanyUser = async (): Promise<boolean>
@@ -792,25 +846,35 @@ Returns `void`.
 
 ## updateCompanyUserStatus
 
-### Signature
+Updates a company user's status between Active and Inactive with automatic base64 encoding.
 
-```typescript
-function updateCompanyUserStatus(params: UpdateCompanyUserStatusParams): Promise<UpdateCompanyUserStatusResponse>
+```ts
+const updateCompanyUserStatus = async (
+  params: UpdateCompanyUserStatusParams
+): Promise<UpdateCompanyUserStatusResponse>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `UpdateCompanyUserStatusParams` | Yes | An object of type `UpdateCompanyUserStatusParams` containing the user ID and the new status value (active, inactive). Used to enable or disable user access to company resources. |
+| `params` | `UpdateCompanyUserStatusParams` | Yes | An object of type \`UpdateCompanyUserStatusParams\` containing the user ID and the new status value (active, inactive). Used to enable or disable user access to company resources. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`UpdateCompanyUserStatusResponse`](#updatecompanyuserstatusresponse).
 
 ---
 
 ## validateCompanyEmail
+
+Validates if a company email is available.
 
 ```ts
 const validateCompanyEmail = async (
