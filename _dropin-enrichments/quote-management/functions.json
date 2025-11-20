@@ -29,6 +29,7 @@
     }
   },
   "closeNegotiableQuotes": {
+    "description": "Closes a negotiable quote, finalizing its status and preventing any further modifications or negotiations. Once closed, the quote cannot be reopened or edited.",
     "parameters": {
       "quoteId": {
         "description": "The unique identifier for the negotiable quote to close. This finalizes the quote and prevents further modifications or negotiations."
@@ -36,6 +37,7 @@
     }
   },
   "deleteNegotiableQuotes": {
+    "description": "Deletes one or more negotiable quotes permanently. This action cannot be undone. Supports both single and batch deletion operations.",
     "parameters": {
       "quoteUids": {
         "description": "One or more negotiable quote unique identifiers to delete. Can be a single UID string or an array of UIDs for batch deletion."
@@ -50,10 +52,12 @@
     }
   },
   "generateCartFromNegotiableQuote": {
-    "description": "Converts a negotiable quote into an active shopping cart, allowing the customer to proceed to checkout with the quoted items and pricing. This is typically used after a quote has been approved by both parties.",
-    "returns": "Returns a Promise that resolves to a cart ID string representing the newly created cart."
+    "description": "Converts a negotiable quote into an active shopping cart, allowing the customer to proceed to checkout with the quoted items and pricing. This is typically used after a quote has been approved by both parties and the customer is ready to place the order.",
+    "returns": "Returns a Promise that resolves to a cart ID string representing the newly created cart.",
+    "example": "```js\nimport { generateCartFromNegotiableQuote } from '@dropins/storefront-quote-management/api.js';\n\ntry {\n  const cartId = await generateCartFromNegotiableQuote('quote-123');\n  console.log('Cart created:', cartId);\n  // Redirect to checkout\n  window.location.href = `/checkout?cartId=${cartId}`;\n} catch (error) {\n  console.error('Failed to generate cart:', error);\n}\n```"
   },
   "generateQuoteFromTemplate": {
+    "description": "Creates a new negotiable quote based on an existing quote template. This is useful for repeat orders where customers regularly order the same or similar products.",
     "parameters": {
       "params": {
         "description": "An object of type `GenerateQuoteFromTemplateParams` containing the template UID and any customization parameters. Creates a new negotiable quote based on the template structure."
@@ -75,18 +79,21 @@
     }
   },
   "getQuoteTemplates": {
+    "description": "Retrieves a list of quote templates available to the current customer. Quote templates are reusable quote structures that can be used to quickly generate new quotes for recurring orders.",
     "parameters": {
       "params": {
-        "description": "An optional object of type `GetQuoteTemplatesParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all templates with default pagination."
+        "description": "An optional object of type `GetQuoteTemplatesParams` containing pagination and filter criteria (currentPage, pageSize, filter, sort). Omit to retrieve all templates with default pagination."
       }
     }
   },
   "negotiableQuotes": {
+    "description": "Retrieves a list of negotiable quotes for the current customer with filtering, sorting, and pagination options. This function is useful for displaying quote lists and implementing search functionality.",
     "parameters": {
       "params": {
-        "description": "An optional object of type `NegotiableQuotesParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all negotiable quotes with default pagination."
+        "description": "An optional object of type `NegotiableQuotesParams` containing pagination and filter criteria (currentPage, pageSize, filter, sort). Omit to retrieve all negotiable quotes with default pagination."
       }
-    }
+    },
+    "example": "```js\nimport { negotiableQuotes } from '@dropins/storefront-quote-management/api.js';\n\ntry {\n  const result = await negotiableQuotes({\n    filter: {\n      name: {\n        match: 'Office Supplies',\n        match_type: 'PARTIAL'\n      }\n    },\n    pageSize: 25,\n    currentPage: 1,\n    sort: {\n      sort_field: 'CREATED_AT',\n      sort_direction: 'DESC'\n    }\n  });\n  console.log('Quotes:', result.items);\n  console.log('Pagination:', result.pageInfo);\n} catch (error) {\n  console.error('Failed to get quotes list:', error);\n}\n```"
   },
   "openQuoteTemplate": {
     "parameters": {
@@ -103,8 +110,9 @@
     }
   },
   "requestNegotiableQuote": {
-    "description": "Creates a new negotiable quote request from the current cart. This initiates the quote negotiation workflow, converting cart items into a quote that can be reviewed and negotiated by the seller.",
-    "returns": "Returns a Promise that resolves to a `NegotiableQuoteModel` object containing the new quote details."
+    "description": "Creates a new negotiable quote request from cart contents. This function initiates the quote negotiation workflow by converting cart items into a quote that can be reviewed and negotiated by the seller. The quote can be saved as a draft for later submission or submitted immediately for seller review.",
+    "returns": "Returns a Promise that resolves to a `NegotiableQuoteModel` object containing the new quote details, or null if the request fails.",
+    "example": "```js\nimport { requestNegotiableQuote } from '@dropins/storefront-quote-management/api.js';\n\ntry {\n  const quote = await requestNegotiableQuote({\n    cartId: 'cart-123',\n    quoteName: 'Q1 2024 Office Supplies',\n    comment: 'Please provide volume discount pricing',\n    isDraft: false\n  });\n  \n  console.log('Quote created:', quote);\n} catch (error) {\n  console.error('Failed to create quote:', error);\n}\n```"
   },
   "sendQuoteTemplateForReview": {
     "parameters": {
@@ -142,11 +150,13 @@
     }
   },
   "getQuoteData": {
+    "description": "Retrieves detailed information about a specific negotiable quote including all items, pricing, negotiation history, comments, and current status.",
     "parameters": {
       "quoteId": {
         "description": "The unique identifier for the negotiable quote to retrieve. Returns complete quote details including items, prices, history, comments, and negotiation status."
       }
-    }
+    },
+    "example": "```js\nimport { getQuoteData } from '@dropins/storefront-quote-management/api.js';\n\ntry {\n  const quote = await getQuoteData('quote-123');\n  console.log('Quote data:', quote);\n} catch (error) {\n  console.error('Failed to get quote:', error);\n}\n```"
   },
   "getQuoteTemplateData": {
     "parameters": {
@@ -156,11 +166,28 @@
     }
   },
   "uploadFile": {
+    "description": "Uploads and attaches a file to a quote. This function is useful for providing additional context, specifications, purchase orders, or any supporting documentation for quote requests.",
     "parameters": {
       "file": {
         "description": "The File object to upload and attach to a quote. Supports specification documents, purchase orders, or any supporting files that provide context for quote requests."
       }
     }
-  }
+  },
+  "error_handling": {
+    "description": "All functions return promises and should be wrapped in try-catch blocks for proper error handling. Check error messages for specific error types such as authentication errors (Unauthorized), not found errors, or validation errors.",
+    "example": "```js\ntry {\n  const result = await someQuoteFunction(parameters);\n  // Handle success\n} catch (error) {\n  // Handle error\n  console.error('Operation failed:', error.message);\n  \n  // Check for specific error types\n  if (error.message.includes('Unauthorized')) {\n    // Handle authentication error\n  } else if (error.message.includes('Not Found')) {\n    // Handle not found error\n  }\n}\n```"
+  },
+  "event_integration": {
+    "description": "Many functions emit events through the event bus that you can listen to for real-time updates. For example, `requestNegotiableQuote` emits the `quote-management/negotiable-quote-requested` event, and `getQuoteData` emits the `quote-management/quote-data` event. See the Events documentation for complete details.",
+    "example": "```js\nimport { events } from '@dropins/tools/event-bus.js';\n\n// Listen for quote events\nevents.on('quote-management/negotiable-quote-requested', (data) => {\n  console.log('Quote requested:', data.quote);\n});\n\nevents.on('quote-management/quote-data', (data) => {\n  console.log('Quote data updated:', data.quote);\n});\n\nevents.on('quote-management/quote-data/initialized', (data) => {\n  console.log('Quote initialized:', data.quote);\n});\n```"
+  },
+  "best_practices": [
+    "Always handle errors appropriately with try-catch blocks",
+    "Check user permissions before performing operations",
+    "Use events for real-time UI updates",
+    "Validate input parameters before making API calls",
+    "Implement proper loading states for better UX",
+    "Cache frequently accessed data when appropriate"
+  ]
 }
 

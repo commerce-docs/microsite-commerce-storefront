@@ -228,5 +228,50 @@
         "code": "```js\nevents.on('quote-management/shipping-address-set', (payload) => {\n  console.log('Shipping address set:', payload.data.address);\n  refreshShippingMethods();\n  recalculateQuoteTotals();\n});\n```\n\n---\n\n## Listening to events\n\nAll Quote Management events are emitted through the centralized event bus:\n\n```js\nimport { events } from '@dropins/tools/event-bus.js';\n\n// Listen to quote lifecycle events\nevents.on('quote-management/negotiable-quote-requested', handleQuoteRequest);\nevents.on('quote-management/quote-sent-for-review', handleQuoteReview);\nevents.on('quote-management/quote-duplicated', handleQuoteDuplicate);\n\n// Listen to quote data changes\nevents.on('quote-management/quote-data', handleQuoteUpdate);\nevents.on('quote-management/quantities-updated', handleQuantityChange);\n\n// Listen to template events\nevents.on('quote-management/quote-template-generated', handleTemplateGeneration);\nevents.on('quote-management/quote-templates-data', handleTemplatesLoad);\n\n// Clean up listeners\nevents.off('quote-management/quote-data', handleQuoteUpdate);\n```\n\n<Aside type=\"tip\">\nThe `quote-management/quote-data` event is frequently emitted during quote modifications. Consider debouncing your handlers if they perform expensive operations like re-rendering large components.\n</Aside>\n\n<Aside type=\"note\">\nTemplate events (`quote-template-*`) are separate from quote events. A template can generate multiple quotes, and each generated quote will emit its own set of quote-specific events.\n</Aside>\n\n## Event flow examples"
       }
     ]
-  }
+  },
+  "external_events": {
+    "description": "The Quote Management drop-in also listens to external events from other parts of the application:",
+    "events": [
+      {
+        "name": "authenticated",
+        "description": "Emitted when user authentication status changes.",
+        "example": "```js\nevents.on('authenticated', (isAuthenticated) => {\n  console.log('Authentication status:', isAuthenticated);\n  \n  // Update UI based on authentication status\n  if (isAuthenticated) {\n    showAuthenticatedFeatures();\n  } else {\n    hideAuthenticatedFeatures();\n  }\n});\n```"
+      },
+      {
+        "name": "locale",
+        "description": "Emitted when the application locale changes.",
+        "example": "```js\nevents.on('locale', (locale) => {\n  console.log('Locale changed to:', locale);\n  \n  // Update UI language\n  updateUILanguage(locale);\n});\n```"
+      }
+    ]
+  },
+  "integration_examples": {
+    "cart_integration": {
+      "title": "Cart Integration",
+      "description": "Listen for quote events to update cart components:",
+      "code": "```js\n// When a quote is requested from cart\nevents.on('quote-management/negotiable-quote-requested', (data) => {\n  if (data.quote) {\n    // Clear cart after successful quote request\n    clearCart();\n    \n    // Show success message\n    showCartNotification('Items moved to quote successfully');\n  }\n});\n\n// When quote data is loaded\nevents.on('quote-management/quote-data', (data) => {\n  // Update UI with quote information\n  updateQuoteDisplay(data.quote);\n});\n```"
+    },
+    "navigation_integration": {
+      "title": "Navigation Integration",
+      "description": "Handle navigation based on quote events:",
+      "code": "```js\n// Navigate to quote management after creation\nevents.on('quote-management/negotiable-quote-requested', (data) => {\n  if (data.quote) {\n    window.location.href = `/quotes/${data.quote.id}`;\n  }\n});\n\n// Navigate to quotes list after error\nevents.on('quote-management/quote-data/error', (data) => {\n  console.error('Failed to load quote:', data.error);\n  window.location.href = '/quotes';\n});\n```"
+    },
+    "analytics_integration": {
+      "title": "Analytics Integration",
+      "description": "Track user interactions for analytics:",
+      "code": "```js\n// Track quote requests\nevents.on('quote-management/negotiable-quote-requested', (data) => {\n  if (data.quote) {\n    analytics.track('Quote Requested', {\n      quoteId: data.quote.id,\n      quoteName: data.input.quoteName,\n      cartId: data.input.cartId,\n      isDraft: data.input.isDraft || false\n    });\n  }\n});\n\n// Track quote data loading\nevents.on('quote-management/quote-data', (data) => {\n  analytics.track('Quote Data Loaded', {\n    quoteId: data.quote.id,\n    permissions: Object.keys(data.permissions)\n  });\n});\n```"
+    }
+  },
+  "event_cleanup": {
+    "title": "Event Cleanup",
+    "description": "Remember to clean up event listeners when components are unmounted:",
+    "code": "```js\n// Store reference to event handler\nconst handleQuoteRequested = (data) => {\n  console.log('Quote requested:', data);\n};\n\n// Add event listener and store the subscription\nconst subscription = events.on('quote-management/negotiable-quote-requested', handleQuoteRequested);\n\n// Clean up when component unmounts\nconst cleanup = () => {\n  subscription.off();\n};\n\n// Call cleanup when appropriate\nwindow.addEventListener('beforeunload', cleanup);\n```"
+  },
+  "best_practices": [
+    "Always handle errors appropriately in event listeners",
+    "Use descriptive event handler names for better debugging",
+    "Clean up event listeners to prevent memory leaks",
+    "Use events for loose coupling between components",
+    "Implement proper error boundaries for event handling",
+    "Consider using TypeScript for better type safety with events"
+  ]
 }
