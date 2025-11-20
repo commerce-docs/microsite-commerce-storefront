@@ -383,7 +383,7 @@ async function config() {
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
-                    collapsed: false,
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
