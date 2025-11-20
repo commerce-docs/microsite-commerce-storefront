@@ -305,7 +305,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 
         // Build configurations table using shared library
         const configurationsTable = generatePropertyTable(containerInfo.props, {
-            nowrapColumns: [0, 1],
+            nowrapColumns: [0],
             emptyMessage: 'No configurations'
         });
 
