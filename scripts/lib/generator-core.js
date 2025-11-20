@@ -313,7 +313,8 @@ export async function runGenerator(config) {
             // Write output - use custom handler if provided, otherwise default
             if (config.writeOutput) {
                 // Custom write handler (e.g., for multi-file generators like containers)
-                config.writeOutput(dropin, data, content, contentDir);
+                // Pass parameters that match the expected signature
+                config.writeOutput(dropin.name, dropin, content, versionInfo);
             } else {
                 // Default single-file write
                 const outputDir = getDropinOutputPath(dropin.name, dropin.type, contentDir);
