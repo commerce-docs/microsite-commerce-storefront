@@ -1807,7 +1807,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                         'quote-management/shipping-address-set'
                     ],
                     'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
-                    'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                    'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionList/initialized', 'requisitionLists/data'],
                     'company-switcher': ['companyContext/changed'],
                     'company-management': ['auth/permissions']
                 };
@@ -1868,7 +1868,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                         // B2B drop-ins
                         'quote-management': ['quote-management/permissions', 'quote-management/quote-data', 'quote-management/quote-renamed', 'quote-management/quote-sent-for-review', 'quote-management/shipping-address-set'],
                         'purchase-order': ['purchase-order/data', 'purchase-order/refresh'],
-                        'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionLists/data'],
+                        'requisition-list': ['requisitionList/alert', 'requisitionList/data', 'requisitionList/initialized', 'requisitionLists/data'],
                         'company-switcher': ['companyContext/changed'],
                         'company-management': ['auth/permissions']
                     };
