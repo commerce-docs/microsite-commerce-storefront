@@ -75,6 +75,84 @@ const dropinDisplayName = dropinName
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
+/**
+ * Generate concise intro paragraph (20-40 words) summarizing high-level capabilities
+ * across all documentation pages for the drop-in.
+ */
+function generateIntroSummary(data, dropinName) {
+    const displayName = dropinName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+    // Extract top 3-4 supported features that describe core functionality
+    const topFeatures = data.supported_features
+        .filter(f => f.status.toLowerCase() === 'supported')
+        .slice(0, 4);
+
+    // Build a concise description from the features
+    if (topFeatures.length === 0) {
+        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce storefronts.`;
+    }
+
+    /**
+     * Convert feature names to proper grammatical form for "enables X" construction.
+     * E.g., "Request negotiable quotes" -> "requesting negotiable quotes"
+     *       "Quote management" -> "quote management"
+     */
+    function toGerundForm(feature) {
+        const lower = feature.toLowerCase();
+
+        // If it starts with a verb in imperative form, convert to gerund
+        const verbMap = {
+            'request ': 'requesting ',
+            'create ': 'creating ',
+            'manage ': 'managing ',
+            'track ': 'tracking ',
+            'update ': 'updating ',
+            'view ': 'viewing ',
+            'edit ': 'editing ',
+            'delete ': 'deleting ',
+            'add ': 'adding ',
+            'remove ': 'removing ',
+            'send ': 'sending ',
+            'convert ': 'converting ',
+            'handle ': 'handling ',
+            'process ': 'processing ',
+            'display ': 'displaying ',
+            'show ': 'showing ',
+            'save ': 'saving ',
+            'load ': 'loading '
+        };
+
+        for (const [verb, gerund] of Object.entries(verbMap)) {
+            if (lower.startsWith(verb)) {
+                return gerund + lower.slice(verb.length);
+            }
+        }
+
+        // Already in noun form (like "quote management"), return as is
+        return lower;
+    }
+
+    // Convert features to proper grammatical form
+    const featureDescriptions = topFeatures.map(f => toGerundForm(f.feature));
+
+    // Build summary: "The X drop-in enables [feature1], [feature2], and [feature3] for Adobe Commerce storefronts."
+    let summary = `The ${displayName} drop-in enables `;
+
+    if (featureDescriptions.length === 1) {
+        summary += `${featureDescriptions[0]}`;
+    } else if (featureDescriptions.length === 2) {
+        summary += `${featureDescriptions[0]} and ${featureDescriptions[1]}`;
+    } else {
+        const lastFeature = featureDescriptions[featureDescriptions.length - 1];
+        const otherFeatures = featureDescriptions.slice(0, -1).join(', ');
+        summary += `${otherFeatures}, and ${lastFeature}`;
+    }
+
+    summary += ' for Adobe Commerce storefronts.';
+
+    return summary;
+}
+
 // Generate MDX content
 const mdx = `---
 title: ${dropinDisplayName} overview
@@ -86,7 +164,7 @@ sidebar:
 import { Badge } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 
-${data.introduction}
+${generateIntroSummary(data, dropinName)}
 
 ## Supported Commerce features
 
