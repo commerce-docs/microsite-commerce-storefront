@@ -112,33 +112,108 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
     // Keep the original for JSDoc extraction later
     const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
 
-    // Match property definitions (property: type, property?: type, property?: type | null)
-    const propertyPattern = /(\w+)\??\s*:\s*([^;,]+)/g;
-    let match;
+    // Parse properties with balanced brace/bracket/paren tracking
+    // This handles complex nested types like (params: { foo: Bar, baz: Qux }) => void
+    let i = 0;
+    while (i < cleanedContent.length) {
+        // Skip whitespace
+        while (i < cleanedContent.length && /\s/.test(cleanedContent[i])) {
+            i++;
+        }
 
-    while ((match = propertyPattern.exec(cleanedContent)) !== null) {
-        const propertyName = match[1];
-        const propertyType = match[2].trim();
+        if (i >= cleanedContent.length) break;
+
+        // Match property name (word characters, followed by optional ?, then :)
+        const propMatch = cleanedContent.substring(i).match(/^(\w+)(\??)\s*:\s*/);
+        if (!propMatch) {
+            // Skip to next potential property (after semicolon or comma)
+            const nextDelim = cleanedContent.indexOf(';', i);
+            if (nextDelim === -1) break;
+            i = nextDelim + 1;
+            continue;
+        }
+
+        const propertyName = propMatch[1];
+        const isOptional = propMatch[2] === '?';
+        i += propMatch[0].length;
+
+        // Extract type with balanced delimiters
+        let type = '';
+        let depth = { braces: 0, brackets: 0, parens: 0, angles: 0 };
+        let inString = false;
+        let stringChar = '';
+
+        while (i < cleanedContent.length) {
+            const char = cleanedContent[i];
+
+            // Handle string literals
+            if ((char === '"' || char === "'" || char === '`') && cleanedContent[i - 1] !== '\\') {
+                if (!inString) {
+                    inString = true;
+                    stringChar = char;
+                } else if (char === stringChar) {
+                    inString = false;
+                }
+                type += char;
+                i++;
+                continue;
+            }
+
+            if (inString) {
+                type += char;
+                i++;
+                continue;
+            }
+
+            // Track nesting depth
+            // Special case: Don't treat `=>` arrow operator as angle bracket
+            const prevChar = i > 0 ? cleanedContent[i - 1] : '';
+            const nextChar = i + 1 < cleanedContent.length ? cleanedContent[i + 1] : '';
+            const isArrowOperator = char === '=' && nextChar === '>';
+
+            if (char === '{') depth.braces++;
+            else if (char === '}') depth.braces--;
+            else if (char === '[') depth.brackets++;
+            else if (char === ']') depth.brackets--;
+            else if (char === '(') depth.parens++;
+            else if (char === ')') depth.parens--;
+            else if (char === '<' && !isArrowOperator) depth.angles++;
+            else if (char === '>' && prevChar !== '=') depth.angles--;
+
+            // Check if we've reached the end of the type (semicolon or comma at depth 0)
+            const isAtTopLevel = depth.braces === 0 && depth.brackets === 0 &&
+                depth.parens === 0 && depth.angles === 0;
+
+            if (isAtTopLevel && (char === ';' || char === ',')) {
+                i++; // Skip the delimiter
+                break;
+            }
+
+            type += char;
+            i++;
+        }
+
+        type = type.trim();
 
         // Skip slots unless explicitly requested
         if (!includeSlots && propertyName.toLowerCase().includes('slot')) {
             continue;
         }
 
-        // Check if property is required (no ? after name)
-        const required = !interfaceContent.includes(`${propertyName}?`);
+        // Check if property is required
+        const required = !isOptional;
 
         // Try to get JSDoc description
         let description = extractJSDocDescription(fullText, propertyName);
 
         // If no JSDoc and generator provided, generate description
         if (!description && descriptionGenerator) {
-            description = descriptionGenerator(propertyName, propertyType);
+            description = descriptionGenerator(propertyName, type);
         }
 
         props.push({
             name: propertyName,
-            type: propertyType,
+            type: type,
             required,
             description
         });
@@ -168,28 +243,11 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
  * // ]
  */
 export function extractSlotsFromInterface(interfaceContent) {
-    const slots = [];
+    // Reuse parsePropsInterface with includeSlots: true for consistent parsing
+    const allProps = parsePropsInterface(interfaceContent, interfaceContent, { includeSlots: true });
 
-    // Remove JSDoc comments to avoid parsing them
-    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
-
-    // Match slot definitions (property containing "Slot" in name)
-    const slotPattern = /(\w*[Ss]lot\w*)\??\s*:\s*([^;,]+)/g;
-    let match;
-
-    while ((match = slotPattern.exec(cleanedContent)) !== null) {
-        const slotName = match[1];
-        const slotType = match[2].trim();
-
-        // Check if slot is required
-        const required = !interfaceContent.includes(`${slotName}?`);
-
-        slots.push({
-            name: slotName,
-            type: slotType,
-            required
-        });
-    }
+    // Filter to only properties with "Slot" in the name
+    const slots = allProps.filter(prop => prop.name.toLowerCase().includes('slot'));
 
     return slots;
 }
