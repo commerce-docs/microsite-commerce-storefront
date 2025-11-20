@@ -1615,7 +1615,18 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         // Determine if we should generate Usage section or keep the original
         // PRIORITY: Source code examples > Original MDX usage > Enrichment examples
         const sourceExamples = getAllExamples(repoName, func.name, 3);
-        const enrichmentExamples = enrichment && enrichment.examples && Array.isArray(enrichment.examples) ? enrichment.examples : [];
+
+        // Support both 'example' (string) and 'examples' (array) formats in enrichments
+        let enrichmentExamples = [];
+        if (enrichment) {
+            if (enrichment.examples && Array.isArray(enrichment.examples)) {
+                // New format: examples array
+                enrichmentExamples = enrichment.examples;
+            } else if (enrichment.example && typeof enrichment.example === 'string') {
+                // Legacy format: singular example string (convert to array format)
+                enrichmentExamples = [{ code: enrichment.example }];
+            }
+        }
 
         // Filter out invalid examples and deduplicate (aggressive normalization for comparison)
         const seenExamples = new Set();
@@ -1663,21 +1674,28 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         const validEnrichmentExamples = filterExamples(enrichmentExamples);
 
         // Decide what to do about Usage section:
-        // 1. If we have extracted source examples, use them (override original MDX)
-        // 2. Else if original MDX has Usage, keep it (don't remove)
-        // 3. Else if we have enrichment examples, use them
+        // PRIORITY (updated to prefer enrichment examples):
+        // 1. If we have enrichment examples, use them (they're curated and comprehensive)
+        // 2. Else if we have extracted source examples, use them
+        // 3. Else if original MDX has Usage, keep it
         // 4. Else no Usage section
 
         let shouldGenerateUsage = false;
         let examplesForOutput = [];
 
-        if (validSourceExamples.length > 0) {
-            // We have extracted examples from source code - use them and remove original Usage
+        if (validEnrichmentExamples.length > 0) {
+            // Enrichment examples are curated and match documentation standards - prioritize them
+            shouldGenerateUsage = true;
+            examplesForOutput = validEnrichmentExamples;
+            // Remove Usage section from funcContent since we're replacing it
+            funcContent = funcContent.replace(/^#{2,6}\s+Usage[\s\S]*?(?=^#{2,6}\s|\Z)/gm, '');
+            funcContent = funcContent.replace(/##\s+Usage[\s\S]*$/m, ''); // Also try H2 until end
+            console.log(`  ${func.name}: Using ${examplesForOutput.length} enrichment examples`);
+        } else if (validSourceExamples.length > 0) {
+            // We have extracted examples from source code - use them
             shouldGenerateUsage = true;
             examplesForOutput = validSourceExamples;
             // Remove Usage section from funcContent since we're replacing it
-            // Must happen before heading level conversion
-            // Try multiple patterns to ensure we catch it
             funcContent = funcContent.replace(/^#{2,6}\s+Usage[\s\S]*?(?=^#{2,6}\s|\Z)/gm, '');
             funcContent = funcContent.replace(/##\s+Usage[\s\S]*$/m, ''); // Also try H2 until end
             console.log(`  ${func.name}: Using ${examplesForOutput.length} extracted source examples`);
@@ -1689,11 +1707,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
             }
             shouldGenerateUsage = false;
             console.log(`  ${func.name}: Keeping original MDX ${hasOriginalExamples ? 'examples' : 'usage'}`);
-        } else if (validEnrichmentExamples.length > 0) {
-            // No extracted examples, no original usage, but we have enrichment examples
-            shouldGenerateUsage = true;
-            examplesForOutput = validEnrichmentExamples;
-            console.log(`  ${func.name}: Using ${examplesForOutput.length} enrichment examples`);
         } else {
             // No examples from any source
             console.log(`  ${func.name}: No usage examples found`);
@@ -2053,11 +2066,30 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     const inputModels = Array.from(inputModelDefinitions.keys()).sort();
     const outputModels = Array.from(outputModelDefinitions.keys()).sort();
 
-    // Add Data Models section if there are shared models, input models, or output models
+    // Add Data Models section if there are shared models, input models, output models, OR enrichment data models
     let dataModelsSection = '';
-    if (sharedModels.length > 0 || inputModels.length > 0 || outputModels.length > 0) {
+    const hasEnrichmentDataModels = enrichmentData && enrichmentData.data_models && enrichmentData.data_models.models && enrichmentData.data_models.models.length > 0;
+
+    if (sharedModels.length > 0 || inputModels.length > 0 || outputModels.length > 0 || hasEnrichmentDataModels) {
         dataModelsSection = '## Data Models\n\n';
-        dataModelsSection += 'The following data models are used by functions in this drop-in.\n\n';
+
+        // If we have enrichment data models description, use it; otherwise use default
+        if (hasEnrichmentDataModels && enrichmentData.data_models.description) {
+            dataModelsSection += `${enrichmentData.data_models.description}\n\n`;
+        } else {
+            dataModelsSection += 'The following data models are used by functions in this drop-in.\n\n';
+        }
+
+        // Add enrichment-defined data models first (they're manually curated and comprehensive)
+        if (hasEnrichmentDataModels) {
+            enrichmentData.data_models.models.forEach(model => {
+                dataModelsSection += `### ${model.name}\n\n`;
+                if (model.description) {
+                    dataModelsSection += `${model.description}\n\n`;
+                }
+                dataModelsSection += `${model.code}\n\n`;
+            });
+        }
 
         // Output return type models first (standard models extracted from source)
         for (const modelName of sharedModels) {
