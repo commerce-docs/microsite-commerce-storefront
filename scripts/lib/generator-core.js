@@ -310,11 +310,17 @@ export async function runGenerator(config) {
                 enrichmentData
             );
 
-            // Write output file
-            const outputDir = getDropinOutputPath(dropin.name, dropin.type, contentDir);
-            mkdirSync(outputDir, { recursive: true });
-            const outputPath = join(outputDir, config.outputFileName);
-            writeFileSync(outputPath, content, 'utf8');
+            // Write output - use custom handler if provided, otherwise default
+            if (config.writeOutput) {
+                // Custom write handler (e.g., for multi-file generators like containers)
+                config.writeOutput(dropin, data, content, contentDir);
+            } else {
+                // Default single-file write
+                const outputDir = getDropinOutputPath(dropin.name, dropin.type, contentDir);
+                mkdirSync(outputDir, { recursive: true });
+                const outputPath = join(outputDir, config.outputFileName);
+                writeFileSync(outputPath, content, 'utf8');
+            }
 
             successCount++;
 
