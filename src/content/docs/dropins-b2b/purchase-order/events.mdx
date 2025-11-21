@@ -107,25 +107,24 @@ See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
 
 #### When triggered
 
-- After a purchase order is converted to an order
-- When loading order confirmation details
-- After order status updates
+- When the Purchase Order Details page loads with a poRef parameter
+- After purchase-order/refresh event (emitted together with purchase-order/data)
 
 
 
-#### Example: Example
+#### Example: Display purchase order details
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
 
 events.on('order/data', (payload) => {
-  console.log('Order data loaded:', payload.data);
+  console.log('Purchase order data for Order containers:', payload.data);
   
-  // Display order confirmation
-  showOrderConfirmation(payload.data);
+  // Initialize Order Drop-In containers with PO data
+  displayPurchaseOrderDetailsInOrderContainers(payload.data);
   
-  // Track conversion
-  trackPurchaseOrderConversion(payload.data.orderNumber);
+  // Extract purchase order information
+  const { number, status, items } = payload.data;
 });
 ```
 
@@ -133,10 +132,10 @@ events.on('order/data', (payload) => {
 
 #### Usage scenarios
 
-- Display order confirmation after PO placement.
-- Update order tracking information.
-- Sync order data with external systems.
-- Trigger post-purchase workflows.
+- Initialize Order Drop-In containers with purchase order data.
+- Display purchase order details on the PO Details page.
+- Sync PO data after refresh events.
+- Update UI when PO data loads.
 
 ---
 
@@ -252,7 +251,8 @@ See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
 import { events } from '@dropins/tools/event-bus.js';
 
 events.on('purchase-order/placed', (payload) => {
-  const { purchaseOrderNumber, requiresApproval, status } = payload.data;
+  const { number: purchaseOrderNumber, status } = payload.data;
+  const requiresApproval = status !== "APPROVED";
   
   console.log(`Purchase order ${purchaseOrderNumber} placed with status: ${status}`);
   
@@ -286,7 +286,8 @@ async function completePurchaseOrderCheckout(cartId) {
     
     // Listen for successful placement
     events.once('purchase-order/placed', async (payload) => {
-      const { purchaseOrderNumber, requiresApproval, status } = payload.data;
+      const { number: purchaseOrderNumber, status } = payload.data;
+      const requiresApproval = status !== "APPROVED";
       
       // Close processing modal
       hideCheckoutModal();
@@ -388,7 +389,8 @@ class PurchaseOrderDashboard {
   }
   
   handleNewOrder(payload) {
-    const { purchaseOrderNumber, requiresApproval, status } = payload.data;
+    const { number: purchaseOrderNumber, status } = payload.data;
+    const requiresApproval = status !== "APPROVED";
     
     const order = {
       number: purchaseOrderNumber,
@@ -602,7 +604,7 @@ events.off('purchase-order/placed', handlePurchaseOrderPlaced);
 ```
 
 <Aside type="tip">
-The `purchase-order/data` event is frequently emitted. Consider debouncing or throttling your event handlers if they perform expensive operations.
+Event listeners remain active until explicitly removed with `events.off()`. Clean up listeners when components unmount to prevent memory leaks.
 </Aside>
 
 <Aside type="note">
