@@ -108,9 +108,10 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 
     const props = [];
 
-    // Remove JSDoc comments from interface content to avoid parsing them as properties
+    // Remove JSDoc comments and inline comments from interface content to avoid parsing them as properties
     // Keep the original for JSDoc extraction later
-    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
+    let cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, ''); // Remove JSDoc
+    cleanedContent = cleanedContent.replace(/\/\/.*$/gm, ''); // Remove inline comments
 
     // Parse properties with balanced brace/bracket/paren tracking
     // This handles complex nested types like (params: { foo: Bar, baz: Qux }) => void
