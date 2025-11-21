@@ -213,13 +213,47 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 
         props.push({
             name: propertyName,
-            type: type,
+            type: simplifyType(type),
             required,
             description
         });
     }
 
     return props;
+}
+
+/**
+ * Simplify TypeScript type for display in documentation tables
+ * 
+ * Converts complex function signatures to simple "function" label
+ * for better readability in configuration tables.
+ * 
+ * @param {string} type - TypeScript type string
+ * @returns {string} Simplified type
+ * 
+ * @example
+ * simplifyType('() => void') // Returns: 'function'
+ * simplifyType('(item: Item) => string') // Returns: 'function'
+ * simplifyType('string') // Returns: 'string'
+ * simplifyType('boolean') // Returns: 'boolean'
+ */
+export function simplifyType(type) {
+    if (!type) return type;
+    
+    const trimmedType = type.trim();
+    
+    // Check if this is a function type:
+    // - Arrow functions: () => void, (x: string) => number
+    // - Function keyword: Function, (() => void) | undefined
+    if (
+        trimmedType.includes('=>') ||
+        trimmedType === 'Function' ||
+        /^\([^)]*\)\s*=>/.test(trimmedType)
+    ) {
+        return 'function';
+    }
+    
+    return type;
 }
 
 /**
