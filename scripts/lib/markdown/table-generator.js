@@ -11,6 +11,8 @@
  * - Consistent column formatting
  */
 
+import { simplifyType } from '../react/props-extractor.js';
+
 /**
  * Sanitize text for safe use in markdown table cells
  * 
@@ -317,7 +319,9 @@ export function generateSlotsTable(slots) {
 
     for (const slot of slots) {
         const name = `\`${slot.name}\``;
-        const type = `\`${sanitizeText(slot.type)}\``;
+        // Simplify complex slot types before sanitizing
+        const simplifiedType = simplifyType(slot.type);
+        const type = `\`${sanitizeText(simplifiedType)}\``;
         const required = slot.required ? 'Yes' : 'No';
         const description = sanitizeText(slot.description || '');
         table += `| ${name} | ${type} | ${required} | ${description} |\n`;
