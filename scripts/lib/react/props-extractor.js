@@ -292,9 +292,17 @@ export function extractSlotsFromInterface(interfaceContent) {
         
         // Case 1: Property is named exactly "slots" - extract nested slots
         if (propName === 'slots' && prop.type.trim().startsWith('{')) {
-            // Parse the nested object to extract individual slots
-            const nestedSlots = parsePropsInterface(prop.type, prop.type, { includeSlots: true });
-            extractedSlots.push(...nestedSlots);
+            // Extract content between the braces of the nested object
+            const typeStr = prop.type.trim();
+            const firstBrace = typeStr.indexOf('{');
+            const lastBrace = typeStr.lastIndexOf('}');
+            
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                const nestedContent = typeStr.substring(firstBrace + 1, lastBrace);
+                // Parse the nested object content to extract individual slots
+                const nestedSlots = parsePropsInterface(nestedContent, nestedContent, { includeSlots: true });
+                extractedSlots.push(...nestedSlots);
+            }
         }
         // Case 2: Property name contains "slot" but isn't exactly "slots"
         else if (propName.includes('slot') && propName !== 'slots') {
