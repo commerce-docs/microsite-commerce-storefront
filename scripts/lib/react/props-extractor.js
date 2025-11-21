@@ -225,7 +225,7 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 /**
  * Simplify TypeScript type for display in documentation tables
  * 
- * Converts complex function signatures to simple "function" label
+ * Converts complex function signatures and generic types to simple labels
  * for better readability in configuration tables.
  * 
  * @param {string} type - TypeScript type string
@@ -234,8 +234,8 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
  * @example
  * simplifyType('() => void') // Returns: 'function'
  * simplifyType('(item: Item) => string') // Returns: 'function'
+ * simplifyType('SlotProps<ComplexType>') // Returns: 'SlotProps'
  * simplifyType('string') // Returns: 'string'
- * simplifyType('boolean') // Returns: 'boolean'
  */
 export function simplifyType(type) {
     if (!type) return type;
@@ -253,13 +253,20 @@ export function simplifyType(type) {
         return 'function';
     }
     
+    // Simplify SlotProps with complex generics: SlotProps<ComplexType> → SlotProps
+    if (trimmedType.startsWith('SlotProps<')) {
+        return 'SlotProps';
+    }
+    
     return type;
 }
 
 /**
  * Extract slots from a Props interface
  * 
- * Specifically looks for properties with "slot" in the name.
+ * Handles two patterns:
+ * 1. Direct slot properties: headerSlot?: SlotProps;
+ * 2. Nested slots object: slots?: { Header?: SlotProps; Footer?: SlotProps; }
  * 
  * @param {string} interfaceContent - Content between the interface braces
  * @returns {Array<Object>} Array of slot objects
@@ -267,23 +274,35 @@ export function simplifyType(type) {
  * @example
  * const interfaceContent = `
  *   headerSlot?: SlotProps;
- *   footerSlot?: SlotProps;
- *   sku: string;
+ *   slots?: { Header?: SlotProps; Footer?: SlotProps; };
  * `;
  * extractSlotsFromInterface(interfaceContent)
  * // Returns: [
  * //   { name: 'headerSlot', type: 'SlotProps', required: false },
- * //   { name: 'footerSlot', type: 'SlotProps', required: false }
+ * //   { name: 'Header', type: 'SlotProps', required: false },
+ * //   { name: 'Footer', type: 'SlotProps', required: false }
  * // ]
  */
 export function extractSlotsFromInterface(interfaceContent) {
-    // Reuse parsePropsInterface with includeSlots: true for consistent parsing
     const allProps = parsePropsInterface(interfaceContent, interfaceContent, { includeSlots: true });
+    const extractedSlots = [];
 
-    // Filter to only properties with "Slot" in the name
-    const slots = allProps.filter(prop => prop.name.toLowerCase().includes('slot'));
+    for (const prop of allProps) {
+        const propName = prop.name.toLowerCase();
+        
+        // Case 1: Property is named exactly "slots" - extract nested slots
+        if (propName === 'slots' && prop.type.trim().startsWith('{')) {
+            // Parse the nested object to extract individual slots
+            const nestedSlots = parsePropsInterface(prop.type, prop.type, { includeSlots: true });
+            extractedSlots.push(...nestedSlots);
+        }
+        // Case 2: Property name contains "slot" but isn't exactly "slots"
+        else if (propName.includes('slot') && propName !== 'slots') {
+            extractedSlots.push(prop);
+        }
+    }
 
-    return slots;
+    return extractedSlots;
 }
 
 /**
