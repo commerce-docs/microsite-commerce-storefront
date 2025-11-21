@@ -76,6 +76,12 @@ export function generatePropertyDescription(propertyName, propertyType) {
         return `Callback function triggered when ${toReadable(action)}`;
     }
 
+    // Customization callbacks (setColumns, setRowsData, etc.)
+    if (propertyName.startsWith('set') && propertyType.includes('function')) {
+        const target = propertyName.substring(3);
+        return `Callback to customize ${toReadable(target)}`;
+    }
+
     // Boolean flags
     if (propertyType.includes('boolean')) {
         if (propertyName.startsWith('is')) {
