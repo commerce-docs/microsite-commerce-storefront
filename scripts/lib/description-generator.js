@@ -86,6 +86,10 @@ export function generatePropertyDescription(propertyName, propertyType) {
             const state = propertyName.substring(3);
             return `Whether ${toReadable(state)} is present`;
         }
+        if (propertyName.startsWith('with')) {
+            const feature = propertyName.substring(4);
+            return `Whether to include the ${toReadable(feature)}`;
+        }
         if (propertyName.startsWith('show')) {
             const element = propertyName.substring(4);
             return `Controls visibility of ${toReadable(element)}`;
