@@ -224,6 +224,8 @@ function scanForEvents(repoPath) {
                 '(', '-name', '*.ts', '-o', '-name', '*.tsx', ')',
                 '!', '-path', '*/node_modules/*',
                 '!', '-name', '*.test.*',
+                '!', '-name', '*.stories.*',
+                '!', '-name', '*.spec.*',
                 '!', '-name', '*.d.ts'
             ];
             files = execFileSync('find', findArgs, { encoding: 'utf8' })
@@ -233,6 +235,11 @@ function scanForEvents(repoPath) {
 
         files.forEach(file => {
             if (!existsSync(file)) return;
+
+            // Skip test and story files
+            if (file.includes('.test.') || file.includes('.stories.') || file.includes('.spec.')) {
+                return;
+            }
 
             const content = readFileSync(file, 'utf8');
             const relativePath = file.replace(repoPath, '').replace(/\\/g, '/');
