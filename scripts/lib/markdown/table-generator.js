@@ -302,10 +302,17 @@ export function generateConfigTable(options) {
  */
 export function generateSlotsTable(slots) {
     if (!slots || slots.length === 0) {
-        return '| No slots | - | - | - |\n| --- | --- | --- | --- |';
+        // Return properly formatted empty table with TableWrapper
+        let table = '<TableWrapper nowrap={[0]}>\n\n';
+        table += '| Slot | Type | Required | Description |\n';
+        table += '|------|------|----------|-------------|\n';
+        table += '| No slots | - | - | - |\n';
+        table += '\n</TableWrapper>';
+        return table;
     }
 
-    let table = '| Slot | Type | Required | Description |\n';
+    let table = '<TableWrapper nowrap={[0]}>\n\n';
+    table += '| Slot | Type | Required | Description |\n';
     table += '|------|------|----------|-------------|\n';
 
     for (const slot of slots) {
@@ -316,6 +323,7 @@ export function generateSlotsTable(slots) {
         table += `| ${name} | ${type} | ${required} | ${description} |\n`;
     }
 
+    table += '\n</TableWrapper>';
     return table;
 }
 
