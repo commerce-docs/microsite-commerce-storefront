@@ -240,9 +240,14 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
  */
 export function simplifyType(type) {
     if (!type) return type;
-    
+
     const trimmedType = type.trim();
-    
+
+    // Don't simplify object literals (they might contain nested functions)
+    if (trimmedType.startsWith('{')) {
+        return type;
+    }
+
     // Check if this is a function type:
     // - Arrow functions: () => void, (x: string) => number
     // - Function keyword: Function, (() => void) | undefined
@@ -253,12 +258,12 @@ export function simplifyType(type) {
     ) {
         return 'function';
     }
-    
+
     // Simplify SlotProps with complex generics: SlotProps<ComplexType> → SlotProps
     if (trimmedType.startsWith('SlotProps<')) {
         return 'SlotProps';
     }
-    
+
     return type;
 }
 
@@ -290,14 +295,14 @@ export function extractSlotsFromInterface(interfaceContent) {
 
     for (const prop of allProps) {
         const propName = prop.name.toLowerCase();
-        
+
         // Case 1: Property is named exactly "slots" - extract nested slots
         if (propName === 'slots' && prop.type.trim().startsWith('{')) {
             // Extract content between the braces of the nested object
             const typeStr = prop.type.trim();
             const firstBrace = typeStr.indexOf('{');
             const lastBrace = typeStr.lastIndexOf('}');
-            
+
             if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
                 const nestedContent = typeStr.substring(firstBrace + 1, lastBrace);
                 // Parse the nested object content to extract individual slots
