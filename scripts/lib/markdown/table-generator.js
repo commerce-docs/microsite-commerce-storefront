@@ -117,31 +117,31 @@ export function generatePropertyTable(items, options = {}) {
     if (!items || items.length === 0) {
         // Return a properly formatted table with TableWrapper and headers
         let table = '';
-        
+
         // Add TableWrapper if nowrap specified
         if (nowrapColumns.length > 0) {
             const nowrapArray = JSON.stringify(nowrapColumns);
             table += `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
         }
-        
+
         // Add header row
         table += includeRequired
             ? '| Parameter | Type | Req? | Description |\n'
             : '| Parameter | Type | Description |\n';
-        
+
         table += includeRequired
             ? '|---|---|---|---|\n'
             : '|---|---|---|\n';
-        
+
         // Add single row with message
         const requiredCol = includeRequired ? ' - |' : '';
         table += `| ${emptyMessage} | - |${requiredCol} - |\n`;
-        
+
         // Close TableWrapper if opened
         if (nowrapColumns.length > 0) {
             table += '\n</TableWrapper>';
         }
-        
+
         return table;
     }
 
@@ -303,9 +303,20 @@ export function generateConfigTable(options) {
  * @returns {string} Markdown table
  */
 export function generateSlotsTable(slots) {
+    // Determine which columns should nowrap based on type length
+    // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+    const hasOnlyShortTypes = slots && slots.length > 0 && slots.every(slot => {
+        if (!slot.type) return true;
+        const simplifiedType = simplifyType(slot.type);
+        return simplifiedType.length <= 20;
+    });
+
+    const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+    const nowrapArray = JSON.stringify(nowrapColumns);
+
     if (!slots || slots.length === 0) {
         // Return properly formatted empty table with TableWrapper
-        let table = '<TableWrapper nowrap={[0]}>\n\n';
+        let table = `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
         table += '| Slot | Type | Required | Description |\n';
         table += '|------|------|----------|-------------|\n';
         table += '| No slots | - | - | - |\n';
@@ -313,7 +324,7 @@ export function generateSlotsTable(slots) {
         return table;
     }
 
-    let table = '<TableWrapper nowrap={[0]}>\n\n';
+    let table = `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
     table += '| Slot | Type | Required | Description |\n';
     table += '|------|------|----------|-------------|\n';
 
