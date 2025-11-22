@@ -250,10 +250,12 @@ function generateSlotsContent(containerName, slots) {
         return 'This container does not expose any customizable slots.';
     }
 
-    // Add descriptions to slots for the table
+    // Add empty descriptions to slots
+    // Generic descriptions like "Custom slot for rendering X" are not helpful
+    // Developers can infer purpose from the slot name itself
     const slotsWithDescriptions = slots.map(slot => ({
         ...slot,
-        description: `Custom slot for rendering ${slot.name.replace(/Slot$/, '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`
+        description: '' // Leave blank - slot name is self-documenting
     }));
 
     let content = 'This container exposes the following slots for customization:\n\n';
