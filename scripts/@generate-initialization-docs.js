@@ -535,7 +535,7 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
             name: prop.name,
             type: displayType,
             required: prop.required,
-            description: enrichedDesc || `Configuration for ${prop.name}.`
+            description: enrichedDesc || '' // Leave blank if no enrichment - parameter name is self-documenting
         });
     });
 
