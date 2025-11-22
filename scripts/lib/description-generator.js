@@ -15,6 +15,7 @@
 
 /**
  * Convert camelCase or PascalCase to human-readable lowercase string
+ * Handles acronyms (ID, UID, API, URL, etc.) correctly
  * 
  * @param {string} str - String to convert
  * @returns {string} Human-readable string
@@ -22,12 +23,30 @@
  * @example
  * toReadable('productSku') // Returns: 'product sku'
  * toReadable('isEnabled') // Returns: 'is enabled'
+ * toReadable('approvalRuleID') // Returns: 'approval rule ID'
+ * toReadable('cartUID') // Returns: 'cart UID'
+ * toReadable('SKU') // Returns: 'SKU'
+ * toReadable('useACDL') // Returns: 'use ACDL'
  */
 export function toReadable(str) {
+    // Handle all-caps inputs first (like SKU, HTML, ACDL)
+    if (str === str.toUpperCase() && /^[A-Z]+$/.test(str)) {
+        return str; // Return as-is for all-caps acronyms
+    }
+
     return str
-        .replace(/([A-Z])/g, ' $1')
+        // Insert space before uppercase letters that are followed by lowercase letters
+        // This handles: "camelCase" -> "camel Case"
+        .replace(/([A-Z])([a-z])/g, ' $1$2')
+        // Insert space before uppercase letters that follow lowercase letters
+        // This handles: "approvalRule" -> "approval Rule"
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        // Keep consecutive uppercase letters together (acronyms like ID, UID, API)
+        // The above rules already handle this correctly
         .toLowerCase()
-        .trim();
+        .trim()
+        // Fix common acronyms to be uppercase
+        .replace(/\b(id|uid|url|api|sdk|ui|ux|html|css|json|xml|http|https|ssh|ftp|sku|acdl)\b/g, match => match.toUpperCase());
 }
 
 /**

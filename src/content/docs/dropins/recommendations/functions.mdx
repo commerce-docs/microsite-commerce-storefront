@@ -9,8 +9,6 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-
-
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
@@ -20,8 +18,6 @@ The Recommendations drop-in provides API functions that enable you to programmat
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.1.1</strong>
 </div>
-
-{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
 <TableWrapper nowrap={[0]}>
 
@@ -34,51 +30,72 @@ The Recommendations drop-in provides API functions that enable you to programmat
 
 ## getRecommendations
 
-The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the GraphQL recommendations query and transforms the response into a standardized format. The function calls the [`recommendations`](https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/recommendations/) query.
+The `getRecommendations` function retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. The function calls the `GraphQL` recommendations query and transforms the response into a standardized format. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/products/queries/recommendations`/" text="recommendations" /> query.
 
-### Signature
-
-```typescript
-function getRecommendations(params: GetRecommendationsProps): Promise<RecommendationUnitModel[] | null>
+```ts
+const getRecommendations = async (
+  params: GetRecommendationsProps
+): Promise<RecommendationUnitModel[] | null>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including `pageType` (where recommendations are shown), `currentSku` (product being viewed), `cartSkus` (items in cart), `userPurchaseHistory` (previous purchases), and `userViewHistory` (previously viewed products). |
+| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
 
 </TableWrapper>
 
 ### Events
 
-Emits the `recommendations/data` event with the transformed recommendations data as the payload.
+Emits the [`recommendations/data`](/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
 
----
+### Returns
+
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
 
 ## publishRecsItemAddToCartClick
 
 The `publishRecsItemAddToCartClick` function publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.
 
-### Signature
-
-```typescript
-function publishRecsItemAddToCartClick(params: PublishParams): any
+```ts
+const publishRecsItemAddToCartClick = async (
+  params: PublishParams
+): any
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `params` | `PublishParams` | Yes | Parameters for the add-to-cart event including the recommended product details and recommendation unit information. |
 
 </TableWrapper>
 
----
+### Examples
+
+From product recommendations block:
+
+```js
+import { publishRecsItemAddToCartClick } from '@dropins/storefront-recommendations/api';
+
+publishRecsItemAddToCartClick({
+  recommendationUnit,
+  pagePlacement: 'product-list',
+  yOffsetTop: addToCart.getBoundingClientRect().top ?? 0,
+  yOffsetBottom:
+  addToCart.getBoundingClientRect().bottom ?? 0,
+  productId: ctx.index,
+})
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## Data Models
 
