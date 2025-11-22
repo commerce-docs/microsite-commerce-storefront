@@ -543,8 +543,13 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // If all types are short (≤20 chars), prevent wrapping on both name and type columns
     const hasOnlyShortTypes = allOptions.every(prop => {
         if (!prop.type) return true;
-        // Remove __LINK__ marker if present (it's not part of display text)
-        const cleanType = prop.type.replace('__LINK__', '');
+        // Remove __LINK__ marker and extract display text from markdown links
+        let cleanType = prop.type.replace('__LINK__', '');
+        // Extract display text from markdown link syntax: [`Text`](url) -> Text
+        const linkMatch = cleanType.match(/\[`?([^`\]]+)`?\]\([^)]+\)/);
+        if (linkMatch) {
+            cleanType = linkMatch[1]; // Extract just the display text
+        }
         return cleanType.length <= 20;
     });
 
