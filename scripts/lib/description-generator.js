@@ -15,6 +15,7 @@
 
 /**
  * Convert camelCase or PascalCase to human-readable lowercase string
+ * Handles acronyms (ID, UID, API, URL, etc.) correctly
  * 
  * @param {string} str - String to convert
  * @returns {string} Human-readable string
@@ -22,12 +23,30 @@
  * @example
  * toReadable('productSku') // Returns: 'product sku'
  * toReadable('isEnabled') // Returns: 'is enabled'
+ * toReadable('approvalRuleID') // Returns: 'approval rule ID'
+ * toReadable('cartUID') // Returns: 'cart UID'
+ * toReadable('SKU') // Returns: 'SKU'
+ * toReadable('useACDL') // Returns: 'use ACDL'
  */
 export function toReadable(str) {
+    // Handle all-caps inputs first (like SKU, HTML, ACDL)
+    if (str === str.toUpperCase() && /^[A-Z]+$/.test(str)) {
+        return str; // Return as-is for all-caps acronyms
+    }
+
     return str
-        .replace(/([A-Z])/g, ' $1')
+        // Insert space before uppercase letters that are followed by lowercase letters
+        // This handles: "camelCase" -> "camel Case"
+        .replace(/([A-Z])([a-z])/g, ' $1$2')
+        // Insert space before uppercase letters that follow lowercase letters
+        // This handles: "approvalRule" -> "approval Rule"
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        // Keep consecutive uppercase letters together (acronyms like ID, UID, API)
+        // The above rules already handle this correctly
         .toLowerCase()
-        .trim();
+        .trim()
+        // Fix common acronyms to be uppercase
+        .replace(/\b(id|uid|url|api|sdk|ui|ux|html|css|json|xml|http|https|ssh|ftp|sku|acdl)\b/g, match => match.toUpperCase());
 }
 
 /**
@@ -76,6 +95,12 @@ export function generatePropertyDescription(propertyName, propertyType) {
         return `Callback function triggered when ${toReadable(action)}`;
     }
 
+    // Customization callbacks (setColumns, setRowsData, etc.)
+    if (propertyName.startsWith('set') && propertyType.includes('function')) {
+        const target = propertyName.substring(3);
+        return `Callback to customize ${toReadable(target)}`;
+    }
+
     // Boolean flags
     if (propertyType.includes('boolean')) {
         if (propertyName.startsWith('is')) {
@@ -85,6 +110,10 @@ export function generatePropertyDescription(propertyName, propertyType) {
         if (propertyName.startsWith('has')) {
             const state = propertyName.substring(3);
             return `Whether ${toReadable(state)} is present`;
+        }
+        if (propertyName.startsWith('with')) {
+            const feature = propertyName.substring(4);
+            return `Whether to include the ${toReadable(feature)}`;
         }
         if (propertyName.startsWith('show')) {
             const element = propertyName.substring(4);

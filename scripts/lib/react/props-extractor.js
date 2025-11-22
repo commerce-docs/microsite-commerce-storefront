@@ -351,6 +351,9 @@ export function findPropsInTypeFiles(repoPath, componentName) {
         // Additional patterns for B2B drop-ins (e.g., Purchase Order)
         join(repoPath, 'src', 'types', 'containers', `${camelCaseName}.types.ts`),
         join(repoPath, 'src', 'types', 'containers', `${componentName}.types.ts`),
+        // Patterns with "Props" suffix in filename (e.g., approvalRuleDetailsProps.types.ts)
+        join(repoPath, 'src', 'types', 'containers', `${camelCaseName}Props.types.ts`),
+        join(repoPath, 'src', 'types', 'containers', `${componentName}Props.types.ts`),
         join(repoPath, 'src', 'types', 'components', `${camelCaseName}.types.ts`),
         join(repoPath, 'src', 'types', 'components', `${componentName}.types.ts`)
     ];
