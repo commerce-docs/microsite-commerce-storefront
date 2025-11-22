@@ -8,7 +8,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The `ApprovalRuleDetails` container displays and manages approval rule configuration including conditions, approvers, and rule metadata.
+
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.0.0-beta2</strong>
@@ -22,11 +22,11 @@ The `ApprovalRuleDetails` container provides the following configuration options
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `withHeader` | `boolean` | No |  |
-| `withWrapper` | `boolean` | No |  |
-| `className` | `string` | No | Additional CSS classes to apply to the container |
-| `approvalRuleID` | `string` | No |  |
-| `routeApprovalRulesList` | `function` | Yes |  |
+| `withHeader` | `boolean` | No | When true, displays the header section. Set to false when embedding the container within a layout that provides its own header. |
+| `withWrapper` | `boolean` | No | When true, wraps the container in a styled wrapper. Set to false for custom styling or when the container is embedded within another styled component. |
+| `className` | `string` | No | Additional CSS classes to apply to the container for custom styling. |
+| `approvalRuleID` | `string` | No | The unique identifier for the approval rule to display or manage. Required to fetch the correct data from the backend. |
+| `routeApprovalRulesList` | `function` | Yes | Function to generate the URL for navigating to the approval rules list. Use to implement custom routing logic or add query parameters. |
 
 </TableWrapper>
 
@@ -48,100 +48,6 @@ await provider.render(ApprovalRuleDetails, {
   withWrapper: true,
 })(block);
 ```
-
-
-## Complete integration example
-
-This example from the AEM boilerplate shows a complete implementation with authentication, permissions, and event handling:
-
-```js
-import { render as purchaseOrderRenderer } from '@dropins/storefront-purchase-order/render.js';
-import { ApprovalRuleDetails } from '@dropins/storefront-purchase-order/containers/ApprovalRuleDetails.js';
-import { PO_PERMISSIONS } from '@dropins/storefront-purchase-order/api.js';
-import { events } from '@dropins/tools/event-bus.js';
-import { getConfigValue } from '@dropins/tools/lib/aem/configs.js';
-import {
-  checkIsAuthenticated,
-  CUSTOMER_LOGIN_PATH,
-  CUSTOMER_ACCOUNT_PATH,
-  CUSTOMER_PO_RULES_PATH,
-  rootLink,
-} from '../../scripts/commerce.js';
-
-// Initialize dropins
-import '../../scripts/initializers/purchase-order.js';
-
-const redirectToLogin = () => {
-  window.location.href = rootLink(CUSTOMER_LOGIN_PATH);
-};
-
-const redirectToAccountDashboard = () => {
-  window.location.href = rootLink(CUSTOMER_ACCOUNT_PATH);
-};
-
-const redirectToApprovalRulesList = () => {
-  window.location.href = rootLink(CUSTOMER_PO_RULES_PATH);
-};
-
-/**
- * Renders the Approval Rule Details with permission checks
- */
-const renderApprovalRuleDetails = async (blockElement, permissions = {}) => {
-  const isB2BEnabled = getConfigValue('commerce-b2b-enabled');
-  const hasAccess = permissions.admin || permissions[PO_PERMISSIONS.VIEW_RULES];
-
-  // Check if user has access
-  if (!isB2BEnabled || !hasAccess) {
-    redirectToAccountDashboard();
-    return;
-  }
-
-  // Get rule ID from URL
-  const approvalRuleID = new URLSearchParams(window.location.search).get('ruleRef') || '';
-  if (!approvalRuleID) {
-    redirectToApprovalRulesList();
-    return;
-  }
-
-  // Render the container
-  await purchaseOrderRenderer.render(ApprovalRuleDetails, {
-    approvalRuleID,
-    withWrapper: false,
-    routeApprovalRulesList: () => rootLink(CUSTOMER_PO_RULES_PATH),
-  })(blockElement);
-};
-
-export default async function decorate(block) {
-  // Redirect guest users immediately
-  if (!checkIsAuthenticated()) {
-    redirectToLogin();
-    return;
-  }
-
-  // Get initial permissions from event bus
-  const initialPermissions = events.lastPayload('auth/permissions');
-  await renderApprovalRuleDetails(block, initialPermissions);
-
-  // React to permission updates (e.g., role changes)
-  events.on('auth/permissions', async (updatedPermissions) => {
-    await renderApprovalRuleDetails(block, updatedPermissions);
-  });
-
-  // Handle logout during interaction
-  events.on('authenticated', (isAuthenticated) => {
-    if (!isAuthenticated) redirectToLogin();
-  });
-}
-```
-
-### Key patterns demonstrated
-
-1. **Authentication Check**: Redirects unauthenticated users before rendering
-2. **Permission Validation**: Checks both B2B enablement and specific PO permissions
-3. **URL Parameter Handling**: Extracts `ruleRef` from query string
-4. **Event-Driven Updates**: Reacts to permission and authentication changes
-5. **Graceful Redirects**: Routes users appropriately based on access level
-6. **Initialization**: Imports initializer to set up the drop-in
 
 
 
