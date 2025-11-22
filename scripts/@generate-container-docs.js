@@ -315,7 +315,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             const cleanType = prop.type.replace('__LINK__', '');
             return cleanType.length <= 20;
         });
-        
+
         const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
 
         // Build configurations table using shared library
