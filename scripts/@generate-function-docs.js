@@ -1188,12 +1188,10 @@ function generateFunctionFromEnrichment(func, enrichment) {
     // Parameters table (if parameters exist)
     if (func.signature && func.signature.params && enrichment.parameters) {
         content += `### Parameters\n\n`;
-        content += `<TableWrapper nowrap={[0,1]}>\n\n`;
-        content += `| Parameter | Type | Required | Description |\n`;
-        content += `|---|---|---|---|\n`;
 
-        // Parse parameters from signature
+        // Parse parameters from signature to determine nowrap setting
         const paramPattern = /(\w+)(\??)\s*:\s*([^,)]+)/g;
+        const params = [];
         let match;
         while ((match = paramPattern.exec(func.signature.params)) !== null) {
             const paramName = match[1];
@@ -1202,7 +1200,32 @@ function generateFunctionFromEnrichment(func, enrichment) {
             const required = !optional;
             const description = enrichment.parameters[paramName]?.description || '';
 
-            content += `| \`${paramName}\` | \`${paramType}\` | ${required ? 'Yes' : 'No'} | ${description} |\n`;
+            params.push({ paramName, paramType, required, description });
+        }
+
+        // Determine which columns should nowrap based on type length
+        // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+        const hasOnlyShortTypes = params.every(p => {
+            if (!p.paramType) return true;
+            // Extract display text from markdown link if present
+            let cleanType = p.paramType;
+            const linkMatch = cleanType.match(/\[`([^`]+)`\]/);
+            if (linkMatch) {
+                cleanType = linkMatch[1];
+            }
+            return cleanType.length <= 20;
+        });
+
+        const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+        const nowrapArray = JSON.stringify(nowrapColumns);
+
+        content += `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
+        content += `| Parameter | Type | Required | Description |\n`;
+        content += `|---|---|---|---|\n`;
+
+        // Generate table rows
+        for (const p of params) {
+            content += `| \`${p.paramName}\` | \`${p.paramType}\` | ${p.required ? 'Yes' : 'No'} | ${p.description} |\n`;
         }
 
         content += `\n</TableWrapper>\n\n`;
