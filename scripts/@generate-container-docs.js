@@ -250,16 +250,10 @@ function generateSlotsContent(containerName, slots) {
         return 'This container does not expose any customizable slots.';
     }
 
-    // Add empty descriptions to slots
-    // Generic descriptions like "Custom slot for rendering X" are not helpful
-    // Developers can infer purpose from the slot name itself
-    const slotsWithDescriptions = slots.map(slot => ({
-        ...slot,
-        description: '' // Leave blank - slot name is self-documenting
-    }));
-
+    // Slots should already have descriptions from enrichment or be empty
+    // Don't override them - just pass through as-is
     let content = 'This container exposes the following slots for customization:\n\n';
-    content += generateSlotsTable(slotsWithDescriptions);
+    content += generateSlotsTable(slots);
 
     return content;
 }
@@ -325,22 +319,40 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 
         const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
 
+        // Enrich props with descriptions from enrichment file
+        const enrichedProps = containerInfo.props.map(prop => {
+            const enrichedDesc = enrichment?.parameters?.[prop.name]?.description;
+            return {
+                ...prop,
+                description: enrichedDesc || prop.description || ''
+            };
+        });
+
         // Build configurations table using shared library
-        const configurationsTable = generatePropertyTable(containerInfo.props, {
+        const configurationsTable = generatePropertyTable(enrichedProps, {
             nowrapColumns,
             emptyMessage: 'No configurations'
         });
 
+        // Enrich slots with descriptions from enrichment file
+        const enrichedSlots = containerInfo.slots.map(slot => {
+            const enrichedDesc = enrichment?.slots?.[slot.name]?.description;
+            return {
+                ...slot,
+                description: enrichedDesc || slot.description || ''
+            };
+        });
+
         // Build slots content
-        const slotsContent = generateSlotsContent(containerInfo.containerName, containerInfo.slots);
+        const slotsContent = generateSlotsContent(containerInfo.containerName, enrichedSlots);
 
         // Build usage example using boilerplate provider.render() pattern
         const usageExample = generateContainerExample({
             componentName: containerInfo.containerName,
             packageName: repoConfig.packageName,
-            props: containerInfo.props,
+            props: enrichedProps, // Use enriched props for better examples
             maxProps: 3,
-            includeSlots: containerInfo.slots.length > 0
+            includeSlots: enrichedSlots.length > 0
         });
 
         // Build complete example section if enrichment provides it
