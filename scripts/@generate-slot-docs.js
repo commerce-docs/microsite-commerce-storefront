@@ -32,8 +32,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadSlotEnrichments } from './lib/enrichment.js';
 import { updateSidebarForSlots } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { toKebabCase } from './lib/utils.js';
-import { cleanVersion } from './lib/utils.js';
+import { toKebabCase, cleanVersion, wrapCodeNames } from './lib/utils.js';
 
 // Import Phase 2 shared libraries
 import { extractPropsFromComponent, extractSlotsSection } from './lib/react/props-extractor.js';
@@ -142,7 +141,8 @@ function generateSlotsContent(containers, repoName, repoConfig, enrichmentData =
 
     for (const container of containers) {
         content += `## ${container.containerName} slots\n\n`;
-        content += `The slots for the \`${container.containerName}\` container allow you to customize its appearance and behavior.\n\n`;
+        const slotIntro = wrapCodeNames(`The slots for the ${container.containerName} container allow you to customize its appearance and behavior.`);
+        content += `${slotIntro}\n\n`;
         content += '```typescript\n';
         content += `interface ${container.containerName}Props {\n`;
         content += '  slots?: {\n';
@@ -178,8 +178,8 @@ function generateSlotsContent(containers, repoName, repoConfig, enrichmentData =
                 const slotEnrichment = enrichmentData?.[slotName];
 
                 if (slotEnrichment?.description) {
-                    // Use enriched description
-                    content += `${slotEnrichment.description}\n\n`;
+                    // Use enriched description (wrap code names)
+                    content += `${wrapCodeNames(slotEnrichment.description)}\n\n`;
 
                     // Add context properties section if available
                     if (slotEnrichment.context_properties && Object.keys(slotEnrichment.context_properties).length > 0) {
@@ -202,7 +202,8 @@ function generateSlotsContent(containers, repoName, repoConfig, enrichmentData =
                     }
                 } else {
                     // Fallback to generic description
-                    content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
+                    const genericDesc = wrapCodeNames(`The ${slotName} slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the ${container.containerName} container.`);
+                    content += `${genericDesc}\n\n`;
                 }
 
                 // Add example with proper imports based on boilerplate
@@ -223,8 +224,6 @@ function generateSlotsContent(containers, repoName, repoConfig, enrichmentData =
                 content += '```\n\n';
             }
         }
-
-        content += '---\n\n';
     }
 
     return content;
@@ -308,10 +307,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         }, 0);
 
         // Brief, focused intro for drop-ins with slots
-        const containerCount = containers.length;
-        const containerWord = containerCount === 1 ? 'container' : 'containers';
-        const slotWord = totalSlots === 1 ? 'slot' : 'slots';
-        introText = `The ${repoConfig.displayName} drop-in exposes **${totalSlots} ${slotWord}** in **${containerCount} ${containerWord}** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
+        introText = `The ${repoConfig.displayName} drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
     }
 
     // Replace placeholders
@@ -324,8 +320,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example
         'COMPLEX_EXAMPLE': '', // Removed - each slot now has its own example
         'SLOTS_CONTENT': slotsContent,
-        'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
-        'CONTAINER_COUNT': containers.length.toString()
+        'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
 }
 

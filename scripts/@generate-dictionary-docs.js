@@ -26,7 +26,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadDictionaryEnrichments } from './lib/enrichment.js';
 import { updateSidebarForDictionary } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 
 const projectRoot = getProjectRoot();
 
@@ -123,10 +123,43 @@ function scanForDictionary(repoPath) {
  * Recursively finds string values to create a meaningful example
  */
 /**
- * Create a simple custom value to demonstrate customization
+ * Create a realistic custom value to demonstrate customization
  */
 function createCustomValue(defaultValue, key) {
-    return 'Custom string';
+    const lowerKey = key.toLowerCase();
+
+    // Title variations
+    if (lowerKey.includes('title') || lowerKey.includes('heading')) {
+        return 'My Custom Title';
+    }
+
+    // Button text
+    if (lowerKey.includes('button') || lowerKey.includes('action') || lowerKey === 'submit') {
+        return 'Click Here';
+    }
+
+    // Labels
+    if (lowerKey.includes('label')) {
+        return 'Custom Label';
+    }
+
+    // Messages, descriptions, text
+    if (lowerKey.includes('message') || lowerKey.includes('description') || lowerKey.includes('text')) {
+        return 'Your custom message here';
+    }
+
+    // Empty states
+    if (lowerKey.includes('empty') || lowerKey.includes('no')) {
+        return 'No items found';
+    }
+
+    // Placeholders
+    if (lowerKey.includes('placeholder')) {
+        return 'Enter text here';
+    }
+
+    // Default fallback - keep it simple
+    return 'Custom value';
 }
 
 function generateCustomizationExample(dictionaryJson) {
@@ -225,6 +258,15 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo
     const camelCaseKey = repoName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
     const dictionaryVarName = `${camelCaseKey}Dictionary`;
 
+    // Indent the custom example to align with en_US: in the template
+    // The template has en_US at 4 spaces indent, so we need to indent each line by 4 spaces
+    const indentedExample = customExample.split('\n').map((line, index) => {
+        // First line goes on same line as "en_US: ", so don't indent it
+        if (index === 0) return line;
+        // All other lines need 4 spaces of indent to align properly
+        return '    ' + line;
+    }).join('\n');
+
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
@@ -233,9 +275,8 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo
         'DROPIN_PACKAGE': repoConfig.packageName,
         'DROPIN_VERSION': cleanVersion(version),
         'DICTIONARY_JSON': dictionaryJson,
-        'CUSTOM_EXAMPLE': customExample,
-        'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
-        'KEY_COUNT': dictionaryData?.keyCount?.toString() || '0'
+        'CUSTOM_EXAMPLE': indentedExample,
+        'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
 }
 
