@@ -27,7 +27,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadInitializationEnrichments } from './lib/enrichment.js';
 import { updateSidebarForInitialization } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { generatePropertyTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
@@ -475,9 +475,10 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
         Object.keys(enrichmentData.models).forEach(modelName => {
             // Skip if already in models
             if (!models.find(m => m.name === modelName)) {
+                const desc = enrichmentData.models[modelName].description || `Data model for ${modelName}.`;
                 models.push({
                     name: modelName,
-                    description: enrichmentData.models[modelName].description || `Data model for ${modelName}.`
+                    description: wrapCodeNames(desc)
                 });
             }
         });
@@ -489,7 +490,10 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Add drop-in specific config props if they exist (skip langDefinitions and models as they're added as standardOptions)
     configProps.filter(p => p.name !== 'langDefinitions' && p.name !== 'models').forEach(prop => {
         // Check if enrichment has a description for this property
-        const enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
+        let enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
+        if (enrichedDesc) {
+            enrichedDesc = wrapCodeNames(enrichedDesc);
+        }
 
         let displayType = prop.type;
 
@@ -547,9 +551,10 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     const enrichedModels = models.map(model => {
         const enrichedDesc = enrichmentData?.models?.[model.name]?.description;
         const enrichedDef = enrichmentData?.models?.[model.name]?.definition;
+        const desc = enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`;
         return {
             ...model,
-            description: enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`,
+            description: wrapCodeNames(desc),
             definition: enrichedDef || model.definition || 'undefined'
         };
     });
@@ -609,7 +614,7 @@ No customizable models are available for this drop-in.
         const enrichedIntro = enrichmentData?.intro ||
             `Configure the **${repoConfig.displayName}** drop-in ${standardOptionsText.replace('beyond the standard', 'with')}. All configuration options are optional unless marked as required.`;
 
-        customConfigSection = `## Drop-in-specific configuration
+        customConfigSection = `## Drop-in configuration
 
 ${enrichedIntro}
 
@@ -701,12 +706,12 @@ ${configType.definition}
     }
 
     // Generate default config comment based on drop-in-specific options
-    const dropinSpecificOptions = configProps.filter(p => 
+    const dropinSpecificOptions = configProps.filter(p =>
         p.name !== 'langDefinitions' && p.name !== 'models'
     );
     let defaultConfigComment = '';
     if (dropinSpecificOptions.length > 0) {
-        const defaultValues = dropinSpecificOptions.map(opt => 
+        const defaultValues = dropinSpecificOptions.map(opt =>
             `  // ${opt.name}: undefined // See configuration options below`
         ).join('\n');
         defaultConfigComment = `// Drop-in-specific defaults:\n${defaultValues}`;
@@ -758,8 +763,11 @@ function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, 
     const versionDisplay = cleanVersion(version);
 
     // Use enrichment intro if available, otherwise use default text
-    const introText = enrichmentData?.intro ||
+    let introText = enrichmentData?.intro ||
         `The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.`;
+
+    // Wrap code names in backticks
+    introText = wrapCodeNames(introText);
 
     return `---
 title: ${repoConfig.displayName} initialization

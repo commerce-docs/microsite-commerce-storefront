@@ -9,8 +9,6 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-
-
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
@@ -18,31 +16,29 @@ import { Aside } from '@astrojs/starlight/components';
 The Checkout drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.0-beta1</strong>
+<strong>Version: 3.0.0-beta2</strong>
 </div>
-
-{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
 | --- | --- |
 | [`authenticateCustomer`](#authenticatecustomer) | API function for the drop-in.. |
-| [`estimateShippingMethods`](#estimateshippingmethods) | Calls the estimateShippingMethods mutation.. |
+| [`estimateShippingMethods`](#estimateshippingmethods) | Calls the `estimateShippingMethods` mutation.. |
 | [`getCart`](#getcart) | Retrieves the current cart's checkout data from Adobe Commerce. |
-| [`getCheckoutAgreements`](#getcheckoutagreements) | API function for the drop-in.. |
+| [`getCheckoutAgreements`](#getcheckoutagreements) | Returns a list with the available checkout agreements. |
 | [`getCompanyCredit`](#getcompanycredit) | API function for the drop-in.. |
 | [`getCustomer`](#getcustomer) | API function for the drop-in.. |
 | [`getNegotiableQuote`](#getnegotiablequote) | Retrieves a negotiable quote for B2B customers. |
-| [`getStoreConfig`](#getstoreconfig) | API function for the drop-in.. |
+| [`getStoreConfig`](#getstoreconfig) | The `storeConfig` query defines information about a store's configuration. |
 | [`getStoreConfigCache`](#getstoreconfigcache) | API function for the drop-in.. |
 | [`initializeCheckout`](#initializecheckout) | API function for the drop-in.. |
-| [`isEmailAvailable`](#isemailavailable) | Calls the isEmailAvailable query.. |
+| [`isEmailAvailable`](#isemailavailable) | Calls the `isEmailAvailable` query.. |
 | [`resetCheckout`](#resetcheckout) | API function for the drop-in.. |
-| [`setBillingAddress`](#setbillingaddress) | Calls the setBillingAddressOnCart mutation.. |
-| [`setGuestEmailOnCart`](#setguestemailoncart) | Calls the setGuestEmailOnCart mutation.. |
-| [`setPaymentMethod`](#setpaymentmethod) | Calls the setPaymentMethodOnCart mutation.. |
-| [`setShippingAddress`](#setshippingaddress) | Calls the setShippingAddressesOnCart mutation.. |
+| [`setBillingAddress`](#setbillingaddress) | Calls the `setBillingAddressOnCart` mutation.. |
+| [`setGuestEmailOnCart`](#setguestemailoncart) | Calls the `setGuestEmailOnCart` mutation.. |
+| [`setPaymentMethod`](#setpaymentmethod) | Calls the `setPaymentMethodOnCart` mutation.. |
+| [`setShippingAddress`](#setshippingaddress) | Calls the `setShippingAddressesOnCart` mutation.. |
 | [`setShippingMethods`](#setshippingmethods) | Sets one or more shipping methods on the cart. |
 | [`synchronizeCheckout`](#synchronizecheckout) | API function for the drop-in.. |
 
@@ -69,43 +65,49 @@ function authenticateCustomer(authenticated = false): Promise<any>
 
 ## estimateShippingMethods
 
-The `estimateShippingMethods` function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/) mutation.
+The `estimateShippingMethods` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods`/" text="estimateShippingMethods" /> mutation.
 
-### Signature
-
-```typescript
-function estimateShippingMethods(input?: EstimateShippingInput): Promise<ShippingMethod[] | undefined>
+```ts
+const estimateShippingMethods = async (
+  input?: EstimateShippingInput
+): Promise<ShippingMethod[] | undefined>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `input` | `EstimateShippingInput` | No | An object of type EstimateShippingInput, which contains a criteria object including the following fields: country_code, region_name, region_id, and zip. |
 
 </TableWrapper>
 
----
+### Events
 
-## getCart
-
-The `getCart` function retrieves the current cart's checkout data from Adobe Commerce. It automatically uses the cart ID from internal state and calls either the `getCart` or `customerCart` GraphQL query depending on authentication status. The returned data includes billing address, shipping addresses, available and selected payment methods, email, total quantity, and virtual cart status—all the information needed to complete the checkout process.
-
-### Signature
-
-```typescript
-function getCart(): Promise<any>
-```
+Emits the [`shipping/estimate`](/dropins/checkout/events/#shippingestimate-emits-and-listens) event.
 
 ### Returns
 
-a Cart model containing complete checkout information
+Returns an array of [`ShippingMethod`](#shippingmethod) objects or `null`.
 
----
+## getCart
+
+The `getCart` function retrieves the current cart's checkout data from Adobe Commerce. It automatically uses the cart ID from internal state and calls either the `getCart` or `customerCart` `GraphQL` query depending on authentication status. The returned data includes billing address, shipping addresses, available and selected payment methods, email, total quantity, and virtual cart status—all the information needed to complete the checkout process.
+
+```ts
+const getCart = async (): Promise<any>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a [`Cart`](#cart) model containing complete checkout information.
 
 ## getCheckoutAgreements
+
+The `getCheckoutAgreements` function returns a list with the available checkout agreements. Each agreement has a name and the mode (manual or automatic).
 
 ```ts
 const getCheckoutAgreements = async (): Promise<CheckoutAgreement[]>
@@ -118,8 +120,6 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns an array of [`CheckoutAgreement`](#checkoutagreement) objects.
-
----
 
 ## getCompanyCredit
 
@@ -135,8 +135,6 @@ Does not emit any drop-in events.
 
 Returns [`CompanyCredit`](#companycredit) or `null`.
 
----
-
 ## getCustomer
 
 ```ts
@@ -151,31 +149,35 @@ Does not emit any drop-in events.
 
 Returns [`Customer`](#customer) or `null`.
 
----
-
 ## getNegotiableQuote
 
-The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. The function calls the [`negotiableQuote`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/negotiable-quote/) query.
+The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/queries/negotiable-quote`/" text="negotiableQuote" /> query.
 
-### Signature
-
-```typescript
-function getNegotiableQuote(input: GetNegotiableQuoteInput = {}): Promise<any>
+```ts
+const getNegotiableQuote = async (
+  input: GetNegotiableQuoteInput = {}
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `input` | `GetNegotiableQuoteInput = {}` | Yes | Input parameters including the quote UID to retrieve. |
+| `input` | `GetNegotiableQuoteInput` | No | Input parameters including the quote UID to retrieve. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## getStoreConfig
+
+The `storeConfig` query defines information about a store's configuration. You can query a non-default store by changing the header in your `GraphQL` request.
 
 ```ts
 const getStoreConfig = async (): Promise<any>
@@ -188,8 +190,6 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `void`.
-
----
 
 ## getStoreConfigCache
 
@@ -204,8 +204,6 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `void`.
-
----
 
 ## initializeCheckout
 
@@ -229,25 +227,29 @@ function initializeCheckout(input: InitializeInput): Promise<any>
 
 ## isEmailAvailable
 
-The `isEmailAvailable` function calls the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/is-email-available/) query.
+The `isEmailAvailable` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/queries/is-email-available`/" text="isEmailAvailable" /> query.
 
-### Signature
-
-```typescript
-function isEmailAvailable(email: string): Promise<EmailAvailability>
+```ts
+const isEmailAvailable = async (
+  email: string
+): Promise<EmailAvailability>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `email` | `string` | Yes | A string representing the email address to check for availability. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`EmailAvailability`](#emailavailability).
 
 ## resetCheckout
 
@@ -263,117 +265,135 @@ Emits the [`checkout/updated`](/dropins/checkout/events/#checkoutupdated-emits-a
 
 Returns `void`.
 
----
-
 ## setBillingAddress
 
-The `setBillingAddress` function calls the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address-on-cart/) mutation.
+The `setBillingAddress` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address-on-cart`/" text="setBillingAddressOnCart" /> mutation.
 
-### Signature
-
-```typescript
-function setBillingAddress(input: BillingAddressInputModel): Promise<any>
+```ts
+const setBillingAddress = async (
+  input: BillingAddressInputModel
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `input` | `BillingAddressInputModel` | Yes | The billing address to set on the cart, including street, city, region, country, and postal code. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## setGuestEmailOnCart
 
-The `setGuestEmailOnCart` function calls the [`setGuestEmailOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email-on-cart/) mutation.
+The `setGuestEmailOnCart` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email-on-cart`/" text="setGuestEmailOnCart" /> mutation.
 
-### Signature
-
-```typescript
-function setGuestEmailOnCart(email: string): Promise<any>
+```ts
+const setGuestEmailOnCart = async (
+  email: string
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `email` | `string` | Yes | The guest customer's email address for order confirmation and communication. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## setPaymentMethod
 
-The `setPaymentMethod` function calls the [`setPaymentMethodOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method-on-cart/) mutation.
+The `setPaymentMethod` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method-on-cart`/" text="setPaymentMethodOnCart" /> mutation.
 
-### Signature
-
-```typescript
-function setPaymentMethod(input: PaymentMethodInputModel): Promise<any>
+```ts
+const setPaymentMethod = async (
+  input: PaymentMethodInputModel
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `input` | `PaymentMethodInputModel` | Yes | The payment method code and additional payment data required by the selected payment processor. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## setShippingAddress
 
-The `setShippingAddress` function calls the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-addresses-on-cart/) mutation.
+The `setShippingAddress` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-addresses-on-cart`/" text="setShippingAddressesOnCart" /> mutation.
 
-### Signature
-
-```typescript
-function setShippingAddress(input: ShippingAddressInputModel): Promise<any>
+```ts
+const setShippingAddress = async (
+  input: ShippingAddressInputModel
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `input` | `ShippingAddressInputModel` | Yes | The shipping address to set on the cart, including street, city, region, country, and postal code. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## setShippingMethods
 
-The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the [`setShippingMethodsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-methods-on-cart/) mutation.
+The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-methods-on-cart`/" text="setShippingMethodsOnCart" /> mutation.
 
-### Signature
-
-```typescript
-function setShippingMethods(input: Array<ShippingMethodInputModel>): Promise<any>
+```ts
+const setShippingMethods = async (
+  input: Array<ShippingMethodInputModel>
+): Promise<any>
 ```
-
-### Parameters
 
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `input` | `Array<ShippingMethodInputModel>` | Yes | An array of shipping method objects, each containing a carrier code and method code. |
 
 </TableWrapper>
 
----
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## synchronizeCheckout
 
@@ -398,6 +418,25 @@ function synchronizeCheckout(data: SynchronizeInput): Promise<any>
 ## Data Models
 
 The following data models are used by functions in this drop-in.
+
+### Cart
+
+The `Cart` object is returned by the following functions: [`getCart`](#getcart).
+
+```ts
+interface Cart {
+  type: 'cart';
+  availablePaymentMethods?: PaymentMethod[];
+  billingAddress?: CartAddress;
+  email?: string;
+  id: string;
+  isEmpty: boolean;
+  isGuest: boolean;
+  isVirtual: boolean;
+  selectedPaymentMethod?: PaymentMethod;
+  shippingAddresses: CartShippingAddress[];
+}
+```
 
 ### CheckoutAgreement
 
