@@ -32,7 +32,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadFunctionEnrichments } from './lib/enrichment.js';
 import { updateSidebarForFunctions } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { getAllExamples } from './lib/example-extractor.js';
 import { validateAndMerge, validateFunctionSignature, createValidationReport } from './lib/source-validator.js';
 import { getParameterDescription } from './lib/parameter-patterns.js';
@@ -1348,7 +1348,10 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
             .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
             .replace(/\n/g, ' '); // Remove newlines
 
-        functionsTable += `| [\`${func.name}\`](#${func.name.toLowerCase()}) | ${cleanDesc} |\n`;
+        // Wrap code names in backticks
+        const wrappedDesc = wrapCodeNames(cleanDesc);
+
+        functionsTable += `| [\`${func.name}\`](#${func.name.toLowerCase()}) | ${wrappedDesc} |\n`;
     });
     functionsTable += '\n</TableWrapper>';
 
@@ -1485,6 +1488,8 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
         if (description) {
+            // Wrap code names in backticks
+            description = wrapCodeNames(description);
             // Convert external markdown links to Link components
             description = convertExternalLinks(description);
             functionsContent += `${description}\n\n`;
@@ -2050,9 +2055,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
 
         // ALWAYS add Returns section
         functionsContent += `### Returns\n\n${returnsContent}\n\n`;
-
-        // Add separator between functions
-        functionsContent += `---\n\n`;
 
         // Note: We don't append funcContent here anymore
         // The description from original MDX is already extracted via cleanFunctionDescription()

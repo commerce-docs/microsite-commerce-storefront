@@ -34,7 +34,7 @@ const { join, basename, dirname } = path;
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { insertSidebarEntry } from './lib/sidebar.js';
 import { replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { logger } from './lib/logger.js';
 
 const projectRoot = getProjectRoot();
@@ -783,18 +783,47 @@ function generateCustomCSSExamples(stylesData, dropinName) {
     // Select up to 3 properties to show in the example
     const propsToShow = bestProps.slice(0, 3);
 
-    examples.push(`\`\`\`css title="styles/styles.css" del={2-${1 + propsToShow.length}} ins={${2 + propsToShow.length}-${1 + propsToShow.length * 2}}`);
+    // Generate custom values and identify which properties actually change
+    const propsWithChanges = propsToShow.map(prop => {
+        const customValue = getCustomValue(prop.property, prop.value);
+        return {
+            ...prop,
+            customValue,
+            hasChange: customValue !== prop.value
+        };
+    }).filter(prop => prop.hasChange); // Only show properties that actually change
+
+    // If no properties change, fall back to showing the first property with a generic custom value
+    if (propsWithChanges.length === 0 && propsToShow.length > 0) {
+        const firstProp = propsToShow[0];
+        // Force a change by using a different color
+        propsWithChanges.push({
+            ...firstProp,
+            customValue: firstProp.value.includes('neutral')
+                ? firstProp.value.replace('neutral', 'brand')
+                : 'var(--color-brand-800)',
+            hasChange: true
+        });
+    }
+
+    // Limit to a maximum of 2 properties to keep examples concise
+    const finalPropsToShow = propsWithChanges.slice(0, 2);
+
+    if (finalPropsToShow.length === 0) {
+        return `Use the browser DevTools to inspect the rendered containers and identify the classes and properties you want to customize.`;
+    }
+
+    examples.push(`\`\`\`css title="styles/styles.css" del={2-${1 + finalPropsToShow.length}} ins={${2 + finalPropsToShow.length}-${1 + finalPropsToShow.length * 2}}`);
     examples.push(`${selectorToUse} {`);
 
     // Show original properties
-    propsToShow.forEach(prop => {
+    finalPropsToShow.forEach(prop => {
         examples.push(`  ${prop.property}: ${prop.value};`);
     });
 
     // Show customized properties
-    propsToShow.forEach(prop => {
-        const customValue = getCustomValue(prop.property, prop.value);
-        examples.push(`  ${prop.property}: ${customValue};`);
+    finalPropsToShow.forEach(prop => {
+        examples.push(`  ${prop.property}: ${prop.customValue};`);
     });
 
     examples.push(`}`);

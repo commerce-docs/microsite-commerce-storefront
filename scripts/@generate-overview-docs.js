@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { logger } from './lib/logger.js';
+import { wrapCodeNames } from './lib/utils.js';
 
 // Get drop-in name from command line
 const dropinName = process.argv[2];
@@ -55,7 +56,7 @@ const featuresTable = data.supported_features.map(item => {
 
 // Generate key events section (optional)
 const keyEventsSection = data.key_events ? data.key_events.map(event => {
-    let section = `### ${event.name}\n\n${event.description}\n`;
+    let section = `### ${event.name}\n\n${wrapCodeNames(event.description)}\n`;
 
     if (event.details) {
         section += '\n' + event.details.join('\n') + '\n';
@@ -66,7 +67,7 @@ const keyEventsSection = data.key_events ? data.key_events.map(event => {
 
 // Generate section topics (without internal links)
 const sectionTopics = data.section_topics.sections.map(section => {
-    return `### ${section.title}\n\n${section.description}\n`;
+    return `### ${section.title}\n\n${wrapCodeNames(section.description)}\n`;
 }).join('\n');
 
 // Convert kebab-case to Title Case for display

@@ -12,7 +12,7 @@ import { Aside } from '@astrojs/starlight/components';
 The **User Account initializer** configures user account management features including profile editing, address management, and account settings. Use initialization to customize account data models and user interface behaviors.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.0-beta1</strong>
+<strong>Version: 3.0.0-beta2</strong>
 </div>
 
 
@@ -31,20 +31,26 @@ The following table describes the configuration options available for the **User
 
 </TableWrapper>
 
-## Basic initialization
+## Default configuration
 
-Initialize the drop-in with default settings:
+The initializer runs with these defaults when no configuration is provided:
 
 ```javascript title="scripts/initializers/user-account.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-account';
 
-await initializers.mountImmediately(initialize, {});
+// All configuration options are optional
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {}, // Uses built-in English strings
+  models: {}, // Uses default data models
+  // Drop-in-specific defaults:
+  // authHeaderConfig: undefined // See configuration options below
+});
 ```
 
 ## Language definitions
 
-Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override the drop-in's default text.
+Override dictionary keys for localization or branding. The `langDefinitions` object maps locale keys to custom strings that override default text for the drop-in.
 
 ```javascript title="scripts/initializers/user-account.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -80,8 +86,8 @@ The following models can be customized through the `models` configuration option
 
 | Model | Description |
 |---|---|
-| [`OrderHistoryModel`](#orderhistorymodel) | Transforms OrderHistoryModel data from GraphQL. |
-| [`CustomerDataModelShort`](#customerdatamodelshort) | Transforms CustomerDataModelShort data from GraphQL. |
+| [`OrderHistoryModel`](#orderhistorymodel) | Transforms `OrderHistoryModel` data from `GraphQL`. |
+| [`CustomerDataModelShort`](#customerdatamodelshort) | Transforms `CustomerDataModelShort` data from `GraphQL`. |
 
 </TableWrapper>
 
@@ -98,7 +104,7 @@ const models = {
       customField: data?.custom_field,
       promotionBadge: data?.promotion?.label,
       // Transform existing fields
-      displayPrice: data?.price?.value ? `$${data.price.value}` : 'N/A',
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
     }),
   },
 };
@@ -106,7 +112,7 @@ const models = {
 await initializers.mountImmediately(initialize, { models });
 ```
 
-## Drop-in-specific configuration
+## Drop-in configuration
 
 The **User Account initializer** configures user account management features including profile editing, address management, and account settings. Use initialization to customize account data models and user interface behaviors.
 
