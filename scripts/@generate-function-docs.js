@@ -1609,9 +1609,20 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     });
                 });
 
+                // Determine which columns should nowrap based on type length
+                // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+                const hasOnlyShortTypes = tableItems.every(item => {
+                    if (!item.type) return true;
+                    // Remove __LINK__ marker if present (it's not part of display text)
+                    const cleanType = item.type.replace('__LINK__', '');
+                    return cleanType.length <= 20;
+                });
+
+                const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+
                 // Use shared library to generate table
                 functionsContent += generatePropertyTable(tableItems, {
-                    nowrapColumns: [0, 1]
+                    nowrapColumns
                 });
                 functionsContent += '\n\n';
             }
