@@ -307,9 +307,20 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
         const imageName = findImageForContainer(containerInfo.containerName, repoName, basePath);
         const hasImage = imageName !== null;
 
+        // Determine which columns should nowrap based on type length
+        // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+        const hasOnlyShortTypes = containerInfo.props.every(prop => {
+            if (!prop.type) return true;
+            // Remove __LINK__ marker if present (it's not part of display text)
+            const cleanType = prop.type.replace('__LINK__', '');
+            return cleanType.length <= 20;
+        });
+
+        const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+
         // Build configurations table using shared library
         const configurationsTable = generatePropertyTable(containerInfo.props, {
-            nowrapColumns: [0],
+            nowrapColumns,
             emptyMessage: 'No configurations'
         });
 
