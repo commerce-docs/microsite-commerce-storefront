@@ -1613,8 +1613,13 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                 // If all types are short (≤20 chars), prevent wrapping on both name and type columns
                 const hasOnlyShortTypes = tableItems.every(item => {
                     if (!item.type) return true;
-                    // Remove __LINK__ marker if present (it's not part of display text)
-                    const cleanType = item.type.replace('__LINK__', '');
+                    // Remove __LINK__ marker and extract display text from markdown links
+                    let cleanType = item.type.replace('__LINK__', '');
+                    // Extract display text from markdown link syntax: [`Text`](url) -> Text
+                    const linkMatch = cleanType.match(/\[`?([^`\]]+)`?\]\([^)]+\)/);
+                    if (linkMatch) {
+                        cleanType = linkMatch[1]; // Extract just the display text
+                    }
                     return cleanType.length <= 20;
                 });
 
