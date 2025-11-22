@@ -47,7 +47,7 @@ import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
 import { TypeExtractor } from './lib/core/type-extractor.js';
 import { CrossDropinResolver } from './lib/core/cross-dropin-resolver.js';
 import { generateNoEventsPage } from './lib/markdown/empty-state-generator.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -224,6 +224,8 @@ function scanForEvents(repoPath) {
                 '(', '-name', '*.ts', '-o', '-name', '*.tsx', ')',
                 '!', '-path', '*/node_modules/*',
                 '!', '-name', '*.test.*',
+                '!', '-name', '*.stories.*',
+                '!', '-name', '*.spec.*',
                 '!', '-name', '*.d.ts'
             ];
             files = execFileSync('find', findArgs, { encoding: 'utf8' })
@@ -233,6 +235,11 @@ function scanForEvents(repoPath) {
 
         files.forEach(file => {
             if (!existsSync(file)) return;
+
+            // Skip test and story files
+            if (file.includes('.test.') || file.includes('.stories.') || file.includes('.spec.')) {
+                return;
+            }
 
             const content = readFileSync(file, 'utf8');
             const relativePath = file.replace(repoPath, '').replace(/\\/g, '/');
@@ -828,6 +835,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 description += ' 🚧';
             }
 
+            // Wrap code names in backticks
+            description = wrapCodeNames(description);
+
             const anchor = eventNameToAnchor(eventName, 'emits');
             eventsTable += `| [${eventName}](#${anchor}) | Emits | ${description} |\n`;
         });
@@ -844,6 +854,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
                 description += ' 🚧';
             }
 
+            // Wrap code names in backticks
+            description = wrapCodeNames(description);
+
             const anchor = eventNameToAnchor(eventName, 'listens');
             eventsTable += `| [${eventName}](#${anchor}) | Listens | ${description} |\n`;
         });
@@ -859,6 +872,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
                 description += ' 🚧';
             }
+
+            // Wrap code names in backticks
+            description = wrapCodeNames(description);
 
             const anchor = eventNameToAnchor(eventName, 'emits-and-listens');
             eventsTable += `| [${eventName}](#${anchor}) | Emits and listens | ${description} |\n`;
@@ -932,6 +948,9 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             const generatedDescription = generateEventDescription(eventName, emits, listeners);
             description = getEventDescription(eventName, eventEnrichment, generatedDescription);
         }
+
+        // Wrap code names in backticks
+        description = wrapCodeNames(description);
 
         // Add implementation status note for documented-only events
         if (implementationStatus && implementationStatus.get(eventName) === 'documented-only') {
