@@ -313,10 +313,10 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             if (!prop.type) return true;
             // Remove __LINK__ marker and extract display text from markdown links
             let cleanType = prop.type.replace('__LINK__', '');
-            // Extract display text from markdown link syntax: [`Text`](url) -> Text
-            const linkMatch = cleanType.match(/\[`?([^`\]]+)`?\]\([^)]+\)/);
+            // Extract display text from markdown link: [`LangDefinitions`](#url) -> LangDefinitions
+            const linkMatch = cleanType.match(/\[`([^`]+)`\]/);
             if (linkMatch) {
-                cleanType = linkMatch[1]; // Extract just the display text
+                cleanType = linkMatch[1]; // Extract just the text between backticks
             }
             return cleanType.length <= 20;
         });
