@@ -32,7 +32,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadContainerEnrichments } from './lib/enrichment.js';
 import { updateSidebarForContainers } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion, toKebabCase, capitalize } from './lib/utils.js';
+import { cleanVersion, toKebabCase, capitalize, wrapCodeNames } from './lib/utils.js';
 import { logger } from './lib/logger.js';
 
 // Import Phase 2 shared libraries
@@ -52,19 +52,23 @@ const IMAGE_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];
 
 /**
  * Split long descriptions into two paragraphs for better readability
+ * and wrap code names in backticks
  * 
  * @param {string} description - The description text
- * @returns {string} - Description split into 2 paragraphs if long enough
+ * @returns {string} - Description split into 2 paragraphs if long enough, with code names in backticks
  */
 function splitDescription(description) {
     if (!description) return '';
 
+    // Wrap code names in backticks first
+    const wrappedDescription = wrapCodeNames(description);
+
     // Split by sentences (periods followed by space or end of string)
-    const sentences = description.match(/[^.!?]+[.!?]+/g) || [description];
+    const sentences = wrappedDescription.match(/[^.!?]+[.!?]+/g) || [wrappedDescription];
 
     if (sentences.length <= 2) {
         // Short description, keep as is
-        return description;
+        return wrappedDescription;
     }
 
     // Split roughly in half (first 2-3 sentences in first paragraph)
@@ -243,7 +247,7 @@ function scanForContainers(repoPath) {
  */
 function generateSlotsContent(containerName, slots) {
     if (slots.length === 0) {
-        return 'This container does not currently expose any customizable slots.';
+        return 'This container does not expose any customizable slots.';
     }
 
     // Add descriptions to slots for the table
@@ -335,7 +339,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
                 ce.keyPoints.forEach((point, index) => {
                     completeExample += `${index + 1}. ${point}\n`;
                 });
-                completeExample += `\n---\n`;
+                completeExample += `\n`;
             }
         }
 
@@ -458,11 +462,18 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
         if (!description) {
             description = '*Enrichment needed - add description to `_dropin-enrichments/' + repoName + '/containers.json`*';
         } else {
-            // Extract first sentence for the table
+            // Remove "The ContainerName container" prefix if present
+            description = description.replace(/^The\s+\w+\s+container\s+/i, '');
+
+            // Capitalize first letter after removing prefix
+            description = description.charAt(0).toUpperCase() + description.slice(1);
+
+            // Use full first sentence, aim for ~150 chars but don't truncate mid-sentence
             const firstSentence = description.split(/\.\s+/)[0];
-            description = firstSentence.length > 150
-                ? firstSentence.substring(0, 147) + '...'
-                : firstSentence + '.';
+            description = firstSentence.endsWith('.') ? firstSentence : firstSentence + '.';
+
+            // Wrap code names in backticks
+            description = wrapCodeNames(description);
         }
 
         containersTable += `| [${displayName}](/${basePath}/${repoName}/containers/${fileName}/) | ${description} |\n`;
@@ -471,8 +482,7 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
     const overviewContent = replacePlaceholders(overviewTemplate, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_VERSION': cleanVersion(version),
-        'CONTAINERS_LIST': containersTable,
-        'CONTAINER_COUNT': containersArray.length.toString()
+        'CONTAINERS_LIST': containersTable
     });
 
     const overviewPath = join(outputDir, 'index.mdx');

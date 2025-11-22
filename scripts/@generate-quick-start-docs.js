@@ -26,7 +26,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadInstallationEnrichments } from './lib/enrichment.js';
 import { updateSidebarForInstallation } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 
 const projectRoot = getProjectRoot();
 
@@ -173,7 +173,7 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     if (enrichmentData) {
         // Custom intro
         if (enrichmentData.intro) {
-            customIntro = enrichmentData.intro + '\n';
+            customIntro = wrapCodeNames(enrichmentData.intro) + '\n';
         }
 
         // Custom sections before steps
