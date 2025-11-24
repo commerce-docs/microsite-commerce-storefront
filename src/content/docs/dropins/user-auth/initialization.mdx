@@ -28,7 +28,7 @@ The following table describes the configuration options available for the **User
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
 | `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
-| `customerPermissionRoles` | `boolean` | No | Configuration for customerPermissionRoles. |
+| `customerPermissionRoles` | `boolean` | No | When `true`, fetches and caches customer role-based permissions during initialization and on auth state changes. Useful for B2B gating. Default: `false`. |
 
 </TableWrapper>
 
@@ -46,7 +46,7 @@ await initializers.mountImmediately(initialize, {
   models: {}, // Uses default data models
   // Drop-in-specific defaults:
   // authHeaderConfig: undefined // See configuration options below
-  // customerPermissionRoles: undefined // See configuration options below
+  // customerPermissionRoles: false // Enable to fetch role-based permissions
 });
 ```
 
@@ -170,6 +170,27 @@ Maps model names to transformer functions. Each transformer receives data from G
 models?: {
   [modelName: string]: Model<any>;
 };
+```
+
+### customerPermissionRoles
+
+Enables retrieval of customer role-based permissions.
+
+- When enabled, the drop-in fetches permissions on initialization (if a token is present) and on authentication state changes.
+- Permissions are cached and emitted via the `auth/permissions` event for other components or drop-ins to consume.
+- Default: `false`.
+
+```typescript
+customerPermissionRoles?: boolean;
+```
+
+```javascript
+// Example: consuming emitted permissions
+import { events } from '@adobe-commerce/event-bus';
+
+events.on('auth/permissions', (permissions) => {
+  // gate UI/actions based on permissions
+});
 ```
 
 
