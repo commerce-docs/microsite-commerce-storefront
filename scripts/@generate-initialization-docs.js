@@ -692,18 +692,18 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
         });
     }
 
-    // Add enrichment-only subsections for simple types (like boolean with detailed explanation)
+    // Add custom subsections from enrichment for simple types
     if (enrichmentData?.config) {
         Object.keys(enrichmentData.config).forEach(configName => {
             const enrichment = enrichmentData.config[configName];
-            // If enrichment has subsection content and it's not already in configTypesWithDefinitions
-            if (enrichment?.subsection && !configTypesWithDefinitions.find(c => c.name === configName)) {
-                configTypesWithDefinitions.push({
-                    name: enrichment.subsection.title || configName,
-                    description: '', // Content comes from subsection.content
-                    definition: '', // Will use custom content instead
-                    customContent: enrichment.subsection.content // Use this instead of auto-generated
-                });
+            if (enrichment?.subsection?.content) {
+                // Check if not already in configTypesWithDefinitions
+                if (!configTypesWithDefinitions.find(t => t.name === configName)) {
+                    configTypesWithDefinitions.push({
+                        name: configName,
+                        customContent: enrichment.subsection.content
+                    });
+                }
             }
         });
     }
@@ -723,7 +723,7 @@ ${configTypesWithDefinitions.map(configType => {
 
 ${enrichment.subsection.content}`;
             }
-            
+
             // Default format
             const anchor = configType.name.toLowerCase();
             
