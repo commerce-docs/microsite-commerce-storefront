@@ -67,6 +67,7 @@ sidebar:
 import { Badge } from '@astrojs/starlight/components';
 import { Aside } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 
 ${intro}
 
@@ -81,10 +82,17 @@ ${note.content}
 `;
     }
 
+    // Get table settings
+    const tableSettings = data.tableSettings || {};
+    const featuresNowrap = tableSettings.features?.nowrap || [0, 1];
+    const containersNowrap = tableSettings.containers?.nowrap || [0];
+
     // Add features table
     content += `## Supported Commerce features
 
 The B2B payment method containers support the following Adobe Commerce features:
+
+<TableWrapper nowrap={[${featuresNowrap.join(', ')}]}>
 
 | Feature | Status |
 | ------- | ------ |
@@ -94,10 +102,16 @@ The B2B payment method containers support the following Adobe Commerce features:
         content += `| ${feature} | <Badge text="${status}" variant="tip" /> |\n`;
     });
 
+    content += `\n</TableWrapper>
+
+`;
+
     // Add containers section
-    content += `\n## B2B payment methods
+    content += `## B2B payment methods
 
 The Checkout drop-in includes specialized payment method containers designed for B2B purchasing workflows:
+
+<TableWrapper nowrap={[${containersNowrap.join(', ')}]}>
 
 | Container | Description |
 |-----------|-------------|
@@ -107,8 +121,12 @@ The Checkout drop-in includes specialized payment method containers designed for
         content += `| [${name}](${link}) | ${description} |\n`;
     });
 
+    content += `\n</TableWrapper>
+
+`;
+
     if (containersNote) {
-        content += `\n${containersNote}\n`;
+        content += `${containersNote}\n`;
     }
 
     return content;
