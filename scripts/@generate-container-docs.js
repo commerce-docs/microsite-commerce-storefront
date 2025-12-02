@@ -414,6 +414,27 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             );
         }
 
+        // Add optional configuration note from enrichment
+        if (enrichment?.configNote) {
+            // Check if Aside is already imported
+            const hasAsideImport = mdxContent.includes("import { Aside }");
+
+            // Add Aside import if not present
+            if (!hasAsideImport) {
+                mdxContent = mdxContent.replace(
+                    /(import.*from '@astrojs\/starlight\/components';)/,
+                    `import { Aside } from '@astrojs/starlight/components';\n$1`
+                );
+            }
+
+            // Insert Aside note after ## Configuration heading
+            const configNote = `\n<Aside type="note">\n${enrichment.configNote}\n</Aside>\n`;
+            mdxContent = mdxContent.replace(
+                /(^## Configuration\n\n)/m,
+                `$1${configNote}\n`
+            );
+        }
+
         // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
         // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
         // Check both repo-level B2B and container-level b2b flag
