@@ -27,8 +27,8 @@ The following table describes the configuration options available for the **User
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
 | `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
-| `customerPermissionRoles` | `boolean` | No | Configuration for customerPermissionRoles. |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (for example, 'Bearer', 'Token'). |
+| `customerPermissionRoles` | `boolean` | No | Fetches and caches customer role-based permissions during initialization and on authentication state changes when set to \`true\`. Useful for B2B feature gating. |
 
 </TableWrapper>
 
@@ -46,7 +46,7 @@ await initializers.mountImmediately(initialize, {
   models: {}, // Uses default data models
   // Drop-in-specific defaults:
   // authHeaderConfig: undefined // See configuration options below
-  // customerPermissionRoles: undefined // See configuration options below
+  // customerPermissionRoles: false // Enable to fetch role-based permissions
 });
 ```
 
@@ -141,7 +141,7 @@ The following TypeScript definitions show the structure of each configuration ob
 
 ### authHeaderConfig
 
-Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token').
+Configures authentication header format for API requests including custom header names and token prefix format (for example, 'Bearer', 'Token').
 
 ```typescript
 authHeaderConfig?: {
@@ -170,6 +170,27 @@ Maps model names to transformer functions. Each transformer receives data from G
 models?: {
   [modelName: string]: Model<any>;
 };
+```
+
+### customerPermissionRoles
+
+Enables retrieval of customer role-based permissions.
+
+- When enabled, the drop-in fetches permissions on initialization (if a token is present) and on authentication state changes.
+- Permissions are cached and emitted via the `auth/permissions` event for other components or drop-ins to consume.
+- Default: `false`.
+
+```typescript
+customerPermissionRoles?: boolean;
+```
+
+```javascript
+// Example: consuming emitted permissions
+import { events } from '@adobe-commerce/event-bus';
+
+events.on('auth/permissions', (permissions) => {
+  // Gate UI or actions based on permissions
+});
 ```
 
 
