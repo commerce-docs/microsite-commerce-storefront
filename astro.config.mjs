@@ -760,6 +760,20 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/dropins-b2b/' },
                       {
+                        label: 'Checkout',
+                        collapsed: true,
+                        items: [
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'PaymentOnAccount', link: '/dropins-b2b/checkout/containers/payment-on-account/' },
+                              { label: 'PurchaseOrder', link: '/dropins-b2b/checkout/containers/purchase-order/' },
+                            ],
+                          },
+                        ],
+                      },
+                      {
                         label: 'Company Management',
                         collapsed: true,
                         items: [
@@ -807,20 +821,6 @@ async function config() {
                           { label: 'Slots', link: '/dropins-b2b/company-switcher/slots/' },
                           { label: 'Styles', link: '/dropins-b2b/company-switcher/styles/' },
                           { label: 'Dictionary', link: '/dropins-b2b/company-switcher/dictionary/' },
-                        ],
-                      },
-                      {
-                        label: 'Checkout (B2B)',
-                        collapsed: true,
-                        items: [
-                          {
-                            label: 'Containers',
-                            collapsed: false,
-                            items: [
-                              { label: 'PaymentOnAccount', link: '/dropins-b2b/checkout/containers/payment-on-account/' },
-                              { label: 'PurchaseOrder', link: '/dropins-b2b/checkout/containers/purchase-order/' },
-                            ],
-                          },
                         ],
                       },
                       {
