@@ -716,6 +716,15 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 The following TypeScript definitions show the structure of each configuration object:
 
 ${configTypesWithDefinitions.map(configType => {
+            // Check for custom subsection content from enrichment
+            const enrichment = enrichmentData?.config?.[configType.name];
+            if (enrichment?.subsection?.content) {
+                return `### ${configType.name}
+
+${enrichment.subsection.content}`;
+            }
+            
+            // Default format
             const anchor = configType.name.toLowerCase();
             
             // If has custom content from enrichment, use that instead
@@ -753,11 +762,10 @@ ${configType.definition}
     let defaultConfigComment = '';
     if (dropinSpecificOptions.length > 0) {
         const defaultValues = dropinSpecificOptions.map(opt => {
-            // Check if enrichment specifies a default value for this property
-            const enrichedDefault = enrichmentData?.config?.[opt.name]?.defaultValue;
-            const defaultValue = enrichedDefault !== undefined ? enrichedDefault : 'undefined';
-            const comment = enrichmentData?.config?.[opt.name]?.defaultComment || 'See configuration options below';
-            return `  // ${opt.name}: ${defaultValue} // ${comment}`;
+            const enrichment = enrichmentData?.config?.[opt.name];
+            const defaultValue = enrichment?.defaultValue !== undefined ? enrichment.defaultValue : 'undefined';
+            const defaultComment = enrichment?.defaultComment ? ` // ${enrichment.defaultComment}` : ' // See configuration options below';
+            return `  // ${opt.name}: ${defaultValue}${defaultComment}`;
         }).join('\n');
         defaultConfigComment = `// Drop-in-specific defaults:\n${defaultValues}`;
     }
