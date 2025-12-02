@@ -763,6 +763,7 @@ async function config() {
                         label: 'Checkout',
                         collapsed: true,
                         items: [
+                          { label: 'Overview', link: '/dropins-b2b/checkout/' },
                           {
                             label: 'Containers',
                             collapsed: false,
