@@ -810,6 +810,20 @@ async function config() {
                         ],
                       },
                       {
+                        label: 'Checkout (B2B)',
+                        collapsed: true,
+                        items: [
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'PaymentOnAccount', link: '/dropins-b2b/checkout/containers/payment-on-account/' },
+                              { label: 'PurchaseOrder', link: '/dropins-b2b/checkout/containers/purchase-order/' },
+                            ],
+                          },
+                        ],
+                      },
+                      {
                         label: 'Purchase Order',
                         collapsed: true,
                         items: [
