@@ -416,13 +416,19 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 
         // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
         // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
-        if (repoConfig.type === 'B2B') {
+        // Check both repo-level B2B and container-level b2b flag
+        if (repoConfig.type === 'B2B' || enrichment?.b2b === true) {
             mdxContent = mdxContent.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
         }
 
         // Use kebab-case for file name
         const fileName = toKebabCase(containerInfo.containerName);
-        containerDocs.set(fileName, mdxContent);
+
+        // Store container with b2b flag for path determination during write
+        containerDocs.set(fileName, {
+            content: mdxContent,
+            isB2B: enrichment?.b2b === true
+        });
     }
 
     // Return both the docs and the original data for overview generation
@@ -446,25 +452,30 @@ function writeContainerDocs(repoName, repoConfig, containerDocsData, versionInfo
 
     // Handle versionInfo object or string
     const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
-    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    const outputDir = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'containers');
+    const defaultBasePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
 
-    // Ensure output directory exists
-    if (!existsSync(outputDir)) {
-        mkdirSync(outputDir, { recursive: true });
-    }
+    // Write each container file (may go to different directories for B2B containers)
+    for (const [fileName, containerData] of containerDocs) {
+        // Determine output path based on container-level b2b flag
+        const basePath = containerData.isB2B ? 'dropins-b2b' : defaultBasePath;
+        const outputDir = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'containers');
 
-    // Write each container file
-    for (const [fileName, mdxContent] of containerDocs) {
+        // Ensure output directory exists
+        if (!existsSync(outputDir)) {
+            mkdirSync(outputDir, { recursive: true });
+        }
+
         const outputPath = join(outputDir, `${fileName}.mdx`);
-        writeFileSync(outputPath, mdxContent, 'utf8');
+        writeFileSync(outputPath, containerData.content, 'utf8');
 
         const relativeUrl = `/${basePath}/${repoName}/containers/${fileName}`;
         logger.generated(outputPath, relativeUrl);
     }
 
     // Also generate overview page (pass containers array and enrichment for descriptions)
-    generateOverviewPage(repoName, repoConfig, containerDocs, containersArray, enrichmentData, version, outputDir, basePath);
+    // Use default base path for overview (B2C containers overview)
+    const outputDir = join(projectRoot, 'src', 'content', 'docs', defaultBasePath, repoName, 'containers');
+    generateOverviewPage(repoName, repoConfig, containerDocs, containersArray, enrichmentData, version, outputDir, defaultBasePath);
 }
 
 /**
@@ -477,6 +488,7 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
 
     // Build table of containers with descriptions
     // Use containersArray instead of containerDocs to include all containers (even those with override_template)
+    // Filter out B2B containers (they have their own overview in dropins-b2b)
     let containersTable = '| Container | Description |\n';
     containersTable += '| --------- | ----------- |\n';
 
@@ -486,6 +498,12 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
 
         // Get description from enrichment or fallback to scanned description
         const enrichment = enrichmentData?.[containerInfo.containerName];
+
+        // Skip B2B containers in B2C overview
+        if (enrichment?.b2b === true) {
+            continue;
+        }
+
         let description = enrichment?.description || containerInfo.description;
 
         // If no description available, indicate enrichment is needed
