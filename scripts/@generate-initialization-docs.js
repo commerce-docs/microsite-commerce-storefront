@@ -692,6 +692,22 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
         });
     }
 
+    // Add custom subsections from enrichment for simple types
+    if (enrichmentData?.config) {
+        Object.keys(enrichmentData.config).forEach(configName => {
+            const enrichment = enrichmentData.config[configName];
+            if (enrichment?.subsection?.content) {
+                // Check if not already in configTypesWithDefinitions
+                if (!configTypesWithDefinitions.find(t => t.name === configName)) {
+                    configTypesWithDefinitions.push({
+                        name: configName,
+                        customContent: enrichment.subsection.content
+                    });
+                }
+            }
+        });
+    }
+
     // Generate Configuration types section
     let configTypeDefinitions = '';
     if (configTypesWithDefinitions.length > 0) {
@@ -700,7 +716,25 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 The following TypeScript definitions show the structure of each configuration object:
 
 ${configTypesWithDefinitions.map(configType => {
+            // Check for custom subsection content from enrichment
+            const enrichment = enrichmentData?.config?.[configType.name];
+            if (enrichment?.subsection?.content) {
+                return `### ${configType.name}
+
+${enrichment.subsection.content}`;
+            }
+
+            // Default format
             const anchor = configType.name.toLowerCase();
+            
+            // If has custom content from enrichment, use that instead
+            if (configType.customContent) {
+                return `### ${configType.name}
+
+${configType.customContent}`;
+            }
+            
+            // Otherwise use auto-generated format
             return `### ${configType.name}
 
 ${configType.description}
@@ -727,9 +761,12 @@ ${configType.definition}
     );
     let defaultConfigComment = '';
     if (dropinSpecificOptions.length > 0) {
-        const defaultValues = dropinSpecificOptions.map(opt =>
-            `  // ${opt.name}: undefined // See configuration options below`
-        ).join('\n');
+        const defaultValues = dropinSpecificOptions.map(opt => {
+            const enrichment = enrichmentData?.config?.[opt.name];
+            const defaultValue = enrichment?.defaultValue !== undefined ? enrichment.defaultValue : 'undefined';
+            const defaultComment = enrichment?.defaultComment ? ` // ${enrichment.defaultComment}` : ' // See configuration options below';
+            return `  // ${opt.name}: ${defaultValue}${defaultComment}`;
+        }).join('\n');
         defaultConfigComment = `// Drop-in-specific defaults:\n${defaultValues}`;
     }
 
