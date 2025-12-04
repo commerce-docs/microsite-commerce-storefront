@@ -316,6 +316,7 @@ async function config() {
                       { label: 'Configuration', link: '/boilerplate/configuration/' },
                       { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
                       { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
+                      { label: 'Federated Search', link: '/boilerplate/federated-search/' },
                       { label: 'Updates', link: '/boilerplate/updates/' },
                     ],
                   },
