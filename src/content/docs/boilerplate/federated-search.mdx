@@ -33,30 +33,30 @@ Before starting this tutorial, make sure you have:
 
 - A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
 - Basic understanding of JavaScript and asynchronous operations
-- Familiarity with [customizing blocks](/boilerplate/customizing-blocks/) in the your code repository
+- Familiarity with [customizing blocks](/boilerplate/customizing-blocks/) in your code repository
 - Access to your site's Helix Admin configuration (for creating the content index)
 - Adobe Commerce backend configured with product catalog
 
 ## Overview
 
-This federated search approach involves:
+Developing this federated search solution involves:
 
-1. Creating a content index for your site's pages and content
+1. Creating an index for your site's pages and content
 2. Building a custom search block that fetches both content and commerce data
 3. Implementing a tabbed UI to display results separately
-4. Handling search queries in parallel for optimal performance
+4. Processing search queries in parallel for optimal performance
 
-This approach keeps your content and commerce searches separate but presents them as a unified experience to the user.
+This method keeps content and commerce searches distinct while delivering a unified experience to the user.
 
-<Aside type="tip">
-**Note:** This approach is ideal when you want quick implementation, have straightforward search requirements, or want to maintain separate control over content and commerce search logic.
+<Aside type="tip" title="When to use this strategy">
+This federated search strategy is ideal for scenarios where you need quick implementation, have straightforward search requirements, or want to maintain separate control over content and commerce search logic.
 </Aside>
 
 ## Tutorial Steps
 
 ### Step 1: Create the Content Index Configuration
 
-First, you need to configure a content index that will crawl and index your site's content pages. This is done by creating a `query.yaml` configuration file.
+Start by setting up a content index to crawl and index your site’s pages. This is accomplished by creating a query.yaml configuration file.
 
    Create the configuration by making a POST request to your site's admin config endpoint:
 
@@ -112,13 +112,13 @@ First, you need to configure a content index that will crawl and index your site
    - `properties`: Metadata fields to extract from each page
    </Aside>
 
-   After creating this configuration, the system will automatically generate a content index at `https://[your-domain]/content-index.json` whenever you publish pages.
+   After creating this configuration, the system automatically generates a content index at `https://[your-domain]/content-index.json` whenever you publish pages.
 
 **Expected result:** You should be able to access your content index at the configured target URL and see a JSON array of indexed pages (after you publish the pages).
 
 ### Step 2: Create Sample Content Pages
 
-To test your federated search, create and publish some content pages that will be indexed. For example, create and publish blog posts in a `/blog` directory:
+To validate your federated search setup, publish content pages that can be indexed. For example, create and publish blog posts in a `/blog` directory:
 
    Create a few pages like:
    - `/blog/winter-collection`
@@ -129,20 +129,20 @@ To test your federated search, create and publish some content pages that will b
 
    ![Example blog page for Winter Collection](images/federated-search-content-example.png)
 
-<Aside type="tip">
-**Content tip:** Include relevant keywords in your content that shoppers might search for. The content index contains the full text content of your pages, so descriptive content improves search results.
+<Aside type="tip" title="Content tip">
+Include relevant keywords in your content that shoppers might search for. Since the content index stores the full text of your pages, well-written and relevant descriptions can significantly improve search results.
 </Aside>
 
 ### Step 3: Create the Combined Search Block
 
-Now create a custom block that will perform federated search. This block will handle both the content and commerce searches.
+Next, create a custom block to perform the federated search. This block processes both the content and commerce searches.
 
 Create a new directory: `blocks/combined-search/`
 
 Create `blocks/combined-search/combined-search.js`:
 
-<Aside type="note">
-**Full implementation:** The code below shows the key concepts. For a complete working example with full rendering logic, see the [reference implementation](https://gist.github.com/sirugh/6690b7ded67868f3b17d3c1b5a29dc76).
+<Aside type="note" title="Full implementation">
+The code below shows the key concepts. For a complete working example with full rendering logic, see the [reference implementation](https://gist.github.com/sirugh/6690b7ded67868f3b17d3c1b5a29dc76).
 </Aside>
 
 ```javascript title="blocks/combined-search/combined-search.js"
@@ -276,12 +276,16 @@ export default async function decorate(block) {
 
 3. **Product search** (`searchProducts`): Products are searched using the Commerce `search()` function from the Product Discovery dropin, which handles the GraphQL query to Adobe Commerce. The `visibility` filter ensures only searchable products are returned.
 
-4. **Parallel execution** (`performSearch`): Both searches run simultaneously using `Promise.all()`, which means the slower of the two doesn't hold up the faster one.
+4. **Parallel execution** (`performSearch`): Both searches execute in parallel using `Promise.all()`, ensuring that the slower query doesn’t delay the faster one.
 
 5. **Tabbed UI**: Results are organized in separate tabs (Products and Content) for a clean user experience.
 
-<Aside type="tip">
-**Customization:** You can add additional filters (like category or price range), adjust pagination with `pageSize`, add sorting options, customize the content search algorithm in `searchContent()`, or modify the UI structure to display results differently (e.g., in a single list instead of tabs).
+<Aside type="tip" title="Customize search behavior">
+- Add additional filters (like category or price range)
+- Adjust pagination with `pageSize1
+- Add sorting options
+- Customize the content search algorithm in `searchContent()`
+- Modify the UI structure to display results differently (for example, in a single list instead of tabs).
 </Aside>
 
 ### Step 4: Add Styling for the Search Block
@@ -290,15 +294,15 @@ Create `blocks/combined-search/combined-search.css` and add the styles from the 
 
 ### Step 5: Create the Search Results Page
 
-Create a new page in your project to host the combined search block. In your content authoring tool (e.g., DA.live, Google Docs, SharePoint), create a page at `/search`:
+Create a dedicated page in your project to host the combined search block. Using your content authoring tool (for example, DA.live, Google Docs, SharePoint), add a new page at `/search`.
 
 ![Example search page](images/federated-search-search-example.png)
 
-This creates a page that uses your `combined-search` block.
+This addition creates a page that uses your `combined-search` block.
 
 ### Step 6: Test Your Federated Search
 
-Now let's verify everything is working correctly:
+Now, let's verify everything is working correctly:
 
    1. **Test the content index:**
       - Navigate to `https://[your-domain]/content-index.json`
@@ -330,6 +334,7 @@ Now let's verify everything is working correctly:
 Here's a complete example of how the federated search works in practice:
 
 **User Journey:**
+
 1. Shopper types "winter" in the search box
 2. System performs parallel searches:
    - Content search finds blog posts about "Winter Collection 2024"
@@ -359,8 +364,7 @@ renderProductResults(productResults)
 
 ## Performance Considerations
 
-<Aside type="tip">
-**Optimization tips:**
+<Aside type="tip" title="Optimization tips">
 - The content index is fetched once and cached in memory
 - Both searches run in parallel using `Promise.all()` for optimal speed
 - Consider implementing debouncing for search-as-you-type functionality
@@ -397,7 +401,7 @@ Now that you've implemented federated search, you might want to:
 **Solution:** Verify that you've correctly configured the `query.yaml` file and that you've published pages that match your include patterns. The index is only generated after the configuration is in place and pages are published.
 
 **Issue:** No products appear in search results
-**Solution:** Check that your GraphQL endpoint is correctly configured. Verify in browser console that the GraphQL query is executing without errors. Ensure your Adobe Commerce instance has products with the searched terms.
+**Solution:** Check that your GraphQL endpoint is correctly configured. In the browser console, verify that the GraphQL query is executing without errors. Ensure your Adobe Commerce instance has products with the searched terms.
 
 **Issue:** Content search returns too many irrelevant results
 **Solution:** Improve the search algorithm in the `searchContent()` function. Consider implementing:
@@ -423,7 +427,7 @@ If you encounter issues not covered here:
 
 ### Single-View Display
 
-Instead of tabs, you could display content and products in a single view with section headers:
+Instead of tabs, you can display content and products in a single view with section headers:
 
 ```javascript
 function renderUnifiedResults(contentResults, productResults, container) {
@@ -444,7 +448,7 @@ function renderUnifiedResults(contentResults, productResults, container) {
 }
 ```
 
-This provides a single scrolling experience but may be less organized for large result sets.
+This method provides a single scrolling experience but may be less organized for large result sets.
 
 ## Summary
 
