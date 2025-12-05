@@ -61,10 +61,10 @@ Start by setting up a content index to crawl and index your site’s pages. This
    Create the configuration by making a POST request to your site's admin config endpoint:
 
    ```bash
-   POST https://admin.hlx.page/config/[owner]/[repo]/[branch]/query.yaml
+   POST https://admin.hlx.page/config/[owner]/sites/[repo]/content/query.yaml
    ```
 
-   Replace `[owner]`, `[repo]`, and `[branch]` with your site's GitHub details.
+   Replace `[owner]` and `[repo]`with your site's GitHub details.
 
    Here's a sample `query.yaml` configuration that indexes blog content:
 
@@ -82,10 +82,6 @@ Start by setting up a content index to crawl and index your site’s pages. This
            select: head > meta[property="og:title"]
            value: |
              attribute(el, 'content')
-         image:
-           select: head > meta[property="og:image"]
-           value: |
-             match(attribute(el, 'content'), 'https:\/\/[^/]+(\/.*)')
          description:
            select: head > meta[name="description"]
            value: |
@@ -94,10 +90,6 @@ Start by setting up a content index to crawl and index your site’s pages. This
            select: none
            value: |
              parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
-         robots:
-           select: head > meta[name="robots"]
-           value: |
-             attribute(el, 'content')
          content:
            select: main
            value: |
@@ -109,7 +101,7 @@ Start by setting up a content index to crawl and index your site’s pages. This
    - `target`: The URL path where the index JSON file will be published
    - `include`: Glob patterns for pages to include in the index
    - `exclude`: Paths to exclude from indexing
-   - `properties`: Metadata fields to extract from each page
+   - `properties`: Metadata fields to extract from each page. See [Indexing Reference](/merchants/content-customizations/indexing-reference/) for more details.
    </Aside>
 
    After creating this configuration, the system automatically generates a content index at `https://[your-domain]/content-index.json` whenever you publish pages.
@@ -304,30 +296,30 @@ This addition creates a page that uses your `combined-search` block.
 
 Now, let's verify everything is working correctly:
 
-   1. **Test the content index:**
-      - Navigate to `https://[your-domain]/content-index.json`
-      - Verify that your content pages are indexed with proper metadata
+1. **Test the content index:**
+    - Navigate to `https://[your-site-domain]/content-index.json`
+    - Verify that your content pages are indexed with proper metadata
 
-   2. **Test product search:**
-      - Navigate to `/search?q=shirt` (or any product in your catalog)
-      - Verify products appear in the Products tab
-      - Check that images, titles, and prices display correctly
+2. **Test product search:**
+    - Navigate to `/search?q=shirt` (or any product in your catalog)
+    - Verify products appear in the Products tab
+    - Check that images, titles, and prices display correctly
 
-   3. **Test content search:**
-      - Navigate to `/search?q=blog` (or keywords from your content)
-      - Switch to the Content tab
-      - Verify content results appear with titles and descriptions
+3. **Test content search:**
+    - Navigate to `/search?q=blog` (or keywords from your content)
+    - Switch to the Content tab
+    - Verify content results appear with titles and descriptions
 
-   4. **Test search interaction:**
-      - Type a query in the search input
-      - Press Enter or click the search button
-      - Verify the URL updates with the query parameter
-      - Verify both tabs update with new results
+4. **Test search interaction:**
+    - Type a query in the search input
+    - Press Enter or click the search button
+    - Verify the URL updates with the query parameter
+    - Verify both tabs update with new results
 
 5. **Test edge cases:**
-   - Search for a term with no results
-   - Search with special characters
-   - Search with very short queries (1-2 characters)
+    - Search for a term with no results
+    - Search with special characters
+    - Search with very short queries (1-2 characters)
 
 ## Complete Example
 
@@ -343,25 +335,6 @@ Here's a complete example of how the federated search works in practice:
    - **Products Tab**: Displays winter jackets, boots, accessories
    - **Content Tab**: Displays blog posts, buying guides, seasonal content
 
-**Technical Flow:**
-```javascript
-// 1. User searches for "winter"
-performSearch('winter', block)
-
-// 2. Parallel requests
-Promise.all([
-  getContentIndex(),      // Fetch/use cached content-index.json
-  searchProducts('winter') // GraphQL query to commerce
-])
-
-// 3. Filter content index client-side
-searchContent('winter', contentIndex) // Returns matching content
-
-// 4. Render both result sets in tabs
-renderContentResults(contentResults)
-renderProductResults(productResults)
-```
-
 ## Performance Considerations
 
 <Aside type="tip" title="Optimization tips">
@@ -370,28 +343,6 @@ renderProductResults(productResults)
 - Consider implementing debouncing for search-as-you-type functionality
 - For large content indexes (>1MB), consider pagination or lazy loading
 </Aside>
-
-## Next Steps
-
-Now that you've implemented federated search, you might want to:
-
-<LinkCard
-  title="Customize the Product Discovery Dropin"
-  description="Learn how to further customize product search and filtering"
-  href="/dropins/product-discovery/"
-/>
-
-<LinkCard
-  title="Content Authoring Best Practices"
-  description="Optimize your content for better search results"
-  href="/merchants/content-customizations/"
-/>
-
-<LinkCard
-  title="SEO Configuration"
-  description="Ensure your content and products are discoverable"
-  href="/setup/seo/"
-/>
 
 ## Troubleshooting
 
