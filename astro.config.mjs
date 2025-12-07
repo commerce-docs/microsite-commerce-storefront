@@ -1104,6 +1104,14 @@ async function config() {
                           { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
                         ],
                       },
+                      {
+                        label: 'B2B commerce blocks',
+                        collapsed: true,
+                        items: [
+                          { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
+                          { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
+                        ],
+                      },
                     ],
                   },
                   {
