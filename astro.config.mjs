@@ -1104,6 +1104,15 @@ async function config() {
                           { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
                         ],
                       },
+                      {
+                        label: 'B2B commerce blocks',
+                        collapsed: true,
+                        items: [
+                          { label: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
+                          { label: 'Negotiable Quote Template', link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/' },
+                          { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
+                        ],
+                      },
                     ],
                   },
                   {
