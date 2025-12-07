@@ -1104,6 +1104,15 @@ async function config() {
                           { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
                         ],
                       },
+                      {
+                        label: 'B2B commerce blocks',
+                        collapsed: true,
+                        items: [
+                          { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
+                          { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
+                          { label: 'Customer Company', link: '/merchants/blocks/commerce-customer-company/' },
+                        ],
+                      },
                     ],
                   },
                   {
