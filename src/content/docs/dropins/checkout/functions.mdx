@@ -23,49 +23,56 @@ The Checkout drop-in provides API functions that enable you to programmatically 
 
 | Function | Description |
 | --- | --- |
-| [`authenticateCustomer`](#authenticatecustomer) | API function for the drop-in.. |
-| [`estimateShippingMethods`](#estimateshippingmethods) | Calls the `estimateShippingMethods` mutation.. |
+| [`authenticateCustomer`](#authenticatecustomer) | Updates the checkout state when customer authentication status changes. |
+| [`estimateShippingMethods`](#estimateshippingmethods) | Estimates available shipping methods for a given address. |
 | [`getCart`](#getcart) | Retrieves the current cart's checkout data from Adobe Commerce. |
 | [`getCheckoutAgreements`](#getcheckoutagreements) | Returns a list with the available checkout agreements. |
-| [`getCompanyCredit`](#getcompanycredit) | API function for the drop-in.. |
-| [`getCustomer`](#getcustomer) | API function for the drop-in.. |
+| [`getCompanyCredit`](#getcompanycredit) | Retrieves company credit information for B2B customers. |
+| [`getCustomer`](#getcustomer) | Retrieves the authenticated customer's basic information. |
 | [`getNegotiableQuote`](#getnegotiablequote) | Retrieves a negotiable quote for B2B customers. |
-| [`getStoreConfig`](#getstoreconfig) | The `storeConfig` query defines information about a store's configuration. |
-| [`getStoreConfigCache`](#getstoreconfigcache) | API function for the drop-in.. |
-| [`initializeCheckout`](#initializecheckout) | API function for the drop-in.. |
-| [`isEmailAvailable`](#isemailavailable) | Calls the `isEmailAvailable` query.. |
-| [`resetCheckout`](#resetcheckout) | API function for the drop-in.. |
-| [`setBillingAddress`](#setbillingaddress) | Calls the `setBillingAddressOnCart` mutation.. |
-| [`setGuestEmailOnCart`](#setguestemailoncart) | Calls the `setGuestEmailOnCart` mutation.. |
-| [`setPaymentMethod`](#setpaymentmethod) | Calls the `setPaymentMethodOnCart` mutation.. |
-| [`setShippingAddress`](#setshippingaddress) | Calls the `setShippingAddressesOnCart` mutation.. |
+| [`getStoreConfig`](#getstoreconfig) | Retrieves store configuration information. |
+| [`getStoreConfigCache`](#getstoreconfigcache) | Retrieves cached store configuration information. |
+| [`initializeCheckout`](#initializecheckout) | Initializes the checkout state with cart or quote data. |
+| [`isEmailAvailable`](#isemailavailable) | Checks if an email address is available for registration. |
+| [`resetCheckout`](#resetcheckout) | Resets the checkout state to its initial values. |
+| [`setBillingAddress`](#setbillingaddress) | Sets the billing address on the cart. |
+| [`setGuestEmailOnCart`](#setguestemailoncart) | Sets the email address for guest checkout. |
+| [`setPaymentMethod`](#setpaymentmethod) | Sets the payment method on the cart. |
+| [`setShippingAddress`](#setshippingaddress) | Sets the shipping address on the cart. |
 | [`setShippingMethods`](#setshippingmethods) | Sets one or more shipping methods on the cart. |
-| [`synchronizeCheckout`](#synchronizecheckout) | API function for the drop-in.. |
+| [`synchronizeCheckout`](#synchronizecheckout) | Synchronizes the checkout state with updated cart data. |
 
 </TableWrapper>
 
 ## authenticateCustomer
 
-### Signature
+The `authenticateCustomer` function updates the checkout state when the customer's authentication status changes. This function is typically called after a customer signs in or signs out during the checkout process to refresh cart data and available options.
 
 ```typescript
 function authenticateCustomer(authenticated = false): Promise<any>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
+| `authenticated` | `boolean` | No | A boolean indicating whether the user has been authenticated. Defaults to `false`. |
 
 </TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns updated checkout data reflecting the customer's authentication status.
 
 ---
 
 ## estimateShippingMethods
 
-The `estimateShippingMethods` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods`/" text="estimateShippingMethods" /> mutation.
+The `estimateShippingMethods` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/" text="estimateShippingMethods" /> mutation.
 
 ```ts
 const estimateShippingMethods = async (
@@ -123,6 +130,8 @@ Returns an array of [`CheckoutAgreement`](#checkoutagreement) objects.
 
 ## getCompanyCredit
 
+The `getCompanyCredit` function retrieves the company credit information for B2B customers. This includes the available credit balance and whether the current cart exceeds the credit limit. The function is used to display credit information and validate purchases against credit limits for Payment on Account transactions.
+
 ```ts
 const getCompanyCredit = async (): Promise<CompanyCredit | null>
 ```
@@ -133,9 +142,11 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns [`CompanyCredit`](#companycredit) or `null`.
+Returns a [`CompanyCredit`](#companycredit) object containing the available credit balance and limit status, or `null` if company credit is not available or the user is not a B2B customer.
 
 ## getCustomer
+
+The `getCustomer` function retrieves the authenticated customer's basic information including first name, last name, and email address. This information is used to pre-populate checkout forms and display personalized content during the checkout process.
 
 ```ts
 const getCustomer = async (): Promise<Customer | null>
@@ -147,11 +158,15 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns [`Customer`](#customer) or `null`.
+Returns a [`Customer`](#customer) object with the customer's name and email, or `null` if the user is not authenticated or customer data is unavailable.
 
 ## getNegotiableQuote
 
-The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/queries/negotiable-quote`/" text="negotiableQuote" /> query.
+The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. This function is used in the B2B checkout flow to fetch quote details including negotiated pricing, shipping addresses, and quote status. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/queries/quote/" text="negotiableQuote" /> query.
+
+<Aside type="note">
+This function is primarily used when the `features.b2b.quotes` option is enabled during [initialization](/dropins/checkout/initialization/#enabling-b2b-features). When enabled, the checkout flow uses quote data instead of standard cart data.
+</Aside>
 
 ```ts
 const getNegotiableQuote = async (
@@ -173,7 +188,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `void`.
+Returns the negotiable quote data including cart items, pricing, shipping addresses, and quote-specific information such as quote status and negotiated terms.
 
 ## getStoreConfig
 
@@ -193,6 +208,8 @@ Returns `void`.
 
 ## getStoreConfigCache
 
+The `getStoreConfigCache` function retrieves cached store configuration information. This is an optimized version of `getStoreConfig` that returns previously fetched configuration data without making a new GraphQL request, improving performance during checkout.
+
 ```ts
 const getStoreConfigCache = async (): any
 ```
@@ -203,31 +220,37 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `void`.
+Returns the cached store configuration object, or undefined if no configuration has been cached yet.
 
 ## initializeCheckout
 
-### Signature
+The `initializeCheckout` function initializes the checkout state with cart or quote data. This function is called when the checkout page loads to set up the initial state. For B2B quote checkouts, it can accept quote data directly; otherwise, it retrieves cart data from internal state.
 
 ```typescript
 function initializeCheckout(input: InitializeInput): Promise<any>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `input` | `InitializeInput` | Yes |  |
+| `input` | `InitializeInput` | Yes | The cart or quote data to initialize the checkout process, or null to retrieve the cart from internal state. |
 
 </TableWrapper>
+
+### Events
+
+Emits the [`checkout/initialized`](/dropins/checkout/events/#checkoutinitialized-emits-and-listens) event after successfully initializing the checkout state.
+
+### Returns
+
+Returns the initialized checkout data including cart items, addresses, and selected payment/shipping methods.
 
 ---
 
 ## isEmailAvailable
 
-The `isEmailAvailable` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/queries/is-email-available`/" text="isEmailAvailable" /> query.
+The `isEmailAvailable` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/" text="isEmailAvailable" /> query.
 
 ```ts
 const isEmailAvailable = async (
@@ -253,21 +276,23 @@ Returns [`EmailAvailability`](#emailavailability).
 
 ## resetCheckout
 
+The `resetCheckout` function resets the checkout state to its initial values. This clears all selected options, form data, and cached information, effectively starting the checkout process from scratch. This is useful when a cart is emptied or when the user needs to restart checkout.
+
 ```ts
 const resetCheckout = async (): any
 ```
 
 ### Events
 
-Emits the [`checkout/updated`](/dropins/checkout/events/#checkoutupdated-emits-and-listens) event.
+Emits the [`checkout/updated`](/dropins/checkout/events/#checkoutupdated-emits-and-listens) event after resetting the state.
 
 ### Returns
 
-Returns `void`.
+Returns the reset checkout state with default values.
 
 ## setBillingAddress
 
-The `setBillingAddress` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address-on-cart`/" text="setBillingAddressOnCart" /> mutation.
+The `setBillingAddress` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/" text="setBillingAddressOnCart" /> mutation.
 
 ```ts
 const setBillingAddress = async (
@@ -293,7 +318,7 @@ Returns `void`.
 
 ## setGuestEmailOnCart
 
-The `setGuestEmailOnCart` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email-on-cart`/" text="setGuestEmailOnCart" /> mutation.
+The `setGuestEmailOnCart` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/" text="setGuestEmailOnCart" /> mutation.
 
 ```ts
 const setGuestEmailOnCart = async (
@@ -319,7 +344,7 @@ Returns `void`.
 
 ## setPaymentMethod
 
-The `setPaymentMethod` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method-on-cart`/" text="setPaymentMethodOnCart" /> mutation.
+The `setPaymentMethod` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method/" text="setPaymentMethodOnCart" /> mutation.
 
 ```ts
 const setPaymentMethod = async (
@@ -345,7 +370,7 @@ Returns `void`.
 
 ## setShippingAddress
 
-The `setShippingAddress` function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-addresses-on-cart`/" text="setShippingAddressesOnCart" /> mutation.
+The `setShippingAddress` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/" text="setShippingAddressesOnCart" /> mutation.
 
 ```ts
 const setShippingAddress = async (
@@ -371,7 +396,7 @@ Returns `void`.
 
 ## setShippingMethods
 
-The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-methods-on-cart`/" text="setShippingMethodsOnCart" /> mutation.
+The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/" text="setShippingMethodsOnCart" /> mutation.
 
 ```ts
 const setShippingMethods = async (
@@ -397,21 +422,27 @@ Returns `void`.
 
 ## synchronizeCheckout
 
-### Signature
+The `synchronizeCheckout` function synchronizes the checkout state with updated cart data. This function is called when cart contents change (items added/removed, quantities updated, addresses modified) to ensure the checkout UI reflects the latest cart state.
 
 ```typescript
 function synchronizeCheckout(data: SynchronizeInput): Promise<any>
 ```
 
-### Parameters
-
 <TableWrapper nowrap={[0,1]}>
 
-| Parameter | Type | Required | Description |
+| Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `data` | `SynchronizeInput` | Yes |  |
+| `data` | `SynchronizeInput` | Yes | The cart data to synchronize with the checkout state, or null to retrieve the cart from internal state. |
 
 </TableWrapper>
+
+### Events
+
+Emits the [`checkout/updated`](/dropins/checkout/events/#checkoutupdated-emits-and-listens) event after successfully synchronizing the state.
+
+### Returns
+
+Returns the synchronized checkout data with the latest cart information.
 
 ---
 

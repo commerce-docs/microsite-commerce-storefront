@@ -1,0 +1,1022 @@
+#!/usr/bin/env node
+
+/**
+ * Merchant Block Documentation Generator
+ *
+ * Generates merchant-focused documentation for commerce blocks, showing how to
+ * configure them using document-based authoring in AEM.
+ *
+ * Unlike technical documentation, this focuses on:
+ * - Business user perspective
+ * - Document authoring configuration
+ * - Practical examples and tips
+ * - Non-technical language
+ *
+ * USAGE:
+ * - Generate all merchant block docs: npm run generate-merchant-docs
+ *
+ * OUTPUT: Multiple MDX files in src/content/docs/merchants/blocks/
+ */
+
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
+import { execSync } from 'child_process';
+
+// Import shared utilities
+import { getProjectRoot } from './lib/generator-core.js';
+import { ensureParentDirectoryExists } from './lib/utils.js';
+import { cloneOrUpdateBoilerplate } from './lib/repository.js';
+
+const projectRoot = getProjectRoot();
+
+// ============================================================================
+// REPOSITORY MANAGEMENT
+// ============================================================================
+
+// ============================================================================
+// CONFIGURATION EXTRACTION
+// ============================================================================
+
+/**
+ * Extract configuration from block JavaScript source code
+ * Parses multiple patterns:
+ * 1. Direct destructuring: const { 'key': var = 'default' } = readBlockConfig(block)
+ * 2. Variable assignment: const config = readBlockConfig(block); then access config.key
+ * 3. Nested destructuring: const config = readBlockConfig(block); const { key } = config
+ */
+function extractConfigFromSource(blockPath, blockName) {
+    const jsPath = join(blockPath, `${blockName}.js`);
+
+    if (!existsSync(jsPath)) {
+        console.log(`  ⚠️  JavaScript file not found: ${jsPath}`);
+        return [];
+    }
+
+    const source = readFileSync(jsPath, 'utf8');
+    const configs = [];
+    const configKeys = new Set();
+
+    // Pattern 1: Direct destructuring from readBlockConfig
+    // const { 'key': var = 'default', 'key2': var2 } = readBlockConfig(block)
+    const directDestructurePattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\s*\(/s;
+    const directMatch = source.match(directDestructurePattern);
+
+    if (directMatch) {
+        const destructuring = directMatch[1];
+
+        // Parse each property in the destructuring
+        // Pattern 1: 'config-key': variableName = 'default' (quoted keys)
+        // Pattern 2: variableName = 'default' (unquoted keys, variable name is the key)
+        // Pattern 3: variableName (no default)
+
+        // First try quoted keys: 'key': var = 'default'
+        const quotedPropertyPattern = /'([^']+)':\s*(\w+)\s*=?\s*([^,}]+)?/g;
+        let propMatch;
+
+        while ((propMatch = quotedPropertyPattern.exec(destructuring)) !== null) {
+            const configKey = propMatch[1];
+            const variableName = propMatch[2];
+            let defaultValue = propMatch[3] ? propMatch[3].trim() : undefined;
+
+            if (!configKeys.has(configKey)) {
+                configKeys.add(configKey);
+                configs.push(extractConfigProperty(configKey, variableName, defaultValue));
+            }
+        }
+
+        // Then try unquoted keys: variableName = 'default' or just variableName
+        // Only if we haven't already processed this key
+        const unquotedPropertyPattern = /(\w+)\s*=?\s*([^,}]+)?/g;
+        let unquotedMatch;
+
+        // Reset regex lastIndex to start from beginning
+        unquotedPropertyPattern.lastIndex = 0;
+
+        while ((unquotedMatch = unquotedPropertyPattern.exec(destructuring)) !== null) {
+            const variableName = unquotedMatch[1];
+            let defaultValue = unquotedMatch[2] ? unquotedMatch[2].trim() : undefined;
+
+            // Skip if this looks like a quoted key pattern (already processed)
+            // Check if the previous character was a quote
+            const matchIndex = unquotedMatch.index;
+            if (matchIndex > 0 && destructuring[matchIndex - 1] === "'") {
+                continue;
+            }
+
+            // Use variable name as config key (convert camelCase to kebab-case)
+            const configKey = variableName.replace(/([A-Z])/g, '-$1').toLowerCase();
+
+            if (!configKeys.has(configKey) && !configKeys.has(variableName)) {
+                configKeys.add(configKey);
+                configKeys.add(variableName); // Also track variable name to avoid duplicates
+                configs.push(extractConfigProperty(configKey, variableName, defaultValue));
+            }
+        }
+    }
+
+    // Pattern 2: Variable assignment then property access
+    // const config = readBlockConfig(block);
+    // Then find: config['key'] or config.key or const { key } = config
+    const configVarPattern = /const\s+(\w+)\s*=\s*readBlockConfig\s*\([^)]*\)/;
+    const configVarMatch = source.match(configVarPattern);
+
+    if (configVarMatch && !directMatch) {
+        const configVarName = configVarMatch[1];
+
+        // Find nested destructuring FIRST (most reliable): const { key, key2 } = config
+        const nestedDestructurePattern = new RegExp(`const\\s*\\{([^}]+)\\}\s*=\\s*${configVarName}\\s*;`, 'g');
+        let nestedMatch;
+
+        while ((nestedMatch = nestedDestructurePattern.exec(source)) !== null) {
+            const nestedProps = nestedMatch[1];
+            const nestedPropPattern = /(\w+)\s*=?\s*([^,}]+)?/g;
+            let nestedPropMatch;
+
+            while ((nestedPropMatch = nestedPropPattern.exec(nestedProps)) !== null) {
+                const configKey = nestedPropMatch[1];
+                let defaultValue = nestedPropMatch[2] ? nestedPropMatch[2].trim() : undefined;
+
+                // Clean up default value - remove any trailing comments or code
+                if (defaultValue) {
+                    defaultValue = defaultValue.split('//')[0].trim(); // Remove comments
+                    defaultValue = defaultValue.split(';')[0].trim(); // Remove semicolons
+                }
+
+                if (!configKeys.has(configKey)) {
+                    configKeys.add(configKey);
+                    configs.push(extractConfigProperty(configKey, configKey, defaultValue));
+                }
+            }
+        }
+
+        // Only if no nested destructuring found, try property access patterns
+        // But be very careful - only match simple property accesses, not complex expressions
+        if (configs.length === 0) {
+            // Find simple property accesses: config.key or config['key'] (but not in complex expressions)
+            // Look for standalone property accesses, not ones inside function calls or complex expressions
+            const simplePropertyPattern = new RegExp(`${configVarName}\\.(\\w+)|${configVarName}\\s*\\[\\s*['"](\\w+)['"]\\s*\\]`, 'g');
+            let accessMatch;
+            const foundKeys = new Set();
+
+            while ((accessMatch = simplePropertyPattern.exec(source)) !== null) {
+                const configKey = accessMatch[1] || accessMatch[2];
+
+                // Only add if it looks like a simple property access (not part of a complex expression)
+                // Check context - should be followed by semicolon, newline, or simple operators
+                const matchEnd = accessMatch.index + accessMatch[0].length;
+                const afterMatch = source.substring(matchEnd, matchEnd + 10);
+
+                // Only accept if followed by simple patterns (semicolon, newline, ||, &&, etc.)
+                if (configKey &&
+                    !foundKeys.has(configKey) &&
+                    (afterMatch.match(/^\s*[;,\n\|&]|^\s*$/) || afterMatch.trim() === '')) {
+                    foundKeys.add(configKey);
+                    if (!configKeys.has(configKey)) {
+                        configKeys.add(configKey);
+                        const defaultValue = findDefaultValue(source, configKey, configVarName);
+                        configs.push(extractConfigProperty(configKey, configKey, defaultValue));
+                    }
+                }
+            }
+        }
+    }
+
+    return configs;
+}
+
+/**
+ * Extract a single configuration property with type inference
+ */
+function extractConfigProperty(configKey, variableName, defaultValue) {
+    // Clean up default value
+    let cleanDefault = defaultValue;
+    if (cleanDefault) {
+        cleanDefault = cleanDefault.replace(/['"`]/g, '').trim();
+        if (cleanDefault === '') cleanDefault = "''";
+    }
+
+    // Infer type from default value (author-friendly types)
+    let type = 'string';
+    if (cleanDefault === 'true' || cleanDefault === 'false') {
+        type = 'boolean';
+    } else if (cleanDefault && !isNaN(cleanDefault)) {
+        type = 'number';
+    } else if (!cleanDefault || cleanDefault === 'undefined') {
+        // Check variable name patterns for better type inference
+        if (variableName.toLowerCase().includes('enable') ||
+            variableName.toLowerCase().includes('hide') ||
+            variableName.toLowerCase().includes('show')) {
+            type = 'boolean';
+        } else if (variableName.toLowerCase().includes('max') ||
+            variableName.toLowerCase().includes('min') ||
+            variableName.toLowerCase().includes('count') ||
+            variableName.toLowerCase().includes('items')) {
+            type = 'number';
+        } else {
+            type = 'string';
+        }
+        cleanDefault = cleanDefault || 'undefined';
+    }
+
+    return {
+        key: configKey,
+        variable: variableName,
+        type,
+        default: cleanDefault,
+        description: '', // Will be enriched from README if available
+        required: cleanDefault === 'undefined' ? 'Optional' : 'No',
+        sideEffects: '' // Will be enriched from README if available
+    };
+}
+
+/**
+ * Find default value for a config key from source code
+ */
+function findDefaultValue(source, configKey, configVarName) {
+    // Escape special regex characters in configKey
+    const escapedKey = configKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Look for: const key = config['key'] || 'default' or config.key || 'default'
+    const defaultPattern = new RegExp(`${configVarName}\\s*[\\[.]${escapedKey}[\\]]?\\s*\\|\\|\\s*([^;\\n]+)`, 'i');
+    const match = source.match(defaultPattern);
+    if (match) {
+        return match[1].trim().replace(/['"`]/g, '');
+    }
+    return undefined;
+}
+
+/**
+ * Extract configuration from source code (PRIMARY SOURCE OF TRUTH)
+ * Scans .js file for readBlockConfig() calls and extracts destructured keys
+ * This is the ONLY way to know what configurations actually exist
+ */
+function extractConfigFromSource(blockPath) {
+    const jsFile = join(blockPath, `${basename(blockPath)}.js`);
+
+    if (!existsSync(jsFile)) {
+        return [];
+    }
+
+    const sourceCode = readFileSync(jsFile, 'utf8');
+    const configs = [];
+
+    // Look for readBlockConfig pattern:
+    // const { 'config-key': varName = 'default', ... } = readBlockConfig(block);
+    const readBlockConfigPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\([^)]+\)/g;
+    const matches = sourceCode.matchAll(readBlockConfigPattern);
+
+    for (const match of matches) {
+        const destructuredContent = match[1];
+
+        // Parse each destructured property
+        // Pattern: 'config-key': varName = 'defaultValue'
+        const propertyPattern = /['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*([^,}]+))?/g;
+        const propertyMatches = destructuredContent.matchAll(propertyPattern);
+
+        for (const propMatch of propertyMatches) {
+            const key = propMatch[1].trim();
+            const variable = propMatch[2].trim();
+            let defaultValue = propMatch[3]?.trim() || 'undefined';
+
+            // Clean up default value
+            defaultValue = defaultValue
+                .replace(/^['"`]|['"`]$/g, '')
+                .replace(/,\s*$/, '')
+                .trim();
+
+            if (defaultValue === '') {
+                defaultValue = 'undefined';
+            }
+
+            // Infer type from default value in source code
+            let type = 'string';
+            if (defaultValue === 'true' || defaultValue === 'false') {
+                type = 'boolean';
+            } else if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
+                type = 'number';
+            } else if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
+                type = 'object';
+            }
+
+            configs.push({
+                key: key,
+                variable: variable,
+                type: type,
+                default: defaultValue,
+                description: '', // Will be enriched from README
+                required: 'No',
+                sideEffects: '',
+                source: 'source-code'
+            });
+        }
+    }
+
+    return configs;
+}
+
+/**
+ * Extract configuration from README file (ENRICHMENT ONLY)
+ * Used ONLY to add descriptions and type annotations to configs found in source code
+ * README files should NOT be used to discover what configurations exist
+ */
+function extractConfigFromReadme(readmePath) {
+    if (!existsSync(readmePath)) {
+        return [];
+    }
+
+    const readme = readFileSync(readmePath, 'utf8');
+    let configs = [];
+
+    // Method 1: Try to extract from markdown table first
+    const blockConfigPattern = /(?:##\s+Block\s+Configuration|###\s+Block\s+Configuration)[\s\S]*?\|\s*Configuration\s+Key[^|]*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|([\s\S]*?)(?=\n\n|\n##|\n###|$)/i;
+    const tableMatch = readme.match(blockConfigPattern);
+
+    if (tableMatch) {
+        const tableContent = tableMatch[1];
+        const rows = tableContent.split('\n').filter(line => {
+            const trimmed = line.trim();
+            return trimmed.startsWith('|') &&
+                !trimmed.match(/^\|\s*-+\s*\|/) && // Skip separator rows
+                trimmed !== '|'; // Skip empty rows
+        });
+
+        for (const row of rows) {
+            const cells = row.split('|').map(cell => cell.trim()).filter(cell => cell);
+
+            // Expected columns: Configuration Key | Type | Default | Description | Required | Side Effects
+            if (cells.length >= 4) {
+                const key = cells[0].replace(/`/g, '').trim();
+                const type = cells[1]?.trim() || 'string';
+                const defaultValue = cells[2]?.trim() || 'undefined';
+                const description = cells[3]?.trim() || '';
+                const required = cells[4]?.replace(/`/g, '').trim() || 'No';
+                const sideEffects = cells[5]?.trim() || '';
+
+                // Skip header rows, "no config" entries, and invalid keys
+                if (key &&
+                    key !== 'Configuration Key' &&
+                    key !== '–' &&
+                    !key.toLowerCase().includes('configuration') &&
+                    !key.match(/^-+$/) &&
+                    !description.toLowerCase().includes('no authorable configuration')) {
+
+                    // Clean default value
+                    let cleanDefault = defaultValue.replace(/`/g, '').trim();
+                    if (cleanDefault === '' || cleanDefault === 'undefined' || cleanDefault === '–') {
+                        cleanDefault = 'undefined';
+                    }
+
+                    // Infer type if not specified
+                    let inferredType = type.toLowerCase();
+                    if (cleanDefault === 'true' || cleanDefault === 'false') {
+                        inferredType = 'boolean';
+                    } else if (cleanDefault && !isNaN(cleanDefault) && cleanDefault !== 'undefined') {
+                        inferredType = 'number';
+                    } else if (!inferredType || inferredType === 'string' || inferredType === '' || inferredType === '–') {
+                        inferredType = 'string';
+                    }
+
+                    configs.push({
+                        key: key,
+                        variable: key.replace(/-/g, ''), // Convert kebab-case to variable name
+                        type: inferredType,
+                        default: cleanDefault,
+                        description: description,
+                        required: required === 'Yes' || required === 'Required' ? 'Yes' : 'No',
+                        sideEffects: sideEffects
+                    });
+                }
+            }
+        }
+    }
+
+    // Method 2: If no table configs found, try bullet point format (common in B2B blocks)
+    if (configs.length === 0) {
+        const bulletConfigPattern = /(?:##\s+Block\s+Configuration|###\s+Block\s+Configuration)([\s\S]*?)(?=\n##|\n###|Example configuration:|$)/i;
+        const bulletMatch = readme.match(bulletConfigPattern);
+
+        if (bulletMatch) {
+            const configSection = bulletMatch[1];
+            // Match bullet points like: - **className** (string, optional): Description
+            const bulletPattern = /^-\s+\*\*([^*]+)\*\*\s*\(([^,)]+)(?:,\s*(optional|required))?(?:,\s*default:\s*([^)]+))?\):\s*(.+)$/gm;
+            let match;
+
+            while ((match = bulletPattern.exec(configSection)) !== null) {
+                const key = match[1].trim();
+                const type = match[2].trim();
+                const isRequired = match[3]?.trim() === 'required' ? 'Yes' : 'No';
+                const defaultValue = match[4]?.trim() || 'undefined';
+                const description = match[5].trim();
+
+                // Clean up types and defaults
+                let cleanDefault = defaultValue;
+                let inferredType = type.toLowerCase();
+
+                if (inferredType === 'boolean') {
+                    cleanDefault = cleanDefault === 'true' ? 'true' : cleanDefault === 'false' ? 'false' : cleanDefault;
+                }
+
+                configs.push({
+                    key: key,
+                    variable: key.replace(/-/g, ''),
+                    type: inferredType,
+                    default: cleanDefault,
+                    description: description,
+                    required: isRequired,
+                    sideEffects: ''
+                });
+            }
+        }
+    }
+
+    return configs;
+}
+
+/**
+ * Enrich configuration with descriptions from README (legacy function, kept for compatibility)
+ */
+function enrichConfigFromReadme(configs, readmePath) {
+    // This function is now deprecated - use extractConfigFromReadme instead
+    // Keeping for backward compatibility but it should not be called
+    return configs;
+}
+
+/**
+ * Extract merchant-friendly description from README overview
+ * Simplifies technical README overview for merchant consumption
+ */
+function extractDescriptionFromReadme(readmePath) {
+    if (!existsSync(readmePath)) {
+        return null;
+    }
+
+    try {
+        const content = readFileSync(readmePath, 'utf8');
+
+        // Extract the Overview section
+        const overviewMatch = content.match(/## Overview\s*\n\s*\n(.*?)(?=\n\n##|\n\n<!-- |\n\n\*|$)/s);
+        if (!overviewMatch) {
+            return null;
+        }
+
+        let overview = overviewMatch[1].trim();
+
+        // Get the first sentence, which usually contains the core purpose
+        const firstSentence = overview.match(/^[^.!?]+[.!?]/);
+        if (!firstSentence) {
+            return null;
+        }
+
+        // Simplify for merchant consumption
+        let description = firstSentence[0]
+            // Remove technical jargon
+            .replace(/using the @dropins\/[^\s]+\s+\w+\s+container/gi, '')
+            .replace(/The Commerce [\w\s]+ block (renders|provides|handles|displays)/gi, (match, verb) => {
+                const actionMap = {
+                    'renders': 'Display',
+                    'provides': 'Manage',
+                    'handles': 'Set up',
+                    'displays': 'Show'
+                };
+                return actionMap[verb] || 'Configure';
+            })
+            // Clean up extra spaces
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return description;
+    } catch (error) {
+        console.warn(`  ⚠️  Could not extract description from ${readmePath}: ${error.message}`);
+        return null;
+    }
+}
+
+/**
+ * Load enrichment file with manually verified descriptions
+ */
+function loadDescriptionEnrichments() {
+    const enrichmentPath = join(process.cwd(), '_dropin-enrichments', 'merchant-blocks', 'descriptions.json');
+    if (!existsSync(enrichmentPath)) {
+        return {};
+    }
+
+    try {
+        const content = readFileSync(enrichmentPath, 'utf8');
+        const data = JSON.parse(content);
+        return data.blocks || {};
+    } catch (error) {
+        console.warn(`  ⚠️  Could not load description enrichments: ${error.message}`);
+        return {};
+    }
+}
+
+/**
+ * Generate merchant-friendly description for a block
+ * Priority: 1) Verified enrichment, 2) README extraction, 3) Fallback
+ */
+function generateMerchantDescription(blockName, blockPath) {
+    const enrichments = loadDescriptionEnrichments();
+    const key = blockName.replace('commerce-', '');
+
+    // Priority 1: Use verified enrichment if available
+    if (enrichments[key] && enrichments[key].verified) {
+        return enrichments[key].description;
+    }
+
+    // Priority 2: Extract from README
+    const readmePath = join(blockPath, 'README.md');
+    const readmeDescription = extractDescriptionFromReadme(readmePath);
+    if (readmeDescription) {
+        return readmeDescription;
+    }
+
+    // Priority 3: Use unverified enrichment if available
+    if (enrichments[key]) {
+        return enrichments[key].description;
+    }
+
+    // Priority 4: Fallback to generic description
+    return `Configure the ${blockName.replace('commerce-', '').replace(/-/g, ' ')} block for your store.`;
+}
+
+/**
+ * Generate configuration tips for merchants
+ */
+function generateTips(blockName, configs) {
+    const tips = [];
+
+    if (configs.length > 0) {
+        tips.push('Use document authoring to configure this block without writing code.');
+        tips.push('Test configuration changes in preview before publishing to production.');
+    }
+
+    if (blockName.includes('cart') || blockName.includes('checkout')) {
+        tips.push('Ensure your configuration matches your Adobe Commerce backend settings.');
+    }
+
+    if (blockName.includes('product')) {
+        tips.push('Configure product attributes to match your catalog structure.');
+    }
+
+    return tips;
+}
+
+/**
+ * Convert kebab-case to Title Case (matching AEM document authoring format)
+ * e.g., "enable-item-quantity-update" -> "Enable Item Quantity Update"
+ */
+function toTitleCase(str) {
+    return str.split('-').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+/**
+ * Format value for AEM document authoring
+ * Shows example values for empty properties based on property name and type
+ */
+function formatValueForAEM(value, type, propertyKey) {
+    if (value === '' || value === 'undefined' || value === "''") {
+        // Show example values based on property name and type
+        let example = '';
+        const keyLower = propertyKey.toLowerCase();
+
+        // Number-like properties (even if stored as string in AEM)
+        // Check property name patterns first, before type check
+        if (keyLower.includes('max') || keyLower.includes('min') ||
+            keyLower.includes('count') || keyLower.includes('items') ||
+            keyLower.includes('limit') || keyLower.includes('quantity') ||
+            keyLower.includes('number') || keyLower.includes('size') ||
+            keyLower.includes('amount') || keyLower.includes('total')) {
+            example = '10';
+        }
+        // Attribute-related properties (check before ID to avoid false matches)
+        else if (keyLower.includes('attributes') || keyLower.includes('attribute')) {
+            example = 'color, size';
+        }
+        // SKU-related properties
+        else if (keyLower.includes('sku') || keyLower.includes('currentsku')) {
+            example = 'ABC-123';
+        }
+        // ID-related properties (check after attributes to avoid false matches)
+        else if (keyLower.includes('id') || keyLower.includes('recid') || keyLower.includes('reqid')) {
+            example = 'rec-12345';
+        }
+        // URL-related properties
+        else if (keyLower.includes('url') || keyLower.includes('link') || keyLower.includes('path')) {
+            example = '/path/to/page';
+        }
+        // Name or title properties
+        else if (keyLower.includes('name') || keyLower.includes('title')) {
+            example = 'Example Name';
+        }
+        // Number type (explicit)
+        else if (type === 'number') {
+            example = '10';
+        }
+        // Boolean type
+        else if (type === 'boolean') {
+            example = 'true';
+        }
+        // Default string
+        else {
+            example = 'value';
+        }
+
+        return `<em style="color: var(--sl-color-gray-3); font-style: italic;">${example} <span style="font-size: 0.85em;">(example)</span></em>`;
+    }
+    return value;
+}
+
+/**
+ * Generate section metadata table for document authoring
+ * Shows common section styling options available to all blocks
+ */
+function generateSectionMetadataTable() {
+    let output = `## Section metadata\n\n`;
+    output += `Control the section styling that wraps your commerce block using the section metadata table:\n\n`;
+
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
+    output += `<tbody>\n`;
+
+    // First row: section-metadata label
+    output += `<tr>\n`;
+    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">section-metadata</td>\n`;
+    output += `</tr>\n`;
+
+    // Style row
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Style</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">light, highlight <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
+    output += `</tr>\n`;
+
+    output += `</tbody>\n`;
+    output += `</table>\n\n`;
+
+    output += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0 2rem 0;">\n`;
+    output += `<strong>Learn more:</strong> See the <a href="/merchants/storefront-builder/section-metadata/">Section Metadata guide</a> for complete styling options and the <a href="/merchants/storefront-builder/page-metadata/">Page Metadata guide</a> for SEO, caching, and social sharing options.\n`;
+    output += `</div>\n\n`;
+
+    return output;
+}
+
+/**
+ * Generate page metadata table for document authoring
+ * Used for blocks that need page-level metadata (robots, cache-control, title)
+ */
+function generateMetadataTable(blockName, blockDisplayName) {
+    // Only generate metadata table for specific blocks that need it
+    const blocksWithMetadata = ['commerce-checkout', 'commerce-cart', 'commerce-login', 'commerce-create-account', 'commerce-addresses'];
+
+    if (!blocksWithMetadata.includes(blockName)) {
+        return '';
+    }
+
+    // Determine metadata values based on block type
+    let robots = '';
+    let cacheControl = '';
+    let title = blockDisplayName;
+    let template = '';
+
+    if (blockName === 'commerce-checkout') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Checkout';
+    } else if (blockName === 'commerce-cart') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Cart';
+    } else if (blockName === 'commerce-login' || blockName === 'commerce-create-account') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = blockDisplayName.replace('Commerce ', '');
+    } else if (blockName === 'commerce-addresses') {
+        robots = 'noindex, nofollow';
+        title = 'Addresses';
+        template = 'Addresses, Columns';
+    }
+
+    let output = `## Page metadata\n\n`;
+    output += `Configure page-level metadata in the document authoring table below:\n\n`;
+
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
+    output += `<tbody>\n`;
+
+    // First row: metadata label
+    output += `<tr>\n`;
+    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>\n`;
+    output += `</tr>\n`;
+
+    // Title row (always present)
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Title</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${title}</td>\n`;
+    output += `</tr>\n`;
+
+    // Template row (only for addresses)
+    if (template) {
+        output += `<tr>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Template</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${template}</td>\n`;
+        output += `</tr>\n`;
+    }
+
+    // Robots row
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Robots</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${robots}</td>\n`;
+    output += `</tr>\n`;
+
+    // Cache Control row (only for checkout, cart, login, create-account)
+    if (cacheControl) {
+        output += `<tr>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Cache Control</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${cacheControl}</td>\n`;
+        output += `</tr>\n`;
+    }
+
+    output += `</tbody>\n`;
+    output += `</table>\n\n`;
+
+    return output;
+}
+
+/**
+ * Generate document authoring configuration table with descriptions
+ * Combines configuration example with property descriptions for one-stop reference
+ */
+function generateDocumentAuthoringTable(blockName, configs) {
+    if (configs.length === 0) {
+        return '';
+    }
+
+    // Filter out placeholder/empty configs (those with key '–' or empty)
+    const validConfigs = configs.filter(c => c.key && c.key !== '–' && c.key.trim() !== '');
+
+    if (validConfigs.length === 0) {
+        return '';
+    }
+
+    let output = `## Configuration\n\n`;
+    output += `Add this table to your document to configure the block:\n\n`;
+
+    // Table with full-width responsive layout
+    output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
+    output += `<tbody>\n`;
+
+    // First row: block name only (single cell, centered)
+    output += `<tr>\n`;
+    output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">${blockName}</td>\n`;
+    output += `</tr>\n`;
+
+    // Property rows: Title Case names and formatted values with examples
+    for (const config of validConfigs) {
+        const titleCaseName = toTitleCase(config.key);
+        const formattedValue = formatValueForAEM(config.default, config.type, config.key);
+        output += `<tr>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${titleCaseName}</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${formattedValue}</td>\n`;
+        output += `</tr>\n`;
+    }
+
+    output += `</tbody>\n`;
+    output += `</table>\n\n`;
+
+    // Add property descriptions if they exist
+    const configsWithDescriptions = validConfigs.filter(c => c.description && c.description.trim() && c.description !== 'This block has no authorable configuration.');
+    if (configsWithDescriptions.length > 0) {
+        output += `### Property descriptions\n\n`;
+        for (const config of configsWithDescriptions) {
+            const titleCaseName = toTitleCase(config.key);
+            let desc = config.description.trim();
+            if (desc && !desc.match(/[.!?]$/)) {
+                desc += '.';
+            }
+            output += `**${titleCaseName}**: ${desc}\n\n`;
+        }
+    }
+
+    return output;
+}
+
+// ============================================================================
+// BLOCK EXTRACTION
+// ============================================================================
+
+/**
+ * Extract commerce blocks from boilerplate
+ */
+function extractCommerceBlocks(boilerplatePath) {
+    console.log('\n🔍 Analyzing commerce blocks...');
+
+    const blocksDir = join(boilerplatePath, 'blocks');
+    const blocks = [];
+
+    if (!existsSync(blocksDir)) {
+        console.log('  ⚠️  Blocks directory not found');
+        return blocks;
+    }
+
+    const blockDirs = readdirSync(blocksDir).filter(name => {
+        const path = join(blocksDir, name);
+        return statSync(path).isDirectory();
+    });
+
+    for (const blockName of blockDirs) {
+        // Only process commerce-related blocks
+        if (!blockName.startsWith('commerce-') &&
+            !blockName.includes('product') &&
+            !blockName.includes('cart') &&
+            !blockName.includes('checkout')) {
+            continue;
+        }
+
+        const blockPath = join(blocksDir, blockName);
+        const readmePath = join(blockPath, 'README.md');
+
+        // SOURCE CODE IS THE ONLY SOURCE OF TRUTH
+        // Extract configs from actual readBlockConfig() calls in .js file
+        let configs = extractConfigFromSource(blockPath);
+
+        // Enrich with descriptions from README (if available)
+        if (configs.length > 0) {
+            const readmeConfigs = extractConfigFromReadme(readmePath);
+            const readmeMap = new Map(readmeConfigs.map(c => [c.key, c]));
+
+            for (const config of configs) {
+                const readmeConfig = readmeMap.get(config.key);
+                if (readmeConfig) {
+                    // Enrich with README description and type (if source type is unclear)
+                    config.description = readmeConfig.description || '';
+                    if (!config.type && readmeConfig.type) {
+                        config.type = readmeConfig.type;
+                    }
+                    config.sideEffects = readmeConfig.sideEffects || '';
+                } else {
+                    // Config exists in source but not documented in README
+                    config.description = 'No description available (not documented in README)';
+                }
+            }
+        }
+
+        blocks.push({
+            name: blockName,
+            displayName: blockName.split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
+            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
+            path: blockPath,
+            configs,
+            hasReadme: existsSync(readmePath)
+        });
+    }
+
+    console.log(`  ✓ Found ${blocks.length} commerce blocks`);
+    return blocks;
+}
+
+// ============================================================================
+// DOCUMENTATION GENERATION
+// ============================================================================
+
+/**
+ * Get boilerplate version from package.json
+ * This provides a consistent semantic version (e.g., 4.0.1) rather than
+ * git tags which may be descriptive (e.g., "fix-headers")
+ */
+function getBoilerplateVersion(boilerplatePath) {
+    try {
+        // Primary: Use package.json version (semantic versioning)
+        const packageJsonPath = join(boilerplatePath, 'package.json');
+        if (existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            if (packageJson.version) {
+                return packageJson.version;
+            }
+        }
+    } catch (error) {
+        console.warn('  ⚠️  Could not read package.json version');
+    }
+
+    // Fallback: Try git tag (only if package.json fails)
+    try {
+        const tag = execSync('git describe --tags --abbrev=0', {
+            cwd: boilerplatePath,
+            encoding: 'utf8'
+        }).trim();
+        // Remove 'v' prefix if present
+        return tag.replace(/^v/, '');
+    } catch {
+        return 'latest';
+    }
+}
+
+/**
+ * Mapping of blocks to their setup/tutorial guides
+ */
+const setupGuideMapping = {
+    'product-recommendations': '/merchants/commerce-blocks/product-recommendations/'
+};
+
+/**
+ * Generate merchant documentation for a single block
+ */
+function generateMerchantBlockDoc(block, outputDir, boilerplateVersion) {
+    const description = generateMerchantDescription(block.name, block.path);
+    const documentAuthoringTable = generateDocumentAuthoringTable(block.name, block.configs);
+    const metadataTable = generateMetadataTable(block.name, block.displayName);
+    const setupGuideUrl = setupGuideMapping[block.name];
+
+    const sidebarLabel = block.sidebarLabel || block.displayName;
+    let content = `---
+title: ${block.displayName}
+description: ${description}
+sidebar:
+  label: ${sidebarLabel}
+---
+
+${description}
+
+`;
+
+    // Add setup guide note if one exists
+    if (setupGuideUrl) {
+        content += `:::note[Setup required]
+Before using this block, see the [${block.displayName} setup guide](${setupGuideUrl}) for configuration instructions.
+:::
+
+`;
+    }
+
+    // Add page metadata table (for blocks that need it)
+    if (metadataTable) {
+        content += metadataTable;
+    }
+
+    // Add document authoring table with descriptions
+    if (block.configs.length > 0) {
+        content += documentAuthoringTable;
+    } else {
+        content += `## Configuration
+
+This block requires no configuration. Add the block name to a table in your document and it will automatically work with your storefront.
+
+`;
+    }
+
+    // Write file
+    const outputPath = join(outputDir, 'blocks', `${block.name}.mdx`);
+    ensureParentDirectoryExists(outputPath);
+    writeFileSync(outputPath, content, 'utf8');
+}
+
+// ============================================================================
+// MAIN EXECUTION
+// ============================================================================
+
+try {
+    console.log('\n' + '='.repeat(60));
+    console.log('  MERCHANT BLOCK DOCUMENTATION GENERATOR');
+    console.log('='.repeat(60));
+
+    // Clone/update boilerplate - use b2b-suite-release1 branch for B2B blocks
+    const { path: boilerplatePath } = cloneOrUpdateBoilerplate('b2b-suite-release1');
+
+    // Extract blocks
+    const blocks = extractCommerceBlocks(boilerplatePath);
+
+    // Generate documentation
+    const outputDir = join(projectRoot, 'src', 'content', 'docs', 'merchants');
+
+    console.log('\n📝 Generating merchant block documentation...');
+    const boilerplateVersion = getBoilerplateVersion(boilerplatePath);
+    let blockCount = 0;
+    for (const block of blocks) {
+        generateMerchantBlockDoc(block, outputDir, boilerplateVersion);
+        blockCount++;
+    }
+    console.log(`  ✅ Generated ${blockCount} block docs`);
+
+    // Summary
+    console.log('\n' + '='.repeat(60));
+    console.log('\n📊 Generation Summary:\n');
+    console.log(`✅ Commerce blocks: ${blocks.length}`);
+    console.log(`📄 Total pages: ${blocks.length}`);
+
+    console.log('\n📝 Generated Documentation:\n');
+    console.log(`   📂 /merchants/blocks/`);
+    blocks.forEach(block => {
+        console.log(`      📄 ${block.name}.mdx`);
+    });
+
+    console.log('\n✨ Merchant block documentation generation complete!\n');
+
+} catch (error) {
+    console.error('\n❌ Error generating merchant block documentation:');
+    console.error(`   ${error.message}`);
+    console.error(`\n${error.stack}`);
+    process.exit(1);
+}
