@@ -953,6 +953,15 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      { label: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
+                      { label: 'Negotiable Quote Template', link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/' },
+                      { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
+                    ],
+                  },
+                  {
                     label: 'Content customizations',
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
