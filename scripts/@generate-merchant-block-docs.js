@@ -824,8 +824,28 @@ function extractRequirements(blockPath) {
 
 /**
  * Generate Requirements section if block has prerequisites
+ * Priority: 1) Enrichment file, 2) README extraction
  */
 function generateRequirementsSection(blockName, blockPath) {
+    // Try to load enriched requirements first
+    const requirementsEnrichmentPath = join(process.cwd(), '_dropin-enrichments/merchant-blocks/requirements.json');
+    let enrichedRequirement = null;
+
+    try {
+        if (existsSync(requirementsEnrichmentPath)) {
+            const enrichmentData = JSON.parse(readFileSync(requirementsEnrichmentPath, 'utf8'));
+            enrichedRequirement = enrichmentData.requirements?.[blockName];
+        }
+    } catch (error) {
+        console.warn(`Warning: Could not load requirements enrichment: ${error.message}`);
+    }
+
+    // Use enriched requirement if available
+    if (enrichedRequirement) {
+        return `## Requirements\n\n${enrichedRequirement}\n\n`;
+    }
+
+    // Fall back to README extraction
     const requirements = extractRequirements(blockPath);
 
     if (!requirements || requirements.length === 0) {
@@ -972,13 +992,23 @@ function formatValueForAEM(value, type, propertyKey) {
 }
 
 /**
+ * Generate configuration section for blocks with no config properties
+ * Provides clear instructions for creating the block in DA.live
+ */
+function generateNoConfigurationSection(blockName) {
+    let output = `## Configuration\n\n`;
+    output += `No configurations available for this block.\n\n`;
+    return output;
+}
+
+/**
  * Generate section metadata table for document authoring
  * Shows common section styling options available to all blocks
  * Varies examples across blocks for demonstration
  */
 function generateSectionMetadataTable(blockName) {
     // Vary examples across blocks to show different options
-    // All values verified from boilerplate/styles/styles.css lines 406-411
+    // All values verified from boilerplate/styles/styles.css lines 406-491
     const styleExamples = {
         'default': 'light',
         'alt1': 'highlight',
@@ -994,9 +1024,9 @@ function generateSectionMetadataTable(blockName) {
     }
 
     let output = `## Section metadata\n\n`;
-    output += `Control the section styling that wraps your commerce block. Copy this table into your document to apply a light background:\n\n`;
+    output += `Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:\n\n`;
 
-    // Table with full-width responsive layout
+    // Table with full-width responsive layout showing ALL section-metadata properties
     output += `<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">\n`;
     output += `<tbody>\n`;
 
@@ -1005,17 +1035,41 @@ function generateSectionMetadataTable(blockName) {
     output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">section-metadata</td>\n`;
     output += `</tr>\n`;
 
-    // Style row
+    // Style row (background color)
     output += `<tr>\n`;
     output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Style</td>\n`;
-    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${styleValue}</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">${styleValue} <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
+    output += `</tr>\n`;
+
+    // Padding row (vertical spacing inside section)
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Padding</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">medium <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
+    output += `</tr>\n`;
+
+    // Margin row (vertical spacing outside section)
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Margin</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">small <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
+    output += `</tr>\n`;
+
+    // Column Width row (for multi-column layouts)
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Column Width</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">30% <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
+    output += `</tr>\n`;
+
+    // Gap row (spacing between columns)
+    output += `<tr>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Gap</td>\n`;
+    output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">small <span style="font-size: 0.85em;">(optional)</span></em></td>\n`;
     output += `</tr>\n`;
 
     output += `</tbody>\n`;
     output += `</table>\n\n`;
 
     output += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0 2rem 0;">\n`;
-    output += `<strong>Learn more:</strong> See the <a href="/merchants/storefront-builder/section-metadata/">Section Metadata guide</a> for complete styling options and the <a href="/merchants/storefront-builder/page-metadata/">Page Metadata guide</a> for SEO, caching, and social sharing options.\n`;
+    output += `<strong>Learn more:</strong> See the <a href="/merchants/storefront-builder/section-metadata/">Section Metadata guide</a> for all available values and the <a href="/merchants/storefront-builder/page-metadata/">Page Metadata guide</a> for SEO and caching options.\n`;
     output += `</div>\n\n`;
 
     return output;
@@ -1027,7 +1081,33 @@ function generateSectionMetadataTable(blockName) {
  */
 function generateMetadataTable(blockName, blockDisplayName) {
     // Only generate metadata table for specific blocks that need it
-    const blocksWithMetadata = ['commerce-checkout', 'commerce-cart', 'commerce-login', 'commerce-create-account', 'commerce-addresses'];
+    // These are full-page blocks that need SEO/caching controls
+    const blocksWithMetadata = [
+        // B2C full pages
+        'commerce-checkout',
+        'commerce-cart',
+        'commerce-login',
+        'commerce-create-account',
+        'commerce-addresses',
+        // B2B Company Management pages (user-specific account pages)
+        'commerce-company-create',
+        'commerce-company-profile',
+        'commerce-company-users',
+        'commerce-company-structure',
+        'commerce-company-roles-permissions',
+        'commerce-company-credit',
+        // B2B Purchase Order pages (user-specific transaction pages)
+        'commerce-b2b-po-company-purchase-orders',
+        'commerce-b2b-po-customer-purchase-orders',
+        'commerce-b2b-po-approval-rules-list',
+        'commerce-b2b-po-require-approval-purchase-orders',
+        // B2B Quote pages (user-specific, should not be cached/indexed)
+        'commerce-b2b-negotiable-quote',
+        'commerce-b2b-quote-checkout',
+        // B2B Requisition List pages (user shopping lists)
+        'commerce-b2b-requisition-list',
+        'commerce-b2b-requisition-list-view'
+    ];
 
     if (!blocksWithMetadata.includes(blockName)) {
         return '';
@@ -1055,6 +1135,65 @@ function generateMetadataTable(blockName, blockDisplayName) {
         robots = 'noindex, nofollow';
         title = 'Addresses';
         template = 'Addresses, Columns';
+        // B2B Company Management pages
+    } else if (blockName === 'commerce-company-create') {
+        robots = 'noindex, nofollow';
+        title = 'Company Registration';
+    } else if (blockName === 'commerce-company-profile') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Company Profile';
+    } else if (blockName === 'commerce-company-users') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Company Users';
+    } else if (blockName === 'commerce-company-structure') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Company Structure';
+    } else if (blockName === 'commerce-company-roles-permissions') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Roles & Permissions';
+    } else if (blockName === 'commerce-company-credit') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Company Credit';
+        // B2B Purchase Order pages
+    } else if (blockName === 'commerce-b2b-po-company-purchase-orders') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Purchase Orders';
+    } else if (blockName === 'commerce-b2b-po-customer-purchase-orders') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'My Purchase Orders';
+    } else if (blockName === 'commerce-b2b-po-approval-rules-list') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Approval Rules';
+    } else if (blockName === 'commerce-b2b-po-require-approval-purchase-orders') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Requires My Approval';
+        // B2B Quote pages
+    } else if (blockName === 'commerce-b2b-negotiable-quote') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Quotes';
+    } else if (blockName === 'commerce-b2b-quote-checkout') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Checkout';
+        // B2B Requisition List pages
+    } else if (blockName === 'commerce-b2b-requisition-list') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Requisition Lists';
+    } else if (blockName === 'commerce-b2b-requisition-list-view') {
+        robots = 'noindex, nofollow';
+        cacheControl = 'no-store';
+        title = 'Requisition List';
     }
 
     let output = `## Page metadata\n\n`;
@@ -1320,11 +1459,6 @@ Before using this block, see the [${block.displayName} setup guide](${setupGuide
         content += requirementsSection;
     }
 
-    // Add page metadata table (for blocks that need it)
-    if (metadataTable) {
-        content += metadataTable;
-    }
-
     // Add document authoring table with descriptions
     if (block.configs.length > 0) {
         content += documentAuthoringTable;
@@ -1341,11 +1475,12 @@ Before using this block, see the [${block.displayName} setup guide](${setupGuide
             content += importantNotes;
         }
     } else {
-        content += `## Configuration
+        content += generateNoConfigurationSection(block.name);
+    }
 
-This block requires no configuration. Add the block name to a table in your document and it will automatically work with your storefront.
-
-`;
+    // Add page metadata table (for blocks that need it)
+    if (metadataTable) {
+        content += metadataTable;
     }
 
     // Add section metadata table (available to ALL blocks)
