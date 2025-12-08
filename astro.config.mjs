@@ -956,9 +956,8 @@ async function config() {
                     label: 'B2B commerce blocks',
                     collapsed: true,
                     items: [
-                      { label: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
-                      { label: 'Negotiable Quote Template', link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/' },
-                      { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
+                      { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
+                      { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
                     ],
                   },
                   {
