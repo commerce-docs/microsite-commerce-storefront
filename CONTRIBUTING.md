@@ -619,6 +619,82 @@ docs: Fix broken links in SDK guide
 - **Production:** Automatic deployment after PR merge to main branch
 - **Rollback:** Contact DevOps team if issues arise
 
+### B2B Merchant Block Documentation Workflow
+
+The B2B merchant block documentation follows a specialized workflow to ensure clean, reviewable PRs for each B2B dropin team.
+
+**Branch Structure:**
+- **`releases/b2b-nov-release`**: Base branch for infrastructure changes
+- **Feature branches**: One per B2B dropin for generated files
+  - `feature/merchant-blocks-company-management`
+  - `feature/merchant-blocks-purchase-order`
+  - `feature/merchant-blocks-quote-management`
+  - `feature/merchant-blocks-requisition-list`
+  - `feature/merchant-blocks-checkout-account`
+- **`b2b-documentation`**: Preview branch combining all changes
+
+**Three-Step Workflow:**
+
+**Step 1: Infrastructure → `releases/b2b-nov-release`**
+1. Commit infrastructure changes directly to `releases/b2b-nov-release`
+2. Infrastructure includes:
+   - Generator scripts (`scripts/@generate-*.js`)
+   - Enrichment files (`_dropin-enrichments/merchant-blocks/*.json`)
+   - Package configuration (`package.json`)
+   - Sidebar configuration (`astro.config.mjs` - B2C blocks only, no B2B section)
+3. Push to GitHub
+
+**Important:** Feature branches do NOT receive infrastructure updates via merge. They remain independent with only their generated files.
+
+**Step 2: Generated Files → Feature Branches**
+1. Generate or update merchant block MDX files
+2. Commit files to their appropriate feature branch (one branch per dropin)
+3. Each feature branch includes:
+   - Only the merchant block files for that specific dropin
+   - Its own "B2B commerce blocks" section in `astro.config.mjs`
+4. Push each feature branch to GitHub
+
+**Step 3: Everything → `b2b-documentation`**
+1. Merge all feature branches into `b2b-documentation`
+2. This creates a complete preview with:
+   - All infrastructure from `releases/b2b-nov-release`
+   - All B2B merchant blocks from all feature branches
+3. Purpose: Test the complete B2B documentation before creating PRs
+
+**Example Commands:**
+```bash
+# Step 1: Infrastructure
+git checkout releases/b2b-nov-release
+git add scripts/_dropin-enrichments/merchant-blocks/
+git commit -m "Update merchant block generator infrastructure"
+git push origin releases/b2b-nov-release
+
+# Step 2: Generated files for one dropin
+git checkout feature/merchant-blocks-company-management
+# Generate or manually update merchant block files
+git add src/content/docs/merchants/blocks/commerce-company-*.mdx
+git commit -m "Update company management merchant blocks"
+git push origin feature/merchant-blocks-company-management
+
+# Step 3: Preview
+git checkout b2b-documentation
+git merge feature/merchant-blocks-company-management --no-edit
+git merge feature/merchant-blocks-purchase-order --no-edit
+# ... merge other feature branches
+git push origin b2b-documentation
+```
+
+**Why This Workflow?**
+- **Clean PRs**: Each B2B dropin team reviews only their specific files
+- **Independent Development**: Teams can work on their blocks without merge conflicts
+- **Infrastructure Separation**: Generator updates don't clutter feature branch PRs
+- **Complete Preview**: `b2b-documentation` shows the final integrated result
+
+**When to Use:**
+- Use this workflow when working on B2B merchant block documentation
+- For B2C merchant blocks, commit directly to `develop` branch
+- For developer dropin docs, use the standard development workflow
+
 ## Common Tasks
 
 ### Adding a New Tutorial
