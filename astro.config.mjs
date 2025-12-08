@@ -953,6 +953,25 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      { label: 'PO Approval Flow', link: '/merchants/blocks/commerce-b2b-po-approval-flow/' },
+                      { label: 'PO Approval Rule Details', link: '/merchants/blocks/commerce-b2b-po-approval-rule-details/' },
+                      { label: 'PO Approval Rule Form', link: '/merchants/blocks/commerce-b2b-po-approval-rule-form/' },
+                      { label: 'PO Approval Rules List', link: '/merchants/blocks/commerce-b2b-po-approval-rules-list/' },
+                      { label: 'PO Checkout Success', link: '/merchants/blocks/commerce-b2b-po-checkout-success/' },
+                      { label: 'PO Comment Form', link: '/merchants/blocks/commerce-b2b-po-comment-form/' },
+                      { label: 'PO Comments List', link: '/merchants/blocks/commerce-b2b-po-comments-list/' },
+                      { label: 'PO Company Purchase Orders', link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/' },
+                      { label: 'PO Customer Purchase Orders', link: '/merchants/blocks/commerce-b2b-po-customer-purchase-orders/' },
+                      { label: 'PO Header', link: '/merchants/blocks/commerce-b2b-po-header/' },
+                      { label: 'PO History Log', link: '/merchants/blocks/commerce-b2b-po-history-log/' },
+                      { label: 'PO Require Approval Purchase Orders', link: '/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/' },
+                      { label: 'PO Status', link: '/merchants/blocks/commerce-b2b-po-status/' },
+                    ],
+                  },
+                  {
                     label: 'Content customizations',
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
