@@ -359,6 +359,7 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                          { label: 'B2B Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
                           { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                           { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                         ],
@@ -476,7 +477,9 @@ async function config() {
                               { label: 'MergedCartBanner', link: '/dropins/checkout/containers/merged-cart-banner/' },
                               { label: 'OutOfStock', link: '/dropins/checkout/containers/out-of-stock/' },
                               { label: 'PaymentMethods', link: '/dropins/checkout/containers/payment-methods/' },
+                              { label: 'PaymentOnAccount', link: '/dropins/checkout/containers/payment-on-account/' },
                               { label: 'PlaceOrder', link: '/dropins/checkout/containers/place-order/' },
+                              { label: 'PurchaseOrder', link: '/dropins/checkout/containers/purchase-order/' },
                               { label: 'ServerError', link: '/dropins/checkout/containers/server-error/' },
                               { label: 'ShippingMethods', link: '/dropins/checkout/containers/shipping-methods/' },
                               { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
