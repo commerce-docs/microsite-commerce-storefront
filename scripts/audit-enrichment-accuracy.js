@@ -286,9 +286,22 @@ for (const [repoName, repoConfig] of Object.entries(dropinsToCheck)) {
             }
 
             // Warn if description claims to call a mutation but doesn't link to it
-            if (enrichment.description.includes('mutation') && !enrichment.description.includes('developer.adobe.com')) {
-                console.log(`      ⚠️  [Description] Mentions 'mutation' but no link to GraphQL docs`);
-                totalIssues++;
+            if (enrichment.description.includes('mutation')) {
+                // Check if any URL in description links to developer.adobe.com
+                const urlRegex = /\bhttps?:\/\/[^\s)]+/g;
+                const urls = enrichment.description.match(urlRegex) || [];
+                const hasDevAdobeLink = urls.some(urlStr => {
+                    try {
+                        const urlObj = new URL(urlStr);
+                        return urlObj.hostname === 'developer.adobe.com';
+                    } catch {
+                        return false;
+                    }
+                });
+                if (!hasDevAdobeLink) {
+                    console.log(`      ⚠️  [Description] Mentions 'mutation' but no link to GraphQL docs`);
+                    totalIssues++;
+                }
             }
         }
 
