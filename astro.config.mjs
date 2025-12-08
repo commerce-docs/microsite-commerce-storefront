@@ -953,6 +953,15 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      { label: 'Account Navigation', link: '/merchants/blocks/commerce-account-nav/' },
+                      { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
+                      { label: 'Customer Company', link: '/merchants/blocks/commerce-customer-company/' },
+                    ],
+                  },
+                  {
                     label: 'Content customizations',
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
