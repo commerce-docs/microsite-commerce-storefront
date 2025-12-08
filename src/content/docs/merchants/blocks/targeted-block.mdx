@@ -7,13 +7,12 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Diagram from '@components/Diagram.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 import Aside from '@components/Aside.astro';
-import Callouts from '@components/Callouts.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 
-This topic describes how to use Targeted Blocks to deliver personalized experiences.
+Display personalized content to specific customer segments, groups, or cart rules using Targeted Blocks. This enables you to show different promotions, messaging, or content to different customer types without creating separate pages.
 
 ## Vocabulary
 
@@ -21,7 +20,7 @@ This topic describes how to use Targeted Blocks to deliver personalized experien
 
 ### Targeted Block
 
-A block that wraps the content targeted for specific customer groups, segments, or cart rules.
+A block that wraps content targeted for specific customer groups, segments, or cart rules.
 
 ### Group
 
@@ -37,9 +36,9 @@ A block that wraps the content targeted for specific customer groups, segments, 
 
 </Vocabulary>
 
-## About targeted blocks
+## Configuration parameters
 
-You can add Targeted Blocks to a Commerce storefront page. They accept the following parameters:
+Targeted Blocks accept the following parameters to control which customers see the content:
 
 <OptionsTable
   compact
@@ -53,32 +52,103 @@ You can add Targeted Blocks to a Commerce storefront page. They accept the follo
   ]}
 />
 
+:::note
 If the fragment is not used for a Targeted Block, the last merged row of the block configuration must contain the content.
+:::
 
-## Specific customer segments
+## Implementation examples
 
-Specify the comma-separated list of customer segment IDs from Adobe Commerce to ensure that the block displays for customers matching these segments only.
+Follow these examples to implement different personalization scenarios using Targeted Blocks:
 
-The content of the Targeted Block in the following example will be displayed to the customers of the 1st and 2nd segments only:
+<Tasks>
 
-<Diagram caption="Targeted Block for specific customer segments">![Targeted Block for specific customer segments](@images/dropins/personalization/targeted-block.png)</Diagram>
+<Task>
 
-## Load interactive content from a fragment
+### Target specific customer segments
 
-Instead of embedding content directly in the Targeted Block, you can specify a path to a fragment. When you use a fragment, the system loads the content from the specified document path and displays it as the Targeted Block content.
+Specify comma-separated customer segment IDs from Adobe Commerce to ensure the block displays only for customers matching these segments.
 
-The content of the Targeted Block in the following example will be loaded from a document following the path specified in the fragment property:
+<Steps>
 
-<Diagram caption="Targeted Block loading interactive content from a fragment">![Targeted Block loading interactive content from a fragment](@images/dropins/personalization/targeted-block-fragment.png)</Diagram>
+1. Identify the customer segment IDs in your Adobe Commerce Admin.
 
-## Fallback using block type
+1. Create a Targeted Block table in your document.
 
-When multiple Targeted Blocks on a page share the same type, only the first matching Targeted Block displays to the customer. This fallback behavior enables you to configure a Targeted Block with default content that is visible to everyone, which specific blocks for particular groups or segments can then replace.
+1. Add the segment IDs to the **Customer Segments** parameter.
+
+</Steps>
+
+The content in this example displays only to customers in segments 1 and 2:
+
+<Diagram caption="Targeted Block for specific customer segments">
+![Targeted Block for specific customer segments](@images/dropins/personalization/targeted-block.png)
+</Diagram>
+
+</Task>
+
+<Task>
+
+### Load content from a fragment
+
+Instead of embedding content directly in the Targeted Block, specify a path to a fragment. The system loads content from the specified document path and displays it as the Targeted Block content.
+
+<Steps>
+
+1. Create a separate document containing your personalized content.
+
+1. Note the document path (e.g., `/fragments/promo-banner`).
+
+1. In your Targeted Block, specify this path in the **Fragment** parameter.
+
+</Steps>
+
+This example loads content from the document path specified in the fragment property:
+
+<Diagram caption="Targeted Block loading interactive content from a fragment">
+![Targeted Block loading interactive content from a fragment](@images/dropins/personalization/targeted-block-fragment.png)
+</Diagram>
+
+</Task>
+
+<Task>
+
+### Create fallback content using block type
+
+When multiple Targeted Blocks on a page share the same type, only the first matching Targeted Block displays to the customer. This fallback behavior enables you to configure a Targeted Block with default content visible to everyone, which specific blocks for particular groups or segments can then replace.
+
+<Steps>
+
+1. Create a Targeted Block with specific targeting rules (segments, groups, or cart rules).
+
+1. Set the **Type** parameter to a meaningful value (e.g., `hero-banner`).
+
+1. Create a second Targeted Block with no targeting rules (displays to all customers).
+
+1. Set the same **Type** value on the second block.
+
+1. The second block serves as fallback when the first block doesn't match.
+
+</Steps>
 
 In this example, the first Targeted Block displays only to customers whose shopping cart meets the conditions of cart price rule ID 5. The second Targeted Block has no conditions and should display to all customers. However, because both blocks share the same "Type" value, the second block will not display when the first block is active. Blocks with the same type replace each other in the display hierarchy:
 
-<Diagram caption="Targeted Block fallback using block type">![Targeted Block fallback using block type](@images/dropins/personalization/targeted-block-type.png)</Diagram>
+<Diagram caption="Targeted Block fallback using block type">
+![Targeted Block fallback using block type](@images/dropins/personalization/targeted-block-type.png)
+</Diagram>
 
-## Next steps
+</Task>
 
-Now that you understand how to create Targeted Blocks, you can start experimenting with personalized content for your customers.
+</Tasks>
+
+## Tips for merchants
+
+- Test Targeted Blocks by switching between different customer groups in your storefront
+- Use fragments for complex interactive content that needs to be reused across pages
+- Create default content with no targeting rules as fallback for customers who don't match any segments
+- Use the Type parameter to create layered fallback chains for progressive personalization
+
+## Related documentation
+
+- [Adobe Commerce Customer Groups](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-groups)
+- [Adobe Commerce Customer Segments](https://experienceleague.adobe.com/en/docs/commerce-admin/customers/segments/customer-segments)
+- [Adobe Commerce Cart Price Rules](https://experienceleague.adobe.com/en/docs/commerce-admin/marketing/promotions/cart-rules/price-rules-cart)
