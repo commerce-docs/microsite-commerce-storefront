@@ -921,12 +921,10 @@ async function config() {
                     items: [
                       { label: 'Overview', link: '/merchants/commerce-blocks/' },
                       { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
-                      { label: 'Account Navigation', link: '/merchants/blocks/commerce-account-nav/' },
                       { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
                       { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
                       { label: 'Cart', link: '/merchants/blocks/commerce-cart/' },
                       { label: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
-                      { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
                       { label: 'Confirm Account', link: '/merchants/blocks/commerce-confirm-account/' },
                       { label: 'Create Account', link: '/merchants/blocks/commerce-create-account/' },
                       { label: 'Create Password', link: '/merchants/blocks/commerce-create-password/' },
@@ -952,6 +950,15 @@ async function config() {
                       { label: 'Product Details', link: '/merchants/blocks/product-details/' },
                       { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
                       { label: 'Product Recommendations', link: '/merchants/blocks/product-recommendations/' },
+                    ],
+                  },
+                  {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      { label: 'Account Navigation', link: '/merchants/blocks/commerce-account-nav/' },
+                      { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
+                      { label: 'Customer Company', link: '/merchants/blocks/commerce-customer-company/' },
                     ],
                   },
                   {
