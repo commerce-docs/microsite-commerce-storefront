@@ -15,12 +15,13 @@
 
 interface Props {
   nowrap?: number[]; // Column indices that should not wrap (0-based)
+  variant?: 'default' | 'metadata'; // Visual style variant
 }
 
-const { nowrap = [] } = Astro.props;
+const { nowrap = [], variant = 'default' } = Astro.props;
 ---
 
-<div class="table-wrapper" data-nowrap-columns={nowrap.join(",")}>
+<div class={`table-wrapper ${variant === 'metadata' ? 'metadata-table' : ''}`} data-nowrap-columns={nowrap.join(",")}>
   <slot />
 </div>
 
@@ -99,5 +100,26 @@ const { nowrap = [] } = Astro.props;
   .table-wrapper[data-nowrap-columns*="9"] th:nth-child(10),
   .table-wrapper[data-nowrap-columns*="9"] td:nth-child(10) {
     white-space: nowrap;
+  }
+
+  /* Metadata table styling */
+  .metadata-table table {
+    min-width: 470px;
+    max-width: 100%;
+    table-layout: fixed;
+  }
+
+  .metadata-table table thead tr th {
+    text-align: center;
+    padding: 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
+    background-color: var(--sl-color-gray-6);
+    font-weight: 600;
+  }
+
+  .metadata-table table tbody tr td {
+    width: 50%;
+    padding: 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
   }
 </style>
