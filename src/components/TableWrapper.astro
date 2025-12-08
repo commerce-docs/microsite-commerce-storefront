@@ -15,12 +15,13 @@
 
 interface Props {
   nowrap?: number[]; // Column indices that should not wrap (0-based)
+  variant?: 'default' | 'metadata'; // Visual style variant
 }
 
-const { nowrap = [] } = Astro.props;
+const { nowrap = [], variant = 'default' } = Astro.props;
 ---
 
-<div class="table-wrapper" data-nowrap-columns={nowrap.join(",")}>
+<div class={`table-wrapper ${variant === 'metadata' ? 'metadata-table' : ''}`} data-nowrap-columns={nowrap.join(",")}>
   <slot />
 </div>
 
@@ -99,5 +100,40 @@ const { nowrap = [] } = Astro.props;
   .table-wrapper[data-nowrap-columns*="9"] th:nth-child(10),
   .table-wrapper[data-nowrap-columns*="9"] td:nth-child(10) {
     white-space: nowrap;
+  }
+
+  /* Metadata table styling - matches HTML table appearance exactly */
+  .metadata-table table {
+    min-width: 470px;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  /* Header row - make first cell span full width visually */
+  .metadata-table table thead tr {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .metadata-table table thead tr th {
+    text-align: center;
+    padding: 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
+    background-color: var(--sl-color-gray-6);
+    font-weight: 600;
+    grid-column: 1 / -1;
+  }
+
+  /* Hide the second (empty) header cell */
+  .metadata-table table thead tr th:nth-child(2) {
+    display: none;
+  }
+
+  /* Body rows - 50% width each column */
+  .metadata-table table tbody tr td {
+    width: 50%;
+    padding: 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
   }
 </style>
