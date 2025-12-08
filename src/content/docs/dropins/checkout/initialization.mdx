@@ -118,26 +118,110 @@ await initializers.mountImmediately(initialize, { models });
 
 ## Drop-in configuration
 
-The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.
+The **Checkout initializer** provides drop-in-specific configuration options to customize the checkout experience beyond language and model customization.
+
+### Configuring default behaviors
+
+The `defaults` option controls checkout behaviors such as billing address and shipping method selection:
 
 ```javascript title="scripts/initializers/checkout.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-checkout';
 
 await initializers.mountImmediately(initialize, {
-  defaults: {},
-  shipping: {},
-  features: {},
-  langDefinitions: {},
-  models: {},
+  defaults: {
+    // Set billing address to match shipping address by default
+    isBillToShipping: true,
+    // Pre-select the first available shipping method
+    selectedShippingMethod: (methods) => methods.length > 0 ? methods[0] : null,
+  },
 });
 ```
 
-<Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
-</Aside>
+#### Default options
 
+- **isBillToShipping**: When `true`, automatically uses the shipping address as the billing address. When `false` (default), displays a separate billing address form.
+- **selectedShippingMethod**: A selector function that receives an array of available shipping methods and returns the method to pre-select. Return `null` for no pre-selection.
 
+### Filtering shipping methods
+
+The `shipping` option allows you to filter which shipping methods are available to customers:
+
+```javascript title="scripts/initializers/checkout.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-checkout';
+
+await initializers.mountImmediately(initialize, {
+  shipping: {
+    // Only show ground shipping options
+    filterOptions: (method) => method.carrier.code === 'flatrate',
+  },
+});
+```
+
+The `filterOptions` function receives each shipping method and returns `true` to show it or `false` to hide it.
+
+### Enabling B2B features
+
+The `features` option enables B2B-specific functionality such as negotiable quote checkout:
+
+```javascript title="scripts/initializers/checkout.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-checkout';
+import { rootLink, detectPageType } from '../commerce.js';
+
+const pageType = detectPageType();
+
+await initializers.mountImmediately(initialize, {
+  features: {
+    b2b: {
+      // Enable quote checkout for B2B pages
+      quotes: pageType === 'B2B Checkout',
+      // Redirect to login page for guest users
+      routeLogin: () => rootLink('/customer/login'),
+    },
+  },
+});
+```
+
+#### B2B feature options
+
+- **quotes**: When `true`, enables negotiable quote checkout functionality for B2B customers. This displays quote-specific information and uses the [`getNegotiableQuote`](/dropins/checkout/functions/#getnegotiablequote) function instead of standard cart operations.
+- **routeLogin**: A function that returns the login page URL. Called when unauthenticated users need to sign in during checkout.
+
+### Complete configuration example
+
+The following example shows all drop-in-specific configuration options together:
+
+```javascript title="scripts/initializers/checkout.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-checkout';
+import { rootLink, detectPageType } from '../commerce.js';
+
+const pageType = detectPageType();
+
+await initializers.mountImmediately(initialize, {
+  defaults: {
+    isBillToShipping: true,
+    selectedShippingMethod: (methods) => methods.length > 0 ? methods[0] : null,
+  },
+  shipping: {
+    filterOptions: (method) => method.carrier.code === 'flatrate',
+  },
+  features: {
+    b2b: {
+      quotes: pageType === 'B2B Checkout',
+      routeLogin: () => rootLink('/customer/login'),
+    },
+  },
+  langDefinitions: {
+    default: {
+      'Checkout': 'Complete Purchase',
+    },
+  },
+  models: {},
+});
+```
 
 ## Configuration types
 
