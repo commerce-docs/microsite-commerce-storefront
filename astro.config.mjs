@@ -953,6 +953,19 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      { label: 'Company Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
+                      { label: 'Company Create', link: '/merchants/blocks/commerce-company-create/' },
+                      { label: 'Company Credit', link: '/merchants/blocks/commerce-company-credit/' },
+                      { label: 'Company Profile', link: '/merchants/blocks/commerce-company-profile/' },
+                      { label: 'Company Roles Permissions', link: '/merchants/blocks/commerce-company-roles-permissions/' },
+                      { label: 'Company Structure', link: '/merchants/blocks/commerce-company-structure/' },
+                      { label: 'Company Users', link: '/merchants/blocks/commerce-company-users/' },
+                    ],
+                  },
+                  {
                     label: 'Content customizations',
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
