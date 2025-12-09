@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+/*
+ * Copyright 2025 Adobe
+ */
+
 /**
  * Setup Reference Repositories
  * 
