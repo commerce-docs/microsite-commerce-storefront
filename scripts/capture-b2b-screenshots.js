@@ -31,7 +31,7 @@ const __dirname = path.dirname(__filename);
 // Configuration
 const CONFIG = {
     baseUrl: 'https://b2b-suite-release1--boilerplate-b2b-accs-qa--adobe-commerce.aem.live',
-    viewport: { width: 3840, height: 2160 }, // 2x retina (1920x1080 @ 2x)
+    viewport: { width: 2560, height: 1440 }, // 16:9 aspect ratio @ 2x retina (1280x720 base)
     deviceScaleFactor: 2,
     credentials: {
         username: process.env.B2B_USERNAME || 'tony.stark@fake.email',
@@ -40,7 +40,11 @@ const CONFIG = {
     },
     outputDir: path.join(__dirname, '..', 'public', 'images'),
     tempDir: path.join(__dirname, '..', '.temp-screenshots'),
-    storageStatePath: path.join(__dirname, '..', '.temp-screenshots', 'auth-state.json')
+    storageStatePath: path.join(__dirname, '..', '.temp-screenshots', 'auth-state.json'),
+    // Screenshot settings
+    captureFullWidth: true, // Capture full width of main content area
+    minWidth: 1200, // Minimum width for screenshots
+    maxHeight: 800 // Maximum height to keep aspect ratio wide
 };
 
 /**
@@ -339,11 +343,34 @@ async function captureBlock(page, blockName, config) {
     const tempPngPath = path.join(CONFIG.tempDir, `${blockName}.png`);
     const finalWebpPath = path.join(CONFIG.outputDir, `${blockName}.webp`);
 
-    await element.screenshot({ path: tempPngPath });
+    // Get element bounding box to ensure wide capture
+    const box = await element.boundingBox();
+    if (box && box.width < CONFIG.minWidth) {
+        // If element is too narrow, capture a wider parent or the main content area
+        console.log(`   📐 Element too narrow (${Math.round(box.width)}px), capturing wider area`);
+        const mainContent = page.locator('main, .main-content, [role="main"]').first();
+        await mainContent.screenshot({ path: tempPngPath });
+    } else {
+        await element.screenshot({ path: tempPngPath });
+    }
     console.log(`   → PNG saved: ${tempPngPath}`);
 
-    // Convert to WebP
-    await convertToWebP(tempPngPath, finalWebpPath);
+    // Convert to WebP with resizing if needed
+    let image = sharp(tempPngPath);
+    const metadata = await image.metadata();
+
+    // Ensure landscape orientation (width > height)
+    if (metadata.height > metadata.width) {
+        console.log(`   📐 Converting portrait to landscape`);
+        // This is a tall image, let's resize to maintain aspect but cap height
+        const targetHeight = Math.min(metadata.height, CONFIG.maxHeight);
+        image = image.resize({ height: targetHeight, fit: 'inside' });
+    } else if (metadata.width < CONFIG.minWidth) {
+        console.log(`   📐 Scaling up to minimum width`);
+        image = image.resize({ width: CONFIG.minWidth, fit: 'inside' });
+    }
+
+    await image.webp({ quality: 90, lossless: false }).toFile(finalWebpPath);
     console.log(`   ✅ WebP saved: ${finalWebpPath}`);
 
     // Clean up temp PNG
