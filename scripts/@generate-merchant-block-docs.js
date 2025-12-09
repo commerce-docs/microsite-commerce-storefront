@@ -173,6 +173,83 @@ function updateEnrichmentMetadata(boilerplatePath, blockCount) {
 
 
 /**
+ * Helper: Split destructured properties while respecting nested structures
+ */
+function splitDestructuredProperties(content) {
+    const properties = [];
+    let current = '';
+    let depth = 0;
+    let inString = false;
+    let stringChar = '';
+
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        const prev = content[i - 1];
+
+        // Track string boundaries
+        if ((char === '"' || char === "'" || char === '`') && prev !== '\\') {
+            if (!inString) {
+                inString = true;
+                stringChar = char;
+            } else if (char === stringChar) {
+                inString = false;
+            }
+        }
+
+        // Track nesting depth (for arrays/objects in default values)
+        if (!inString) {
+            if (char === '{' || char === '[' || char === '(') depth++;
+            if (char === '}' || char === ']' || char === ')') depth--;
+        }
+
+        // Split on commas at depth 0 (not nested)
+        if (char === ',' && depth === 0 && !inString) {
+            properties.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Add the last property
+    if (current.trim()) {
+        properties.push(current);
+    }
+
+    return properties;
+}
+
+/**
+ * Helper: Clean and normalize default values from source code
+ */
+function cleanDefaultValue(value) {
+    if (!value) return 'undefined';
+
+    let cleaned = value
+        .replace(/^['"`]|['"`]$/g, '')  // Remove surrounding quotes
+        .replace(/,\s*$/, '')            // Remove trailing comma
+        .trim();
+
+    return cleaned || 'undefined';
+}
+
+/**
+ * Helper: Infer type from default value
+ */
+function inferType(defaultValue) {
+    if (defaultValue === 'true' || defaultValue === 'false') {
+        return 'boolean';
+    }
+    if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
+        return 'number';
+    }
+    if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
+        return 'object';
+    }
+    return 'string';
+}
+
+/**
  * Extract configuration from source code (PRIMARY SOURCE OF TRUTH)
  * Scans .js file for readBlockConfig() calls and extracts destructured keys
  * This is the ONLY way to know what configurations actually exist
@@ -188,56 +265,73 @@ function extractConfigFromSource(blockPath) {
     const configs = [];
     const foundKeys = new Set();
 
-    // PATTERN 1: Destructuring pattern
-    // const { 'config-key': varName = 'default', ... } = readBlockConfig(block);
+    // PATTERN 1: Destructuring pattern (both explicit and shorthand)
+    // const { 'config-key': varName = 'default', shorthand, ... } = readBlockConfig(block);
     const readBlockConfigPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\([^)]+\)/g;
     const matches = sourceCode.matchAll(readBlockConfigPattern);
 
     for (const match of matches) {
         const destructuredContent = match[1];
 
-        // Parse each destructured property
-        // Pattern: 'config-key': varName = 'defaultValue'
-        const propertyPattern = /['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*([^,}]+))?/g;
-        const propertyMatches = destructuredContent.matchAll(propertyPattern);
+        // Split by commas (but be careful with nested objects/arrays)
+        const properties = splitDestructuredProperties(destructuredContent);
 
-        for (const propMatch of propertyMatches) {
-            const key = propMatch[1].trim();
-            const variable = propMatch[2].trim();
-            let defaultValue = propMatch[3]?.trim() || 'undefined';
+        for (const prop of properties) {
+            const trimmedProp = prop.trim();
+            if (!trimmedProp) continue;
 
-            // Clean up default value
-            defaultValue = defaultValue
-                .replace(/^['"`]|['"`]$/g, '')
-                .replace(/,\s*$/, '')
-                .trim();
+            // Pattern 1a: Explicit key-value: 'config-key': varName = 'defaultValue'
+            const explicitPattern = /^['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*(.+))?$/;
+            const explicitMatch = trimmedProp.match(explicitPattern);
 
-            if (defaultValue === '') {
-                defaultValue = 'undefined';
+            if (explicitMatch) {
+                const key = explicitMatch[1].trim();
+                const variable = explicitMatch[2].trim();
+                let defaultValue = explicitMatch[3]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                configs.push({
+                    key: key,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-explicit'
+                });
+
+                foundKeys.add(key);
+                continue;
             }
 
-            // Infer type from default value in source code
-            let type = 'string';
-            if (defaultValue === 'true' || defaultValue === 'false') {
-                type = 'boolean';
-            } else if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
-                type = 'number';
-            } else if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
-                type = 'object';
+            // Pattern 1b: ES6 Shorthand: varName or varName = 'defaultValue'
+            const shorthandPattern = /^(\w+)(?:\s*=\s*(.+))?$/;
+            const shorthandMatch = trimmedProp.match(shorthandPattern);
+
+            if (shorthandMatch) {
+                const variable = shorthandMatch[1].trim();
+                let defaultValue = shorthandMatch[2]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                // For shorthand, the config key is the variable name
+                configs.push({
+                    key: variable,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-shorthand'
+                });
+
+                foundKeys.add(variable);
             }
-
-            configs.push({
-                key: key,
-                variable: variable,
-                type: type,
-                default: defaultValue,
-                description: '', // Will be enriched from README
-                required: 'No',
-                sideEffects: '',
-                source: 'source-code'
-            });
-
-            foundKeys.add(key);
         }
     }
 
@@ -616,7 +710,7 @@ function generateEnhancedPropertyDescription(key, description, type, defaultValu
     const configEnrichments = loadConfigurationEnrichments();
     const blockConfigs = configEnrichments[blockName] || {};
     const enrichedConfig = blockConfigs[key.toLowerCase()];
-    
+
     if (enrichedConfig && enrichedConfig.description) {
         // Use enriched description + when_to_use if available
         let enhanced = enrichedConfig.description;
@@ -625,7 +719,7 @@ function generateEnhancedPropertyDescription(key, description, type, defaultValu
         }
         return enhanced.endsWith('.') ? enhanced : enhanced + '.';
     }
-    
+
     // Fall back to auto-generated enhancements
     const cleanKey = key.toLowerCase();
     let enhanced = description.trim();
