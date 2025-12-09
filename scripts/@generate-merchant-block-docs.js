@@ -588,10 +588,45 @@ function extractImportantNotes(blockPath) {
 }
 
 /**
+ * Load configuration enrichments from JSON file
+ */
+function loadConfigurationEnrichments() {
+    const enrichmentPath = join(process.cwd(), '_dropin-enrichments/merchant-blocks/configurations.json');
+    if (!existsSync(enrichmentPath)) {
+        return {};
+    }
+
+    try {
+        const content = readFileSync(enrichmentPath, 'utf8');
+        const data = JSON.parse(content);
+        return data.configurations || {};
+    } catch (error) {
+        console.warn(`  ⚠️  Could not load configuration enrichments: ${error.message}`);
+        return {};
+    }
+}
+
+
+/**
  * Generate enhanced property descriptions with context
  * Adds WHEN/WHY information to make descriptions more actionable
  */
-function generateEnhancedPropertyDescription(key, description, type, defaultValue) {
+function generateEnhancedPropertyDescription(key, description, type, defaultValue, blockName) {
+    // Try to load enriched description first
+    const configEnrichments = loadConfigurationEnrichments();
+    const blockConfigs = configEnrichments[blockName] || {};
+    const enrichedConfig = blockConfigs[key.toLowerCase()];
+    
+    if (enrichedConfig && enrichedConfig.description) {
+        // Use enriched description + when_to_use if available
+        let enhanced = enrichedConfig.description;
+        if (enrichedConfig.when_to_use) {
+            enhanced += ` ${enrichedConfig.when_to_use}`;
+        }
+        return enhanced.endsWith('.') ? enhanced : enhanced + '.';
+    }
+    
+    // Fall back to auto-generated enhancements
     const cleanKey = key.toLowerCase();
     let enhanced = description.trim();
 
@@ -1338,7 +1373,8 @@ function generateDocumentAuthoringTable(blockName, configs) {
                 config.key,
                 config.description.trim(),
                 config.type,
-                config.default
+                config.default,
+                blockName  // ADDED: Pass blockName for enrichment lookup
             );
             output += `**${titleCaseName}**: ${enhancedDesc}\n\n`;
         }
