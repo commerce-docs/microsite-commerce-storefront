@@ -186,8 +186,9 @@ function extractConfigFromSource(blockPath) {
 
     const sourceCode = readFileSync(jsFile, 'utf8');
     const configs = [];
+    const foundKeys = new Set();
 
-    // Look for readBlockConfig pattern:
+    // PATTERN 1: Destructuring pattern
     // const { 'config-key': varName = 'default', ... } = readBlockConfig(block);
     const readBlockConfigPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\([^)]+\)/g;
     const matches = sourceCode.matchAll(readBlockConfigPattern);
@@ -235,6 +236,50 @@ function extractConfigFromSource(blockPath) {
                 sideEffects: '',
                 source: 'source-code'
             });
+
+            foundKeys.add(key);
+        }
+    }
+
+    // PATTERN 2: Assignment pattern
+    // const config = readBlockConfig(block);
+    // if (config.urlpath) { ... }
+    const assignmentPattern = /const\s+(\w+)\s*=\s*readBlockConfig\([^)]+\)/;
+    const assignmentMatch = sourceCode.match(assignmentPattern);
+
+    if (assignmentMatch) {
+        const configVarName = assignmentMatch[1]; // e.g., "config"
+
+        // Find all usages of config.property throughout the file
+        const propertyUsagePattern = new RegExp(configVarName + '\\.(\\w+)', 'g');
+        const propertyMatches = [...sourceCode.matchAll(propertyUsagePattern)];
+
+        // Get unique property names
+        const propertyNames = [...new Set(propertyMatches.map(m => m[1]))];
+
+        for (const propertyName of propertyNames) {
+            // Skip if already found via destructuring
+            if (foundKeys.has(propertyName)) {
+                continue;
+            }
+
+            // Skip common object properties that aren't config
+            if (['length', 'toString', 'valueOf', 'constructor', 'dataset'].includes(propertyName)) {
+                continue;
+            }
+
+            configs.push({
+                key: propertyName,
+                variable: propertyName,
+                type: 'string', // Default to string, could be enhanced with more analysis
+                default: 'undefined',
+                description: '', // Will be enriched from README
+                required: 'No',
+                sideEffects: '',
+                source: 'source-code-assignment'
+            });
+
+            foundKeys.add(propertyName);
         }
     }
 
