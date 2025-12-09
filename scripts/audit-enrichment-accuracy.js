@@ -72,6 +72,27 @@ function extractEventsFromEnrichment(eventsText) {
     return eventMentions.map(e => e.replace(/`/g, '')).sort();
 }
 
+/**
+ * Check if text contains a valid URL with the specified hostname
+ * Prevents incomplete URL substring sanitization vulnerabilities
+ * 
+ * @param {string} text - Text to search for URLs
+ * @param {string} hostname - Hostname to match (e.g., 'github.com')
+ * @returns {boolean}
+ */
+function hasValidUrlWithHost(text, hostname) {
+    const urlRegex = /\bhttps?:\/\/[^\s)]+/g;
+    const urls = text.match(urlRegex) || [];
+    return urls.some(urlStr => {
+        try {
+            const urlObj = new URL(urlStr);
+            return urlObj.hostname === hostname;
+        } catch {
+            return false;
+        }
+    });
+}
+
 console.log('\n' + '='.repeat(70));
 console.log('📋 ENRICHMENT ACCURACY AUDIT');
 console.log('='.repeat(70) + '\n');
@@ -193,7 +214,7 @@ for (const [repoName, repoConfig] of Object.entries(dropinsToCheck)) {
         // === CHECK 1: Returns Field ===
         if (enrichment.returns) {
             // Check for verification link
-            if (!enrichment.returns.includes('github.com')) {
+            if (!hasValidUrlWithHost(enrichment.returns, 'github.com')) {
                 console.log(`      ⚠️  [Returns] Missing verification link to source code`);
                 totalIssues++;
             }
@@ -236,7 +257,7 @@ for (const [repoName, repoConfig] of Object.entries(dropinsToCheck)) {
                 if (hasSpecificType) {
                     console.log(`      ✅ References specific type: ${hasSpecificType[1]}`);
                     totalVerified++;
-                } else if (enrichment.returns.includes('github.com')) {
+                } else if (hasValidUrlWithHost(enrichment.returns, 'github.com')) {
                     console.log(`      ✅ Has verification link`);
                     totalVerified++;
                 } else {
@@ -287,18 +308,7 @@ for (const [repoName, repoConfig] of Object.entries(dropinsToCheck)) {
 
             // Warn if description claims to call a mutation but doesn't link to it
             if (enrichment.description.includes('mutation')) {
-                // Check if any URL in description links to developer.adobe.com
-                const urlRegex = /\bhttps?:\/\/[^\s)]+/g;
-                const urls = enrichment.description.match(urlRegex) || [];
-                const hasDevAdobeLink = urls.some(urlStr => {
-                    try {
-                        const urlObj = new URL(urlStr);
-                        return urlObj.hostname === 'developer.adobe.com';
-                    } catch {
-                        return false;
-                    }
-                });
-                if (!hasDevAdobeLink) {
+                if (!hasValidUrlWithHost(enrichment.description, 'developer.adobe.com')) {
                     console.log(`      ⚠️  [Description] Mentions 'mutation' but no link to GraphQL docs`);
                     totalIssues++;
                 }
