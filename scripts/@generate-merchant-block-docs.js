@@ -335,45 +335,132 @@ function extractConfigFromSource(blockPath) {
         }
     }
 
-    // PATTERN 2: Assignment pattern
-    // const config = readBlockConfig(block);
-    // if (config.urlpath) { ... }
+    // PATTERN 2 & 3: Assignment pattern with optional subsequent destructuring
+    // Pattern 2: const config = readBlockConfig(block); if (config.urlpath) { ... }
+    // Pattern 3: const blockConfig = readBlockConfig(block); const { fragment, type, ... } = blockConfig;
     const assignmentPattern = /const\s+(\w+)\s*=\s*readBlockConfig\([^)]+\)/;
     const assignmentMatch = sourceCode.match(assignmentPattern);
 
     if (assignmentMatch) {
-        const configVarName = assignmentMatch[1]; // e.g., "config"
+        const configVarName = assignmentMatch[1]; // e.g., "config" or "blockConfig"
 
-        // Find all usages of config.property throughout the file
-        const propertyUsagePattern = new RegExp(configVarName + '\\.(\\w+)', 'g');
-        const propertyMatches = [...sourceCode.matchAll(propertyUsagePattern)];
+        // PATTERN 3: Check for subsequent destructuring from the config variable
+        // This handles cases where destructuring happens on a separate line (even with blank lines)
+        // Example: const blockConfig = readBlockConfig(block);
+        //          
+        //          const { fragment, type, 'customer-segments': customerSegments } = blockConfig;
+        const subsequentDestructPattern = new RegExp(
+            `const\\s*\\{([^}]+)\\}\\s*=\\s*${configVarName}[;,]?`,
+            'gs' // Global + dotall flags to handle multiline patterns and blank lines
+        );
+        const destructMatch = sourceCode.match(subsequentDestructPattern);
 
-        // Get unique property names
-        const propertyNames = [...new Set(propertyMatches.map(m => m[1]))];
+        if (destructMatch) {
+            // Found subsequent destructuring - parse it like PATTERN 1
+            for (const match of destructMatch) {
+                // Extract the content between { and }
+                const destructuredContent = match.match(/\{([^}]+)\}/s)?.[1];
+                if (!destructuredContent) continue;
 
-        for (const propertyName of propertyNames) {
-            // Skip if already found via destructuring
-            if (foundKeys.has(propertyName)) {
-                continue;
+                const properties = splitDestructuredProperties(destructuredContent);
+
+                for (const prop of properties) {
+                    const trimmedProp = prop.trim();
+                    if (!trimmedProp) continue;
+
+                    // Pattern 3a: Explicit key-value: 'config-key': varName = 'defaultValue'
+                    const explicitPattern = /^['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*(.+))?$/;
+                    const explicitMatch = trimmedProp.match(explicitPattern);
+
+                    if (explicitMatch) {
+                        const key = explicitMatch[1].trim();
+                        const variable = explicitMatch[2].trim();
+                        let defaultValue = explicitMatch[3]?.trim() || 'undefined';
+
+                        // Skip if already found
+                        if (foundKeys.has(key)) continue;
+
+                        // Clean up default value
+                        defaultValue = cleanDefaultValue(defaultValue);
+
+                        configs.push({
+                            key: key,
+                            variable: variable,
+                            type: inferType(defaultValue),
+                            default: defaultValue,
+                            description: '', // Will be enriched from README
+                            required: 'No',
+                            sideEffects: '',
+                            source: 'source-code-subsequent-destruct'
+                        });
+
+                        foundKeys.add(key);
+                        continue;
+                    }
+
+                    // Pattern 3b: ES6 Shorthand: varName or varName = 'defaultValue'
+                    const shorthandPattern = /^(\w+)(?:\s*=\s*(.+))?$/;
+                    const shorthandMatch = trimmedProp.match(shorthandPattern);
+
+                    if (shorthandMatch) {
+                        const variable = shorthandMatch[1].trim();
+                        let defaultValue = shorthandMatch[2]?.trim() || 'undefined';
+
+                        // Skip if already found
+                        if (foundKeys.has(variable)) continue;
+
+                        // Clean up default value
+                        defaultValue = cleanDefaultValue(defaultValue);
+
+                        // For shorthand, the config key is the variable name
+                        configs.push({
+                            key: variable,
+                            variable: variable,
+                            type: inferType(defaultValue),
+                            default: defaultValue,
+                            description: '', // Will be enriched from README
+                            required: 'No',
+                            sideEffects: '',
+                            source: 'source-code-subsequent-destruct'
+                        });
+
+                        foundKeys.add(variable);
+                    }
+                }
             }
+        } else {
+            // No subsequent destructuring found - fall back to PATTERN 2 (property usage detection)
+            // Find all usages of config.property throughout the file
+            const propertyUsagePattern = new RegExp(configVarName + '\\.(\\w+)', 'g');
+            const propertyMatches = [...sourceCode.matchAll(propertyUsagePattern)];
 
-            // Skip common object properties that aren't config
-            if (['length', 'toString', 'valueOf', 'constructor', 'dataset'].includes(propertyName)) {
-                continue;
+            // Get unique property names
+            const propertyNames = [...new Set(propertyMatches.map(m => m[1]))];
+
+            for (const propertyName of propertyNames) {
+                // Skip if already found via destructuring
+                if (foundKeys.has(propertyName)) {
+                    continue;
+                }
+
+                // Skip common object properties that aren't config
+                if (['length', 'toString', 'valueOf', 'constructor', 'dataset'].includes(propertyName)) {
+                    continue;
+                }
+
+                configs.push({
+                    key: propertyName,
+                    variable: propertyName,
+                    type: 'string', // Default to string, could be enhanced with more analysis
+                    default: 'undefined',
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-assignment'
+                });
+
+                foundKeys.add(propertyName);
             }
-
-            configs.push({
-                key: propertyName,
-                variable: propertyName,
-                type: 'string', // Default to string, could be enhanced with more analysis
-                default: 'undefined',
-                description: '', // Will be enriched from README
-                required: 'No',
-                sideEffects: '',
-                source: 'source-code-assignment'
-            });
-
-            foundKeys.add(propertyName);
         }
     }
 
