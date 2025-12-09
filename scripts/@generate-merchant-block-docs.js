@@ -124,7 +124,7 @@ function extractConfigFromSource(blockPath, blockName) {
         const configVarName = configVarMatch[1];
 
         // Find nested destructuring FIRST (most reliable): const { key, key2 } = config
-        const nestedDestructurePattern = new RegExp(`const\\s*\\{([^}]+)\\}\s*=\\s*${configVarName}\\s*;`, 'g');
+        const nestedDestructurePattern = new RegExp(`const\\s*\\{([^}]+)\\}\\s*=\\s*${configVarName}\\s*;`, 'g');
         let nestedMatch;
 
         while ((nestedMatch = nestedDestructurePattern.exec(source)) !== null) {
