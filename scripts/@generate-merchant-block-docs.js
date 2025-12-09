@@ -173,6 +173,83 @@ function updateEnrichmentMetadata(boilerplatePath, blockCount) {
 
 
 /**
+ * Helper: Split destructured properties while respecting nested structures
+ */
+function splitDestructuredProperties(content) {
+    const properties = [];
+    let current = '';
+    let depth = 0;
+    let inString = false;
+    let stringChar = '';
+
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        const prev = content[i - 1];
+
+        // Track string boundaries
+        if ((char === '"' || char === "'" || char === '`') && prev !== '\\') {
+            if (!inString) {
+                inString = true;
+                stringChar = char;
+            } else if (char === stringChar) {
+                inString = false;
+            }
+        }
+
+        // Track nesting depth (for arrays/objects in default values)
+        if (!inString) {
+            if (char === '{' || char === '[' || char === '(') depth++;
+            if (char === '}' || char === ']' || char === ')') depth--;
+        }
+
+        // Split on commas at depth 0 (not nested)
+        if (char === ',' && depth === 0 && !inString) {
+            properties.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Add the last property
+    if (current.trim()) {
+        properties.push(current);
+    }
+
+    return properties;
+}
+
+/**
+ * Helper: Clean and normalize default values from source code
+ */
+function cleanDefaultValue(value) {
+    if (!value) return 'undefined';
+
+    let cleaned = value
+        .replace(/^['"`]|['"`]$/g, '')  // Remove surrounding quotes
+        .replace(/,\s*$/, '')            // Remove trailing comma
+        .trim();
+
+    return cleaned || 'undefined';
+}
+
+/**
+ * Helper: Infer type from default value
+ */
+function inferType(defaultValue) {
+    if (defaultValue === 'true' || defaultValue === 'false') {
+        return 'boolean';
+    }
+    if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
+        return 'number';
+    }
+    if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
+        return 'object';
+    }
+    return 'string';
+}
+
+/**
  * Extract configuration from source code (PRIMARY SOURCE OF TRUTH)
  * Scans .js file for readBlockConfig() calls and extracts destructured keys
  * This is the ONLY way to know what configurations actually exist
@@ -186,55 +263,117 @@ function extractConfigFromSource(blockPath) {
 
     const sourceCode = readFileSync(jsFile, 'utf8');
     const configs = [];
+    const foundKeys = new Set();
 
-    // Look for readBlockConfig pattern:
-    // const { 'config-key': varName = 'default', ... } = readBlockConfig(block);
+    // PATTERN 1: Destructuring pattern (both explicit and shorthand)
+    // const { 'config-key': varName = 'default', shorthand, ... } = readBlockConfig(block);
     const readBlockConfigPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\([^)]+\)/g;
     const matches = sourceCode.matchAll(readBlockConfigPattern);
 
     for (const match of matches) {
         const destructuredContent = match[1];
 
-        // Parse each destructured property
-        // Pattern: 'config-key': varName = 'defaultValue'
-        const propertyPattern = /['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*([^,}]+))?/g;
-        const propertyMatches = destructuredContent.matchAll(propertyPattern);
+        // Split by commas (but be careful with nested objects/arrays)
+        const properties = splitDestructuredProperties(destructuredContent);
 
-        for (const propMatch of propertyMatches) {
-            const key = propMatch[1].trim();
-            const variable = propMatch[2].trim();
-            let defaultValue = propMatch[3]?.trim() || 'undefined';
+        for (const prop of properties) {
+            const trimmedProp = prop.trim();
+            if (!trimmedProp) continue;
 
-            // Clean up default value
-            defaultValue = defaultValue
-                .replace(/^['"`]|['"`]$/g, '')
-                .replace(/,\s*$/, '')
-                .trim();
+            // Pattern 1a: Explicit key-value: 'config-key': varName = 'defaultValue'
+            const explicitPattern = /^['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*(.+))?$/;
+            const explicitMatch = trimmedProp.match(explicitPattern);
 
-            if (defaultValue === '') {
-                defaultValue = 'undefined';
+            if (explicitMatch) {
+                const key = explicitMatch[1].trim();
+                const variable = explicitMatch[2].trim();
+                let defaultValue = explicitMatch[3]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                configs.push({
+                    key: key,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-explicit'
+                });
+
+                foundKeys.add(key);
+                continue;
             }
 
-            // Infer type from default value in source code
-            let type = 'string';
-            if (defaultValue === 'true' || defaultValue === 'false') {
-                type = 'boolean';
-            } else if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
-                type = 'number';
-            } else if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
-                type = 'object';
+            // Pattern 1b: ES6 Shorthand: varName or varName = 'defaultValue'
+            const shorthandPattern = /^(\w+)(?:\s*=\s*(.+))?$/;
+            const shorthandMatch = trimmedProp.match(shorthandPattern);
+
+            if (shorthandMatch) {
+                const variable = shorthandMatch[1].trim();
+                let defaultValue = shorthandMatch[2]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                // For shorthand, the config key is the variable name
+                configs.push({
+                    key: variable,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-shorthand'
+                });
+
+                foundKeys.add(variable);
+            }
+        }
+    }
+
+    // PATTERN 2: Assignment pattern
+    // const config = readBlockConfig(block);
+    // if (config.urlpath) { ... }
+    const assignmentPattern = /const\s+(\w+)\s*=\s*readBlockConfig\([^)]+\)/;
+    const assignmentMatch = sourceCode.match(assignmentPattern);
+
+    if (assignmentMatch) {
+        const configVarName = assignmentMatch[1]; // e.g., "config"
+
+        // Find all usages of config.property throughout the file
+        const propertyUsagePattern = new RegExp(configVarName + '\\.(\\w+)', 'g');
+        const propertyMatches = [...sourceCode.matchAll(propertyUsagePattern)];
+
+        // Get unique property names
+        const propertyNames = [...new Set(propertyMatches.map(m => m[1]))];
+
+        for (const propertyName of propertyNames) {
+            // Skip if already found via destructuring
+            if (foundKeys.has(propertyName)) {
+                continue;
+            }
+
+            // Skip common object properties that aren't config
+            if (['length', 'toString', 'valueOf', 'constructor', 'dataset'].includes(propertyName)) {
+                continue;
             }
 
             configs.push({
-                key: key,
-                variable: variable,
-                type: type,
-                default: defaultValue,
+                key: propertyName,
+                variable: propertyName,
+                type: 'string', // Default to string, could be enhanced with more analysis
+                default: 'undefined',
                 description: '', // Will be enriched from README
                 required: 'No',
                 sideEffects: '',
-                source: 'source-code'
+                source: 'source-code-assignment'
             });
+
+            foundKeys.add(propertyName);
         }
     }
 
@@ -543,10 +682,45 @@ function extractImportantNotes(blockPath) {
 }
 
 /**
+ * Load configuration enrichments from JSON file
+ */
+function loadConfigurationEnrichments() {
+    const enrichmentPath = join(process.cwd(), '_dropin-enrichments/merchant-blocks/configurations.json');
+    if (!existsSync(enrichmentPath)) {
+        return {};
+    }
+
+    try {
+        const content = readFileSync(enrichmentPath, 'utf8');
+        const data = JSON.parse(content);
+        return data.configurations || {};
+    } catch (error) {
+        console.warn(`  ⚠️  Could not load configuration enrichments: ${error.message}`);
+        return {};
+    }
+}
+
+
+/**
  * Generate enhanced property descriptions with context
  * Adds WHEN/WHY information to make descriptions more actionable
  */
-function generateEnhancedPropertyDescription(key, description, type, defaultValue) {
+function generateEnhancedPropertyDescription(key, description, type, defaultValue, blockName) {
+    // Try to load enriched description first
+    const configEnrichments = loadConfigurationEnrichments();
+    const blockConfigs = configEnrichments[blockName] || {};
+    const enrichedConfig = blockConfigs[key.toLowerCase()];
+
+    if (enrichedConfig && enrichedConfig.description) {
+        // Use enriched description + when_to_use if available
+        let enhanced = enrichedConfig.description;
+        if (enrichedConfig.when_to_use) {
+            enhanced += ` ${enrichedConfig.when_to_use}`;
+        }
+        return enhanced.endsWith('.') ? enhanced : enhanced + '.';
+    }
+
+    // Fall back to auto-generated enhancements
     const cleanKey = key.toLowerCase();
     let enhanced = description.trim();
 
@@ -834,7 +1008,7 @@ function generateRequirementsSection(blockName, blockPath) {
     try {
         if (existsSync(requirementsEnrichmentPath)) {
             const enrichmentData = JSON.parse(readFileSync(requirementsEnrichmentPath, 'utf8'));
-            enrichedRequirement = enrichmentData.requirements?.[blockName];
+            enrichedRequirement = enrichmentData[blockName];  // FIXED: Direct access, not nested
         }
     } catch (error) {
         console.warn(`Warning: Could not load requirements enrichment: ${error.message}`);
@@ -1293,7 +1467,8 @@ function generateDocumentAuthoringTable(blockName, configs) {
                 config.key,
                 config.description.trim(),
                 config.type,
-                config.default
+                config.default,
+                blockName  // ADDED: Pass blockName for enrichment lookup
             );
             output += `**${titleCaseName}**: ${enhancedDesc}\n\n`;
         }
