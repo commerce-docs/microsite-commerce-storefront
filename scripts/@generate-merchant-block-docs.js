@@ -1109,6 +1109,58 @@ function toTitleCase(str) {
 }
 
 /**
+ * Get readable title and label for B2B blocks
+ * Returns null for non-B2B blocks (use default title generation)
+ */
+function getB2BBlockTitles(blockName) {
+    // Remove 'commerce-' prefix for matching
+    const name = blockName.replace('commerce-', '');
+    
+    // B2B block title transformations
+    const b2bTitles = {
+        // Purchase Order blocks
+        'b2b-po-approval-flow': { title: 'Purchase Order Approval Flow', label: 'PO Approval Flow' },
+        'b2b-po-approval-rule-details': { title: 'Purchase Order Approval Rule Details', label: 'PO Approval Rule Details' },
+        'b2b-po-approval-rule-form': { title: 'Purchase Order Approval Rule Form', label: 'PO Approval Rule Form' },
+        'b2b-po-approval-rules-list': { title: 'Purchase Order Approval Rules List', label: 'PO Approval Rules List' },
+        'b2b-po-checkout-success': { title: 'Purchase Order Checkout Success', label: 'PO Checkout Success' },
+        'b2b-po-comment-form': { title: 'Purchase Order Comment Form', label: 'PO Comment Form' },
+        'b2b-po-comments-list': { title: 'Purchase Order Comments List', label: 'PO Comments List' },
+        'b2b-po-company-purchase-orders': { title: 'Company Purchase Orders', label: 'Company POs' },
+        'b2b-po-customer-purchase-orders': { title: 'Customer Purchase Orders', label: 'My POs' },
+        'b2b-po-header': { title: 'Purchase Order Header', label: 'PO Header' },
+        'b2b-po-history-log': { title: 'Purchase Order History Log', label: 'PO History Log' },
+        'b2b-po-require-approval-purchase-orders': { title: 'Purchase Orders Requiring Approval', label: 'POs Requiring Approval' },
+        'b2b-po-status': { title: 'Purchase Order Status', label: 'PO Status' },
+        
+        // Quote Management blocks
+        'b2b-negotiable-quote': { title: 'Negotiable Quote', label: 'Negotiable Quote' },
+        'b2b-negotiable-quote-template': { title: 'Negotiable Quote Template', label: 'Quote Template' },
+        'b2b-quote-checkout': { title: 'Quote Checkout', label: 'Quote Checkout' },
+        
+        // Requisition List blocks
+        'b2b-requisition-list': { title: 'Requisition Lists', label: 'Requisition Lists' },
+        'b2b-requisition-list-view': { title: 'Requisition List View', label: 'List View' },
+        
+        // Company Management blocks
+        'company-accept-invitation': { title: 'Accept Company Invitation', label: 'Accept Invitation' },
+        'company-create': { title: 'Create Company', label: 'Create Company' },
+        'company-credit': { title: 'Company Credit', label: 'Company Credit' },
+        'company-profile': { title: 'Company Profile', label: 'Company Profile' },
+        'company-roles-permissions': { title: 'Company Roles and Permissions', label: 'Roles & Permissions' },
+        'company-structure': { title: 'Company Structure', label: 'Company Structure' },
+        'company-users': { title: 'Company Users', label: 'Company Users' },
+        
+        // Checkout & Account blocks
+        'account-nav': { title: 'Account Navigation', label: 'Account Navigation' },
+        'checkout-success': { title: 'Checkout Success', label: 'Checkout Success' },
+        'customer-company': { title: 'Customer Company', label: 'Customer Company' },
+    };
+    
+    return b2bTitles[name] || null;
+}
+
+/**
  * Format value for AEM document authoring
  * Shows example values for empty properties based on property name and type
  */
@@ -1537,14 +1589,19 @@ function extractCommerceBlocks(boilerplatePath) {
             }
         }
 
+        // Get B2B-specific titles if available, otherwise use default title case
+        const b2bTitles = getB2BBlockTitles(blockName);
+        const displayName = b2bTitles?.title || blockName.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        const sidebarLabel = b2bTitles?.label || blockName.replace('commerce-', '').split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
         blocks.push({
             name: blockName,
-            displayName: blockName.split('-').map(word =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' '),
-            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' '),
+            displayName: displayName,
+            sidebarLabel: sidebarLabel,
             path: blockPath,
             configs,
             hasReadme: existsSync(readmePath)
