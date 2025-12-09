@@ -834,7 +834,7 @@ function generateRequirementsSection(blockName, blockPath) {
     try {
         if (existsSync(requirementsEnrichmentPath)) {
             const enrichmentData = JSON.parse(readFileSync(requirementsEnrichmentPath, 'utf8'));
-            enrichedRequirement = enrichmentData.requirements?.[blockName];
+            enrichedRequirement = enrichmentData[blockName];  // FIXED: Direct access, not nested
         }
     } catch (error) {
         console.warn(`Warning: Could not load requirements enrichment: ${error.message}`);
