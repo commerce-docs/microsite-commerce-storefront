@@ -1,18 +1,15 @@
 {
   "getCart": {
-    "description": "The `getCart` function fetches the cart details for either a [guest user](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/cart/) or an [authenticated customer](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/cart/).",
-    "returns": "a promise that resolves to the transformed cart data fetched from the API",
-    "returns_source": "model.Cart",
-    "example": "```ts\nimport { getCart } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchCartData() {\n  try {\n    const cartData = await getCart();\n    console.log('Cart Data:', cartData);\n  } catch (error) {\n    console.error('Error fetching cart data:', error);\n  }\n}\n\n// Call the function to fetch and log the cart data\nfetchCartData();\n```"
+    "description": "The `getCart` function retrieves the current cart's checkout data from Adobe Commerce. It automatically uses the cart ID from internal state and calls either the `getCart` or `customerCart` GraphQL query depending on authentication status. The returned data includes billing address, shipping addresses, available and selected payment methods, email, total quantity, and virtual cart status—all the information needed to complete the checkout process.",
+    "returns": "a Cart model containing complete checkout information",
+    "returns_source": "model.Cart"
   },
   "authenticateCustomer": {
-    "description": "The `authenticateCustomer` function manages the authentication state of a customer, either by fetching customer data using the [`getCustomer`](#getcustomer) function when authenticated or resetting the customer data when not authenticated.",
     "parameters": {
       "authenticated": {
         "description": "A boolean indicating whether the user has been authenticated or not."
       }
-    },
-    "example": "```ts\nimport { authenticateCustomer } from '@dropins/storefront-checkout/api.js';\n\nasync function authenticate() {\n  try {\n    await authenticateCustomer(true);\n    console.log('Customer authenticated successfully.');\n  } catch (error) {\n    console.error('Error authenticating customer:', error);\n  }\n}\n```"
+    }
   },
   "estimateShippingMethods": {
     "parameters": {
@@ -20,22 +17,14 @@
         "description": "An object of type EstimateShippingInput, which contains a criteria object including the following fields: country_code, region_name, region_id, and zip."
       }
     },
-    "description": "The `estimateShippingMethods` function fetches and displays available shipping methods based on a customer's address information. If no information is provided, it takes the default country configured by default. It can take a combination of fields as `input` criteria: country, region, region identifier, and postal code. It uses a utility function to call an [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/) mutation.",
-    "usageScenarios": "```ts\nimport { estimateShippingMethods } from '@dropins/storefront-checkout/api.js';\n\n// By country code and region name\nconst input = {\n  criteria: {\n    country_code: 'US',\n    region_name: 'FL',\n  },\n};\nconst shippingMethods = await estimateShippingMethods(input);\n\n// By country code and region ID\nconst input2 = {\n  criteria: {\n    country_code: 'US',\n    region_id: 18,\n  },\n};\nconst shippingMethods2 = await estimateShippingMethods(input2);\n\n// By country code and postal code\nconst input3 = {\n  criteria: {\n    country_code: 'US',\n    zip: '80000',\n  },\n};\nconst shippingMethods3 = await estimateShippingMethods(input3);\n```"
-  },
-  "getCheckoutAgreements": {
-    "description": "The `getCheckoutAgreements` function fetches the list of terms and conditions configured in the Admin Panel using the [`checkoutAgreements`](https://developer.adobe.com/commerce/webapi/graphql/schema/checkout/queries/agreements/) query.",
-    "returns": "a promise that resolves to an array of checkout agreements or an empty array if none are enabled",
-    "example": "```ts\nimport { getCheckoutAgreements } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchAndLogTermsAndConditions() {\n  try {\n    const agreements = await getCheckoutAgreements();\n    console.log('List of Terms and Conditions:', agreements);\n  } catch (error) {\n    console.error('Error fetching terms and conditions:', error);\n  }\n}\n\n// Call the function to fetch and log the list of Terms and Conditions\nfetchAndLogTermsAndConditions();\n```"
+    "description": "The `estimateShippingMethods` function calls the [`estimateShippingMethods`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/estimate-shipping-methods/) mutation."
   },
   "initializeCheckout": {
-    "description": "The `initializeCheckout` function initializes the checkout process by fetching necessary configuration and data from various Adobe Commerce GraphQL APIs using the following functions: `getStoreConfig`, `getCart`, `synchronizeCheckout`.",
     "parameters": {
       "cart": {
-        "description": "An object of type Cart or null."
+        "description": "The cart data to initialize the checkout process, or null to retrieve the cart from internal state."
       }
-    },
-    "example": "```ts\nimport { initializeCheckout } from '@dropins/storefront-checkout/api.js';\n\nawait initializeCheckout(null);\n```"
+    }
   },
   "isEmailAvailable": {
     "parameters": {
@@ -43,94 +32,68 @@
         "description": "A string representing the email address to check for availability."
       }
     },
-    "description": "The `isEmailAvailable` function checks whether the specified email has already been used to create a customer account using the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/is-email-available/) query. A value of `true` indicates that the email address is available and the customer can use the email address to create an account. As of Adobe Commerce 2.4.7, the default value is `true`.",
-    "example": "```ts\nimport { isEmailAvailable } from '@dropins/storefront-checkout/api.js';\n\nawait isEmailAvailable('test@example.com');\n```"
+    "description": "The `isEmailAvailable` function calls the [`isEmailAvailable`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/is-email-available/) query."
   },
   "setBillingAddress": {
     "parameters": {
       "input": {
-        "description": "An object containing the billing address details."
+        "description": "The billing address to set on the cart, including street, city, region, country, and postal code."
       }
     },
-    "description": "The `setBillingAddress` function sets the billing address for a specific cart or negotiable quote using the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address/) or `setNegotiableQuoteBillingAddress` mutation.",
-    "usageScenarios": "To set the billing address as the same as the shipping address:\n\n```ts\nimport { setBillingAddress } from '@dropins/storefront-checkout/api.js';\n\nawait setBillingAddress({\n  sameAsShipping: true,\n});\n```\n\nTo set a specific billing address:\n\n```ts\nimport { setBillingAddress } from '@dropins/storefront-checkout/api.js';\n\nawait setBillingAddress({\n  address: {\n    firstName: 'John',\n    lastName: 'Doe',\n    street: ['123 Main St', 'Apt 1'],\n    city: 'New York',\n    postcode: '10001',\n    countryCode: 'US',\n    telephone: '555-555-5555',\n  },\n  sameAsShipping: false,\n});\n```"
+    "description": "The `setBillingAddress` function calls the [`setBillingAddressOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-billing-address-on-cart/) mutation."
   },
   "setGuestEmailOnCart": {
     "parameters": {
       "email": {
-        "description": "A string representing the guest email to be set on the cart."
+        "description": "The guest customer's email address for order confirmation and communication."
       }
     },
-    "description": "The `setGuestEmailOnCart` function sets the email address for a guest user on the cart using the [`setGuestEmailOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email/) mutation.",
-    "example": "```ts\nimport { setGuestEmailOnCart } from '@dropins/storefront-checkout/api.js';\n\nawait setGuestEmailOnCart('test@example.com');\n```"
+    "description": "The `setGuestEmailOnCart` function calls the [`setGuestEmailOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-guest-email-on-cart/) mutation."
   },
   "setPaymentMethod": {
     "parameters": {
       "input": {
-        "description": "An object representing the payment method input to be set on the cart or negotiable quote."
+        "description": "The payment method code and additional payment data required by the selected payment processor."
       }
     },
-    "description": "The `setPaymentMethod` function sets the provided payment method for the current cart or negotiable quote using the [`setPaymentMethodOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method/) or `setNegotiableQuotePaymentMethod` mutation.",
-    "example": "```ts\nimport { setPaymentMethod } from '@dropins/storefront-checkout/api.js';\n\nawait setPaymentMethod({ code: 'braintree' });\n```"
+    "description": "The `setPaymentMethod` function calls the [`setPaymentMethodOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-payment-method-on-cart/) mutation."
   },
   "setShippingAddress": {
     "parameters": {
       "input": {
-        "description": "An object containing the shipping address details."
+        "description": "The shipping address to set on the cart, including street, city, region, country, and postal code."
       }
     },
-    "description": "The `setShippingAddress` function sets the shipping address for a specific cart or negotiable quote using the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-address/) or `setNegotiableQuoteShippingAddress` mutation.",
-    "example": "```ts\nimport { setShippingAddress } from '@dropins/storefront-checkout/api.js';\n\nawait setShippingAddress({\n  address: {\n    firstName: 'John',\n    lastName: 'Doe',\n    street: ['123 Main St', 'Apt 1'],\n    city: 'New York',\n    postcode: '10001',\n    countryCode: 'US',\n    telephone: '555-555-5555',\n  },\n});\n```"
+    "description": "The `setShippingAddress` function calls the [`setShippingAddressesOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-addresses-on-cart/) mutation."
+  },
+  "setShippingMethodsOnCart": {
+    "parameters": {
+      "shippingMethods": {
+        "description": "The shipping methods to apply to the cart, each containing a carrier code and method code."
+      }
+    }
   },
   "synchronizeCheckout": {
-    "description": "The `synchronizeCheckout` function synchronizes the checkout state with the current cart information. It ensures that the checkout process is properly initialized, reset, or updated based on the cart data. It uses the following functions: `getCart`, `initializeCheckout`.",
     "parameters": {
       "cart": {
-        "description": "An object of type Cart or null."
+        "description": "The cart data to synchronize with the checkout state, or null to retrieve the cart from internal state."
       }
-    },
-    "example": "```ts\nimport { synchronizeCheckout } from '@dropins/storefront-checkout/api.js';\n\nawait synchronizeCheckout(cart);\n```"
+    }
   },
   "getNegotiableQuote": {
-    "description": "The `getNegotiableQuote` function fetches the specified negotiable quote for B2B customers using the [`negotiableQuote`](https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/queries/quote/) query.",
+    "description": "The `getNegotiableQuote` function retrieves a negotiable quote for B2B customers. The function calls the [`negotiableQuote`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/queries/negotiable-quote/) query.",
     "parameters": {
       "input": {
-        "description": "An object containing the optional uid of the negotiable quote. If not provided, uses the quote ID from the URL query parameter."
+        "description": "Input parameters including the quote UID to retrieve."
       }
-    },
-    "example": "```ts\nimport { getNegotiableQuote } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchNegotiableQuote() {\n  try {\n    const quote = await getNegotiableQuote();\n    console.log('Negotiable Quote:', quote);\n  } catch (error) {\n    console.error('Error fetching negotiable quote:', error);\n  }\n}\n\n// Call the function to fetch the negotiable quote\nfetchNegotiableQuote();\n```"
-  },
-  "getCompanyCredit": {
-    "description": "The `getCompanyCredit` function fetches company credit information for B2B customers using the [`company`](https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/queries/company/) query.",
-    "returns": "a promise that resolves to the company credit data or `null` if the user is not authenticated or does not have company credit access",
-    "returns_source": "model.CompanyCredit",
-    "example": "```ts\nimport { getCompanyCredit } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchAndLogCompanyCredit() {\n  try {\n    const companyCredit = await getCompanyCredit();\n    if (companyCredit) {\n      console.log('Company Credit:', companyCredit);\n    } else {\n      console.log('No company credit data found.');\n    }\n  } catch (error) {\n    console.error('Error fetching company credit:', error);\n  }\n}\n\n// Call the function to fetch and log the company credit data\nfetchAndLogCompanyCredit();\n```"
-  },
-  "getCustomer": {
-    "description": "The `getCustomer` function fetches customer details for an authenticated user using the [`customer`](https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/) query.",
-    "returns": "a promise that resolves to the transformed customer data fetched from the API or `null` if the user is not authenticated",
-    "returns_source": "model.Customer",
-    "example": "```ts\nimport { getCustomer } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchAndLogCustomer() {\n  try {\n    const customer = await getCustomer();\n    if (customer) {\n      console.log('Customer:', customer);\n    } else {\n      console.log('No customer data found.');\n    }\n  } catch (error) {\n    console.error('Error fetching customer data:', error);\n  }\n}\n\n// Call the function to fetch and log the customer data\nfetchAndLogCustomer();\n```"
-  },
-  "getStoreConfig": {
-    "description": "The `getStoreConfig` function fetches information about a store's configuration settings using the [`storeConfig`](https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/) query. You can query a non-default store by changing the header in your GraphQL request.",
-    "returns": "a promise that resolves to the transformed store configuration data fetched from the API. If the API call fails, it returns the default store configuration settings",
-    "example": "```ts\nimport { getStoreConfig } from '@dropins/storefront-checkout/api.js';\n\nasync function fetchAndLogStoreConfig() {\n  try {\n    const storeConfig = await getStoreConfig();\n    console.log('Store Config:', storeConfig);\n  } catch (error) {\n    console.error('Error fetching store config:', error);\n  }\n}\n\n// Call the function to fetch and log the store configuration\nfetchAndLogStoreConfig();\n```"
-  },
-  "resetCheckout": {
-    "description": "The `resetCheckout` function resets the checkout process to its initial state by clearing the cart data.",
-    "example": "```ts\nimport { resetCheckout } from '@dropins/storefront-checkout/api.js';\n\nresetCheckout();\n```"
-  },
-  "getStoreConfigCache": {
-    "description": "The `getStoreConfigCache` function retrieves cached store configuration information. This is an optimized version of `getStoreConfig` that returns previously fetched configuration data without making a new GraphQL request, improving performance during checkout."
+    }
   },
   "setShippingMethods": {
-    "description": "The `setShippingMethods` function sets the shipping methods for a specific cart or negotiable quote using the [`setShippingMethodsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-method/) or `setNegotiableQuoteShippingMethods` mutation.",
+    "description": "The `setShippingMethods` function sets one or more shipping methods on the cart. The function calls the [`setShippingMethodsOnCart`](https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-shipping-methods-on-cart/) mutation.",
     "parameters": {
       "input": {
-        "description": "An array of objects representing the shipping methods."
+        "description": "An array of shipping method objects, each containing a carrier code and method code."
       }
-    },
-    "example": "```ts\nimport { setShippingMethods } from '@dropins/storefront-checkout/api.js';\n\nconst shippingMethod = {\n  carrierCode: 'flatrate',\n  methodCode: 'flatrate',\n};\n\nawait setShippingMethods([shippingMethod]);\n```"
+    }
   }
 }
