@@ -887,6 +887,7 @@ async function config() {
                 items: [
                   {
                     label: 'Quick start',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/quick-start/' },
                       { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
@@ -918,6 +919,7 @@ async function config() {
                   },
                   {
                     label: 'Commerce blocks',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/commerce-blocks/' },
                       { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
@@ -953,7 +955,47 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'B2B commerce blocks',
+                    collapsed: true,
+                    items: [
+                      // Account & Authentication
+                      { label: 'Account Navigation', link: '/merchants/blocks/commerce-account-nav/' },
+                      { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
+                      { label: 'Customer Company', link: '/merchants/blocks/commerce-customer-company/' },
+                      // Company Management
+                      { label: 'Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
+                      { label: 'Company Credit', link: '/merchants/blocks/commerce-company-credit/' },
+                      { label: 'Company Profile', link: '/merchants/blocks/commerce-company-profile/' },
+                      { label: 'Company Structure', link: '/merchants/blocks/commerce-company-structure/' },
+                      { label: 'Company Users', link: '/merchants/blocks/commerce-company-users/' },
+                      { label: 'Create Company', link: '/merchants/blocks/commerce-company-create/' },
+                      { label: 'Roles & Permissions', link: '/merchants/blocks/commerce-company-roles-permissions/' },
+                      // Purchase Orders
+                      { label: 'Company POs', link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/' },
+                      { label: 'Customer POs', link: '/merchants/blocks/commerce-b2b-po-customer-purchase-orders/' },
+                      { label: 'PO Approval Flow', link: '/merchants/blocks/commerce-b2b-po-approval-flow/' },
+                      { label: 'PO Approval Rule Details', link: '/merchants/blocks/commerce-b2b-po-approval-rule-details/' },
+                      { label: 'PO Approval Rule Form', link: '/merchants/blocks/commerce-b2b-po-approval-rule-form/' },
+                      { label: 'PO Approval Rules List', link: '/merchants/blocks/commerce-b2b-po-approval-rules-list/' },
+                      { label: 'PO Checkout Success', link: '/merchants/blocks/commerce-b2b-po-checkout-success/' },
+                      { label: 'PO Comment Form', link: '/merchants/blocks/commerce-b2b-po-comment-form/' },
+                      { label: 'PO Comments List', link: '/merchants/blocks/commerce-b2b-po-comments-list/' },
+                      { label: 'PO Header', link: '/merchants/blocks/commerce-b2b-po-header/' },
+                      { label: 'PO History Log', link: '/merchants/blocks/commerce-b2b-po-history-log/' },
+                      { label: 'PO Status', link: '/merchants/blocks/commerce-b2b-po-status/' },
+                      { label: 'POs Requiring Approval', link: '/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/' },
+                      // Quotes
+                      { label: 'Negotiable Quotes', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
+                      { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
+                      { label: 'Quote Template', link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/' },
+                      // Requisition Lists
+                      { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
+                      { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
+                    ],
+                  },
+                  {
                     label: 'Content customizations',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
                       { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
