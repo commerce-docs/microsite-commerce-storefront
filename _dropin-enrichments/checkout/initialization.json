@@ -1,49 +1,20 @@
 {
-  "intro": "The checkout drop-in component initializer provides options for configuring default behaviors, shipping options, feature flags, language definitions, and extending the default models with new fields and transformers.",
+  "intro": "The **Checkout initializer** configures the checkout flow, payment processing, shipping options, and order placement. Use initialization to customize checkout behavior, integrate payment providers, and transform checkout data models to match your storefront requirements.",
   "config": {
     "defaults": {
-      "description": "Configure default values for billing and shipping method selection.",
-      "subsection": {
-        "title": "Set defaults",
-        "content": "The `defaults` property allows you to configure default behaviors for billing and shipping:\n\n- **`isBillToShipping`**: Boolean flag to indicate if billing address should default to shipping address (default: `true`)\n- **`selectedShippingMethod`**: A selector function that determines which shipping method is selected by default. Receives an array of available shipping methods and returns the selected one\n\n```ts\nawait initializeDropin(async () => {\n  return initializers.mountImmediately(initialize, {\n    defaults: {\n      isBillToShipping: true,\n      selectedShippingMethod: (options) => {\n        // Select the first available shipping method\n        return options.length > 0 ? options[0] : null;\n      },\n    },\n  });\n})();\n```"
-      }
+      "description": "Configures default checkout behaviors including whether billing address defaults to shipping address and which shipping method is pre-selected."
     },
     "shipping": {
-      "description": "Configure shipping options filtering.",
-      "subsection": {
-        "title": "Set shipping options",
-        "content": "The `shipping` property allows you to filter available shipping methods:\n\n- **`filterOptions`**: A filter function that receives a shipping method and returns `true` to include it or `false` to exclude it\n\n```ts\nawait initializeDropin(async () => {\n  return initializers.mountImmediately(initialize, {\n    shipping: {\n      filterOptions: (method) => {\n        // Only show standard shipping methods\n        return method.code === 'flatrate';\n      },\n    },\n  });\n})();\n```"
-      }
+      "description": "Configures shipping method filtering to control which shipping options are available to customers during checkout."
     },
     "features": {
-      "description": "Enable or configure feature flags (e.g., B2B quotes).",
-      "subsection": {
-        "title": "Set features",
-        "content": "The `features` property allows you to enable or configure feature flags:\n\n- **`b2b.quotes`**: Boolean flag to enable B2B negotiable quotes support (default: `false`)\n- **`b2b.routeLogin`**: Function that returns the login route URL for B2B quote authentication\n\n```ts\nawait initializeDropin(async () => {\n  return initializers.mountImmediately(initialize, {\n    features: {\n      b2b: {\n        quotes: true,\n        routeLogin: () => '/login?redirect=checkout',\n      },\n    },\n  });\n})();\n```"
-      }
-    },
-    "langDefinitions": {
-      "description": "Provides language definitions for internationalization (i18n).",
-      "subsection": {
-        "title": "Set language definitions",
-        "content": "The `langDefinitions` property is used to fetch and register dictionary files for the checkout component. This allows you to provide localized text for different languages in your application.\n\n```ts\n// Initialize checkout\nawait initializeDropin(async () => {\n  // Fetch the dictionary files for your application\n  const en_US = await fetch('/i18n/en_US.json').then((res) => res.json());\n  const fr_FR = await fetch('/i18n/fr_FR.json').then((res) => res.json());\n\n  // Register the checkout component with language definitions\n  const langDefinitions = {\n    default: en_US,\n    en_US,\n    fr_FR,\n  };\n\n  // Register initializers\n  return initializers.mountImmediately(initialize, {\n    langDefinitions,\n  });\n})();\n```"
-      }
-    },
-    "models": {
-      "description": "Extend the default models (CartModel, CustomerModel) with new fields and transform them as needed.",
-      "subsection": {
-        "title": "Set models",
-        "content": "You can extend the default models in the checkout component and provide transformers to process new fields.\n\nThe `models` property is an object that contains the default models that you might want to extend and the transformers to use to transform the data. By default, the checkout component initializer accepts the following models only:\n\n- `CartModel`\n- `CustomerModel`\n\nThe following example shows how to extend the default models with new fields and transformers:\n\n```ts\n// Initialize checkout\nawait initializeDropin(async () => {\n  // Register the checkout component with models extensibility\n  const models = {\n    CustomerModel: {\n      transformer: (data) => ({\n        gender: ((gender) => {\n          switch (gender) {\n            case 1:\n              return \"Male\";\n            case 2:\n              return \"Female\";\n            case 3:\n              return \"Not Specified\";\n            default:\n              return \"\";\n          }\n        })(data?.gender),\n        dateOfBirth: data?.date_of_birth,\n      }),\n    },\n    CartModel: {\n      transformer: (data) => ({\n        printedCardIncluded: data?.printed_card_included,\n        giftReceiptIncluded: data?.gift_receipt_included,\n      }),\n    },\n  };\n\n  // Register initializers\n  return initializers.mountImmediately(initialize, {\n    models\n  });\n})();\n```"
-      }
+      "description": "Enables or disables checkout features including B2B quote functionality and custom login routing."
     }
   },
-  "customModelExample": "```ts\nawait initializeDropin(async () => {\n  setFetchGraphQlHeaders(await getHeaders('checkout'));\n\n  const labels = await fetchPlaceholders();\n  const langDefinitions = {\n    default: {\n      ...labels,\n    },\n  };\n\n  return initializers.mountImmediately(initialize, { langDefinitions });\n})();\n```",
   "models": {
     "CartModel": {
       "description": "Transforms cart data during checkout including items, pricing, shipping, billing, and payment information. Use this to add custom fields specific to the checkout flow."
-    },
-    "CustomerModel": {
-      "description": "Transforms customer data including personal information, addresses, and preferences. Use this to add custom fields or format existing data."
     }
   }
 }
+
