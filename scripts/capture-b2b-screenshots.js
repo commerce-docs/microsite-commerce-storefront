@@ -31,7 +31,7 @@ const __dirname = path.dirname(__filename);
 // Configuration
 const CONFIG = {
     baseUrl: 'https://b2b-suite-release1--boilerplate-b2b-accs-qa--adobe-commerce.aem.live',
-    viewport: { width: 3840, height: 2160 }, // 2x retina (1920x1080 @ 2x)
+    viewport: { width: 2560, height: 1600 }, // 2x retina (1280x800 base)
     deviceScaleFactor: 2,
     credentials: {
         username: process.env.B2B_USERNAME || 'tony.stark@fake.email',
@@ -40,7 +40,10 @@ const CONFIG = {
     },
     outputDir: path.join(__dirname, '..', 'public', 'images'),
     tempDir: path.join(__dirname, '..', '.temp-screenshots'),
-    storageStatePath: path.join(__dirname, '..', '.temp-screenshots', 'auth-state.json')
+    storageStatePath: path.join(__dirname, '..', '.temp-screenshots', 'auth-state.json'),
+    // Screenshot settings
+    maxWidth: 2560, // Max width @ 2x retina (1280px base)
+    maxHeight: 1600 // Max height @ 2x retina (800px base)
 };
 
 /**
@@ -181,6 +184,62 @@ const BLOCKS = {
         waitFor: 'div',
         description: 'Purchase order checkout success',
         fallback: 'commerce-b2b-po-customer-purchase-orders'
+    },
+
+    // Company Management
+    'commerce-account-nav': {
+        url: '/customer/account',
+        selector: '.account-nav, nav',
+        waitFor: 'nav',
+        description: 'B2B account navigation'
+    },
+    'commerce-customer-company': {
+        url: '/customer/account',
+        selector: '.customer-company, [data-testid="customer-company"]',
+        waitFor: 'div',
+        description: 'Customer company information'
+    },
+    'commerce-company-accept-invitation': {
+        url: '/customer/company/accept-invitation',
+        selector: '.accept-invitation, form',
+        waitFor: 'form',
+        description: 'Company invitation acceptance form'
+    },
+    'commerce-company-create': {
+        url: '/customer/company/create',
+        selector: '.company-create, form',
+        waitFor: 'form',
+        description: 'Create company form'
+    },
+    'commerce-company-credit': {
+        url: '/customer/company/credit',
+        selector: '.company-credit, [data-testid="company-credit"]',
+        waitFor: 'div',
+        description: 'Company credit history'
+    },
+    'commerce-company-profile': {
+        url: '/customer/company',
+        selector: '.company-profile, [data-testid="company-profile"]',
+        waitFor: 'div',
+        description: 'Company profile information'
+    },
+    'commerce-company-roles-permissions': {
+        url: '/customer/company/roles',
+        selector: '.roles-permissions, [data-testid="roles-permissions"], table',
+        waitFor: 'table',
+        description: 'Company roles and permissions'
+    },
+    'commerce-company-structure': {
+        url: '/customer/company/structure',
+        selector: '.company-structure, [data-testid="company-structure"]',
+        waitFor: 'div',
+        description: 'Company organizational structure'
+    },
+    'commerce-company-users': {
+        url: '/customer/company/users',
+        selector: '.company-users, [data-testid="company-users"], table',
+        waitFor: 'table',
+        description: 'Company users listing'
     }
 };
 
@@ -306,32 +365,98 @@ async function captureBlock(page, blockName, config) {
     // Wait a bit for dynamic content
     await page.waitForTimeout(2000);
 
+    // Force hidden elements to be visible using JavaScript DOM manipulation
+    await page.evaluate(() => {
+        // Remove hidden attributes
+        document.querySelectorAll('[hidden]').forEach(el => el.removeAttribute('hidden'));
+
+        // Override inline styles that hide elements
+        document.querySelectorAll('*').forEach(el => {
+            const style = el.style;
+            if (style.display === 'none') style.display = '';
+            if (style.visibility === 'hidden') style.visibility = 'visible';
+            if (style.opacity === '0') style.opacity = '1';
+        });
+
+        // Remove hidden classes
+        document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
+    });
+
+    // Wait for any dynamic content to render after forcing visibility
+    await page.waitForTimeout(1000);
+
+    console.log(`   🎨 Forced hidden elements visible via DOM manipulation`);
+
     // Try to find the specific selector
     let element;
-    const selectors = config.selector.split(',').map(s => s.trim());
 
-    for (const selector of selectors) {
-        try {
-            element = await page.locator(selector).first();
-            const count = await element.count();
-            if (count > 0) {
-                console.log(`   ✓ Found selector: ${selector}`);
-                break;
+    // FIRST: Try the most reliable selector - data-block-name attribute
+    const dataBlockSelector = `[data-block-name="${blockName}"]`;
+    try {
+        element = await page.locator(dataBlockSelector).first();
+        if (await element.count() > 0) {
+            console.log(`   ✓ Found via data-block-name: ${blockName}`);
+        } else {
+            element = null;
+        }
+    } catch (error) {
+        element = null;
+    }
+
+    // SECOND: Try configured selectors if data-block-name didn't work
+    if (!element) {
+        const selectors = config.selector.split(',').map(s => s.trim());
+        for (const selector of selectors) {
+            try {
+                element = await page.locator(selector).first();
+                const count = await element.count();
+                if (count > 0) {
+                    console.log(`   ✓ Found selector: ${selector}`);
+                    break;
+                }
+            } catch (error) {
+                continue;
             }
-        } catch (error) {
-            continue;
         }
     }
 
-    // Fallback to another block's screenshot if selector not found
+    // Fallback: Try to find by common classnames or component patterns
+    if (!element || await element.count() === 0) {
+        console.log(`   ⚠️  Primary selectors not found, trying fallback patterns...`);
+
+        // Extract key terms from block name for intelligent fallback
+        const blockKey = blockName.replace('commerce-b2b-', '').replace(/-/g, '_');
+        const fallbackSelectors = [
+            `[class*="${blockKey}"]`,
+            `[data-block="${blockKey}"]`,
+            `[id*="${blockKey}"]`,
+            '.dropin-container',
+            '[class*="dropin"]'
+        ];
+
+        for (const fallbackSelector of fallbackSelectors) {
+            try {
+                const fallbackElement = await page.locator(fallbackSelector).first();
+                if (await fallbackElement.count() > 0) {
+                    console.log(`   ✓ Found via fallback: ${fallbackSelector}`);
+                    element = fallbackElement;
+                    break;
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+    }
+
+    // If still not found, use configured fallback
     if (!element || await element.count() === 0) {
         if (config.fallback) {
-            console.log(`   ⚠️  Selector not found, using fallback: ${config.fallback}`);
+            console.log(`   ⚠️  No selectors found, using fallback: ${config.fallback}`);
             return config.fallback;
         }
 
         // Last resort: screenshot the main content area
-        console.log(`   ⚠️  No selector found, capturing main content`);
+        console.log(`   ⚠️  No selectors found, capturing main content`);
         element = page.locator('main, .main-content, [role="main"]').first();
     }
 
@@ -339,12 +464,46 @@ async function captureBlock(page, blockName, config) {
     const tempPngPath = path.join(CONFIG.tempDir, `${blockName}.png`);
     const finalWebpPath = path.join(CONFIG.outputDir, `${blockName}.webp`);
 
-    await element.screenshot({ path: tempPngPath });
-    console.log(`   → PNG saved: ${tempPngPath}`);
+    try {
+        // Try element screenshot first with shorter timeout
+        await element.screenshot({ path: tempPngPath, timeout: 5000 });
+        console.log(`   → PNG saved: ${tempPngPath}`);
+    } catch (error) {
+        // If element screenshot fails, capture main content area
+        console.log(`   ⚠️  Element screenshot failed, capturing main content`);
+        try {
+            const mainContent = page.locator('main').first();
+            await mainContent.screenshot({ path: tempPngPath, timeout: 5000 });
+            console.log(`   → PNG saved (main content): ${tempPngPath}`);
+        } catch (mainError) {
+            // Last resort: full viewport screenshot
+            console.log(`   ⚠️  Main content failed, capturing viewport`);
+            await page.screenshot({ path: tempPngPath, fullPage: false });
+            console.log(`   → PNG saved (viewport): ${tempPngPath}`);
+        }
+    }
 
-    // Convert to WebP
-    await convertToWebP(tempPngPath, finalWebpPath);
-    console.log(`   ✅ WebP saved: ${finalWebpPath}`);
+    // Convert to WebP with size constraints
+    let image = sharp(tempPngPath);
+    const metadata = await image.metadata();
+
+    console.log(`   📐 Original: ${metadata.width}x${metadata.height}`);
+
+    // Enforce max dimensions while maintaining aspect ratio
+    let resizeOptions = { fit: 'inside', withoutEnlargement: true };
+
+    if (metadata.width > CONFIG.maxWidth || metadata.height > CONFIG.maxHeight) {
+        resizeOptions.width = CONFIG.maxWidth;
+        resizeOptions.height = CONFIG.maxHeight;
+        console.log(`   📐 Resizing to fit within ${CONFIG.maxWidth}x${CONFIG.maxHeight}`);
+        image = image.resize(resizeOptions);
+    }
+
+    await image.webp({ quality: 90, lossless: false }).toFile(finalWebpPath);
+
+    // Get final dimensions
+    const finalMetadata = await sharp(finalWebpPath).metadata();
+    console.log(`   ✅ WebP saved: ${finalWebpPath} (${finalMetadata.width}x${finalMetadata.height})`);
 
     // Clean up temp PNG
     fs.unlinkSync(tempPngPath);
@@ -420,8 +579,16 @@ async function main() {
     const page = await context.newPage();
 
     try {
-        // Skip login for now - assuming auth state exists or site allows access
-        console.log('⏭️  Skipping login (use save-auth-state.js first if needed)\n');
+        // Verify authentication
+        const isLoggedIn = await checkIfLoggedIn(page);
+
+        if (!isLoggedIn) {
+            console.log('❌ Not logged in! Please run: node scripts/save-auth-state.js');
+            console.log('   The authentication state has expired or was not saved.\n');
+            process.exit(1);
+        }
+
+        console.log('✅ Authenticated successfully\n');
 
         // Determine which blocks to capture
         const blocksToCapture = specificBlock
