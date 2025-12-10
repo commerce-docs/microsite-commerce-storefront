@@ -314,6 +314,7 @@ async function config() {
                       { label: 'Overview', link: '/boilerplate/' },
                       { label: 'Getting started', link: '/boilerplate/getting-started/' },
                       { label: 'Configuration', link: '/boilerplate/configuration/' },
+                      { label: 'Commerce blocks', link: '/boilerplate/blocks/' },
                       { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
                       { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
                       { label: 'Updates', link: '/boilerplate/updates/' },
