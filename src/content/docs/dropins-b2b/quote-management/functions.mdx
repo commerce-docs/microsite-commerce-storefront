@@ -1,0 +1,1005 @@
+---
+title: Quote Management Functions
+description: API functions provided by the Quote Management drop-in for programmatic control and customization.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Quote Management drop-in provides **17 API functions** for managing negotiable quotes and quote templates, including creating quotes, adding items, managing shipping addresses, and processing quote workflows.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.0-beta5</strong>
+</div>
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`acceptQuoteTemplate`](#acceptquotetemplate) | Accepts a negotiable quote template. |
+| [`addQuoteTemplateLineItemNote`](#addquotetemplatelineitemnote) | Adds a buyer's note to a specific item in a negotiable quote template. |
+| [`addQuoteTemplateShippingAddress`](#addquotetemplateshippingaddress) | Assigns a shipping address to a negotiable quote template. |
+| [`cancelQuoteTemplate`](#cancelquotetemplate) | Cancels a negotiable quote template. |
+| [`closeNegotiableQuote`](#closenegotiablequote) | Closes one or more negotiable quotes via `GraphQL` mutation.. |
+| [`createQuoteTemplate`](#createquotetemplate) | Creates a new negotiable quote template from an existing quote. |
+| [`deleteQuote`](#deletequote) | Deletes one or more negotiable quotes. |
+| [`deleteQuoteTemplate`](#deletequotetemplate) | Permanently deletes a negotiable quote template. |
+| [`duplicateQuote`](#duplicatequote) | API function for the drop-in.. |
+| [`generateQuoteFromTemplate`](#generatequotefromtemplate) | Generates a negotiable quote from an accepted quote template. |
+| [`getQuoteData`](#getquotedata) | Fetches negotiable quote data by ID.. |
+| [`getQuoteTemplateData`](#getquotetemplatedata) | Fetches negotiable quote template data by template ID. |
+| [`getQuoteTemplates`](#getquotetemplates) | An asynchronous function that fetches the list of negotiable quote templates for the authenticated customer using `GraphQL` and returns the transformed result.. |
+| [`getStoreConfig`](#getstoreconfig) | Returns information about a store's configuration.. |
+| [`negotiableQuotes`](#negotiablequotes) | An asynchronous function that fetches the list of negotiable quotes for the authenticated customer using `GraphQL` and returns the transformed result.. |
+| [`openQuoteTemplate`](#openquotetemplate) | Opens an existing negotiable quote template. |
+| [`removeNegotiableQuoteItems`](#removenegotiablequoteitems) | Removes one or more items from a negotiable quote, returns the updated quote data, and emits an event so listeners can react to the change.. |
+| [`removeQuoteTemplateItems`](#removequotetemplateitems) | Removes one or more products from an existing negotiable quote template. |
+| [`renameNegotiableQuote`](#renamenegotiablequote) | Renames a negotiable quote. |
+| [`requestNegotiableQuote`](#requestnegotiablequote) | Creates a new negotiable quote request from the current cart. |
+| [`sendForReview`](#sendforreview) | Submits a negotiable quote for review by the seller. |
+| [`sendQuoteTemplateForReview`](#sendquotetemplateforreview) | Submits a negotiable quote template for review by the seller. |
+| [`setLineItemNote`](#setlineitemnote) | Updates (or creates) a buyer note for a specific negotiable quote line item.. |
+| [`setShippingAddress`](#setshippingaddress) | Sets or updates the shipping address for a negotiable quote. |
+| [`updateQuantities`](#updatequantities) | Updates the quantities of items in a negotiable quote. |
+| [`updateQuoteTemplateItemQuantities`](#updatequotetemplateitemquantities) | Changes the quantity of one or more items in an existing negotiable quote template. |
+| [`uploadFile`](#uploadfile) | API function for the drop-in.. |
+
+</TableWrapper>
+
+## acceptQuoteTemplate
+
+Accepts a negotiable quote template. This action finalizes the acceptance of a quote template from the buyer's side, returns the updated template data on success, and emits an event for successful acceptance.
+
+```ts
+const acceptQuoteTemplate = async (
+  params: AcceptQuoteTemplateParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `AcceptQuoteTemplateParams` | Yes | An object of type \`AcceptQuoteTemplateParams\` containing the template UID and acceptance details. See the type definition for available fields. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## addQuoteTemplateLineItemNote
+
+Adds a buyer's note to a specific item in a negotiable quote template. This allows buyers to provide additional information or special instructions for individual line items.
+
+```ts
+const addQuoteTemplateLineItemNote = async (
+  params: AddQuoteTemplateLineItemNoteParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `AddQuoteTemplateLineItemNoteParams` | Yes | An object of type \`AddQuoteTemplateLineItemNoteParams\` containing the template UID, item UID, and note text to add to a specific line item. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## addQuoteTemplateShippingAddress
+
+Assigns a shipping address to a negotiable quote template. This can be either a previously-defined customer address (by ID) or a new address provided with full details.
+
+```ts
+const addQuoteTemplateShippingAddress = async (
+  params: AddQuoteTemplateShippingAddressParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `AddQuoteTemplateShippingAddressParams` | Yes | An object of type \`AddQuoteTemplateShippingAddressParams\` containing the template UID and shipping address details (street, city, region, postal code, country). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## cancelQuoteTemplate
+
+Cancels a negotiable quote template. This action allows buyers to cancel a quote template they no longer need, with an optional comment to provide the reason for cancellation. Returns the updated template data on success and emits an event for successful cancellation.
+
+```ts
+const cancelQuoteTemplate = async (
+  params: CancelQuoteTemplateParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `CancelQuoteTemplateParams` | Yes | An object of type \`CancelQuoteTemplateParams\` containing the template UID to cancel. This moves the quote template to canceled status. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## closeNegotiableQuote
+
+Closes one or more negotiable quotes via `GraphQL` mutation.
+
+```ts
+const closeNegotiableQuote = async (
+  input: CloseNegotiableQuoteInput
+): Promise<CloseNegotiableQuoteResult>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `CloseNegotiableQuoteInput` | Yes | Input parameters for retrieving or managing quotes. |
+
+</TableWrapper>
+
+### Events
+
+Emits the following events: [`quote-management/negotiable-quote-close-error`](/dropins-b2b/quote-management/events/#quote-managementnegotiable-quote-close-error-emits-and-listens), [`quote-management/negotiable-quote-closed`](/dropins-b2b/quote-management/events/#quote-managementnegotiable-quote-closed-emits-and-listens).
+
+### Returns
+
+Returns `CloseNegotiableQuoteResult`.
+
+## createQuoteTemplate
+
+Creates a new negotiable quote template from an existing quote. Returns the newly created template data on success and emits an event with the template data and user permissions.
+
+```ts
+const createQuoteTemplate = async (
+  quoteId: string
+): Promise<NegotiableQuoteTemplateModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `quoteId` | `string` | Yes | The unique identifier for the negotiable quote to convert into a reusable template. Creates a template that can be used to generate similar quotes in the future. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteTemplateModel`](#negotiablequotetemplatemodel) or `null`.
+
+## deleteQuote
+
+Deletes one or more negotiable quotes. Deleted quotes become invisible from both the Admin and storefront. On success, it emits an event with the deleted quote UIDs.
+
+```ts
+const deleteQuote = async (
+  quoteUids: string[] | string
+): Promise<DeleteQuoteOutput>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `quoteUids` | `string[] \| string` | Yes | One or more negotiable quote unique identifiers to delete. Can be a single UID string or an array of UIDs for batch deletion. This permanently removes the quotes. |
+
+</TableWrapper>
+
+### Events
+
+Emits the following events: [`quote-management/negotiable-quote-delete-error`](/dropins-b2b/quote-management/events/#quote-managementnegotiable-quote-delete-error-emits), [`quote-management/negotiable-quote-deleted`](/dropins-b2b/quote-management/events/#quote-managementnegotiable-quote-deleted-emits).
+
+### Returns
+
+Returns `DeleteQuoteOutput`.
+
+## deleteQuoteTemplate
+
+Permanently deletes a negotiable quote template. This action removes the template from the system, returns a success result, and emits an event for successful deletion. This operation is irreversible.
+
+```ts
+const deleteQuoteTemplate = async (
+  params: DeleteQuoteTemplateParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `DeleteQuoteTemplateParams` | Yes | An object of type \`DeleteQuoteTemplateParams\` containing the template UID to delete. This permanently removes the quote template. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-deleted`](/dropins-b2b/quote-management/events/#quote-managementquote-template-deleted-emits) event.
+
+### Returns
+
+Returns `void`.
+
+## duplicateQuote
+
+```ts
+const duplicateQuote = async (
+  input: DuplicateQuoteInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `DuplicateQuoteInput` | Yes | Input parameters for retrieving or managing quotes. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## generateQuoteFromTemplate
+
+Generates a negotiable quote from an accepted quote template. This creates a new quote based on the template's configuration and items.
+
+```ts
+const generateQuoteFromTemplate = async (
+  params: GenerateQuoteFromTemplateParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GenerateQuoteFromTemplateParams` | Yes | An object of type \`GenerateQuoteFromTemplateParams\` containing the template UID and any customization parameters. Creates a new negotiable quote based on the template structure. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-generated`](/dropins-b2b/quote-management/events/#quote-managementquote-template-generated-emits) event.
+
+### Returns
+
+Returns `void`.
+
+## getQuoteData
+
+Fetches negotiable quote data by ID.
+
+```ts
+const getQuoteData = async (
+  quoteId: string
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `quoteId` | `string` | Yes | The unique identifier for the negotiable quote to retrieve. Returns complete quote details including items, prices, history, comments, and negotiation status. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-data`](/dropins-b2b/quote-management/events/#quote-managementquote-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## getQuoteTemplateData
+
+Fetches negotiable quote template data by template ID. Returns the transformed template data on success and emits an event with the template data and user permissions.
+
+```ts
+const getQuoteTemplateData = async (
+  templateId: string
+): Promise<NegotiableQuoteTemplateModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `templateId` | `string` | Yes | The unique identifier for the quote template to retrieve. Returns template details including structure, items, and configuration settings. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteTemplateModel`](#negotiablequotetemplatemodel) or `null`.
+
+## getQuoteTemplates
+
+An asynchronous function that fetches the list of negotiable quote templates for the authenticated customer using `GraphQL` and returns the transformed result.
+
+```ts
+const getQuoteTemplates = async (
+  params: GetQuoteTemplatesParams = {}
+): Promise<NegotiableQuoteTemplatesListModel>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetQuoteTemplatesParams` | No | An optional object of type \`GetQuoteTemplatesParams\` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all templates with default pagination. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-templates-data`](/dropins-b2b/quote-management/events/#quote-managementquote-templates-data-emits) event.
+
+### Returns
+
+Returns [`NegotiableQuoteTemplatesListModel`](#negotiablequotetemplateslistmodel).
+
+## getStoreConfig
+
+Returns information about a store's configuration.
+
+```ts
+const getStoreConfig = async (): Promise<StoreConfigModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`StoreConfigModel`](#storeconfigmodel).
+
+## negotiableQuotes
+
+An asynchronous function that fetches the list of negotiable quotes for the authenticated customer using `GraphQL` and returns the transformed result.
+
+```ts
+const negotiableQuotes = async (
+  params: NegotiableQuotesParams = {}
+): Promise<NegotiableQuotesListModel>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `NegotiableQuotesParams` | No | An optional object of type \`NegotiableQuotesParams\` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all negotiable quotes with default pagination. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`NegotiableQuotesListModel`](#negotiablequoteslistmodel).
+
+## openQuoteTemplate
+
+Opens an existing negotiable quote template. This action allows buyers to reopen a quote template for viewing or editing, returns the updated template data on success, and emits an event with the template data.
+
+```ts
+const openQuoteTemplate = async (
+  params: OpenQuoteTemplateParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `OpenQuoteTemplateParams` | Yes | An object of type \`OpenQuoteTemplateParams\` containing the template UID to open or activate. This makes the template available for generating quotes. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## removeNegotiableQuoteItems
+
+Removes one or more items from a negotiable quote, returns the updated quote data, and emits an event so listeners can react to the change.
+
+```ts
+const removeNegotiableQuoteItems = async (
+  input: RemoveNegotiableQuoteItemsInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `RemoveNegotiableQuoteItemsInput` | Yes | Input parameters for the operation. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-items-removed`](/dropins-b2b/quote-management/events/#quote-managementquote-items-removed-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## removeQuoteTemplateItems
+
+Removes one or more products from an existing negotiable quote template. This allows you to delete items from a template by providing their unique identifiers.
+
+```ts
+const removeQuoteTemplateItems = async (
+  params: RemoveQuoteTemplateItemsParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `RemoveQuoteTemplateItemsParams` | Yes | An object of type \`RemoveQuoteTemplateItemsParams\` containing the template UID and an array of item UIDs to remove from the template. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## renameNegotiableQuote
+
+Renames a negotiable quote. It supports renaming quotes with or without a comment explaining the reason for the rename, returns the updated quote data on success, and emits an event for successful renames.
+
+```ts
+const renameNegotiableQuote = async (
+  input: RenameNegotiableQuoteInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `RenameNegotiableQuoteInput` | Yes | Input parameters for retrieving or managing quotes. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-renamed`](/dropins-b2b/quote-management/events/#quote-managementquote-renamed-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## requestNegotiableQuote
+
+Creates a new negotiable quote request from the current cart. This initiates the quote negotiation workflow, converting cart items into a quote that can be reviewed and negotiated by the seller.
+
+```ts
+const requestNegotiableQuote = async (
+  input: RequestNegotiableQuoteInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `RequestNegotiableQuoteInput` | Yes | Input parameters for retrieving or managing quotes. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/negotiable-quote-requested`](/dropins-b2b/quote-management/events/#quote-managementnegotiable-quote-requested-emits) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## sendForReview
+
+Submits a negotiable quote for review by the seller. It supports submitting quotes with or without a comment, returns the updated quote data on success, and emits an event for successful submissions.
+
+```ts
+const sendForReview = async (
+  input: SendForReviewInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `SendForReviewInput` | Yes | Input parameters for the operation. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-sent-for-review`](/dropins-b2b/quote-management/events/#quote-managementquote-sent-for-review-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## sendQuoteTemplateForReview
+
+Submits a negotiable quote template for review by the seller. It supports submitting templates with optional name, comment, and reference document links, returns the updated template data on success, and emits an event for successful submissions.
+
+```ts
+const sendQuoteTemplateForReview = async (
+  params: SendQuoteTemplateForReviewParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `SendQuoteTemplateForReviewParams` | Yes | An object of type \`SendQuoteTemplateForReviewParams\` containing the template UID and optional review notes. Submits the template for review by the seller or approver. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## setLineItemNote
+
+Updates (or creates) a buyer note for a specific negotiable quote line item.
+
+```ts
+const setLineItemNote = async (
+  input: SetLineItemNoteInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `SetLineItemNoteInput` | Yes | Input parameters for the operation. |
+
+</TableWrapper>
+
+### Events
+
+Emits the following events: [`quote-management/line-item-note-set`](/dropins-b2b/quote-management/events/#quote-managementline-item-note-set-emits), [`quote-management/quote-data`](/dropins-b2b/quote-management/events/#quote-managementquote-data-emits-and-listens).
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## setShippingAddress
+
+Sets or updates the shipping address for a negotiable quote. It supports setting the address using either a saved customer address ID or by providing new address data. Returns the updated quote data on success and emits an event for successful updates.
+
+```ts
+const setShippingAddress = async (
+  input: SetShippingAddressInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `SetShippingAddressInput` | Yes | Input parameters for the operation. |
+
+</TableWrapper>
+
+### Examples
+
+```ts
+additionalInput: {
+  vat_id: 'GB123456789',
+  custom_attribute: 'value',
+  delivery_instructions: 'Leave at door'
+}
+```
+
+### Events
+
+Emits the [`quote-management/shipping-address-set`](/dropins-b2b/quote-management/events/#quote-managementshipping-address-set-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## updateQuantities
+
+Updates the quantities of items in a negotiable quote. It validates input, transforms the request to `GraphQL` format, returns the updated quote data on success, and emits an event for successful updates.
+
+```ts
+const updateQuantities = async (
+  input: UpdateQuantitiesInput
+): Promise<NegotiableQuoteModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateQuantitiesInput` | Yes | Input parameters for the operation. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quantities-updated`](/dropins-b2b/quote-management/events/#quote-managementquantities-updated-emits-and-listens) event.
+
+### Returns
+
+Returns [`NegotiableQuoteModel`](#negotiablequotemodel) or `null`.
+
+## updateQuoteTemplateItemQuantities
+
+Changes the quantity of one or more items in an existing negotiable quote template. This allows updating item quantities, including optional `min/max` quantity constraints when the template uses `min/max` quantity settings.
+
+```ts
+const updateQuoteTemplateItemQuantities = async (
+  params: UpdateQuoteTemplateItemQuantitiesParams
+): Promise<any>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `UpdateQuoteTemplateItemQuantitiesParams` | Yes | An object of type \`UpdateQuoteTemplateItemQuantitiesParams\` containing the template UID and an array of item quantity updates (item UID and new quantity for each item). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/quote-template-data`](/dropins-b2b/quote-management/events/#quote-managementquote-template-data-emits-and-listens) event.
+
+### Returns
+
+Returns `void`.
+
+## uploadFile
+
+API function for the drop-in.
+
+```ts
+const uploadFile = async (
+  file: File
+): Promise<{ key: string }>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `file` | `File` | Yes | The File object to upload and attach to a quote. Supports specification documents, purchase orders, or any supporting files that provide context for quote requests. |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`quote-management/file-upload-error`](/dropins-b2b/quote-management/events/#quote-managementfile-upload-error-emits) event.
+
+### Returns
+
+Returns `{ key: string }`.
+
+## Data Models
+
+The quote management drop-in uses several TypeScript interfaces to define data structures:
+
+### NegotiableQuoteModel
+
+Represents a negotiable quote with all its properties and relationships.
+
+```typescript
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  comments?: QuoteComment[];
+  prices: QuotePrices;
+  items: NegotiableQuoteCartItem[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+}
+```
+
+### NegotiableQuoteStatus
+
+Enumeration of possible quote statuses.
+
+```typescript
+enum NegotiableQuoteStatus {
+  SUBMITTED = 'SUBMITTED',
+  PENDING = 'PENDING',
+  UPDATED = 'UPDATED',
+  OPEN = 'OPEN',
+  ORDERED = 'ORDERED',
+  CLOSED = 'CLOSED',
+  DECLINED = 'DECLINED',
+  EXPIRED = 'EXPIRED',
+  DRAFT = 'DRAFT',
+}
+```
+
+### CustomerModel
+
+Represents customer data and permissions.
+
+```typescript
+interface CustomerModel {
+  permissions: CustomerPermissions;
+}
+
+interface CustomerPermissions {
+  canRequestQuote: boolean;
+  canEditQuote: boolean;
+  canDeleteQuote: boolean;
+  canCheckoutQuote: boolean;
+}
+```
+
+### NegotiableQuoteModel
+
+The `NegotiableQuoteModel` object is returned by the following functions: [`duplicateQuote`](#duplicatequote), [`removeNegotiableQuoteItems`](#removenegotiablequoteitems), [`renameNegotiableQuote`](#renamenegotiablequote), [`requestNegotiableQuote`](#requestnegotiablequote), [`sendForReview`](#sendforreview), [`setLineItemNote`](#setlineitemnote), [`setShippingAddress`](#setshippingaddress), [`updateQuantities`](#updatequantities).
+
+```ts
+interface NegotiableQuoteModel {
+  uid: string;
+  name: string;
+  createdAt: string;
+  salesRepName: string;
+  expirationDate: string;
+  updatedAt: string;
+  status: NegotiableQuoteStatus;
+  isVirtual: boolean;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  templateName?: string;
+  totalQuantity: number;
+  comments?: {
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+    };
+    text: string;
+    attachments?: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    appliedDiscounts?: Discount[];
+    appliedTaxes?: Tax[];
+    discount?: Currency;
+    grandTotal?: Currency;
+    grandTotalExcludingTax?: Currency;
+    shippingExcludingTax?: Currency;
+    shippingIncludingTax?: Currency;
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    totalTax?: Currency;
+  };
+  items: CartItemModel[];
+  shippingAddresses?: ShippingAddress[];
+  canCheckout: boolean;
+  canSendForReview: boolean;
+  lockedForEditing?: boolean;
+  canDelete: boolean;
+  canClose: boolean;
+  canUpdateQuote: boolean;
+  readOnly: boolean;
+}
+```
+
+### NegotiableQuoteTemplateModel
+
+The `NegotiableQuoteTemplateModel` object is returned by the following functions: [`createQuoteTemplate`](#createquotetemplate), [`getQuoteTemplateData`](#getquotetemplatedata).
+
+```ts
+interface NegotiableQuoteTemplateModel {
+  id: string;
+  uid: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  expirationDate?: string;
+  status: NegotiableQuoteTemplateStatus;
+  salesRepName: string;
+  buyer: {
+    firstname: string;
+    lastname: string;
+  };
+  comments?: QuoteTemplateComment[];
+  history?: NegotiableQuoteHistoryEntry[];
+  prices: {
+    subtotalExcludingTax?: Currency;
+    subtotalIncludingTax?: Currency;
+    subtotalWithDiscountExcludingTax?: Currency;
+    grandTotal?: Currency;
+    appliedTaxes?: {
+      amount: Currency;
+      label: string;
+    }[];
+  };
+  items: CartItemModel[];
+  shippingAddresses?: ShippingAddress[];
+  referenceDocuments?: {
+    uid: string;
+    name: string;
+    identifier?: string;
+    url: string;
+  }[];
+  // Template-specific fields
+  quantityThresholds?: {
+    min?: number;
+    max?: number;
+  };
+  canAccept: boolean;
+  canDelete: boolean;
+  canReopen: boolean;
+  canCancel: boolean;
+  canSendForReview: boolean;
+  canGenerateQuoteFromTemplate: boolean;
+  canEditTemplateItems: boolean;
+}
+```
+
+### NegotiableQuoteTemplatesListModel
+
+The `NegotiableQuoteTemplatesListModel` object is returned by the following functions: [`getQuoteTemplates`](#getquotetemplates).
+
+```ts
+interface NegotiableQuoteTemplatesListModel {
+  items: NegotiableQuoteTemplateListEntry[];
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  totalCount: number;
+  paginationInfo?: PaginationInfo;
+  sortFields?: {
+    default: string;
+    options: Array<{
+      label: string;
+      value: string;
+    }>;
+  };
+}
+```
+
+### NegotiableQuotesListModel
+
+The `NegotiableQuotesListModel` object is returned by the following functions: [`negotiableQuotes`](#negotiablequotes).
+
+```ts
+interface NegotiableQuotesListModel {
+  items: NegotiableQuoteListEntry[];
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+  totalCount: number;
+  paginationInfo?: PaginationInfo;
+  sortFields?: {
+    default: string;
+    options: Array<{
+      label: string;
+      value: string;
+    }>;
+  };
+}
+```
+
+### StoreConfigModel
+
+The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfigModel {
+  quoteSummaryDisplayTotal: number;
+  quoteSummaryMaxItems: number;
+  quoteDisplaySettings: {
+    zeroTax: boolean;
+    subtotal: QuoteDisplayAmount;
+    price: QuoteDisplayAmount;
+    shipping: QuoteDisplayAmount;
+    fullSummary: boolean;
+    grandTotal: boolean;
+  };
+  useConfigurableParentThumbnail: boolean;
+  quoteMinimumAmount: number | null;
+  quoteMinimumAmountMessage: string | null;
+}
+```
+
+
+
+{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}
