@@ -29,7 +29,8 @@ const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
   ? fs.readdirSync(sdkComponentsDir).filter((file) => file.endsWith('.mdx'))
   : [];
 
-const sdkComponentEntries = sdkComponentFiles.map((file) => {
+const sdkComponentEntries = sdkComponentFiles.map((file) =>
+{
   const componentName = path.basename(file, '.mdx');
   const label = componentName.charAt(0).toUpperCase() + componentName.slice(1);
   return { label, link: `/sdk/components/${componentName}/` };
@@ -37,7 +38,8 @@ const sdkComponentEntries = sdkComponentFiles.map((file) => {
 
 // https://astro.build/config
 /** @returns {Promise<import('astro').AstroUserConfig>} */
-async function config() {
+async function config()
+{
   const compressIntegration = (await import('@playform/compress')).default({
     CSS: false,
     HTML: false,
@@ -305,6 +307,7 @@ async function config() {
                       { label: 'Learn the architecture', link: '/get-started/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
+                      { label: "Launch preparation and checklist", link: "setup/launch/" },
                     ],
                   },
                   {
@@ -362,19 +365,19 @@ async function config() {
                           { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                           { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                         ],
-                      },
-                      {
-                        label: 'Launch preparation',
-                        collapsed: true,
-                        items: [
-                          { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-                          { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-                          { label: 'SEO indexing', link: '/setup/seo/indexing/' },
-                          { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-                          { label: 'Launch checklist', link: '/setup/launch/' },
-                        ],
-                      },
+                      }
                     ]
+                  },
+                  {
+                    label: 'Launch preparation and checklist',
+                    collapsed: true,
+                    items: [
+                      { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+                      { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+                      { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+                      { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+                      { label: 'Launch checklist', link: '/setup/launch/' },
+                    ],
                   },
                   // ---------- DROP-INS Overview ----------
                   {
@@ -1077,12 +1080,14 @@ async function config() {
       build: {
         chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
         rollupOptions: {
-          onwarn(warning, warn) {
+          onwarn(warning, warn)
+          {
             // Suppress warnings about unused imports from expressive-code packages
             if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
               warning.source &&
               (warning.source.includes('@expressive-code/') ||
-                warning.source.includes('expressive-code'))) {
+                warning.source.includes('expressive-code')))
+            {
               return;
             }
             warn(warning);
@@ -1091,10 +1096,12 @@ async function config() {
       },
       logLevel: 'warn',
       customLogger: {
-        warn(msg, options) {
+        warn(msg, options)
+        {
           // Suppress specific expressive-code warnings
           if (msg.includes('@expressive-code/plugin-text-markers') &&
-            msg.includes('never used')) {
+            msg.includes('never used'))
+          {
             return;
           }
           console.warn(msg, options);
