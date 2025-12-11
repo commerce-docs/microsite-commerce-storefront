@@ -1097,8 +1097,7 @@ async function config()
         warn(msg, options) {
           // Suppress specific expressive-code warnings
           if (msg.includes('@expressive-code/plugin-text-markers') &&
-            msg.includes('never used'))
-          {
+            msg.includes('never used')) {
             return;
           }
           console.warn(msg, options);
