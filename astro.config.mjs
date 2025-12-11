@@ -1094,8 +1094,7 @@ async function config()
       },
       logLevel: 'warn',
       customLogger: {
-        warn(msg, options)
-        {
+        warn(msg, options) {
           // Suppress specific expressive-code warnings
           if (msg.includes('@expressive-code/plugin-text-markers') &&
             msg.includes('never used'))
