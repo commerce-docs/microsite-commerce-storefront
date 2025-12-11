@@ -1206,11 +1206,13 @@ async function config() {
             }
           ),
           starlightHeadingBadges(),
-          starlightLinksValidator({
-            errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
-            errorOnRelativeLinks: false, // Allow broken links (preview has all files)
-          }),
+          // Skip link validation if SKIP_LINK_VALIDATION=true
+          ...(process.env.SKIP_LINK_VALIDATION !== 'true'
+            ? [starlightLinksValidator({
+              errorOnFallbackPages: false,
+              errorOnInconsistentLocale: true,
+            })]
+            : []),
           starlightImageZoom({ showCaptions: false }),
         ],
 
