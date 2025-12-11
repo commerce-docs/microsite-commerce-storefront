@@ -47,18 +47,36 @@ Your datastream must be configured to route data to Adobe Experience Platform. F
 
 ## Configuration
 
-To enable data flow from your storefront to the Experience Platform Edge Network, you need to configure the Adobe Data Layer with your AEP credentials.
+To enable data flow from your storefront to the Experience Platform Edge Network, you need to add your AEP credentials to your storefront configuration.
 
-<Tasks>
+### Method 1: Configuration File (Recommended)
 
-<Task>
-### Locate your delayed script file
+Add your AEP credentials to the `analytics` section of your <Link href="/setup/configuration/commerce-configuration/" text="storefront configuration" />:
 
-Typically `scripts/delayed.js` in your project
-</Task>
+```json title="config.json"
+{
+  "public": {
+    "default": {
+      "analytics": {
+        "aep-ims-org-id": "1234567890ABCDEF7F000101@AdobeOrg",
+        "aep-datastream-id": "12345678-1234-1234-1234-123456789012",
+        "base-currency-code": "USD",
+        "environment": "Testing",
+        ...
+      }
+    }
+  }
+}
+```
 
-<Task>
-### Add the AEP configuration to your Adobe Data Layer initialization
+When both `aep-ims-org-id` and `aep-datastream-id` are configured, the storefront automatically:
+- Enables event forwarding to Adobe Experience Platform
+- Configures the AEP context with your credentials
+- Begins sending commerce events to the Experience Platform Edge Network
+
+### Method 2: Direct Script Configuration (Alternative)
+
+Alternatively, you can configure AEP directly in your `scripts/delayed.js` file:
 
 ```js
 window.adobeDataLayer.push(
@@ -76,21 +94,25 @@ window.adobeDataLayer.push(
 );
 ```
 
-</Task>
-</Tasks>
+<Aside type="tip" title="Recommended approach">
+Using the configuration file (Method 1) is recommended because it:
+- Centralizes all configuration in one place
+- Allows environment-specific settings without code changes
+- Simplifies deployment and configuration management
+</Aside>
 
 ### Configuration Parameters
 
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `aepContext.imsOrgId` | Your Adobe IMS Organization ID | Yes |
-| `aepContext.datastreamId` | Your configured datastream ID for routing data to AEP | Yes |
-| `eventForwardingContext.aep` | Enables forwarding events to Adobe Experience Platform | Yes |
+| Parameter | Description | Required | Example |
+|-----------|-------------|----------|---------|
+| `aep-ims-org-id` | Your Adobe IMS Organization ID | Yes | `"1234567890ABCDEF7F000101@AdobeOrg"` |
+| `aep-datastream-id` | Your configured datastream ID for routing data to AEP | Yes | `"12345678-1234-1234-1234-123456789012"` |
 
 ### What This Configuration Does
 
-- **`aepContext`**: Provides the necessary identifiers for routing data to your specific Adobe Experience Platform environment
-- **`eventForwardingContext.aep: true`**: Instructs the Adobe Data Layer to forward commerce events to the Experience Platform Edge Network
+- **`aep-ims-org-id`**: Identifies your Adobe organization for routing events to the correct Experience Platform environment
+- **`aep-datastream-id`**: Specifies the datastream configuration that determines how events are processed and where they're sent
+- **Automatic event forwarding**: When both values are present, the storefront automatically enables `eventForwardingContext.aep` and configures the `aepContext`
 
 ## Storefront events
 
@@ -117,8 +139,6 @@ These events are processed in real-time and can be used for:
 - Attribution modeling
 
 ## Validation
-
-You can see an example of this <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/commit/eb49d00bcebd21e48cd87c0efced17d2c6ccfd9d" text="in the Commerce Boilerplate" />.
 
 ### Testing Your Integration
 
@@ -166,7 +186,7 @@ For detailed validation procedures, refer to the <Link href="https://experiencel
 After successful integration:
 
 <Steps>
-1. **Configure schemas**: Set up XDM schemas in Adobe Experience Platform to structure your commerce data  
+1. **Configure schemas**: Set up XDM schemas in Adobe Experience Platform to structure your commerce data
 1. **Create audiences**: Build customer segments based on commerce behavior
 1. **Set up Real-Time CDP**: Use collected data for personalization and marketing activation
 1. **Monitor performance**: Regularly review data quality and ingestion metrics
