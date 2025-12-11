@@ -1,0 +1,51 @@
+{
+  "models": {
+    "CartModel": {
+      "description": "The `CartModel` represents the complete state of a shopping cart, including items, pricing, discounts, shipping estimates, and gift options."
+    },
+    "Item": {
+      "description": "The `Item` interface represents a single product in the cart, including product details, pricing, quantity, customization options, and inventory status."
+    },
+    "PartialAddress": {
+      "description": "The `PartialAddress` interface represents a minimal address used for shipping estimates, containing country, postal code, and region information."
+    },
+    "ShippingMethod": {
+      "description": "The `ShippingMethod` interface represents a shipping option with carrier and method codes, along with pricing information."
+    }
+  },
+  "cart/data": {
+    "description": "Emitted when cart data is available or changes. This event is triggered during cart initialization and updates to provide the current cart state."
+  },
+  "cart/merged": {
+    "description": "Emitted when a guest cart is merged with a customer cart after login. This typically happens when an unauthenticated user adds items to their cart, then signs in, and their guest cart items are combined with any existing items in their customer cart.",
+    "payload": "{\n  oldCartItems: Item[] | null;\n  newCart: CartModel | null;\n}"
+  },
+  "shipping/estimate": {
+    "description": "Emitted when shipping cost estimates are calculated for a given address. This event provides both the address used for estimation and the resulting shipping method with its cost.",
+    "payload": {
+      "address": {
+        "description": "The partial address used to calculate shipping estimates. Typically includes country, region, and postal code but may not include complete street address details."
+      },
+      "shippingMethod": {
+        "description": "The estimated shipping method with carrier information and cost details. Returns `null` if no shipping methods are available for the provided address."
+      }
+    }
+  },
+  "cart/product/added": {
+    "description": "Emitted when new products are added to the cart. This event fires for genuinely new items, not quantity updates of existing items.",
+    "payload": {
+      "value": {
+        "description": "Array of cart items that were just added. Each item includes the product details, selected options, quantity, and pricing information. Returns `null` if the add operation failed."
+      }
+    }
+  },
+  "cart/product/updated": {
+    "description": "Emitted when the quantity of existing cart items is increased. This event fires when adding more of a product that's already in the cart, as opposed to adding a brand new product.",
+    "payload": {
+      "value": {
+        "description": "Array of cart items whose quantities were updated. Each item reflects the new quantity and updated pricing. Returns `null` if the update operation failed."
+      }
+    }
+  }
+}
+

@@ -1,87 +1,93 @@
 ---
-import { Image } from 'astro:assets';
-import { Icons } from '@components/overrides/Icons';
-import Icon from '@components/overrides/Icon.astro';
-import type { HTMLAttributes } from 'astro/types';
-import { setBasePath } from '@utils/basePath';
+import { Image } from "astro:assets";
+import { Icons } from "@components/overrides/Icons";
+import Icon from "@components/overrides/Icon.astro";
+import type { HTMLAttributes } from "astro/types";
+import { setBasePath } from "@utils/basePath";
 
-interface Props extends Omit<HTMLAttributes<'a'>, 'title'> {
+interface Props extends Omit<HTMLAttributes<"a">, "title"> {
   title: string;
   description?: string;
-  image?: string | ImageMetadata | Promise<{ default: ImageMetadata }> | undefined;
+  image?:
+    | string
+    | ImageMetadata
+    | Promise<{ default: ImageMetadata }>
+    | undefined;
   icon?: keyof typeof Icons;
   rightIcon?: keyof typeof Icons;
   link: string;
   noborder?: boolean;
 }
 
-const { title, description, image, icon, rightIcon, noborder, link, ...attributes } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  icon,
+  rightIcon,
+  noborder,
+  link,
+  ...attributes
+} = Astro.props;
 
-const iconClass = noborder ? '' : 'icon';
-const iconSize = noborder ? '1.5rem' : '2rem';
+const iconClass = noborder ? "" : "icon";
+const iconSize = noborder ? "1.5rem" : "2rem";
 ---
 
 <div class="sl-link-card">
   {
     image && (
       <div class="sl-flex">
-        <Image src={image as string} alt={title} width="64" height="64" class="rounded-full" />
+        <Image
+          src={image as string}
+          alt={title}
+          width="64"
+          height="64"
+          class="rounded-full"
+        />
       </div>
     )
   }
   {icon && <Icon name={icon} class={iconClass} size={iconSize} />}
   <div class="sl-flex stack">
-    <a href={link?.toString().startsWith('https://') ? link : setBasePath(link)} {...attributes}></a>
+    <a
+      href={link?.toString().startsWith("https://") ? link : setBasePath(link)}
+      {...attributes}
+    >
       <span class="title" set:html={title} />
     </a>
     {description && <span class="description" set:html={description} />}
   </div>
-  <Icon name={rightIcon} size="1.5rem" />
+  {rightIcon && <Icon name={rightIcon} size="1.5rem" />}
 </div>
 
 <style>
   .sl-link-card.sl-link-card {
-    --sl-card-border: var(--sl-color-purple);
-    --sl-card-bg: var(--sl-color-purple-low);
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.75rem;
-    border: 1px solid var(--sl-color-gray-5);
-    background-color: var(--sl-color-black);
-    border-radius: 0.5rem;
-    padding: 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: #9e9e9e24;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
     box-shadow: var(--sl-shadow-sm);
     position: relative;
     padding-top: 0;
     margin-top: 0;
-  }
-
-  .sl-link-card:nth-child(4n + 1) {
-    --sl-card-border: var(--sl-color-orange);
-    --sl-card-bg: var(--sl-color-orange-low);
-  }
-  .sl-link-card:nth-child(4n + 3) {
-    --sl-card-border: var(--sl-color-green);
-    --sl-card-bg: var(--sl-color-green-low);
-  }
-  .sl-link-card:nth-child(4n + 4) {
-    --sl-card-border: var(--sl-color-red);
-    --sl-card-bg: var(--sl-color-red-low);
-  }
-  .sl-link-card:nth-child(4n + 5) {
-    --sl-card-border: var(--sl-color-blue);
-    --sl-card-bg: var(--sl-color-blue-low);
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease,
+      opacity 0.3s ease;
+    contain: layout style paint;
   }
 
   .sl-link-card .icon {
-    border: 1px solid var(--sl-card-border);
-    background-color: var(--sl-card-bg);
-    padding: 0.2em;
-    border-radius: 0.25rem;
+    display: none;
   }
 
   .sl-link-card svg {
-    margin-top: 1rem;
+    display: none;
   }
 
   a {
@@ -91,41 +97,91 @@ const iconSize = noborder ? '1.5rem' : '2rem';
 
   /* a11y fix for https://github.com/withastro/starlight/issues/487 */
   a::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
   }
 
   .sl-link-card .stack {
     flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
   }
 
   .title {
-    /* color: var(--sl-color-white);
-		font-weight: 600;
-		font-size: var(--sl-text-lg); */
-    font-weight: 600;
+    font-weight: 700;
     font-size: var(--sl-text-h3);
     color: var(--sl-color-white);
-    line-height: var(--sl-line-height-headings);
+    line-height: 1.2;
     gap: 1rem;
     align-items: center;
   }
 
   .description {
-    color: var(--sl-color-gray-3);
-    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.4;
     letter-spacing: 0;
     text-wrap: balance;
+    font-size: var(--sl-text-base);
   }
 
   /* Hover state */
-  .sl-link-card:hover {
-    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
-    border-color: var(--sl-color-gray-2);
+  .sl-link-card:hover,
+  .sl-link-card:has(a:hover) {
+    transform: translateY(-6px) !important;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 8px 16px rgba(0, 0, 0, 0.3),
+      0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
-  .sl-link-card:hover .icon {
+  /* Visible focus outline for accessibility */
+  .sl-link-card :global(a:focus-visible) {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+  }
+
+  /* Enable backdrop-filter only on desktop for performance */
+  @media (min-width: 50rem) {
+    .sl-link-card.sl-link-card {
+      backdrop-filter: blur(12px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sl-link-card,
+    .sl-link-card:hover,
+    .sl-link-card:has(a:hover) {
+      transition: none;
+      transform: none !important;
+      box-shadow: var(--sl-shadow-sm);
+    }
+  }
+
+  .sl-link-card:hover .icon,
+  .sl-link-card:has(a:hover) .icon {
     color: var(--sl-color-white);
+  }
+
+  /* Light mode specific styles */
+  :global(html:not([data-theme="dark"])) .sl-link-card {
+    background-color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(165, 165, 165, 0.4);
+  }
+
+  :global(html:not([data-theme="dark"])) .sl-link-card:hover {
+    background-color: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  :global(html[data-theme="light"]) .sl-link-card .title {
+    color: #1a1a1a !important;
+  }
+
+  :global(html[data-theme="light"]) .sl-link-card .description {
+    color: #2a2a2a !important;
   }
 </style>

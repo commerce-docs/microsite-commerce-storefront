@@ -84,9 +84,6 @@ See [Getting started with custom VCL](https://experienceleague.adobe.com/en/docs
 
 By default, Adobe Commerce [email templates](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/communications/email-templates) (such as "Forgot Password" and "Create Password") use camelCase in their route URLs (for example, `/customer/account/forgotPassword`). However, Helix 5 and Edge Delivery Services only support lowercase routes (for example, `/customer/account/forgotpassword`). This incompatibility means that links in default email templates will not work correctly on Commerce Storefronts powered by Edge Delivery Services.
 
-<Aside type="note">
-For full Edge Delivery Services migrations, all template paths must be lowercase. In Luma Bridge scenarios, camelCase can be used only if those routes are served from Luma; otherwise, they must be converted to lowercase.
-</Aside>
 
 To fix this issue, you can [customize email](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/communications/email-template-custom) templates to use the following workaround:
 
@@ -136,3 +133,17 @@ To fix this issue, you can [customize email](https://experienceleague.adobe.com/
 </Task>
 
 </Tasks>
+
+## Why don't I see my configuration changes in the browser?
+
+The [storefront configuration](/setup/configuration/commerce-configuration/#configuration-caching) is cached by the Edge CDN with a `max-age=7200` (2 hours) cache control header.
+
+When the storefront configuration is loaded in the browser, it is stored in [session storage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage). This means that the configuration persists until the browser session is cleared, or the page is refreshed after the expiration of the CDN cache. You can verify the current configuration by accessing `<site.com>/config.json` directly in your browser. This will show you the current configuration being served by the CDN.
+
+**For developers:** If your configuration changes are not reflected in the browser, check for CDN cache expiration by accessing `<site.com>/config.json` directly in your browser. If the updated configuration is available on the CDN, manually clear the session storage:
+1. Open the browser developer tools.
+1. Select the **Application** tab, then select **Storage**.
+1. Clear the session storage for your domain.
+1. Refresh the page.
+
+**For end users:** Clear the browser session by closing and reopening the browser, or clear the browsing data to see configuration changes.

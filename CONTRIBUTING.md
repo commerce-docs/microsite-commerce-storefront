@@ -144,6 +144,141 @@ Choose the right content type for your documentation:
 4. **Write scannable content** - use headings, lists, and short paragraphs
 5. **Include examples** - show, don't just tell
 
+### The Elements of Style Principles
+
+All documentation writing must follow "The Elements of Style" by William Strunk Jr. and E.B. White. These principles ensure clear, concise, and effective technical writing:
+
+1. **Use the active voice**
+   - ✅ "The system processes requests"
+   - ❌ "Requests are processed by the system"
+
+2. **Put statements in positive form**
+   - Say what is, not what isn't
+   - ✅ "Use the Link component for external links"
+   - ❌ "Don't use standard markdown for external links"
+
+3. **Use definite, specific, concrete language**
+   - Avoid vague terms
+   - ✅ "Run `npm install` to install dependencies"
+   - ❌ "Install the necessary packages"
+
+4. **Omit needless words**
+   - Make every word tell
+   - ✅ "Configure the endpoint"
+   - ❌ "You can configure the endpoint if you want to"
+
+5. **Keep related words together**
+   - Subject near verb, modifiers near what they modify
+   - ✅ "The function returns a promise that resolves when complete"
+   - ❌ "The function, when the operation completes, returns a promise"
+
+6. **Express parallel ideas in parallel form**
+   - Maintain consistent grammatical structure
+   - ✅ "The component loads data, processes it, and renders the UI"
+   - ❌ "The component loads data, processes it, and then the UI is rendered"
+
+7. **Use the same form for coordinate ideas**
+   - Maintain grammatical consistency
+   - Lists should use the same structure for all items
+
+8. **Place emphatic words at the end of sentences**
+   - ✅ "For better performance, use the Link component"
+   - ❌ "Use the Link component for better performance" (less emphasis)
+
+9. **Avoid a succession of loose sentences**
+   - Vary sentence structure
+   - Mix simple, compound, and complex sentences
+
+10. **Make the paragraph the unit of composition**
+    - One topic per paragraph
+    - Begin each paragraph with a topic sentence
+
+11. **Use orthodox spelling and grammar**
+    - Follow standard American English conventions
+    - Use consistent terminology throughout
+
+12. **Do not overwrite or overstate**
+    - Be direct and factual
+    - ✅ "This improves performance"
+    - ❌ "This dramatically revolutionizes and transforms performance"
+
+13. **Avoid qualifiers**
+    - Use sparingly: very, rather, quite, pretty, little, somewhat
+    - ✅ "The build is fast"
+    - ❌ "The build is quite fast"
+
+14. **Be clear and direct**
+    - Favor simple over complex constructions
+    - Technical writing should be immediately understandable
+
+15. **Prefer the standard to the offbeat**
+    - Use conventional language and structure
+    - Avoid trendy or informal expressions in technical documentation
+
+### Grammar Rules
+
+Follow these specific grammar rules for consistency and clarity:
+
+1. **Add articles where needed**
+   - Use "a", "an", "the" appropriately
+   - ✅ "Import the initializer"
+   - ❌ "Import initializer"
+
+2. **Avoid possessives for objects** - Use "in/of" constructions instead
+   - ✅ "The styles in the Cart"
+   - ❌ "The Cart's styles"
+   - ✅ "The initializer for the drop-in"
+   - ❌ "The drop-in's initializer"
+
+3. **Never use Latin abbreviations** - Write out the English equivalent
+   - ✅ "for example" not ❌ "e.g."
+   - ✅ "and so on" not ❌ "etc."
+   - ✅ "that is" not ❌ "i.e."
+
+4. **Omit needless words** (Strunk & White)
+   - Make every word tell
+   - Remove redundant phrases
+   - ✅ "Configure the endpoint"
+   - ❌ "You can configure the endpoint"
+
+5. **Use parallel construction**
+   - Keep list items in the same grammatical form
+   - All bullet points should follow the same structure
+
+6. **Always end complete sentences in lists with periods**
+   - ALWAYS end ordered and unordered list items with periods if they are complete sentences
+   - Fragments do not need periods
+   - ✅ "The boilerplate includes all drop-in packages." (complete sentence with period)
+   - ✅ "All drop-in packages" (fragment, no period)
+   - ❌ "The boilerplate includes all drop-in packages" (missing period on complete sentence)
+   - Be consistent within each list - all complete sentences or all fragments
+   - This applies to ALL lists: bulleted, numbered, nested, and lists within Steps components
+
+7. **No bold text after H3 headings** - Use H4 headings instead
+   - Use proper heading hierarchy for structure
+   - ✅ `#### Configuration options` (H4 heading)
+   - ❌ `**Configuration options**` (bold text after H3)
+   - This ensures proper document outline and accessibility
+
+8. **Use Steps component for ordered lists** - Always use the Steps component for step-by-step instructions
+   - Import from `@astrojs/starlight/components`
+   - ✅ `<Steps>` wrapping numbered list items (proper component)
+   - ❌ Standard markdown without Steps component (less visually distinct)
+   - Steps component provides enhanced styling and visual hierarchy
+   - **Always use `1.` for every list item** - Markdown automatically numbers them sequentially
+   - Example:
+     ```jsx
+     import { Steps } from '@astrojs/starlight/components';
+     
+     <Steps>
+     
+     1. First step description
+     1. Second step description
+     1. Third step description
+     
+     </Steps>
+     ```
+
 ## File Conventions
 
 ### Naming Standards
@@ -151,6 +286,41 @@ Choose the right content type for your documentation:
 - **Use kebab-case** for file and folder names: `checkout-configuration.mdx`
 - **Be descriptive** but concise: `add-payment-method.mdx` not `payment.mdx`
 - **Match URL structure** to file structure where possible
+
+### Product Terminology
+
+Use the correct Adobe product terminology consistently throughout all documentation:
+
+- ✅ **Adobe Commerce boilerplate** - The official name for the boilerplate
+- ✅ **Edge Delivery Services + Adobe Commerce Boilerplate** - The full official name (from the repository)
+- ❌ ~~AEM Commerce boilerplate~~ - Incorrect; never use this term
+- ℹ️  The repository is named `aem-boilerplate-commerce`, but the product name is "Adobe Commerce boilerplate"
+
+**Terminology Progression Within a Page:**
+
+Use natural shorthand after introducing the full term:
+1. **First mention**: "Adobe Commerce boilerplate" or "Edge Delivery Services + Adobe Commerce Boilerplate"
+2. **Second mention**: "Commerce boilerplate" (shorthand)
+3. **Subsequent mentions**: "boilerplate"
+
+Example:
+> The **Adobe Commerce boilerplate** provides a complete foundation... Why use the Commerce boilerplate? The boilerplate eliminates complexity by...
+
+**Shortening "Adobe Commerce" Within Sections:**
+
+After introducing "Adobe Commerce" in a section, subsequent mentions within that section should use "Commerce" as shorthand:
+
+- ✅ "The **Adobe Commerce boilerplate** applies to building Commerce storefronts..." (second mention shortened)
+- ✅ "Adobe Commerce provides... Commerce also supports..." (subsequent mentions shortened)
+- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce storefronts..." (repetitive, should shorten second mention)
+
+This rule applies within the scope of a section (between H2/H3 headings) to avoid repetition and improve readability.
+
+This terminology applies to:
+- Page titles and descriptions
+- Body content and examples
+- Code comments and documentation
+- All references to the boilerplate project
 
 ### Frontmatter Requirements
 
@@ -185,6 +355,8 @@ time: "15 minutes"            # Estimated reading/completion time
 
 Standard Markdown is supported, plus MDX extensions for interactive components.
 
+**Important:** Always use the Steps component for all ordered lists.
+
 **Headings:**
 ```markdown
 # Page Title (H1 - used once per page)
@@ -192,6 +364,11 @@ Standard Markdown is supported, plus MDX extensions for interactive components.
 ### Subsections (H3)
 #### Minor Sections (H4)
 ```
+
+**Important:** Always use H4 headings for subsections under H3. Never use bold text as a substitute for headings.
+- ✅ `#### Configuration options` (correct - H4 heading)
+- ❌ `**Configuration options**` (incorrect - bold text)
+- Proper heading hierarchy ensures accessibility and proper document structure
 
 **Code Blocks:**
 ````markdown
@@ -205,10 +382,33 @@ function initializeCart() {
 ````
 
 **Links:**
+
+**Internal Links** (within the documentation site):
 ```markdown
 [Internal Link](/get-started/create-storefront/)
-[External Link](https://example.com)
 ```
+
+**External Links** (REQUIRED - use Link component for ALL external links):
+
+All external links (to websites outside this documentation) MUST use the Link component:
+```jsx
+import Link from '@components/Link.astro';
+
+<Link href="https://example.com" text="External Link" />
+```
+
+**Why this is required:**
+- Automatically adds an external link icon for visual consistency
+- Opens in a new tab to preserve user's place in documentation
+- Provides consistent styling across all external links
+- Makes it clear to users when they're leaving the documentation
+
+**Examples of external links that require the Link component:**
+- GitHub repositories and files
+- NPM packages
+- External documentation sites (aem.live, da.live, etc.)
+- API documentation
+- Any URL starting with `http://` or `https://` that's not this documentation
 
 ### Available Components
 
@@ -267,6 +467,42 @@ This is something users should be careful about.
 2. **Don't overuse callouts** - reserve for truly important information
 3. **Test components** in the browser to ensure they render correctly
 4. **Keep accessibility in mind** - use proper alt text for images, meaningful link text
+
+### Tables
+
+**Standard Table Format:** All tables should use the TableWrapper component with consistent formatting.
+
+**Required Pattern:**
+1. Import TableWrapper component at the top of your file
+2. Wrap markdown tables in `<TableWrapper nowrap={[0]}>`
+3. Make first column items into links to relevant reference pages
+4. Use standard markdown table syntax inside the wrapper
+
+**Example:**
+```jsx
+import TableWrapper from '@components/TableWrapper.astro';
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Description |
+|-----------|-------------|
+| [Cart](/dropins/cart/) | Shopping cart functionality |
+| [Checkout](/dropins/checkout/) | Complete checkout flow |
+
+</TableWrapper>
+```
+
+**Benefits:**
+- `nowrap={[0]}` prevents the first column from wrapping, keeping names clean
+- First column links provide quick navigation to detailed documentation
+- Consistent formatting across all documentation
+- Responsive table behavior on mobile devices
+
+**When to Use Tables:**
+- Comparing features or options
+- Listing components with descriptions
+- Directory or file structure references
+- Configuration option references
 
 ## Assets & Media
 

@@ -1,0 +1,115 @@
+---
+title: CORS Setup
+description: Quick guide to configuring CORS headers for Adobe Commerce GraphQL endpoints.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Badge from '@components/overrides/Badge.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Link from '@components/Link.astro';
+
+Cross-Origin Resource Sharing (CORS) is a browser security feature that restricts web pages from making requests to a different domain than the one serving the page. CORS is required when your storefront runs on a different domain or port than your Adobe Commerce backend.
+
+<Badge text="PaaS only" variant="note" size="large" /> 
+
+<Aside type="caution" title="Production recommendation">
+CORS should be a last resort for production. Prefer same-origin delivery of the storefront and API (for example, via Fastly VCL) to avoid CORS entirely.
+
+But during development, it's a common scenario for storefronts to run on a different domain or port than the Adobe Commerce backend, so CORS is required. Without CORS, browsers will block cross-origin requests and you'll see errors like the following in the browser console:
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+</Aside>
+
+## Quick test: Is CORS working?
+
+Adobe Commerce uses `/graphql` as the GraphQL endpoint, and this is the primary endpoint that requires CORS configuration. If you already have CORS configured, test it by replacing `YOUR_STOREFRONT_URL` with your actual frontend URL:
+
+```bash
+curl -I -X OPTIONS https://your-commerce-backend.com/graphql \
+  -H "Origin: YOUR_STOREFRONT_URL" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+Look for these headers in the response:
+- `Access-Control-Allow-Origin: YOUR_STOREFRONT_URL` (or `*` if using a wildcard)
+- `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+
+If you see these headers with your storefront URL, CORS is configured correctly. If not, follow the setup steps below.
+
+## Quick steps
+
+<Tasks>
+
+<Task>
+
+### Add CORS support
+
+To add CORS headers to your Adobe Commerce GraphQL endpoints, you have several options:
+
+- **Server configuration**: Configure CORS headers at the web server level ([Nginx](https://enable-cors.org/server_nginx.html), [Apache](https://enable-cors.org/server_apache.html))
+- **Third-party module**: Use a community module such as [graycore/magento2-cors](https://github.com/graycoreio/magento2-cors)
+- **Custom module**: Implement a custom Adobe Commerce module to add CORS headers
+
+<Aside type="note" title="Support scope">
+Third-party modules and custom module implementations are outside the scope of Adobe Commerce support. For production environments, Adobe recommends server-level configuration or same-origin delivery to avoid CORS requirements entirely.
+</Aside>
+
+Refer to your chosen implementation's documentation for specific configuration steps.
+
+</Task>
+
+<Task>
+
+### Configure CORS settings
+
+Configure your CORS implementation to allow requests from your storefront domain(s) to your Adobe Commerce GraphQL endpoint.
+
+At minimum, you'll need to configure:
+- **Allowed origins**: Your storefront domain(s) (for example, `http://localhost:3000`, `https://your-storefront.com`)
+- **Allowed methods**: `GET`, `POST`, `OPTIONS`
+- **Allowed headers**: `Content-Type`, `Authorization`, `X-Requested-With`
+
+Refer to your chosen implementation's documentation for specific configuration steps.
+
+</Task>
+
+<Task>
+
+### Test your CORS configuration
+
+Open your storefront in a browser and check the Network tab in DevTools:
+- Look for preflight `OPTIONS` requests to your GraphQL endpoint
+- Verify the response includes headers like:
+  - `Access-Control-Allow-Origin: <your-storefront-url>` (or `*` if using a wildcard)
+  - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type, Authorization`
+
+If configured correctly, your GraphQL requests should succeed without CORS errors.
+
+</Task>
+
+</Tasks>
+
+## Common pitfalls
+
+<Aside type="caution" title="Avoid these common mistakes">
+
+**Forgetting to clear cache:** After changing CORS settings, always run `bin/magento cache:flush`. A stale cache is the primary cause of "it's not working" reports.
+
+**Using `*` with credentials:** You cannot use a wildcard `*` origin when `Allow Credentials` is enabled. Browsers will block the request.
+
+**Missing the `OPTIONS` method:** All CORS requests start with an OPTIONS preflight request. If you forget to include `OPTIONS` in **Allowed Methods**, all CORS requests will fail.
+
+</Aside>
+
+## Next steps
+
+If you encounter issues or need detailed configuration guidance, see [CORS Troubleshooting](/setup/configuration/cors-troubleshooting/)
+
+## References
+
+- <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="CORS specification" /> - MDN Web Docs on Cross-Origin Resource Sharing
+- <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors" text="CORS errors" /> - MDN documentation on common CORS error messages

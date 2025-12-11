@@ -1,0 +1,297 @@
+---
+title: CORS Troubleshooting
+description: Diagnose and resolve CORS issues with Adobe Commerce GraphQL endpoints, including common errors, debugging techniques, and browser network inspection.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Badge from '@components/overrides/Badge.astro';
+import Options from '@components/Options.astro';
+import Option from '@components/Option.astro';
+import Link from '@components/Link.astro';
+
+This guide helps you diagnose and resolve CORS issues with Adobe Commerce GraphQL endpoints.
+
+<Badge text="PaaS only" variant="note" size="large" />
+
+
+## Common CORS errors
+
+The following are standard CORS errors enforced by browser security policies. These error messages appear in the browser console (DevTools).
+
+<Options label="Error" numbered={false}>
+
+<Option>
+
+### No 'Access-Control-Allow-Origin' header
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the 
+requested resource.
+```
+
+#### Cause
+
+CORS headers are not being sent by your Commerce backend. This could mean:
+- CORS support is not configured
+- The origin is not in the allowed list
+- The configuration cache needs to be cleared
+
+#### Solution
+
+- Verify CORS is configured. See [CORS Setup](/setup/configuration/cors-setup/) if not configured yet.
+- Add your storefront origin to the allowed origins list
+- Clear the cache: `bin/magento cache:flush`
+
+</Option>
+
+<Option>
+
+### Origin not allowed
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: The 'Access-Control-Allow-Origin' header has a value 
+'https://storefront.example.com' that is not equal to the supplied origin.
+```
+
+#### Cause
+
+The requesting origin is not in the allowed origins list.
+
+#### Solution
+
+Add the exact origin (including protocol and port) to the Allowed Origins configuration.
+
+</Option>
+
+<Option>
+
+### Credentials flag issue
+
+```txt
+Access to fetch at 'https://commerce.example.com/graphql' from origin 'http://localhost:3000' 
+has been blocked by CORS policy: The value of the 'Access-Control-Allow-Origin' header in the 
+response must not be the wildcard '*' when the request's credentials mode is 'include'.
+```
+
+#### Cause
+
+You have `Allow Credentials` enabled but are using `*` for allowed origins.
+
+#### Solution
+
+Replace `*` with specific origins when credentials are required.
+
+</Option>
+
+</Options>
+
+### Common issues
+
+If you encounter CORS errors after installing `adobe-commerce/storefront-compatibility`, verify that your CORS implementation is compatible with Adobe Commerce Storefronts. If using the graycore module, ensure v2.x or later is installed.
+
+## Debug checklist
+
+<Options label="Item" numbered={false}>
+
+<Option>
+
+### Verify CORS is configured
+
+If using a CORS module, check that it's installed and enabled:
+
+```bash
+# List all enabled modules
+bin/magento module:status | grep -i cors
+```
+
+If using a custom CORS implementation, verify your code is deployed and active.
+
+</Option>
+
+<Option>
+
+### Verify CORS configuration
+
+Check your CORS configuration and confirm:
+- Your storefront origin is in the Allowed Origins list
+- Origins match exactly (including protocol and port)
+- No trailing slashes in origins
+- Allowed Methods includes `OPTIONS`
+- Allowed Headers includes all headers your storefront sends
+
+See [CORS Setup](/setup/configuration/cors-setup/) for configuration details.
+
+</Option>
+
+<Option>
+
+### Inspect browser network traffic
+
+Open DevTools > Network tab and look for:
+
+#### Preflight OPTIONS request
+
+```txt
+Request URL: https://commerce.example.com/graphql
+Request Method: OPTIONS
+```
+
+Expected response headers:
+```txt
+Access-Control-Allow-Origin: http://localhost:3000
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Max-Age: 86400
+```
+
+#### Actual GraphQL POST request
+
+```txt
+Request URL: https://commerce.example.com/graphql
+Request Method: POST
+```
+
+Expected response headers:
+```txt
+Access-Control-Allow-Origin: http://localhost:3000
+Access-Control-Allow-Credentials: true
+```
+
+</Option>
+
+<Option>
+
+### Check server logs
+
+If CORS headers are present but requests still fail:
+
+```bash
+tail -f var/log/system.log
+tail -f var/log/exception.log
+```
+
+Look for PHP errors, GraphQL exceptions, or module conflicts.
+
+</Option>
+
+<Option>
+
+### Clear all caches
+
+After any configuration changes:
+
+```bash
+bin/magento cache:flush
+bin/magento cache:clean
+```
+
+Some CORS configurations may also be cached in Varnish/Fastly if applicable.
+
+</Option>
+
+</Options>
+
+## Distinguishing CORS errors from server-side errors
+
+When debugging, it's important to distinguish CORS policy failures from server-side GraphQL exceptions. Here's an example of a server-side error that might be mistaken for a CORS issue: 
+
+```txt
+{
+  "message": "Internal server error",
+  "extensions": {
+    "debugMessage": "Magento\\InventoryConfiguration\\Model\\IsSourceItemManagementAllowedForProductType\\Interceptor::execute(): Argument #1 ($productType) must be of type string, null given"
+  }
+}
+```
+
+This indicates a PHP/GraphQL issue (inventory configuration or compatibility) and not a missing Access-Control-Allow-Origin header.
+
+## Edge cases and special scenarios
+
+### Docker and containerized environments
+
+When running Commerce in Docker, you may need to add multiple origin variations:
+
+```txt
+http://localhost:3000
+http://127.0.0.1:3000
+http://host.docker.internal:3000
+```
+
+<Aside type="note" title="Docker hostname variations">
+Docker networking can cause your browser to use different hostnames for the same service, so you need to add all variations.
+</Aside>
+
+### Multiple storefronts
+
+For multiple storefronts accessing the same Commerce backend, add each origin separately:
+
+```txt
+https://storefront-us.example.com
+https://storefront-eu.example.com
+https://storefront-asia.example.com
+```
+
+Each storefront is treated as a separate origin and must be explicitly allowed.
+
+## Production best practices
+
+The recommended production approach is to avoid CORS entirely by serving both the storefront and the backend from the same domain using a CDN proxy.
+
+### Same-origin architecture (recommended)
+
+Serve both your storefront and Commerce backend from the same domain:
+
+- Storefront: `https://example.com` → CDN serves static assets
+- GraphQL API: `https://example.com/graphql` → CDN proxies to Commerce backend
+
+This requires configuring your CDN to proxy `/graphql` requests to your Commerce backend.
+
+**Benefits:**
+- No CORS complexity
+- Better performance (fewer preflight requests)
+- Simpler security model
+- Better caching control
+
+**Implementation approaches:**
+
+<Steps>
+
+1. **Fastly VCL routing:**
+   Configure Fastly to route GraphQL requests to your Commerce backend using VCL (Varnish Configuration Language). The VCL detects requests to `/graphql` and proxies them to your backend origin while serving other requests from your storefront origin.
+
+2. **Cloudflare Workers / CDN Edge Functions:**
+   Use edge functions to route API requests to your backend dynamically.
+
+3. **Reverse proxy (Nginx/Apache):**
+   Configure your web server to proxy `/graphql` requests to the backend.
+
+</Steps>
+
+**Note:** This approach requires CDN/infrastructure expertise. If you don't have these resources, use CORS configuration instead.
+
+### CORS configuration
+
+If you must use different domains (for example, `storefront.example.com` → `commerce.example.com`), use CORS configuration. Use specific allowed origins for single production domains, or a wildcard `*` when you have multiple dynamic preview URLs (such as Edge Delivery Services branch previews).
+
+## References
+
+### CORS standards and specifications
+
+- <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" text="CORS specification" /> - MDN Web Docs on Cross-Origin Resource Sharing
+- <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors" text="CORS errors" /> - MDN documentation on common CORS error messages
+- <Link href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers#cors" text="CORS headers" /> - Complete list of CORS-related HTTP headers
+- <Link href="https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request" text="Preflight requests" /> - How browsers use OPTIONS requests for CORS
+
+### Adobe Commerce
+
+- <Link href="https://experienceleague.adobe.com/docs/commerce-operations/configuration-guide/cli/common-cli-commands.html" text="Adobe Commerce CLI commands" /> - Official documentation for Magento CLI commands used in this guide
+- <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="Adobe Commerce GraphQL" /> - GraphQL API documentation
+
+### Additional tools and platforms
+
+- <Link href="https://getcomposer.org/doc/" text="Composer documentation" /> - PHP dependency manager used for module installation
+- <Link href="https://docs.docker.com/network/" text="Docker networking" /> - Understanding Docker hostname resolution for CORS origins
+- <Link href="https://developer.fastly.com/reference/vcl/" text="Fastly VCL documentation" /> - For implementing same-origin architecture with Fastly CDN routing
