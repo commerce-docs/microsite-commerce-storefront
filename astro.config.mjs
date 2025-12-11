@@ -1085,8 +1085,7 @@ async function config()
             if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
               warning.source &&
               (warning.source.includes('@expressive-code/') ||
-                warning.source.includes('expressive-code')))
-            {
+                warning.source.includes('expressive-code'))) {
               return;
             }
             warn(warning);
