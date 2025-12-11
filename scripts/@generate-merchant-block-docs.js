@@ -173,6 +173,83 @@ function updateEnrichmentMetadata(boilerplatePath, blockCount) {
 
 
 /**
+ * Helper: Split destructured properties while respecting nested structures
+ */
+function splitDestructuredProperties(content) {
+    const properties = [];
+    let current = '';
+    let depth = 0;
+    let inString = false;
+    let stringChar = '';
+
+    for (let i = 0; i < content.length; i++) {
+        const char = content[i];
+        const prev = content[i - 1];
+
+        // Track string boundaries
+        if ((char === '"' || char === "'" || char === '`') && prev !== '\\') {
+            if (!inString) {
+                inString = true;
+                stringChar = char;
+            } else if (char === stringChar) {
+                inString = false;
+            }
+        }
+
+        // Track nesting depth (for arrays/objects in default values)
+        if (!inString) {
+            if (char === '{' || char === '[' || char === '(') depth++;
+            if (char === '}' || char === ']' || char === ')') depth--;
+        }
+
+        // Split on commas at depth 0 (not nested)
+        if (char === ',' && depth === 0 && !inString) {
+            properties.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+
+    // Add the last property
+    if (current.trim()) {
+        properties.push(current);
+    }
+
+    return properties;
+}
+
+/**
+ * Helper: Clean and normalize default values from source code
+ */
+function cleanDefaultValue(value) {
+    if (!value) return 'undefined';
+
+    let cleaned = value
+        .replace(/^['"`]|['"`]$/g, '')  // Remove surrounding quotes
+        .replace(/,\s*$/, '')            // Remove trailing comma
+        .trim();
+
+    return cleaned || 'undefined';
+}
+
+/**
+ * Helper: Infer type from default value
+ */
+function inferType(defaultValue) {
+    if (defaultValue === 'true' || defaultValue === 'false') {
+        return 'boolean';
+    }
+    if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
+        return 'number';
+    }
+    if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
+        return 'object';
+    }
+    return 'string';
+}
+
+/**
  * Extract configuration from source code (PRIMARY SOURCE OF TRUTH)
  * Scans .js file for readBlockConfig() calls and extracts destructured keys
  * This is the ONLY way to know what configurations actually exist
@@ -186,55 +263,204 @@ function extractConfigFromSource(blockPath) {
 
     const sourceCode = readFileSync(jsFile, 'utf8');
     const configs = [];
+    const foundKeys = new Set();
 
-    // Look for readBlockConfig pattern:
-    // const { 'config-key': varName = 'default', ... } = readBlockConfig(block);
+    // PATTERN 1: Destructuring pattern (both explicit and shorthand)
+    // const { 'config-key': varName = 'default', shorthand, ... } = readBlockConfig(block);
     const readBlockConfigPattern = /const\s*\{([^}]+)\}\s*=\s*readBlockConfig\([^)]+\)/g;
     const matches = sourceCode.matchAll(readBlockConfigPattern);
 
     for (const match of matches) {
         const destructuredContent = match[1];
 
-        // Parse each destructured property
-        // Pattern: 'config-key': varName = 'defaultValue'
-        const propertyPattern = /['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*([^,}]+))?/g;
-        const propertyMatches = destructuredContent.matchAll(propertyPattern);
+        // Split by commas (but be careful with nested objects/arrays)
+        const properties = splitDestructuredProperties(destructuredContent);
 
-        for (const propMatch of propertyMatches) {
-            const key = propMatch[1].trim();
-            const variable = propMatch[2].trim();
-            let defaultValue = propMatch[3]?.trim() || 'undefined';
+        for (const prop of properties) {
+            const trimmedProp = prop.trim();
+            if (!trimmedProp) continue;
 
-            // Clean up default value
-            defaultValue = defaultValue
-                .replace(/^['"`]|['"`]$/g, '')
-                .replace(/,\s*$/, '')
-                .trim();
+            // Pattern 1a: Explicit key-value: 'config-key': varName = 'defaultValue'
+            const explicitPattern = /^['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*(.+))?$/;
+            const explicitMatch = trimmedProp.match(explicitPattern);
 
-            if (defaultValue === '') {
-                defaultValue = 'undefined';
+            if (explicitMatch) {
+                const key = explicitMatch[1].trim();
+                const variable = explicitMatch[2].trim();
+                let defaultValue = explicitMatch[3]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                configs.push({
+                    key: key,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-explicit'
+                });
+
+                foundKeys.add(key);
+                continue;
             }
 
-            // Infer type from default value in source code
-            let type = 'string';
-            if (defaultValue === 'true' || defaultValue === 'false') {
-                type = 'boolean';
-            } else if (!isNaN(defaultValue) && defaultValue !== '' && defaultValue !== 'undefined') {
-                type = 'number';
-            } else if (defaultValue.startsWith('[') || defaultValue.startsWith('{')) {
-                type = 'object';
-            }
+            // Pattern 1b: ES6 Shorthand: varName or varName = 'defaultValue'
+            const shorthandPattern = /^(\w+)(?:\s*=\s*(.+))?$/;
+            const shorthandMatch = trimmedProp.match(shorthandPattern);
 
-            configs.push({
-                key: key,
-                variable: variable,
-                type: type,
-                default: defaultValue,
-                description: '', // Will be enriched from README
-                required: 'No',
-                sideEffects: '',
-                source: 'source-code'
-            });
+            if (shorthandMatch) {
+                const variable = shorthandMatch[1].trim();
+                let defaultValue = shorthandMatch[2]?.trim() || 'undefined';
+
+                // Clean up default value
+                defaultValue = cleanDefaultValue(defaultValue);
+
+                // For shorthand, the config key is the variable name
+                configs.push({
+                    key: variable,
+                    variable: variable,
+                    type: inferType(defaultValue),
+                    default: defaultValue,
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-shorthand'
+                });
+
+                foundKeys.add(variable);
+            }
+        }
+    }
+
+    // PATTERN 2 & 3: Assignment pattern with optional subsequent destructuring
+    // Pattern 2: const config = readBlockConfig(block); if (config.urlpath) { ... }
+    // Pattern 3: const blockConfig = readBlockConfig(block); const { fragment, type, ... } = blockConfig;
+    const assignmentPattern = /const\s+(\w+)\s*=\s*readBlockConfig\([^)]+\)/;
+    const assignmentMatch = sourceCode.match(assignmentPattern);
+
+    if (assignmentMatch) {
+        const configVarName = assignmentMatch[1]; // e.g., "config" or "blockConfig"
+
+        // PATTERN 3: Check for subsequent destructuring from the config variable
+        // This handles cases where destructuring happens on a separate line (even with blank lines)
+        // Example: const blockConfig = readBlockConfig(block);
+        //          
+        //          const { fragment, type, 'customer-segments': customerSegments } = blockConfig;
+        const subsequentDestructPattern = new RegExp(
+            `const\\s*\\{([^}]+)\\}\\s*=\\s*${configVarName}[;,]?`,
+            'gs' // Global + dotall flags to handle multiline patterns and blank lines
+        );
+        const destructMatch = sourceCode.match(subsequentDestructPattern);
+
+        if (destructMatch) {
+            // Found subsequent destructuring - parse it like PATTERN 1
+            for (const match of destructMatch) {
+                // Extract the content between { and }
+                const destructuredContent = match.match(/\{([^}]+)\}/s)?.[1];
+                if (!destructuredContent) continue;
+
+                const properties = splitDestructuredProperties(destructuredContent);
+
+                for (const prop of properties) {
+                    const trimmedProp = prop.trim();
+                    if (!trimmedProp) continue;
+
+                    // Pattern 3a: Explicit key-value: 'config-key': varName = 'defaultValue'
+                    const explicitPattern = /^['"]([^'"]+)['"]\s*:\s*(\w+)(?:\s*=\s*(.+))?$/;
+                    const explicitMatch = trimmedProp.match(explicitPattern);
+
+                    if (explicitMatch) {
+                        const key = explicitMatch[1].trim();
+                        const variable = explicitMatch[2].trim();
+                        let defaultValue = explicitMatch[3]?.trim() || 'undefined';
+
+                        // Skip if already found
+                        if (foundKeys.has(key)) continue;
+
+                        // Clean up default value
+                        defaultValue = cleanDefaultValue(defaultValue);
+
+                        configs.push({
+                            key: key,
+                            variable: variable,
+                            type: inferType(defaultValue),
+                            default: defaultValue,
+                            description: '', // Will be enriched from README
+                            required: 'No',
+                            sideEffects: '',
+                            source: 'source-code-subsequent-destruct'
+                        });
+
+                        foundKeys.add(key);
+                        continue;
+                    }
+
+                    // Pattern 3b: ES6 Shorthand: varName or varName = 'defaultValue'
+                    const shorthandPattern = /^(\w+)(?:\s*=\s*(.+))?$/;
+                    const shorthandMatch = trimmedProp.match(shorthandPattern);
+
+                    if (shorthandMatch) {
+                        const variable = shorthandMatch[1].trim();
+                        let defaultValue = shorthandMatch[2]?.trim() || 'undefined';
+
+                        // Skip if already found
+                        if (foundKeys.has(variable)) continue;
+
+                        // Clean up default value
+                        defaultValue = cleanDefaultValue(defaultValue);
+
+                        // For shorthand, the config key is the variable name
+                        configs.push({
+                            key: variable,
+                            variable: variable,
+                            type: inferType(defaultValue),
+                            default: defaultValue,
+                            description: '', // Will be enriched from README
+                            required: 'No',
+                            sideEffects: '',
+                            source: 'source-code-subsequent-destruct'
+                        });
+
+                        foundKeys.add(variable);
+                    }
+                }
+            }
+        } else {
+            // No subsequent destructuring found - fall back to PATTERN 2 (property usage detection)
+            // Find all usages of config.property throughout the file
+            const propertyUsagePattern = new RegExp(configVarName + '\\.(\\w+)', 'g');
+            const propertyMatches = [...sourceCode.matchAll(propertyUsagePattern)];
+
+            // Get unique property names
+            const propertyNames = [...new Set(propertyMatches.map(m => m[1]))];
+
+            for (const propertyName of propertyNames) {
+                // Skip if already found via destructuring
+                if (foundKeys.has(propertyName)) {
+                    continue;
+                }
+
+                // Skip common object properties that aren't config
+                if (['length', 'toString', 'valueOf', 'constructor', 'dataset'].includes(propertyName)) {
+                    continue;
+                }
+
+                configs.push({
+                    key: propertyName,
+                    variable: propertyName,
+                    type: 'string', // Default to string, could be enhanced with more analysis
+                    default: 'undefined',
+                    description: '', // Will be enriched from README
+                    required: 'No',
+                    sideEffects: '',
+                    source: 'source-code-assignment'
+                });
+
+                foundKeys.add(propertyName);
+            }
         }
     }
 
@@ -543,10 +769,45 @@ function extractImportantNotes(blockPath) {
 }
 
 /**
+ * Load configuration enrichments from JSON file
+ */
+function loadConfigurationEnrichments() {
+    const enrichmentPath = join(process.cwd(), '_dropin-enrichments/merchant-blocks/configurations.json');
+    if (!existsSync(enrichmentPath)) {
+        return {};
+    }
+
+    try {
+        const content = readFileSync(enrichmentPath, 'utf8');
+        const data = JSON.parse(content);
+        return data.configurations || {};
+    } catch (error) {
+        console.warn(`  ⚠️  Could not load configuration enrichments: ${error.message}`);
+        return {};
+    }
+}
+
+
+/**
  * Generate enhanced property descriptions with context
  * Adds WHEN/WHY information to make descriptions more actionable
  */
-function generateEnhancedPropertyDescription(key, description, type, defaultValue) {
+function generateEnhancedPropertyDescription(key, description, type, defaultValue, blockName) {
+    // Try to load enriched description first
+    const configEnrichments = loadConfigurationEnrichments();
+    const blockConfigs = configEnrichments[blockName] || {};
+    const enrichedConfig = blockConfigs[key.toLowerCase()];
+
+    if (enrichedConfig && enrichedConfig.description) {
+        // Use enriched description + when_to_use if available
+        let enhanced = enrichedConfig.description;
+        if (enrichedConfig.when_to_use) {
+            enhanced += ` ${enrichedConfig.when_to_use}`;
+        }
+        return enhanced.endsWith('.') ? enhanced : enhanced + '.';
+    }
+
+    // Fall back to auto-generated enhancements
     const cleanKey = key.toLowerCase();
     let enhanced = description.trim();
 
@@ -834,7 +1095,7 @@ function generateRequirementsSection(blockName, blockPath) {
     try {
         if (existsSync(requirementsEnrichmentPath)) {
             const enrichmentData = JSON.parse(readFileSync(requirementsEnrichmentPath, 'utf8'));
-            enrichedRequirement = enrichmentData.requirements?.[blockName];
+            enrichedRequirement = enrichmentData[blockName];  // FIXED: Direct access, not nested
         }
     } catch (error) {
         console.warn(`Warning: Could not load requirements enrichment: ${error.message}`);
@@ -932,6 +1193,58 @@ function toTitleCase(str) {
     return str.split('-').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
+}
+
+/**
+ * Get readable title and label for B2B blocks
+ * Returns null for non-B2B blocks (use default title generation)
+ */
+function getB2BBlockTitles(blockName) {
+    // Remove 'commerce-' prefix for matching
+    const name = blockName.replace('commerce-', '');
+    
+    // B2B block title transformations
+    const b2bTitles = {
+        // Purchase Order blocks
+        'b2b-po-approval-flow': { title: 'Purchase Order Approval Flow', label: 'PO Approval Flow' },
+        'b2b-po-approval-rule-details': { title: 'Purchase Order Approval Rule Details', label: 'PO Approval Rule Details' },
+        'b2b-po-approval-rule-form': { title: 'Purchase Order Approval Rule Form', label: 'PO Approval Rule Form' },
+        'b2b-po-approval-rules-list': { title: 'Purchase Order Approval Rules List', label: 'PO Approval Rules List' },
+        'b2b-po-checkout-success': { title: 'Purchase Order Checkout Success', label: 'PO Checkout Success' },
+        'b2b-po-comment-form': { title: 'Purchase Order Comment Form', label: 'PO Comment Form' },
+        'b2b-po-comments-list': { title: 'Purchase Order Comments List', label: 'PO Comments List' },
+        'b2b-po-company-purchase-orders': { title: 'Company Purchase Orders', label: 'Company POs' },
+        'b2b-po-customer-purchase-orders': { title: 'Customer Purchase Orders', label: 'My POs' },
+        'b2b-po-header': { title: 'Purchase Order Header', label: 'PO Header' },
+        'b2b-po-history-log': { title: 'Purchase Order History Log', label: 'PO History Log' },
+        'b2b-po-require-approval-purchase-orders': { title: 'Purchase Orders Requiring Approval', label: 'POs Requiring Approval' },
+        'b2b-po-status': { title: 'Purchase Order Status', label: 'PO Status' },
+        
+        // Quote Management blocks
+        'b2b-negotiable-quote': { title: 'Negotiable Quote', label: 'Negotiable Quote' },
+        'b2b-negotiable-quote-template': { title: 'Negotiable Quote Template', label: 'Quote Template' },
+        'b2b-quote-checkout': { title: 'Quote Checkout', label: 'Quote Checkout' },
+        
+        // Requisition List blocks
+        'b2b-requisition-list': { title: 'Requisition Lists', label: 'Requisition Lists' },
+        'b2b-requisition-list-view': { title: 'Requisition List View', label: 'List View' },
+        
+        // Company Management blocks
+        'company-accept-invitation': { title: 'Accept Company Invitation', label: 'Accept Invitation' },
+        'company-create': { title: 'Create Company', label: 'Create Company' },
+        'company-credit': { title: 'Company Credit', label: 'Company Credit' },
+        'company-profile': { title: 'Company Profile', label: 'Company Profile' },
+        'company-roles-permissions': { title: 'Company Roles and Permissions', label: 'Roles & Permissions' },
+        'company-structure': { title: 'Company Structure', label: 'Company Structure' },
+        'company-users': { title: 'Company Users', label: 'Company Users' },
+        
+        // Checkout & Account blocks
+        'account-nav': { title: 'Account Navigation', label: 'Account Navigation' },
+        'checkout-success': { title: 'Checkout Success', label: 'Checkout Success' },
+        'customer-company': { title: 'Customer Company', label: 'Customer Company' },
+    };
+    
+    return b2bTitles[name] || null;
 }
 
 /**
@@ -1293,7 +1606,8 @@ function generateDocumentAuthoringTable(blockName, configs) {
                 config.key,
                 config.description.trim(),
                 config.type,
-                config.default
+                config.default,
+                blockName  // ADDED: Pass blockName for enrichment lookup
             );
             output += `**${titleCaseName}**: ${enhancedDesc}\n\n`;
         }
@@ -1362,14 +1676,19 @@ function extractCommerceBlocks(boilerplatePath) {
             }
         }
 
+        // Get B2B-specific titles if available, otherwise use default title case
+        const b2bTitles = getB2BBlockTitles(blockName);
+        const displayName = b2bTitles?.title || blockName.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        const sidebarLabel = b2bTitles?.label || blockName.replace('commerce-', '').split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
         blocks.push({
             name: blockName,
-            displayName: blockName.split('-').map(word =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' '),
-            sidebarLabel: blockName.replace('commerce-', '').split('-').map(word =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' '),
+            displayName: displayName,
+            sidebarLabel: sidebarLabel,
             path: blockPath,
             configs,
             hasReadme: existsSync(readmePath)
