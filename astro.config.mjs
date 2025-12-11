@@ -29,8 +29,7 @@ const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
   ? fs.readdirSync(sdkComponentsDir).filter((file) => file.endsWith('.mdx'))
   : [];
 
-const sdkComponentEntries = sdkComponentFiles.map((file) =>
-{
+const sdkComponentEntries = sdkComponentFiles.map((file) => {
   const componentName = path.basename(file, '.mdx');
   const label = componentName.charAt(0).toUpperCase() + componentName.slice(1);
   return { label, link: `/sdk/components/${componentName}/` };
