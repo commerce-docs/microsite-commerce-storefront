@@ -1,0 +1,664 @@
+---
+title: Purchase Order Data & Events
+description: Learn about the events used by the Purchase Order and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Purchase Order** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.0.0-beta3</strong>
+</div>
+
+## Events reference
+
+{/* EVENTS_TABLE_START */}
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [order/data](#orderdata-emits) | Emits | Emitted when data is available or changes. |
+| [purchase-order/error](#purchase-ordererror-emits) | Emits | Emitted when an error occurs. |
+| [purchase-order/placed](#purchase-orderplaced-emits) | Emits | Emitted when an order is placed. |
+| [auth/permissions](#authpermissions-listens) | Listens | Fired by Auth (`auth`) when permissions are updated. |
+| [purchase-order/data](#purchase-orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [purchase-order/refresh](#purchase-orderrefresh-emits-and-listens) | Emits and listens | Emitted and consumed for internal and external communication. |
+
+</TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+
+### `auth/permissions` (listens)
+
+Fired by Auth (`auth`) when permissions are updated.
+
+#### Event payload
+
+```typescript
+{
+  admin?: boolean;
+  [key: string]: boolean | undefined;
+}
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('auth/permissions', (payload) => {
+  console.log('auth/permissions event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+
+### `order/data` (emits)
+
+Emitted when data is available or changes.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel['quote']
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### When triggered
+
+- When the Purchase Order Details page loads with a poRef parameter
+- After purchase-order/refresh event (emitted together with purchase-order/data)
+
+
+
+#### Example: Display purchase order details
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('order/data', (payload) => {
+  console.log('Purchase order data for Order containers:', payload.data);
+  
+  // Initialize Order Drop-In containers with PO data
+  displayPurchaseOrderDetailsInOrderContainers(payload.data);
+  
+  // Extract purchase order information
+  const { number, status, items } = payload.data;
+});
+```
+
+
+
+#### Usage scenarios
+
+- Initialize Order Drop-In containers with purchase order data.
+- Display purchase order details on the PO Details page.
+- Sync PO data after refresh events.
+- Update UI when PO data loads.
+
+---
+
+
+
+
+### `purchase-order/data` (emits and listens)
+
+Triggered when data is available or changes.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### When triggered
+
+- After loading a purchase order
+- After approving a purchase order
+- After rejecting a purchase order
+- After canceling a purchase order
+- After adding comments to a purchase order
+- After updating purchase order status
+
+
+
+#### Example: Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('purchase-order/data', (payload) => {
+  const po = payload.data;
+  console.log('Purchase order updated:', po.number, po.status);
+  
+  // Update the UI to reflect current status
+  updatePurchaseOrderStatus(po.status);
+  
+  // Show approval flow if needed
+  if (po.requiresApproval) {
+    displayApprovalFlow(po.approvalFlow);
+  }
+});
+```
+
+
+
+#### Usage scenarios
+
+- Refresh the purchase order details view.
+- Update purchase order lists.
+- Display the approval flow progress.
+- Show status-specific actions.
+- Update cached purchase order data.
+
+---
+
+
+
+
+### `purchase-order/error` (emits)
+
+Emitted when an error occurs.
+
+#### Event payload
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('purchase-order/error', (payload) => {
+  console.log('purchase-order/error event received:', payload);
+  // Add your custom logic here
+});
+```
+
+
+
+
+
+
+### `purchase-order/placed` (emits)
+
+Emitted when an order is placed.
+
+#### Event payload
+
+```typescript
+PurchaseOrderModel
+```
+
+See [`PurchaseOrderModel`](#purchaseordermodel) for full type definition.
+
+
+
+#### When triggered
+
+- After successfully calling `placePurchaseOrder()`
+- After converting a cart to a purchase order
+
+
+
+#### Example 1: Basic purchase order placement
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('purchase-order/placed', (payload) => {
+  const { number: purchaseOrderNumber, status } = payload.data;
+  const requiresApproval = status !== "APPROVED";
+  
+  console.log(`Purchase order ${purchaseOrderNumber} placed with status: ${status}`);
+  
+  // Show appropriate confirmation message
+  if (requiresApproval) {
+    showMessage('Purchase order submitted for approval');
+    redirectToApprovalStatus(purchaseOrderNumber);
+  } else {
+    showMessage('Purchase order placed successfully');
+    redirectToOrderConfirmation(purchaseOrderNumber);
+  }
+  
+  // Track analytics
+  trackPurchaseOrderPlacement(purchaseOrderNumber, requiresApproval);
+});
+```
+
+#### Example 2: Complete checkout workflow with notifications
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { placePurchaseOrder } from '@dropins/storefront-purchase-order/api.js';
+
+async function completePurchaseOrderCheckout(cartId) {
+  try {
+    // Show checkout processing
+    showCheckoutModal('Processing your purchase order...');
+    
+    // Place the purchase order
+    await placePurchaseOrder(cartId);
+    
+    // Listen for successful placement
+    events.once('purchase-order/placed', async (payload) => {
+      const { number: purchaseOrderNumber, status } = payload.data;
+      const requiresApproval = status !== "APPROVED";
+      
+      // Close processing modal
+      hideCheckoutModal();
+      
+      // Clear cart UI
+      clearCartDisplay();
+      
+      // Show success modal with details
+      if (requiresApproval) {
+        showSuccessModal({
+          title: 'Purchase Order Submitted',
+          message: `Your purchase order #${purchaseOrderNumber} has been submitted for approval.`,
+          details: [
+            `Status: Pending Approval`,
+            `You will be notified when it's reviewed.`,
+            `Track your order in the Purchase Orders section.`
+          ],
+          primaryAction: {
+            label: 'View Purchase Order',
+            onClick: () => window.location.href = `/purchase-orders/${purchaseOrderNumber}`
+          },
+          secondaryAction: {
+            label: 'Continue Shopping',
+            onClick: () => window.location.href = '/products'
+          }
+        });
+        
+        // Send notification email
+        await sendNotification({
+          type: 'purchase-order-submitted',
+          purchaseOrderNumber,
+          approvers: payload.data.approvers
+        });
+        
+      } else {
+        showSuccessModal({
+          title: 'Order Placed Successfully',
+          message: `Your purchase order #${purchaseOrderNumber} has been placed.`,
+          details: [
+            `Status: ${status}`,
+            `You will receive a confirmation email shortly.`
+          ],
+          primaryAction: {
+            label: 'View Order',
+            onClick: () => window.location.href = `/orders/${purchaseOrderNumber}`
+          }
+        });
+      }
+      
+      // Track conversion
+      trackConversion({
+        type: 'purchase-order',
+        orderNumber: purchaseOrderNumber,
+        requiresApproval,
+        value: payload.data.total,
+        currency: payload.data.currency
+      });
+      
+      // Update user's PO history count
+      incrementPurchaseOrderCount();
+    });
+    
+  } catch (error) {
+    hideCheckoutModal();
+    showErrorModal({
+      title: 'Failed to Place Purchase Order',
+      message: error.message || 'An error occurred while processing your order.',
+      action: {
+        label: 'Try Again',
+        onClick: () => completePurchaseOrderCheckout(cartId)
+      }
+    });
+    console.error('Purchase order placement error:', error);
+  }
+}
+```
+
+#### Example 3: Multi-approval workflow dashboard
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Dashboard for tracking all purchase orders
+class PurchaseOrderDashboard {
+  constructor() {
+    this.pendingOrders = [];
+    this.completedOrders = [];
+    
+    // Listen for new purchase orders
+    events.on('purchase-order/placed', this.handleNewOrder.bind(this));
+    events.on('purchase-order/data', this.handleOrderUpdate.bind(this));
+    
+    this.init();
+  }
+  
+  async init() {
+    await this.loadExistingOrders();
+    this.render();
+  }
+  
+  handleNewOrder(payload) {
+    const { number: purchaseOrderNumber, status } = payload.data;
+    const requiresApproval = status !== "APPROVED";
+    
+    const order = {
+      number: purchaseOrderNumber,
+      status: status,
+      requiresApproval,
+      placedAt: new Date(),
+      ...payload.data
+    };
+    
+    if (requiresApproval) {
+      this.pendingOrders.unshift(order);
+      
+      // Show real-time notification
+      this.showNotificationBanner({
+        type: 'info',
+        message: `New PO #${purchaseOrderNumber} awaiting approval`,
+        action: () => this.viewOrder(purchaseOrderNumber)
+      });
+      
+      // Play notification sound
+      this.playNotificationSound();
+      
+      // Update pending count badge
+      this.updatePendingBadge(this.pendingOrders.length);
+      
+    } else {
+      this.completedOrders.unshift(order);
+    }
+    
+    // Refresh dashboard display
+    this.render();
+  }
+  
+  handleOrderUpdate(payload) {
+    const updatedOrder = payload.data;
+    
+    // Remove from pending if approved/rejected
+    if (['approved', 'rejected', 'canceled'].includes(updatedOrder.status)) {
+      this.pendingOrders = this.pendingOrders.filter(
+        o => o.number !== updatedOrder.number
+      );
+      this.completedOrders.unshift(updatedOrder);
+      this.updatePendingBadge(this.pendingOrders.length);
+    }
+    
+    this.render();
+  }
+  
+  render() {
+    document.querySelector('#pending-orders').innerHTML = 
+      this.renderOrderList(this.pendingOrders, 'pending');
+    document.querySelector('#completed-orders').innerHTML = 
+      this.renderOrderList(this.completedOrders, 'completed');
+  }
+  
+  renderOrderList(orders, type) {
+    if (orders.length === 0) {
+      return `<div class="empty-state">No ${type} purchase orders</div>`;
+    }
+    
+    return orders.map(order => `
+      <div class="order-card" data-order="${order.number}">
+        <div class="order-header">
+          <span class="order-number">#${order.number}</span>
+          <span class="order-status status-${order.status}">${order.status}</span>
+        </div>
+        <div class="order-details">
+          <span>Total: ${order.total}</span>
+          <span>Date: ${formatDate(order.placedAt)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  showNotificationBanner(options) {
+    // Show slide-in notification
+    const banner = document.createElement('div');
+    banner.className = `notification-banner notification-${options.type}`;
+    banner.innerHTML = `
+      <span>${options.message}</span>
+      <button onclick="this.parentElement.remove()">×</button>
+    `;
+    if (options.action) {
+      banner.onclick = options.action;
+    }
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 5000);
+  }
+  
+  playNotificationSound() {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.play().catch(() => {});
+  }
+  
+  updatePendingBadge(count) {
+    const badge = document.querySelector('.pending-count-badge');
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'block' : 'none';
+    }
+  }
+  
+  viewOrder(orderNumber) {
+    window.location.href = `/purchase-orders/${orderNumber}`;
+  }
+  
+  async loadExistingOrders() {
+    // Load existing orders from API
+    const { pendingOrders, completedOrders } = await fetchPurchaseOrders();
+    this.pendingOrders = pendingOrders;
+    this.completedOrders = completedOrders;
+  }
+}
+
+// Initialize dashboard
+const dashboard = new PurchaseOrderDashboard();
+```
+
+
+
+#### Usage scenarios
+
+- Display success confirmation with order details.
+- Redirect to the success page (approval or direct order).
+- Clear shopping cart after successful placement.
+- Send email notifications to approvers.
+- Track analytics and conversion events.
+- Update purchase order history and counts.
+- Show real-time notifications for new orders.
+- Update dashboard widgets and badges.
+- Trigger approval workflow notifications.
+- Log purchase order creation for audit.
+- Update budget tracking systems.
+- Sync with ERP/accounting systems.
+
+---
+
+
+
+
+### `purchase-order/refresh` (emits and listens)
+
+Emitted and consumed for internal and external communication.
+
+#### Event payload
+
+```typescript
+Boolean
+```
+
+
+
+#### When triggered
+
+- After approval rule changes
+- After permission updates
+- On user request (manual refresh)
+- After significant state changes
+
+
+
+#### Example: Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Emit refresh event
+events.emit('purchase-order/refresh', {
+  purchaseOrderId: 'PO123456'
+});
+
+// Listen for refresh requests
+events.on('purchase-order/refresh', async (payload) => {
+  if (payload.data.purchaseOrderId) {
+    // Refresh specific purchase order
+    await refreshPurchaseOrder(payload.data.purchaseOrderId);
+  } else {
+    // Refresh all purchase orders
+    await refreshAllPurchaseOrders();
+  }
+});
+```
+
+
+
+#### Usage scenarios
+
+- Force reload after external updates.
+- Implement pull-to-refresh functionality.
+- Sync data after background changes.
+- Refresh after approval rule modifications.
+
+---
+
+## Listening to events
+
+All Purchase Order events are emitted through the centralized event bus. Subscribe to events using the `events.on()` method:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Listen to purchase order lifecycle events
+events.on('purchase-order/placed', handlePurchaseOrderPlaced);
+events.on('purchase-order/data', handlePurchaseOrderData);
+events.on('purchase-order/refresh', handleRefreshRequest);
+
+// Remove listeners when done
+events.off('purchase-order/placed', handlePurchaseOrderPlaced);
+```
+
+<Aside type="tip">
+Event listeners remain active until explicitly removed with `events.off()`. Clean up listeners when components unmount to prevent memory leaks.
+</Aside>
+
+<Aside type="note">
+Purchase order events integrate with the standard Order drop-in events. A purchase order that completes the approval process will emit both `purchase-order/data` and `order/data` events.
+</Aside>
+
+## Related documentation
+
+- [Functions](/dropins-b2b/purchase-order/functions/) - API functions that emit these events
+- [Containers](/dropins-b2b/purchase-order/containers/) - UI components that respond to events
+- [Event bus documentation](/sdk/reference/events/) - Learn more about the event system
+
+{/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-purchase-order */}
+
+
+
+
+
+
+## Data Models
+
+The following data models are used in event payloads for this drop-in.
+
+### PurchaseOrderModel
+
+Used in: [`order/data`](#orderdata-emits), [`purchase-order/data`](#purchase-orderdata-emits-and-listens), [`purchase-order/placed`](#purchase-orderplaced-emits).
+
+```ts
+interface PurchaseOrderModel {
+  typename: string;
+  uid: string;
+  number: string;
+  status: string;
+  availableActions: string[];
+  approvalFlow:
+    | {
+        ruleName: string;
+        events: Array<{
+          message: string;
+          name: string;
+          role: string;
+          status: string;
+          updatedAt: string;
+        }>;
+      }[]
+    | [];
+  comments?: Array<{
+    uid: string;
+    createdAt: string;
+    author: {
+      firstname: string;
+      lastname: string;
+      email: string;
+    };
+    text: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  historyLog?: Array<{
+    activity: string;
+    createdAt: string;
+    message: string;
+    uid: string;
+  }>;
+  quote: QuoteProps | null;
+  order: {
+    orderNumber: string;
+    id: string;
+  };
+}
+```
+
