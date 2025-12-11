@@ -1043,6 +1043,7 @@ async function config() {
                 items: [
                   {
                     label: 'Quick start',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/quick-start/' },
                       { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
@@ -1066,6 +1067,7 @@ async function config() {
                   },
                   {
                     label: 'Commerce blocks',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/commerce-blocks/' },
                       { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
@@ -1143,6 +1145,7 @@ async function config() {
                   },
                   {
                     label: 'Content customizations',
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/content-customizations/' },
                       { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
