@@ -37,8 +37,7 @@ const sdkComponentEntries = sdkComponentFiles.map((file) => {
 
 // https://astro.build/config
 /** @returns {Promise<import('astro').AstroUserConfig>} */
-async function config()
-{
+async function config() {
   const compressIntegration = (await import('@playform/compress')).default({
     CSS: false,
     HTML: false,
