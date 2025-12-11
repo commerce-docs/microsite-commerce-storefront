@@ -1035,11 +1035,13 @@ async function config() {
             }
           ),
           starlightHeadingBadges(),
-          starlightLinksValidator({
-            errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
-            errorOnRelativeLinks: false, // Allow broken links in PR branches
-          }),
+          // Skip link validation for PR branches (set SKIP_LINK_VALIDATION=true)
+          ...(process.env.SKIP_LINK_VALIDATION !== 'true'
+            ? [starlightLinksValidator({
+              errorOnFallbackPages: false,
+              errorOnInconsistentLocale: true,
+            })]
+            : []),
           starlightImageZoom({ showCaptions: false }),
         ],
 
