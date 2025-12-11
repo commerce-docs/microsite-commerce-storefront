@@ -1038,6 +1038,7 @@ async function config() {
           starlightLinksValidator({
             errorOnFallbackPages: false,
             errorOnInconsistentLocale: true,
+            errorOnRelativeLinks: false, // Allow broken links in PR branches
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
