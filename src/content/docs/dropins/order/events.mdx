@@ -6,34 +6,13 @@ sidebar:
   order: 5
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/generate-events-docs.js to generate event documentation.
-  
-  WHAT THE SCRIPT USES FROM THIS TEMPLATE:
-  - Section headings and descriptive text (used as-is)
-  - Import statements
-  - The REPEAT_FOR_EACH_EVENT block (replicated for each event)
-  - Placeholders: Order, Order, EVENT_NAME, and so on.
-  
-  WHAT THE SCRIPT GENERATES INDEPENDENTLY:
-  - Table contents between START/END markers (example rows are for reference only)
-  - Event-specific data (names, descriptions, payloads from source repos)
-  
-  TO CHANGE:
-  - Section text/descriptions → Edit this template
-  - Table structure (columns, links, formatting) → Edit scripts/generate-events-docs.js
-  - Both template and script must be kept in sync for table structure changes
-*/}
-
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
 The **Order** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.0-beta1</strong>
+<strong>Version: 3.0.0-beta2</strong>
 </div>
 
 ## Events reference
@@ -44,9 +23,10 @@ The **Order** drop-in uses the [event bus](/sdk/reference/events) to emit and li
 | Event | Direction | Description |
 |-------|-----------|-------------|
 | [cart/reset](#cartreset-emits) | Emits | Emitted when the component state is reset. |
-| [order/error](#ordererror-emits) | Emits | Emitted when an error occurs. |
 | [order/placed](#orderplaced-emits) | Emits | Emitted when an order is placed. |
+| [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 | [order/data](#orderdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
+| [order/error](#ordererror-emits-and-listens) | Emits and listens | Triggered when an error occurs. |
 
 </TableWrapper>
 {/* EVENTS_TABLE_END */}
@@ -76,6 +56,37 @@ events.on('cart/reset', (payload) => {
   // Add your custom logic here
 });
 ```
+
+
+
+
+
+
+### `companyContext/changed` (listens)
+
+Fired by Company Context (`companyContext`) when a change occurs.
+
+#### Event payload
+
+```typescript
+string | null | undefined
+```
+
+
+
+
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('companyContext/changed', (payload) => {
+  console.log('companyContext/changed event received:', payload);
+  // Add your custom logic here
+});
+```
+
 
 
 
@@ -112,7 +123,8 @@ events.on('order/data', (payload) => {
 
 
 
-### `order/error` (emits)
+
+### `order/error` (emits and listens)
 
 Emitted when an error occurs during order operations such as fetching order details, reordering items, or processing returns.
 
@@ -136,6 +148,7 @@ events.on('order/error', (payload) => {
   // Add your custom logic here
 });
 ```
+
 
 
 
@@ -173,15 +186,6 @@ events.on('order/placed', (payload) => {
 
 
 
-{/* 
-  DATA MODELS SECTION
-  The Data Models section is automatically generated and appended after this template.
-  It includes all TypeScript interfaces/types referenced in event payloads, extracted
-  from source code with editorial descriptions from enrichment files.
-  
-  To add/edit model descriptions, update the "models" section in the enrichment file:
-  _dropin-enrichments/{dropin}/events.json
-*/}
 
 
 ## Data Models
