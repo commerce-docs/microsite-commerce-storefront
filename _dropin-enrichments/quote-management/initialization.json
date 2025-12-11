@@ -1,0 +1,19 @@
+{
+  "intro": "The **Quote Management initializer** configures the drop-in for managing negotiable quotes, quote templates, and quote workflows. Use initialization to set quote identifiers, customize data models, and enable internationalization for multi-language B2B storefronts.",
+  "config": {
+    "quoteId": {
+      "description": "Quote identifier used to load and display a specific negotiable quote. Pass this to initialize the drop-in with quote details on page load."
+    },
+    "quoteTemplateId": {
+      "description": "Quote template identifier used to load and display a specific quote template. Pass this to initialize the drop-in with template details on page load."
+    }
+  },
+  "customModelExample": "const models = {\n  NegotiableQuoteModel: {\n    transformer: (data) => ({\n      // Add urgency badge for expiring quotes (within 7 days)\n      isExpiringSoon: data?.expirationDate && \n        new Date(data.expirationDate) - Date.now() < 7 * 24 * 60 * 60 * 1000,\n      // Custom status display for better UX\n      statusDisplay: data?.status === 'SUBMITTED' ? 'Pending Review' : data?.status,\n      // Add formatted expiration date\n      expirationFormatted: data?.expirationDate ? \n        new Date(data.expirationDate).toLocaleDateString() : null,\n    }),\n  },\n};\n\nawait initializers.mountImmediately(initialize, { models });",
+  "models": {
+    "NegotiableQuoteModel": {
+      "description": "Transforms negotiable quote data from GraphQL including quote details, status, items, totals, comments, and history. Use this to add custom fields or modify existing quote data structures.",
+      "definition": "interface NegotiableQuoteModel {\n  uid: string;\n  name: string;\n  createdAt: string;\n  salesRepName: string;\n  expirationDate: string;\n  updatedAt: string;\n  status: NegotiableQuoteStatus;\n  isVirtual: boolean;\n  buyer: {\n    firstname: string;\n    lastname: string;\n  };\n  templateName?: string;\n  totalQuantity: number;\n  comments?: {\n    uid: string;\n    createdAt: string;\n    author: {\n      firstname: string;\n      lastname: string;\n    };\n    text: string;\n    attachments?: {\n      name: string;\n      url: string;\n    }[];\n  }[];\n  history?: NegotiableQuoteHistoryEntry[];\n  prices: {\n    appliedDiscounts?: Discount[];\n    appliedTaxes?: Tax[];\n    discount?: Currency;\n    grandTotal?: Currency;\n    grandTotalExcludingTax?: Currency;\n    shippingExcludingTax?: Currency;\n    shippingIncludingTax?: Currency;\n    subtotalExcludingTax?: Currency;\n    subtotalIncludingTax?: Currency;\n    subtotalWithDiscountExcludingTax?: Currency;\n    totalTax?: Currency;\n  };\n  items: NegotiableQuoteCartItem[];\n  shippingAddresses?: ShippingAddress[];\n  canCheckout: boolean;\n  canSendForReview: boolean;\n  lockedForEditing?: boolean;\n  canDelete: boolean;\n  canClose: boolean;\n  canUpdateQuote: boolean;\n  readOnly: boolean;\n}"
+    }
+  }
+}
+
