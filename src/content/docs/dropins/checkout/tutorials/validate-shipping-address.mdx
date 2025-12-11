@@ -62,11 +62,9 @@ const handlePlaceOrder = async ({ cartId, code }) => {
           if (selection === 'suggested') {
             await checkoutApi.setShippingAddress({ address });
             const latest = events.lastPayload('checkout/updated');
-            // Update the shipping form with the suggested address
-            shippingForm.setProps((prevProps) => ({
-              ...prevProps,
-              inputsDefaultValueSet: address,
-            }));
+            // Unmount shipping address form and render again with latest checkout data
+            unmountContainer(CONTAINERS.SHIPPING_ADDRESS_FORM);
+            await renderAddressForm($shippingForm, shippingFormRef, latest, placeOrder, 'shipping');
           } else {
             // Place order
             await orderApi.placeOrder(cartId);

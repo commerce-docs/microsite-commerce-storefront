@@ -360,10 +360,13 @@ async function config() {
                         collapsed: true,
                         items: [
                           { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                          { label: 'B2B Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
                           { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                           { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                         ],
+                      },
+                      {
+                        label: 'Storefront Compatibility B2B Package',
+                        link: '/setup/configuration/storefront-compatibility-b2b/'
                       },
                       {
                         label: 'Launch preparation',
@@ -381,7 +384,7 @@ async function config() {
                   // ---------- DROP-INS Overview ----------
                   {
                     label: 'Drop-ins overview',
-                    collapsed: false,
+                    collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins/all/introduction/' },
                       { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
@@ -402,7 +405,7 @@ async function config() {
                   },
                   // ---------- DROP-INS (B2C) ----------
                   {
-                    label: 'Drop-ins',
+                    label: 'Drop-ins for B2C',
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/dropins/' },
@@ -756,13 +759,165 @@ async function config() {
                     label: 'Drop-ins for B2B',
                     collapsed: true,
                     items: [
-                      { label: 'Overview', link: '/dropins-b2b/overview/' },
+                      { label: 'Overview', link: '/dropins-b2b/' },
+                      {
+                        label: 'Checkout',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/checkout/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'PaymentOnAccount', link: '/dropins-b2b/checkout/containers/payment-on-account/' },
+                              { label: 'PurchaseOrder', link: '/dropins-b2b/checkout/containers/purchase-order/' },
+                            ],
+                          },
+                        ],
+                      },
                       {
                         label: 'Company Management',
                         collapsed: true,
                         items: [
+                          { label: 'Overview', link: '/dropins-b2b/company-management/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/company-management/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/company-management/containers/' },
+                              { label: 'CompanyCredit', link: '/dropins-b2b/company-management/containers/company-credit/' },
+                              { label: 'CompanyProfile', link: '/dropins-b2b/company-management/containers/company-profile/' },
+                              { label: 'CompanyRegistration', link: '/dropins-b2b/company-management/containers/company-registration/' },
+                              { label: 'CompanyStructure', link: '/dropins-b2b/company-management/containers/company-structure/' },
+                              { label: 'CompanyUsers', link: '/dropins-b2b/company-management/containers/company-users/' },
+                              { label: 'CustomerCompanyInfo', link: '/dropins-b2b/company-management/containers/customer-company-info/' },
+                              { label: 'RolesAndPermissions', link: '/dropins-b2b/company-management/containers/roles-and-permissions/' },
+                            ],
+                          },
                           { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
                           { label: 'Events', link: '/dropins-b2b/company-management/events/' },
+                          { label: 'Slots', link: '/dropins-b2b/company-management/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/company-management/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company-management/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Company Switcher',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/company-switcher/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/company-switcher/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/company-switcher/initialization/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/company-switcher/containers/' },
+                              { label: 'CompanySwitcher', link: '/dropins-b2b/company-switcher/containers/company-switcher/' },
+                            ],
+                          },
+                          { label: 'Functions', link: '/dropins-b2b/company-switcher/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/company-switcher/events/' },
+                          { label: 'Slots', link: '/dropins-b2b/company-switcher/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/company-switcher/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/company-switcher/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Purchase Order',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/purchase-order/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/purchase-order/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/purchase-order/initialization/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/purchase-order/containers/' },
+                              { label: 'ApprovalRuleDetails', link: '/dropins-b2b/purchase-order/containers/approval-rule-details/' },
+                              { label: 'ApprovalRuleForm', link: '/dropins-b2b/purchase-order/containers/approval-rule-form/' },
+                              { label: 'ApprovalRulesList', link: '/dropins-b2b/purchase-order/containers/approval-rules-list/' },
+                              { label: 'CompanyPurchaseOrders', link: '/dropins-b2b/purchase-order/containers/company-purchase-orders/' },
+                              { label: 'CustomerPurchaseOrders', link: '/dropins-b2b/purchase-order/containers/customer-purchase-orders/' },
+                              { label: 'PurchaseOrderApprovalFlow', link: '/dropins-b2b/purchase-order/containers/purchase-order-approval-flow/' },
+                              { label: 'PurchaseOrderCommentForm', link: '/dropins-b2b/purchase-order/containers/purchase-order-comment-form/' },
+                              { label: 'PurchaseOrderCommentsList', link: '/dropins-b2b/purchase-order/containers/purchase-order-comments-list/' },
+                              { label: 'PurchaseOrderConfirmation', link: '/dropins-b2b/purchase-order/containers/purchase-order-confirmation/' },
+                              { label: 'PurchaseOrderHistoryLog', link: '/dropins-b2b/purchase-order/containers/purchase-order-history-log/' },
+                              { label: 'PurchaseOrderStatus', link: '/dropins-b2b/purchase-order/containers/purchase-order-status/' },
+                              { label: 'RequireApprovalPurchaseOrders', link: '/dropins-b2b/purchase-order/containers/require-approval-purchase-orders/' },
+                            ],
+                          },
+                          { label: 'Functions', link: '/dropins-b2b/purchase-order/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/purchase-order/events/' },
+                          { label: 'Slots', link: '/dropins-b2b/purchase-order/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/purchase-order/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/purchase-order/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Quote Management',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/quote-management/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/quote-management/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/quote-management/containers/' },
+                              { label: 'ItemsQuoted', link: '/dropins-b2b/quote-management/containers/items-quoted/' },
+                              { label: 'ItemsQuotedTemplate', link: '/dropins-b2b/quote-management/containers/items-quoted-template/' },
+                              { label: 'ManageNegotiableQuote', link: '/dropins-b2b/quote-management/containers/manage-negotiable-quote/' },
+                              { label: 'ManageNegotiableQuoteTemplate', link: '/dropins-b2b/quote-management/containers/manage-negotiable-quote-template/' },
+                              { label: 'OrderSummary', link: '/dropins-b2b/quote-management/containers/order-summary/' },
+                              { label: 'OrderSummaryLine', link: '/dropins-b2b/quote-management/containers/order-summary-line/' },
+                              { label: 'QuoteCommentsList', link: '/dropins-b2b/quote-management/containers/quote-comments-list/' },
+                              { label: 'QuoteHistoryLog', link: '/dropins-b2b/quote-management/containers/quote-history-log/' },
+                              { label: 'QuoteSummaryList', link: '/dropins-b2b/quote-management/containers/quote-summary-list/' },
+                              { label: 'QuoteTemplateCommentsList', link: '/dropins-b2b/quote-management/containers/quote-template-comments-list/' },
+                              { label: 'QuoteTemplateHistoryLog', link: '/dropins-b2b/quote-management/containers/quote-template-history-log/' },
+                              { label: 'QuoteTemplatesListTable', link: '/dropins-b2b/quote-management/containers/quote-templates-list-table/' },
+                              { label: 'QuotesListTable', link: '/dropins-b2b/quote-management/containers/quotes-list-table/' },
+                              { label: 'RequestNegotiableQuoteForm', link: '/dropins-b2b/quote-management/containers/request-negotiable-quote-form/' },
+                              { label: 'ShippingAddressDisplay', link: '/dropins-b2b/quote-management/containers/shipping-address-display/' },
+                            ],
+                          },
+                          { label: 'Functions', link: '/dropins-b2b/quote-management/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/quote-management/events/' },
+                          { label: 'Slots', link: '/dropins-b2b/quote-management/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/quote-management/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/quote-management/dictionary/' },
+                        ],
+                      },
+                      {
+                        label: 'Requisition List',
+                        collapsed: true,
+                        items: [
+                          { label: 'Overview', link: '/dropins-b2b/requisition-list/' },
+                          { label: 'Quick Start', link: '/dropins-b2b/requisition-list/quick-start/' },
+                          { label: 'Initialization', link: '/dropins-b2b/requisition-list/initialization/' },
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              { label: 'Overview', link: '/dropins-b2b/requisition-list/containers/' },
+                              { label: 'RequisitionListForm', link: '/dropins-b2b/requisition-list/containers/requisition-list-form/' },
+                              { label: 'RequisitionListGrid', link: '/dropins-b2b/requisition-list/containers/requisition-list-grid/' },
+                              { label: 'RequisitionListHeader', link: '/dropins-b2b/requisition-list/containers/requisition-list-header/' },
+                              { label: 'RequisitionListSelector', link: '/dropins-b2b/requisition-list/containers/requisition-list-selector/' },
+                              { label: 'RequisitionListView', link: '/dropins-b2b/requisition-list/containers/requisition-list-view/' },
+                            ],
+                          },
+                          { label: 'Functions', link: '/dropins-b2b/requisition-list/functions/' },
+                          { label: 'Events', link: '/dropins-b2b/requisition-list/events/' },
+                          { label: 'Slots', link: '/dropins-b2b/requisition-list/slots/' },
+                          { label: 'Styles', link: '/dropins-b2b/requisition-list/styles/' },
+                          { label: 'Dictionary', link: '/dropins-b2b/requisition-list/dictionary/' },
                         ],
                       },
                     ],
@@ -911,18 +1066,12 @@ async function config() {
                     ],
                   },
                   {
-                    label: 'Setup guides',
-                    collapsed: true,
-                    items: [
-                      { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
-                      { label: 'Product Recommendations', link: '/merchants/commerce-blocks/product-recommendations/' },
-                    ],
-                  },
-                  {
                     label: 'Commerce blocks',
                     collapsed: true,
                     items: [
                       { label: 'Overview', link: '/merchants/commerce-blocks/' },
+                      { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
+                      { label: 'Product recommendations', link: '/merchants/commerce-blocks/product-recommendations/' },
                       { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
                       { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
                       { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -1075,10 +1224,13 @@ async function config() {
             }
           ),
           starlightHeadingBadges(),
-          starlightLinksValidator({
-            errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
-          }),
+          // Skip link validation if SKIP_LINK_VALIDATION=true
+          ...(process.env.SKIP_LINK_VALIDATION !== 'true'
+            ? [starlightLinksValidator({
+              errorOnFallbackPages: false,
+              errorOnInconsistentLocale: true,
+            })]
+            : []),
           starlightImageZoom({ showCaptions: false }),
         ],
 
