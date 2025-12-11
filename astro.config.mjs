@@ -1079,8 +1079,7 @@ async function config()
       build: {
         chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
         rollupOptions: {
-          onwarn(warning, warn)
-          {
+          onwarn(warning, warn) {
             // Suppress warnings about unused imports from expressive-code packages
             if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
               warning.source &&
