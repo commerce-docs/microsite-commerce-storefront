@@ -267,17 +267,17 @@ async function config() {
                           { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                         ],
                       },
-                      {
-                        label: 'Launch preparation',
-                        collapsed: true,
-                        items: [
-                          { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-                          { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-                          { label: 'SEO indexing', link: '/setup/seo/indexing/' },
-                          { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-                          { label: 'Launch checklist', link: '/setup/launch/' },
-                        ],
-                      },
+                    ],
+                  },
+                  {
+                    label: 'Essentials',
+                    collapsed: true,
+                    items: [
+                      { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+                      { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+                      { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+                      { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+                      { label: 'Launch preparation and checklist', link: '/setup/launch/' },
                     ],
                   },
                   // ---------- DROP-INS Overview ----------
