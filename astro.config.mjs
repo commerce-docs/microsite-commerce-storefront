@@ -945,6 +945,8 @@ async function config() {
                       { label: 'Orders List', link: '/merchants/blocks/commerce-orders-list/' },
                       { label: 'Return Header', link: '/merchants/blocks/commerce-return-header/' },
                       { label: 'Returns List', link: '/merchants/blocks/commerce-returns-list/' },
+                      { label: 'B2B Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
+                      { label: 'B2B Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
                       { label: 'Search Order', link: '/merchants/blocks/commerce-search-order/' },
                       { label: 'Shipping Status', link: '/merchants/blocks/commerce-shipping-status/' },
                       { label: 'Personalization', link: '/merchants/blocks/targeted-block/' },
