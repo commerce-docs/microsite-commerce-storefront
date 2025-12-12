@@ -1,0 +1,103 @@
+---
+title: Price Book ID setup
+description: Enable Adobe Commerce Optimizer Price Book ID functionality in your storefront.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+
+This guide shows you how to enable Adobe Commerce Optimizer (ACO) Price Book ID functionality in the Adobe Commerce boilerplate. Price Book IDs allow you to deliver personalized pricing based on customer segments, contracts, or other business rules managed through Adobe Commerce Optimizer.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active Adobe Commerce Optimizer subscription.
+- Access to your boilerplate repository code.
+- The Auth drop-in installed and configured in your storefront.
+
+## Enable Price Book ID
+
+<Steps>
+
+1. **Enable Adobe Commerce Optimizer in the Auth drop-in initializer**
+
+   Open the Auth drop-in initializer file at `scripts/initializers/auth.js` and add the `adobeCommerceOptimizer: true` option:
+
+   ```javascript
+   // Initialize auth
+   return initializers.mountImmediately(initialize, {
+     langDefinitions,
+     adobeCommerceOptimizer: true // Enable ACO
+   });
+   ```
+
+1. **Replace the customer group header function**
+
+   Open the main initializers file at `scripts/initializers/index.js` and replace the `setCustomerGroupHeader` function with the `setAdobeCommerceOptimizerHeader` function:
+
+   ```javascript
+   const setAdobeCommerceOptimizerHeader = (adobeCommerceOptimizer) => {
+     if (adobeCommerceOptimizer?.priceBookId) {
+       CS_FETCH_GRAPHQL.setFetchGraphQlHeader('AC-Price-Book-ID', adobeCommerceOptimizer.priceBookId);
+     } else {
+       CS_FETCH_GRAPHQL.removeFetchGraphQlHeader('AC-Price-Book-ID');
+     }
+   };
+   ```
+
+1. **Update the event listener**
+
+   In the same `scripts/initializers/index.js` file, replace the `auth/group-uid` event listener with the `auth/adobe-commerce-optimizer` event:
+
+   ```javascript
+   events.on('auth/adobe-commerce-optimizer', setAdobeCommerceOptimizerHeader, { eager: true });
+   ```
+
+1. **Test the implementation**
+
+   After making these changes, verify that the Price Book ID header is being sent with GraphQL requests:
+
+   - Log in as a customer in your storefront.
+   - Open your browser's developer tools and navigate to the Network tab.
+   - Look for GraphQL requests and verify the `AC-Price-Book-ID` header is present in the request headers.
+
+</Steps>
+
+## How it works
+
+When Adobe Commerce Optimizer is enabled:
+
+1. The Auth drop-in emits the `auth/adobe-commerce-optimizer` event when a customer logs in.
+1. The event includes the customer's Price Book ID from Adobe Commerce Optimizer.
+1. The `setAdobeCommerceOptimizerHeader` function adds the `AC-Price-Book-ID` header to all GraphQL requests.
+1. Adobe Commerce uses this header to return pricing specific to the customer's price book.
+
+<Aside type="tip">
+The `eager: true` option ensures the event handler is registered before any authentication occurs, preventing race conditions.
+</Aside>
+
+## Troubleshooting
+
+### Price Book ID header is not being sent
+
+If the `AC-Price-Book-ID` header is not appearing in your GraphQL requests:
+
+- Verify that `adobeCommerceOptimizer: true` is set in the Auth drop-in initializer.
+- Confirm that the customer has a valid Price Book ID assigned in Adobe Commerce Optimizer.
+- Check the browser console for any JavaScript errors that might prevent the event from firing.
+
+### Pricing is not changing
+
+If the header is being sent but pricing remains unchanged:
+
+- Verify that the Price Book ID is correctly configured in Adobe Commerce Optimizer.
+- Confirm that your Adobe Commerce backend is configured to recognize and process the `AC-Price-Book-ID` header.
+- Check that the customer's Price Book has active pricing rules.
+
+## Additional resources
+
+- <Link href="https://experienceleague.adobe.com/docs/commerce-merchant-services/price-indexer/price-indexing.html" text="Adobe Commerce Optimizer documentation" />
+- [Storefront configuration](/setup/configuration/commerce-configuration/)
+- [Auth drop-in documentation](/dropins/user-auth/quick-start/)
+
