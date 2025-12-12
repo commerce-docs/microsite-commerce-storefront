@@ -1108,6 +1108,7 @@ async function config() {
                     label: 'B2B commerce blocks',
                     collapsed: true,
                     items: [
+                      { label: 'Overview', link: '/merchants/blocks-b2b/' },
                       // Account & Authentication
                       { label: 'Account Navigation', link: '/merchants/blocks/commerce-account-nav/' },
                       { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
