@@ -309,6 +309,11 @@ async function config() {
                     ],
                   },
                   {
+                    label: 'Licensing',
+                    collapsed: true,
+                    autogenerate: { directory: '/licensing/' },
+                  },
+                  {
                     label: 'The Boilerplate',
                     collapsed: true,
                     items: [
