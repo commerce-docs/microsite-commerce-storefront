@@ -309,11 +309,6 @@ async function config() {
                     ],
                   },
                   {
-                    label: 'Licensing',
-                    collapsed: true,
-                    autogenerate: { directory: '/licensing/' },
-                  },
-                  {
                     label: 'The Boilerplate',
                     collapsed: true,
                     items: [
@@ -370,6 +365,11 @@ async function config() {
                         ],
                       }
                     ]
+                  },
+                  {
+                    label: 'Licensing',
+                    collapsed: true,
+                    autogenerate: { directory: '/licensing/' },
                   },
                   {
                     label: 'Launch preparation and checklist',
