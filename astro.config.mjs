@@ -874,6 +874,11 @@ async function config() {
                     collapsed: true,
                     autogenerate: { directory: '/resources/' },
                   },
+                  {
+                    label: 'Licensing',
+                    collapsed: true,
+                    autogenerate: { directory: '/licensing/' },
+                  },
                 ],
               },
 
