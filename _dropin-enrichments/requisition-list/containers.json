@@ -2,16 +2,16 @@
   "RequisitionListForm": {
     "parameters": {
       "mode": {
-        "description": "Determines the form operation mode. Set to 'create' when adding a new requisition list or 'update' when modifying an existing list. Controls form validation, default values, and submission behavior."
+        "description": "Sets the form mode to determine whether to create a new requisition list or update an existing one. Use 'create' for new lists and 'update' when modifying existing lists. Controls form behavior and validation rules."
       },
       "requisitionListUid": {
-        "description": "Specifies the unique identifier for the requisition list being updated. Required when mode is 'update' to load existing list data from the backend and populate the form fields with current values."
+        "description": "Specifies the unique identifier for the requisition list being updated. Required when mode is 'update' to load and modify the existing list data from the backend."
       },
       "defaultValues": {
-        "description": "Pre-populates form fields with default values. Use when creating a list from a template, duplicating an existing list, or restoring a previously saved draft. Overrides empty form fields but allows user modification."
+        "description": "Pre-populates form values for the requisition list. Use to prepopulate the form when creating from a template, duplicating an existing list, or restoring previously entered data."
       },
       "onCancel": {
-        "description": "Callback function triggered when user cancels the form. Use to implement navigation back to the list view or close modal dialogs."
+        "description": "Callback function to handle form cancellation when users cancel the form. Use to implement navigation back to the list view or close modal dialogs."
       },
       "withHeader": {
         "description": "Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements."
@@ -35,10 +35,10 @@
         "description": "Callback function triggered when user navigates back. Use to implement custom navigation logic or track user behavior."
       },
       "onSuccess": {
-        "description": "Callback function triggered on successful completion. Use to implement custom success handling, navigation, or notifications."
+        "description": "Callback function to handle successful form completion. Use to implement custom success handling, navigation, or notifications."
       },
       "onError": {
-        "description": "Callback function triggered when an error occurs. Use to implement custom error handling, logging, or user notifications."
+        "description": "Callback function to handle errors when form submission fails. Use to implement custom error handling, logging, or user notifications."
       },
       "purchaseOrderId": {
         "description": "Specifies the unique identifier for the purchase order to display or manage. Required to fetch the correct purchase order data from the backend when viewing details or performing operations on a specific order."
@@ -64,7 +64,7 @@
   "RequisitionListGrid": {
     "parameters": {
       "routeRequisitionListDetails": {
-        "description": "Function to generate the URL for navigating to the requisition list details page. Use to implement custom routing logic or add query parameters when users click on a list."
+        "description": "Generates the URL for navigating to the requisition list details page. Returns a URL string or performs navigation. Use to implement custom routing logic, add query parameters when users click on a list, or integrate with your application's routing system."
       },
       "withHeader": {
         "description": "Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements."
@@ -110,6 +110,9 @@
       },
       "userId": {
         "description": "Specifies the unique identifier for the user to display or manage. Required to fetch user-specific data from the backend when viewing user details or performing user-level operations."
+      },
+      "fallbackRoute": {
+        "description": "Fallback URL to redirect when requisition lists are not enabled. Defaults to '/customer/account'"
       }
     },
     "slots": {
@@ -122,13 +125,13 @@
   "RequisitionListHeader": {
     "parameters": {
       "requisitionList": {
-        "description": "Provides the requisition list data object containing name, description, and metadata. Required to display list information in the header, populate form fields, and enable list management operations."
+        "description": "Provides the requisition list data object containing name, description, and metadata. Required to display the list information in the header. Contains all list details needed for rendering the header section."
       },
       "routeRequisitionListGrid": {
-        "description": "Function to generate the URL for navigating back to the requisition list grid view. Use to implement breadcrumb navigation or back buttons."
+        "description": "Generates the URL for navigating back to the requisition list grid view. Returns a URL string or performs navigation. Use to implement breadcrumb navigation, back buttons, or integrate with your application's routing system."
       },
       "onUpdate": {
-        "description": "Callback function triggered when the requisition list is updated (name or description changed). Use to refresh the parent component or show success notifications."
+        "description": "Callback function to handle requisition list updates when the name or description changes. Use to refresh the parent component or show success notifications."
       },
       "withHeader": {
         "description": "Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements."
@@ -174,6 +177,9 @@
       },
       "userId": {
         "description": "Specifies the unique identifier for the user to display or manage. Required to fetch user-specific data from the backend when viewing user details or performing user-level operations."
+      },
+      "onAlert": {
+        "description": "Callback function to handle alert notifications when alerts are displayed."
       }
     },
     "description": "Displays header information for a requisition list including name, description, and action buttons."
@@ -193,7 +199,7 @@
         "description": "Sets the quantity of the product to add to the requisition list. Defaults to 1 if not specified. Use to allow bulk additions or pre-populate quantities from previous orders or saved preferences."
       },
       "beforeAddProdToReqList": {
-        "description": "Callback function triggered when the Add to Requisition List button is clicked, before the dropdown opens. Use to validate if the product can be added directly (e.g., check if a configurable product needs options selected) and redirect to the product detail page if needed. If the callback throws an error or rejects, the dropdown will not open, enabling patterns like redirecting complex products to their detail pages."
+        "description": "Callback function to handle validation before the Add to Requisition List dropdown opens when the button is clicked. Use to validate if the product can be added directly (e.g., check if a configurable product needs options selected) and redirect to the product detail page if needed. If the callback throws an error or rejects, the dropdown will not open, enabling patterns like redirecting complex products to their detail pages."
       },
       "withHeader": {
         "description": "Controls whether to render the container header section. Set to false when embedding the container within a layout that already provides its own header to avoid duplicate navigation elements."
@@ -290,6 +296,24 @@
       },
       "userId": {
         "description": "Specifies the unique identifier for the user to display or manage. Required to fetch user-specific data from the backend when viewing user details or performing user-level operations."
+      },
+      "requisitionListUid": {
+        "description": "Specifies the UID of the requisition list to display. Must be a base64-encoded string. If an invalid UID is provided, renders the NotFound state. Fetches the requisition list data internally using this identifier."
+      },
+      "skipProductLoading": {
+        "description": "Controls whether to skip automatic product data fetching on component mount. Set to true in test environments to prevent API calls or when product data is loaded externally."
+      },
+      "pageSize": {
+        "description": "Sets the number of items displayed per page for pagination. Controls how many requisition list items appear in each page view. Defaults to DEFAULT_PAGE_SIZE if not specified."
+      },
+      "selectedItems": {
+        "description": "Provides a Set of selected item UIDs for batch operations. Tracks which items are selected for actions like adding to cart or deleting. Required to enable multi-select functionality."
+      },
+      "routeRequisitionListGrid": {
+        "description": "Generates the URL for navigating back to the requisition list grid view. Use to implement breadcrumb navigation, back buttons, or custom routing logic that preserves query parameters or application state."
+      },
+      "fallbackRoute": {
+        "description": "Sets the fallback URL to redirect when requisition lists are not enabled or unavailable. Defaults to '/customer/account'. Use to provide graceful degradation when B2B features are disabled."
       }
     }
   }

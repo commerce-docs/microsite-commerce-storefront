@@ -7,10 +7,35 @@
       "Subtotal calculations",
       "Action buttons for quote management",
       "Responsive design for mobile and desktop"
-    ]
+    ],
+    "parameters": {
+      "quoteData": {
+        "description": "Quote data object. Auto-populated from drop-in state when omitted."
+      },
+      "onItemCheckboxChange": {
+        "description": "Callback when item checkbox is toggled. Use for tracking selections or custom validation."
+      },
+      "onItemDropdownChange": {
+        "description": "Callback when item action dropdown changes. Use for custom action handling or analytics."
+      },
+      "onUpdate": {
+        "description": "Callback on form submission (quantity/note updates). Use for custom validation or tracking."
+      },
+      "onRemoveItemsRef": {
+        "description": "Provides access to internal item removal handler. Use for custom removal workflows."
+      },
+      "onRemoveModalStateChange": {
+        "description": "Callback when remove confirmation modal opens/closes. Use for tracking or custom modal logic."
+      }
+    }
   },
   "ItemsQuotedTemplate": {
-    "description": "The ItemsQuotedTemplate container displays items stored in a quote template for reuse in future quote requests."
+    "description": "The ItemsQuotedTemplate container displays items stored in a quote template for reuse in future quote requests.",
+    "parameters": {
+      "templateData": {
+        "description": "Template data object. Auto-populated from drop-in state when omitted."
+      }
+    }
   },
   "ManageNegotiableQuote": {
     "description": "The ManageNegotiableQuote container provides comprehensive quote management capabilities for existing quotes. It displays quote details (creation date, sales rep, expiration), manages quote status and updates, shows the product list with pricing and quantity controls, provides quote actions (print, copy, delete, send for review), displays shipping information, and includes a quote comments section. All actions respect permission-based access control.",
@@ -25,13 +50,25 @@
     ],
     "parameters": {
       "maxFiles": {
-        "description": "Maximum number of files that can be attached when sending a quote for review. Use to enforce company policies on attachment limits."
+        "description": "Sets the maximum number of files that can be attached when sending a quote for review. Enforces company policies on attachment limits and prevents excessive file uploads that could impact performance or storage."
       },
       "maxFileSize": {
-        "description": "Maximum file size in bytes for attachments. Use to prevent large file uploads that could impact performance or storage."
+        "description": "Sets the maximum file size in bytes for attachments. Controls the upper limit for individual file uploads. Use to prevent large file uploads that could impact performance, storage, or network bandwidth."
       },
       "acceptedFileTypes": {
-        "description": "Array of MIME types allowed for file attachments (for example ['application/pdf', 'image/jpeg', 'image/png']). Use to restrict uploads to specific document types required by your quote approval process."
+        "description": "Specifies an array of MIME types allowed for file attachments (for example \\`['application/pdf', 'image/jpeg', 'image/png']\\`). Use to restrict uploads to specific document types required by your quote approval process."
+      },
+      "onActionsDropdownChange": {
+        "description": "Callback function triggered when actions dropdown change"
+      },
+      "onActionsButtonClick": {
+        "description": "Callback function triggered when actions button click"
+      },
+      "onSendForReview": {
+        "description": "Callback function triggered when send for review"
+      },
+      "onDuplicateQuote": {
+        "description": "Callback function triggered when duplicate quote"
       }
     },
     "slots": {
@@ -86,7 +123,15 @@
     }
   },
   "ManageNegotiableQuoteTemplate": {
-    "description": "The ManageNegotiableQuoteTemplate container provides the interface for managing quote templates with template-specific actions and details."
+    "description": "The ManageNegotiableQuoteTemplate container provides the interface for managing quote templates with template-specific actions and details.",
+    "parameters": {
+      "onActionsButtonClick": {
+        "description": "Callback function triggered when actions button click"
+      },
+      "onSendForReview": {
+        "description": "Callback function triggered when send for review"
+      }
+    }
   },
   "OrderSummary": {
     "description": "The OrderSummary container displays a comprehensive pricing breakdown for quotes including subtotal calculations, applied discounts, tax information, and grand total. This component provides transparency in quote pricing.",
@@ -95,16 +140,44 @@
       "Applied discounts display",
       "Tax information",
       "Grand total display"
-    ]
+    ],
+    "parameters": {
+      "showTotalSaved": {
+        "description": "Shows/hides total savings amount."
+      },
+      "updateLineItems": {
+        "description": "Callback to transform line items before display. Use for custom line item logic."
+      }
+    }
   },
   "OrderSummaryLine": {
-    "description": "The OrderSummaryLine container renders individual line items within the order summary such as subtotal, shipping, or tax rows."
+    "description": "The OrderSummaryLine container renders individual line items within the order summary such as subtotal, shipping, or tax rows.",
+    "parameters": {
+      "label": {
+        "description": "Yes | Label text or component for the line item."
+      },
+      "price": {
+        "description": "Price component for the line item."
+      },
+      "classSuffixes": {
+        "description": "Provides an array of CSS class suffixes for styling variants. Use to apply different visual styles to order summary line items based on their type or context."
+      },
+      "labelClassSuffix": {
+        "description": "CSS class suffix specifically for the label."
+      },
+      "testId": {
+        "description": "Test ID for automated testing."
+      },
+      "children": {
+        "description": "Child elements to render within the container"
+      }
+    }
   },
   "QuoteCommentsList": {
     "description": "The QuoteCommentsList container displays all comments and communications between buyer and seller for a negotiable quote.",
     "parameters": {
       "quoteData": {
-        "description": "The negotiable quote data object containing the comments history. Required to display the conversation thread between buyer and seller throughout the negotiation process."
+        "description": "Quote data object. Auto-populated from drop-in state when omitted."
       }
     }
   },
@@ -112,7 +185,7 @@
     "description": "The QuoteHistoryLog container shows the complete history of actions, status changes, and updates for a quote throughout its lifecycle.",
     "parameters": {
       "quoteData": {
-        "description": "The negotiable quote data object containing the history log. Required to display the audit trail of all actions, status changes, and modifications made to the quote."
+        "description": "Quote data object. Auto-populated from drop-in state when omitted."
       }
     }
   },
@@ -120,31 +193,31 @@
     "description": "The QuoteSummaryList container displays quote metadata including quote ID, status, dates, buyer information, and shipping details.",
     "parameters": {
       "hideHeading": {
-        "description": "Use when embedding the quote summary within a layout that already provides its own heading, such as in a modal dialog, sidebar, or tabbed interface."
+        "description": "Hides the list heading when true."
       },
       "hideFooter": {
-        "description": "Use when you want to manage the footer actions yourself or when embedding the summary in a layout where the default 'View More' footer is not needed."
+        "description": "Hides item footers when true."
       },
       "routeProduct": {
-        "description": "Provide a custom function to generate product URLs. Useful when implementing custom routing logic or when product links need query parameters or specific URL structures."
+        "description": "Generates product detail URLs. Receives item data as a parameter and returns a URL string. Use to create links to product pages, add query parameters, or integrate with your application's product routing system."
       },
       "showMaxItems": {
-        "description": "When true (default), limits the display to 5 items initially with a 'View More' button to expand. Set to false to show all items immediately, useful for print views or detailed quote pages."
+        "description": "Shows maximum item count indicator when true."
       },
       "attributesToHide": {
-        "description": "Array of attribute names to hide from the item display. Use to create simplified views for specific contexts, such as hiding SKU and price for mobile layouts or hiding quantity for summary views. Available attributes: name, image, configurations, warning, alert, sku, price, quantity, total, totalDiscount, totalExcludingTax."
+        "description": "Specifies an array of product attributes to hide from display. Use to customize which product attributes are visible in the quote summary, reducing visual clutter or focusing on specific attribute types."
       },
       "accordion": {
-        "description": "When true, renders the quote items in a collapsible accordion. Useful for mobile layouts, multi-quote comparison pages, or dashboards where multiple quote summaries are displayed and space is limited."
+        "description": "Enables accordion-style collapsible items when true."
       },
       "variant": {
-        "description": "Controls the background styling. Use 'primary' for standard pages and 'secondary' for alternate contexts like sidebars or embedded widgets."
+        "description": "No | Visual variant (primary or secondary)."
       },
       "showDiscount": {
-        "description": "When true, displays the discount percentage next to discounted items. Useful for highlighting negotiated savings to buyers and providing transparency in pricing."
+        "description": "Shows discount information when true."
       },
       "showSavings": {
-        "description": "When true, displays the total savings amount for discounted items. Complements showDiscount by showing the dollar value of savings, helping buyers understand the value of the quote."
+        "description": "Shows savings amount when true."
       }
     },
     "slots": {
@@ -185,6 +258,9 @@
     "parameters": {
       "quoteData": {
         "description": "The quote template data object containing the comments history. Required to display discussions and notes related to the template that can be reused across multiple quote requests."
+      },
+      "templateData": {
+        "description": "Template data object. Auto-populated from drop-in state when omitted."
       }
     }
   },
@@ -193,11 +269,40 @@
     "parameters": {
       "quoteData": {
         "description": "The quote template data object containing the history log. Required to track when the template was created, modified, used, or archived for audit and governance purposes."
+      },
+      "templateData": {
+        "description": "Template data object. Auto-populated from drop-in state when omitted."
       }
     }
   },
   "QuoteTemplatesListTable": {
-    "description": "The QuoteTemplatesListTable container displays all quote templates in a paginated table with search, filter, and action capabilities."
+    "description": "The QuoteTemplatesListTable container displays all quote templates in a paginated table with search, filter, and action capabilities.",
+    "parameters": {
+      "pageSize": {
+        "description": "Sets the number of items displayed per page for pagination. Controls how many quote template items appear in each page view. Use to optimize display for different screen sizes or match user preferences."
+      },
+      "showItemRange": {
+        "description": "Shows item range indicator when true."
+      },
+      "showPageSizePicker": {
+        "description": "Shows page size selector when true."
+      },
+      "showPagination": {
+        "description": "Shows pagination controls when true."
+      },
+      "onViewQuoteTemplate": {
+        "description": "Callback when viewing a template. Receives template ID, name, and status."
+      },
+      "onGenerateQuoteFromTemplate": {
+        "description": "Callback when generating quote from template. Receives template and quote IDs."
+      },
+      "onPageSizeChange": {
+        "description": "Callback when page size changes."
+      },
+      "onPageChange": {
+        "description": "Callback when page changes."
+      }
+    }
   },
   "QuotesListTable": {
     "description": "The QuotesListTable container displays a comprehensive list of quotes with advanced filtering, sorting, and management capabilities. It includes quote list display with status indicators, pagination and sorting controls, search and filtering options, bulk actions for multiple quotes, quote selection and navigation, and responsive table design.",
@@ -208,7 +313,30 @@
       "Bulk actions for multiple quotes",
       "Quote selection and navigation",
       "Responsive table design"
-    ]
+    ],
+    "parameters": {
+      "pageSize": {
+        "description": "Sets the number of items displayed per page for pagination. Controls how many quote items appear in each page view. Use to optimize display for different screen sizes or match user preferences."
+      },
+      "showItemRange": {
+        "description": "Shows item range indicator when true."
+      },
+      "showPageSizePicker": {
+        "description": "Shows page size selector when true."
+      },
+      "showPagination": {
+        "description": "Shows pagination controls when true."
+      },
+      "onViewQuote": {
+        "description": "Callback when viewing a quote. Receives quote ID, name, and status."
+      },
+      "onPageSizeChange": {
+        "description": "Callback when page size changes."
+      },
+      "onPageChange": {
+        "description": "Callback when page changes."
+      }
+    }
   },
   "RequestNegotiableQuoteForm": {
     "description": "The RequestNegotiableQuoteForm container enables customers to request new negotiable quotes from their cart contents. This component handles quote name and comment input, draft saving functionality, form validation and error handling, and success/error messaging. It includes support for file attachments and integrates with cart contents.",
@@ -222,16 +350,16 @@
     ],
     "parameters": {
       "cartId": {
-        "description": "The unique identifier for the shopping cart to convert into a quote. Required to associate the quote request with specific cart items and pricing."
+        "description": "Specifies the cart ID to create the quote from. Required to identify which shopping cart contains the items to be quoted."
       },
       "maxFiles": {
-        "description": "Maximum number of files that can be attached to the quote request. Use to enforce company policies on attachment limits or prevent excessive file uploads."
+        "description": "Sets the maximum number of files that can be attached when sending a quote for review. Enforces company policies on attachment limits and prevents excessive file uploads that could impact performance or storage."
       },
       "maxFileSize": {
-        "description": "Maximum file size in bytes for each attachment. Use to prevent large file uploads that could impact performance or storage costs."
+        "description": "Sets the maximum file size in bytes for attachments. Controls the upper limit for individual file uploads. Use to prevent large file uploads that could impact performance, storage, or network bandwidth."
       },
       "acceptedFileTypes": {
-        "description": "Array of MIME types allowed for file attachments (for example ['application/pdf', 'image/jpeg']). Use to restrict uploads to specific document types required by your quote workflow."
+        "description": "Specifies an array of allowed MIME types for file attachments. Use to restrict uploads to specific document types required by your quote approval process (for example, \\`['application/pdf', 'image/jpeg', 'image/png']\\`)."
       }
     },
     "slots": {
@@ -265,7 +393,15 @@
     }
   },
   "ShippingAddressDisplay": {
-    "description": "The ShippingAddressDisplay container shows the selected shipping address for a quote with options to change or add new addresses. This component integrates with the company address book for B2B customers."
+    "description": "The ShippingAddressDisplay container shows the selected shipping address for a quote with options to change or add new addresses. This component integrates with the company address book for B2B customers.",
+    "parameters": {
+      "shippingAddress": {
+        "description": "Provides the shipping address object to display for the quote. Contains address details such as street, city, region, postal code, and country. Required to render the address information in the container."
+      },
+      "loading": {
+        "description": "Controls the loading state of the container. Shows a loading indicator when set to `true` while address data is being fetched or processed. Use to provide visual feedback during async operations."
+      }
+    }
   },
   "integration": {
     "description": "These containers are designed to work together to provide a complete quote management experience. Use RequestNegotiableQuoteForm on cart pages or product pages to initiate quote requests, ManageNegotiableQuote on dedicated quote management pages for comprehensive quote handling, ItemsQuoted on quote summary pages or as a sidebar component, and QuotesListTable on quotes listing pages for browsing and managing multiple quotes."
