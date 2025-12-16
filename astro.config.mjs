@@ -305,7 +305,7 @@ async function config() {
                       { label: 'Learn the architecture', link: '/get-started/architecture/' },
                       { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
                       { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
-                      { label: "Launch preparation and checklist", link: "setup/launch/" },
+                      { label: "Launch checklist", link: "setup/launch/" },
                     ],
                   },
                   {
@@ -367,14 +367,14 @@ async function config() {
                     ]
                   },
                   {
-                    label: 'Launch preparation and checklist',
+                    label: 'Launch preparation',
                     collapsed: true,
                     items: [
+                      { label: 'Launch checklist', link: '/setup/launch/' },
                       { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
                       { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
                       { label: 'SEO indexing', link: '/setup/seo/indexing/' },
                       { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-                      { label: 'Launch checklist', link: '/setup/launch/' },
                     ],
                   },
                   // ---------- DROP-INS Overview ----------
