@@ -367,6 +367,11 @@ async function config() {
                     ]
                   },
                   {
+                    label: 'Licensing',
+                    collapsed: true,
+                    autogenerate: { directory: '/licensing/' },
+                  },
+                  {
                     label: 'Launch preparation',
                     collapsed: true,
                     items: [
