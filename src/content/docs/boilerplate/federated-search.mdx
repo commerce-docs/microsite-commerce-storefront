@@ -13,6 +13,9 @@ time: "45 minutes"
 ---
 
 import { Aside, Code, LinkCard } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Link from '@components/Link.astro';
 
 A common requirement for storefronts is to provide a unified search experience that returns both content (blog posts, articles, pages) and commerce (products) results from a single search input. This tutorial shows you how to implement a federated search approach that performs parallel searches against a content index and the Adobe Commerce GraphQL API.
 
@@ -22,7 +25,7 @@ In this tutorial, you'll learn how to create a combined search experience that d
 
 By the end of this tutorial, you'll have:
 
-- A content index configuration that indexes your site's pages, blogs, and content
+- A content index configuration that indexes the pages, blogs, and content for your site
 - A custom search block that performs parallel searches against content and commerce
 - A tabbed interface displaying separate results for content and products
 - A fully functional federated search experience
@@ -34,14 +37,14 @@ Before starting this tutorial, make sure you have:
 - A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
 - Basic understanding of JavaScript and asynchronous operations
 - Familiarity with [customizing blocks](/boilerplate/customizing-blocks/) in your code repository
-- Access to your site's Helix Admin configuration (for creating the content index)
+- Access to configure content indexing for your site (similar to [enrichment configuration](/merchants/content-customizations/enrichment/))
 - Adobe Commerce backend configured with product catalog
 
 ## Overview
 
 Developing this federated search solution involves:
 
-1. Creating an index for your site's pages and content
+1. Creating an index for the pages and content of your site
 2. Building a custom search block that fetches both content and commerce data
 3. Implementing a tabbed UI to display results separately
 4. Processing search queries in parallel for optimal performance
@@ -52,61 +55,74 @@ This method keeps content and commerce searches distinct while delivering a unif
 This federated search strategy is ideal for scenarios where you need quick implementation, have straightforward search requirements, or want to maintain separate control over content and commerce search logic.
 </Aside>
 
-## Tutorial Steps
+<Tasks>
+
+<Task>
 
 ### Step 1: Create the Content Index Configuration
 
-Start by setting up a content index to crawl and index your site’s pages. This is accomplished by creating a query.yaml configuration file.
+Create a `helix-query.yaml` file in the root of your repository with this configuration:
 
-   Create the configuration by making a POST request to your site's admin config endpoint:
+```yaml title="helix-query.yaml"
+version: 1
+indices:
+  content:
+    target: /content-index.json
+    exclude:
+      - '/blog/index'
+    include:
+      - /blog/**
+      - /pages/**
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      description:
+        select: head > meta[name="description"]
+        value: |
+          attribute(el, 'content')
+      lastModified:
+        select: none
+        value: |
+          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
+      content:
+        select: main
+        value: |
+          textContent(el)
+```
 
-   ```bash
-   POST https://admin.hlx.page/config/[owner]/sites/[repo]/content/query.yaml
-   ```
+**What this does:**
 
-   Replace `[owner]` and `[repo]` with your site's GitHub details.
+This configuration tells Edge Delivery Services to automatically index your site's content pages. When you publish pages, the system:
+- Crawls pages matching `/blog/**` and `/pages/**` (excludes `/blog/index`)
+- Extracts metadata (`title`, `description`, `content`) from each page
+- Generates a searchable JSON index at `/content-index.json`
 
-   Here's a sample `query.yaml` configuration that indexes blog content:
+**Key fields:**
+- `select`: CSS selector or metadata to extract
+- `value`: Extraction method (e.g., `attribute()`, `textContent()`)
+- See the <Link href="https://www.aem.live/developer/indexing" text="AEM indexing documentation" /> for advanced property configurations
 
-   ```yaml title="query.yaml"
-   indices:
-     content:
-       target: /content-index.json
-       exclude:
-         - '/blog/index'
-       include:
-         - /blog/**
-         - /pages/**
-       properties:
-         title:
-           select: head > meta[property="og:title"]
-           value: |
-             attribute(el, 'content')
-         description:
-           select: head > meta[name="description"]
-           value: |
-             attribute(el, 'content')
-         lastModified:
-           select: none
-           value: |
-             parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
-         content:
-           select: main
-           value: |
-             textContent(el)
-   ```
+Commit and push `helix-query.yaml`. The index generates automatically when you publish pages.
 
-   <Aside type="note">
-   **Configuration details:**
-   - `target`: The URL path where the index JSON file will be published
-   - `include`: Glob patterns for pages to include in the index
-   - `exclude`: Paths to exclude from indexing
-   - `properties`: Metadata fields to extract from each page. See the [AEM indexing documentation](https://www.aem.live/developer/indexing) for more details.
-   </Aside>
+<Aside type="tip">
+**Alternative: Configuration Service**
 
-   After creating this configuration, the system automatically generates a content index at `https://[your-domain]/content-index.json` whenever you publish pages.
+Instead of a GitHub file, you can use the Configuration Service API to manage the configuration remotely at:
+```
+https://admin.hlx.page/config/[ORG]/sites/[SITE]/content/query.yaml
+```
+Replace `[ORG]` with your GitHub organization and `[SITE]` with your repository name. See the <Link href="https://www.aem.live/docs/config-service-setup" text="Configuration Service documentation" /> for authentication details.
 
-**Expected result:** After you publish pages, you can access your content index at the configured target URL and see a JSON array of indexed pages.
+If you already use [enrichment](/merchants/content-customizations/enrichment/), add the `content` index to your existing `query.yaml` file.
+</Aside>
+
+**Verify:** After publishing pages, access `https://[your-domain]/content-index.json` to see the indexed pages as JSON.
+
+</Task>
+
+<Task>
 
 ### Step 2: Create Sample Content Pages
 
@@ -125,9 +141,13 @@ To validate your federated search setup, publish content pages that can be index
 Include relevant keywords in your content that shoppers might search for. Since the content index stores the full text of your pages, well-written and relevant descriptions can significantly improve search results.
 </Aside>
 
+</Task>
+
+<Task>
+
 ### Step 3: Create the Combined Search Block
 
-Next, create a custom block to perform the federated search. This block processes both the content and commerce searches.
+Next, create a custom block to perform the federated search. This block processes both the content and commerce searches using the [Product Discovery drop-in](/dropins/product-discovery/).
 
 Create a new directory: `blocks/combined-search/`
 
@@ -264,9 +284,9 @@ export default async function decorate(block) {
 
 1. **Content index caching** (`getContentIndex`): The content index is fetched once and cached in memory for subsequent searches, improving performance.
 
-2. **Client-side content search** (`searchContent`): Since the content index is a JSON file, we can filter it client-side using JavaScript's `filter()` method. This is fast and doesn't require additional API calls.
+2. **Client-side content search** (`searchContent`): Because the content index is a JSON file, we can filter it client-side using the JavaScript `filter()` method. This is fast and doesn't require additional API calls.
 
-3. **Product search** (`searchProducts`): Products are searched using the Commerce `search()` function from the Product Discovery dropin, which handles the GraphQL query to Adobe Commerce. The `visibility` filter ensures only searchable products are returned.
+3. **Product search** (`searchProducts`): Products are searched using the Commerce [`search()` function](/dropins/product-discovery/functions/#search) from the Product Discovery drop-in, which handles the GraphQL query to Adobe Commerce. The `visibility` filter ensures only searchable products are returned.
 
 4. **Parallel execution** (`performSearch`): Both searches execute in parallel using `Promise.all()`, ensuring that the slower query doesn’t delay the faster one.
 
@@ -280,46 +300,43 @@ export default async function decorate(block) {
 - Modify the UI structure to display results differently (for example, in a single list instead of tabs).
 </Aside>
 
+</Task>
+
+<Task>
+
 ### Step 4: Add Styling for the Search Block
 
 Create `blocks/combined-search/combined-search.css` and add the styles from the [reference implementation](https://gist.github.com/sirugh/6690b7ded67868f3b17d3c1b5a29dc76).
 
+</Task>
+
+<Task>
+
 ### Step 5: Create the Search Results Page
 
-Create a dedicated page in your project to host the combined search block. Using your content authoring tool (for example, DA.live, Google Docs, SharePoint), add a new page at `/search`.
+Create a dedicated page in your project to host the combined search block. Using your content authoring tool (for example, [DA.live](/merchants/quick-start/document-authoring/), Google Docs, SharePoint), add a new page at `/search`.
 
 ![Example search page](images/federated-search-search-example.png)
 
 This addition creates a page that uses your `combined-search` block.
 
-### Step 6: Test Your Federated Search
+</Task>
 
-Now, let's verify everything is working correctly:
+<Task>
 
-1. **Test the content index:**
-    - Navigate to `https://[your-site-domain]/content-index.json`
-    - Verify that your content pages are indexed with proper metadata
+### Step 6: Test Your Implementation
 
-2. **Test product search:**
-    - Navigate to `/search?q=shirt` (or any product in your catalog)
-    - Verify products appear in the Products tab
-    - Check that images, titles, and prices display correctly
+**Quick verification:**
 
-3. **Test content search:**
-    - Navigate to `/search?q=blog` (or keywords from your content)
-    - Switch to the Content tab
-    - Verify content results appear with titles and descriptions
+1. **Content index**: Visit `https://[your-domain]/content-index.json` - verify pages are indexed with metadata
+2. **Product search**: Navigate to `/search?q=shirt` - check Products tab shows results with images, titles, prices
+3. **Content search**: Try `/search?q=blog` - verify Content tab displays titles and descriptions
+4. **Search UI**: Type a query, press Enter - confirm URL updates with `?q=` parameter and tabs refresh
+5. **Edge cases**: Test empty results, special characters, short queries (1-2 chars)
 
-4. **Test search interaction:**
-    - Type a query in the search input
-    - Press Enter or click the search button
-    - Verify the URL updates with the query parameter
-    - Verify both tabs update with new results
+</Task>
 
-5. **Test edge cases:**
-    - Search for a term with no results
-    - Search with special characters
-    - Search with very short queries (1-2 characters)
+</Tasks>
 
 ## Complete Example
 
@@ -381,7 +398,7 @@ If you encounter issues not covered here:
 
 In this tutorial, you learned how to:
 
-- ✅ Configure a content index using `query.yaml` to index your site's pages
+- ✅ Configure a content index using `query.yaml` to index the pages for your site
 - ✅ Create a custom combined search block that queries both content and commerce
 - ✅ Implement parallel async searches for optimal performance
 - ✅ Build a tabbed interface to organize and display federated search results
