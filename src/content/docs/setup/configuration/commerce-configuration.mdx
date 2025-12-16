@@ -10,7 +10,7 @@ import Task from '@components/Task.astro';
 import Vocabulary from '@components/Vocabulary.astro';
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 
-In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either your site's [public config](https://www.aem.live/docs/admin.html#schema/PublicConfig) or a [config.json](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/demo-config.json) file in your code repo.
+In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either your site's [public config](https://www.aem.live/docs/admin.html#schema/PublicConfig) or a config.json file in your code repo.
 
 The configuration is organized into several key sections:
 - **Endpoints** - GraphQL endpoints for Commerce and Catalog Services
@@ -23,7 +23,7 @@ When implementing your own project, you must update the configuration values wit
 - The Adobe Commerce and Catalog Service GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](/setup/configuration/content-delivery-network/).
 - The header values specific to your Adobe Commerce Catalog Services environment.
 
-If you [set up your storefront](/get-started/) using the boilerplate code, the template repo provides you with a `demo-config.json` file in the root folder. This file contains the environment values for a Commerce backend including GraphQl endpoints and headers.
+If you [set up your storefront](/get-started/) using the boilerplate code, refer to the config generator tool to generate a `config.json` file for your Commerce backend. This file will contain the environment values for a Commerce backend including GraphQl endpoints and headers.
 
 If you set up your site using the [Site Creator Tool](https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator), the `config.json` file is created and added to the GitHub repository created for the boilerplate code. You can review and update the default values in the `config.json` file after the process completes.
 
@@ -519,6 +519,112 @@ This example shows the configuration for Adobe Commerce Optimizer, which uses di
 </TabItem>
 
 </Tabs>
+
+## Local Development
+
+Understanding how storefront configuration resolution works is essential for effective local development and branch-based testing. This section explains how the browser retrieves configuration and how to manage it across different environments.
+
+### How Configuration Resolution Works
+
+When your storefront loads in the browser, the following sequence occurs:
+
+1. **Browser requests** `https://[site]/config.json`
+2. **EDS CDN checks** if a `config.json` file exists in the code repository root
+3. **If found** - The `config.json` file from the repository is served
+4. **If not found** - The CDN falls back to the `public` config from the EDS site config
+
+**Important:** A committed `config.json` file in your repository will always take precedence over the public config from EDS site config.
+
+### Working with demo-config.json
+
+The demo-config.json file is deprecated and will be removed in a future version. Use the [config generator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator) to generate a `config.json` file for your Commerce backend. Be sure update with necessary values and validate.
+
+### Local Development Configuration
+
+To work with your own Commerce backend locally:
+
+<Steps>
+
+1. **Get your configuration from the config generator tool:**
+   - Visit the [config generator tool](https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator) and enter your API url.
+   - Copy the configuration to your clipboard and paste it into your `config.json` file in your code repo.
+
+2. **Edit config.json** with your Commerce backend values:
+   - Update `commerce-endpoint` and `commerce-core-endpoint` (if needed)
+   - Update `headers` for authentication
+   - Update `analytics` values for your store
+   - Update any other values as needed, such as `commerce-assets-enabled`, etc.
+
+3. **Add config.json to .gitignore** (optional):
+   ```bash
+   echo "config.json" >> .gitignore
+   ```
+   This prevents you from accidentally committing your local configuration.
+
+4. **Clear session storage and reload:**
+   - Open browser DevTools (F12)
+   - Go to **Application** > **Session Storage**
+   - Delete the `config` entry
+   - Reload the page
+
+5. **Verify the configuration loaded:**
+   - Check `http://localhost:3000/config.json` in your browser
+   - Or check **Application** > **Session Storage** > `config` entry in DevTools
+
+</Steps>
+
+### Branch-Based Configuration
+
+You can commit `config.json` to any branch to provide branch-specific configuration. Understanding the behavior based on which branch you commit to is crucial:
+
+**Committing to a feature/test branch:**
+- Commit `config.json` to your branch (e.g., `feature/new-backend`)
+- When deployed, `https://[branch]--[site]--[org].aem.page/config.json` will serve your branch's configuration
+- The `main` branch and other branches are unaffected
+- Public config is NOT used for this branch
+
+**Committing to main branch:**
+- If you commit `config.json` to `main`, it will ALWAYS be served
+- Public config from EDS site config will NEVER be used (unless you delete `config.json` from main)
+- All branches without their own `config.json` will inherit main's configuration
+- Use this approach only if you want repository-based configuration for production
+
+**Using public config (Recommended for production):**
+- Do NOT commit `config.json` to `main`
+- Configure the `public` property in your EDS site config via the [Configuration Service](https://www.aem.live/docs/config-service-setup)
+- Access at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`
+- Update configuration without code deployments
+- Any branch with a committed `config.json` will be used (on that branch) instead of this public config
+
+### Testing Configuration Changes
+
+After creating or updating your configuration (either in public config or `config.json`), follow these steps to verify the changes:
+
+<Steps>
+
+1. **Deploy or save your changes:**
+   - For repository-based: Commit and push `config.json`
+   - For public config: Update via the Configuration Service API
+
+2. **Clear session storage:**
+   - Open browser DevTools (F12)
+   - Navigate to **Application** tab > **Session Storage**
+   - Find and delete the `config` entry for your domain
+
+3. **Reload the page:**
+   - Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
+   - Or simply reload after clearing session storage
+
+4. **Verify the configuration:**
+   - In DevTools, go to **Application** > **Session Storage**
+   - Check the `config` entry contains your updated values
+   - Or access `https://[your-site]/config.json` directly in the browser
+
+</Steps>
+
+:::tip[Quick Verification]
+Always verify your configuration loaded correctly by checking the session storage `config` entry after reload. This ensures your storefront is using the expected configuration values.
+:::
 
 ## Step-by-step
 
