@@ -67,7 +67,7 @@ Create a `helix-query.yaml` file in the root of your repository with this config
 version: 1
 indices:
   content:
-    target: /product-content-index.json
+    target: /content-index.json
     exclude:
       - '/blog/index'
     include:
@@ -97,7 +97,7 @@ indices:
 This configuration tells Edge Delivery Services to automatically index your site's content pages. When you publish pages, the system:
 - Crawls pages matching `/blog/**` and `/pages/**` (excludes `/blog/index`)
 - Extracts metadata (`title`, `description`, `content`) from each page
-- Generates a searchable JSON index at `/product-content-index.json`
+- Generates a searchable JSON index at `/content-index.json`
 
 **Key fields:**
 - `select`: CSS selector or metadata to extract
@@ -118,24 +118,9 @@ Replace `[ORG]` with your GitHub organization and `[SITE]` with your repository 
 If you already use [enrichment](/merchants/content-customizations/enrichment/), add the `content` index to your existing `query.yaml` file.
 </Aside>
 
-**Verify:** After publishing pages, access `https://[your-domain]/product-content-index.json` to see the indexed pages as JSON.
+**Verify:** After publishing pages, access `https://[your-domain]/content-index.json` to see the indexed pages as JSON.
 
-```yaml
-indices:
-  content:
-    target: /product-content-index.json
-    include:
-      - /product-content/**
-    properties:
-      title:
-        select: head > meta[property="og:title"]
-        value: |
-          attribute(el, 'content')
-      lastModified:
-        select: none
-        value: |
-          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
-```
+![Content index JSON output showing indexed pages with title, description, and content fields](images/federated-search-content-index.png)
 
 </Task>
 
@@ -191,7 +176,7 @@ let contentIndex = null;
 async function getContentIndex() {
   if (contentIndex) return contentIndex;
 
-  const response = await fetch('/product-content-index.json');
+  const response = await fetch('/content-index.json');
   const data = await response.json();
   contentIndex = data.data;
   return contentIndex;
@@ -349,16 +334,15 @@ This addition creates a page that uses your `combined-search` block.
 
 **Quick verification:**
 
-1. **Content index**: Visit `https://[your-domain]/product-content-index.json` - verify pages are indexed with metadata
-2. **Product search**: Navigate to `/search?q=shirt` - check Products tab shows results with images, titles, prices
+1. **Content index**: Visit `https://[your-domain]/content-index.json` - verify pages are indexed with metadata
+2. **Product search**: Navigate to `/search?q=winter` - check Products tab shows results with images, titles, prices
 3. **Content search**: Try `/search?q=blog` - verify Content tab displays titles and descriptions
 4. **Search UI**: Type a query, press Enter - confirm URL updates with `?q=` parameter and tabs refresh
 5. **Edge cases**: Test empty results, special characters, short queries (1-2 chars)
 
 **Expected result:**
 
-{/* TODO: Add screenshot
-![Federated search results showing search input, Products and Content tabs, with product cards displayed in the Products tab](images/federated-search-results.png)
+![Federated search results showing search input, Products and Content tabs, with product cards displayed in the Products tab](images/federated-search-products-tab.png)
 */}
 
 </Task>
@@ -379,13 +363,9 @@ Here's a complete example of how the federated search works in practice:
    - **Products Tab**: Displays winter jackets, boots, accessories
    - **Content Tab**: Displays blog posts, buying guides, seasonal content
 
-{/* TODO: Add screenshot
 ![Products tab showing winter product results with images and prices](images/federated-search-products-tab.png)
-*/}
 
-{/* TODO: Add screenshot
 ![Content tab showing blog posts and articles related to winter](images/federated-search-content-tab.png)
-*/}
 
 ## Performance Considerations
 
