@@ -1,4 +1,4 @@
-const baseConfig = require('./configuration/prettier.cjs');
+const baseConfig = require('./config/prettier.cjs');
 
 /**
  * @type {import('prettier').Config}
