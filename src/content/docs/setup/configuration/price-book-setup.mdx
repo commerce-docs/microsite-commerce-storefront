@@ -1,0 +1,118 @@
+---
+title: Price Book ID setup
+description: Enable Adobe Commerce Optimizer Price Book ID functionality in your storefront.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+
+This guide shows you how to enable Adobe Commerce Optimizer (ACO) Price Book ID functionality in the Adobe Commerce boilerplate. Price Book IDs are assigned to <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="catalog views in Commerce Optimizer" /> and allow you to deliver personalized pricing based on customer segments, contracts, or other business rules.
+
+<Aside type="caution" title="Adobe Commerce Optimizer only">
+This guide is specifically for **Adobe Commerce Optimizer (ACO)** implementations. If you are using Adobe Commerce as a Cloud Service (ACCS) or Adobe Commerce PaaS without Optimizer, this feature does not apply to your setup. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for configuration options for your Commerce environment.
+</Aside>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active Adobe Commerce Optimizer subscription.
+- The storefront is <Link href="/setup/configuration/commerce-configuration/#headers" text="configured to connect to Adobe Commerce Optimizer" />.
+- Access to your <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="boilerplate repository" /> code.
+- The <Link href="/dropins/user-auth/quick-start/" text="Auth drop-in" /> installed and configured in your storefront.
+
+## Enable Price Book ID
+
+<Steps>
+
+1. **Enable Adobe Commerce Optimizer in the Auth drop-in initializer**
+
+   Open the <Link href="/dropins/user-auth/initialization/" text="Auth drop-in initializer" /> file at `scripts/initializers/auth.js` and add the `adobeCommerceOptimizer: true` option:
+
+   ```javascript
+   // Initialize auth
+   return initializers.mountImmediately(initialize, {
+     langDefinitions,
+     adobeCommerceOptimizer: true // Enable ACO
+   });
+   ```
+
+1. **Replace the customer group header function**
+
+   Open the main initializers file at `scripts/initializers/index.js` and replace the `setCustomerGroupHeader` function with the `setAdobeCommerceOptimizerHeader` function:
+
+   ```javascript
+   const setAdobeCommerceOptimizerHeader = (adobeCommerceOptimizer) => {
+     if (adobeCommerceOptimizer?.priceBookId) {
+       CS_FETCH_GRAPHQL.setFetchGraphQlHeader('AC-Price-Book-ID', adobeCommerceOptimizer.priceBookId);
+     } else {
+       CS_FETCH_GRAPHQL.removeFetchGraphQlHeader('AC-Price-Book-ID');
+     }
+   };
+   ```
+
+1. **Update the event listener**
+
+   In the same `scripts/initializers/index.js` file, replace the `auth/group-uid` event listener with the `auth/adobe-commerce-optimizer` <Link href="/dropins/all/events/" text="event" />:
+
+   ```javascript
+   events.on('auth/adobe-commerce-optimizer', setAdobeCommerceOptimizerHeader, { eager: true });
+   ```
+   
+   The `{ eager: true }` option ensures the event handler executes immediately if the event has already been emitted. See <Link href="/dropins/all/events/#subscription-options" text="Event subscription options" /> for more details.
+
+1. **Test the implementation**
+
+   After making these changes, verify that the Price Book ID header is being sent with GraphQL requests:
+
+   - Log in to your storefront as a customer.
+   - Open your browser's developer tools and navigate to the Network tab.
+   - Look for GraphQL requests and verify the `AC-Price-Book-ID` header is present in the request headers.
+
+</Steps>
+
+## Troubleshooting
+
+### Price Book ID header is not being sent
+
+If the `AC-Price-Book-ID` header is not appearing in your GraphQL requests:
+
+- Verify that `adobeCommerceOptimizer: true` is set in the Auth drop-in initializer.
+- Confirm that a Price Book ID is assigned to the catalog view in Adobe Commerce Optimizer.
+- Check the browser console for any JavaScript errors that might prevent the event from firing.
+
+### Pricing is not changing
+
+If the header is being sent but pricing remains unchanged:
+
+- Verify that the Price Book ID is correctly configured for the catalog view in Adobe Commerce Optimizer.
+- Confirm that your Adobe Commerce backend is configured to recognize and process the `AC-Price-Book-ID` <Link href="/setup/configuration/commerce-configuration/#headers" text="header" />.
+- Check that the Price Book has active pricing rules.
+
+## How it works
+
+When Adobe Commerce Optimizer is enabled:
+
+<Steps>
+
+1. The <Link href="/dropins/user-auth/" text="Auth drop-in" /> emits the `auth/adobe-commerce-optimizer` event when a customer logs in.
+1. The event includes the Price Book ID from Adobe Commerce Optimizer for the authenticated customer.
+1. The `setAdobeCommerceOptimizerHeader` function adds the `AC-Price-Book-ID` header to all GraphQL requests.
+1. Adobe Commerce uses this header to return pricing specific to the Price Book associated with the catalog view.
+
+</Steps>
+
+<Aside type="tip">
+The `eager: true` option ensures the event handler is registered before any authentication occurs, preventing race conditions. Learn more about <Link href="/dropins/all/events/#subscription-options" text="event subscription options" />.
+</Aside>
+
+<Aside type="note">
+Price Books are <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="assigned to catalog views in Commerce Optimizer" />. The `commerceOptimizer` GraphQL query returns the appropriate Price Book ID for the authenticated customer based on your Commerce Optimizer configuration. For more information about Commerce Optimizer setup, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="Catalog view configuration" /> documentation.
+</Aside>
+
+## Additional resources
+
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks" text="Adobe Commerce Optimizer Price Books documentation" />
+- [Storefront configuration](/setup/configuration/commerce-configuration/)
+- [Auth drop-in documentation](/dropins/user-auth/quick-start/)
+
