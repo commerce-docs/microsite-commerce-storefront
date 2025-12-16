@@ -335,6 +335,7 @@ async function config() {
                         items: [
                           { label: 'Overview', link: '/setup/configuration/' },
                           { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                          { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
                           { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
                           { label: 'AEM Commerce prerender', link: '/setup/configuration/aem-prerender/' },
                           { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
@@ -366,6 +367,11 @@ async function config() {
                         ],
                       }
                     ]
+                  },
+                  {
+                    label: 'Licensing',
+                    collapsed: true,
+                    autogenerate: { directory: '/licensing/' },
                   },
                   {
                     label: 'Launch preparation',
