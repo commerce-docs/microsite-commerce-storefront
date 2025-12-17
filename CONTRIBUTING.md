@@ -28,17 +28,20 @@ Welcome! This guide will help you contribute effectively to the Adobe Commerce S
 ### Local Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone [repository-url]
    cd microsite-commerce-storefront
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Start the development server**
+
    ```bash
    pnpm dev
    ```
@@ -87,8 +90,10 @@ The site navigation is configured in `astro.config.mjs`. When adding new pages, 
 Choose the right content type for your documentation:
 
 ### 1. **Tutorials** (`/tutorials/` or `/dropins/[component]/tutorials/`)
+
 **When to use:** Step-by-step instructions for completing a specific task
 **Structure:**
+
 - Clear objective statement
 - Prerequisites listed
 - Numbered steps with screenshots
@@ -96,16 +101,20 @@ Choose the right content type for your documentation:
 - Next steps or related tutorials
 
 ### 2. **Guides** (`/get-started/`, `/setup/`)
+
 **When to use:** Comprehensive explanations of concepts or processes
 **Structure:**
+
 - Overview of the topic
 - Detailed explanations with examples
 - Best practices and recommendations
 - Troubleshooting common issues
 
 ### 3. **Reference** (`/sdk/reference/`, `/dropins/[component]/functions/`)
+
 **When to use:** API documentation, function references, configuration options
 **Structure:**
+
 - Brief description
 - Parameters/options table
 - Code examples
@@ -113,8 +122,10 @@ Choose the right content type for your documentation:
 - Related references
 
 ### 4. **Overview Pages** (`/dropins/[component]/index.mdx`)
+
 **When to use:** Introduction to a major feature or component
 **Structure:**
+
 - What it is and why it's useful
 - Key features and capabilities
 - Quick start or installation
@@ -235,17 +246,22 @@ Follow these specific grammar rules for consistency and clarity:
    - ✅ "and so on" not ❌ "etc."
    - ✅ "that is" not ❌ "i.e."
 
-4. **Omit needless words** (Strunk & White)
+4. **Spell out product abbreviations on first use** - Include abbreviation in parentheses
+   - ✅ "Adobe Commerce on Cloud (ACCS)" - first mention
+   - ✅ "Adobe Commerce Optimizer (ACO)" - first mention
+   - ❌ "Configure ACO settings..." - abbreviation without spelling it out first
+
+5. **Omit needless words** (Strunk & White)
    - Make every word tell
    - Remove redundant phrases
    - ✅ "Configure the endpoint"
    - ❌ "You can configure the endpoint"
 
-5. **Use parallel construction**
+6. **Use parallel construction**
    - Keep list items in the same grammatical form
    - All bullet points should follow the same structure
 
-6. **Always end complete sentences in lists with periods**
+7. **Always end complete sentences in lists with periods**
    - ALWAYS end ordered and unordered list items with periods if they are complete sentences
    - Fragments do not need periods
    - ✅ "The boilerplate includes all drop-in packages." (complete sentence with period)
@@ -254,29 +270,24 @@ Follow these specific grammar rules for consistency and clarity:
    - Be consistent within each list - all complete sentences or all fragments
    - This applies to ALL lists: bulleted, numbered, nested, and lists within Steps components
 
-7. **No bold text after H3 headings** - Use H4 headings instead
+8. **No bold text after H3 headings** - Use H4 headings instead
    - Use proper heading hierarchy for structure
    - ✅ `#### Configuration options` (H4 heading)
    - ❌ `**Configuration options**` (bold text after H3)
    - This ensures proper document outline and accessibility
 
-8. **Use Steps component for ordered lists** - Always use the Steps component for step-by-step instructions
+9. **Use Steps component for ordered lists** - Always use the Steps component for step-by-step instructions
    - Import from `@astrojs/starlight/components`
    - ✅ `<Steps>` wrapping numbered list items (proper component)
    - ❌ Standard markdown without Steps component (less visually distinct)
    - Steps component provides enhanced styling and visual hierarchy
    - **Always use `1.` for every list item** - Markdown automatically numbers them sequentially
    - Example:
+
      ```jsx
      import { Steps } from '@astrojs/starlight/components';
-     
-     <Steps>
-     
-     1. First step description
-     1. Second step description
-     1. Third step description
-     
-     </Steps>
+
+     <Steps>1. First step description 1. Second step description 1. Third step description</Steps>;
      ```
 
 ## File Conventions
@@ -294,16 +305,18 @@ Use the correct Adobe product terminology consistently throughout all documentat
 - ✅ **Adobe Commerce boilerplate** - The official name for the boilerplate
 - ✅ **Edge Delivery Services + Adobe Commerce Boilerplate** - The full official name (from the repository)
 - ❌ ~~AEM Commerce boilerplate~~ - Incorrect; never use this term
-- ℹ️  The repository is named `aem-boilerplate-commerce`, but the product name is "Adobe Commerce boilerplate"
+- ℹ️ The repository is named `aem-boilerplate-commerce`, but the product name is "Adobe Commerce boilerplate"
 
 **Terminology Progression Within a Page:**
 
 Use natural shorthand after introducing the full term:
+
 1. **First mention**: "Adobe Commerce boilerplate" or "Edge Delivery Services + Adobe Commerce Boilerplate"
 2. **Second mention**: "Commerce boilerplate" (shorthand)
 3. **Subsequent mentions**: "boilerplate"
 
 Example:
+
 > The **Adobe Commerce boilerplate** provides a complete foundation... Why use the Commerce boilerplate? The boilerplate eliminates complexity by...
 
 **Shortening "Adobe Commerce" Within Sections:**
@@ -316,7 +329,18 @@ After introducing "Adobe Commerce" in a section, subsequent mentions within that
 
 This rule applies within the scope of a section (between H2/H3 headings) to avoid repetition and improve readability.
 
+**Abbreviations for Adobe Products:**
+
+Always spell out ACCS and ACO on first use with the abbreviation in parentheses:
+
+- ✅ "Adobe Commerce on Cloud (ACCS)" - first mention with abbreviation
+- ✅ "Adobe Commerce Optimizer (ACO)" - first mention with abbreviation
+- ❌ "Configure ACO settings..." - abbreviation used without first spelling it out
+
+After the first mention, subsequent references can use the abbreviation alone.
+
 This terminology applies to:
+
 - Page titles and descriptions
 - Body content and examples
 - Code comments and documentation
@@ -339,13 +363,13 @@ description: Brief description of the page content (used for SEO)
 ---
 title: Advanced Cart Configuration
 description: Learn how to configure cart settings for your storefront
-tableOfContents: true          # Show/hide table of contents
-prerequisites:                 # List of prerequisites
+tableOfContents: true # Show/hide table of contents
+prerequisites: # List of prerequisites
   html: true
   css: false
   js: true
   commerce: true
-time: "15 minutes"            # Estimated reading/completion time
+time: '15 minutes' # Estimated reading/completion time
 ---
 ```
 
@@ -358,19 +382,25 @@ Standard Markdown is supported, plus MDX extensions for interactive components.
 **Important:** Always use the Steps component for all ordered lists.
 
 **Headings:**
+
 ```markdown
 # Page Title (H1 - used once per page)
+
 ## Major Sections (H2)
+
 ### Subsections (H3)
+
 #### Minor Sections (H4)
 ```
 
 **Important:** Always use H4 headings for subsections under H3. Never use bold text as a substitute for headings.
+
 - ✅ `#### Configuration options` (correct - H4 heading)
 - ❌ `**Configuration options**` (incorrect - bold text)
 - Proper heading hierarchy ensures accessibility and proper document structure
 
 **Code Blocks:**
+
 ````markdown
 ```javascript
 // Always specify the language for syntax highlighting
@@ -381,9 +411,12 @@ function initializeCart() {
 ```
 ````
 
+**Important:** All code examples must use 2-space indentation for consistency across the documentation.
+
 **Links:**
 
 **Internal Links** (within the documentation site):
+
 ```markdown
 [Internal Link](/get-started/create-storefront/)
 ```
@@ -391,19 +424,22 @@ function initializeCart() {
 **External Links** (REQUIRED - use Link component for ALL external links):
 
 All external links (to websites outside this documentation) MUST use the Link component:
+
 ```jsx
 import Link from '@components/Link.astro';
 
-<Link href="https://example.com" text="External Link" />
+<Link href="https://example.com" text="External Link" />;
 ```
 
 **Why this is required:**
+
 - Automatically adds an external link icon for visual consistency
 - Opens in a new tab to preserve user's place in documentation
 - Provides consistent styling across all external links
 - Makes it clear to users when they're leaving the documentation
 
 **Examples of external links that require the Link component:**
+
 - GitHub repositories and files
 - NPM packages
 - External documentation sites (aem.live, da.live, etc.)
@@ -415,6 +451,7 @@ import Link from '@components/Link.astro';
 Import and use these components for enhanced documentation:
 
 #### LinkCard Component
+
 ```jsx
 import LinkCard from '@components/LinkCard.astro';
 
@@ -423,10 +460,11 @@ import LinkCard from '@components/LinkCard.astro';
   description="Brief description of what this links to"
   link="/path/to/page/"
   icon="seti:json"
-/>
+/>;
 ```
 
 #### CardGrid for Multiple Cards
+
 ```jsx
 import { CardGrid } from '@astrojs/starlight/components';
 
@@ -437,18 +475,24 @@ import { CardGrid } from '@astrojs/starlight/components';
 ```
 
 #### Code Examples with Language
+
 ```jsx
 import { Code } from '@astrojs/starlight/components';
 
-<Code code={`
+<Code
+  code={`
 // Your code example here
 function example() {
   return 'hello world';
 }
-`} lang="js" title="example.js" />
+`}
+  lang="js"
+  title="example.js"
+/>;
 ```
 
 #### Callouts and Alerts
+
 ```jsx
 import { Aside } from '@astrojs/starlight/components';
 
@@ -473,32 +517,32 @@ This is something users should be careful about.
 **Standard Table Format:** All tables should use the TableWrapper component with consistent formatting.
 
 **Required Pattern:**
+
 1. Import TableWrapper component at the top of your file
 2. Wrap markdown tables in `<TableWrapper nowrap={[0]}>`
 3. Make first column items into links to relevant reference pages
 4. Use standard markdown table syntax inside the wrapper
 
 **Example:**
+
 ```jsx
 import TableWrapper from '@components/TableWrapper.astro';
 
 <TableWrapper nowrap={[0]}>
-
-| Component | Description |
-|-----------|-------------|
-| [Cart](/dropins/cart/) | Shopping cart functionality |
-| [Checkout](/dropins/checkout/) | Complete checkout flow |
-
-</TableWrapper>
+  | Component | Description | |-----------|-------------| | [Cart](/dropins/cart/) | Shopping cart
+  functionality | | [Checkout](/dropins/checkout/) | Complete checkout flow |
+</TableWrapper>;
 ```
 
 **Benefits:**
+
 - `nowrap={[0]}` prevents the first column from wrapping, keeping names clean
 - First column links provide quick navigation to detailed documentation
 - Consistent formatting across all documentation
 - Responsive table behavior on mobile devices
 
 **When to Use Tables:**
+
 - Comparing features or options
 - Listing components with descriptions
 - Directory or file structure references
@@ -509,6 +553,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 ### Images
 
 **Location:** Store images in `/public/images/` with organized subdirectories:
+
 ```
 /public/images/
 ├── dropins/
@@ -519,11 +564,13 @@ import TableWrapper from '@components/TableWrapper.astro';
 ```
 
 **Usage in Markdown:**
+
 ```markdown
 ![Alt text describing the image](/images/dropins/cart/example-screenshot.png)
 ```
 
 **Guidelines:**
+
 - Use descriptive alt text for accessibility
 - Optimize images for web (prefer WebP format)
 - Include both light and dark mode versions when possible
@@ -532,6 +579,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 ### Screenshots
 
 **Best Practices:**
+
 - Capture at 2x resolution for crisp display
 - Include browser chrome when showing UI interactions
 - Highlight important areas with arrows or borders
@@ -541,15 +589,23 @@ import TableWrapper from '@components/TableWrapper.astro';
 ### Code Samples
 
 **File Organization:**
+
 - Store longer code examples in `/src/content/docs/[section]/files/`
 - Use the `CodeInclude` component to embed file contents
 - Keep inline code samples short and focused
+
+**Formatting Standards:**
+
+- Use 2-space indentation for all code examples
+- Ensure proper formatting and alignment
+- Break long lines for readability (especially function calls with multiple parameters)
 
 ## Review Process
 
 ### Before Submitting
 
 **Self-Review Checklist:**
+
 - [ ] Content is technically accurate and tested
 - [ ] All links work and point to correct destinations
 - [ ] Code examples run without errors
@@ -561,6 +617,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 ### Pull Request Guidelines
 
 **PR Title Format:**
+
 ```
 docs: Add checkout payment method tutorial
 docs: Update cart configuration reference
@@ -568,6 +625,7 @@ docs: Fix broken links in SDK guide
 ```
 
 **PR Description Should Include:**
+
 - Summary of changes made
 - Type of content (new tutorial, update, fix)
 - Any navigation or structural changes
@@ -585,6 +643,7 @@ docs: Fix broken links in SDK guide
 ### Development Process
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b docs/add-payment-tutorial
    ```
@@ -595,6 +654,7 @@ docs: Fix broken links in SDK guide
    - Update navigation if needed
 
 3. **Test thoroughly**
+
    ```bash
    pnpm dev          # Test in development
    pnpm build        # Test production build
@@ -602,6 +662,7 @@ docs: Fix broken links in SDK guide
    ```
 
 4. **Commit and push**
+
    ```bash
    git add .
    git commit -m "docs: Add payment method integration tutorial"
@@ -688,6 +749,7 @@ A: Create a GitHub issue or submit a quick PR to fix it. Don't let broken docs p
 ## Quick Reference
 
 ### Essential Commands
+
 ```bash
 pnpm dev           # Start development server
 pnpm build         # Build for production
@@ -696,16 +758,19 @@ pnpm lint          # Check for linting errors
 ```
 
 ### File Templates
+
 - **Tutorial:** [Link to tutorial template]
 - **Reference:** [Link to reference template]
 - **Overview:** [Link to overview template]
 
 ### Contact Information
+
 For questions about this guide or documentation processes, contact:
+
 - Email: docs-team@company.com
 - Slack: #docs-team
 
 ---
 
-*Last updated: [Current Date]*
-*Version: 1.0*
+_Last updated: [Current Date]_
+_Version: 1.0_
