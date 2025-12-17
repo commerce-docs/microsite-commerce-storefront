@@ -6,7 +6,7 @@ description: Enable Adobe Commerce Optimizer Price Book ID functionality in your
 import { Steps, Aside } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
 
-This guide shows you how to enable Adobe Commerce Optimizer (ACO) Price Book ID functionality in the Adobe Commerce boilerplate. Price Book IDs are assigned to <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="catalog views in Commerce Optimizer" /> and allow you to deliver personalized pricing based on customer segments, contracts, or other business rules.
+This guide shows you how to enable Adobe Commerce Optimizer (ACO) Price Book ID functionality in the Adobe Commerce boilerplate. Price Books in Commerce Optimizer allow you to deliver personalized pricing based on customer segments, contracts, or other business rules. Each <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="catalog view defines a default Price Book" /> and may restrict which Price Books are allowed for that view. Customers can have their own assigned Price Books, which are used if they fall within the allowed Price Books for the catalog view.
 
 <Aside type="caution" title="Adobe Commerce Optimizer only">
 This guide is specifically for **Adobe Commerce Optimizer (ACO)** implementations. If you are using Adobe Commerce as a Cloud Service (ACCS) or Adobe Commerce PaaS without Optimizer, this feature does not apply to your setup. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for configuration options for your Commerce environment.
@@ -78,14 +78,16 @@ Before you begin, ensure you have:
 If the `AC-Price-Book-ID` header is not appearing in your GraphQL requests:
 
 - Verify that `adobeCommerceOptimizer: true` is set in the Auth drop-in initializer.
-- Confirm that a Price Book ID is assigned to the catalog view in Adobe Commerce Optimizer.
+- Confirm that the catalog view has a default Price Book configured in Adobe Commerce Optimizer.
+- Verify that the customer has a valid Price Book assigned (or that the default Price Book for the catalog view is configured).
 - Check the browser console for any JavaScript errors that might prevent the event from firing.
 
 ### Pricing is not changing
 
 If the header is being sent but pricing remains unchanged:
 
-- Verify that the Price Book ID is correctly configured for the catalog view in Adobe Commerce Optimizer.
+- Verify that the default Price Book for the catalog view is correctly configured in Adobe Commerce Optimizer.
+- If the customer has an assigned Price Book, confirm it is within the allowed Price Books for the catalog view.
 - Confirm that your Adobe Commerce backend is configured to recognize and process the `AC-Price-Book-ID` <Link href="/setup/configuration/commerce-configuration/#headers" text="header" />.
 - Check that the Price Book has active pricing rules.
 
@@ -95,10 +97,12 @@ When Adobe Commerce Optimizer is enabled:
 
 <Steps>
 
+1. Each catalog view in Commerce Optimizer defines a default Price Book and may restrict which Price Books are allowed for that view.
 1. The <Link href="/dropins/user-auth/" text="Auth drop-in" /> emits the `auth/adobe-commerce-optimizer` event when a customer logs in.
-1. The event includes the Price Book ID from Adobe Commerce Optimizer for the authenticated customer.
+1. The event includes the Price Book ID for the authenticated customer (if the customer has an assigned Price Book).
+1. Adobe Commerce Optimizer validates that the Price Book for the customer is within the allowed Price Books for the catalog view. If valid, the Price Book for the customer is used. Otherwise, the default Price Book for the catalog view is used.
 1. The `setAdobeCommerceOptimizerHeader` function adds the `AC-Price-Book-ID` header to all GraphQL requests.
-1. Adobe Commerce uses this header to return pricing specific to the Price Book associated with the catalog view.
+1. Adobe Commerce uses this header to return pricing specific to the determined Price Book.
 
 </Steps>
 
@@ -107,7 +111,7 @@ The `eager: true` option ensures the event handler is registered before any auth
 </Aside>
 
 <Aside type="note">
-Price Books are <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="assigned to catalog views in Commerce Optimizer" />. The `commerceOptimizer` GraphQL query returns the appropriate Price Book ID for the authenticated customer based on your Commerce Optimizer configuration. For more information about Commerce Optimizer setup, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="Catalog view configuration" /> documentation.
+Each catalog view in Commerce Optimizer <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/pricebooks#view-price-books-in-commerce-optimizer" text="defines a default Price Book" /> and may restrict which Price Books are allowed. Customers can have their own assigned Price Books. The `commerceOptimizer` GraphQL query returns the appropriate Price Book ID for the authenticated customer, ensuring it falls within the allowed Price Books for the catalog view. For more information about Commerce Optimizer setup, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="Catalog view configuration" /> documentation.
 </Aside>
 
 ## Additional resources
