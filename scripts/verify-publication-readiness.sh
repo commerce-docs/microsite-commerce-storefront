@@ -203,6 +203,12 @@ echo "   - $CONTRIBUTOR_COUNT contributors"
 echo "   - $SCRIPT_COUNT scripts"
 echo "   - $TEMPLATE_COUNT templates"
 echo ""
+
+# Create timestamp for pre-push hook
+date +%s > .last-publication-verification
+echo "✅ Verification timestamp created (.last-publication-verification)"
+echo ""
+
 echo "Ready to publish! Run:"
 echo ""
 echo "   git checkout $TARGET_BRANCH"
