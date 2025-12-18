@@ -7,6 +7,11 @@
 2. Read [B2B-WORKFLOW-GUIDE.md](./B2B-WORKFLOW-GUIDE.md) - Learn HOW to work daily
 3. Run validation: `npm run validate-b2b-enrichments && ./scripts/validate-branch-content.sh`
 
+**Publishing to production?** 🚨 **READ THIS FIRST:**
+1. [PUBLISH-B2B-README.md](./PUBLISH-B2B-README.md) - **STOP! Read before merging to develop**
+2. [PUBLISH-TO-PRODUCTION-CHECKLIST.md](./PUBLISH-TO-PRODUCTION-CHECKLIST.md) - Complete checklist
+3. Run check: `./scripts/pre-merge-to-develop-check.sh <branch-name>`
+
 ## Documentation Structure
 
 ### 📚 Core Architecture Documents
@@ -253,13 +258,24 @@ npm run validate-b2b-enrichments -- --fix  # Fix
 
 **CRITICAL**: This preserves ALL 3,230+ commits from 50+ contributors.
 
+**🚨 BEFORE YOU START**: Read `PUBLISH-B2B-README.md`
+
+**📋 USE THE CHECKLIST**: Open `PUBLISH-TO-PRODUCTION-CHECKLIST.md`
+
 1. **Consolidate**: Merge infrastructure + docs-only → `releases/b2b-nov-release`
 2. **Verify**: Run `./scripts/verify-publication-readiness.sh`
-3. **Publish**: Merge `b2b-nov-release` → `develop`
-4. **Tag**: Create release tag
-5. **Notify**: Stakeholders that B2B docs are live
+3. **Check**: Run `./scripts/pre-merge-to-develop-check.sh releases/b2b-nov-release`
+4. **Publish**: Merge `b2b-nov-release` → `develop` (use PR template)
+5. **Tag**: Create release tag
+6. **Notify**: Stakeholders that B2B docs are live
 
 **See**: "Workflow 4: Publish to Production" in B2B-WORKFLOW-GUIDE.md
+
+**Reminders**:
+- `PUBLISH-B2B-README.md` - STOP sign before merging
+- `PUBLISH-TO-PRODUCTION-CHECKLIST.md` - Step-by-step guide
+- `scripts/pre-merge-to-develop-check.sh` - Automated safety check
+- `.github/PULL_REQUEST_TEMPLATE_PUBLICATION.md` - PR template
 
 ### Scenario 4: "I need to fix an enrichment in merged drop-in"
 
@@ -324,6 +340,55 @@ git commit -m "fix: Clean polluted enrichments"
 | `./scripts/compare-enrichments.sh [dropin]` | Deep analysis | Troubleshooting |
 | `./scripts/audit-branch-state.sh` | Branch state | Migration planning |
 
+## Publication Safeguards 🛡️
+
+**Problem**: It's easy to forget the consolidation step when publishing (happens periodically, not daily)
+
+**Solution**: Multiple reminder systems
+
+### 1. Visual Warning File
+**`PUBLISH-B2B-README.md`** - At repository root
+- Shows up in GitHub file browser
+- Big red stop sign
+- Quick reference guide
+
+### 2. Complete Checklist
+**`PUBLISH-TO-PRODUCTION-CHECKLIST.md`** - Copy-paste ready
+- Every step with commands
+- Pre/post publication tasks
+- Rollback procedure
+- ~30 minute process
+
+### 3. Automated Check Script
+**`scripts/pre-merge-to-develop-check.sh`** - Blocks wrong merges
+```bash
+# Run before merging to develop:
+./scripts/pre-merge-to-develop-check.sh <branch-name>
+
+# ✅ Passes if branch is releases/b2b-nov-release
+# ❌ Blocks if branch is anything else B2B-related
+```
+
+### 4. GitHub PR Template
+**`.github/PULL_REQUEST_TEMPLATE_PUBLICATION.md`**
+- Forces checklist completion
+- Pre-publication verification required
+- Links to all documentation
+
+### How to Remember
+
+**When publishing time comes:**
+
+1. You'll see `PUBLISH-B2B-README.md` in file list
+2. Open it, it says "STOP AND READ"
+3. It points to `PUBLISH-TO-PRODUCTION-CHECKLIST.md`
+4. Follow checklist step-by-step
+5. Script blocks you if you try to skip
+
+**Can't forget** - multiple safety nets! 🎯
+
+---
+
 ## Glossary
 
 **Infrastructure**: Shared tools used by ALL drop-ins (generators, templates)
@@ -341,6 +406,8 @@ git commit -m "fix: Clean polluted enrichments"
 **Preview Branch**: Consolidated view for reviewers (all drop-ins)
 
 **Base Branch**: Branch that feature branches are created from (`releases/b2b-docs-only`)
+
+**Consolidation**: Merging working branches into publication branch before production
 
 ## Migration Status
 
