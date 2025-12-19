@@ -188,7 +188,7 @@ validate_feature_branch() {
         "^templates/"                                                  # From infrastructure merge
         "^package\.json$"                                              # From infrastructure merge
         "^package-lock\.json$"                                         # From infrastructure merge
-        "^\.github/workflows/"                                         # From infrastructure merge (safeguards)
+        "^\.github/"                                                   # From infrastructure merge (safeguards, workflows, templates)
         "^\.githooks/"                                                 # From infrastructure merge (safeguards)
         "^src/content/docs/dropins-b2b/${dropin_name}/"               # Their docs
         "^_dropin-enrichments/${dropin_name}/"                         # Their enrichments
