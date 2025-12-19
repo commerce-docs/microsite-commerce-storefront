@@ -483,7 +483,7 @@ export function generateSidebar() {
           label: 'Drop-ins for B2B',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/dropins-b2b/overview/' },
+            { label: 'Overview', link: '/dropins-b2b/' },
             {
               label: 'Company Management',
               collapsed: true,
