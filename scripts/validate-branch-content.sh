@@ -188,11 +188,13 @@ validate_feature_branch() {
         "^templates/"                                                  # From infrastructure merge
         "^package\.json$"                                              # From infrastructure merge
         "^package-lock\.json$"                                         # From infrastructure merge
+        "^\.github/workflows/"                                         # From infrastructure merge (safeguards)
+        "^\.githooks/"                                                 # From infrastructure merge (safeguards)
         "^src/content/docs/dropins-b2b/${dropin_name}/"               # Their docs
         "^_dropin-enrichments/${dropin_name}/"                         # Their enrichments
         "^public/images/dropins-b2b/${dropin_name}/"                  # Their images
         "^README"
-        "^.*\.md$"
+        "^.*\.md$"                                                     # Includes all safeguard docs
     )
     
     # FORBIDDEN in feature branch
