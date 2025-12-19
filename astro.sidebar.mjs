@@ -828,26 +828,26 @@ export function generateSidebar() {
     },
 
 // ========= RELEASES =========
-{
-  label: 'Releases',
-    link: '/releases/',
+    {
+      label: 'Releases',
+      link: '/releases/',
       icon: 'rocket',
-        collapsed: true,
+      collapsed: true,
+      items: [
+        {
+          label: 'Release notes',
           items: [
-            {
-              label: 'Release notes',
-              items: [
-                { label: 'Overview', link: '/releases/' },
-                { label: 'Changelog', link: '/releases/changelog/' },
-              ],
-            },
-            {
-              label: 'Hotfixes',
-              items: [
-                { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
-              ],
-            },
+            { label: 'Overview', link: '/releases/' },
+            { label: 'Changelog', link: '/releases/changelog/' },
           ],
+        },
+        {
+          label: 'Hotfixes',
+          items: [
+            { label: 'Centralized FetchGraphQL', link: '/releases/hotfixes/centralized-fetchgraphql/' },
+          ],
+        },
+      ],
     },
   ];
 }
