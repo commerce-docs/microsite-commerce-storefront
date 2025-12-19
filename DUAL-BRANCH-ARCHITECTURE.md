@@ -258,6 +258,135 @@ npm run build:prod-fast  # Should build successfully
 ✅ **Auditable** - Every decision is documented  
 ✅ **Safe** - Validation catches issues  
 
+---
+
+## Publication Strategy: Preserving All Developer Work
+
+### The Critical Risk
+
+The `releases/b2b-nov-release` branch contains:
+- **3,230+ commits** from **50+ contributors**
+- **Months of irreplaceable work**: Purchase Order (PR #665), generator improvements, merchant blocks, enrichments
+- **Major contributors**: Bruce Denham (1,688 commits), Jeff Matthews (375), Kevin Harper (314), and 47 others
+
+**These commits are NOT in `develop`. Losing them when publishing would be catastrophic.**
+
+### The Solution: Three-Branch Publication Model
+
+**Keep `releases/b2b-nov-release` as the publication consolidation point:**
+
+```
+Working Branches (Daily Development):
+├── releases/b2b-infrastructure    (Scripts, generators, templates)
+└── releases/b2b-docs-only         (Approved, merged drop-in docs)
+
+Consolidation Branch (Merge Target):
+└── releases/b2b-nov-release       (ALL work flows here → develop)
+
+Production:
+└── develop → main                  (Published to the world)
+```
+
+### Publication Workflow
+
+**Before publishing to production:**
+
+```bash
+# 1. Consolidate infrastructure updates
+git checkout releases/b2b-nov-release
+git merge releases/b2b-infrastructure --no-ff \
+  -m "Merge infrastructure updates for publication"
+
+# 2. Consolidate approved documentation
+git merge releases/b2b-docs-only --no-ff \
+  -m "Merge approved documentation for publication"
+
+# 3. Verify readiness (automated checks)
+./scripts/verify-publication-readiness.sh
+
+# 4. Publish to production (100% safe - all history preserved)
+git checkout develop
+git merge releases/b2b-nov-release --no-ff \
+  -m "Publish B2B documentation to production"
+git push origin develop
+```
+
+### Why This Guarantees 100% Safety
+
+✅ **All commit history preserved** - Every PR, every change, every author  
+✅ **All attributions intact** - Git blame shows original contributors  
+✅ **Auditable** - Can diff `b2b-nov-release` vs `develop` before merge  
+✅ **Rollback-safe** - Can revert the single merge commit if needed  
+✅ **No data loss** - Merge brings ALL commits from b2b-nov-release  
+
+### Branch Flow Diagram
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│  DAILY WORKFLOW (Working Branches)                            │
+├───────────────────────────────────────────────────────────────┤
+│                                                                │
+│  releases/b2b-infrastructure                                  │
+│    • Scripts, generators, templates                           │
+│    • package.json                                             │
+│    • Merge TO: feature branches                               │
+│                                                                │
+│  releases/b2b-docs-only                                       │
+│    • Purchase Order (merged)                                  │
+│    • Future merged drop-ins                                   │
+│    • Merge FROM: approved feature branch PRs                  │
+│                                                                │
+│  b2b-docs-[dropin]-vN (Feature Branches)                     │
+│    • One drop-in's content                                    │
+│    • Merge TO: b2b-documentation (preview)                    │
+│    • Merge TO: b2b-docs-only (after PR approval)             │
+│                                                                │
+└───────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│  PUBLICATION WORKFLOW (Before Going Live)                     │
+├───────────────────────────────────────────────────────────────┤
+│                                                                │
+│  releases/b2b-infrastructure ──┐                              │
+│                                 │                              │
+│  releases/b2b-docs-only ────────┼──> releases/b2b-nov-release │
+│                                 │      (Consolidation)         │
+│  Feature PRs (ongoing) ─────────┘         ↓                   │
+│                                                                │
+│                                        develop ──> main        │
+│                                      (Production)              │
+│                                                                │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### When to Merge to b2b-nov-release
+
+**Continuous (as work progresses):**
+- Feature branch PRs can merge directly to `b2b-nov-release` (current workflow continues)
+- Preserves all commit history and attributions
+
+**Periodic (when infrastructure stabilizes):**
+- Merge `b2b-infrastructure` → `b2b-nov-release` (monthly or as needed)
+- Merge `b2b-docs-only` → `b2b-nov-release` (when drop-ins are approved)
+
+**Before production publish:**
+- Final consolidation merge
+- Run verification script
+- Merge `b2b-nov-release` → `develop`
+
+### Migration Strategy
+
+During the migration to dual-branch architecture:
+1. Create `releases/b2b-infrastructure` (scripts only)
+2. Create `releases/b2b-docs-only` (Purchase Order only)
+3. **Keep `releases/b2b-nov-release` INTACT** (all 3,230+ commits preserved)
+4. Feature branches base on `b2b-docs-only` + merge from `b2b-infrastructure`
+5. All approved work flows through `b2b-nov-release` before `develop`
+
+**Result**: Zero risk of losing any developer work.
+
+---
+
 ## Questions & Answers
 
 **Q: Why can't feature branches build locally?**  

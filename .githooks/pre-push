@@ -1,0 +1,191 @@
+#!/bin/bash
+
+###############################################################################
+# Git Pre-Push Hook - B2B Publication Safety
+#
+# Prevents accidental direct pushes of B2B work to develop without going
+# through the proper consolidation workflow.
+#
+# Installation:
+#   git config core.hooksPath .githooks
+#
+# This hook runs BEFORE pushing and can abort the push if issues are detected.
+###############################################################################
+
+# Read stdin to get what we're about to push
+while read local_ref local_sha remote_ref remote_sha; do
+    # Check if we're pushing to develop
+    if [[ "$remote_ref" == "refs/heads/develop" ]]; then
+        
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "  🛡️  B2B PUBLICATION SAFETY CHECK"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        echo "You're pushing to: develop"
+        
+        # Get the current branch name
+        current_branch=$(git rev-parse --abbrev-ref HEAD)
+        echo "From branch: $current_branch"
+        echo ""
+        
+        # Check if this is a B2B-related branch
+        if [[ "$current_branch" == *"b2b"* ]] || [[ "$current_branch" == "releases/b2b-"* ]]; then
+            
+            # Allow only releases/b2b-nov-release (the publication branch)
+            if [[ "$current_branch" == "releases/b2b-nov-release" ]]; then
+                
+                echo "✅ ALLOWED: Pushing from publication branch"
+                echo ""
+                echo "⚠️  Before proceeding, confirm you've completed:"
+                echo "   1. ✅ Merged releases/b2b-infrastructure → releases/b2b-nov-release"
+                echo "   2. ✅ Merged releases/b2b-docs-only → releases/b2b-nov-release"
+                echo "   3. ✅ Ran ./scripts/verify-publication-readiness.sh"
+                echo ""
+                
+                # Check if the verification script was run recently
+                if [[ -f ".last-publication-verification" ]]; then
+                    last_verification=$(cat .last-publication-verification)
+                    time_diff=$(($(date +%s) - last_verification))
+                    
+                    if [[ $time_diff -lt 3600 ]]; then
+                        echo "✅ Verification script ran $(($time_diff / 60)) minutes ago"
+                        echo ""
+                        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                        echo "  ✅ PUSH ALLOWED - Proceed with publication"
+                        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                        echo ""
+                        exit 0
+                    else
+                        echo "⚠️  Verification script last ran $(($time_diff / 3600)) hours ago"
+                        echo ""
+                        read -p "Run verification now? (y/N): " -n 1 -r
+                        echo ""
+                        
+                        if [[ $REPLY =~ ^[Yy]$ ]]; then
+                            ./scripts/verify-publication-readiness.sh
+                            
+                            if [[ $? -eq 0 ]]; then
+                                date +%s > .last-publication-verification
+                                echo ""
+                                echo "✅ Verification passed! Continuing with push..."
+                                echo ""
+                                exit 0
+                            else
+                                echo ""
+                                echo "❌ Verification failed! Aborting push."
+                                exit 1
+                            fi
+                        fi
+                    fi
+                else
+                    echo "⚠️  No verification timestamp found"
+                    echo ""
+                    read -p "Run verification now? (y/N): " -n 1 -r
+                    echo ""
+                    
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        ./scripts/verify-publication-readiness.sh
+                        
+                        if [[ $? -eq 0 ]]; then
+                            date +%s > .last-publication-verification
+                            echo ""
+                            echo "✅ Verification passed! Continuing with push..."
+                            echo ""
+                            exit 0
+                        else
+                            echo ""
+                            echo "❌ Verification failed! Aborting push."
+                            exit 1
+                        fi
+                    fi
+                fi
+                
+                echo ""
+                read -p "Continue with push anyway? (y/N): " -n 1 -r
+                echo ""
+                
+                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                    echo ""
+                    echo "❌ Push aborted by user"
+                    exit 1
+                fi
+                
+                echo ""
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "  ✅ PUSH ALLOWED - Proceeding"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                exit 0
+                
+            else
+                # Block: Trying to push from wrong B2B branch
+                echo "❌ BLOCKED: Cannot push B2B branch directly to develop!"
+                echo ""
+                echo "Current branch: $current_branch"
+                echo "Target: develop"
+                echo ""
+                echo "This bypasses the publication consolidation workflow!"
+                echo ""
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "  CORRECT WORKFLOW:"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                echo "1. Consolidate to releases/b2b-nov-release:"
+                echo "   git checkout releases/b2b-nov-release"
+                echo "   git merge releases/b2b-infrastructure --no-ff"
+                echo "   git merge releases/b2b-docs-only --no-ff"
+                echo ""
+                echo "2. Verify:"
+                echo "   ./scripts/verify-publication-readiness.sh"
+                echo ""
+                echo "3. Push consolidated branch:"
+                echo "   git push origin releases/b2b-nov-release"
+                echo ""
+                echo "4. Then create PR: releases/b2b-nov-release → develop"
+                echo ""
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                echo "📚 See: PUBLISH-TO-PRODUCTION-CHECKLIST.md"
+                echo ""
+                echo "❌ PUSH ABORTED"
+                exit 1
+            fi
+        fi
+        
+        # Not a B2B branch - check for B2B content anyway
+        # Get the list of files changed in commits being pushed
+        if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+            # New branch, check all commits
+            range="$local_sha"
+        else
+            range="$remote_sha..$local_sha"
+        fi
+        
+        # Check for B2B-related files
+        b2b_files=$(git diff --name-only "$range" | grep -E "(dropins-b2b|b2b-)" || true)
+        
+        if [[ -n "$b2b_files" ]]; then
+            echo "⚠️  WARNING: Detected B2B-related files in push:"
+            echo "$b2b_files" | head -10
+            echo ""
+            echo "This might be unintentional. These changes should normally go through"
+            echo "the B2B publication workflow (releases/b2b-nov-release)."
+            echo ""
+            read -p "Continue anyway? (y/N): " -n 1 -r
+            echo ""
+            
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo ""
+                echo "❌ Push aborted by user"
+                exit 1
+            fi
+        fi
+        
+        echo "✅ Push allowed (non-B2B branch with confirmation)"
+        echo ""
+    fi
+done
+
+exit 0
+
