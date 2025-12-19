@@ -142,7 +142,7 @@ export function generateSidebar() {
             },
           ],
         },
-        // ---------- DROP-INS Overview ----------
+        // ---------- DROP-INS (General) ----------
         {
           label: 'Drop-ins',
           collapsed: false,
@@ -162,8 +162,17 @@ export function generateSidebar() {
             { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
+          ],
+        },
+
+        // ---------- B2C DROP-INS ----------
+        {
+          label: 'B2C Drop-ins',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/dropins/' },
             {
-              label: 'B2C drop-ins',
+              label: 'Cart',
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/dropins/' },
@@ -478,9 +487,9 @@ export function generateSidebar() {
           ],
         },
 
-        // ---------- DROP-INS (B2B) ----------
+        // ---------- B2B DROP-INS ----------
         {
-          label: 'Drop-ins for B2B',
+          label: 'B2B Drop-ins',
           collapsed: true,
           items: [
             {
