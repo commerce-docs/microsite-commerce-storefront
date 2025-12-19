@@ -720,6 +720,8 @@ export function generateSidebar() {
             { label: 'Product Recommendations', link: '/merchants/blocks/product-recommendations/' },
           ],
         },
+        // B2B Commerce blocks (30 total): commerce-b2b-* (18), commerce-company-* (7),
+        // commerce-customer-company (1), plus commerce-{account-header,account-nav,account-sidebar,checkout-success} (4)
         {
           label: 'B2B Commerce blocks',
           collapsed: true,
