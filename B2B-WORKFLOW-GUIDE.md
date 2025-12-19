@@ -151,6 +151,120 @@ git merge releases/b2b-docs-only
 git push
 ```
 
+---
+
+## Workflow 4: Publish to Production
+
+**🚨 CRITICAL WORKFLOW**: Preserves all 3,230+ commits from 50+ contributors on `releases/b2b-nov-release`.
+
+### Prerequisites
+
+- [ ] All feature branch PRs reviewed and approved
+- [ ] Infrastructure branch has latest generators
+- [ ] Docs-only branch has all merged drop-ins  
+- [ ] Stakeholders notified
+- [ ] Production deployment window scheduled
+
+### Publication Steps
+
+```bash
+# 1. Consolidate all work to b2b-nov-release
+git checkout releases/b2b-nov-release
+git pull origin releases/b2b-nov-release
+
+# 2. Merge infrastructure updates
+git merge releases/b2b-infrastructure --no-ff \
+  -m "chore: Consolidate infrastructure for publication
+
+- Latest generators and validation scripts
+- Updated templates
+- Package dependencies"
+
+# 3. Merge approved documentation
+git merge releases/b2b-docs-only --no-ff \
+  -m "docs: Consolidate approved documentation for publication
+
+- Purchase Order drop-in (merged)
+- Requisition List drop-in (merged)
+- Company Management drop-in (merged)
+- [Add other approved drop-ins]"
+
+# 4. Verify readiness (automated checks)
+./scripts/verify-publication-readiness.sh
+
+# If verification passes:
+
+# 5. Merge to develop
+git checkout develop
+git pull origin develop
+
+git merge releases/b2b-nov-release --no-ff \
+  -m "feat: Publish B2B documentation to production
+
+This merge brings 3,230+ commits from 50+ contributors including:
+- Purchase Order drop-in (complete)
+- Requisition List drop-in (complete)
+- Company Management, Company Switcher, Quote Management
+- Generator improvements and enrichment refinements
+- Infrastructure updates and validation tools
+
+All commit history and attributions preserved."
+
+# 6. Push to production
+git push origin develop
+
+# 7. Tag the release (recommended)
+git tag -a b2b-release-$(date +%Y%m%d) \
+  -m "B2B documentation release $(date +%Y-%m-%d)"
+git push origin --tags
+```
+
+### Why This is 100% Safe
+
+✅ **All 3,230+ commits preserved** - Every change included  
+✅ **All 50+ contributors credited** - Git history intact  
+✅ **Full audit trail** - Merge commit shows what was published  
+✅ **Rollback-safe** - Can revert the single merge commit  
+✅ **Automated verification** - Script catches issues before push  
+
+### When to Publish
+
+- **Major milestones**: When core drop-ins are complete
+- **Product releases**: Before major Adobe Commerce releases
+- **Quarterly**: Regular publication schedule
+- **On-demand**: Critical fixes or updates
+
+### Verification Script Checks
+
+The `verify-publication-readiness.sh` script validates:
+
+- Branch is up to date with remote
+- Expected content present (Purchase Order, scripts, templates)
+- No unexpected in-progress drop-ins
+- No uncommitted changes
+- Commit and contributor counts
+
+**If verification fails**: Fix issues before proceeding.
+
+### Rollback Procedure (if needed)
+
+```bash
+# If something goes wrong after merge to develop:
+
+# 1. Find the merge commit
+git log --oneline --graph develop | head -20
+
+# 2. Revert the merge
+git revert -m 1 <merge-commit-sha>
+
+# 3. Push the revert
+git push origin develop
+
+# The revert preserves history while undoing the publication
+```
+
+---
+
 ## All Potential Issues & Solutions
 
 ### Issue 1: Wrong Branch Commits ❌
