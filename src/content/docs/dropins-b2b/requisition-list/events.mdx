@@ -1,5 +1,5 @@
 ---
-title: Requisition List Data & Events
+title: Requisition List Events and Data
 description: Learn about the events used by the Requisition List and the data available within the events.
 sidebar:
   label: Events
@@ -22,7 +22,7 @@ The **Requisition List** drop-in uses the [event bus](/sdk/reference/events) to 
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [requisitionList/alert](#requisitionlistalert-emits-and-listens) | Emits and listens | Triggered when an alert or notification is triggered. |
+| [requisitionList/alert](#requisitionlistalert-emits-and-listens) | Emits and listens | Triggered when an alert or notification occurs. |
 | [requisitionList/data](#requisitionlistdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
 | [requisitionList/initialized](#requisitionlistinitialized-emits-and-listens) | Emits and listens | Triggered when the component completes initialization. |
 | [requisitionLists/data](#requisitionlistsdata-emits-and-listens) | Emits and listens | Triggered when data is available or changes. |
@@ -35,9 +35,24 @@ The **Requisition List** drop-in uses the [event bus](/sdk/reference/events) to 
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
-### `requisitionList/alert` (emits and listens)
+### `requisitionList/alert`
 
-Triggered when an alert or notification is triggered.
+Triggered when an alert or notification is triggered. It emits and listens for alerts related to requisition list actions.
+
+#### When triggered
+
+- After successful list operations (create, update, delete)
+- After adding items to cart from a list
+- After item operations (add, update, remove)
+- On operation errors or validation failures
+
+#### Usage scenarios
+
+- Display toast notifications.
+- Show inline error messages.
+- Log user actions for analytics.
+- Trigger accessibility announcements.
+- Update status indicators.
 
 #### Event payload
 
@@ -48,17 +63,7 @@ RequisitionListActionPayload
 See [`RequisitionListActionPayload`](#requisitionlistactionpayload) for full type definition.
 
 
-
-#### When triggered
-
-- After successful list operations (create, update, delete)
-- After adding items to cart from a list
-- After item operations (add, update, remove)
-- On operation errors or validation failures
-
-
-
-#### Example: Example
+#### Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -77,34 +82,12 @@ events.on('requisitionList/alert', (payload) => {
 });
 ```
 
-
-
-#### Usage scenarios
-
-- Display toast notifications.
-- Show inline error messages.
-- Log user actions for analytics.
-- Trigger accessibility announcements.
-- Update status indicators.
-
 ---
 
 
+### `requisitionList/data`
 
-
-### `requisitionList/data` (emits and listens)
-
-Triggered when data is available or changes.
-
-#### Event payload
-
-```typescript
-RequisitionList | null
-```
-
-See [`RequisitionList`](#requisitionlist) for full type definition.
-
-
+Triggered when data is available or changes. It emits and listens for updates to a single requisition list.
 
 #### When triggered
 
@@ -114,6 +97,26 @@ See [`RequisitionList`](#requisitionlist) for full type definition.
 - After updating item quantities
 - After updating list details (name, description)
 
+#### Usage scenarios
+
+- Refresh the list details view after changes.
+- Update item count displays and badges.
+- Recalculate list totals and pricing.
+- Update caching or local storage.
+- Enable/disable action buttons based on list state.
+- Add entire requisition lists to the cart with one click.
+- Implement selective item-to-cart workflows.
+- Handle inventory availability in real-time.
+- Track cart conversions from requisition lists.
+- Show progress during bulk add operations.
+
+#### Event payload
+
+```typescript
+RequisitionList | null
+```
+
+See [`RequisitionList`](#requisitionlist) for full type definition.
 
 
 #### Example 1: Basic list data handler
@@ -313,24 +316,7 @@ class SelectiveCartManager {
 window.cartManager = new SelectiveCartManager();
 ```
 
-
-
-#### Usage scenarios
-
-- Refresh the list details view after changes.
-- Update item count displays and badges.
-- Recalculate list totals and pricing.
-- Update caching or local storage.
-- Enable/disable action buttons based on list state.
-- Add entire requisition lists to the cart with one click.
-- Implement selective item-to-cart workflows.
-- Handle inventory availability in real-time.
-- Track cart conversions from requisition lists.
-- Show progress during bulk add operations.
-
 ---
-
-
 
 
 ### `requisitionList/initialized` (emits and listens)
@@ -349,7 +335,7 @@ Triggered when the component completes initialization.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -383,9 +369,27 @@ events.on('requisitionList/initialized', () => {
 
 
 
-### `requisitionLists/data` (emits and listens)
+### `requisitionLists/data`
 
-Triggered when data is available or changes.
+Triggered when data is available or changes. It emits and listens for updates to the collection of requisition lists.
+
+#### When triggered
+
+- After loading requisition lists
+- After creating a new list
+- After deleting a list
+- After list collection changes
+- On pagination or filtering
+
+
+#### Usage scenarios
+
+- Render lists grid or table.
+- Update list count displays.
+- Handle pagination.
+- Show/hide empty states.
+- Update filters and sorting.
+- Cache lists data.
 
 #### Event payload
 
@@ -397,17 +401,7 @@ See [`RequisitionList`](#requisitionlist) for full type definition.
 
 
 
-#### When triggered
-
-- After loading requisition lists
-- After creating a new list
-- After deleting a list
-- After list collection changes
-- On pagination or filtering
-
-
-
-#### Example: Example
+#### Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
@@ -435,17 +429,6 @@ events.on('requisitionLists/data', (payload) => {
   }
 });
 ```
-
-
-
-#### Usage scenarios
-
-- Render lists grid or table.
-- Update list count displays.
-- Handle pagination.
-- Show/hide empty states.
-- Update filters and sorting.
-- Cache lists data.
 
 ---
 
@@ -484,10 +467,7 @@ The `requisitionList/redirect` event is advisory - your application controls whe
 
 
 
-
-
-
-## Data Models
+## Data models
 
 The following data models are used in event payloads for this drop-in.
 
