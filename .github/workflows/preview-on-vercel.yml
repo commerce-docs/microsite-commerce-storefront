@@ -50,8 +50,14 @@ jobs:
 
       - name: Prepare dist for deployment
         run: |
-          # Copy Vercel config to dist/ so it deploys to the correct project
-          cp -r .vercel dist/.vercel
+          # Copy only the project linkage file to dist/ (not cache/build artifacts)
+          mkdir -p dist/.vercel
+          cp .vercel/project.json dist/.vercel/project.json 2>/dev/null || true
+
+          # Create .vercelignore to exclude large static assets
+          cat > dist/.vercelignore << 'EOF'
+          storybook-static/
+          EOF
 
       - name: Deploy to Vercel
         id: deploy
@@ -66,10 +72,9 @@ jobs:
 
           # Deploy the dist/ folder as a static site
           echo "Deploying built site to Vercel..."
-          cd dist
 
-          # Deploy with archive to compress files
-          DEPLOY_OUTPUT=$(vercel deploy --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          # Deploy only the dist/ directory (explicitly specify path)
+          DEPLOY_OUTPUT=$(vercel deploy dist/ --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
           echo "=== Deployment Output ==="
