@@ -54,11 +54,6 @@ jobs:
           mkdir -p dist/.vercel
           cp .vercel/project.json dist/.vercel/project.json 2>/dev/null || true
 
-          # Create .vercelignore to exclude large static assets
-          cat > dist/.vercelignore << 'EOF'
-          storybook-static/
-          EOF
-
       - name: Deploy to Vercel
         id: deploy
         shell: bash
@@ -72,9 +67,14 @@ jobs:
 
           # Deploy the dist/ folder as a static site
           echo "Deploying built site to Vercel..."
-
-          # Deploy only the dist/ directory (explicitly specify path)
-          DEPLOY_OUTPUT=$(vercel deploy dist/ --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          
+          # Change to dist/ and deploy from there (so Vercel only scans dist/)
+          cd dist
+          rm -rf storybook-static  # Physically remove storybook to reduce file count (364 files)
+          
+          echo "Files to deploy: $(find . -type f | wc -l)"
+          
+          DEPLOY_OUTPUT=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
           echo "=== Deployment Output ==="
