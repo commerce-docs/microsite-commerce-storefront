@@ -732,6 +732,7 @@ export function generateSidebar() {
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
+            { label: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
             { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
             { label: 'Company Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
             { label: 'Company Create', link: '/merchants/blocks/commerce-company-create/' },
