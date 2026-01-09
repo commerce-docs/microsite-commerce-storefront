@@ -31,6 +31,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm run build:prod-fast
+        env:
+          NODE_ENV: development
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -45,10 +53,11 @@ jobs:
           SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
           CUSTOM_ALIAS="${SAFE_BRANCH}.storefront.dropinkit.com"
 
-          # Deploy and get the deployment URL (let Vercel build and deploy)
-          # Use --archive=tgz to compress and avoid file count limits
-          echo "Deploying to Vercel..."
-          DEPLOY_OUTPUT=$(vercel deploy --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          # Deploy only the dist/ folder (built output)
+          # This avoids the 5000 file limit by only deploying static files
+          echo "Deploying built site to Vercel..."
+          cd dist
+          DEPLOY_OUTPUT=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
           echo "=== Deployment Output ==="
@@ -70,8 +79,12 @@ jobs:
 
           echo "✅ Deployed to: $DEPLOYMENT_URL"
 
-          # For now, use the direct Vercel URL (custom alias can be added later)
-          FINAL_URL="$DEPLOYMENT_URL"
+          # Assign custom domain alias
+          echo "Setting custom alias: $CUSTOM_ALIAS"
+          vercel alias set "$DEPLOYMENT_URL" "$CUSTOM_ALIAS" --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
+
+          # Use the custom alias as the final URL
+          FINAL_URL="https://$CUSTOM_ALIAS"
           echo "url=$FINAL_URL" >> $GITHUB_OUTPUT
           echo "### 🚀 Preview Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
