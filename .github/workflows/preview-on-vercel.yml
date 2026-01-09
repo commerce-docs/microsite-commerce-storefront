@@ -57,16 +57,20 @@ jobs:
           # Deploy and get the deployment URL
           echo "Deploying to Vercel..."
           DEPLOY_OUTPUT=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
-          
+          DEPLOY_EXIT_CODE=$?
+
+          echo "=== Deployment Output ==="
+          echo "$DEPLOY_OUTPUT"
+          echo "=== End Output (exit code: $DEPLOY_EXIT_CODE) ==="
+
           # Extract the deployment URL (last line that starts with https://)
           DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -E '^https://' | tail -1)
-          
+
           if [ -z "$DEPLOYMENT_URL" ]; then
-            echo "❌ Deployment failed - no URL found in output:"
-            echo "$DEPLOY_OUTPUT"
+            echo "❌ Deployment failed - no URL found in output"
             exit 1
           fi
-          
+
           echo "✅ Deployed to: $DEPLOYMENT_URL"
 
           # Assign custom domain alias
