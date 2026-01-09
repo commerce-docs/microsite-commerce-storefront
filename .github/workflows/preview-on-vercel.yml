@@ -49,12 +49,24 @@ jobs:
       - name: Deploy to Vercel
         id: deploy
         run: |
+          BRANCH_NAME="${{ inputs.branch || github.ref_name }}"
+          # Sanitize branch name for URL (replace / with -)
+          SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
+          CUSTOM_ALIAS="${SAFE_BRANCH}-storefront.dropinkit.com"
+
+          # Deploy and get the deployment URL
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
+          # Assign custom domain alias
+          vercel alias set "$DEPLOYMENT_URL" "$CUSTOM_ALIAS" --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
+
+          # Use the custom alias as the final URL
+          FINAL_URL="https://$CUSTOM_ALIAS"
+          echo "url=$FINAL_URL" >> $GITHUB_OUTPUT
           echo "### 🚀 Preview Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ inputs.branch || github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** $FINAL_URL" >> $GITHUB_STEP_SUMMARY
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
