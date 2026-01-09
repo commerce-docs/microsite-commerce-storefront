@@ -39,6 +39,15 @@ jobs:
         env:
           NODE_ENV: development
 
+      - name: Prepare dist for deployment
+        run: |
+          # Create a minimal vercel.json in dist/ to deploy as static site
+          cat > dist/vercel.json << 'EOF'
+          {
+            "version": 2
+          }
+          EOF
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
@@ -53,10 +62,19 @@ jobs:
           SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
           CUSTOM_ALIAS="${SAFE_BRANCH}.storefront.dropinkit.com"
 
-          # Deploy only the dist/ folder (built output)
-          # This avoids the 5000 file limit by only deploying static files
+          # Deploy the dist/ folder as a static site
+          # Set Vercel project info so CLI knows which project to deploy to
+          export VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}
+          export VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}
+          
           echo "Deploying built site to Vercel..."
           cd dist
+          
+          # Link to Vercel project
+          echo "Linking to Vercel project..."
+          vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
+          
+          # Now deploy
           DEPLOY_OUTPUT=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
@@ -90,9 +108,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`$BRANCH_NAME\`" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** $FINAL_URL" >> $GITHUB_STEP_SUMMARY
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Find PR Number
         id: pr
