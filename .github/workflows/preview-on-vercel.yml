@@ -39,17 +39,19 @@ jobs:
         env:
           NODE_ENV: development
 
-      - name: Prepare dist for deployment
-        run: |
-          # Create a minimal vercel.json in dist/ to deploy as static site
-          cat > dist/vercel.json << 'EOF'
-          {
-            "version": 2
-          }
-          EOF
-
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Prepare dist for deployment
+        run: |
+          # Copy Vercel config to dist/ so it deploys to the correct project
+          cp -r .vercel dist/.vercel
 
       - name: Deploy to Vercel
         id: deploy
@@ -63,19 +65,11 @@ jobs:
           CUSTOM_ALIAS="${SAFE_BRANCH}.storefront.dropinkit.com"
 
           # Deploy the dist/ folder as a static site
-          # Set Vercel project info so CLI knows which project to deploy to
-          export VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}
-          export VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}
-          
           echo "Deploying built site to Vercel..."
           cd dist
-          
-          # Link to Vercel project
-          echo "Linking to Vercel project..."
-          vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
-          
-          # Now deploy
-          DEPLOY_OUTPUT=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+
+          # Deploy with archive to compress files
+          DEPLOY_OUTPUT=$(vercel deploy --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
           echo "=== Deployment Output ==="
