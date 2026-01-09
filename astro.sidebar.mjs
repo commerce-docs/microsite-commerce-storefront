@@ -756,7 +756,7 @@ export function generateSidebar() {
             { label: 'PO History Log', link: '/merchants/blocks/commerce-b2b-po-history-log/' },
             { label: 'PO Require Approval', link: '/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/' },
             { label: 'PO Status', link: '/merchants/blocks/commerce-b2b-po-status/' },
-            { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
+            { label: 'Negotiable Quote checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
             { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
             { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
           ],
