@@ -56,11 +56,14 @@ jobs:
 
           # Deploy and get the deployment URL
           echo "Deploying to Vercel..."
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
+          DEPLOY_OUTPUT=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
           
-          if [ -z "$DEPLOYMENT_URL" ] || [[ "$DEPLOYMENT_URL" == *"Error"* ]]; then
-            echo "❌ Deployment failed:"
-            echo "$DEPLOYMENT_URL"
+          # Extract the deployment URL (last line that starts with https://)
+          DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -E '^https://' | tail -1)
+          
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "❌ Deployment failed - no URL found in output:"
+            echo "$DEPLOY_OUTPUT"
             exit 1
           fi
           
