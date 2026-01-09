@@ -48,7 +48,10 @@ jobs:
 
       - name: Deploy to Vercel
         id: deploy
+        shell: bash
         run: |
+          set +e  # Don't exit on error - we want to capture output
+
           BRANCH_NAME="${{ inputs.branch || github.ref_name }}"
           # Sanitize branch name for URL (replace / with -)
           SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
@@ -63,11 +66,16 @@ jobs:
           echo "$DEPLOY_OUTPUT"
           echo "=== End Output (exit code: $DEPLOY_EXIT_CODE) ==="
 
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo "❌ Deployment command failed with exit code $DEPLOY_EXIT_CODE"
+            exit 1
+          fi
+
           # Extract the deployment URL (last line that starts with https://)
           DEPLOYMENT_URL=$(echo "$DEPLOY_OUTPUT" | grep -E '^https://' | tail -1)
 
           if [ -z "$DEPLOYMENT_URL" ]; then
-            echo "❌ Deployment failed - no URL found in output"
+            echo "❌ No deployment URL found in output"
             exit 1
           fi
 
