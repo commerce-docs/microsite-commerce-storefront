@@ -55,9 +55,19 @@ jobs:
           CUSTOM_ALIAS="${SAFE_BRANCH}.storefront.dropinkit.com"
 
           # Deploy and get the deployment URL
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Deploying to Vercel..."
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
+          
+          if [ -z "$DEPLOYMENT_URL" ] || [[ "$DEPLOYMENT_URL" == *"Error"* ]]; then
+            echo "❌ Deployment failed:"
+            echo "$DEPLOYMENT_URL"
+            exit 1
+          fi
+          
+          echo "✅ Deployed to: $DEPLOYMENT_URL"
 
           # Assign custom domain alias
+          echo "Setting custom alias: $CUSTOM_ALIAS"
           vercel alias set "$DEPLOYMENT_URL" "$CUSTOM_ALIAS" --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
 
           # Use the custom alias as the final URL
