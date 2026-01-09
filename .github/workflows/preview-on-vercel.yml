@@ -77,22 +77,22 @@ jobs:
             const prNumber = ${{ steps.pr.outputs.number }};
             const deploymentUrl = '${{ steps.deploy.outputs.url }}';
             const branch = '${{ inputs.branch || github.ref_name }}';
-            
+
             const body = `## 🚀 Preview Deployment Ready\n\n**Branch:** \`${branch}\`\n**Preview URL:** ${deploymentUrl}\n\n<sub>Deployed via [Vercel Preview](${deploymentUrl})</sub>`;
-            
+
             // Check if we already commented
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
               comment.body.includes('Preview Deployment Ready') &&
               comment.body.includes(`Branch:** \`${branch}\``)
             );
-            
+
             if (botComment) {
               // Update existing comment
               await github.rest.issues.updateComment({
