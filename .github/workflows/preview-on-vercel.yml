@@ -34,18 +34,6 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
       - name: Deploy to Vercel
         id: deploy
         shell: bash
@@ -57,9 +45,9 @@ jobs:
           SAFE_BRANCH=$(echo "$BRANCH_NAME" | sed 's/\//-/g')
           CUSTOM_ALIAS="${SAFE_BRANCH}.storefront.dropinkit.com"
 
-          # Deploy and get the deployment URL
+          # Deploy and get the deployment URL (let Vercel build and deploy)
           echo "Deploying to Vercel..."
-          DEPLOY_OUTPUT=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
+          DEPLOY_OUTPUT=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
           DEPLOY_EXIT_CODE=$?
 
           echo "=== Deployment Output ==="
@@ -81,12 +69,8 @@ jobs:
 
           echo "✅ Deployed to: $DEPLOYMENT_URL"
 
-          # Assign custom domain alias
-          echo "Setting custom alias: $CUSTOM_ALIAS"
-          vercel alias set "$DEPLOYMENT_URL" "$CUSTOM_ALIAS" --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
-
-          # Use the custom alias as the final URL
-          FINAL_URL="https://$CUSTOM_ALIAS"
+          # For now, use the direct Vercel URL (custom alias can be added later)
+          FINAL_URL="$DEPLOYMENT_URL"
           echo "url=$FINAL_URL" >> $GITHUB_OUTPUT
           echo "### 🚀 Preview Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
