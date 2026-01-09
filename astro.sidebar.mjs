@@ -741,6 +741,8 @@ export function generateSidebar() {
             { label: 'Company Roles & Permissions', link: '/merchants/blocks/commerce-company-roles-permissions/' },
             { label: 'Company Structure', link: '/merchants/blocks/commerce-company-structure/' },
             { label: 'Company Users', link: '/merchants/blocks/commerce-company-users/' },
+            { label: 'Confirm Account', link: '/merchants/blocks/commerce-confirm-account/' },
+            { label: 'Create Account', link: '/merchants/blocks/commerce-create-account/' },
             { label: 'Customer Company', link: '/merchants/blocks/commerce-customer-company/' },
             { label: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
             { label: 'Negotiable Quote Template', link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/' },
