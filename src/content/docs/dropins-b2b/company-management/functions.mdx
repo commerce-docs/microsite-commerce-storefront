@@ -27,7 +27,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`allowCompanyRegistration`](#allowcompanyregistration) | Return whether the backend allows company self-registration per store configuration.. |
 | [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company.. |
 | [`companyEnabled`](#companyenabled) | Return whether the Company feature is enabled in store configuration.. |
-| [`createCompany`](#createcompany) | API function for the drop-in.. |
+| [`createCompany`](#createcompany) | Registers a new B2B company with complete business information including company details, legal address, and administrator account. |
 | [`createCompanyRole`](#createcompanyrole) | API function for the drop-in.. |
 | [`createCompanyTeam`](#createcompanyteam) | Creates a new company team under an optional target structure node.. |
 | [`createCompanyUser`](#createcompanyuser) | Creates a new company user and optionally places them under a target structure node.. |
@@ -53,7 +53,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`isCompanyRoleNameAvailable`](#iscompanyrolenameavailable) | API function for the drop-in.. |
 | [`isCompanyUser`](#iscompanyuser) | Check if the current authenticated customer belongs to any company.. |
 | [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | API function for the drop-in.. |
-| [`updateCompany`](#updatecompany) | API function for the drop-in.. |
+| [`updateCompany`](#updatecompany) | Updates company profile information with permission-aware field filtering based on user's edit permissions. |
 | [`updateCompanyRole`](#updatecompanyrole) | API function for the drop-in.. |
 | [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree.. |
 | [`updateCompanyTeam`](#updatecompanyteam) | Updates a company team's name `and/or` description.. |
@@ -139,9 +139,17 @@ Returns `boolean`.
 
 ## createCompany
 
+Registers a new B2B company with complete business information.
+
+This function handles the entire company registration workflow including:
+- Company details validation (name, email, legal name, tax IDs)
+- Legal address validation with country/region support
+- Company administrator account creation
+- Email uniqueness validation
+
 ```ts
 const createCompany = async (
-  formData: any
+  formData: CompanyCreateInput
 ): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
 ```
 
@@ -149,7 +157,7 @@ const createCompany = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `formData` | `any` | Yes | An object containing the company registration information including company name, legal name, email, VAT/TAX ID, and resale number. The structure depends on your store's company registration requirements. |
+| `formData` | `CompanyCreateInput` | Yes | Company registration form data containing company info, legal address, and admin details. Includes: `company_name`, `company_email`, `legal_name`, `vat_tax_id`, `reseller_id`, `legal_address` (with street, city, region, postcode, country_id, telephone), and `company_admin` (with email, firstname, lastname, job_title, telephone, gender, custom_attributes). |
 
 </TableWrapper>
 
@@ -163,7 +171,40 @@ Does not emit any drop-in events.
 { success: boolean; company?: CompanyRegistrationModel; errors?: string[] }
 ```
 
+Returns a promise resolving to registration result with success status, company data on success, or error messages on failure.
+
 See [`CompanyRegistrationModel`](#companyregistrationmodel).
+
+### Example
+
+```typescript
+const result = await createCompany({
+  company_name: 'Acme Corp',
+  company_email: 'contact@acme.com',
+  legal_name: 'Acme Corporation Inc.',
+  vat_tax_id: 'VAT123456789',
+  legal_address: {
+    street: ['123 Main St', 'Suite 100'],
+    city: 'San Francisco',
+    region: { region_code: 'CA', region: 'California', region_id: 12 },
+    postcode: '94105',
+    country_id: 'US',
+    telephone: '+1-555-123-4567'
+  },
+  company_admin: {
+    email: 'admin@acme.com',
+    firstname: 'John',
+    lastname: 'Doe',
+    job_title: 'CEO'
+  }
+});
+
+if (result.success) {
+  console.log('Company registered:', result.company);
+} else {
+  console.error('Registration failed:', result.errors);
+}
+```
 
 ## createCompanyRole
 
@@ -691,6 +732,18 @@ Returns `void`.
 
 ## updateCompany
 
+Updates company profile information with permission-aware field filtering.
+
+This function dynamically builds the GraphQL mutation based on user permissions:
+- Only requests fields the user can view in the response
+- Only sends fields the user can edit in the mutation
+
+**Permissions Required:**
+- `Magento_Company::edit_account` - To update name, email, legal name, VAT/Tax ID, Reseller ID
+- `Magento_Company::edit_address` - To update legal address fields
+
+**Important:** The dropin UI gates which fields are editable. If neither permission is granted, the submit button is disabled and this function should not be called.
+
 ```ts
 const updateCompany = async (
   input: UpdateCompanyDto
@@ -701,17 +754,33 @@ const updateCompany = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `input` | `UpdateCompanyDto` | Yes | Input parameters for the operation. |
+| `input` | `UpdateCompanyDto` | Yes | Partial company data to update (only changed fields). Can include: `name`, `email`, `legalName`, `vatTaxId`, `resellerId`, and `legalAddress` (with street, city, region, countryCode, postcode, telephone). |
 
 </TableWrapper>
 
 ### Events
 
-Does not emit any drop-in events.
+Emits [`company/updated`](/dropins-b2b/company-management/events/#companyupdated-emits-and-listens) after successful update with new company data.
 
 ### Returns
 
-Returns `CompanyModel`.
+Returns `CompanyModel` - Complete updated company object with all current data.
+
+### Example
+
+```typescript
+const updated = await updateCompany({
+  name: 'New Company Name',
+  legalAddress: {
+    street: ['456 New St'],
+    city: 'Los Angeles',
+    region: { region: 'California', regionCode: 'CA' },
+    countryCode: 'US',
+    postcode: '90001'
+  }
+});
+// Event 'company/updated' is emitted with { company: updated }
+```
 
 ## updateCompanyRole
 
