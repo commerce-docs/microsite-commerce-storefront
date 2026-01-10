@@ -31,24 +31,31 @@ jobs:
       - name: Run branch content validation
         run: ./scripts/validate-branch-content.sh
       
-      - name: Install Node.js
+      - name: Install pnpm
         if: success() || failure()  # Run even if previous step failed
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      
+      - name: Install Node.js
+        if: success() || failure()
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
       
       - name: Install dependencies
         if: success() || failure()
-        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+        run: pnpm install
       
       - name: Validate B2B enrichments
         if: success() || failure()
         run: |
           # Only run if enrichments exist in this branch
           if [ -d "_dropin-enrichments" ] && [ "$(ls -A _dropin-enrichments 2>/dev/null)" ]; then
-            npm run validate-b2b-enrichments || {
+            pnpm run validate-b2b-enrichments || {
               echo "❌ Enrichment validation failed"
-              echo "Run locally: npm run validate-b2b-enrichments --fix"
+              echo "Run locally: pnpm run validate-b2b-enrichments --fix"
               exit 1
             }
           else
