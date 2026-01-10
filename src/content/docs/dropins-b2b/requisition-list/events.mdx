@@ -38,7 +38,11 @@ The following sections provide detailed information about each event, including 
 
 ### `requisitionList/alert` (emits and listens)
 
-Triggered when an alert or notification occurs. It emits and listens for alerts related to requisition list actions. The `requisitionList/alert` event provides a standardized way to display feedback to users. Consider implementing a global alert handler rather than handling alerts in individual components.
+Triggered when an alert or notification occurs. It emits and listens for alerts related to requisition list actions.
+
+<Aside type="tip">
+The `requisitionList/alert` event provides a standardized way to display feedback to users. Consider implementing a global alert handler rather than handling alerts in individual components.
+</Aside>
 
 #### When triggered
 
@@ -368,7 +372,11 @@ events.on('requisitionList/initialized', () => {
 
 ### `requisitionList/redirect` (emits and listens)
 
-Triggered when a redirect or navigation is suggested after a requisition list operation. The `requisitionList/redirect` event is advisory - your application controls whether to honor the redirect request. This allows you to implement custom routing logic or prevent navigation in certain scenarios.
+Triggered when a redirect or navigation is suggested after a requisition list operation.
+
+<Aside type="note">
+The `requisitionList/redirect` event is advisory - your application controls whether to honor the redirect request. This allows you to implement custom routing logic or prevent navigation in certain scenarios.
+</Aside>
 
 #### When triggered
 
@@ -516,40 +524,93 @@ The following examples demonstrate common event flow patterns when working with 
 
 ### Creating a new requisition list
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant App
-    participant DropIn
-    participant EventBus
-    
-    User->>App: Click "Create List"
-    App->>DropIn: createRequisitionList()
-    DropIn->>EventBus: emit('requisitionList/alert', success)
-    EventBus->>App: notify success
-    App->>User: Show success message
-    DropIn->>EventBus: emit('requisitionLists/data', updated lists)
-    EventBus->>App: update lists display
+When a user creates a new requisition list, the following events occur in sequence:
+
+1. The `requisitionList/alert` event fires with a success notification
+2. The `requisitionLists/data` event fires with the updated collection of lists
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { createRequisitionList } from '@dropins/storefront-requisition-list/api.js';
+
+// Set up event listeners before creating the list
+events.on('requisitionList/alert', (payload) => {
+  const { type, message } = payload.data;
+  console.log(`Alert: ${type} - ${message}`);
+  showNotification(type, message);
+});
+
+events.on('requisitionLists/data', (payload) => {
+  const lists = payload.data;
+  console.log(`Lists updated: ${lists.length} total lists`);
+  renderListsGrid(lists);
+});
+
+// Create the list
+async function handleCreateList(name, description) {
+  try {
+    await createRequisitionList({ name, description });
+    // Events will fire automatically after successful creation:
+    // 1. requisitionList/alert (success notification)
+    // 2. requisitionLists/data (updated lists collection)
+  } catch (error) {
+    console.error('Failed to create list:', error);
+  }
+}
 ```
 
 ### Adding items to cart from a list
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant App
-    participant DropIn
-    participant EventBus
-    participant Cart
-    
-    User->>App: Click "Add all to cart"
-    App->>DropIn: addRequisitionListItemsToCart()
-    DropIn->>Cart: Add items
-    DropIn->>EventBus: emit('requisitionList/alert', success)
-    EventBus->>App: show success notification
-    DropIn->>EventBus: emit('requisitionList/redirect', {url: '/cart'})
-    EventBus->>App: navigate to cart
-    App->>User: Show cart page
+When adding all items from a requisition list to the cart, multiple events fire in sequence:
+
+1. The `requisitionList/alert` event fires with a success notification
+2. The `requisitionList/redirect` event fires suggesting navigation to the cart
+3. The `cart/updated` event fires from the Cart drop-in (if integrated)
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { addRequisitionListItemsToCart } from '@dropins/storefront-requisition-list/api.js';
+
+// Set up event listeners
+events.on('requisitionList/alert', (payload) => {
+  const { type, message } = payload.data;
+  showNotification(type, message);
+});
+
+events.on('requisitionList/redirect', (payload) => {
+  const { url } = payload.data;
+  console.log(`Redirect suggested to: ${url}`);
+  
+  // Honor the redirect after a short delay
+  setTimeout(() => {
+    window.location.href = url;
+  }, 1500);
+});
+
+events.on('cart/updated', (payload) => {
+  const cart = payload.data;
+  console.log(`Cart updated: ${cart.items.length} items`);
+  updateCartBadge(cart.items.length);
+});
+
+// Add all items from list to cart
+async function handleAddAllToCart(listUid, items) {
+  try {
+    await addRequisitionListItemsToCart({
+      requisitionListUid: listUid,
+      requisitionListItems: items.map(item => ({
+        uid: item.uid,
+        quantity: item.quantity
+      }))
+    });
+    // Events will fire automatically after successful addition:
+    // 1. requisitionList/alert (success notification)
+    // 2. requisitionList/redirect (suggested navigation to /cart)
+    // 3. cart/updated (if Cart drop-in is integrated)
+  } catch (error) {
+    console.error('Failed to add items to cart:', error);
+  }
+}
 ```
 
 
