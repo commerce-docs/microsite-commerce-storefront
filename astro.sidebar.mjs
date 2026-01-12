@@ -518,6 +518,21 @@ export function generateSidebar() {
               ],
             },
             {
+              label: 'Purchase Order',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/dropins-b2b/purchase-order/' },
+                { label: 'Quick start', link: '/dropins-b2b/purchase-order/quick-start/' },
+                { label: 'Functions', link: '/dropins-b2b/purchase-order/functions/' },
+                { label: 'Events', link: '/dropins-b2b/purchase-order/events/' },
+                { label: 'Initialization', link: '/dropins-b2b/purchase-order/initialization/' },
+                { label: 'Containers', link: '/dropins-b2b/purchase-order/containers/' },
+                { label: 'Slots', link: '/dropins-b2b/purchase-order/slots/' },
+                { label: 'Styles', link: '/dropins-b2b/purchase-order/styles/' },
+                { label: 'Dictionary', link: '/dropins-b2b/purchase-order/dictionary/' },
+              ],
+            },
+            {
               label: 'Quote Management',
               collapsed: true,
               items: [
