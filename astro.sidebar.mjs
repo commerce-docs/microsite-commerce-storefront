@@ -79,6 +79,7 @@ export function generateSidebar() {
                 { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
                 { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                 { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
               ],
             }
           ]
@@ -698,6 +699,9 @@ export function generateSidebar() {
             { label: 'Product recommendations', link: '/merchants/commerce-blocks/product-recommendations/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
             { label: 'Cart', link: '/merchants/blocks/commerce-cart/' },
+            { label: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
+            { label: 'Confirm Account', link: '/merchants/blocks/commerce-confirm-account/' },
+            { label: 'Create Account', link: '/merchants/blocks/commerce-create-account/' },
             { label: 'Create Password', link: '/merchants/blocks/commerce-create-password/' },
             { label: 'Create Return', link: '/merchants/blocks/commerce-create-return/' },
             { label: 'Customer Details', link: '/merchants/blocks/commerce-customer-details/' },
