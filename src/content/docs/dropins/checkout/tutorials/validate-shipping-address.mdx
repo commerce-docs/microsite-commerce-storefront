@@ -22,7 +22,6 @@ At a high level:
 - If it returns a suggestion, open a modal and render `AddressValidation`.
 - If the shopper selects the suggestion, persist it as the shipping address; otherwise, use the original address.
 
-
 ## Integration
 
 ```javascript
@@ -61,10 +60,12 @@ const handlePlaceOrder = async ({ cartId, code }) => {
         handleSelectedAddress: async ({ selection, address }) => {
           if (selection === 'suggested') {
             await checkoutApi.setShippingAddress({ address });
-            const latest = events.lastPayload('checkout/updated');
-            // Unmount shipping address form and render again with latest checkout data
-            unmountContainer(CONTAINERS.SHIPPING_ADDRESS_FORM);
-            await renderAddressForm($shippingForm, shippingFormRef, latest, placeOrder, 'shipping');
+
+            // Update the shipping form using the suggested address
+            shippingForm.setProps((prevProps) => ({
+              ...prevProps,
+              inputsDefaultValueSet: address,
+            }));
           } else {
             // Place order
             await orderApi.placeOrder(cartId);
@@ -96,7 +97,7 @@ import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.
  */
 export const renderAddressValidation = async (
   container,
-  { suggestedAddress, handleSelectedAddress },
+  { suggestedAddress, handleSelectedAddress }
 ) =>
   CheckoutProvider.render(AddressValidation, {
     suggestedAddress,
@@ -132,5 +133,3 @@ Finally, add some padding for better appearance:
 
 - See the [`AddressValidation` container](/dropins/checkout/containers/address-validation/) container for props and behaviors.
 - Ensure your suggestion matches the `CartAddressInput` format.
-
-
