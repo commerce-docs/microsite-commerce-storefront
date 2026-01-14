@@ -73,8 +73,7 @@ Before implementing multistore functionality, ensure you have:
 
 - Your storefront repository linked to Document Authoring environment (da.live) via Edge Delivery Services
 - Access to Adobe Commerce Admin for [store view configuration](https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views)
-- Your `fstab.yaml` file properly configured for [folder mapping](https://www.aem.live/developer/folder-mapping)
-- Your `config.json` file linked to the Adobe Commerce instance
+- Your [Storefront Configuration](/setup/configuration/commerce-configuration/) set up and pointing to the Adobe Commerce instance
 - Familiarity with [Authoring and Publishing Content](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/edge-delivery/document-authoring/authoring)
 - Understanding of [Storefront Configuration](/setup/configuration/commerce-configuration)
 - Knowledge of [Adobe Commerce Configuration Scope](https://experienceleague.adobe.com/en/docs/commerce-admin/config/scope-change)
@@ -93,9 +92,9 @@ This walkthrough demonstrates the complete process from initial planning to fina
 Before implementing multistore functionality, confirm your environment is properly configured.
 
 <Steps>
-1. **Check the `fstab.yaml` file** in your repository to ensure it's linked to the Document Authoring environment at da.live.
+1. **Verify the code sync bot** is installed on your repository. This automatically configures your site's content pointer to the Document Authoring environment at da.live.
 
-2. **Verify the `config.json` file** is connected to your Adobe Commerce instance to enable content preview, publishing, and editing.
+2. **Verify the `config.json` file** (or Configuration Service) is connected to your Adobe Commerce instance to enable content preview, publishing, and editing.
 </Steps>
 
 <Aside type="caution" title="Environment setup">
@@ -117,7 +116,7 @@ Set up the folder structure in your Document Authoring environment to support th
    - Name it `en-ca`
 
 3. **Create the Canadian French folder**:
-   - Select "New folder"  
+   - Select "New folder"
    - Name it `fr-ca`
 
 4. **Copy content from the default root folder** into each new store view folder:
@@ -169,23 +168,7 @@ The store view codes in Adobe Commerce Admin must exactly match the folder names
 
 Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you'll need to add a corresponding folder mapping for the new URLs.
 
-#### Using fstab.yaml
-
-If your project uses a `fstab.yaml` file, add the new store view mapping under the `folders:` section:
-
-```yaml
-mountpoints:
-  /: https://example.mountpoint.com/:f:/r/sites/myproject
-
-folders:
-  /en/products/: /en/products/default
-  /en-ca/products/: /en-ca/products/default
-  /fr-ca/products/: /fr-ca/products/default
-```
-
-#### Using Configuration Service
-
-If your project uses the Configuration Service, update the configuration to add the new store view mapping under the `folders:` section:
+Update your site configuration (using the Configuration Service or `default-site.json`) to add the new store view mapping under the `folders:` section:
 
 ```json
 {
@@ -307,7 +290,7 @@ Test your new store views to ensure proper functionality before publishing.
    - Navigate to `public` → `[your store path]` → `headers` → `cs`
    - Verify the correct header values:
      - `Magento-Store-Code`
-     - `Magento-Website-Code` 
+     - `Magento-Website-Code`
      - `Magento-Store-View-Code`
 
 5. **Test the store switcher**:
@@ -401,8 +384,8 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 ### Common Issues
 
 #### Store View Not Loading
-- **Check the folder mapping**: Verify that the folder mapping in `fstab.yaml` or the Configuration Service matches your folder structure
-- **Verify the headers**: Ensure that the headers in `config.json` match the store view codes in Adobe Commerce Admin
+- **Check the folder mapping**: Verify that the folder mapping in your site configuration (Configuration Service or `default-site.json`) matches your folder structure
+- **Verify the headers**: Ensure that the headers in `config.json` or Configuration Service match the store view codes in Adobe Commerce Admin
 - **Check the session storage**: Use browser developer tools to verify that the correct headers are being sent
 
 #### Content Not Displaying
