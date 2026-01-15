@@ -66,10 +66,6 @@ Fired by Auth (`auth`) when Adobe Commerce permissions are updated.
 AuthPermissionsPayload
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -77,14 +73,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('auth/permissions', (payload) => {
   console.log('auth/permissions event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `checkout/updated` (listens)
 
@@ -98,10 +88,6 @@ Cart | NegotiableQuote | null
 
 See [`Cart`](/dropins/checkout/events#cart), [`NegotiableQuote`](/dropins/checkout/events#negotiablequote) for full type definitions.
 
-
-
-
-
 #### Example
 
 ```js
@@ -109,14 +95,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('checkout/updated', (payload) => {
   console.log('checkout/updated event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `quote-management/file-upload-error` (emits)
 
@@ -131,10 +111,6 @@ Emitted when `uploadFile()` fails to upload or finalize a file attachment.
 }
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -142,14 +118,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('quote-management/file-upload-error', (payload) => {
   console.log('quote-management/file-upload-error event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `quote-management/initialized` (emits and listens)
 
@@ -165,32 +135,22 @@ Emitted when the Quote Management initializer finishes loading store configurati
 
 See [`StoreConfigModel`](#storeconfigmodel) for full type definition.
 
-
-
 #### When triggered
 
 - After `initialize()` function completes
 - On drop-in first load
 
-
-
-#### Example: Example
+#### Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
 
-events.on('quote-management/initialized', () => {
-  console.log('Quote Management ready');
-  loadQuotesList();
+events.on('quote-management/initialized', ({ config }) => {
+  console.log('Quote Management ready', config);
+  // Example: use the store config values that Quote Management loads.
+  // console.log(config.quoteMinimumAmount, config.quoteMinimumAmountMessage);
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/line-item-note-set` (emits)
 
@@ -212,30 +172,21 @@ Emitted after `setLineItemNote()` updates a line item note for a negotiable quot
 
 See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
-
-
 #### When triggered
 
 - After calling `setLineItemNote()`
 - When merchant or buyer adds/updates item notes
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/line-item-note-set', (payload) => {
-  console.log(`Note set on item ${payload.data.itemId}:`, payload.data.note);
-  refreshQuoteItemsList();
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/line-item-note-set', ({ input, quote }) => {
+  console.log(`Note set on item ${input.itemUid}:`, input.note);
+  console.log('Updated quote:', quote);
 });
-```
-
----
-
-
-
-
-
+``` 
 
 ### `quote-management/negotiable-quote-close-error` (emits and listens)
 
@@ -250,10 +201,6 @@ Emitted when `closeNegotiableQuote()` fails to close one or more negotiable quot
 }
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -261,14 +208,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('quote-management/negotiable-quote-close-error', (payload) => {
   console.log('quote-management/negotiable-quote-close-error event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `quote-management/negotiable-quote-closed` (emits and listens)
 
@@ -283,30 +224,20 @@ Emitted after `closeNegotiableQuote()` closes one or more negotiable quotes.
 }
 ```
 
-
-
 #### When triggered
 
 - After calling `closeNegotiableQuote()`
 - When quote reaches final state
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/negotiable-quote-closed', (payload) => {
-  console.log(`Quote ${payload.data.quoteId} closed`);
-  redirectToQuotesList();
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/negotiable-quote-closed', ({ closedQuoteUids, resultStatus }) => {
+  console.log('Quotes closed:', closedQuoteUids, 'status:', resultStatus);
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/negotiable-quote-delete-error` (emits)
 
@@ -321,10 +252,6 @@ Emitted when `deleteQuote()` fails to delete one or more negotiable quotes.
 }
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -332,14 +259,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('quote-management/negotiable-quote-delete-error', (payload) => {
   console.log('quote-management/negotiable-quote-delete-error event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `quote-management/negotiable-quote-deleted` (emits)
 
@@ -354,30 +275,20 @@ Emitted after `deleteQuote()` deletes one or more negotiable quotes.
 }
 ```
 
-
-
 #### When triggered
 
 - After calling `deleteQuote()`
 - After successful quote deletion
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/negotiable-quote-deleted', (payload) => {
-  console.log(`Quote ${payload.data.quoteId} deleted`);
-  removeQuoteFromList(payload.data.quoteId);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/negotiable-quote-deleted', ({ deletedQuoteUids, resultStatus }) => {
+  console.log('Quotes deleted:', deletedQuoteUids, 'status:', resultStatus);
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/negotiable-quote-requested` (emits)
 
@@ -400,31 +311,20 @@ Emitted after `requestNegotiableQuote()` creates a negotiable quote from a cart.
 
 See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
-
-
 #### When triggered
 
 - After calling `requestNegotiableQuote()`
 - When buyer submits quote request
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/negotiable-quote-requested', (payload) => {
-  console.log(`Quote ${payload.data.quoteName} requested`);
-  showSuccessMessage('Quote request submitted');
-  redirectToQuoteDetails(payload.data.quoteId);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/negotiable-quote-requested', ({ quote, input }) => {
+  console.log('Quote requested:', { quoteUid: quote?.uid, quoteName: input.quoteName, cartId: input.cartId });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/permissions` (emits and listens)
 
@@ -436,31 +336,21 @@ Emitted when the permissions state for Quote Management changes (for example, af
 typeof state.permissions
 ```
 
-
-
 #### When triggered
 
 - After permission changes
 - On user role updates
 - After company context switches
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/permissions', (payload) => {
-  const canRequestQuote = payload.data.permissions.includes('request_quote');
-  updateQuoteActions(canRequestQuote);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/permissions', (permissions) => {
+  console.log('Quote Management permissions updated:', permissions);
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quantities-updated` (emits and listens)
 
@@ -480,30 +370,20 @@ Emitted after `updateQuantities()` updates item quantities in a negotiable quote
 
 See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
-
-
 #### When triggered
 
 - After calling `updateQuantities()`
 - When buyer or merchant updates quantities
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quantities-updated', (payload) => {
-  console.log(`Quantities updated for quote ${payload.data.quoteId}`);
-  refreshQuoteTotals();
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quantities-updated', ({ quote, input }) => {
+  console.log('Quantities updated:', { quoteUid: quote.uid, items: input.items });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-data` (emits and listens)
 
@@ -520,31 +400,21 @@ Emitted when negotiable quote data is loaded or updated.
 
 See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
-
-
 #### When triggered
 
 - After loading quote details
 - After any quote modification
 - After status changes
 
-
-
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-data', (payload) => {
-  console.log('Quote data updated:', payload.data);
-  updateQuoteDisplay(payload.data);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-data', ({ quote, permissions }) => {
+  console.log('Quote data updated:', { quoteUid: quote.uid, permissions });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-data/error` (emits)
 
@@ -558,10 +428,6 @@ Emitted when Quote Management fails to load negotiable quote data during initial
 }
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -569,14 +435,8 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('quote-management/quote-data/error', (payload) => {
   console.log('quote-management/quote-data/error event received:', payload);
-  // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `quote-management/quote-data/initialized` (emits)
 
@@ -602,21 +462,15 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-data/initialized', (payload) => {
-  console.log('Quote initialized:', payload.data.number);
-  setupQuoteWorkflow(payload.data);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-data/initialized', ({ quote, permissions }) => {
+  console.log('Quote data initialized:', { quoteUid: quote.uid, permissions });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-duplicated` (emits and listens)
 
@@ -646,21 +500,20 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-duplicated', (payload) => {
-  console.log(`Quote duplicated: ${payload.data.originalQuoteId} -> ${payload.data.newQuoteId}`);
-  redirectToQuote(payload.data.newQuoteId);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-duplicated', ({ quote, input, hasOutOfStockItems }) => {
+  console.log('Quote duplicated:', {
+    newQuoteUid: quote.uid,
+    originalQuoteUid: input.quoteUid,
+    duplicatedQuoteUid: input.duplicatedQuoteUid,
+    hasOutOfStockItems,
+  });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-items-removed` (emits and listens)
 
@@ -687,21 +540,15 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-items-removed', (payload) => {
-  console.log(`Removed ${payload.data.removedItemIds.length} items`);
-  refreshQuoteItemsList();
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-items-removed', ({ quote, removedItemUids }) => {
+  console.log('Quote items removed:', { quoteUid: quote.uid, removedItemUids });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-renamed` (emits and listens)
 
@@ -731,21 +578,15 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-renamed', (payload) => {
-  console.log(`Quote renamed to: ${payload.data.newName}`);
-  updateQuoteHeader(payload.data.newName);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-renamed', ({ quote, input }) => {
+  console.log('Quote renamed:', { quoteUid: quote.uid, quoteName: input.quoteName, quoteComment: input.quoteComment });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-sent-for-review` (emits and listens)
 
@@ -775,22 +616,15 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-sent-for-review', (payload) => {
-  console.log(`Quote ${payload.data.quoteId} sent for review`);
-  showSuccessMessage('Quote submitted for merchant review');
-  updateQuoteStatus('pending');
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-sent-for-review', ({ quote, input }) => {
+  console.log('Quote sent for review:', { quoteUid: quote.uid, input });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-template-data` (emits and listens)
 
@@ -817,21 +651,15 @@ See [`NegotiableQuoteTemplateModel`](#negotiablequotetemplatemodel) for full typ
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-template-data', (payload) => {
-  console.log('Template data updated:', payload.data);
-  updateTemplateDisplay(payload.data);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-template-data', ({ quoteTemplate, permissions }) => {
+  console.log('Template data updated:', { templateUid: quoteTemplate.uid, permissions });
 });
 ```
-
----
-
-
-
-
-
 
 ### `quote-management/quote-template-data/error` (emits)
 
@@ -856,7 +684,6 @@ import { events } from '@dropins/tools/event-bus.js';
 
 events.on('quote-management/quote-template-data/error', (payload) => {
   console.log('quote-management/quote-template-data/error event received:', payload);
-  // Add your custom logic here
 });
 ```
 
@@ -886,12 +713,13 @@ Emitted after `deleteQuoteTemplate()` deletes a quote template.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-template-deleted', (payload) => {
-  console.log(`Template ${payload.data.templateId} deleted`);
-  removeTemplateFromList(payload.data.templateId);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-template-deleted', ({ templateId }) => {
+  console.log('Quote template deleted:', templateId);
 });
 ```
 
@@ -923,321 +751,17 @@ Emitted after `generateQuoteFromTemplate()` creates a new negotiable quote from 
 
 
 
-#### Example 1: Basic template generation
-
-```js
-events.on('quote-management/quote-template-generated', (payload) => {
-  console.log(`Quote ${payload.data.quoteId} generated from template ${payload.data.templateId}`);
-  redirectToQuote(payload.data.quoteId);
-});
-```
-
-#### Example 2: Template catalog with quick-quote generation
+#### Example
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
-import { generateQuoteFromTemplate, getQuoteTemplates } from '@dropins/storefront-quote-management/api.js';
 
-class QuoteTemplateCatalog {
-  constructor(containerElement) {
-    this.container = containerElement;
-    this.templates = [];
-    
-    // Listen for template generation
-    events.on('quote-management/quote-template-generated', this.handleQuoteGenerated.bind(this));
-    
-    this.init();
-  }
-  
-  async init() {
-    try {
-      // Load all available templates
-      const response = await getQuoteTemplates({
-        currentPage: 1,
-        pageSize: 50,
-        sort: { field: 'name', direction: 'ASC' }
-      });
-      
-      this.templates = response.items;
-      this.render();
-      
-    } catch (error) {
-      this.showError('Failed to load quote templates');
-      console.error(error);
-    }
-  }
-  
-  render() {
-    this.container.innerHTML = `
-      <div class="template-catalog">
-        <h2>Quote Templates</h2>
-        <div class="template-grid">
-          ${this.templates.map(template => this.renderTemplateCard(template)).join('')}
-        </div>
-      </div>
-    `;
-    
-    // Attach event listeners
-    this.container.querySelectorAll('.generate-quote-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const templateUid = e.target.dataset.templateUid;
-        this.generateQuote(templateUid);
-      });
-    });
-  }
-  
-  renderTemplateCard(template) {
-    return `
-      <div class="template-card" data-template-uid="${template.uid}">
-        <div class="template-header">
-          <h3>${template.name}</h3>
-          <span class="item-count">${template.items.length} items</span>
-        </div>
-        <div class="template-meta">
-          <span class="total">Total: ${template.prices.grandTotal.value}</span>
-          <span class="date">Created: ${formatDate(template.createdAt)}</span>
-        </div>
-        <div class="template-actions">
-          <button 
-            class="generate-quote-btn" 
-            data-template-uid="${template.uid}">
-            Generate Quote
-          </button>
-          <button 
-            class="view-template-btn" 
-            onclick="viewTemplate('${template.uid}')">
-            View Details
-          </button>
-        </div>
-      </div>
-    `;
-  }
-  
-  async generateQuote(templateUid) {
-    const template = this.templates.find(t => t.uid === templateUid);
-    if (!template) return;
-    
-    try {
-      // Show loading state
-      this.showLoadingOverlay(`Generating quote from "${template.name}"...`);
-      
-      // Generate quote from template
-      await generateQuoteFromTemplate(templateUid);
-      
-      // Event handler will redirect when complete
-      
-    } catch (error) {
-      this.hideLoadingOverlay();
-      this.showError('Failed to generate quote: ' + error.message);
-      console.error(error);
-    }
-  }
-  
-  handleQuoteGenerated(payload) {
-    const { templateId, quoteId } = payload.data;
-    
-    this.hideLoadingOverlay();
-    
-    // Get template name for notification
-    const template = this.templates.find(t => t.uid === templateId);
-    const templateName = template ? template.name : 'template';
-    
-    // Show success notification
-    this.showSuccess(`Quote generated from "${templateName}"`);
-    
-    // Track analytics
-    trackAnalytics('quote_generated_from_template', {
-      templateId,
-      quoteId,
-      templateName
-    });
-    
-    // Redirect to the new quote for editing
-    setTimeout(() => {
-      window.location.href = `/quotes/${quoteId}`;
-    }, 1500);
-  }
-  
-  showLoadingOverlay(message) {
-    const overlay = document.createElement('div');
-    overlay.id = 'loading-overlay';
-    overlay.innerHTML = `
-      <div class="loading-spinner"></div>
-      <div class="loading-message">${message}</div>
-    `;
-    document.body.appendChild(overlay);
-  }
-  
-  hideLoadingOverlay() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.remove();
-  }
-  
-  showSuccess(message) {
-    this.showToast(message, 'success');
-  }
-  
-  showError(message) {
-    this.showToast(message, 'error');
-  }
-  
-  showToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-  }
-}
-
-// Initialize template catalog
-const catalog = new QuoteTemplateCatalog(document.querySelector('#template-catalog'));
-```
-
-#### Example 3: Recurring order workflow using templates
-
-```js
-import { events } from '@dropins/tools/event-bus.js';
-import { generateQuoteFromTemplate, submitNegotiableQuote } from '@dropins/storefront-quote-management/api.js';
-
-/**
- * Automated recurring order system using quote templates
- * Useful for customers who regularly order the same items
- */
-class RecurringOrderManager {
-  constructor() {
-    this.activeOrders = [];
-    
-    events.on('quote-management/quote-template-generated', this.handleGeneration.bind(this));
-    events.on('quote-management/quote-sent-for-review', this.handleSubmission.bind(this));
-  }
-  
-  /**
-   * Set up a recurring order schedule
-   */
-  async scheduleRecurringOrder(templateUid, schedule) {
-    const recurringOrder = {
-      templateUid,
-      schedule, // e.g., { frequency: 'monthly', dayOfMonth: 1 }
-      status: 'active',
-      lastGenerated: null,
-      nextGeneration: this.calculateNextDate(schedule)
-    };
-    
-    // Save to user preferences
-    await this.saveRecurringOrder(recurringOrder);
-    
-    // Set up next execution
-    this.scheduleNextGeneration(recurringOrder);
-    
-    return recurringOrder;
-  }
-  
-  /**
-   * Generate quote from template on schedule
-   */
-  async generateScheduledQuote(templateUid, autoSubmit = true) {
-    try {
-      console.log(`Generating scheduled quote from template ${templateUid}`);
-      
-      // Generate the quote
-      await generateQuoteFromTemplate(templateUid);
-      
-      // Store auto-submit preference
-      if (autoSubmit) {
-        this.pendingAutoSubmits.add(templateUid);
-      }
-      
-    } catch (error) {
-      console.error('Failed to generate scheduled quote:', error);
-      
-      // Notify user of failure
-      this.notifyGenerationFailure(templateUid, error);
-    }
-  }
-  
-  /**
-   * Handle successful quote generation
-   */
-  async handleGeneration(payload) {
-    const { templateId, quoteId } = payload.data;
-    
-    console.log(`Quote ${quoteId} generated from template ${templateId}`);
-    
-    // Check if this was an automated generation
-    if (this.pendingAutoSubmits.has(templateId)) {
-      // Automatically submit for review
-      try {
-        await submitNegotiableQuote(quoteId);
-        console.log(`Auto-submitted quote ${quoteId} for review`);
-        
-        this.pendingAutoSubmits.delete(templateId);
-        
-      } catch (error) {
-        console.error('Failed to auto-submit quote:', error);
-        
-        // Notify user to manually submit
-        this.notifyManualSubmissionNeeded(quoteId);
-      }
-    }
-    
-    // Update recurring order record
-    await this.updateRecurringOrderHistory(templateId, quoteId);
-  }
-  
-  /**
-   * Handle quote submission
-   */
-  handleSubmission(payload) {
-    const { quoteId } = payload.data;
-    
-    // Send confirmation email
-    this.sendSubmissionConfirmation(quoteId);
-    
-    // Update dashboard
-    this.updateDashboard();
-  }
-  
-  calculateNextDate(schedule) {
-    const now = new Date();
-    switch (schedule.frequency) {
-      case 'weekly':
-        return new Date(now.setDate(now.getDate() + 7));
-      case 'monthly':
-        return new Date(now.setMonth(now.getMonth() + 1, schedule.dayOfMonth));
-      case 'quarterly':
-        return new Date(now.setMonth(now.getMonth() + 3, schedule.dayOfMonth));
-      default:
-        return null;
-    }
-  }
-  
-  scheduleNextGeneration(recurringOrder) {
-    const delay = recurringOrder.nextGeneration - new Date();
-    setTimeout(() => {
-      this.generateScheduledQuote(recurringOrder.templateUid, true);
-    }, delay);
-  }
-  
-  // Helper methods
-  pendingAutoSubmits = new Set();
-  
-  async saveRecurringOrder(order) { /* Save to backend */ }
-  async updateRecurringOrderHistory(templateId, quoteId) { /* Update history */ }
-  notifyGenerationFailure(templateId, error) { /* Send notification */ }
-  notifyManualSubmissionNeeded(quoteId) { /* Send notification */ }
-  sendSubmissionConfirmation(quoteId) { /* Send email */ }
-  updateDashboard() { /* Refresh UI */ }
-}
-
-// Initialize recurring order system
-const recurringOrders = new RecurringOrderManager();
-
-// Example: Set up monthly recurring order
-recurringOrders.scheduleRecurringOrder('template-uid-123', {
-  frequency: 'monthly',
-  dayOfMonth: 1
+const listener = events.on('quote-management/quote-template-generated', ({ quoteId }) => {
+  console.log('Quote generated from template:', quoteId);
 });
+
+// Later, to clean up:
+// listener.off();
 ```
 
 
@@ -1281,12 +805,13 @@ See [`NegotiableQuoteTemplatesListModel`](#negotiablequotetemplateslistmodel) fo
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/quote-templates-data', (payload) => {
-  console.log(`${payload.data.totalCount} templates loaded`);
-  updateTemplatesList(payload.data.templates);
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/quote-templates-data', ({ quoteTemplates }) => {
+  console.log(`${quoteTemplates.totalCount} templates loaded`);
 });
 ```
 
@@ -1325,13 +850,13 @@ See [`NegotiableQuoteModel`](#negotiablequotemodel) for full type definition.
 
 
 
-#### Example: Example
+#### Example
 
 ```js
-events.on('quote-management/shipping-address-set', (payload) => {
-  console.log('Shipping address set:', payload.data.address);
-  refreshShippingMethods();
-  recalculateQuoteTotals();
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quote-management/shipping-address-set', ({ quote, input }) => {
+  console.log('Shipping address set:', { quoteUid: quote.uid, input });
 });
 ```
 
