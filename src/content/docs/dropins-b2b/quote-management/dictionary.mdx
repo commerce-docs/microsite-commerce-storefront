@@ -17,31 +17,39 @@ The **Quote Management dictionary** contains all user-facing text, labels, and m
 Dictionaries use the **i18n (internationalization)** pattern, where each text string is identified by a unique key path.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.0.0-beta5</strong>
+<strong>Version: 1.0.0</strong>
 </div>
 
 ## How to customize
 
-Override dictionary values during drop-in initialization. The drop-in deep-merges your custom values with the defaults.
+The Quote Management drop-in dictionary comes from the default `en_US` dictionary shipped in the Quote Management repo (`src/i18n/en_US.json`).
+
+In the current Quote Management implementation, the `langDefinitions` value passed into `initialize.init()` is stored in config but is not applied to the UI provider that renders the containers. If you need to override dictionary values without forking the drop-in, provide your own `UIProvider` and `Render` wrapper with a full `langDefinitions` object.
 
 ```javascript
-import { initialize } from '@dropins/storefront-quote-management';
+import { Render } from '@adobe-commerce/elsie/lib';
+import { UIProvider } from '@adobe-commerce/elsie/components';
+import { ItemsQuoted } from '@dropins/storefront-quote-management/containers/ItemsQuoted.js';
 
-await initialize({
-  langDefinitions: {
-    en_US: {
-      "ConfirmationModal": {
-        "cancel": {
-          "0": "Custom value",
-          "1": "Custom value"
-        }
-      }
-    }
-  }
-});
+// Copy the defaults from the JSON block on this page, then change the keys you need.
+const langDefinitions = {
+  default: {
+    ConfirmationModal: {
+      cancel: 'Custom value',
+      confirm: 'Confirm',
+    },
+    // ... include the rest of the default dictionary ...
+  },
+};
+
+const provider = new Render(<UIProvider lang="en_US" langDefinitions={langDefinitions} />);
+
+await provider.render(ItemsQuoted, {
+  // container props
+})(block);
 ```
 
-You only need to include the keys you want to change. For multi-language support and advanced patterns, see the [Dictionary customization guide](/dropins/all/dictionaries/).
+To avoid missing strings, start from the defaults on this page and change only the keys you need. For multi-language support and advanced patterns, see the [Dictionary customization guide](/dropins/all/dictionaries/).
 
 ## Default keys and values
 
