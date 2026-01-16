@@ -732,6 +732,7 @@ export function generateSidebar() {
           label: 'B2B Commerce blocks',
           collapsed: true,
           items: [
+            { label: 'Overview', link: '/merchants/blocks/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
