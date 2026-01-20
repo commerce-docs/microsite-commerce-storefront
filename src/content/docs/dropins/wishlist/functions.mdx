@@ -9,32 +9,6 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
-{/*
-  ⚠️ TEMPLATE USAGE GUIDE ⚠️
-  
-  This template is used by scripts/@generate-function-docs.js to generate API function documentation.
-  
-  Placeholders used in this template:
-  - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
-  - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
-  - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
-  - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
-  
-  The script handles:
-  - Reading function .mdx files from src/api directories in source repositories
-  - Cleaning Storybook imports and metadata
-  - Combining all functions into a single documentation page
-  
-  The template and script must be kept in sync.
-  
-  HEADING HIERARCHY:
-  H1: "DROPIN_NAME functions" (from title)
-  H2: Individual function names
-  H3: Examples, Events, Returns (subsection headings)
-  Content flow: [Signature code block] → [Parameters table] → Examples → Events → Returns
-*/}
-
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
@@ -42,10 +16,8 @@ import { Aside } from '@astrojs/starlight/components';
 The Wishlist drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 2.0.1</strong>
+<strong>Version: 3.0.0-beta1</strong>
 </div>
-
-{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
 <TableWrapper nowrap={[0]}>
 
@@ -55,6 +27,8 @@ The Wishlist drop-in provides API functions that enable you to programmatically 
 | [`getStoreConfig`](#getstoreconfig) | Retrieves the store configuration, which includes various settings and preferences for the store.. |
 | [`getWishlistById`](#getwishlistbyid) | Retrieves a wishlist by its ID. |
 | [`getWishlists`](#getwishlists) | Retrieves all wishlists associated with a user. |
+| [`initializeWishlist`](#initializewishlist) | API function for the drop-in.. |
+| [`mergeWishlists`](#mergewishlists) | Merge a wishlist from local storage with one belonging to a registered user. |
 | [`removeProductsFromWishlist`](#removeproductsfromwishlist) | Remove products from a user's wishlist. |
 | [`resetWishlist`](#resetwishlist) | Resets the wishlist by clearing the current wishlist ID and marking the user as unauthenticated. |
 | [`updateProductsInWishlist`](#updateproductsinwishlist) | Update the quantity of products in a user's wishlist. |
@@ -63,7 +37,7 @@ The Wishlist drop-in provides API functions that enable you to programmatically 
 
 ## addProductsToWishlist
 
-The `addProductsToWishlist` function allows you to add products to a user's wishlist. This function is typically used when a user wants to save a product for later purchase. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/add-products-to-wishlist/" text="addProductsToWishlist" /> mutation.
+The `addProductsToWishlist` function allows you to add products to a user's wishlist. This function is typically used when a user wants to save a product for later purchase. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/wishlist/mutations/add-products-to-wishlist`/" text="addProductsToWishlist" /> mutation.
 
 ```ts
 const addProductsToWishlist = async (
@@ -89,8 +63,6 @@ Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-lis
 
 Returns [`Wishlist`](#wishlist) or `null`.
 
----
-
 ## getStoreConfig
 
 The `getStoreConfig` function retrieves the store configuration, which includes various settings and preferences for the store.
@@ -107,11 +79,9 @@ Does not emit any drop-in events.
 
 Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
 
----
-
 ## getWishlistById
 
-The `getWishlistById` function retrieves a wishlist by its ID. This is useful for accessing a specific user's wishlist. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/queries/wishlist/" text="wishlist_v2" /> query.
+The `getWishlistById` function retrieves a wishlist by its ID. This is useful for accessing a specific user's wishlist. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/wishlist/queries/wishlist`/" text="wishlist_v2" /> query.
 
 ```ts
 const getWishlistById = async (
@@ -135,8 +105,6 @@ Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-lis
 
 Returns `void | Wishlist | null`. See [`Wishlist`](#wishlist).
 
----
-
 ## getWishlists
 
 The `getWishlists` function retrieves all wishlists associated with a user. This is useful for displaying all wishlists a user has created.
@@ -153,11 +121,35 @@ Does not emit any drop-in events.
 
 Returns `void | Wishlist[] | null`. See [`Wishlist`](#wishlist).
 
+## initializeWishlist
+
+```ts
+const initializeWishlist = async (): Promise<Wishlist | null>
+```
+
+### Events
+
+Emits the following events: [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens), [`wishlist/initialized`](/dropins/wishlist/events/#wishlistinitialized-emits).
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null`.
+
+## mergeWishlists
+
+The `mergeWishlists` function allows you to merge a wishlist from local storage with one belonging to a registered user. This is useful when a user wants to synchronize both local and remote wishlists into one wishlist after logging in.
+
+### Signature
+
+```typescript
+function mergeWishlists(wishlist: Wishlist): Promise<Wishlist | null>
+```
+
 ---
 
 ## removeProductsFromWishlist
 
-The `removeProductsFromWishlist` function allows you to remove products from a user's wishlist. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/remove-products-from-wishlist/" text="removeProductsFromWishlist" /> mutation.
+The `removeProductsFromWishlist` function allows you to remove products from a user's wishlist. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/wishlist/mutations/remove-products-from-wishlist`/" text="removeProductsFromWishlist" /> mutation.
 
 ```ts
 const removeProductsFromWishlist = async (
@@ -181,8 +173,6 @@ Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-lis
 
 Returns [`Wishlist`](#wishlist) or `null`.
 
----
-
 ## resetWishlist
 
 Resets the wishlist by clearing the current wishlist ID and marking the user as unauthenticated. It returns a promise that resolves to `null`.
@@ -199,11 +189,9 @@ Does not emit any drop-in events.
 
 Returns [`Wishlist`](#wishlist) or `null`.
 
----
-
 ## updateProductsInWishlist
 
-The `updateProductsInWishlist` function allows you to update the quantity of products in a user's wishlist. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/update-products-in-wishlist/" text="updateProductsInWishlist" /> mutation.
+The `updateProductsInWishlist` function allows you to update the quantity of products in a user's wishlist. The function calls the <Link href="https://developer.adobe.`com/commerce/webapi/graphql/schema/wishlist/mutations/update-products-in-wishlist`/" text="updateProductsInWishlist" /> mutation.
 
 ```ts
 const updateProductsInWishlist = async (
@@ -211,7 +199,7 @@ const updateProductsInWishlist = async (
 ): Promise<Wishlist | null>
 ```
 
-<TableWrapper nowrap={[0,1]}>
+<TableWrapper nowrap={[0]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -231,8 +219,6 @@ Does not emit any drop-in events.
 
 Returns [`Wishlist`](#wishlist) or `null`.
 
----
-
 ## Data Models
 
 The following data models are used by functions in this drop-in.
@@ -251,7 +237,7 @@ interface StoreConfigModel {
 
 ### Wishlist
 
-The `Wishlist` object is returned by the following functions: [`addProductsToWishlist`](#addproductstowishlist), [`getWishlistById`](#getwishlistbyid), [`getWishlists`](#getwishlists), [`removeProductsFromWishlist`](#removeproductsfromwishlist), [`resetWishlist`](#resetwishlist), [`updateProductsInWishlist`](#updateproductsinwishlist).
+The `Wishlist` object is returned by the following functions: [`addProductsToWishlist`](#addproductstowishlist), [`getWishlistById`](#getwishlistbyid), [`getWishlists`](#getwishlists), [`initializeWishlist`](#initializewishlist), [`mergeWishlists`](#mergewishlists), [`removeProductsFromWishlist`](#removeproductsfromwishlist), [`resetWishlist`](#resetwishlist), [`updateProductsInWishlist`](#updateproductsinwishlist).
 
 ```ts
 interface Wishlist {

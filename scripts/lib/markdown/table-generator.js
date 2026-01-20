@@ -11,6 +11,8 @@
  * - Consistent column formatting
  */
 
+import { simplifyType } from '../react/props-extractor.js';
+
 /**
  * Sanitize text for safe use in markdown table cells
  * 
@@ -113,8 +115,34 @@ export function generatePropertyTable(items, options = {}) {
 
     // Handle empty items
     if (!items || items.length === 0) {
+        // Return a properly formatted table with TableWrapper and headers
+        let table = '';
+
+        // Add TableWrapper if nowrap specified
+        if (nowrapColumns.length > 0) {
+            const nowrapArray = JSON.stringify(nowrapColumns);
+            table += `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
+        }
+
+        // Add header row
+        table += includeRequired
+            ? '| Parameter | Type | Req? | Description |\n'
+            : '| Parameter | Type | Description |\n';
+
+        table += includeRequired
+            ? '|---|---|---|---|\n'
+            : '|---|---|---|\n';
+
+        // Add single row with message
         const requiredCol = includeRequired ? ' - |' : '';
-        return `| ${emptyMessage} | - |${requiredCol} - |`;
+        table += `| ${emptyMessage} | - |${requiredCol} - |\n`;
+
+        // Close TableWrapper if opened
+        if (nowrapColumns.length > 0) {
+            table += '\n</TableWrapper>';
+        }
+
+        return table;
     }
 
     // Start with TableWrapper if nowrap columns specified
@@ -275,21 +303,42 @@ export function generateConfigTable(options) {
  * @returns {string} Markdown table
  */
 export function generateSlotsTable(slots) {
+    // Determine which columns should nowrap based on type length
+    // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+    const hasOnlyShortTypes = slots && slots.length > 0 && slots.every(slot => {
+        if (!slot.type) return true;
+        const simplifiedType = simplifyType(slot.type);
+        return simplifiedType.length <= 20;
+    });
+
+    const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+    const nowrapArray = JSON.stringify(nowrapColumns);
+
     if (!slots || slots.length === 0) {
-        return '| No slots | - | - | - |\n| --- | --- | --- | --- |';
+        // Return properly formatted empty table with TableWrapper
+        let table = `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
+        table += '| Slot | Type | Required | Description |\n';
+        table += '|------|------|----------|-------------|\n';
+        table += '| No slots | - | - | - |\n';
+        table += '\n</TableWrapper>';
+        return table;
     }
 
-    let table = '| Slot | Type | Required | Description |\n';
+    let table = `<TableWrapper nowrap={${nowrapArray}}>\n\n`;
+    table += '| Slot | Type | Required | Description |\n';
     table += '|------|------|----------|-------------|\n';
 
     for (const slot of slots) {
         const name = `\`${slot.name}\``;
-        const type = `\`${sanitizeText(slot.type)}\``;
+        // Simplify complex slot types before sanitizing
+        const simplifiedType = simplifyType(slot.type);
+        const type = `\`${sanitizeText(simplifiedType)}\``;
         const required = slot.required ? 'Yes' : 'No';
         const description = sanitizeText(slot.description || '');
         table += `| ${name} | ${type} | ${required} | ${description} |\n`;
     }
 
+    table += '\n</TableWrapper>';
     return table;
 }
 

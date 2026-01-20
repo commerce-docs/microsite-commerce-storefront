@@ -32,7 +32,7 @@ import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadSlotEnrichments } from './lib/enrichment.js';
 import { updateSidebarForSlots } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { toKebabCase, cleanVersion, wrapCodeNames } from './lib/utils.js';
 
 // Import Phase 2 shared libraries
 import { extractPropsFromComponent, extractSlotsSection } from './lib/react/props-extractor.js';
@@ -125,8 +125,14 @@ function scanForSlots(repoPath) {
 
 /**
  * Generate slots content for documentation
+ * 
+ * @param {Array} containers - Array of containers with slots
+ * @param {string} repoName - Drop-in name
+ * @param {Object} repoConfig - Repository configuration
+ * @param {Object} enrichmentData - Optional enrichment data for slots
+ * @returns {string} Generated MDX content for slots
  */
-function generateSlotsContent(containers) {
+function generateSlotsContent(containers, repoName, repoConfig, enrichmentData = null) {
     if (containers.length === 0) {
         return ''; // No additional content needed for empty slots
     }
@@ -135,12 +141,23 @@ function generateSlotsContent(containers) {
 
     for (const container of containers) {
         content += `## ${container.containerName} slots\n\n`;
-        content += `The slots for the \`${container.containerName}\` container allow you to customize its appearance and behavior.\n\n`;
-        content += '```js\n';
-        content += `interface ${container.containerName}Props\n\n`;
-        content += 'slots?: {\n';
-        content += container.slotsInterface;
-        content += '\n};\n';
+        const slotIntro = wrapCodeNames(`The slots for the ${container.containerName} container allow you to customize its appearance and behavior.`);
+        content += `${slotIntro}\n\n`;
+        content += '```typescript\n';
+        content += `interface ${container.containerName}Props {\n`;
+        content += '  slots?: {\n';
+
+        // Normalize and indent the slots interface content
+        const indentedSlots = container.slotsInterface
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line) // Remove empty lines
+            .map(line => `    ${line}`) // Add consistent 4-space indentation
+            .join('\n');
+        content += indentedSlots;
+
+        content += '\n  };\n';
+        content += '}\n';
         content += '```\n\n';
 
         // Parse individual slots for detailed documentation sections
@@ -152,13 +169,49 @@ function generateSlotsContent(containers) {
             slots.push(match[1]);
         }
 
-        // Generate placeholder sections for each slot
+        // Generate sections for each slot
         if (slots.length > 0) {
             for (const slotName of slots) {
                 content += `### ${slotName} slot\n\n`;
-                content += `The \`${slotName}\` slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the \`${container.containerName}\` container.\n\n`;
+
+                // Use enrichment data if available
+                const slotEnrichment = enrichmentData?.[slotName];
+
+                if (slotEnrichment?.description) {
+                    // Use enriched description (wrap code names)
+                    content += `${wrapCodeNames(slotEnrichment.description)}\n\n`;
+
+                    // Add context properties section if available
+                    if (slotEnrichment.context_properties && Object.keys(slotEnrichment.context_properties).length > 0) {
+                        content += `#### Context properties\n\n`;
+                        content += `The slot receives the following context properties:\n\n`;
+
+                        for (const [propName, propData] of Object.entries(slotEnrichment.context_properties)) {
+                            content += `- **\`${propName}\`** - ${propData.description}\n`;
+                        }
+                        content += `\n`;
+                    }
+
+                    // Add usage scenarios if available
+                    if (slotEnrichment.usage_scenarios && slotEnrichment.usage_scenarios.length > 0) {
+                        content += `#### Usage scenarios\n\n`;
+                        for (const scenario of slotEnrichment.usage_scenarios) {
+                            content += `- ${scenario}\n`;
+                        }
+                        content += `\n`;
+                    }
+                } else {
+                    // Fallback to generic description
+                    const genericDesc = wrapCodeNames(`The ${slotName} slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the ${container.containerName} container.`);
+                    content += `${genericDesc}\n\n`;
+                }
+
+                // Add example with proper imports based on boilerplate
+                content += `#### Example\n\n`;
                 content += '```js\n';
-                content += ` provider.render(${container.containerName}, {\n`;
+                content += `import { render as provider } from '${repoConfig.packageName}/render.js';\n`;
+                content += `import { ${container.containerName} } from '${repoConfig.packageName}/containers/${container.containerName}.js';\n\n`;
+                content += `await provider.render(${container.containerName}, {\n`;
                 content += '  slots: {\n';
                 content += `    ${slotName}: (ctx) => {\n`;
                 content += '      // Your custom implementation\n';
@@ -167,12 +220,10 @@ function generateSlotsContent(containers) {
                 content += '      ctx.appendChild(element);\n';
                 content += '    }\n';
                 content += '  }\n';
-                content += '});\n';
+                content += '})(block);\n';
                 content += '```\n\n';
             }
         }
-
-        content += '---\n\n';
     }
 
     return content;
@@ -186,14 +237,9 @@ function generateSummaryTable(containers) {
         return '';
     }
 
-    let table = '<table>\n';
-    table += '<thead>\n';
-    table += '<tr>\n';
-    table += '<th style="white-space: nowrap;">Container</th>\n';
-    table += '<th>Slots</th>\n';
-    table += '</tr>\n';
-    table += '</thead>\n';
-    table += '<tbody>\n';
+    let table = '<TableWrapper nowrap={[0]}>\n\n';
+    table += '| Container | Slots |\n';
+    table += '|-----------|-------|\n';
 
     for (const container of containers) {
         // Parse slot names from the interface
@@ -203,23 +249,18 @@ function generateSummaryTable(containers) {
         const slots = [];
 
         while ((match = slotPattern.exec(container.slotsInterface)) !== null) {
-            slots.push(`<code>${match[1]}</code>`);
+            slots.push(`\`${match[1]}\``);
         }
 
         const slotsList = slots.length > 0 ? slots.join(', ') : 'None';
 
         // Create anchor link to the container's section
         const anchorId = `${container.containerName.toLowerCase()}-slots`;
-        const containerLink = `<a href="#${anchorId}"><code>${container.containerName}</code></a>`;
 
-        table += '<tr>\n';
-        table += `<td style="white-space: nowrap;">${containerLink}</td>\n`;
-        table += `<td>${slotsList}</td>\n`;
-        table += '</tr>\n';
+        table += `| [\`${container.containerName}\`](#${anchorId}) | ${slotsList} |\n`;
     }
 
-    table += '</tbody>\n';
-    table += '</table>\n';
+    table += '\n</TableWrapper>\n\n';
 
     return table;
 }
@@ -242,7 +283,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
 
     // Generate summary table, examples, and detailed content
     const summaryTable = generateSummaryTable(containers);
-    const slotsContent = generateSlotsContent(containers);
+    const slotsContent = generateSlotsContent(containers, repoName, repoConfig, enrichmentData);
 
     // Generate intro text based on whether slots exist
     let introText;
@@ -255,7 +296,7 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
             introText = `${baseIntro}\n\nThis drop-in wraps the Adobe Payment Services SDK (\`@adobe-commerce/payment-services-sdk\`), which renders secure payment forms directly into specified DOM elements. The SDK controls all UI rendering to maintain PCI (Payment Card Industry) compliance and security standards. You customize the payment forms through SDK configuration options (field placeholders, card type settings, callback handlers) passed to \`sdk.Payment.CreditCard.render()\`, not through the slot-based pattern other drop-ins use.`;
         } else {
             // Generic explanation for other dropins without slots
-            introText = `${baseIntro}\n\nThis drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the drop-in's feature set expands.`;
+            introText = `${baseIntro}\n\nThis drop-in provides functionality through API methods and configuration options rather than UI customization points. Slots may be added in future versions as the feature set for the drop-in expands.`;
         }
     } else {
         // Count total slots across all containers
@@ -266,24 +307,20 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
         }, 0);
 
         // Brief, focused intro for drop-ins with slots
-        const containerCount = containers.length;
-        const containerWord = containerCount === 1 ? 'container' : 'containers';
-        const slotWord = totalSlots === 1 ? 'slot' : 'slots';
-        introText = `The ${repoConfig.displayName} drop-in exposes **${totalSlots} ${slotWord}** in **${containerCount} ${containerWord}** for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
+        introText = `The ${repoConfig.displayName} drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).`;
     }
 
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(versionInfo.requested),
+        'DROPIN_VERSION': cleanVersion(version),
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
         'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example
         'COMPLEX_EXAMPLE': '', // Removed - each slot now has its own example
         'SLOTS_CONTENT': slotsContent,
-        'REPO_URL': repoConfig.gitUrl.replace('.git', ''),
-        'CONTAINER_COUNT': containers.length.toString()
+        'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
 }
 

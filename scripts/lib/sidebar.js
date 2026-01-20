@@ -6,7 +6,7 @@
  * locations in the navigation structure.
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -120,9 +120,116 @@ export function updateSidebarForSlots(dropinName, repoConfig) {
  * @returns {boolean} True if successful
  */
 export function updateSidebarForContainers(dropinName, repoConfig) {
-    // Don't add standalone Containers link - it's part of the collapsible groups
-    console.log(`  ℹ️  Sidebar entry for ${repoConfig.displayName} Containers is manually maintained`);
-    return true;
+    const configPath = join(projectRoot, 'astro.config.mjs');
+    let config = readFileSync(configPath, 'utf8');
+
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const containersDir = join(projectRoot, 'src/content/docs', basePath, dropinName, 'containers');
+
+    // Check if containers directory exists
+    if (!existsSync(containersDir)) {
+        console.log(`  ℹ️  No containers directory found for ${repoConfig.displayName}`);
+        return false;
+    }
+
+    // Get all container files except index.mdx
+    const containerFiles = readdirSync(containersDir)
+        .filter(file => file.endsWith('.mdx') && file !== 'index.mdx')
+        .sort();
+
+    if (containerFiles.length === 0) {
+        console.log(`  ℹ️  No container files to add to sidebar for ${repoConfig.displayName}`);
+        return false;
+    }
+
+    // Convert filenames to PascalCase labels (e.g., 'items-quoted.mdx' -> 'ItemsQuoted')
+    const containerEntries = containerFiles.map(file => {
+        const name = file.replace('.mdx', '');
+        const label = name.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join('');
+        const link = `/${basePath}/${dropinName}/containers/${name}/`;
+        return { label, link };
+    });
+
+    // Find the dropin section in the sidebar
+    const dropinPattern = new RegExp(
+        `(label:\\s*'${repoConfig.displayName}',\\s*collapsed:\\s*\\w+,\\s*items:\\s*\\[)([\\s\\S]*?)(\\]\\s*,\\s*}\\s*,\\s*\\{\\s*label:)`,
+        'm'
+    );
+
+    const match = config.match(dropinPattern);
+    if (!match) {
+        console.log(`  ⚠️  Could not find ${repoConfig.displayName} section in sidebar`);
+        return false;
+    }
+
+    const [fullMatch, beforeItems, itemsContent, afterItems] = match;
+
+    // Check if Containers section already exists
+    const containersPattern = /\{\s*label:\s*'Containers',\s*collapsed:\s*\w+,\s*items:\s*\[[\s\S]*?\],\s*\}/;
+    const hasContainersSection = containersPattern.test(itemsContent);
+
+    if (hasContainersSection) {
+        // Update existing Containers section
+        const updatedItems = itemsContent.replace(
+            containersPattern,
+            (containersMatch) => {
+                // Build the new containers items list
+                const items = [
+                    `{ label: 'Overview', link: '/${basePath}/${dropinName}/containers/' }`,
+                    ...containerEntries.map(entry => `{ label: '${entry.label}', link: '${entry.link}' }`)
+                ].join(',\n                              ');
+
+                return `{
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              ${items},
+                            ],
+                          }`;
+            }
+        );
+
+        const newConfig = config.replace(fullMatch, beforeItems + updatedItems + afterItems);
+        writeFileSync(configPath, newConfig, 'utf8');
+        console.log(`  ✅ Updated Containers section with ${containerEntries.length} containers for ${repoConfig.displayName}`);
+        return true;
+    } else {
+        // Containers section doesn't exist - create it
+        // Find where to insert (after Dictionary or Styles, before the closing bracket)
+        const insertAfterPattern = /(label:\s*'(?:Dictionary|Styles)',\s*link:.*?\},)/;
+        const insertMatch = itemsContent.match(insertAfterPattern);
+
+        if (!insertMatch) {
+            console.log(`  ⚠️  Could not find insertion point for Containers section`);
+            return false;
+        }
+
+        const items = [
+            `{ label: 'Overview', link: '/${basePath}/${dropinName}/containers/' }`,
+            ...containerEntries.map(entry => `{ label: '${entry.label}', link: '${entry.link}' }`)
+        ].join(',\n                              ');
+
+        const containersSection = `
+                          {
+                            label: 'Containers',
+                            collapsed: false,
+                            items: [
+                              ${items},
+                            ],
+                          },`;
+
+        const updatedItems = itemsContent.replace(
+            insertAfterPattern,
+            `$1${containersSection}`
+        );
+
+        const newConfig = config.replace(fullMatch, beforeItems + updatedItems + afterItems);
+        writeFileSync(configPath, newConfig, 'utf8');
+        console.log(`  ✅ Added Containers section with ${containerEntries.length} containers for ${repoConfig.displayName}`);
+        return true;
+    }
 }
 
 /**
