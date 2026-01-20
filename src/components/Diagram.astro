@@ -141,24 +141,32 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
         
-        // Trigger the zoom plugin to re-scan for images after our dynamic image is added
+        // FIX: Manually wire up zoom functionality to avoid 1-2 second lag
+        // DO NOT replace this with setTimeout/astro:after-swap - it causes lag!
+        // This approach directly opens the zoom modal without re-scanning all images
+        zoomButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Use blob URL for zoom (more reliable than data URI)
+          const imageSrc = img.dataset.blobUrl || img.src;
+          
+          // Find zoom modal when clicked (it exists by the time user clicks)
+          const zoomModal = document.querySelector('starlight-image-zoom-modal');
+          if (zoomModal && typeof zoomModal.open === 'function') {
+            zoomModal.open(imageSrc, img.alt || 'Mermaid diagram');
+          }
+        });
+        
+        // Clean up blob URL on page unload/navigation
         img.onload = () => {
-          // The blob URL needs to stay alive for the zoom modal to work
-          // Clean up on page unload or navigation
           window.addEventListener('beforeunload', () => {
             URL.revokeObjectURL(blobUrl);
           });
           
-          // Also clean up on Astro page navigation
           document.addEventListener('astro:before-preparation', () => {
             URL.revokeObjectURL(blobUrl);
           });
-          
-          // Trigger the zoom plugin to re-scan after our dynamic image is added
-          setTimeout(() => {
-            // Dispatch the same event the plugin listens to for re-scanning
-            document.dispatchEvent(new CustomEvent('astro:after-swap'));
-          }, 100);
         };
         
       } catch (error) {

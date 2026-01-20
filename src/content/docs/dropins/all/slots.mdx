@@ -6,7 +6,6 @@ description: Learn how to use drop-in slots to customize drop-in components.
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Diagram from '@components/Diagram.astro';
 import Vocabulary from '@components/Vocabulary.astro';
-import Aside from '@components/Aside.astro';
 import Callouts from '@components/Callouts.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
@@ -14,6 +13,24 @@ import Task from '@components/Task.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
 Using slots provides the deepest level of customization for drop-in components. Slots are built-in extension points in the drop-in. A slot provides a place in the drop-in component to add your own UI components and functions. This architecture makes it easy to change the default look, layout, and behavior. Let's learn how slots work.
+
+## Vocabulary
+
+<Vocabulary>
+
+### Container
+
+A component that manages or encapsulates other components. Containers handle logic, fetch data, manage state, and pass data to the UI components that are rendered on the screen.
+
+### Slot
+
+A component that provides placeholders to add other components. You can use the built-in slots for a drop-in component to add or remove UI components and functions. Or you can add your own additional slots.
+
+### Component
+
+In web development, this term is overused. That is why we need to be specific about the kind of component we are talking about. Here are a few examples of components from top to bottom: a **drop-in component** can contain multiple **container components** that can contain multiple **slot components**.
+
+</Vocabulary>
 
 ## Big Picture
 
@@ -23,37 +40,51 @@ The following functions are available to all slots:
 
 <Callouts>
 
-1. `prependSibling`: A function to prepend a new HTML element before the slot's content.
-1. `prependChild`: A function to prepend a new HTML element to the slot's content.
-1. `replaceWith`: A function to replace the slot's content with a new HTML element.
-1. `appendChild`: A function to append a new HTML element to the slot's content.
-1. `appendSibling`: A function to append a new HTML element after the slot's content.
-1. `remove`: A function to remove the slot from the DOM.
-1. `getSlotElement`: A function to get a slot element.
-1. `onChange`: A function to listen to changes in the slot's context.
-1. `dictionary`: JSON Object for the current locale. If the locale changes, the `dictionary` values change to reflect the values for the selected language.
+1. `prependSibling`: Prepends a new HTML element before the content of the slot.
+1. `prependChild`: Prepends a new HTML element to the content of the slot.
+1. `replaceWith`: Replaces the content of the slot with a new HTML element.
+1. `appendChild`: Appends a new HTML element to the content of the slot.
+1. `appendSibling`: Appends a new HTML element after the content of the slot.
+1. `remove`: Removes the slot from the DOM.
+1. `getSlotElement`: Gets a slot element.
+1. `onChange`: Listens to changes in the context of the slot.
+1. `dictionary`: Provides a JSON Object for the current locale. If the locale changes, the `dictionary` values change to reflect the values for the selected language.
 
 </Callouts>
 
-## Vocabulary
+## Best practice for dynamic slot content
 
-<Vocabulary>
+**Do not use context methods inside other context methods.** Context methods include `appendChild()`, `prependChild()`, `replaceWith()`, `appendSibling()`, `prependSibling()`, `remove()`, `getSlotElement()`, and `onChange()`.
 
-### Container
+Instead, create and append wrapper elements on mount, then update their content inside callbacks using standard DOM methods like `innerHTML`:
 
-Component that manages or encapsulates other components. Containers handle logic, fetch data, manage state, and pass data to the UI components that are rendered on the screen.
+```js
+slots: {
+  MySlot: (ctx) => {
+    const wrapper = document.createElement('div');
+    
+    // Use context method on mount (outside other context methods)
+    ctx.appendChild(wrapper);
+    
+    // Update content inside onChange using standard DOM methods
+    ctx.onChange((next) => {
+      if (next.data.condition) {
+        wrapper.innerHTML = 'Content A';
+      } else {
+        wrapper.innerHTML = 'Content B';
+      }
+    });
+  }
+}
+```
 
-### Slot
-
-Component that provides placeholders to add other components. You can use a drop-in component's built-in slots to add or remove UI components and functions. Or you can add your own additional slots.
-
-### Component
-
-In web development, this term is overused. That's why we need to be specific about the kind of component we are talking about. Here's a few examples of components from top-to-bottom: a **drop-in component** can contain multiple **container components** that can contain multiple **slot components** that can contain multiple **UI components**.
-
-</Vocabulary>
-
----
+```js
+// ❌ Incorrect: Calling context method inside context method
+ctx.onChange((next) => {
+  const element = document.createElement('div');
+  ctx.appendChild(element);  // Incorrect - context method inside context method
+});
+```
 
 ## Related resources
 
