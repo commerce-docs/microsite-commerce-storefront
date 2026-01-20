@@ -11,6 +11,161 @@ Adobe organizes storefront application releases into logical suite versions and 
 
 The following sections provide high-level summaries of each release suite and details about the compatibility between storefront components. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
 
+## January 2026 suite
+
+This suite release delivers several enhancements to the Drop-in SDK and drop-in components. The following sections provide details about the improvements. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
+
+<Aside type="caution" title="Breaking changes">
+This release introduces the following breaking changes:
+
+- **Major version 3.0.0 for B2C drop-ins**: All B2C drop-in components have been upgraded to version 3.0.0. These drop-ins have been tested on Adobe Commerce as a Cloud Service (SaaS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the revised license agreement restricts use to Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer only. Use on PaaS or on-premise deployments is not permitted under the license agreement.
+- **Version 1.0.0 for B2B drop-ins**: All B2B drop-in components are released at version 1.0.0. B2B drop-ins have been tested exclusively on Adobe Commerce as a Cloud Service. However, the license agreement permits use on Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer.
+- **Checkout drop-in**: Billing address now uses `customerAddressUid` field instead of previous address field structure. Update any code that reads or sets billing address data.
+- **Checkout and Cart drop-ins**: Event handling now includes a `type` property. Events `checkout/initialized` and `checkout/updated` now include `type: 'cart' | 'quote'`, and Cart only processes events where `type` is `'cart'` (or undefined for backward compatibility). Update event listeners if you filter or process these events.
+- **Order drop-in**: The `placeNegotiableQuoteOrder` GraphQL mutation has been deprecated in favor of `placeNegotiableQuoteOrderV2`. Update any custom order placement code that uses this mutation.
+- **User Account drop-in**: GraphQL query structure changed for order items. Fields `product_sku` and `product_url_key` are now at the order item level instead of nested under `product`. Update any code that parses order history data.
+- **Boilerplate**: Authentication flow refactored to use page reloads instead of in-place updates. If you have custom authentication integrations, test thoroughly to ensure compatibility with the new flow.
+
+</Aside>
+
+### Highlights
+
+This release introduces several significant enhancements across the Commerce Storefront ecosystem:
+
+- **Major version 3.0.0 for B2C drop-ins**: All B2C drop-in components have been upgraded to version 3.0.0. These drop-ins have been tested on Adobe Commerce as a Cloud Service (SaaS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the revised license agreement restricts use to SaaS and Adobe Commerce Optimizer only.
+- **Version 1.0.0 for B2B drop-ins**: All B2B drop-in components are released at version 1.0.0. B2B drop-ins have been tested exclusively on Adobe Commerce as a Cloud Service (ACCS). However, the license agreement permits use on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO).
+- **B2B commerce expansion**: Complete B2B checkout support with Payment on Account, Purchase Order payment methods, company credit integration with limit validation, and quote-specific checkout flows. Company context switching automatically refreshes order data when B2B users switch between companies.
+- **New B2B drop-in components**: Five new B2B-specific drop-ins enable enterprise commerce workflows including Company Management for organizational structure and permissions, Company Switcher for multi-company scenarios, Purchase Order for procurement workflows, Quote Management for negotiable quotes and templates, and Requisition List for repeat ordering.
+- **Universal Editor integration**: The Adobe Commerce boilerplate now integrates with Universal Editor, enabling content authors to edit and preview storefront content directly within the authoring environment with improved rendering stability.
+- **Adobe Commerce Optimizer support**: New integration enables dynamic pricing based on customer segments and price books, with automatic price book ID fetching for both authenticated and non-authenticated users.
+- **Enhanced tier pricing**: Product Details Page now displays quantity-based discount pricing, helping customers understand bulk purchase savings with clear tier price visibility.
+- **Permission-based access control**: New Customer Role Permissions API enables B2B permission checking with intelligent caching, returning granular permissions for purchase orders, company management, and other B2B capabilities.
+- **Improved price display**: Product Discovery now correctly displays both final (sale) prices and crossed-out regular prices for products with special pricing, ensuring customers see available discounts for both simple and complex products.
+- **Translation system enhancements**: Checkout drop-in implements placeholder-based translation system for easier internationalization, while User Account supports custom language definition overrides for brand-specific terminology.
+- **Pagination SEO improvements**: Drop-in SDK now uses semantic `<a>` tags with proper hrefs for pagination links, improving search engine crawlability and accessibility across all drop-ins.
+
+### Updated boilerplate
+
+The Commerce boilerplate has been enhanced with important updates and improvements:
+
+#### New features:
+
+- **Universal Editor integration**: The boilerplate now supports Adobe Universal Editor for in-context content editing, enabling visual authoring experiences directly within the storefront ([#866](https://github.com/hlxsites/aem-boilerplate-commerce/pull/866), [#891](https://github.com/hlxsites/aem-boilerplate-commerce/pull/891)).
+- **Payment Services v2 upgrade**: Payment Services drop-in has been upgraded to version 2 with enhanced payment processing capabilities and improved user experience ([#881](https://github.com/hlxsites/aem-boilerplate-commerce/pull/881)).
+- **AEP analytics configuration**: Adobe Experience Platform analytics configuration is now integrated, providing better tracking and insights into customer behavior ([#969](https://github.com/hlxsites/aem-boilerplate-commerce/pull/969)).
+
+#### Improvements and fixes:
+
+- **Authentication flow refactor**: Authentication flow now uses page reloads for more reliable state management and better compatibility with server-side rendering ([#972](https://github.com/hlxsites/aem-boilerplate-commerce/pull/972)).
+- **Checkout success flow enhancement**: Checkout success page now redirects to order details page, providing customers with immediate access to their order information and improving post-purchase experience ([#882](https://github.com/hlxsites/aem-boilerplate-commerce/pull/882), [#831](https://github.com/hlxsites/aem-boilerplate-commerce/pull/831)).
+- **Configurable product links fix**: Product links for configurable products now work correctly, ensuring proper navigation to product detail pages ([#994](https://github.com/hlxsites/aem-boilerplate-commerce/pull/994)).
+- **Empty cart checkout prevention**: Checkout process now properly prevents access when cart is empty, improving user experience and preventing errors ([#1015](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1015)).
+- **Wishlist sign-up fix**: Sign-up functionality from wishlist now works properly, allowing guest users to create accounts while preserving their wishlist items ([#983](https://github.com/hlxsites/aem-boilerplate-commerce/pull/983)).
+- **Create account overlay fix**: Account creation overlay now closes properly after successful registration ([#934](https://github.com/hlxsites/aem-boilerplate-commerce/pull/934)).
+- **Universal Editor rendering improvements**: Block configuration rows now render more safely in Universal Editor and Document Authoring environments ([#1030](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1030)).
+
+#### B2B integrations:
+
+- **Commerce Account Navigation block**: New block with GraphQL permission integration for B2B account navigation, dynamically showing menu items based on user permissions ([#779](https://github.com/hlxsites/aem-boilerplate-commerce/pull/779), [#789](https://github.com/hlxsites/aem-boilerplate-commerce/pull/789), [#797](https://github.com/hlxsites/aem-boilerplate-commerce/pull/797)).
+- **Requisition List integration**: Integrated requisition list drop-in into PDP and PLP blocks, enabling B2B users to add products to requisition lists ([#755](https://github.com/hlxsites/aem-boilerplate-commerce/pull/755), [#851](https://github.com/hlxsites/aem-boilerplate-commerce/pull/851), [#886](https://github.com/hlxsites/aem-boilerplate-commerce/pull/886), [#911](https://github.com/hlxsites/aem-boilerplate-commerce/pull/911)).
+- **Negotiable Quote blocks**: Added B2B negotiable quote block and quote template block for managing quotes and quote templates ([#778](https://github.com/hlxsites/aem-boilerplate-commerce/pull/778), [#884](https://github.com/hlxsites/aem-boilerplate-commerce/pull/884), [#890](https://github.com/hlxsites/aem-boilerplate-commerce/pull/890), [#916](https://github.com/hlxsites/aem-boilerplate-commerce/pull/916)).
+- **Company Switcher integration**: Integrated company switcher for multi-company B2B scenarios with context-aware redirects for orders, purchase orders, and quotes ([#701](https://github.com/hlxsites/aem-boilerplate-commerce/pull/701), [#914](https://github.com/hlxsites/aem-boilerplate-commerce/pull/914), [#982](https://github.com/hlxsites/aem-boilerplate-commerce/pull/982)).
+- **Purchase Order integration**: Integrated Purchase Order drop-in with details page and approval workflows ([#736](https://github.com/hlxsites/aem-boilerplate-commerce/pull/736), [#826](https://github.com/hlxsites/aem-boilerplate-commerce/pull/826), [#900](https://github.com/hlxsites/aem-boilerplate-commerce/pull/900), [#909](https://github.com/hlxsites/aem-boilerplate-commerce/pull/909)).
+- **Company Management integration**: Integrated company profile, users, structure, and roles & permissions management ([#726](https://github.com/hlxsites/aem-boilerplate-commerce/pull/726), [#745](https://github.com/hlxsites/aem-boilerplate-commerce/pull/745), [#816](https://github.com/hlxsites/aem-boilerplate-commerce/pull/816), [#838](https://github.com/hlxsites/aem-boilerplate-commerce/pull/838), [#926](https://github.com/hlxsites/aem-boilerplate-commerce/pull/926)).
+- **B2B permission system**: Enabled customer permission roles in Auth initializer and checkout permissions handling ([#871](https://github.com/hlxsites/aem-boilerplate-commerce/pull/871), [#880](https://github.com/hlxsites/aem-boilerplate-commerce/pull/880), [#887](https://github.com/hlxsites/aem-boilerplate-commerce/pull/887), [#888](https://github.com/hlxsites/aem-boilerplate-commerce/pull/888)).
+- **Request quote from cart**: Added ability to request negotiable quotes directly from the cart ([#731](https://github.com/hlxsites/aem-boilerplate-commerce/pull/731), [#970](https://github.com/hlxsites/aem-boilerplate-commerce/pull/970)).
+
+### Updated Drop-in SDK
+
+<Aside type="note" title="Internal Links">
+    The links to the StorefrontSDK repository will not resolve unless you have access to this repository.
+</Aside>
+
+The Drop-in SDK has been updated to include several new features and improvements:
+
+#### New features:
+
+- **Pagination SEO enhancements**: Pagination components now support a `routePage` prop that generates anchor tags instead of buttons, enabling proper SEO with crawlable page links, native browser link behavior (right-click, open in new tab), and improved accessibility while maintaining all existing functionality ([#143](https://github.com/adobe-commerce/StorefrontSDK/pull/143)).
+- **Price formatting utility**: The new `getPriceFormatter` utility function enables efficient bulk price formatting operations by creating reusable Intl.NumberFormat instances, reducing overhead when formatting multiple prices, and providing centralized locale resolution with proper fallback hierarchy (prop locale → global locale → environment locale → en-US default) ([#129](https://github.com/adobe-commerce/StorefrontSDK/pull/129)).
+- **New icons**: New icons are now available in the Icon component: Business (company/organization representation), List (list view toggle), Purchase (purchase/buy actions), Quote (quote request actions), Structure (organizational structure), and Team (team/group representation) ([#150](https://github.com/adobe-commerce/StorefrontSDK/pull/150)).
+
+#### Improvements and fixes:
+
+- **Table component improvements**: Table components now include enhanced mobile responsiveness with automatic stacked layout via container queries, data labels automatically generated from column headers on mobile, improved styling for row details and expanded states, better typography hierarchy in mobile view, and enhanced visual structure with proper borders and spacing ([#149](https://github.com/adobe-commerce/StorefrontSDK/pull/149)).
+- **Field component enhancements**: Field components now provide more robust child component rendering, improving support for wrapped components and complex field structures ([#139](https://github.com/adobe-commerce/StorefrontSDK/pull/139)).
+- **Icon stroke width fix**: Icon components now properly apply stroke width styles to all nested SVG elements, ensuring consistent visual appearance across all icon types instead of only applying to the root SVG element ([#151](https://github.com/adobe-commerce/StorefrontSDK/pull/151)).
+- **Multi-store detection fix**: Fixed incorrect multi-store detection in repoless EDS setups where configurations with additional non-store keys were incorrectly identified as multi-store, causing Store Switcher to activate unnecessarily and resulting in rendering errors ([#156](https://github.com/adobe-commerce/StorefrontSDK/pull/156)).
+
+### Updated drop-in components
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Cart**](/dropins/cart/) v3.0.0 | • **Major version upgrade** with improved B2B integration and event handling<br/>• Product names with special characters now display correctly<br/>• Requisition list integration for B2B workflows<br/>• Analytics events now fire correctly (cart open, start checkout)<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Checkout**](/dropins/checkout/) v3.0.0 | • **Major version upgrade** with comprehensive B2B checkout support<br/>• Payment on Account and Purchase Order payment methods for B2B transactions<br/>• Company credit integration with credit limit validation<br/>• Quote-specific checkout flow with dedicated containers and event handling<br/>• Placeholder-based translation system for internationalization<br/>• Improved empty cart handling and checkout permission validation<br/>• Billing address now uses customerAddressUid for better compatibility<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Order**](/dropins/order/) v3.0.0 | • **Major version upgrade** with B2B company context support<br/>• Automatic order data refresh when switching companies<br/>• Enhanced error handling with redirect to orders list when order access is denied<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Payment Services**](/dropins/payment-services/) v3.0.0 | • **Major version upgrade** for suite alignment<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Product Details Page**](/dropins/product-details/) v3.0.0 | • **Major version upgrade** with tier pricing support for displaying quantity-based discount pricing<br/>• Product attributes now render properly in the product detail view<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Product Discovery**](/dropins/product-discovery/) v3.0.0 | • **Major version upgrade** with price display and search improvements<br/>• Fixed final price display for products with special pricing<br/>• Currency code validation with USD fallback for unsupported currencies<br/>• Fixed URL parameter handling in search results<br/>• Fixed facet checkbox rendering issues<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Product Personalization**](/dropins/personalization/) v3.0.0 | • **Major version upgrade** with SDK and dependency updates<br/>• Updated to Elsie SDK 1.6.0 for latest component improvements<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Product Recommendations**](/dropins/recommendations/) v3.0.0 | • **Major version upgrade** for suite alignment<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**User Account**](/dropins/user-account/) v3.0.0 | • **Major version upgrade** with B2B company context support and translation improvements<br/>• Automatic order refresh when switching companies in B2B environments<br/>• Translation override support for customizing UI text<br/>• Fixed product links for configurable products in order history<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**User Auth**](/dropins/user-auth/) v3.0.0 | • **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support<br/>• Customer role permissions API for B2B permission checking<br/>• Adobe Commerce Optimizer integration for dynamic pricing<br/>• Customer group tracking with dedicated event emission<br/>• Improved cookie security for localhost development<br/>• Revised Adobe Commerce Drop-in License Agreement |
+| [**Wishlist**](/dropins/wishlist/) v3.0.0 | • **Major version upgrade** with SDK and dependency updates<br/>• Updated to Elsie SDK 1.6.0 for latest component improvements<br/>• Revised Adobe Commerce Drop-in License Agreement |
+
+### New B2B drop-in components
+
+This release introduces new B2B-specific drop-in components for enterprise commerce workflows:
+
+| Component | Features |
+|-----------|----------|
+| **Company Management** v1.0.0 | • Company profile viewing and editing for admins<br/>• User and team management with drag-and-drop organization<br/>• Roles and permissions management<br/>• Company structure CRUD operations<br/>• New company creation workflow<br/>• Mobile-optimized team management |
+| **Company Switcher** v1.0.0 | • Multi-company context switching for B2B users<br/>• Context-aware page reloads for data consistency<br/>• Integration with account navigation<br/>• Automatic product availability validation on company switch |
+| **Purchase Order** v1.0.0 | • Purchase Order payment method for B2B checkout<br/>• Purchase Order details page with approval workflow<br/>• Permission-based access control<br/>• Company context handling with error management |
+| **Quote Management** v1.0.0 | • Request negotiable quotes from cart<br/>• Quote list and template management<br/>• Quote-specific checkout flow<br/>• File attachments with type restrictions<br/>• Quote ownership validation and permissions |
+| **Requisition List** v1.0.0 | • Requisition list management (create, view, edit, delete)<br/>• Add products from PDP and PLP<br/>• Complex product support with all options<br/>• Cart integration for moving items between lists |
+
+### Known issues
+
+There are no known issues for this release suite.
+
+### Component compatibility
+
+This section provides details about the compatibility between Commerce Storefront components for this release suite. Adobe has tested and verified that each component version works together.
+
+**Commerce Foundation:**
+
+| Adobe Commerce | Storefront Compatibility Package |
+|----------------|----------------------------------|
+| `2.4.7`        | `4.7.11`                         |
+| `2.4.8`        | `4.8.14`                         |
+
+**Drop-in SDK package updates:**
+
+- `@dropins/tools@~1.6.0`
+- `@dropins/build-tools@~1.0.1`
+
+**Drop-in package updates:**
+
+- `@dropins/storefront-account@~3.0.0`
+- `@dropins/storefront-auth@~3.0.0`
+- `@dropins/storefront-cart@~3.0.0`
+- `@dropins/storefront-checkout@~3.0.0`
+- `@dropins/storefront-order@~3.0.0`
+- `@dropins/storefront-payment-services@~3.0.0`
+- `@dropins/storefront-pdp@~3.0.0`
+- `@dropins/storefront-personalization@~3.0.0`
+- `@dropins/storefront-product-discovery@~3.0.0`
+- `@dropins/storefront-recommendations@~3.0.0`
+- `@dropins/storefront-wishlist@~3.0.0`
+
+**B2B Drop-in package updates:**
+
+- `@dropins/storefront-company-management@~1.0.0`
+- `@dropins/storefront-company-switcher@~1.0.0`
+- `@dropins/storefront-purchase-order@~1.0.0`
+- `@dropins/storefront-quote-management@~1.0.0`
+- `@dropins/storefront-requisition-list@~1.0.0`
+
 ## October 2025 suite 
 
 This suite release delivers significant enhancements to existing drop-in components, providing improved functionality and better user experiences for your storefront. The following table lists notable highlights. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
@@ -104,12 +259,8 @@ This section provides details about the compatibility between Commerce Storefron
 
 | Adobe Commerce | Storefront Compatibility Package |
 |----------------|----------------------------------|
-| `2.4.7`        | `4.7.11`                         |
-| `2.4.8`        | `4.8.15`                          |
-
-| Adobe Commerce B2B Package | Storefront Compatibility B2B Package |
-|----------------------------|--------------------------------------|
-| `1.5.2`                    | `1.0.15`                              |
+| `2.4.7`        | `4.7.10`                         |
+| `2.4.8`        | `4.8.8`                          |
 
 **Drop-in SDK package updates:**
 
@@ -160,7 +311,6 @@ The Commerce boilerplate has been significantly enhanced with comprehensive impr
 
 - **New components**: Added carousel and cards-list components for enhanced product display capabilities
 - **Commerce Storefront compatibility**: Improved integration and compatibility with storefront-builder tools
-- **Commerce Storefront B2B compatibility**: Improved integration and compatibility with storefront-builder tools including Adobe Commerce B2B modules
 - **Architecture improvements**: Comprehensive refactoring for better code organization and maintainability
 - **Scripts.js refactoring**: Major restructuring for improved maintainability and performance
 - **Enhanced drop-in functionality**: Improvements across Cart, Checkout, and Wishlist components
@@ -217,10 +367,6 @@ This section provides details about the compatibility between Commerce Storefron
 |----------------|----------------------------------|
 | `2.4.7`        | `4.7.11`                         |
 | `2.4.8`        | `4.8.8`                          |
-
-| Adobe Commerce B2B Package | Storefront Compatibility B2B Package |
-|----------------------------|--------------------------------------|
-| `1.5.2`                    | `1.0.8`                              |
 
 **Drop-in SDK package updates:**
 
