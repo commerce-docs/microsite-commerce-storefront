@@ -1,0 +1,16 @@
+{
+  "intro": "The **Purchase Order initializer** configures the drop-in for managing purchase order workflows, approval rules, and order tracking. Use initialization to set the purchase order reference, customize data models, and enable internationalization for multi-language B2B storefronts.",
+  "config": {
+    "poRef": {
+      "description": "Purchase order reference identifier used to load and display a specific purchase order. Pass this to initialize the drop-in with purchase order details on page load."
+    }
+  },
+  "customModelExample": "const models = {\n  PurchaseOrderModel: {\n    transformer: (data) => ({\n      // Add approval status badge text\n      approvalStatusDisplay: data?.status === 'PENDING' ? 'Awaiting Approval' : \n                            data?.status === 'APPROVED' ? 'Approved - Ready to Order' : \n                            data?.status,\n      // Add formatted approval flow summary\n      approvalSummary: data?.approvalFlow?.map(rule => \n        `${rule.ruleName}: ${rule.events?.length || 0} events`\n      ).join(', '),\n      // Add created by full name\n      createdByName: data?.createdBy ? \n        `${data.createdBy.firstname} ${data.createdBy.lastname}` : null,\n    }),\n  },\n};\n\nawait initializers.mountImmediately(initialize, { models });",
+  "models": {
+    "PurchaseOrderModel": {
+      "description": "Transforms purchase order data from GraphQL including order details, approval status, items, totals, and history. Use this to add custom fields or modify existing purchase order data structures.",
+      "definition": "interface PurchaseOrderModel {\n  typename: string;\n  uid: string;\n  number: string;\n  status: string;\n  availableActions: string[];\n  approvalFlow:\n    | {\n        ruleName: string;\n        events: Array<{\n          message: string;\n          name: string;\n          role: string;\n          status: string;\n          updatedAt: string;\n        }>;\n      }[]\n    | [];\n  comments?: Array<{\n    uid: string;\n    createdAt: string;\n    author: {\n      firstname: string;\n      lastname: string;\n      email: string;\n    };\n    text: string;\n  }>;\n  createdAt: string;\n  updatedAt: string;\n  createdBy: {\n    firstname: string;\n    lastname: string;\n    email: string;\n  };\n  historyLog?: Array<{\n    activity: string;\n    createdAt: string;\n    message: string;\n    uid: string;\n  }>;\n  quote: QuoteProps | null;\n  order: {\n    orderNumber: string;\n    id: string;\n  };\n}"
+    }
+  }
+}
+
