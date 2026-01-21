@@ -99,6 +99,34 @@ export const DROPIN_REPOS = {
         type: 'B2B',
         displayName: 'Quote Management',
         isPublic: true  // Public repo
+    },
+    'purchase-order': {
+        packageName: '@dropins/storefront-purchase-order',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-purchase-order.git',
+        type: 'B2B',
+        displayName: 'Purchase Order',
+        isPublic: true
+    },
+    'requisition-list': {
+        packageName: '@dropins/storefront-requisition-list',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-requisition-list.git',
+        type: 'B2B',
+        displayName: 'Requisition List',
+        isPublic: true
+    },
+    'company-management': {
+        packageName: '@dropins/storefront-company-management',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-company-management.git',
+        type: 'B2B',
+        displayName: 'Company Management',
+        isPublic: true
+    },
+    'company-switcher': {
+        packageName: '@dropins/storefront-company-switcher',
+        gitUrl: 'https://github.com/adobe-commerce/storefront-company-switcher.git',
+        type: 'B2B',
+        displayName: 'Company Switcher',
+        isPublic: true
     }
 };
 
@@ -133,6 +161,12 @@ export const REFERENCE_REPOS = {
         displayName: 'Edge Delivery Authoring',
         description: 'Authoring experience and patterns for merchants, includes blocks and UI examples',
         isPublic: true  // Public repo - source links are safe to include
+    },
+    'b2b-lib': {
+        gitUrl: 'https://github.com/adobe-commerce/storefront-b2b-lib.git',
+        displayName: 'B2B Library',
+        description: 'Shared utilities and components for B2B drop-ins',
+        isPublic: true
     }
 };
 

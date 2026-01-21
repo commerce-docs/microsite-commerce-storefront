@@ -108,37 +108,113 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 
     const props = [];
 
-    // Remove JSDoc comments from interface content to avoid parsing them as properties
+    // Remove JSDoc comments and inline comments from interface content to avoid parsing them as properties
     // Keep the original for JSDoc extraction later
-    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
+    let cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, ''); // Remove JSDoc
+    cleanedContent = cleanedContent.replace(/\/\/.*$/gm, ''); // Remove inline comments
 
-    // Match property definitions (property: type, property?: type, property?: type | null)
-    const propertyPattern = /(\w+)\??\s*:\s*([^;,]+)/g;
-    let match;
+    // Parse properties with balanced brace/bracket/paren tracking
+    // This handles complex nested types like (params: { foo: Bar, baz: Qux }) => void
+    let i = 0;
+    while (i < cleanedContent.length) {
+        // Skip whitespace
+        while (i < cleanedContent.length && /\s/.test(cleanedContent[i])) {
+            i++;
+        }
 
-    while ((match = propertyPattern.exec(cleanedContent)) !== null) {
-        const propertyName = match[1];
-        const propertyType = match[2].trim();
+        if (i >= cleanedContent.length) break;
+
+        // Match property name (word characters, followed by optional ?, then :)
+        const propMatch = cleanedContent.substring(i).match(/^(\w+)(\??)\s*:\s*/);
+        if (!propMatch) {
+            // Skip to next potential property (after semicolon or comma)
+            const nextDelim = cleanedContent.indexOf(';', i);
+            if (nextDelim === -1) break;
+            i = nextDelim + 1;
+            continue;
+        }
+
+        const propertyName = propMatch[1];
+        const isOptional = propMatch[2] === '?';
+        i += propMatch[0].length;
+
+        // Extract type with balanced delimiters
+        let type = '';
+        let depth = { braces: 0, brackets: 0, parens: 0, angles: 0 };
+        let inString = false;
+        let stringChar = '';
+
+        while (i < cleanedContent.length) {
+            const char = cleanedContent[i];
+
+            // Handle string literals
+            if ((char === '"' || char === "'" || char === '`') && cleanedContent[i - 1] !== '\\') {
+                if (!inString) {
+                    inString = true;
+                    stringChar = char;
+                } else if (char === stringChar) {
+                    inString = false;
+                }
+                type += char;
+                i++;
+                continue;
+            }
+
+            if (inString) {
+                type += char;
+                i++;
+                continue;
+            }
+
+            // Track nesting depth
+            // Special case: Don't treat `=>` arrow operator as angle bracket
+            const prevChar = i > 0 ? cleanedContent[i - 1] : '';
+            const nextChar = i + 1 < cleanedContent.length ? cleanedContent[i + 1] : '';
+            const isArrowOperator = char === '=' && nextChar === '>';
+
+            if (char === '{') depth.braces++;
+            else if (char === '}') depth.braces--;
+            else if (char === '[') depth.brackets++;
+            else if (char === ']') depth.brackets--;
+            else if (char === '(') depth.parens++;
+            else if (char === ')') depth.parens--;
+            else if (char === '<' && !isArrowOperator) depth.angles++;
+            else if (char === '>' && prevChar !== '=') depth.angles--;
+
+            // Check if we've reached the end of the type (semicolon or comma at depth 0)
+            const isAtTopLevel = depth.braces === 0 && depth.brackets === 0 &&
+                depth.parens === 0 && depth.angles === 0;
+
+            if (isAtTopLevel && (char === ';' || char === ',')) {
+                i++; // Skip the delimiter
+                break;
+            }
+
+            type += char;
+            i++;
+        }
+
+        type = type.trim();
 
         // Skip slots unless explicitly requested
         if (!includeSlots && propertyName.toLowerCase().includes('slot')) {
             continue;
         }
 
-        // Check if property is required (no ? after name)
-        const required = !interfaceContent.includes(`${propertyName}?`);
+        // Check if property is required
+        const required = !isOptional;
 
         // Try to get JSDoc description
         let description = extractJSDocDescription(fullText, propertyName);
 
         // If no JSDoc and generator provided, generate description
         if (!description && descriptionGenerator) {
-            description = descriptionGenerator(propertyName, propertyType);
+            description = descriptionGenerator(propertyName, type);
         }
 
         props.push({
             name: propertyName,
-            type: propertyType,
+            type: simplifyType(type),
             required,
             description
         });
@@ -148,9 +224,55 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
 }
 
 /**
+ * Simplify TypeScript type for display in documentation tables
+ * 
+ * Converts complex function signatures and generic types to simple labels
+ * for better readability in configuration tables.
+ * 
+ * @param {string} type - TypeScript type string
+ * @returns {string} Simplified type
+ * 
+ * @example
+ * simplifyType('() => void') // Returns: 'function'
+ * simplifyType('(item: Item) => string') // Returns: 'function'
+ * simplifyType('SlotProps<ComplexType>') // Returns: 'SlotProps'
+ * simplifyType('string') // Returns: 'string'
+ */
+export function simplifyType(type) {
+    if (!type) return type;
+
+    const trimmedType = type.trim();
+
+    // Don't simplify object literals (they might contain nested functions)
+    if (trimmedType.startsWith('{')) {
+        return type;
+    }
+
+    // Check if this is a function type:
+    // - Arrow functions: () => void, (x: string) => number
+    // - Function keyword: Function, (() => void) | undefined
+    if (
+        trimmedType.includes('=>') ||
+        trimmedType === 'Function' ||
+        /^\([^)]*\)\s*=>/.test(trimmedType)
+    ) {
+        return 'function';
+    }
+
+    // Simplify SlotProps with complex generics: SlotProps<ComplexType> → SlotProps
+    if (trimmedType.startsWith('SlotProps<')) {
+        return 'SlotProps';
+    }
+
+    return type;
+}
+
+/**
  * Extract slots from a Props interface
  * 
- * Specifically looks for properties with "slot" in the name.
+ * Handles two patterns:
+ * 1. Direct slot properties: headerSlot?: SlotProps;
+ * 2. Nested slots object: slots?: { Header?: SlotProps; Footer?: SlotProps; }
  * 
  * @param {string} interfaceContent - Content between the interface braces
  * @returns {Array<Object>} Array of slot objects
@@ -158,40 +280,43 @@ export function parsePropsInterface(interfaceContent, fullText, options = {}) {
  * @example
  * const interfaceContent = `
  *   headerSlot?: SlotProps;
- *   footerSlot?: SlotProps;
- *   sku: string;
+ *   slots?: { Header?: SlotProps; Footer?: SlotProps; };
  * `;
  * extractSlotsFromInterface(interfaceContent)
  * // Returns: [
  * //   { name: 'headerSlot', type: 'SlotProps', required: false },
- * //   { name: 'footerSlot', type: 'SlotProps', required: false }
+ * //   { name: 'Header', type: 'SlotProps', required: false },
+ * //   { name: 'Footer', type: 'SlotProps', required: false }
  * // ]
  */
 export function extractSlotsFromInterface(interfaceContent) {
-    const slots = [];
+    const allProps = parsePropsInterface(interfaceContent, interfaceContent, { includeSlots: true });
+    const extractedSlots = [];
 
-    // Remove JSDoc comments to avoid parsing them
-    const cleanedContent = interfaceContent.replace(/\/\*\*[\s\S]*?\*\//g, '');
+    for (const prop of allProps) {
+        const propName = prop.name.toLowerCase();
 
-    // Match slot definitions (property containing "Slot" in name)
-    const slotPattern = /(\w*[Ss]lot\w*)\??\s*:\s*([^;,]+)/g;
-    let match;
+        // Case 1: Property is named exactly "slots" - extract nested slots
+        if (propName === 'slots' && prop.type.trim().startsWith('{')) {
+            // Extract content between the braces of the nested object
+            const typeStr = prop.type.trim();
+            const firstBrace = typeStr.indexOf('{');
+            const lastBrace = typeStr.lastIndexOf('}');
 
-    while ((match = slotPattern.exec(cleanedContent)) !== null) {
-        const slotName = match[1];
-        const slotType = match[2].trim();
-
-        // Check if slot is required
-        const required = !interfaceContent.includes(`${slotName}?`);
-
-        slots.push({
-            name: slotName,
-            type: slotType,
-            required
-        });
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                const nestedContent = typeStr.substring(firstBrace + 1, lastBrace);
+                // Parse the nested object content to extract individual slots
+                const nestedSlots = parsePropsInterface(nestedContent, nestedContent, { includeSlots: true });
+                extractedSlots.push(...nestedSlots);
+            }
+        }
+        // Case 2: Property name contains "slot" but isn't exactly "slots"
+        else if (propName.includes('slot') && propName !== 'slots') {
+            extractedSlots.push(prop);
+        }
     }
 
-    return slots;
+    return extractedSlots;
 }
 
 /**
@@ -209,6 +334,9 @@ export function extractSlotsFromInterface(interfaceContent) {
  * // Returns: { content: 'sku: string; ...', fullText: 'export interface CartProps { ... }' }
  */
 export function findPropsInTypeFiles(repoPath, componentName) {
+    // Convert PascalCase to camelCase for some naming patterns
+    const camelCaseName = componentName.charAt(0).toLowerCase() + componentName.slice(1);
+
     const possiblePaths = [
         join(repoPath, 'src', 'containers', componentName, 'types.ts'),
         join(repoPath, 'src', 'containers', componentName, `${componentName}.types.ts`),
@@ -216,7 +344,18 @@ export function findPropsInTypeFiles(repoPath, componentName) {
         join(repoPath, 'src', 'components', componentName, `${componentName}.types.ts`),
         join(repoPath, 'src', 'types', 'containers.ts'),
         join(repoPath, 'src', 'types', 'components.ts'),
-        join(repoPath, 'src', 'types', `${componentName}.ts`)
+        join(repoPath, 'src', 'types', `${componentName}.ts`),
+        // CamelCase patterns directly in src/types (Company Management pattern)
+        join(repoPath, 'src', 'types', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', `${componentName}.types.ts`),
+        // Additional patterns for B2B drop-ins (e.g., Purchase Order)
+        join(repoPath, 'src', 'types', 'containers', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', 'containers', `${componentName}.types.ts`),
+        // Patterns with "Props" suffix in filename (e.g., approvalRuleDetailsProps.types.ts)
+        join(repoPath, 'src', 'types', 'containers', `${camelCaseName}Props.types.ts`),
+        join(repoPath, 'src', 'types', 'containers', `${componentName}Props.types.ts`),
+        join(repoPath, 'src', 'types', 'components', `${camelCaseName}.types.ts`),
+        join(repoPath, 'src', 'types', 'components', `${componentName}.types.ts`)
     ];
 
     for (const path of possiblePaths) {
@@ -224,12 +363,37 @@ export function findPropsInTypeFiles(repoPath, componentName) {
             const content = readFileSync(path, 'utf8');
 
             // Look for Props interface (with or without export)
-            const propsInterfaceMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{([\s\S]*?)^\s*}/m);
-            if (propsInterfaceMatch) {
-                return {
-                    content: propsInterfaceMatch[1],
-                    fullText: content
-                };
+            // Specifically match {ComponentName}Props to avoid matching wrong interfaces
+            const componentPropsRegex = new RegExp(`(?:export\\s+)?interface\\s+${componentName}Props\\s*(?:extends\\s+[^{]+)?\\s*{`);
+            const genericPropsRegex = /(?:export\s+)?interface\s+Props\s*(?:extends\s+[^{]+)?\s*{/;
+            const propsInterfaceStartMatch = content.match(componentPropsRegex) || content.match(genericPropsRegex);
+
+            if (propsInterfaceStartMatch) {
+                // Find the position right after the opening brace
+                const startPos = propsInterfaceStartMatch.index + propsInterfaceStartMatch[0].length;
+
+                // Use balanced brace matching to find the closing brace
+                let braceCount = 1;
+                let endPos = startPos;
+
+                while (endPos < content.length && braceCount > 0) {
+                    const char = content[endPos];
+                    if (char === '{') {
+                        braceCount++;
+                    } else if (char === '}') {
+                        braceCount--;
+                    }
+                    endPos++;
+                }
+
+                if (braceCount === 0) {
+                    // Successfully found matching closing brace
+                    const interfaceContent = content.substring(startPos, endPos - 1);
+                    return {
+                        content: interfaceContent,
+                        fullText: content
+                    };
+                }
             }
         }
     }
@@ -274,7 +438,10 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
 
         // Match both "interface Props" and "export interface Props"
         // Also handle interfaces that extend other interfaces
-        const propsInterfaceStartMatch = content.match(/(?:export\s+)?interface\s+\w*Props\s*(?:extends\s+[^{]+)?\s*{/);
+        // Specifically match {ComponentName}Props to avoid matching wrong interfaces
+        const componentPropsRegex = new RegExp(`(?:export\\s+)?interface\\s+${componentName}Props\\s*(?:extends\\s+[^{]+)?\\s*{`);
+        const genericPropsRegex = /(?:export\s+)?interface\s+Props\s*(?:extends\s+[^{]+)?\s*{/;
+        const propsInterfaceStartMatch = content.match(componentPropsRegex) || content.match(genericPropsRegex);
 
         if (propsInterfaceStartMatch) {
             // Find the position right after the opening brace

@@ -208,3 +208,37 @@ export function parseCommandLineArgs() {
     return parsed;
 }
 
+export function wrapCodeNames(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+
+    // Patterns to match code names (but not already backticked)
+    const patterns = [
+        // PascalCase identifiers (2+ words, starts with capital)
+        // Must be preceded by space, comma, or start of string
+        // Must be followed by space, comma, period, or end of string
+        /(?<!`|[a-z])([A-Z][a-z]+[A-Z][a-zA-Z0-9]*)(?!`)/g,
+
+        // camelCase identifiers (starts lowercase, has uppercase letter)
+        // Must be preceded by space, comma, or start of string
+        // Must be followed by space, comma, period, or end of string
+        /(?<!`|\w)([a-z][a-z0-9]*[A-Z][a-zA-Z0-9]*)(?!`)/g,
+
+        // Event names with slashes (e.g., cart/initialized)
+        /(?<!`)([a-z][a-z0-9-]*\/[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*)(?!`)/g
+    ];
+
+    let result = text;
+
+    // Apply each pattern
+    for (const pattern of patterns) {
+        result = result.replace(pattern, '`$1`');
+    }
+
+    // Clean up any double backticks that might have been created
+    result = result.replace(/``+/g, '`');
+
+    return result;
+}
+

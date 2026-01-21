@@ -20,14 +20,14 @@
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 
 // Import shared utilities
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { loadInitializationEnrichments } from './lib/enrichment.js';
 import { updateSidebarForInitialization } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
-import { cleanVersion } from './lib/utils.js';
+import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { generatePropertyTable } from './lib/markdown/table-generator.js';
 
 const projectRoot = getProjectRoot();
@@ -68,41 +68,88 @@ function extractConfigProps(repoPath) {
         return [];
     }
 
-    // Extract ConfigProps type definition with balanced braces
-    const configPropsPattern = /type\s+ConfigProps\s*=\s*\{/;
-    const match = initializeContent.match(configPropsPattern);
+    // Extract ConfigProps type or interface definition with balanced braces
+    let configPropsPattern = /(type\s+ConfigProps\s*=\s*\{|interface\s+ConfigProps\s*\{)/;
+    let match = initializeContent.match(configPropsPattern);
 
+    // If ConfigProps is not found inline, check if it's imported from another file
+    let propsContent = null;
     if (!match) {
-        return [];
-    }
-
-    // Find the complete type definition using balanced brace matching
-    const startPos = match.index + match[0].length;
-    let braceCount = 1;
-    let endPos = startPos;
-
-    while (endPos < initializeContent.length && braceCount > 0) {
-        const char = initializeContent[endPos];
-        if (char === '{') {
-            braceCount++;
-        } else if (char === '}') {
-            braceCount--;
+        // Look for imported config type (e.g., "config: CompanyDropinConfig")
+        const importedConfigMatch = initializeContent.match(/(?:const|export\s+const)\s+initialize\s*=\s*async\s*\(\s*config:\s*(\w+)/);
+        if (importedConfigMatch) {
+            const configTypeName = importedConfigMatch[1];
+            // Find the import statement for this type
+            const importMatch = initializeContent.match(new RegExp(`import\\s+\\{[^}]*\\b${configTypeName}\\b[^}]*\\}\\s+from\\s+['"]([^'"]+)['"]`));
+            if (importMatch) {
+                const importPath = importMatch[1];
+                // Resolve relative path from initialize.ts directory
+                const initializeDir = dirname(foundPath);
+                const typesFilePath = join(initializeDir, importPath + '.ts');
+                if (existsSync(typesFilePath)) {
+                    const typesContent = readFileSync(typesFilePath, 'utf8');
+                    // Extract the interface/type definition from the types file
+                    const typesPattern = new RegExp(`(export\\s+interface\\s+${configTypeName}\\s*\\{|export\\s+type\\s+${configTypeName}\\s*=\\s*\\{)`);
+                    const typesMatch = typesContent.match(typesPattern);
+                    if (typesMatch) {
+                        const startPos = typesMatch.index + typesMatch[0].length;
+                        let braceCount = 1;
+                        let endPos = startPos;
+                        while (endPos < typesContent.length && braceCount > 0) {
+                            const char = typesContent[endPos];
+                            if (char === '{') braceCount++;
+                            else if (char === '}') braceCount--;
+                            endPos++;
+                        }
+                        if (braceCount === 0) {
+                            propsContent = typesContent.substring(startPos, endPos - 1);
+                        }
+                    }
+                }
+            }
         }
-        endPos++;
+
+        if (!propsContent) {
+            return [];
+        }
+    } else {
+        // ConfigProps found inline - extract it
+        const startPos = match.index + match[0].length;
+        let braceCount = 1;
+        let endPos = startPos;
+
+        while (endPos < initializeContent.length && braceCount > 0) {
+            const char = initializeContent[endPos];
+            if (char === '{') {
+                braceCount++;
+            } else if (char === '}') {
+                braceCount--;
+            }
+            endPos++;
+        }
+
+        if (braceCount !== 0) {
+            return [];
+        }
+
+        propsContent = initializeContent.substring(startPos, endPos - 1);
     }
 
-    if (braceCount !== 0) {
-        return [];
+    // Detect if defaults are provided in the init function
+    const defaultsMatch = initializeContent.match(/const\s+defaultConfig\s*=\s*\{([^}]+(?:\{[^}]+\})*)\}/s);
+    const defaultKeys = new Set();
+    if (defaultsMatch) {
+        const defaultsContent = defaultsMatch[1];
+        // Extract property names from defaults (e.g., "companyHeader: 'value'")
+        const keyMatches = defaultsContent.matchAll(/(\w+)\s*:/g);
+        for (const keyMatch of keyMatches) {
+            defaultKeys.add(keyMatch[1]);
+        }
     }
-
-    const propsContent = initializeContent.substring(startPos, endPos - 1);
 
     // Parse individual properties (only top-level, not nested)
     const customOptions = [];
     const lines = propsContent.split('\n');
-
-    // Standard options that should be excluded (they're added separately)
-    const standardOptionNames = ['langDefinitions', 'models'];
 
     // Track brace depth to avoid extracting nested properties
     let braceDepth = 0;
@@ -130,18 +177,16 @@ function extractConfigProps(repoPath) {
                 const [, propName, optional, rest] = propMatch;
                 const name = propName.trim();
 
-                // Skip standard options (langDefinitions, models)
-                if (standardOptionNames.includes(name)) {
-                    braceDepth += openBraces - closeBraces;
-                    continue;
-                }
+                // Determine if property is required: it's required if NOT optional AND doesn't have a default value
+                const hasDefault = defaultKeys.has(name);
+                const isRequired = !optional && !hasDefault;
 
                 // Check if this is an inline object type definition
                 if (rest.trim().startsWith('{')) {
                     currentProp = {
                         name: name,
                         type: 'object',
-                        required: !optional,
+                        required: isRequired,
                         description: '',
                         inlineDefinition: null
                     };
@@ -160,7 +205,7 @@ function extractConfigProps(repoPath) {
                     customOptions.push({
                         name: name,
                         type: rest.replace(/[;,]$/, '').trim(),
-                        required: !optional,
+                        required: isRequired,
                         description: ''
                     });
                 }
@@ -364,28 +409,46 @@ function scanForInitialization(repoPath, repoConfig) {
 function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, enrichmentData = null) {
     const { configProps, models } = initData;
 
-    // Use simplified template for drop-ins with no custom configuration
-    if (configProps.length === 0 && models.length === 0) {
-        return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo);
+    // Handle versionInfo object or string
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
+
+    // Check if enrichment provides config or models
+    const hasEnrichmentConfig = enrichmentData?.config && Object.keys(enrichmentData.config).length > 0;
+    const hasEnrichmentModels = enrichmentData?.models && Object.keys(enrichmentData.models).length > 0;
+
+    // Use simplified template only if no custom configuration in repo AND no enrichment data
+    if (configProps.length === 0 && models.length === 0 && !hasEnrichmentConfig && !hasEnrichmentModels) {
+        return generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, enrichmentData);
     }
 
     const template = readTemplate('dropin-initialization.mdx');
 
-    // Always include standard options with links to their definitions
-    const standardOptions = [
-        {
+    // Build standard options dynamically based on what's in source ConfigProps
+    const standardOptions = [];
+
+    // Check if langDefinitions exists in source
+    const hasLangDefinitions = configProps.some(p => p.name === 'langDefinitions');
+    if (hasLangDefinitions) {
+        const langDefProp = configProps.find(p => p.name === 'langDefinitions');
+        standardOptions.push({
             name: 'langDefinitions',
             type: '__LINK__[`LangDefinitions`](#langdefinitions)',
-            required: false,
+            required: langDefProp?.required || false,
             description: 'Language definitions for internationalization (i18n). Override dictionary keys for localization or branding.'
-        },
-        {
+        });
+    }
+
+    // Check if models exists in source
+    const hasModels = configProps.some(p => p.name === 'models');
+    if (hasModels) {
+        const modelsProp = configProps.find(p => p.name === 'models');
+        standardOptions.push({
             name: 'models',
             type: '__LINK__[`Record<string, any>`](#models)',
-            required: false,
+            required: modelsProp?.required || false,
             description: 'Custom data models for type transformations. Extend or modify default models with custom fields and transformers.'
-        }
-    ];
+        });
+    }
 
     // Merge with drop-in specific options
     const allOptions = [...standardOptions];
@@ -393,13 +456,44 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Track configuration types that need full definitions at the bottom
     const configTypesWithDefinitions = [];
 
+    // Merge enrichment-only config options (those not found in repo scan)
+    if (enrichmentData?.config) {
+        Object.keys(enrichmentData.config).forEach(configName => {
+            // Skip if already in configProps
+            if (!configProps.find(p => p.name === configName)) {
+                configProps.push({
+                    name: configName,
+                    type: configName === 'langDefinitions' ? 'LangDefinitions' : 'any',
+                    required: false
+                });
+            }
+        });
+    }
+
+    // Merge enrichment-only models (those not found in repo scan)
+    if (enrichmentData?.models) {
+        Object.keys(enrichmentData.models).forEach(modelName => {
+            // Skip if already in models
+            if (!models.find(m => m.name === modelName)) {
+                const desc = enrichmentData.models[modelName].description || `Data model for ${modelName}.`;
+                models.push({
+                    name: modelName,
+                    description: wrapCodeNames(desc)
+                });
+            }
+        });
+    }
+
     // Extract model names for linking
     const modelNames = models.map(m => m.name);
 
-    // Add drop-in specific config props if they exist
-    configProps.forEach(prop => {
+    // Add drop-in specific config props if they exist (skip langDefinitions and models as they're added as standardOptions)
+    configProps.filter(p => p.name !== 'langDefinitions' && p.name !== 'models').forEach(prop => {
         // Check if enrichment has a description for this property
-        const enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
+        let enrichedDesc = enrichmentData?.config?.[prop.name]?.description;
+        if (enrichedDesc) {
+            enrichedDesc = wrapCodeNames(enrichedDesc);
+        }
 
         let displayType = prop.type;
 
@@ -441,24 +535,43 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
             name: prop.name,
             type: displayType,
             required: prop.required,
-            description: enrichedDesc || `Configuration for ${prop.name}.`
+            description: enrichedDesc || '' // Leave blank if no enrichment - parameter name is self-documenting
         });
     });
 
+    // Determine which columns should nowrap based on type length
+    // If all types are short (≤20 chars), prevent wrapping on both name and type columns
+    const hasOnlyShortTypes = allOptions.every(prop => {
+        if (!prop.type) return true;
+        // Remove __LINK__ marker and extract display text from markdown links
+        let cleanType = prop.type.replace('__LINK__', '');
+        // Extract display text from markdown link: [`LangDefinitions`](#url) -> LangDefinitions
+        const linkMatch = cleanType.match(/\[`([^`]+)`\]/);
+        if (linkMatch) {
+            cleanType = linkMatch[1]; // Extract just the text between backticks
+        }
+        return cleanType.length <= 20;
+    });
+
+    const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
+
     // Generate table using shared library
     const optionsTable = generatePropertyTable(allOptions, {
-        nowrapColumns: [0, 1]
+        nowrapColumns
     });
 
     // Pick first model for example, or use a generic placeholder  
     const primaryModel = models.length > 0 ? models[0].name : 'CustomModel';
 
-    // Merge enrichment descriptions with extracted models
+    // Merge enrichment descriptions and definitions with extracted models
     const enrichedModels = models.map(model => {
         const enrichedDesc = enrichmentData?.models?.[model.name]?.description;
+        const enrichedDef = enrichmentData?.models?.[model.name]?.definition;
+        const desc = enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`;
         return {
             ...model,
-            description: enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`
+            description: wrapCodeNames(desc),
+            definition: enrichedDef || model.definition || 'undefined'
         };
     });
 
@@ -501,25 +614,37 @@ No customizable models are available for this drop-in.
 </Aside>`;
     }
 
-    // Generate custom config section if there are drop-in specific options
+    // Generate custom config section if there are drop-in specific options (excluding standard ones)
     let customConfigSection = '';
-    if (configProps.length > 0) {
-        customConfigSection = `## Drop-in-specific configuration
+    const dropinSpecificProps = configProps.filter(p => p.name !== 'langDefinitions' && p.name !== 'models');
+    if (dropinSpecificProps.length > 0) {
+        // Build the text mentioning which standard options exist
+        const standardOptionsList = [];
+        if (hasLangDefinitions) standardOptionsList.push('`langDefinitions`');
+        if (hasModels) standardOptionsList.push('`models`');
 
-The **${repoConfig.displayName}** drop-in provides additional configuration options beyond the standard \`langDefinitions\` and \`models\`. These options customize drop-in-specific behaviors and features.
+        const standardOptionsText = standardOptionsList.length > 0
+            ? `beyond the standard ${standardOptionsList.join(' and ')}`
+            : '';
+
+        const enrichedIntro = enrichmentData?.intro ||
+            `Configure the **${repoConfig.displayName}** drop-in ${standardOptionsText.replace('beyond the standard', 'with')}. All configuration options are optional unless marked as required.`;
+
+        customConfigSection = `## Drop-in configuration
+
+${enrichedIntro}
 
 \`\`\`javascript title="scripts/initializers/${repoName}.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '${repoConfig.packageName}';
 
 await initializers.mountImmediately(initialize, {
-  // Drop-in-specific configuration
-${configProps.map(prop => `  ${prop.name}: ${getExampleValue(prop.type)},`).join('\n')}
+${configProps.map(prop => `  ${prop.name}: ${getExampleValue(prop.type, prop.name)},`).join('\n')}
 });
 \`\`\`
 
 <Aside type="note">
-Refer to the [Configuration options](#configuration-options) table for descriptions of each option.
+Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
 </Aside>
 
 `;
@@ -530,10 +655,12 @@ Refer to the [Configuration options](#configuration-options) table for descripti
         `The **${repoConfig.displayName} initializer** configures the drop-in with global settings. Pass configuration options to the \`initialize()\` function during drop-in setup to customize language definitions, data models, and drop-in-specific behaviors.`;
 
     // Create version display with warning if mismatch
-    let versionDisplay = cleanVersion(versionInfo.requested);
+    // For B2B drop-ins, versionInfo.requested doesn't exist, so use actual version
+    const requestedVersion = typeof versionInfo === 'object' && versionInfo.requested ? versionInfo.requested : version;
+    let versionDisplay = cleanVersion(requestedVersion);
     let versionWarning = '';
 
-    if (!versionInfo.isExactMatch) {
+    if (typeof versionInfo === 'object' && !versionInfo.isExactMatch && versionInfo.requested) {
         versionDisplay = `${cleanVersion(versionInfo.requested)} (documented from ${versionInfo.actual})`;
         versionWarning = `
 <Aside type="caution" title="Version Mismatch">
@@ -542,24 +669,44 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 `;
     }
 
-    // Add standard type definitions for langDefinitions and models
-    configTypesWithDefinitions.push({
-        name: 'langDefinitions',
-        definition: `langDefinitions?: {
+    // Add standard type definitions only if they exist in source
+    if (hasLangDefinitions) {
+        configTypesWithDefinitions.push({
+            name: 'langDefinitions',
+            definition: `langDefinitions?: {
   [locale: string]: {
     [key: string]: string;
   };
 };`,
-        description: 'Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.'
-    });
+            description: 'Maps locale identifiers to dictionaries of key-value pairs. The `default` locale is used as the fallback when no specific locale matches. Each dictionary key corresponds to a text string used in the drop-in UI.'
+        });
+    }
 
-    configTypesWithDefinitions.push({
-        name: 'models',
-        definition: `models?: {
+    if (hasModels) {
+        configTypesWithDefinitions.push({
+            name: 'models',
+            definition: `models?: {
   [modelName: string]: Model<any>;
 };`,
-        description: 'Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.'
-    });
+            description: 'Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.'
+        });
+    }
+
+    // Add custom subsections from enrichment for simple types
+    if (enrichmentData?.config) {
+        Object.keys(enrichmentData.config).forEach(configName => {
+            const enrichment = enrichmentData.config[configName];
+            if (enrichment?.subsection?.content) {
+                // Check if not already in configTypesWithDefinitions
+                if (!configTypesWithDefinitions.find(t => t.name === configName)) {
+                    configTypesWithDefinitions.push({
+                        name: configName,
+                        customContent: enrichment.subsection.content
+                    });
+                }
+            }
+        });
+    }
 
     // Generate Configuration types section
     let configTypeDefinitions = '';
@@ -569,7 +716,25 @@ The boilerplate specifies version **${cleanVersion(versionInfo.requested)}**, bu
 The following TypeScript definitions show the structure of each configuration object:
 
 ${configTypesWithDefinitions.map(configType => {
+            // Check for custom subsection content from enrichment
+            const enrichment = enrichmentData?.config?.[configType.name];
+            if (enrichment?.subsection?.content) {
+                return `### ${configType.name}
+
+${enrichment.subsection.content}`;
+            }
+
+            // Default format
             const anchor = configType.name.toLowerCase();
+            
+            // If has custom content from enrichment, use that instead
+            if (configType.customContent) {
+                return `### ${configType.name}
+
+${configType.customContent}`;
+            }
+            
+            // Otherwise use auto-generated format
             return `### ${configType.name}
 
 ${configType.description}
@@ -580,8 +745,33 @@ ${configType.definition}
         }).join('\n\n')}`;
     }
 
+    // Generate custom model example from enrichment, or use generic fallback
+    let customModelExample = '';
+    if (enrichmentData?.customModelExample) {
+        // Use custom example from enrichment
+        customModelExample = enrichmentData.customModelExample;
+    } else {
+        // Generate generic fallback
+        customModelExample = `const models = {\n  ${primaryModel}: {\n    transformer: (data) => ({\n      // Add custom fields from backend data\n      customField: data?.custom_field,\n      promotionBadge: data?.promotion?.label,\n      // Transform existing fields\n      displayPrice: data?.price?.value ? \`\$\${data.price.value}\` : 'N/A',\n    }),\n  },\n};\n\nawait initializers.mountImmediately(initialize, { models });`;
+    }
+
+    // Generate default config comment based on drop-in-specific options
+    const dropinSpecificOptions = configProps.filter(p =>
+        p.name !== 'langDefinitions' && p.name !== 'models'
+    );
+    let defaultConfigComment = '';
+    if (dropinSpecificOptions.length > 0) {
+        const defaultValues = dropinSpecificOptions.map(opt => {
+            const enrichment = enrichmentData?.config?.[opt.name];
+            const defaultValue = enrichment?.defaultValue !== undefined ? enrichment.defaultValue : 'undefined';
+            const defaultComment = enrichment?.defaultComment ? ` // ${enrichment.defaultComment}` : ' // See configuration options below';
+            return `  // ${opt.name}: ${defaultValue}${defaultComment}`;
+        }).join('\n');
+        defaultConfigComment = `// Drop-in-specific defaults:\n${defaultValues}`;
+    }
+
     // Replace placeholders
-    return replacePlaceholders(template, {
+    let content = replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_KEY': repoName,  // kebab-case for URLs
         'DROPIN_PACKAGE': repoConfig.packageName,
@@ -594,8 +784,22 @@ ${configType.definition}
         'MODEL_DEFINITIONS': modelDefinitions,
         'CONFIG_TYPE_DEFINITIONS': configTypeDefinitions,
         'CUSTOM_CONFIG_SECTION': customConfigSection,
+        'CUSTOM_MODEL_EXAMPLE': customModelExample,
+        'DEFAULT_CONFIG_COMMENT': defaultConfigComment,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')
     });
+
+    // Fix paths for B2B drop-ins: /dropins/ -> /dropins-b2b/
+    // But keep /dropins/all/ as-is (shared documentation)
+    if (repoConfig.type === 'B2B') {
+        content = content.replace(/\/dropins\/(?!all\/)/g, '/dropins-b2b/');
+
+        // Remove navigational sections for B2B drop-ins (only contain internal links unless external links are present)
+        // Matches: "## Next steps", "## Related", "## See also", "## Learn more"
+        content = content.replace(/^## (Next steps|Related|See also|Learn more)\n\n[\s\S]*?(?=\n## |\{\/\*|$)/gm, '');
+    }
+
+    return content;
 }
 
 /**
@@ -604,10 +808,19 @@ ${configType.definition}
  * @param {string} repoName - Repository name (kebab-case)
  * @param {Object} repoConfig - Repository configuration
  * @param {Object} versionInfo - Version info object
+ * @param {Object} enrichmentData - Enrichment data with intro text
  * @returns {string} Generated MDX content
  */
-function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo) {
-    const versionDisplay = cleanVersion(versionInfo.requested);
+function generateSimplifiedInitializationMDX(repoName, repoConfig, versionInfo, enrichmentData = null) {
+    const version = typeof versionInfo === 'object' ? versionInfo.actual : versionInfo;
+    const versionDisplay = cleanVersion(version);
+
+    // Use enrichment intro if available, otherwise use default text
+    let introText = enrichmentData?.intro ||
+        `The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.`;
+
+    // Wrap code names in backticks
+    introText = wrapCodeNames(introText);
 
     return `---
 title: ${repoConfig.displayName} initialization
@@ -619,7 +832,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-The **${repoConfig.displayName}** drop-in has no drop-in-specific configuration options or customizable models.
+${introText}
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: ${versionDisplay}</strong>
@@ -650,10 +863,27 @@ You can customize text and labels using the standard \`langDefinitions\` option.
  * @param {string} type - TypeScript type string
  * @returns {string} Example value
  */
-function getExampleValue(type) {
+function getExampleValue(type, paramName = '') {
     const lowerType = type.toLowerCase();
+    const lowerParamName = paramName.toLowerCase();
 
-    if (lowerType.includes('string')) return "'value'";
+    // Context-specific string examples
+    if (lowerType.includes('string')) {
+        // ID/UID parameters
+        if (lowerParamName.includes('id') || lowerParamName.includes('uid') || lowerParamName.includes('ref')) {
+            return "'abc123'"; // Example ID
+        }
+        // Header parameters
+        if (lowerParamName.includes('header')) {
+            return "'X-Custom-Header'"; // Example header name
+        }
+        // Key parameters  
+        if (lowerParamName.includes('key')) {
+            return "'customKey'"; // Example key
+        }
+        return "'value'"; // Generic fallback
+    }
+
     if (lowerType.includes('number')) return '123';
     if (lowerType.includes('boolean')) return 'true';
     if (lowerType.includes('[]') || lowerType.includes('array')) return '[]';
