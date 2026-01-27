@@ -30,6 +30,7 @@ import * as checkoutApi from '@dropins/storefront-checkout/api.js';
 import * as orderApi from '@dropins/storefront-order/api.js';
 import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
 import { events } from '@adobe-commerce/event-bus';
+import { SHIPPING_ADDRESS_DATA_KEY } from './constants.js';
 import { showModal, validateAddress } from './utils.js';
 
 // Handler passed to the PlaceOrder container
@@ -59,9 +60,8 @@ const handlePlaceOrder = async ({ cartId, code }) => {
         suggestedAddress: suggestion,
         handleSelectedAddress: async ({ selection, address }) => {
           if (selection === 'suggested') {
-            await checkoutApi.setShippingAddress({ address });
-
             // Update the shipping form using the suggested address
+            sessionStorage.removeItem(SHIPPING_ADDRESS_DATA_KEY);
             shippingForm.setProps((prevProps) => ({
               ...prevProps,
               inputsDefaultValueSet: address,
