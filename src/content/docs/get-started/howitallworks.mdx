@@ -1,0 +1,272 @@
+---
+title: How it all works together
+description: Understand how Adobe Commerce Core, Commerce Services, Optimizer, and Storefront components work together in the Adobe Commerce ecosystem.
+---
+
+import Diagram from '@components/Diagram.astro';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page explains how the different Adobe Commerce components work together. Think of Adobe Commerce as four main layers:
+
+1. **Adobe Commerce Core** – The transactional commerce engine (PaaS or ACCS)
+2. **Commerce Services** – Multi-tenant SaaS services for catalog, search, and recommendations
+3. **Adobe Commerce Optimizer (ACO)** – Next-generation SaaS merchandising and catalog layer
+4. **Storefront layers** – Headless frontends built with Edge Delivery Services, AEM, or custom apps
+
+## Commerce application and services view
+
+This diagram shows how Commerce Core, Commerce Services, and Optimizer work together to power storefronts:
+
+<Diagram type="mermaid" code={`
+graph TB
+    subgraph Storefronts["Storefronts"]
+        AEM["<b>AEM Sites</b><br/>CIF Integration"]
+        EDS["<b>Edge Delivery Services</b><br/>Drop-ins & Blocks"]
+        PWA["<b>PWA Studio</b><br/>Custom Headless Apps"]
+    end
+    
+    subgraph SaaS["Commerce SaaS Services"]
+        CS["<b>Catalog Service</b><br/>GraphQL APIs"]
+        LS["<b>Live Search</b><br/>Search APIs"]
+        PREX["<b>Product Recommendations</b><br/>ML-powered Recs"]
+        PS["<b>Payment Services</b><br/>Card Processing"]
+        CM["<b>Channel Manager</b><br/>Marketplace Channels"]
+    end
+    
+    subgraph ACO["Adobe Commerce Optimizer"]
+        CCDM["<b>CCDM</b><br/>Composable Catalog Data Model"]
+        MS["<b>Merchandising Services</b><br/>Catalog Channels & Policies"]
+        Studio["<b>ACO Studio</b><br/>Merchandising UI"]
+    end
+    
+    subgraph Core["Commerce Core"]
+        direction TB
+        Catalog["<b>Catalog</b><br/>Products, Categories"]
+        Cart["<b>Cart & Checkout</b><br/>Quotes, Orders"]
+        Orders["<b>Orders & Fulfillment</b><br/>Invoices, Shipments"]
+        B2B["<b>B2B</b><br/>Companies, Quotes"]
+        CMS["<b>CMS</b><br/>Page Builder"]
+    end
+    
+    subgraph Sources["Data Sources"]
+        ThirdParty["<b>3rd-Party Commerce</b><br/>SFCC, SAP, etc."]
+        PIM["<b>PIM / ERP</b><br/>Product Data"]
+        Assets["<b>AEM Assets</b><br/>Media & Content"]
+    end
+    
+    subgraph Events["Eventing & Extensibility"]
+        SDK["<b>Storefront Events SDK</b><br/>Behavioral Events"]
+        IO["<b>Adobe I/O</b><br/>App Builder, API Mesh"]
+    end
+    
+    Storefronts -->|"GraphQL APIs"| SaaS
+    Storefronts -->|"GraphQL APIs"| ACO
+    Storefronts -->|"Cart/Checkout"| Core
+    
+    Core -->|"Catalog Feeds"| SaaS
+    Core -->|"Catalog Feeds"| ACO
+    ThirdParty -->|"Catalog Feeds"| ACO
+    PIM -->|"Product Data"| ACO
+    Assets -->|"Media"| ACO
+    
+    Storefronts -->|"Events"| SDK
+    SDK -->|"Analytics"| SaaS
+    SDK -->|"Metrics"| ACO
+    
+    Core -->|"Extensibility"| IO
+    SaaS -->|"APIs"| IO
+    
+    classDef storefront fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef saas fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef aco fill:#e1bee7,stroke:#9c27b0,stroke-width:2px
+    classDef core fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef sources fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef events fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    
+    class AEM,EDS,PWA storefront
+    class CS,LS,PREX,PS,CM saas
+    class CCDM,MS,Studio aco
+    class Catalog,Cart,Orders,B2B,CMS core
+    class ThirdParty,PIM,Assets sources
+    class SDK,IO events
+`} />
+
+### How data flows
+
+**Catalog data flow:**
+- Commerce Core exports catalog data → Commerce Services Connector → Catalog Service / Live Search / Product Recommendations
+- Storefronts call GraphQL APIs on `commerce.adobe.io` for product data, search, and recommendations
+
+**Cart and checkout flow:**
+- Storefronts handle cart/checkout via Commerce Core GraphQL APIs
+- Payment processing uses Payment Services SaaS APIs
+
+**Event flow:**
+- Storefront Events SDK captures user behavior (page views, add-to-cart, purchases)
+- Events flow to Product Recommendations, ACO metrics, and Adobe Experience Platform
+
+## Experience Cloud ecosystem view
+
+This diagram shows how Commerce integrates with the broader Adobe Experience Cloud:
+
+<Diagram type="mermaid" code={`
+graph LR
+    subgraph Touchpoints["Digital Touchpoints"]
+        Web["<b>Web</b>"]
+        Mobile["<b>Mobile</b>"]
+        Kiosk["<b>Kiosks</b>"]
+        Store["<b>In-Store</b>"]
+    end
+    
+    subgraph Frontend["Storefronts & Content"]
+        AEM["<b>AEM Sites</b><br/>Content & Commerce"]
+        EDS["<b>Edge Delivery Services</b><br/>Headless Storefront"]
+        Assets["<b>AEM Assets</b><br/>Media & DAM"]
+    end
+    
+    subgraph Commerce["Commerce Layer"]
+        Core["<b>Commerce Core</b><br/>PaaS / ACCS"]
+        Services["<b>Commerce Services</b><br/>Catalog, Search, Recs"]
+        Optimizer["<b>ACO</b><br/>Merchandising"]
+    end
+    
+    subgraph Data["Data & Personalization"]
+        AEP["<b>Adobe Experience Platform</b><br/>RTCDP, Profiles"]
+        AJO["<b>Adobe Journey Optimizer</b><br/>Journeys & Campaigns"]
+        CJA["<b>Customer Journey Analytics</b><br/>Analysis"]
+        Target["<b>Adobe Target</b><br/>Testing & Personalization"]
+        Analytics["<b>Adobe Analytics</b><br/>Web Analytics"]
+    end
+    
+    subgraph AI["AI & Optimization"]
+        Sensei["<b>Adobe Sensei</b><br/>ML for Recs & Search"]
+        LLM["<b>LLM Services</b><br/>Merchandising Optimization"]
+    end
+    
+    Touchpoints --> Frontend
+    Frontend --> Commerce
+    Frontend -->|"Events"| AEP
+    Commerce -->|"Data Connector"| AEP
+    AEP -->|"Segments & Offers"| Commerce
+    AEP --> AJO
+    AEP --> CJA
+    AJO -->|"Personalized Experiences"| Frontend
+    Target -->|"Testing"| Frontend
+    Analytics -->|"Insights"| Frontend
+    
+    Sensei --> Services
+    LLM --> Optimizer
+    AEP -->|"AI Agents"| LLM
+    
+    Assets --> Commerce
+    
+    classDef touchpoints fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef frontend fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef commerce fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef data fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef ai fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    
+    class Web,Mobile,Kiosk,Store touchpoints
+    class AEM,EDS,Assets frontend
+    class Core,Services,Optimizer commerce
+    class AEP,AJO,CJA,Target,Analytics data
+    class Sensei,LLM ai
+`} />
+
+### Integration points
+
+**Commerce → Experience Platform:**
+- Experience Platform Connector sends commerce data (orders, customers, products) to AEP
+- Storefront Events SDK captures behavioral events for analytics and personalization
+
+**Experience Platform → Commerce:**
+- RTCDP segments shared back to Commerce for personalization
+- Journey Optimizer sends personalized offers and campaigns to storefronts
+
+**Content integration:**
+- AEM Assets provides media and content to enrich Commerce catalogs
+- AEM Sites can serve as the full storefront or provide content to Commerce-powered storefronts
+
+## Component overview
+
+### Adobe Commerce Core
+
+The transactional commerce engine that handles:
+
+- **Catalog management** – Products, categories, attributes, pricing rules
+- **Cart and checkout** – Shopping carts, quotes, checkout flows, payment processing
+- **Orders and fulfillment** – Order management, invoices, shipments, returns
+- **B2B features** – Company accounts, negotiable quotes, requisition lists
+- **CMS** – Page Builder, content blocks, widgets
+- **Promotions** – Cart rules, catalog price rules, coupons
+
+**Deployment options:**
+- **PaaS** – Adobe Commerce on cloud infrastructure or on-premises
+- **ACCS** – Adobe Commerce as a Cloud Service (fully managed SaaS)
+
+### Commerce Services
+
+Multi-tenant SaaS services that extend Commerce Core:
+
+- **Catalog Service** – Read-optimized catalog APIs for fast product data retrieval
+- **Live Search** – AI-powered search with facets, synonyms, and merchandising
+- **Product Recommendations** – ML-powered product recommendations using Adobe Sensei
+- **Payment Services** – SaaS payment processing, settlement, and reporting
+- **Channel Manager** – Marketplace integrations (Amazon, Walmart)
+- **Store Fulfillment** – Omnichannel fulfillment capabilities
+
+These services receive catalog feeds from Commerce Core via the Commerce Services Connector and expose GraphQL APIs through `commerce.adobe.io`.
+
+### Adobe Commerce Optimizer (ACO)
+
+Next-generation SaaS merchandising layer built on the Composable Catalog Data Model (CCDM):
+
+- **CCDM** – Flexible catalog data model supporting multiple data sources
+- **Merchandising Services** – Catalog channels, policies, and rules
+- **ACO Studio** – Unified UI for merchandising and optimization
+- **ACO Catalog APIs** – GraphQL APIs for product discovery, search, and recommendations
+
+ACO can front Adobe Commerce, ACCS, or third-party commerce backends. It handles catalog, search, and recommendations while cart/checkout may remain in the backend system.
+
+### Storefront layers
+
+Headless frontends that connect to Commerce:
+
+- **Edge Delivery Services** – Composable storefronts using drop-ins and blocks
+- **AEM Sites** – Full-featured CMS with Commerce integration via CIF
+- **PWA Studio** – Progressive Web App framework for custom storefronts
+- **Custom headless apps** – Any frontend framework connecting via GraphQL
+
+All storefronts use the Storefront Events SDK to capture behavioral data for analytics and personalization.
+
+## Eventing and extensibility
+
+**Storefront Events SDK:**
+- Captures user behavior (page views, product views, add-to-cart, purchases)
+- Sends events to Product Recommendations, ACO metrics, and Adobe Experience Platform
+
+**Adobe I/O and App Builder:**
+- API Mesh for aggregating multiple APIs into a single endpoint
+- App Builder for custom integrations and extensions
+- Webhooks for real-time event notifications
+
+## AI and optimization
+
+**Adobe Sensei:**
+- Powers Product Recommendations with ML algorithms
+- Enhances Live Search ranking and relevance
+- Provides explainable AI for merchandising decisions
+
+**LLM services:**
+- AI-powered merchandising optimization in ACO Studio
+- Future integration with AEP Agents for conversational commerce experiences
+
+## Data flow summary
+
+1. **Catalog data**: Commerce Core → Commerce Services Connector → Catalog Service / ACO → Storefronts
+2. **Cart/checkout**: Storefronts → Commerce Core GraphQL APIs → Order processing
+3. **Events**: Storefronts → Storefront Events SDK → Product Recommendations / ACO / AEP
+4. **Personalization**: AEP → Segments → Commerce → Personalized storefront experiences
+5. **Content**: AEM Assets → Commerce catalogs → Enriched product data
+
+This architecture enables composable commerce where you can mix and match components based on your needs, whether using full Adobe Commerce, third-party backends with ACO, or hybrid approaches.
