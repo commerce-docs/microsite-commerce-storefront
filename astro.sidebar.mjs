@@ -815,15 +815,14 @@ export function generateSidebar() {
           ],
         },
         // B2B Commerce blocks (30 total): commerce-b2b-* (18), commerce-company-* (7),
-        // commerce-customer-company (1), plus commerce-{account-header,account-nav,account-sidebar,checkout-success} (4)
+        // commerce-customer-company (1), plus commerce-{account-nav,checkout-success} (2)
+        // Note: Account Header and Account Sidebar are shared B2C/B2B blocks listed in the main Commerce blocks section
         {
           label: 'B2B Commerce blocks',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/' },
-            { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
-            { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
             { label: 'Company Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
             { label: 'Company Create', link: '/merchants/blocks/commerce-company-create/' },
