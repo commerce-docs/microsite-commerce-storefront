@@ -769,11 +769,15 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Commerce blocks',
+          link: '/merchants/blocks/',
+        },
+        {
           label: 'B2C Commerce blocks',
           items: [
-            { label: 'Overview', link: '/merchants/commerce-blocks/' },
-            { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
-            { label: 'Product Recommendations setup', link: '/merchants/commerce-blocks/product-recommendations/' },
+            { label: 'Overview', link: '/merchants/blocks/b2c/' },
+            { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
+            { label: 'Product Recommendations setup', link: '/merchants/blocks/product-recommendations/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -811,7 +815,7 @@ export function generateSidebar() {
           label: 'B2B Commerce blocks',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/merchants/blocks/' },
+            { label: 'Overview', link: '/merchants/blocks/b2b/' },
             { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
             { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
             { label: 'Company Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
