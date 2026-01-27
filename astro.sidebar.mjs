@@ -146,7 +146,7 @@ export function generateSidebar() {
         // ---------- DROP-INS Overview ----------
         {
           label: 'Drop-ins',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
@@ -320,7 +320,7 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'Product details (PDP)',
+              label: 'Product Details Page',
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },

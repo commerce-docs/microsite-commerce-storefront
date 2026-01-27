@@ -32,14 +32,8 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
       }
       
       try {
-        console.log('Loading mermaid for diagram:', id);
-        
-        // Import mermaid dynamically - use latest version for newest syntax support
+        // Import and initialize mermaid
         const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
-        
-        console.log('Mermaid loaded, initializing...');
-        
-        // Initialize mermaid with explicit font to prevent text clipping
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
@@ -47,46 +41,32 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           fontFamily: 'Arial, sans-serif'
         });
         
-        console.log('Rendering mermaid diagram...');
-        
         // Generate SVG
         const { svg } = await mermaid.render(`${id}-svg`, code);
         
-        console.log('Mermaid diagram rendered successfully');
-        
-        // Parse and enhance the SVG for better zoom behavior
+        // Parse and enhance SVG for zoom
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
         const svgElement = svgDoc.querySelector('svg');
         
         if (svgElement) {
-          // Get original dimensions for aspect ratio calculation
-          const originalViewBox = svgElement.getAttribute('viewBox');
-          const originalWidth = svgElement.getAttribute('width');
-          const originalHeight = svgElement.getAttribute('height');
-        
-          // Set large fixed dimensions like the working SVG images
-          // But preserve aspect ratio for sequence diagrams which can be very wide
-          let targetWidth = 1920;
-          let targetHeight = 1080;
+          // Calculate dimensions preserving aspect ratio
+          let width = 1920;
+          let height = 1080;
           
-          if (originalViewBox) {
-            const [, , vbWidth, vbHeight] = originalViewBox.split(' ').map(Number);
+          const viewBox = svgElement.getAttribute('viewBox');
+          if (viewBox) {
+            const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
             const aspectRatio = vbWidth / vbHeight;
-            
-            // If it's a very wide diagram (like sequence diagrams), adjust dimensions
             if (aspectRatio > 2) {
-              targetHeight = Math.round(targetWidth / aspectRatio);
+              height = Math.round(width / aspectRatio);
             }
           }
-        
-          svgElement.setAttribute('width', targetWidth.toString());
-          svgElement.setAttribute('height', targetHeight.toString());
           
-          // Add white background to the SVG
-          svgElement.style.backgroundColor = 'white';
+          svgElement.setAttribute('width', width.toString());
+          svgElement.setAttribute('height', height.toString());
           
-          // Also add a white background rectangle as the first child
+          // Add white background
           const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect');
           rect.setAttribute('width', '100%');
           rect.setAttribute('height', '100%');
@@ -94,16 +74,14 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        // Serialize enhanced SVG
         const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
         
-        // Use Blob URL instead of data URI - works better with zoom modal
+        // Create blob URL for the SVG
         const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
         const blobUrl = URL.createObjectURL(blob);
         
-        // Create the same structure as working images
+        // Create zoomable wrapper structure (same as working version)
         const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
-        
         const img = document.createElement('img');
         img.src = blobUrl;
         img.alt = 'Mermaid diagram';
@@ -111,19 +89,10 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         // Store blob URL for zoom (don't revoke until zoom is done)
         img.dataset.blobUrl = blobUrl;
         
-        // Set the calculated dimensions on the img element
-        const finalWidth = svgElement?.getAttribute('width') || '1920';
-        const finalHeight = svgElement?.getAttribute('height') || '1080';
-        img.setAttribute('width', finalWidth);
-        img.setAttribute('height', finalHeight);
+        img.setAttribute('width', svgElement?.getAttribute('width') || '1920');
+        img.setAttribute('height', svgElement?.getAttribute('height') || '1080');
+        img.style.cssText = 'max-width: 100%; height: auto; display: block;';
         
-        img.style.cssText = `
-          max-width: 100%;
-          height: auto;
-          display: block;
-        `;
-        
-        // Create zoom button
         const zoomButton = document.createElement('button');
         zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
         zoomButton.className = 'starlight-image-zoom-control';
@@ -133,32 +102,59 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
           </svg>
         `;
         
-        // Assemble the structure
         zoomableWrapper.appendChild(img);
         zoomableWrapper.appendChild(zoomButton);
-        
-        // Replace loading with the zoomable wrapper
         diagramElement.innerHTML = '';
         diagramElement.appendChild(zoomableWrapper);
         
-        // FIX: Manually wire up zoom functionality to avoid 1-2 second lag
-        // DO NOT replace this with setTimeout/astro:after-swap - it causes lag!
-        // This approach directly opens the zoom modal without re-scanning all images
-        zoomButton.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        // Wire up zoom functionality
+        // CRITICAL FIX: starlight-image-zoom scans for zoomables on DOMContentLoaded
+        // Since we create this dynamically AFTER that scan, we must trigger a re-scan
+        async function setupZoom() {
+          // Wait for starlight-image-zoom custom element to be defined
+          await customElements.whenDefined('starlight-image-zoom');
           
-          // Use blob URL for zoom (more reliable than data URI)
-          const imageSrc = img.dataset.blobUrl || img.src;
-          
-          // Find zoom modal when clicked (it exists by the time user clicks)
-          const zoomModal = document.querySelector('starlight-image-zoom-modal');
-          if (zoomModal && typeof zoomModal.open === 'function') {
-            zoomModal.open(imageSrc, img.alt || 'Mermaid diagram');
+          let zoomElement = document.querySelector('starlight-image-zoom');
+          let attempts = 0;
+          while (!zoomElement && attempts < 20) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            zoomElement = document.querySelector('starlight-image-zoom');
+            attempts++;
           }
-        });
+          
+          if (!zoomElement) return;
+          
+          // Wire up button click handler - click the image directly
+          // The zoom element listens for image clicks and will handle it
+          zoomButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            img.click();
+          });
+          
+          // Debounced re-scan: only trigger once after all diagrams are created
+          // Use a namespaced property to avoid conflicts
+          const RESCAN_KEY = '__starlightMermaidZoomRescan';
+          if (window[RESCAN_KEY]) {
+            clearTimeout(window[RESCAN_KEY]);
+          }
+          window[RESCAN_KEY] = setTimeout(() => {
+            document.dispatchEvent(new CustomEvent('astro:after-swap'));
+            window[RESCAN_KEY] = null;
+          }, 150);
+          
+          // Clean up timeout on page navigation
+          document.addEventListener('astro:before-preparation', () => {
+            if (window[RESCAN_KEY]) {
+              clearTimeout(window[RESCAN_KEY]);
+              window[RESCAN_KEY] = null;
+            }
+          }, { once: true });
+        }
         
-        // Clean up blob URL on page unload/navigation
+        setupZoom();
+        
+        // Clean up blob URL on page unload/navigation (same as working version)
         img.onload = () => {
           window.addEventListener('beforeunload', () => {
             URL.revokeObjectURL(blobUrl);
