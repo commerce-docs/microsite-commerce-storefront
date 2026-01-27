@@ -783,7 +783,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/commerce-blocks/' },
             { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
-            { label: 'Product recommendations', link: '/merchants/commerce-blocks/product-recommendations/' },
+            { label: 'Product Recommendations setup', link: '/merchants/commerce-blocks/product-recommendations/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -812,7 +812,6 @@ export function generateSidebar() {
             { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
             { label: 'Product Details', link: '/merchants/blocks/product-details/' },
             { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
-            { label: 'Product Recommendations', link: '/merchants/blocks/product-recommendations/' },
           ],
         },
         // B2B Commerce blocks (30 total): commerce-b2b-* (18), commerce-company-* (7),
