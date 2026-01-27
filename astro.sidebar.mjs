@@ -26,7 +26,6 @@ export function generateSidebar() {
             { label: 'Overview', link: '/get-started/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront' },
             { label: 'Learn the architecture', link: '/get-started/architecture/' },
-            { label: 'How it all works together', link: '/get-started/howitallworks/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
@@ -767,19 +766,10 @@ export function generateSidebar() {
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
             { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
             { label: 'Section metadata', link: '/merchants/quick-start/section-metadata/' },
-            {
-              label: 'Localization',
-              collapsed: true,
-              items: [
-                { label: 'Document Authoring workflow', link: '/merchants/quick-start/content-localization/' },
-                { label: 'Universal Editor workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
-                { label: 'Commerce-specific tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
-              ],
-            },
           ],
         },
         {
-          label: 'Commerce blocks',
+          label: 'B2C Commerce blocks',
           items: [
             { label: 'Overview', link: '/merchants/commerce-blocks/' },
             { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
@@ -850,6 +840,15 @@ export function generateSidebar() {
             { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
             { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
             { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
+          ],
+        },
+        {
+          label: 'Localization',
+          collapsed: true,
+          items: [
+            { label: 'Document Authoring workflow', link: '/merchants/quick-start/content-localization/' },
+            { label: 'Universal Editor workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
+            { label: 'Commerce-specific tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },
         {
