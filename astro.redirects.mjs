@@ -137,12 +137,27 @@ export function generateRedirects(basePath) {
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
 
-        // Commerce blocks redirects (storefront-builder → commerce-blocks)
-        '/merchants/storefront-builder/': `${basePath}/merchants/commerce-blocks`,
-        '/merchants/storefront-builder/personalization': `${basePath}/merchants/commerce-blocks/personalization`,
-        '/merchants/storefront-builder/product-recommendations': `${basePath}/merchants/commerce-blocks/product-recommendations`,
-        '/merchants/get-started/personalization': `${basePath}/merchants/commerce-blocks/personalization`,
-        '/merchants/get-started/product-recommendations': `${basePath}/merchants/commerce-blocks/product-recommendations`,
+        // Commerce blocks redirects (storefront-builder → blocks)
+        '/merchants/storefront-builder/': `${basePath}/merchants/blocks`,
+        '/merchants/storefront-builder/personalization': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/storefront-builder/personalization/': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/storefront-builder/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
+        '/merchants/storefront-builder/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
+        '/merchants/get-started/personalization': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/get-started/personalization/': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/get-started/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
+        '/merchants/get-started/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
+        
+        // Commerce blocks folder consolidation redirects (commerce-blocks → blocks)
+        '/merchants/commerce-blocks/': `${basePath}/merchants/blocks`,
+        '/merchants/commerce-blocks': `${basePath}/merchants/blocks`,
+        '/merchants/commerce-blocks/personalization': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/commerce-blocks/personalization/': `${basePath}/merchants/blocks/personalization`,
+        '/merchants/commerce-blocks/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
+        '/merchants/commerce-blocks/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
+        
+        // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
+        // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
 
         // Content customizations redirects (get-started → content-customizations)
         '/merchants/get-started/content-customizations': `${basePath}/merchants/content-customizations`,
