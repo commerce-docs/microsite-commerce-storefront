@@ -1743,9 +1743,16 @@ function getBoilerplateVersion(boilerplatePath) {
 
 /**
  * Mapping of blocks to their setup/tutorial guides
+ * 
+ * DOCUMENTATION STRUCTURE:
+ * - Block reference docs: /merchants/blocks/{block-name}.mdx (auto-generated, includes config tables)
+ * - Setup guides: /merchants/blocks/{block-name}.mdx (manually written, detailed tutorials)
+ * 
+ * When a block has a setup guide mapping, the generated block reference doc will include
+ * a "Setup required" note linking to the setup guide.
  */
 const setupGuideMapping = {
-    'product-recommendations': '/merchants/commerce-blocks/product-recommendations/'
+    'product-recommendations': '/merchants/blocks/product-recommendations/'
 };
 
 /**
