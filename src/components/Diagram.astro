@@ -1,6 +1,14 @@
 ---
+import { buildMermaidThemeVariables, mermaidThemeConfig } from './diagram-mermaid-styles.config';
+
 const { caption, width, type = "image", code } = Astro.props;
 const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
+
+// Pass config to client-side script
+const themeVariables = buildMermaidThemeVariables();
+const sequenceParticipantStyles = mermaidThemeConfig.sequence.participants;
+const flowchartSubgraphStyle = mermaidThemeConfig.flowchart.subgraph;
+const flowchartNodeCornerRadius = mermaidThemeConfig.flowchart.nodeCornerRadius;
 ---
 
 <div class="diagram" data-diagram-type={type}>
@@ -17,7 +25,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
 </div>
 
 {type === "mermaid" && (
-  <script define:vars={{ id, code }}>
+  <script define:vars={{ id, code, themeVariables, sequenceParticipantStyles, flowchartSubgraphStyle, flowchartNodeCornerRadius }}>
     // Mermaid rendering script
     async function renderMermaidDiagram() {
       const diagramElement = document.getElementById(id);
@@ -34,11 +42,16 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
       try {
         // Import and initialize mermaid
         const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+        
+        // Global theme configuration for all Mermaid diagrams
+        // Using 'base' theme allows customization via themeVariables
+        // Theme variables are imported from mermaid-styles.config.ts
         mermaid.initialize({
           startOnLoad: false,
-          theme: 'default',
+          theme: 'base',
           securityLevel: 'loose',
-          fontFamily: 'Arial, sans-serif'
+          fontFamily: themeVariables.fontFamily,
+          themeVariables: themeVariables
         });
         
         // Generate SVG
@@ -50,6 +63,347 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         const svgElement = svgDoc.querySelector('svg');
         
         if (svgElement) {
+          // Apply styles directly to SVG elements (before converting to blob)
+          // Sequence diagram participant styles are imported from mermaid-styles.config.ts
+          const participantStyles = sequenceParticipantStyles;
+          
+          // Strategy: Find all rectangles and text elements, then match them
+          // Participant boxes are rectangles positioned at the top of the diagram
+          const allRects = Array.from(svgDoc.querySelectorAll('rect'));
+          const allTexts = Array.from(svgDoc.querySelectorAll('text'));
+          
+          // Store reference to background rect (we'll add it later) to exclude it
+          let backgroundRect = null;
+          
+          // Find participant boxes: they're wide, short rectangles at the top
+          // First, identify the top row by finding the topmost wide rectangles
+          const candidateRects = Array.from(allRects).filter(rect => {
+            const width = parseFloat(rect.getAttribute('width') || '0');
+            const height = parseFloat(rect.getAttribute('height') || '0');
+            const y = parseFloat(rect.getAttribute('y') || '0');
+            
+            // Skip background rectangles
+            if (width > 1000 || height > 1000) {
+              return false;
+            }
+            
+            // Candidate: wide rectangles (wider than tall) near the top
+            return width > 60 && width < 500 && 
+                   height > 10 && height < 100 && 
+                   width > height * 1.8 &&  // Wider than tall
+                   y < 120;  // Top portion of diagram
+          });
+          
+          // Find the topmost y position among candidates (this should be the participant row)
+          const topYPositions = candidateRects.map(rect => parseFloat(rect.getAttribute('y') || '0')).sort((a, b) => a - b);
+          const topY = topYPositions.length > 0 ? topYPositions[0] : 50; // Fallback to 50 if none found
+          const participantYRange = 25; // Participant boxes should be within 25px of the topmost one
+          
+          allRects.forEach((rect) => {
+            const width = parseFloat(rect.getAttribute('width') || '0');
+            const height = parseFloat(rect.getAttribute('height') || '0');
+            const x = parseFloat(rect.getAttribute('x') || '0');
+            const y = parseFloat(rect.getAttribute('y') || '0');
+            
+            // Skip if this is a full-width background rectangle
+            if (width > 1000 || height > 1000) {
+              return;
+            }
+            
+            // Participant boxes characteristics:
+            // - Wider than tall (width/height ratio >= 1.8)
+            // - At the top row (within participantYRange of topmost, OR if no topY found, just check y < 120)
+            // - Not too small or too large
+            // - Exclude tall rectangles (activation boxes) - they have height > width
+            const isWideAndShort = width > height * 1.8;
+            const isAtTopRow = topYPositions.length > 0 
+              ? Math.abs(y - topY) <= participantYRange
+              : y < 120; // Fallback if we couldn't determine top row
+            const isRightSize = width > 60 && width < 500 && height > 10 && height < 100;
+            
+            const isParticipantBox = isWideAndShort && isAtTopRow && isRightSize;
+            
+            if (isParticipantBox) {
+              // Find text elements that are positioned near this rectangle
+              // Text is usually centered horizontally within the box
+              const rectCenterX = x + width / 2;
+              const rectCenterY = y + height / 2;
+              
+              const nearbyTexts = allTexts.filter(text => {
+                const textX = parseFloat(text.getAttribute('x') || '0');
+                const textY = parseFloat(text.getAttribute('y') || '0');
+                // Check if text is within the rectangle bounds or very close
+                const horizontalMatch = textX >= x - 20 && textX <= x + width + 20;
+                const verticalMatch = textY >= y - 10 && textY <= y + height + 10;
+                return horizontalMatch && verticalMatch;
+              });
+              
+              if (nearbyTexts.length > 0) {
+                // Collect text content
+                let textContent = '';
+                nearbyTexts.forEach(t => {
+                  const text = (t.textContent || '').trim();
+                  if (text) {
+                    textContent += text.toLowerCase() + ' ';
+                  }
+                });
+                
+                // Match participant by text content and apply styles
+                for (const [key, style] of Object.entries(participantStyles)) {
+                  if (textContent.includes(key)) {
+                    rect.setAttribute('fill', style.fill);
+                    rect.setAttribute('stroke', style.stroke);
+                    rect.setAttribute('stroke-width', style.strokeWidth);
+                    // Also set style attribute as backup
+                    const currentStyle = rect.getAttribute('style') || '';
+                    rect.setAttribute('style', `${currentStyle} fill: ${style.fill}; stroke: ${style.stroke}; stroke-width: ${style.strokeWidth};`.trim());
+                    break;
+                  }
+                }
+              }
+            }
+          });
+          
+          // Also style bottom participant boxes (at the end of lifelines)
+          // Find the bottommost y position for participant boxes
+          const bottomCandidateRects = Array.from(allRects).filter(rect => {
+            const width = parseFloat(rect.getAttribute('width') || '0');
+            const height = parseFloat(rect.getAttribute('height') || '0');
+            const y = parseFloat(rect.getAttribute('y') || '0');
+            
+            // Skip background rectangles
+            if (width > 1000 || height > 1000) {
+              return false;
+            }
+            
+            // Candidate: wide rectangles near the bottom
+            return width > 60 && width < 500 && 
+                   height > 10 && height < 100 && 
+                   width > height * 1.8 &&  // Wider than tall
+                   y > 200;  // Bottom portion of diagram (well below top)
+          });
+          
+          // Find the bottommost y position among candidates
+          const bottomYPositions = bottomCandidateRects.map(rect => parseFloat(rect.getAttribute('y') || '0')).sort((a, b) => b - a);
+          const bottomY = bottomYPositions.length > 0 ? bottomYPositions[0] : 0;
+          const bottomParticipantYRange = 25;
+          
+          // Style bottom participant boxes
+          allRects.forEach((rect) => {
+            const width = parseFloat(rect.getAttribute('width') || '0');
+            const height = parseFloat(rect.getAttribute('height') || '0');
+            const x = parseFloat(rect.getAttribute('x') || '0');
+            const y = parseFloat(rect.getAttribute('y') || '0');
+            
+            // Skip if this is a full-width background rectangle
+            if (width > 1000 || height > 1000) {
+              return;
+            }
+            
+            // Bottom participant boxes: wide, short, at the bottom row
+            const isWideAndShort = width > height * 1.8;
+            const isAtBottomRow = bottomYPositions.length > 0 
+              ? Math.abs(y - bottomY) <= bottomParticipantYRange
+              : false; // Only style if we found a bottom row
+            const isRightSize = width > 60 && width < 500 && height > 10 && height < 100;
+            
+            const isBottomParticipantBox = isWideAndShort && isAtBottomRow && isRightSize;
+            
+            if (isBottomParticipantBox) {
+              // Find text elements near this rectangle
+              const nearbyTexts = allTexts.filter(text => {
+                const textX = parseFloat(text.getAttribute('x') || '0');
+                const textY = parseFloat(text.getAttribute('y') || '0');
+                const horizontalMatch = textX >= x - 20 && textX <= x + width + 20;
+                const verticalMatch = textY >= y - 10 && textY <= y + height + 10;
+                return horizontalMatch && verticalMatch;
+              });
+              
+              if (nearbyTexts.length > 0) {
+                // Collect text content
+                let textContent = '';
+                nearbyTexts.forEach(t => {
+                  const text = (t.textContent || '').trim();
+                  if (text) {
+                    textContent += text.toLowerCase() + ' ';
+                  }
+                });
+                
+                // Match participant by text content and apply same styles as top boxes
+                for (const [key, style] of Object.entries(participantStyles)) {
+                  if (textContent.includes(key)) {
+                    rect.setAttribute('fill', style.fill);
+                    rect.setAttribute('stroke', style.stroke);
+                    rect.setAttribute('stroke-width', style.strokeWidth);
+                    const currentStyle = rect.getAttribute('style') || '';
+                    rect.setAttribute('style', `${currentStyle} fill: ${style.fill}; stroke: ${style.stroke}; stroke-width: ${style.strokeWidth};`.trim());
+                    break;
+                  }
+                }
+              }
+            }
+          });
+          
+          // ===== FLOWCHART POST-PROCESSING =====
+          // Check if this is a flowchart by looking for flowchart-specific elements
+          const isFlowchart = code.trim().toLowerCase().includes('flowchart') || 
+                             code.trim().toLowerCase().includes('graph');
+          
+          if (isFlowchart) {
+            // Find all rectangles that represent nodes (not already styled with classDef)
+            // Nodes without explicit styling should have transparent backgrounds
+            const allFlowchartRects = Array.from(svgDoc.querySelectorAll('rect'));
+            const styledNodes = new Set();
+            
+            // Find nodes that have been styled with classDef (they'll have specific fill colors)
+            allFlowchartRects.forEach(rect => {
+              const fill = rect.getAttribute('fill') || '';
+              const style = rect.getAttribute('style') || '';
+              // If it has a non-default fill color, it's been styled
+              if (fill && fill !== 'transparent' && fill !== 'none' && 
+                  fill !== '#ffffff' && fill !== '#fff' && !fill.includes('rgb(255')) {
+                styledNodes.add(rect);
+              }
+            });
+            
+            // Make unstyled nodes transparent
+            allFlowchartRects.forEach(rect => {
+              const width = parseFloat(rect.getAttribute('width') || '0');
+              const height = parseFloat(rect.getAttribute('height') || '0');
+              
+              // Skip background and very large rectangles
+              if (width > 1000 || height > 1000) {
+                return;
+              }
+              
+              // Skip if already styled
+              if (styledNodes.has(rect)) {
+                return;
+              }
+              
+              // Check if this is a node rectangle (not a subgraph/cluster)
+              // Node rectangles are typically smaller and have text inside
+              const hasTextNearby = Array.from(allTexts).some(text => {
+                const textX = parseFloat(text.getAttribute('x') || '0');
+                const textY = parseFloat(text.getAttribute('y') || '0');
+                const rectX = parseFloat(rect.getAttribute('x') || '0');
+                const rectY = parseFloat(rect.getAttribute('y') || '0');
+                const rectWidth = parseFloat(rect.getAttribute('width') || '0');
+                const rectHeight = parseFloat(rect.getAttribute('height') || '0');
+                
+                return textX >= rectX && textX <= rectX + rectWidth &&
+                       textY >= rectY && textY <= rectY + rectHeight;
+              });
+              
+              // If it's a node rectangle (has text), make it transparent
+              if (hasTextNearby && width < 500 && height < 200) {
+                rect.setAttribute('fill', 'none');
+                // Keep a subtle border for visibility
+                if (!rect.getAttribute('stroke') || rect.getAttribute('stroke') === 'none') {
+                  rect.setAttribute('stroke', '#777777');
+                  rect.setAttribute('stroke-width', '1px');
+                }
+              }
+            });
+            
+            // Style subgraphs/clusters - find them by looking for cluster groups and large rectangles
+            const clusters = [];
+            
+            // First, look for groups with cluster-related class names
+            const clusterGroups = svgDoc.querySelectorAll('g.cluster, g[class*="cluster"], g[class*="subgraph"]');
+            clusterGroups.forEach(group => {
+              const rects = group.querySelectorAll('rect');
+              rects.forEach(rect => {
+                const width = parseFloat(rect.getAttribute('width') || '0');
+                const height = parseFloat(rect.getAttribute('height') || '0');
+                if (width > 100 && height > 50) {
+                  clusters.push({ rect, y: parseFloat(rect.getAttribute('y') || '0') });
+                }
+              });
+            });
+            
+            // Also find large rectangles that contain other rectangles (subgraph containers)
+            allFlowchartRects.forEach(rect => {
+              const width = parseFloat(rect.getAttribute('width') || '0');
+              const height = parseFloat(rect.getAttribute('height') || '0');
+              
+              // Subgraphs are large rectangles (but not the background)
+              if (width > 200 && height > 150 && width < 2000 && height < 2000) {
+                // Check if this rectangle contains other rectangles (indicating it's a cluster)
+                const rectX = parseFloat(rect.getAttribute('x') || '0');
+                const rectY = parseFloat(rect.getAttribute('y') || '0');
+                
+                const containsOtherRects = allFlowchartRects.some(otherRect => {
+                  if (otherRect === rect) return false;
+                  const otherX = parseFloat(otherRect.getAttribute('x') || '0');
+                  const otherY = parseFloat(otherRect.getAttribute('y') || '0');
+                  const otherWidth = parseFloat(otherRect.getAttribute('width') || '0');
+                  const otherHeight = parseFloat(otherRect.getAttribute('height') || '0');
+                  
+                  // Check if otherRect is inside this rect
+                  return otherX > rectX && otherY > rectY &&
+                         (otherX + otherWidth) < (rectX + width) &&
+                         (otherY + otherHeight) < (rectY + height);
+                });
+                
+                if (containsOtherRects) {
+                  // Check if we haven't already added this rect
+                  const alreadyAdded = clusters.some(c => c.rect === rect);
+                  if (!alreadyAdded) {
+                    clusters.push({ rect, y: rectY });
+                  }
+                }
+              }
+            });
+            
+            // Sort clusters by y position and apply subgraph styling from config
+            // Subgraph styles are configured in mermaid-styles.config.ts
+            const subgraphStyle = flowchartSubgraphStyle;
+            clusters.sort((a, b) => a.y - b.y);
+            clusters.forEach((cluster) => {
+              // Apply subgraph styles from config
+              cluster.rect.setAttribute('fill', subgraphStyle.fill);
+              cluster.rect.setAttribute('stroke', subgraphStyle.stroke);
+              cluster.rect.setAttribute('stroke-width', subgraphStyle.strokeWidth);
+              cluster.rect.setAttribute('stroke-dasharray', subgraphStyle.strokeDasharray);
+              cluster.rect.setAttribute('rx', subgraphStyle.cornerRadius.toString());
+              cluster.rect.setAttribute('ry', subgraphStyle.cornerRadius.toString());
+              // Remove any existing style and set new one
+              cluster.rect.removeAttribute('style');
+              cluster.rect.setAttribute('style', `fill: ${subgraphStyle.fill} !important; stroke: ${subgraphStyle.stroke} !important; stroke-width: ${subgraphStyle.strokeWidth} !important; stroke-dasharray: ${subgraphStyle.strokeDasharray} !important;`);
+            });
+          }
+          
+          // ===== APPLY ROUNDED CORNERS TO ALL BOXES =====
+          // Add rounded corners to all rectangles that represent boxes/nodes
+          // Corner radius is configured in mermaid-styles.config.ts
+          const defaultCornerRadius = flowchartNodeCornerRadius;
+          const allBoxRects = Array.from(svgDoc.querySelectorAll('rect'));
+          allBoxRects.forEach(rect => {
+            const width = parseFloat(rect.getAttribute('width') || '0');
+            const height = parseFloat(rect.getAttribute('height') || '0');
+            
+            // Skip background rectangles
+            if (width > 1000 || height > 1000) {
+              return;
+            }
+            
+            // Skip if already has rounded corners (e.g., subgraphs)
+            if (rect.getAttribute('rx') || rect.getAttribute('ry')) {
+              return;
+            }
+            
+            // Calculate appropriate corner radius based on box size
+            // Use configured radius, but scale down for very small boxes
+            const cornerRadius = Math.min(defaultCornerRadius, Math.min(width, height) * 0.1);
+            
+            // Apply rounded corners
+            if (cornerRadius > 0) {
+              rect.setAttribute('rx', cornerRadius.toString());
+              rect.setAttribute('ry', cornerRadius.toString());
+            }
+          });
+          
           // Calculate dimensions preserving aspect ratio
           let width = 1920;
           let height = 1080;
