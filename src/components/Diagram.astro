@@ -388,8 +388,15 @@ const flowchartNodeCornerRadius = mermaidThemeConfig.flowchart.nodeCornerRadius;
               return;
             }
             
-            // Skip if already has rounded corners (e.g., subgraphs)
-            if (rect.getAttribute('rx') || rect.getAttribute('ry')) {
+            // Skip very small rectangles (likely decorative elements)
+            if (width < 5 || height < 5) {
+              return;
+            }
+            
+            // Skip if already has rounded corners (e.g., subgraphs that were explicitly styled)
+            const existingRx = rect.getAttribute('rx');
+            const existingRy = rect.getAttribute('ry');
+            if (existingRx && existingRy && parseFloat(existingRx) > 0) {
               return;
             }
             
@@ -397,8 +404,8 @@ const flowchartNodeCornerRadius = mermaidThemeConfig.flowchart.nodeCornerRadius;
             // Use configured radius, but scale down for very small boxes
             const cornerRadius = Math.min(defaultCornerRadius, Math.min(width, height) * 0.1);
             
-            // Apply rounded corners
-            if (cornerRadius > 0) {
+            // Apply rounded corners (minimum 2px for visibility)
+            if (cornerRadius >= 2) {
               rect.setAttribute('rx', cornerRadius.toString());
               rect.setAttribute('ry', cornerRadius.toString());
             }
@@ -428,7 +435,8 @@ const flowchartNodeCornerRadius = mermaidThemeConfig.flowchart.nodeCornerRadius;
           svgElement.insertBefore(rect, svgElement.firstChild);
         }
         
-        const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
+        // Serialize the SVG element (not the whole document)
+        const enhancedSvg = svgElement ? new XMLSerializer().serializeToString(svgElement) : new XMLSerializer().serializeToString(svgDoc);
         
         // Create blob URL for the SVG
         const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
