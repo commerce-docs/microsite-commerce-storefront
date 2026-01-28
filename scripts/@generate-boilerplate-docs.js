@@ -10,7 +10,7 @@
  * - Overview page with CardGrid of all blocks
  * - Individual documentation page for each commerce block (30+ pages)
  * - Project structure documentation
- * - Build process documentation  
+ * - Build process documentation
  * - Configuration documentation
  *
  * USAGE:
@@ -743,7 +743,6 @@ function generateStructureDocs(boilerplateVersion, outputPath) {
   - styles.css _-- Global design tokens_
 - tools/ _-- Commerce tooling_
   - picker/ _-- Commerce Picker_
-  - sidekick/ _-- Sidekick config_
 - head.html _-- Site-wide head configuration_
 - package.json _-- Dependencies and scripts_
 </FileTree>`;
