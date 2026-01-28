@@ -39,32 +39,65 @@ const allComponents = [
   A changelog for that component does not exist.
 </div>
 
-<script>
-  const componentFilter = document.getElementById('component-filter') as HTMLSelectElement | null;
-  const entries = document.querySelectorAll<HTMLElement>('.changelog-entry');
-  const noEntriesMessage = document.getElementById('no-entries-message');
+<script is:inline>
+  (function() {
+    function initChangelogFilter() {
+      const componentFilter = document.getElementById('component-filter');
+      const noEntriesMessage = document.getElementById('no-entries-message');
 
-  function filterEntries() {
-    if (!componentFilter || !noEntriesMessage) return;
-
-    const selectedComponent = componentFilter.value;
-    let visibleEntries = 0;
-
-    entries.forEach(entry => {
-      const components = entry.getAttribute('data-components')?.split(',') || [];
-      const componentMatch = !selectedComponent || components.includes(selectedComponent);
-
-      if (entry instanceof HTMLElement) {
-        entry.style.display = componentMatch ? 'block' : 'none';
-        if (componentMatch) visibleEntries++;
+      if (!componentFilter) {
+        return;
       }
+
+      if (!noEntriesMessage) {
+        return;
+      }
+
+      // Check if already initialized
+      if (componentFilter.dataset.initialized === 'true') {
+        return;
+      }
+
+      function filterEntries() {
+        const selectedComponent = componentFilter.value;
+        const entries = document.querySelectorAll('.changelog-entry');
+        let visibleEntries = 0;
+
+        entries.forEach(entry => {
+          const componentsAttr = entry.getAttribute('data-components');
+          if (!componentsAttr) {
+            return;
+          }
+
+          const components = componentsAttr.split(',').map(c => c.trim());
+          const componentMatch = !selectedComponent || components.includes(selectedComponent);
+
+          if (entry instanceof HTMLElement) {
+            entry.style.display = componentMatch ? '' : 'none';
+            if (componentMatch) visibleEntries++;
+          }
+        });
+
+        // Show/hide the no entries message
+        if (noEntriesMessage) {
+          noEntriesMessage.style.display = selectedComponent && visibleEntries === 0 ? 'block' : 'none';
+        }
+      }
+
+      componentFilter.addEventListener('change', filterEntries);
+      componentFilter.dataset.initialized = 'true';
+    }
+
+    // Run on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initChangelogFilter);
+    } else {
+      initChangelogFilter();
+    }
+
+    // Handle Astro page transitions
+    document.addEventListener('astro:page-load', () => {
+      setTimeout(initChangelogFilter, 100);
     });
-
-    // Show/hide the no entries message
-    noEntriesMessage.style.display = selectedComponent && visibleEntries === 0 ? 'block' : 'none';
-  }
-
-  if (componentFilter) {
-    componentFilter.addEventListener('change', filterEntries);
-  }
+  })();
 </script>
