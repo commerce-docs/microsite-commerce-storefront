@@ -21,12 +21,23 @@ This guide helps you troubleshoot common issues with product availability, stock
 ### Backorder status toggle switches off unexpectedly
 
 <Aside type="note" title="Note about this issue">
-This troubleshooting entry is based on a customer-reported support issue. The "backorder toggle" refers to a Commerce Admin interface element used to configure product backorder settings (accessible via **Catalog** > **Products** > **[Product]** > **Advanced Inventory**). While the Commerce Admin interface itself is not part of the storefront codebase, the data synchronization mechanism (SaaS Data Export) that syncs inventory changes from Commerce to Catalog Service is documented and verifiable.
+This troubleshooting entry is based on a customer-reported support issue. The "backorder toggle" refers to a Commerce Admin interface element used to configure product backorder settings (accessible via **Catalog** > **Products** > **\[Product\]** > **Advanced Inventory**). While the Commerce Admin interface itself is not part of the storefront codebase, the data synchronization mechanism (SaaS Data Export) that syncs inventory changes from Commerce to Catalog Service is documented and verifiable.
 </Aside>
 
 **Symptom:** Backorder toggle switches on when ERP notifies ACCS that a product is backordered, but then switches back to off after a period of time even though the ERP hasn't adjusted the quantity available.
 
 **Impact:** Customers see products as deliverable when they're actually on backorder, leading to order fulfillment issues.
+
+**Expected behavior:**
+
+The backorder toggle is a **configuration setting** that defines how products behave when stock quantity is 0 (whether to allow customers to purchase out-of-stock items or not). The backorder setting should be a static configuration and is **not intended to change automatically** based on stock quantity changes. 
+
+If you need the backorder toggle to change dynamically based on stock levels, you would need to implement a custom runtime action that:
+- Subscribes to quantity adjustment events
+- Calls Adobe Commerce APIs to update the backorder flag when quantity reaches 0
+- This custom implementation should be at the integration level (e.g., OPTP integration), not in core storefront code
+
+For more information about configuring backorders, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/inventory/configuration/backorders#configure-backorders-for-a-product" text="Commerce Admin backorder configuration documentation" />.
 
 **Verify the issue:**
 
@@ -61,10 +72,12 @@ This troubleshooting entry is based on a customer-reported support issue. The "b
 
 **What to check:**
 
-- **ERP integration**: Verify that your ERP system is correctly sending backorder status to ACCS via API. Check your ERP integration logs and Adobe Commerce backend logs for API call success/failure. The integration typically uses Adobe Commerce REST or GraphQL APIs, but specific implementation details vary by customer.
+- **Expected behavior**: Verify that the backorder toggle is set as a static configuration and not being changed automatically based on stock quantity. The backorder setting should remain consistent regardless of stock level changes.
+- **Custom runtime actions**: Check if any custom runtime actions or integrations are subscribed to quantity adjustment events and automatically updating the backorder flag. If dynamic backorder behavior is needed, it should be implemented at the integration level (e.g., OPTP integration), not in core storefront code.
+- **ERP integration**: Verify that your ERP system is correctly sending backorder status to ACCS via API. Check your ERP integration logs and Adobe Commerce backend logs for API call success/failure. The integration typically uses Adobe Commerce REST or GraphQL APIs, but specific implementation details vary by customer. Note that ERP systems should not be automatically toggling the backorder setting based on stock levels.
 - **API response**: Confirm the Catalog Service GraphQL API is returning the correct `inStock` and `addToCartAllowed` values
 - **Data refresh**: Check if product data is being refreshed from a different source that overwrites the backorder status
-- **Event handlers**: Review any custom event handlers that might be updating product availability
+- **Event handlers**: Review any custom event handlers that might be updating product availability or backorder settings
 
 **Workaround:**
 
@@ -278,6 +291,7 @@ Using browser DevTools Network tab to inspect GraphQL requests is a standard web
 - <Link href="/dropins/product-details/functions/" text="Product Details Functions" /> - API functions for fetching product data
 - <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> - Test GraphQL queries directly
 - <Link href="/setup/configuration/commerce-configuration/" text="Storefront Configuration" /> - Verify API endpoint configuration
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/inventory/configuration/backorders#configure-backorders-for-a-product" text="Commerce Admin Backorder Configuration" /> - Learn how to configure backorder settings in Commerce Admin
 - <Link href="/setup/discovery/data-export-validation/" text="Data Export Validation" /> - Learn how to validate data synchronization
 - <Link href="/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted" text="Catalog Service Sync Troubleshooting" /> - Commands for manually syncing data
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview" text="SaaS Data Export Guide" /> - Complete guide to data synchronization
