@@ -172,7 +172,7 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/get-started/howitallworks/**'],
             }
           ),
           starlightHeadingBadges(),
