@@ -1,0 +1,283 @@
+---
+title: Product Details Troubleshooting
+description: Troubleshoot common issues with product availability, backorder status, and product data display on the product details page.
+sidebar:
+  label: Troubleshooting
+  order: 9
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Options from '@components/Options.astro';
+import Option from '@components/Option.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+This guide helps you troubleshoot common issues with product availability, stock status, and product data synchronization on the product details page.
+
+<Options label="Issue" numbered={false}>
+
+<Option>
+
+### Backorder status toggle switches off unexpectedly
+
+<Aside type="note" title="Note about this issue">
+This troubleshooting entry is based on a customer-reported support issue. The "backorder toggle" refers to a Commerce Admin interface element used to configure product backorder settings (accessible via **Catalog** > **Products** > **[Product]** > **Advanced Inventory**). While the Commerce Admin interface itself is not part of the storefront codebase, the data synchronization mechanism (SaaS Data Export) that syncs inventory changes from Commerce to Catalog Service is documented and verifiable.
+</Aside>
+
+**Symptom:** Backorder toggle switches on when ERP notifies ACCS that a product is backordered, but then switches back to off after a period of time even though the ERP hasn't adjusted the quantity available.
+
+**Impact:** Customers see products as deliverable when they're actually on backorder, leading to order fulfillment issues.
+
+**Verify the issue:**
+
+<Steps>
+
+1. **Check the browser console for product data updates:**
+   ```javascript
+   // Listen to product data events
+   import { events } from '@dropins/tools/event-bus.js';
+   
+   events.on('pdp/data', (payload) => {
+     if (payload) {
+       console.log('Product data:', payload);
+       console.log('In stock:', payload.inStock);
+       console.log('Add to cart allowed:', payload.addToCartAllowed);
+       console.log('SKU:', payload.sku);
+     }
+   });
+   ```
+
+2. **Verify the API response from Catalog Service:**
+   - Use the <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> to query product data
+   - Check the `inStock` and `addToCartAllowed` fields in the GraphQL response
+   - Compare the API response with what's displayed on the PDP
+
+3. **Monitor product data changes:**
+   - Check if product data is being refreshed automatically
+   - Verify if any event handlers are updating product availability
+   - Look for conflicting data sources updating the product
+
+</Steps>
+
+**What to check:**
+
+- **ERP integration**: Verify that your ERP system is correctly sending backorder status to ACCS via API. Check your ERP integration logs and Adobe Commerce backend logs for API call success/failure. The integration typically uses Adobe Commerce REST or GraphQL APIs, but specific implementation details vary by customer.
+- **API response**: Confirm the Catalog Service GraphQL API is returning the correct `inStock` and `addToCartAllowed` values
+- **Data refresh**: Check if product data is being refreshed from a different source that overwrites the backorder status
+- **Event handlers**: Review any custom event handlers that might be updating product availability
+
+**Workaround:**
+
+Monitor product availability in real-time and manually verify backorder status in your Commerce Admin before fulfilling orders.
+
+**Next steps:**
+
+If the issue persists, collect the following information for support:
+- Product SKU(s) experiencing the issue
+- Timestamp when backorder status was set
+- Timestamp when toggle switched back to off
+- API response from Catalog Service at both timestamps
+- Browser console logs showing product data updates
+
+</Option>
+
+<Option>
+
+### Product availability not updating
+
+**Symptom:** Product shows as in stock or out of stock incorrectly, or availability status doesn't update when inventory changes.
+
+**Fix:** Verify the product data source and check for caching issues:
+
+<Steps>
+
+1. **Check API response:**
+   ```javascript
+   // Use getProductData to fetch and verify current data
+   // Note: Import path may vary by package version - see note below
+   import { getProductData } from '@dropins/storefront-pdp/functions.js';
+   
+   const productData = await getProductData('SKU-123');
+   if (productData) {
+     console.log('Current stock status:', productData.inStock);
+     console.log('Add to cart allowed:', productData.addToCartAllowed);
+   }
+   ```
+
+   <Aside type="caution" title="Function import path may vary">
+   The exact import path for Product Details functions may differ depending on your package version and how the package exports its API functions. Other drop-ins in the codebase use `/api.js` instead of `/functions.js` (for example, `@dropins/storefront-cart/api.js`, `@dropins/storefront-checkout/api.js`). 
+   
+   **If the import fails**, try these alternatives:
+   - `@dropins/storefront-pdp/api.js` (if functions are exported from the main API file)
+   - `@dropins/storefront-pdp` (if functions are exported from the package root)
+   
+   Verify the correct import path by checking:
+   
+   <Steps>
+   1. Your installed package version in `package.json`
+   2. The package's export structure in `node_modules/@dropins/storefront-pdp/`
+   3. The [Product Details Functions documentation](/dropins/product-details/functions/) for your specific version
+   </Steps>
+   
+   The function `getProductData` exists and is documented, but the exact import path cannot be verified without inspecting the installed package structure.
+   </Aside>
+
+2. **Clear browser cache** and reload the page
+
+3. **Verify Catalog Service sync:** Ensure your Commerce backend has synced inventory changes to Catalog Service:
+   - Check the [Data Management Dashboard](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard) in Commerce Admin to verify sync status
+   - If sync is delayed or failed, manually trigger synchronization using `saas:resync` commands (see [FAQ troubleshooting](/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted))
+
+4. **Check for multiple data sources:** Verify if product data is being fetched from multiple APIs that might conflict
+
+</Steps>
+
+**Verify:** Use the <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> to query the product directly and compare with what's displayed.
+
+</Option>
+
+<Option>
+
+### Product data not displaying
+
+**Symptom:** Product details page shows incomplete or missing product information.
+
+**Fix:** Check initialization and data fetching:
+
+<Steps>
+
+1. **Verify initializer is imported:**
+   ```javascript
+   // Ensure the PDP initializer is imported
+   import '../../scripts/initializers/pdp.js';
+   ```
+
+2. **Check product SKU:** Verify the SKU is correct and exists in your Commerce backend
+
+3. **Verify API connectivity:** Test the GraphQL endpoint connection
+
+4. **Check browser console:** Look for errors in the browser console that might indicate API failures
+
+</Steps>
+
+**Verify:** Use browser DevTools Network tab to check if GraphQL requests are succeeding and returning data.
+
+</Option>
+
+<Option>
+
+### Stock status inconsistent across pages
+
+**Symptom:** Product shows different availability on PDP vs. cart vs. product list pages.
+
+**Fix:** Verify data consistency across drop-ins:
+
+<Steps>
+
+1. **Check data source:** Ensure all drop-ins are using the same data source (Catalog Service vs. Core GraphQL)
+
+2. **Verify event synchronization:** Check if `pdp/data` events are being listened to by other components
+
+3. **Review caching:** Different components might be caching product data differently
+
+</Steps>
+
+**Verify:** Query the same product SKU from different pages and compare the `inStock` and `addToCartAllowed` values in the API responses.
+
+</Option>
+
+</Options>
+
+## Understanding product availability data flow
+
+Product availability on the PDP is determined by data from your Commerce backend:
+
+<Steps>
+
+1. **ERP/Inventory System** → Updates product inventory and backorder status
+2. **Adobe Commerce Backend** → Receives inventory updates via API or direct integration
+3. **SaaS Data Export** → Synchronizes data between Adobe Commerce and Catalog Service using the [SaaS Data Export](https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview) mechanism
+4. **Catalog Service** → Stores synchronized product data including `inStock` and `addToCartAllowed` fields in a SaaS data space
+5. **Storefront API** → Fetches product data via GraphQL queries from Catalog Service
+6. **PDP Drop-in** → Displays availability based on API response
+
+</Steps>
+
+The PDP drop-in displays product availability based on the `inStock` and `addToCartAllowed` fields returned by the Catalog Service GraphQL API. The `inStock` field indicates whether the product is currently in stock (`true`), out of stock (`false`), or availability is unknown (`null`). If these values are incorrect, the issue is typically in the data synchronization between your inventory system and Catalog Service.
+
+### Monitoring data synchronization
+
+You can monitor the data synchronization process using:
+
+- **Data Management Dashboard**: Accessible in Commerce Admin at **System** > **Data Transfer** > **Data Dashboard** (see <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard" text="Data Management Dashboard documentation" />). This dashboard shows sync progress for each service including Catalog Service.
+
+- **Manual sync commands**: If data is missing or corrupted, you can manually trigger synchronization using `saas:resync` commands. See the [FAQ troubleshooting guide](/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted) for specific commands.
+
+<Aside type="note" title="ERP integration details">
+While the data synchronization mechanism between Commerce and Catalog Service is documented (SaaS Data Export), the specific implementation details of how ERP systems integrate with Adobe Commerce to send inventory updates are backend-specific and vary by customer implementation. The ERP → Commerce integration is typically handled through:
+- Adobe Commerce REST/GraphQL APIs
+- Custom integrations or extensions
+- Third-party connectors
+
+For ERP integration troubleshooting, consult your ERP vendor documentation or Adobe Commerce support.
+</Aside>
+
+## Verifying product data
+
+To verify what product data the storefront is receiving:
+
+**Method 1: Browser console**
+
+```javascript
+// Listen to product data events
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('pdp/data', (payload) => {
+  if (payload) {
+    console.log('Product availability:', {
+      sku: payload.sku,
+      inStock: payload.inStock,
+      addToCartAllowed: payload.addToCartAllowed
+    });
+  }
+});
+```
+
+**Method 2: GraphQL Playground**
+
+Use the <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> to query product data directly:
+
+```graphql
+query {
+  products(skus: ["YOUR-SKU"]) {
+    sku
+    inStock
+    addToCartAllowed
+  }
+}
+```
+
+**Method 3: Network tab**
+
+<Aside type="note" title="Network tab debugging">
+Using browser DevTools Network tab to inspect GraphQL requests is a standard web development debugging technique. This method is referenced in other troubleshooting guides (see [CORS troubleshooting](/setup/configuration/cors-troubleshooting/) and [Price Book setup](/setup/configuration/price-book-setup/)) for inspecting network requests, but the specific steps below are general debugging practices rather than storefront-specific documentation.
+</Aside>
+
+<Steps>
+
+1. Open browser DevTools → Network tab
+2. Filter by "graphql" or "products" to find GraphQL requests
+3. Find the product query request (typically a POST request to your GraphQL endpoint)
+4. Check the response payload for `inStock` and `addToCartAllowed` fields
+
+</Steps>
+
+## Related resources
+
+- <Link href="/dropins/product-details/events/" text="Product Details Events" /> - Learn about product data events
+- <Link href="/dropins/product-details/functions/" text="Product Details Functions" /> - API functions for fetching product data
+- <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> - Test GraphQL queries directly
+- <Link href="/setup/configuration/commerce-configuration/" text="Storefront Configuration" /> - Verify API endpoint configuration
+- <Link href="/setup/discovery/data-export-validation/" text="Data Export Validation" /> - Learn how to validate data synchronization
+- <Link href="/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted" text="Catalog Service Sync Troubleshooting" /> - Commands for manually syncing data
+- <Link href="https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview" text="SaaS Data Export Guide" /> - Complete guide to data synchronization
