@@ -25,7 +25,6 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/get-started/' },
             { label: 'Learn the architecture', link: '/get-started/architecture/' },
-            { label: 'How it all works together', link: '/get-started/howitallworks/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
@@ -776,6 +775,7 @@ export function generateSidebar() {
         },
         {
           label: 'B2C Commerce blocks',
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
             { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
@@ -859,12 +859,21 @@ export function generateSidebar() {
         },
         {
           label: 'Content customizations',
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
+          ],
+        },
+        {
+          label: 'Edge Delivery Services',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
+            { label: 'Scheduled publishing', link: '/merchants/edge-delivery-services/scheduling/' },
           ],
         },
       ],
