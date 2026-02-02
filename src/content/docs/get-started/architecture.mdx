@@ -4,7 +4,7 @@ description: Learn how to plan, develop, and launch a headless Adobe Commerce st
 ---
 
 import Aside from '@components/Aside.astro';
-import { CardGrid, Card, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import { CardGrid, Card, Tabs, TabItem } from '@astrojs/starlight/components';
 import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
 import Task from '@components/Task.astro';
@@ -18,193 +18,16 @@ Headless Adobe Commerce storefronts on Edge Delivery Services are built using a 
 
 Drop-in components use [Adobe Commerce](https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#access-the-service) APIs to provide data and functionality. These components are reusable across projects and integrate out-of-the-box with Edge Delivery Services through the [Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce). Adobe Commerce storefronts on Edge Delivery Services support doc-based authoring, enabling business users to manage content without developer help.
 
-## Architecture overview
+The following diagram illustrates the composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services:
 
-The following diagram illustrates how Storefront connects to different Commerce backend options:
-
-<Diagram type="mermaid" code={`
-graph TB
-    EDS["<b>Edge Delivery Services</b><br/>Hosting & CDN"]
-    Blocks["<b>Blocks</b><br/>Cards, Columns, Headers<br/>Author in DA.live"]
-    CommerceBlocks["<b>Commerce Blocks</b><br/>Addresses, Orders List, Mini Cart<br/>Author in DA.live"]
-    
-    EDS --> Blocks
-    EDS --> CommerceBlocks
-    
-    Blocks --> Boilerplate["<b>Commerce Boilerplate</b><br/>config.json + API clients"]
-    
-    CommerceBlocks --> B2CGroup["<b>B2C Drop-ins</b><br/>Cart, Checkout, Account, Order, Product Details,<br/>User Auth, Wishlist, Recommendations,<br/>Product Discovery, Personalization, Payment Services"]
-    
-    CommerceBlocks --> B2BGroup["<b>B2B Drop-ins</b><br/>Company Management, Company Switcher,<br/>Purchase Order, Quote Management,<br/>Requisition List"]
-    
-    B2CGroup --> Boilerplate
-    B2BGroup --> Boilerplate
-    Boilerplate --> BackendChoice{Choose Backend}
-    
-    BackendChoice -->|"GraphQL + Headers<br/>API Keys Required"| PaaS["<b>Commerce PaaS</b><br/>v2.4.7+<br/>Manual Setup"]
-    BackendChoice -->|"GraphQL + Headers<br/>No API Keys"| ACCS["<b>Adobe Commerce as a Cloud Service</b><br/>Auto-Managed"]
-    BackendChoice -->|"Optimizer Headers<br/>AC-View-ID, etc."| ACO["<b>Adobe Commerce Optimizer</b><br/>Fully Managed SaaS"]
-    
-    subgraph Services["Commerce Services & APIs"]
-        direction TB
-        CS["<b>Catalog Service</b><br/>GraphQL API"]
-        LS["<b>Live Search</b><br/>GraphQL API"]
-        PR["<b>Product Recommendations</b><br/>GraphQL API"]
-        GraphQL["<b>Core GraphQL API</b><br/>Cart, Checkout, Account, B2B"]
-    end
-    
-    PaaS -.->|Connects to| Services
-    ACCS -.->|Connects to| Services
-    ACO -.->|Connects to| Services
-    
-    classDef storefront fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
-    classDef b2cGroup fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    classDef b2bGroup fill:#e1bee7,stroke:#9c27b0,stroke-width:2px
-    classDef paas fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    classDef accs fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    classDef aco fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    classDef services fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-    classDef choice fill:#ffffff,stroke:#666,stroke-width:2px
-    
-    class EDS,Blocks,CommerceBlocks,Boilerplate storefront
-    class B2CGroup b2cGroup
-    class B2BGroup b2bGroup
-    class PaaS paas
-    class ACCS accs
-    class ACO aco
-    class CS,LS,PR,GraphQL services
-    class BackendChoice choice
-`} />
+<Diagram caption="Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.">
+  ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery
+  Services.](@images/implementation/Architecture.svg)
+</Diagram>
 
 :::note
 Although not represented in this diagram, [API Mesh for Adobe Developer App Builder](https://developer.adobe.com/graphql-mesh-gateway/) is an option for integrating multiple APIs into a single API endpoint. It can be used to aggregate data from multiple APIs and provide a single endpoint for the storefront to consume.
 :::
-
-## Adobe Commerce backend options
-
-**First, identify which backend scenario applies to you:**
-
-Storefront supports three main customer scenarios, each with distinct requirements and setup procedures:
-
-<Steps>
-
-1. **Commerce PaaS customers** - Existing Adobe Commerce Platform-as-a-Service (PaaS) customers who previously accessed Storefront without ACCS/ACO licenses
-2. **New ACCS/ACO customers** - New Adobe Commerce as a Cloud Service (ACCS) or Adobe Commerce Optimizer (ACO) customers with Storefront bundled
-3. **Commerce PaaS customers with ACO** - Existing PaaS customers who purchase Adobe Commerce Optimizer (ACO) and receive Storefront
-
-</Steps>
-
-The following sections detail the specific requirements and prerequisites for each scenario.
-
-### Commerce Platform-as-a-Service (PaaS)
-
-Adobe Commerce Platform-as-a-Service (PaaS) refers to Adobe Commerce deployments on cloud infrastructure or on-premises. This includes customers who previously accessed Storefront without ACCS/ACO licenses.
-
-**Prerequisites for PaaS:**
-
-- **Product license**: Adobe Commerce Cloud or on-premises (Magento Open Source is not supported)
-- **Version**: v2.4.7 or later
-- **PHP**: 8.3/8.2 for Adobe Commerce 2.4.7
-- **Storefront Compatibility package**: Must be installed to extend the GraphQL schema. See the [Storefront Compatibility package](/setup/configuration/storefront-compatibility/v248/) documentation for details.
-- **Storefront services**: Ensure that the latest version of following services are installed and configured:
-  - Data Connection service
-  - Services Connector
-  - Catalog Service
-  - Live Search
-  - Product Recommendations
-
-:::note
-The following links provide the requirements and installation procedures for Adobe Commerce PaaS:
-
-- [System requirements for cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
-- [Setup for Commerce on cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/overview)
-:::
-
-**ACO integration with PaaS:**
-
-Adobe Commerce Optimizer (ACO) integration with PaaS is planned and will be available first. Future integration with third-party Commerce services is also planned.
-
-### Adobe Commerce as a Cloud Service (ACCS)
-
-[Adobe Commerce as a Cloud Service](https://experienceleague.adobe.com/en/docs/commerce/cloud-service/overview) is the recommended deployment option for Adobe Commerce. It provides a fully managed, scalable, and secure environment for running your Commerce storefront. All product requirements and services are automatically managed and updated by Adobe.
-
-**Prerequisites for ACCS:**
-
-- **Product license**: Adobe Commerce as a Cloud Service (Storefront is bundled)
-- **Version**: Automatically managed by Adobe
-- **PHP**: Automatically managed by Adobe
-- **Storefront Compatibility package**: Automatically installed and updated by Adobe
-- **Storefront services**: Automatically configured and managed:
-  - Data Connection service
-  - Services Connector
-  - Catalog Service
-  - Live Search
-  - Product Recommendations
-
-:::note
-For ACCS customers, all backend requirements and services are automatically managed by Adobe. No manual installation or configuration is required.
-:::
-
-### Adobe Commerce Optimizer (ACO)
-
-Adobe Commerce Optimizer (ACO) is a SaaS-based commerce solution that includes Storefront bundled. This applies to both new ACO customers and existing PaaS customers who purchase ACO.
-
-**Prerequisites for ACO:**
-
-- **Product license**: Adobe Commerce Optimizer (Storefront is bundled)
-- **Backend services**: Fully managed SaaS infrastructure
-- **Storefront services**: Automatically configured and managed:
-  - Data Connection service
-  - Services Connector
-  - Catalog Service
-  - Live Search
-  - Product Recommendations
-
-:::note
-For ACO customers, all backend requirements and services are automatically managed. ACO integration with PaaS is planned and will be available first, with future integration with third-party Commerce services also planned.
-:::
-
-## How Storefront works
-
-### Runtime flow
-
-Understanding how content transforms into rendered commerce experiences helps developers know where to customize and integrate. The following diagram illustrates the complete flow from authoring to rendering:
-
-<Diagram type="mermaid" code={`
-graph LR
-    A["<b>Author</b><br/><small>Creates table</small>"]
-    B["<b>Edge Delivery</b><br/><small>Server-side transform</small>"]
-    C["<b>Browser</b><br/><small>Loads HTML</small>"]
-    D["<b>Block Decorator</b><br/><small>Client-side JS</small>"]
-    E["<b>Drop-in</b><br/><small>Renders UI</small>"]
-    F["<b>Commerce API</b><br/><small>Data</small>"]
-    
-    A -->|"Document"| B
-    B -->|"HTML with divs"| C
-    C -->|"Decorates blocks"| D
-    D -->|"Initialize"| E
-    E -->|"Fetch"| F
-    F -->|"Response"| E
-    
-    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
-    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
-    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
-    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
-    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
-    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
-`} />
-
-The flow demonstrates how a simple table in a document becomes a fully functional commerce component:
-
-<Steps>
-
-1. **Author creates** a cart page with a "Commerce Cart" table in their document.
-2. **Edge Delivery Services** transforms the document server-side into HTML with a `<div class="commerce-cart">` element.
-3. **Browser loads** the HTML page and client-side JavaScript decorates the blocks.
-4. **Block decorator** (`blocks/commerce-cart/commerce-cart.js`) dynamically loads and initializes the Cart drop-in.
-5. **Drop-in** connects to Commerce backend via API and renders the cart UI.
-
-</Steps>
 
 ## Storefront
 
@@ -224,7 +47,6 @@ The Commerce boilerplate provides an integrated set of drop-in components that y
 You can find the integration patterns for drop-in components as pull requests in the [Commerce boilerplate repository](https://github.com/hlxsites/aem-boilerplate-commerce).
 The source code of drop-in components is private. You can add them to your project as NPM packages:
 
-**B2C Drop-ins:**
 - `@dropins/storefront-account`
 - `@dropins/storefront-auth`
 - `@dropins/storefront-cart`
@@ -236,13 +58,6 @@ The source code of drop-in components is private. You can add them to your proje
 - `@dropins/storefront-wishlist`
 - `@dropins/storefront-personalization`
 - `@dropins/storefront-product-discovery`
-
-**B2B Drop-ins:**
-- `@dropins/storefront-company-management`
-- `@dropins/storefront-company-switcher`
-- `@dropins/storefront-purchase-order`
-- `@dropins/storefront-quote-management`
-- `@dropins/storefront-requisition-list`
 
 :::note
 Adobe recommends using the documented [extension](/dropins/all/extending/) patterns for drop-in components.
@@ -266,6 +81,66 @@ Using a frontend framework can help manage the complexity. In the Commerce boile
 
 Use the [existing blocks](/boilerplate/getting-started/) in the Commerce boilerplate as a reference (for example, teaser and product recommendations). If you want to use React, it's possible, but not recommended. React is usually too heavy (size + execution) to achieve perfect Lighthouse scores.
 
+## Runtime flow
+
+Understanding how content transforms into rendered commerce experiences helps developers know where to customize and integrate. The following diagram illustrates the complete flow from authoring to rendering:
+
+<Diagram type="mermaid" code={`
+graph LR
+    A["Author<br/><small>Creates table</small>"]
+    B["Edge Delivery<br/><small>Server-side transform</small>"]
+    C["Browser<br/><small>Loads HTML</small>"]
+    D["Block Decorator<br/><small>Client-side JS</small>"]
+    E["Drop-in<br/><small>Renders UI</small>"]
+    F["Commerce API<br/><small>Data</small>"]
+    
+    A -->|"Document"| B
+    B -->|"HTML with divs"| C
+    C -->|"Decorates blocks"| D
+    D -->|"Initialize"| E
+    E -->|"Fetch"| F
+    F -->|"Response"| E
+    
+    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
+`} />
+
+The flow demonstrates how a simple table in a document becomes a fully functional commerce component:
+
+1. **Author creates** a cart page with a "Commerce Cart" table in their document.
+2. **Edge Delivery Services** transforms the document server-side into HTML with a `<div class="commerce-cart">` element.
+3. **Browser loads** the HTML page and client-side JavaScript decorates the blocks.
+4. **Block decorator** (`blocks/commerce-cart/commerce-cart.js`) dynamically loads and initializes the Cart drop-in.
+5. **Drop-in** connects to Commerce backend via API and renders the cart UI.
+
+## Adobe Commerce or Adobe Commerce as a Cloud Service
+
+Adobe Commerce or [Adobe Commerce as a Cloud Service](https://experienceleague.adobe.com/en/docs/commerce/cloud-service/overview) is the backend system that powers your Commerce storefront. On Adobe Commerce, you must use version 2.4.7 or later with the storefront compatibility package installed.
+
+Adobe Commerce as a Cloud Service is the recommended deployment option for Adobe Commerce. It provides a fully managed, scalable, and secure environment for running your Commerce storefront. All product requirements and services are automatically managed and updated by Adobe.
+
+Before starting the project, ensure that your Commerce backend meets the following requirements:
+
+- **Product license**: Adobe Commerce as a Cloud Service, Cloud, or on-premises (Magento Open Source is not supported)
+- **Version**: v2.4.7 or later
+- **PHP**: 8.3/8.2 for Adobe Commerce 2.4.7
+- **Storefront services**: Ensure that the latest version of following services are installed and configured:
+  - Data Connection service
+  - Services Connector
+  - Catalog Service
+  - Live Search
+  - Product Recommendations
+
+:::note
+The following links provide the requirements and installation procedures for your Adobe Commerce backend:
+
+- [System requirements for cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
+- [Setup for Commerce on cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/overview)
+  :::
 
 ## Storefront Compatibility package
 
@@ -347,8 +222,6 @@ The Commerce Boilerplate follows a modular architecture that separates core AEM 
 
 The [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) is organized into four main layers that build on each other to deliver a modular, maintainable storefront architecture:
 
-<Steps>
-
 1. **scripts.js** – The foundation. Handles core AEM page loading, block decoration, font loading, and orchestration of eager, lazy, and delayed loading. This file aligns closely with the upstream [AEM Boilerplate](https://github.com/adobe/aem-boilerplate) and is designed for global, site-wide functionality. It also supports extensibility for developers who want to introduce global DOM decorators, integrate third-party plugins such as experimentation tools, or run eager code on page load.
 
 2. **commerce.js** – The commerce engine. Contains all Commerce Boilerplate-specific logic and tooling, including backend connections, template handling, page type detection, Adobe Data Layer initialization, and commerce utilities. This layer centralizes all commerce features and keeps them distinct from core AEM logic.
@@ -358,7 +231,5 @@ The [Commerce Boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce)
 4. **Blocks**
    - **AEM Blocks**: Authored in **DA.live**, Google Docs, or Microsoft Word using tables. Rendered server-side as basic HTML `<divs>` and decorated client-side. Developers can enrich these blocks with semantic HTML, accessibility attributes, and dynamic DOM transformations.
    - **Commerce Blocks**: Extend the AEM Blocks with Commerce drop-in components. They use the same authoring model but dynamically render the client-side UI based on the configuration provided in the authored tables.
-
-</Steps>
 
 For a detailed breakdown of the file structure and where to find specific files, see the [Getting started](/boilerplate/getting-started/) page.

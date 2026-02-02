@@ -299,6 +299,10 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    - Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
    - Monitor the product index to verify continuous updates
 
+   <Aside type="note" title="app.config.yaml productDependencies">
+   If your `app.config.yaml` includes a `productDependencies` array, ensure each entry includes the required `maxVersion` property. The Adobe I/O CLI validates this during `aio app build`. See the Troubleshooting section below for details if you encounter build errors.
+   </Aside>
+
 </Steps>
 
 ### Management UI
@@ -592,6 +596,17 @@ Common issues include:
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
   - Run `aio rt activation list` to check activation logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
   - Manually trigger the change detector from the Management UI to test functionality
+  
+- **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property
+  - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
+  - **Solution**: Ensure each entry in the `productDependencies` array includes `maxVersion`. Example:
+    ```yaml
+    productDependencies:
+      - code: <PRODUCT_CODE>
+        minVersion: <MIN_VERSION>
+        maxVersion: <MAX_VERSION>  # Required field
+    ```
+  - Update your `app.config.yaml` file and redeploy with `npm run deploy`
 
 ## Additional resources
 
