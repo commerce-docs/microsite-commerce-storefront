@@ -862,6 +862,7 @@ export function generateSidebar() {
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
+            { label: 'Scheduled publishing', link: '/merchants/content-customizations/scheduling/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
           ],
         },
