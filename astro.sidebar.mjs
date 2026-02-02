@@ -865,6 +865,14 @@ export function generateSidebar() {
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
           ],
         },
+        {
+          label: 'Edge Delivery Services',
+          items: [
+            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
+            { label: 'Permissions and security', link: '/merchants/edge-delivery-services/permissions/' },
+            { label: 'Scheduled publishing', link: '/merchants/edge-delivery-services/scheduling/' },
+          ],
+        },
       ],
     },
 
