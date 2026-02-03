@@ -59,11 +59,6 @@ export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitlePr
     Heading?: SlotProps<{
       authenticated: boolean;
     }>;
-    Preferences?: SlotProps<{
-      email: string;
-      isEmailValid: boolean;
-      isAuthenticated: boolean;
-    }>;
   } & TitleProps['slots'];
 }
 ```
@@ -79,7 +74,6 @@ export interface LoginFormProps extends HTMLAttributes<HTMLFormElement>, TitlePr
 - The `slots` property is an object containing the following properties:
   - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
   - The `Heading` property is a handler used to render a customized heading content based on the authenticated status provided by the context.
-  - The `Preferences` property is a handler used to render custom marketing preference fields (such as newsletter subscriptions or promotional consent checkboxes). The slot receives context with the current email address, email validation state, and authentication status.
 
 ## Example 1: Render with title and heading content by default
 
@@ -224,49 +218,6 @@ CheckoutProvider.render(LoginForm, {
     loginFormMsg.style.color = 'red';
     loginFormMsg.innerText = `Validation error (${type}) introducing the email address ${email}: ${message}`;
     $login.appendChild(loginFormMsg);
-  },
-})($login),
-```
-
-## Example 5: Render with marketing preferences slot
-
-The following example renders the `LoginForm` container with a custom marketing preferences slot that allows merchants to capture newsletter subscription consent:
-
-```ts
-import LoginForm from '@dropins/storefront-checkout/containers/LoginForm.js';
-import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
-
-const LOGIN_FORM_NAME = 'login-form';
-
-const $login = checkoutFragment.querySelector('.checkout__login');
-
-CheckoutProvider.render(LoginForm, {
-  name: LOGIN_FORM_NAME,
-  onSignInClick: async (initialEmailValue) => { . . . },
-  onSignOutClick: () => { . . . },
-  slots: {
-    Preferences: (ctx) => {
-      // Only show preferences when email is valid and user is not authenticated
-      if (!ctx.isEmailValid || ctx.isAuthenticated) {
-        return;
-      }
-
-      const label = document.createElement('label');
-      label.className = 'checkout__preference-item';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.name = 'newsletter';
-      checkbox.id = 'newsletter-subscription';
-
-      const text = document.createElement('span');
-      text.textContent = 'Subscribe to our newsletter for exclusive offers';
-
-      label.appendChild(checkbox);
-      label.appendChild(text);
-
-      ctx.appendChild(label);
-    },
   },
 })($login),
 ```
