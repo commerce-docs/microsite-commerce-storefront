@@ -27,6 +27,7 @@ export function generateSidebar() {
             { label: 'Learn the architecture', link: '/get-started/architecture/' },
             { label: 'How it all works together', link: '/get-started/howitallworks/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Learn the architecture', link: '/get-started/architecture/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
