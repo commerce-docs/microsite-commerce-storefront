@@ -58,7 +58,7 @@ async function config() {
       remarkPlugins: [remarkBasePathLinks],
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
     },
-    trailingSlash: 'ignore',
+    trailingSlash: 'always',
     outDir: './dist',
     build: {
       inlineStylesheets: 'always',
