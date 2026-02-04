@@ -60,20 +60,30 @@ Each tier displays:
 - The discounted price per unit
 - The percentage saved compared to the regular price
 
-The tier pricing data is retrieved from the [Catalog Service GraphQL API](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductViewPrice), which provides the `tiers` field on the `ProductViewPrice` type. This includes the tier price amount, currency, and quantity threshold for each configured tier.
+The tier pricing data is retrieved from the catalog GraphQL API, which provides the `tiers` field on the [`ProductViewPrice`](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductViewPrice) type. Each tier includes a [`ProductViewTierCondition`](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductViewTierCondition) that specifies the quantity threshold, along with the tier price amount and currency.
 
 ## Render product types
 
-The PDP component supports rendering different product types configured in your Adobe Commerce instance by default using data provided by the [Catalog Service GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/). Adobe Commerce supports seven product types, but the Catalog Service GraphQL API schema maps these to two types:
+The PDP drop-in renders product data retrieved from the catalog GraphQL API. The API returns product data using a [`ProductView`](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductView) interface that maps Adobe Commerce product types to two categories:
 
-- _Simple products_ are products that are defined with a single price and quantity. Catalog Service maps the simple, virtual, downloadable, and gift card product types to [`simpleProductViews`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-simple-product).
-- _Complex products_ are comprised of multiple simple products. The component simple products can have different prices. A complex product can also be defined so that the shopper can specify the quantity of component simple products. Catalog Service maps the configurable, bundle, and grouped product types to [`complexProductViews`](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/products/#return-details-about-a-complex-product).
+- **Simple products** (`SimpleProductView`) — Products with a single price and quantity. This includes simple, virtual, downloadable, and gift card product types. Simple products return pricing through [`ProductViewPrice`](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductViewPrice).
 
-  <Aside type="tip" title="Pro tip!">
-    Go to the [Commerce APIs
-    Playground](https://experienceleague.adobe.com/developer/commerce/storefront/playgrounds/commerce-services/)
-    and run the `product` query to see the product data structure for different product types.
-  </Aside>
+- **Complex products** (`ComplexProductView`) — Products comprised of multiple simple products with potentially different prices. This includes configurable, bundle, and grouped product types. Complex products return pricing as a [`ProductViewPriceRange`](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#definition-ProductViewPriceRange) representing the minimum and maximum prices.
+
+For complete API details, see the [`products` query](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/index.html#query-products) in the Merchandising GraphQL API reference.
+
+<Aside type="tip" title="Pro tip!">
+  Go to the [Commerce APIs Playground](https://experienceleague.adobe.com/developer/commerce/storefront/playgrounds/commerce-services/) and run the `products` query to see the product data structure for different product types.
+</Aside>
+
+<Aside type="note" title="API differences by platform">
+  The catalog API varies depending on your Adobe Commerce platform:
+
+  - **Adobe Commerce Optimizer**: Uses the [Merchandising GraphQL API](https://developer.adobe.com/commerce/services/graphql-api/merchandising-api/) with the `products` query endpoint.
+  - **Adobe Commerce Cloud Service**: Uses the [Catalog Service GraphQL API](https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/) along with Live Search and Product Recommendations APIs.
+
+  Both platforms return product data using the same `ProductView` interface structure, so the PDP drop-in works consistently across both environments.
+</Aside>
 
 ## Product metadata and SEO
 
