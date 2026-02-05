@@ -17,7 +17,7 @@ The AEM Commerce Prerender solution enables your Edge Delivery Services Commerce
 
 ## How it works
 
-You deploy an App Builder application that runs continuously in Adobe's cloud, monitoring your catalog and generating complete HTML for each product. This HTML is published to Edge Delivery Services and served as the initial HTML "source" to page visitors. Then, your `product-details` block enhances the pre-rendered HTML with interactive features powered by the PDP drop-in. You should deploy the App Builder app first because your storefront integration depends on the HTML it generates.
+You deploy an App Builder application that runs continuously in Adobe’s cloud. This application monitors your catalog and generates fully rendered HTML for each product, which is published to Edge Delivery Services and served as the initial page source to visitors. On the client side, the product-details block then enhances this pre-rendered HTML with interactive capabilities provided by the PDP drop-in. Because the storefront integration relies on the generated HTML, you must deploy the App Builder application before configuring the storefront.
 
 <Aside type="note" title="Pre-read: Bring Your Own Markup">
 The prerender solution uses Edge Delivery Services' <Link href="https://www.aem.live/developer/byom" text="Bring Your Own Markup (BYOM)" /> API to publish HTML content. Understanding how BYOM works helps clarify how prerendered content integrates with your storefront. The prerender app publishes HTML files that Edge Delivery Services serves as overlay content, enhancing your existing pages with prerendered product data.
@@ -250,7 +250,7 @@ Run the setup wizard to generate your `.env` configuration:
 npm run setup
 ```
 
-The wizard prompts for your App Builder workspace selection and Adobe I/O authentication.
+The wizard prompts you to select an App Builder workspace and authenticate with Adobe I/O.
 
 </Task>
 
@@ -258,7 +258,7 @@ The wizard prompts for your App Builder workspace selection and Adobe I/O authen
 
 ### Configure environment variables
 
-Configure environment variables in the generated `.env` file with your storefront-specific values:
+Configure the environment variables in the generated `.env` file with values specific to your storefront.
 
 <TableWrapper nowrap={[0]}>
 
@@ -276,7 +276,7 @@ Configure environment variables in the generated `.env` file with your storefron
 </TableWrapper>
 
 <Aside type="note" title="Commerce configuration">
-The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront's `config.json` file, not from environment variables. Ensure your storefront has a properly configured `config.json` file with Commerce endpoints and headers as documented in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront's `config.json` file.
+The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront's `config.json` file, not from environment variables. Verify that your storefront has a properly configured `config.json` file with the required Commerce endpoints and headers as described in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront's `config.json` file.
 </Aside>
 
 </Task>
@@ -286,26 +286,35 @@ The prerender app reads Commerce configuration (endpoints, headers, and store co
 ### Obtain required credentials
 
 **AEM Admin API token**: To obtain your token:
-1. Login to the <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM Admin API" /> (select the link from your preferred Identity Provider; the ones suffixed by "_sa" allow you to select a specific account rather than the one currently logged in)
-2. Once redirected to the JSON response, open your browser's Developer Tools (F12)
-3. Go to the Application tab (Chrome) or Storage tab (Firefox)
-4. Under Cookies, find and copy the value of the `auth_token` cookie
-5. Paste that token in the setup wizard textarea (the setup wizard exchanges your temporary token for a long-lived token automatically)
+1. Login to the <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM Admin API" />  using your preferred Identity Provider.
+   Providers with the "_sa" suffix allow you to select a specific account instead of using the one currently logged in.
+2. After authentication, you are redirected to a page displaying a JSON response.
+3. Open your browser's Developer Tools (F12).
+4. Navigate to:
+    - **Application** tab in Chrome
+    - **Storage** tab (Firefox)
+5. Under Cookies, locate the `auth_token` cookie and copy it's value.
+6. Paste the token into the setup wizard textarea.
+
+    The setup wizard exchanges your temporary token for a long-lived token automatically)
 
 **App Builder credentials**: To configure the credentials:
 1. Go to the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" />
-2. Open your project and navigate to the workspace you want to use (Stage or Production)
-3. Click the "Download All" button in the top-right to download the App Builder configuration file (a `.json` file)
-4. Run `aio app use <file_name>` in the root directory of your prerender project to activate the credentials
+2. Open your project and select the workspace you want to use (for example, Stage or Production)
+3. In the top-right corner, click **Download All** to download the App Builder configuration file (a `.json` file)
+4. In the root directory of your prerender project, run the following command to activate the credentials:
+    ```bash
+     aio app use <file_name>` 
+    ```
 
-**Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> for environment and API configuration
+**Commerce credentials** (Adobe Commerce as a Cloud Service): For environment and API configuration, open your Commerce Admin and navigate to  **System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" />**
 
-**Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details on configuring Optimizer headers and endpoints.
+**Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. For details on configuring Optimizer headers and endpoints, see the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details.
 
-**Note**: Commerce configuration (endpoints and headers) is read from your storefront's `config.json` file, not from environment variables. Ensure your storefront has a properly configured `config.json` file before deploying the prerender app.
+**Note**: The prerender app reads Commerce configuration (endpoints and headers) from your storefront's `config.json` file, not from environment variables. Before deployment, verify that `config.json` is correctly configured.
 
 <Aside type="caution" title="Required: maxVersion in productDependencies">
-If your `app.config.yaml` includes a `productDependencies` array, **each entry must include `maxVersion`** or `aio app build` will fail with a validation error.
+If your `app.config.yaml` includes a `productDependencies` array, **each entry must include `maxVersion`**. Otherwise, the `aio app build` command fails with a validation error.
 
 **Correct format:**
 ```yaml
@@ -336,7 +345,7 @@ See the Troubleshooting section below if you encounter this error.
 npm run deploy
 ```
 
-This deploys all actions and schedules to your selected workspace (Stage or Production).
+This command deploys all actions and schedules to your selected workspace (Stage or Production).
 
 </Task>
 
@@ -357,7 +366,7 @@ aio rt action invoke aem-commerce-ssg/check-product-changes
 aio rt action invoke aem-commerce-ssg/mark-up-clean-up
 ```
 
-Verify product markup generation for sample SKUs and check that pages publish successfully to your AEM project.
+Verify that product markup generation for sample SKUs and that pages are published successfully to your AEM project.
 
 </Task>
 
@@ -365,8 +374,9 @@ Verify product markup generation for sample SKUs and check that pages publish su
 
 ### Enable automated synchronization
 
+After deployment, perform the following steps:
 - Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector
-- Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
+- Configure polling intervals in the `app.config.yaml` file (by default, the app checks for changes every 5 minutes) 
 - Monitor the product index to verify continuous updates
 
 </Task>
@@ -677,7 +687,7 @@ npm run deploy
 ```
 
 <Aside type="note" title="productDependencies vs requiredProducts">
-The `productDependencies` field is validated by the Adobe I/O CLI schema. For publicly distributed apps, Adobe App Builder documentation uses `requiredProducts` instead. Both fields serve similar purposes but may be used in different contexts. If you're using `productDependencies`, ensure `maxVersion` is included for each entry to pass validation.
+The `productDependencies` field is validated against the Adobe I/O CLI schema. For publicly distributed apps, Adobe App Builder documentation references `requiredProducts` instead. Both fields serve similar purposes but can be used in different contexts. When using `productDependencies`, ensure that each entry  includes `maxVersion` to pass validation.
 </Aside>
 
 </Option>
@@ -704,7 +714,7 @@ npm run deploy
 
 ### Product not rendering
 
-**Fix:** Verify the product exists in Catalog Service and check action logs:
+**Fix:** Verify that the product exists in Catalog Service and check the action logs:
 
 ```bash
 # Check action logs
@@ -714,7 +724,7 @@ aio rt activation list
 # Use the GraphQL Product API: https://developer.adobe.com/commerce/services/graphql/catalog-service/products/
 ```
 
-**Verify:** Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to view the product index and confirm the SKU is listed.
+**Verify:** Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to view the product index and confirm that the SKU is listed.
 
 </Option>
 
