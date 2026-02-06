@@ -276,7 +276,7 @@ Configure the environment variables in the generated `.env` file with values spe
 </TableWrapper>
 
 <Aside type="note" title="Commerce configuration">
-The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront's `config.json` file, not from environment variables. Verify that your storefront has a properly configured `config.json` file with the required Commerce endpoints and headers as described in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront's `config.json` file.
+The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront's site configuration file, not from environment variables. Verify that your storefront has a properly configured site configuration file with the required Commerce endpoints and headers as described in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront's site configuration file.
 </Aside>
 
 </Task>
@@ -311,28 +311,10 @@ The prerender app reads Commerce configuration (endpoints, headers, and store co
 
 **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. For details on configuring Optimizer headers and endpoints, see the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details.
 
-**Note**: The prerender app reads Commerce configuration (endpoints and headers) from your storefront's `config.json` file, not from environment variables. Before deployment, verify that `config.json` is correctly configured.
+**Note**: The prerender app reads Commerce configuration (endpoints and headers) from your storefront's site configuration file, not from environment variables. Before deployment, verify that site configuration is correctly configured.
 
-<Aside type="caution" title="Required: maxVersion in productDependencies">
-If your `app.config.yaml` includes a `productDependencies` array, **each entry must include `maxVersion`**. Otherwise, the `aio app build` command fails with a validation error.
-
-**Correct format:**
-```yaml
-productDependencies:
-  - code: <PRODUCT_CODE>
-    minVersion: <MIN_VERSION>
-    maxVersion: <MAX_VERSION>  # Required
-```
-
-**Incorrect format (will cause build failure):**
-```yaml
-productDependencies:
-  - code: <PRODUCT_CODE>
-    minVersion: <MIN_VERSION>
-    # Missing maxVersion - build will fail
-```
-
-See the Troubleshooting section below if you encounter this error.
+<Aside type="note" title="Default app.config.yaml template">
+The prerender repository includes a default `app.config.yaml` template with `productDependencies` commented out. After testing your deployment, uncomment the relevant lines and redeploy to enable product dependencies.
 </Aside>
 
 </Task>
@@ -374,8 +356,8 @@ Verify that product markup generation for sample SKUs and that pages are publish
 
 ### Enable automated synchronization
 
-After deployment, perform the following steps:
-- Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector
+After completing all installation steps and deploying to App Builder, perform the following steps:
+- Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector (the UI displays your deployment context only after completing the full installation)
 - Configure polling intervals in the `app.config.yaml` file (by default, the app checks for changes every 5 minutes) 
 - Monitor the product index to verify continuous updates
 
@@ -664,33 +646,6 @@ For implementation details, see the <Link href="https://github.com/adobe-rnd/aem
 For troubleshooting during development and operations, consult the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="prerender runbook" />.
 
 <Options label="Issue" numbered={false}>
-
-<Option>
-
-### Build error: Missing maxVersion in productDependencies
-
-**Error:** `must have required property 'maxVersion'` in `/productDependencies/0`
-
-**Fix:** Add `maxVersion` to each entry in your `productDependencies` array:
-
-```yaml
-productDependencies:
-  - code: <PRODUCT_CODE>
-    minVersion: <MIN_VERSION>
-    maxVersion: <MAX_VERSION>  # Required field
-```
-
-Then redeploy:
-
-```bash
-npm run deploy
-```
-
-<Aside type="note" title="productDependencies vs requiredProducts">
-The `productDependencies` field is validated against the Adobe I/O CLI schema. For publicly distributed apps, Adobe App Builder documentation references `requiredProducts` instead. Both fields serve similar purposes but can be used in different contexts. When using `productDependencies`, ensure that each entry  includes `maxVersion` to pass validation.
-</Aside>
-
-</Option>
 
 <Option>
 
