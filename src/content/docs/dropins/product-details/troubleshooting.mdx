@@ -24,7 +24,7 @@ This guide helps you troubleshoot common issues with product availability, stock
 This troubleshooting entry is based on a customer-reported support issue. The "backorder toggle" refers to a Commerce Admin interface element used to configure product backorder settings (accessible via **Catalog** > **Products** > **\[Product\]** > **Advanced Inventory**). While the Commerce Admin interface itself is not part of the storefront codebase, the data synchronization mechanism (SaaS Data Export) that syncs inventory changes from Commerce to Catalog Service is documented and verifiable.
 </Aside>
 
-**Symptom:** Backorder toggle switches on when ERP notifies ACCS that a product is backordered, but then switches back to off after a period of time even though the ERP hasn't adjusted the quantity available.
+**Symptom:** The backorder toggle switches on when an ERP notifies ACCS that a product is backordered, but then switches off after a period of time, although the ERP hasn't adjusted the quantity available.
 
 **Impact:** Customers see products as deliverable when they're actually on backorder, leading to order fulfillment issues.
 
@@ -58,9 +58,9 @@ For more information about configuring backorders, see the <Link href="https://e
    });
    ```
 
-2. **Verify the API response from Catalog Service:**
+1. **Verify the API response from Catalog Service:**
    - Use the <Link href="/playgrounds/commerce-services/" text="Commerce APIs Playground" /> to query product data
-   - Check the `inStock` and `addToCartAllowed` fields in the GraphQL response
+   - Check the `ProductView.inStock` and `ProductView.addToCartAllowed` fields in the GraphQL response
    - Compare the API response with what's displayed on the PDP
 
 3. **Monitor product data changes:**
@@ -135,13 +135,13 @@ If the issue persists, collect the following information for support:
    The function `getProductData` exists and is documented, but the exact import path cannot be verified without inspecting the installed package structure.
    </Aside>
 
-2. **Clear browser cache** and reload the page
+2. **Clear browser cache** and reload the page.
 
 3. **Verify Catalog Service sync:** Ensure your Commerce backend has synced inventory changes to Catalog Service:
-   - Check the [Data Management Dashboard](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard) in Commerce Admin to verify sync status
-   - If sync is delayed or failed, manually trigger synchronization using `saas:resync` commands (see [FAQ troubleshooting](/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted))
+   - Check the [Data Management Dashboard](https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard) in Commerce Admin to verify sync status.
+   - If sync is delayed or failed, manually trigger synchronization using `saas:resync` commands (see [FAQ troubleshooting](/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted)).
 
-4. **Check for multiple data sources:** Verify if product data is being fetched from multiple APIs that might conflict
+4. **Check for multiple data sources:** Verify if product data is being fetched from multiple APIs that might conflict.
 
 </Steps>
 
@@ -165,11 +165,11 @@ If the issue persists, collect the following information for support:
    import '../../scripts/initializers/pdp.js';
    ```
 
-2. **Check product SKU:** Verify the SKU is correct and exists in your Commerce backend
+2. **Check the product SKU:** Verify the SKU is correct and exists in your Commerce backend.
 
-3. **Verify API connectivity:** Test the GraphQL endpoint connection
+3. **Verify API connectivity:** Test the GraphQL endpoint connection.
 
-4. **Check browser console:** Look for errors in the browser console that might indicate API failures
+4. **Check browser console:** Look for errors in the browser console that might indicate API failures.
 
 </Steps>
 
@@ -181,7 +181,7 @@ If the issue persists, collect the following information for support:
 
 ### Stock status inconsistent across pages
 
-**Symptom:** Product shows different availability on PDP vs. cart vs. product list pages.
+**Symptom:** Product shows different availability on PDP, cart, and product list pages.
 
 **Fix:** Verify data consistency across drop-ins:
 
@@ -208,10 +208,10 @@ Product availability on the PDP is determined by data from your Commerce backend
 <Steps>
 
 1. **ERP/Inventory System** → Updates product inventory and backorder status
-2. **Adobe Commerce Backend** → Receives inventory updates via API or direct integration
+2. **Adobe Commerce Backend** → Receives inventory updates from an API or direct integration
 3. **SaaS Data Export** → Synchronizes data between Adobe Commerce and Catalog Service using the [SaaS Data Export](https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/overview) mechanism
 4. **Catalog Service** → Stores synchronized product data including `inStock` and `addToCartAllowed` fields in a SaaS data space
-5. **Storefront API** → Fetches product data via GraphQL queries from Catalog Service
+5. **Storefront API** → Fetches product data using Catalog Service GraphQL queries.
 6. **PDP Drop-in** → Displays availability based on API response
 
 </Steps>
@@ -222,12 +222,12 @@ The PDP drop-in displays product availability based on the `inStock` and `addToC
 
 You can monitor the data synchronization process using:
 
-- **Data Management Dashboard**: Accessible in Commerce Admin at **System** > **Data Transfer** > **Data Dashboard** (see <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard" text="Data Management Dashboard documentation" />). This dashboard shows sync progress for each service including Catalog Service.
+- **Data Management Dashboard**: Accessible in Commerce Admin at **System** > **Data Transfer** > **Data Dashboard** (see <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/systems/data-transfer/data-dashboard" text="Data Management Dashboard documentation" />). This dashboard shows sync progress for each service, including Catalog Service.
 
 - **Manual sync commands**: If data is missing or corrupted, you can manually trigger synchronization using `saas:resync` commands. See the [FAQ troubleshooting guide](/troubleshooting/faq/#what-should-i-do-if-my-catalog-servicelive-search-data-is-missing-or-corrupted) for specific commands.
 
 <Aside type="note" title="ERP integration details">
-While the data synchronization mechanism between Commerce and Catalog Service is documented (SaaS Data Export), the specific implementation details of how ERP systems integrate with Adobe Commerce to send inventory updates are backend-specific and vary by customer implementation. The ERP → Commerce integration is typically handled through:
+While the data synchronization mechanism between Commerce and Catalog Service is documented (SaaS Data Export), the specific implementation details of how ERP systems integrate with Adobe Commerce to send inventory updates are backend-specific and vary by customer implementation. The ERP to Commerce integration is typically handled through:
 - Adobe Commerce REST/GraphQL APIs
 - Custom integrations or extensions
 - Third-party connectors
