@@ -872,7 +872,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
-            { label: 'Scheduled publishing', link: '/merchants/edge-delivery-services/scheduling/' },
+            { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
             { label: 'Access permissions', link: '/merchants/edge-delivery-services/permissions/' },
           ],
         },
