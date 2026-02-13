@@ -1,29 +1,74 @@
 ---
-title: Scheduled Publishing
-description: Schedule content for publishing at a later date and time using AEM Edge Delivery Services.
+title: Scheduling options
+description: Learn about the different ways to schedule content changes, page publishing, and promotions on your Edge Delivery Services storefront.
 ---
 
 import Link from '@components/Link.astro';
-import { Steps, Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-Schedule content to publish at a future time. Create snapshots to group multiple pages together so they all go live simultaneously.
+Edge Delivery Services provides several ways to schedule content changes on your storefront. The right approach depends on what you're scheduling -- publishing a set of pages or switching promotional content. Use the comparison table below to find the approach that fits your needs, then follow the links to get started.
 
-## Overview
+## Comparison
 
-Scheduled publishing lets you prepare content in advance and control when it goes live:
+<TableWrapper nowrap={[0]}>
 
-- **Product launches**: Coordinate content updates across multiple pages to go live at a specific time.
-- **Promotions**: Schedule sale pages and banners to publish when your campaign starts.
-- **Coordinated releases**: Publish related pages (landing page, product pages, FAQs) together.
+| Approach | Best for | Tools | Description |
+|----------|----------|-------|--------------|
+| [Snapshot scheduling](#snapshot-scheduling) | Publishing pages at a specific date and time | Document Authoring (DA), SharePoint, Google Drive | Groups pages into a snapshot that publishes them together at a scheduled time. |
+| [Promotion schedules](#promotion-schedules) | Turning promotions on and off by date | Document Authoring (DA), SharePoint, Google Drive | Displays different content based on the current date using a spreadsheet with start and end dates. Pages stay published. Requires developer setup. |
+| [AEM Sites scheduled publishing](#aem-sites-scheduled-publishing) | Publishing content from AEM Author | AEM Sites (WYSIWYG) only | Schedules publish or unpublish actions through the Manage Publication workflow in AEM Author. |
 
-## How it works
+</TableWrapper>
 
-<Steps>
-1. **Create content**. Author your pages in <Link href="/merchants/quick-start/document-authoring/" text="Document Authoring (da.live)" />.
-1. **Create a snapshot**. Add the pages you want to publish together to a snapshot. Snapshots let you group content for a launch or event and review it before publishing. See the <Link href="https://www.aem.live/docs/snapshots-reviews" text="Snapshots and Reviews" /> guide on aem.live.
-1. **Schedule publishing**. Configure when the snapshot will go live using a crontab in the `.helix` folder of your content source (Document Authoring). Your content goes live at the scheduled time with no manual intervention.
-</Steps>
-
-<Aside type="note" title="Step-by-step instructions">
-For detailed instructions, see the <Link href="https://www.aem.live/docs/scheduling" text="Scheduled publishing" /> guide on aem.live. For recurring tasks (for example, publishing an index on a schedule), see <Link href="https://www.aem.live/docs/recurring" text="Schedule recurring tasks" />.
+<Aside type="caution" title="Deprecated: Crontab scheduling">
+The original crontab-based scheduler (using a `crontab` sheet in the `.helix` folder) is **deprecated**. It has been replaced by snapshot scheduling. If you are currently using crontab scheduling, migrate to one of the approaches described below. See the <Link href="https://www.aem.live/docs/scheduling" text="original crontab documentation" /> on aem.live for reference.
 </Aside>
+
+## Snapshot scheduling
+
+Use snapshot scheduling when you need to publish a set of pages together at a specific date and time. This is the recommended approach for coordinating content launches.
+
+A **snapshot** captures the current state of one or more pages at a point in time. You add pages to a named snapshot (for example, `fall-collection-2026`), review the snapshot to verify everything looks correct, and then schedule it to publish. When the scheduled time arrives, all pages in the snapshot go live simultaneously.
+
+**Common scenarios:**
+
+- Publish a landing page, product pages, and banners together for a product launch.
+- Coordinate a site-wide update where dozens of pages must go live at the same time.
+- Prepare content in advance and publish it during off-hours without manual intervention.
+
+**Get started:** The tools you use depend on your authoring method:
+
+- **Document Authoring (da.live):** See the <Link href="https://docs.da.live/authors/guides/apps/snapshots" text="DA Snapshots guide" /> for creating, managing, and scheduling snapshots.
+- **SharePoint or Google Drive:** Use the <Link href="https://tools.aem.live/tools/snapshot-admin/index.html" text="Snapshot Admin tool" /> to manage snapshots and schedule them for publishing.
+- **All authoring methods:** See <Link href="https://www.aem.live/docs/snapshots-reviews" text="Snapshots and Reviews" /> on aem.live for the full lifecycle, including review environments and approval workflows.
+
+## Promotion schedules
+
+Use promotion schedules when you want to rotate time-sensitive content -- like sale banners or seasonal campaigns -- on and off based on dates you define. Unlike snapshot scheduling, this approach does **not** publish or unpublish pages. Instead, it displays different content fragments on already-published pages based on the current date and time.
+
+You define a schedule in a spreadsheet with start dates, end dates, and links to content fragments for each promotion. A default entry (with no dates) serves as the fallback when no promotion is active. Your developer implements the storefront code that reads the published schedule and displays the correct content.
+
+**Common scenarios:**
+
+- Display a "4th of July Sale" banner only during the holiday week.
+- Rotate seasonal promotions (Memorial Day, Back to School, Halloween) throughout the year.
+- Show different hero content or calls-to-action based on an active campaign window.
+
+<Aside type="tip" title="Preview future promotions">
+You can preview what your site will look like during a future promotion by appending a `schedule` parameter to your pre-production URL. For example: `https://main--<site>--<org>.aem.live/?schedule=<timestamp>`. Do not expose your production promotion data publicly if it contains confidential campaign details.
+</Aside>
+
+**Get started:** Work with your developer to implement promotion schedules for your storefront. The <Link href="https://main--author-kit--aemsites.aem.live/" text="Author Kit reference site" /> includes a working example of this pattern that your developer can use as a starting point.
+
+## AEM Sites scheduled publishing
+
+Use AEM Sites scheduled publishing when you author content in **AEM Sites (WYSIWYG)** with AEM as a Cloud Service. This approach uses the **Manage Publication** workflow in AEM Author to schedule publish or unpublish actions for a specific date and time. Once AEM publishes the content, the changes go live on Edge Delivery Services automatically.
+
+<Aside type="note" title="AEM Sites authoring only">
+This approach only works with AEM Sites (WYSIWYG) authoring. It does **not** apply to document-based authoring with DA, SharePoint, or Google Drive. For document-based authoring, use [snapshot scheduling](#snapshot-scheduling) or [promotion schedules](#promotion-schedules) instead.
+</Aside>
+
+**Get started:**
+
+- <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/sites/authoring/sites-console/publishing-pages" text="Publishing Pages" /> — Experience League guide with detailed instructions on scheduling publish and unpublish actions.
