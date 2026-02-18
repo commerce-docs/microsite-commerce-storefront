@@ -11,6 +11,7 @@ import Callouts from '@components/Callouts.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 
 Drop-in components are designed to be flexible and extensible. This guide provides an overview of how to extend drop-in components to add new features, integrate with third-party services, and customize the user experience.
 
@@ -348,6 +349,86 @@ After just a few changes, we were able to add a new feature to the checkout drop
 </Task>
 
 </Tasks>
+
+## Extendable fragments by drop-in
+
+Each drop-in exports one or more GraphQL fragments that you can extend through `overrideGQLOperations` in your `build.mjs` file. Extending a fragment adds custom fields to the drop-in's existing GraphQL queries without replacing them.
+
+<TableWrapper nowrap={[0,1,2]}>
+
+| Drop-in package | Fragment name | GraphQL type | Description |
+|---|---|---|---|
+| `@dropins/storefront-cart` | `CART_FRAGMENT` | `Cart` | Extends cart queries with additional fields on the `Cart` type. |
+| `@dropins/storefront-checkout` | `CHECKOUT_DATA_FRAGMENT` | `Cart` | Extends checkout queries with additional fields on the `Cart` type. |
+| `@dropins/storefront-order` | `GUEST_ORDER_FRAGMENT` | `CustomerOrder` | Extends all order detail queries (guest and authenticated) with additional fields on the `CustomerOrder` type. |
+| `@dropins/storefront-account` | `CUSTOMER_ORDER_FRAGMENT` | `CustomerOrder` | Extends the orders list query with additional fields on the `CustomerOrder` type. |
+
+</TableWrapper>
+
+### Extending order and account queries
+
+To add custom fields to order data, extend the fragments for the order and account drop-ins in your `build.mjs` file. The following example adds a `custom_attribute` field to both the order detail and orders list pages:
+
+```js title='build.mjs'
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-order',
+    operations: [
+      `fragment GUEST_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+    ],
+  },
+  {
+    npm: '@dropins/storefront-account',
+    operations: [
+      `fragment CUSTOMER_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+    ],
+  },
+]);
+```
+
+After updating `build.mjs`, run the install command to apply the fragment extensions. This needs to be re-run after every `npm install` since it patches files inside `node_modules`.
+
+<Aside type="tip">
+You can extend multiple drop-ins in a single `overrideGQLOperations` call. Each entry in the array targets a different drop-in package.
+</Aside>
+
+### Mapping extended data with model transformers
+
+After extending a fragment, the new fields are included in the GraphQL response but are not automatically displayed. Use model transformers in the drop-in's initializer to map the new data into the drop-in's data model.
+
+For example, to make `custom_attribute` available in the order drop-in's data model:
+
+```js title='scripts/initializers/order.js'
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-order';
+
+await initializers.mountImmediately(initialize, {
+  models: {
+    OrderDataModel: {
+      transformer: (data) => ({
+        customAttribute: data?.custom_attribute,
+      }),
+    },
+  },
+});
+```
+
+The transformer function receives the GraphQL response data and returns an object that gets merged into the existing data model. Only the fields you return are overridden; all other data renders normally.
+
+<Aside type="tip">
+Each drop-in has its own set of customizable models. See the initialization page for each drop-in for the full list of available models:
+
+- [Order initialization](/dropins/order/initialization/#customizing-data-models)
+- [User Account initialization](/dropins/user-account/initialization/#customizing-data-models)
+- [Cart initialization](/dropins/cart/initialization/#customizing-data-models)
+- [Checkout initialization](/dropins/checkout/initialization/#customizing-data-models)
+</Aside>
 
 ## Extend drop-ins with third-party components
 
