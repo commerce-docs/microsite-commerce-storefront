@@ -27,10 +27,10 @@ Do not use context methods inside other context methods (for example, `appendChi
 | Container | Slots |
 |-----------|-------|
 | [`CartSummaryGrid`](#cartsummarygrid-slots) | `Thumbnail` |
-| [`CartSummaryList`](#cartsummarylist-slots) | `Heading`, `EmptyCart`, `Footer`, `Thumbnail`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`CartSummaryList`](#cartsummarylist-slots) | `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `Thumbnail`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
 | [`CartSummaryTable`](#cartsummarytable-slots) | `Item`, `Price`, `Quantity`, `Subtotal`, `Thumbnail`, `ProductTitle`, `Sku`, `Configurations`, `ItemAlert`, `ItemWarning`, `Actions`, `UndoBanner`, `EmptyCart` |
 | [`GiftOptions`](#giftoptions-slots) | `SwatchImage` |
-| [`MiniCart`](#minicart-slots) | `ProductList`, `ProductListFooter`, `PreCheckoutSection`, `Thumbnail`, `Heading`, `EmptyCart`, `Footer`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`MiniCart`](#minicart-slots) | `ProductList`, `ProductListFooter`, `PreCheckoutSection`, `Thumbnail`, `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
 | [`OrderSummary`](#ordersummary-slots) | `EstimateShipping`, `Coupons`, `GiftCards` |
 
 </TableWrapper>
@@ -88,6 +88,7 @@ interface CartSummaryListProps {
     defaultImageProps: ImageProps;
     }>;
     ProductAttributes?: SlotProps;
+    RowTotalFooter?: SlotProps<{ item: CartModel['items'][number] }>;
     CartSummaryFooter?: SlotProps;
     CartItem?: SlotProps;
     UndoBanner?: SlotProps<{
@@ -190,6 +191,59 @@ await provider.render(CartSummaryList, {
       const element = document.createElement('div');
       element.innerText = 'Custom Footer';
       ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RowTotalFooter slot
+
+The `RowTotalFooter` slot lets you show custom content beneath each cart item’s total price. Use it to display promotions, special offers, or other relevant information based on your business logic.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item data for the current row |
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { CartSummaryList } from '@dropins/storefront-cart/containers/CartSummaryList.js';
+
+await provider.render(CartSummaryList, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Display a promotional message based on item data
+      const promoMessage = document.createElement('div');
+      promoMessage.style.color = 'var(--color-positive-500)';
+      promoMessage.style.fontSize = '0.875rem';
+      promoMessage.innerText = 'Special offer applied!';
+      ctx.appendChild(promoMessage);
+    }
+  }
+})(block);
+```
+
+#### Example with conditional content
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { CartSummaryList } from '@dropins/storefront-cart/containers/CartSummaryList.js';
+
+await provider.render(CartSummaryList, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Only show message for discounted items
+      if (ctx.item.discounted) {
+        const savings = document.createElement('span');
+        savings.style.color = 'var(--color-alert-800)';
+        savings.innerText = 'You saved on this item!';
+        ctx.appendChild(savings);
+      }
     }
   }
 })(block);
@@ -472,6 +526,7 @@ interface MiniCartProps {
     EmptyCart?: SlotProps;
     Footer?: SlotProps;
     ProductAttributes?: SlotProps;
+    RowTotalFooter?: SlotProps<{ item: CartModel['items'][number] }>;
     CartSummaryFooter?: SlotProps;
     CartItem?: SlotProps;
     UndoBanner?: SlotProps<{
@@ -662,6 +717,38 @@ await provider.render(MiniCart, {
       const element = document.createElement('div');
       element.innerText = 'Custom Footer';
       ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### RowTotalFooter slot
+
+The RowTotalFooter slot lets you show custom content beneath each cart item’s total price. Use it to display promotions, special offers, or other relevant information based on your business logic.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item data for the current row |
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { MiniCart } from '@dropins/storefront-cart/containers/MiniCart.js';
+
+await provider.render(MiniCart, {
+  slots: {
+    RowTotalFooter: (ctx) => {
+      // Display a promotional message based on item data
+      const promoMessage = document.createElement('div');
+      promoMessage.style.color = 'var(--color-positive-500)';
+      promoMessage.style.fontSize = '0.875rem';
+      promoMessage.innerText = 'Special offer applied!';
+      ctx.appendChild(promoMessage);
     }
   }
 })(block);
