@@ -93,33 +93,28 @@ For complete dictionary customization including all available keys and multi-lan
 
 Extend or transform data models by providing custom transformer functions. Use the `models` option to add custom fields or modify existing data structures returned from the backend.
 
-### Model properties
+### Available models
 
-Each model in the `models` configuration object supports the following properties:
+The following models can be customized through the `models` configuration option:
 
-<TableWrapper nowrap={[0,1]}>
 
-| Property | Type | Description |
-|---|---|---|
-| `initialData` | `any` | Provides initial data for the model before backend data is fetched. |
-| `transformer` | `(data?: ProductModel) => ProductModel` | Transforms product data returned from GraphQL. Use this to add custom fields or modify existing data structures. |
-| `transform` | `(data?: ProductModel) => ProductModel` | **Deprecated.** Use `transformer` instead. |
-| `fallbackData` | `(parentProduct: any, simpleProduct: ProductModel) => ProductModel` | Provides fallback data when a simple product variant is selected from a configurable parent product. |
+<Aside type="note">
+No customizable models are available for this drop-in.
+</Aside>
 
-</TableWrapper>
-
-The following example shows how to customize a model for the **Product Details** drop-in:
+The following example shows how to customize the `CustomModel` model for the **Product Details** drop-in:
 
 ```javascript title="scripts/initializers/product-details.js"
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-pdp';
 
 const models = {
-  ProductModel: {
+  CustomModel: {
     transformer: (data) => ({
-      ...data,
+      // Add custom fields from backend data
       customField: data?.custom_field,
       promotionBadge: data?.promotion?.label,
+      // Transform existing fields
       displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
     }),
   },
@@ -175,17 +170,11 @@ langDefinitions?: {
 
 ### models
 
-Maps model names to objects that configure how product data is transformed. Each model can provide an initial data state, a transformer function to modify GraphQL responses, and a fallback for configurable product variants.
+Maps model names to transformer functions. Each transformer receives data from GraphQL and returns a modified or extended version. Use the `Model<T>` type from `@dropins/tools` to create type-safe transformers.
 
 ```typescript
 models?: {
-  [name: string]: {
-    initialData: any;
-    /** @deprecated Use "transformer" instead */
-    transform?: (data?: ProductModel) => ProductModel;
-    transformer?: (data?: ProductModel) => ProductModel;
-    fallbackData?: (parentProduct: any, simpleProduct: ProductModel) => ProductModel;
-  };
+  [modelName: string]: Model<any>;
 };
 ```
 
