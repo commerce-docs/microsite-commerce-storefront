@@ -774,7 +774,6 @@ export function generateSidebar() {
         },
         {
           label: 'B2C Commerce blocks',
-          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
             { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
@@ -858,21 +857,12 @@ export function generateSidebar() {
         },
         {
           label: 'Content customizations',
-          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
-          ],
-        },
-        {
-          label: 'Edge Delivery Services',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
-            { label: 'Access permissions', link: '/merchants/edge-delivery-services/permissions/' },
           ],
         },
       ],
