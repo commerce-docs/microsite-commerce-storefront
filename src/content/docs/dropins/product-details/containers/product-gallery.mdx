@@ -5,7 +5,7 @@ description: Configure the ProductGallery container for the product details page
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ProductGallery` container displays a gallery of product images on the product details page.
+The `ProductGallery` container displays a gallery of product images and videos on the product details page.
 
 The container receives initial product data during [initialization](/dropins/product-details/initialization/) to preload the component and, being event-driven, updates with data emitted to `pdp/data` within the event scope.
 
@@ -25,16 +25,52 @@ The `ProductGallery` container provides the following configuration options:
     ['imageParams', 'object', 'No', 'Parameters for resolving image URLs.'],
     ['thumbnailParams', 'object', 'No', 'Parameters for resolving thumbnail URLs.'],
     ['zoom', 'object or boolean', 'No', 'Configuration for the zoom feature. If an object, it can have a closeButton property to show a close button. Defaults to false.'],
+    ['videos', 'boolean or object', 'No', 'Configuration for video support in the gallery. Set to true to enable videos (positioned after images) or pass an object with a position property. Defaults to false (disabled).'],
     ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+  ]}
+/>
+
+## Videos
+
+The `videos` prop enables product video support in the gallery carousel. Videos are disabled by default.
+
+### Usage
+
+```js
+// Disabled (default) — backward compatible
+<ProductGallery />
+<ProductGallery videos={false} />
+
+// Enabled — videos appear after images
+<ProductGallery videos />
+<ProductGallery videos={true} />
+
+// Videos appear before images
+<ProductGallery videos={{ position: 'first' }} />
+
+// Videos appear after images (explicit)
+<ProductGallery videos={{ position: 'last' }} />
+```
+
+### Supported video sources
+
+The gallery supports multiple video sources, rendered differently depending on the URL type:
+
+<OptionsTable
+  compact
+  options={[
+    ['Video source', 'Render method'],
+    ['Direct files (.mp4, .webm, .ogg, .mov, .avi, .mkv)', 'Native <video> element with playback controls'],
+    ['Other URLs (YouTube, Vimeo, etc.)', '<iframe> with embedded player'],
   ]}
 />
 
 ## Example
 
-The following example demonstrates how to configure the `ProductGallery` container:
+The following example demonstrates how to configure the `ProductGallery` container with video support:
 
 ```js
-return productRenderer.render(ProductDetails, {
+return productRenderer.render(ProductGallery, {
   controls: 'thumbnailsRow',
   loop: true,
   peak: false,
@@ -51,5 +87,6 @@ return productRenderer.render(ProductDetails, {
   zoom: {
     closeButton: true,
   },
+  videos: true,
 });
 ```
