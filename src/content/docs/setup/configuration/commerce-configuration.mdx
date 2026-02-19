@@ -359,12 +359,49 @@ Some configuration options can be set to enable or disable certain boilerplate f
 ```json
 {
   "commerce-assets-enabled": boolean,
+  "commerce-b2b-enabled": boolean,
   "commerce-companies-enabled": boolean,
 }
 ```
 
 - **`commerce-assets-enabled`** - Boolean flag to enable or disable AEM Assets within the storefront
-- **`commerce-companies-enabled`** - Boolean flag to enable or disable Commerce B2B features within the storefront
+- **`commerce-b2b-enabled`** - Boolean flag to enable or disable B2B-related global and shared logic within the storefront. When enabled, this flag is passed to the Auth initializer as `customerPermissionRoles: true` to enable customer role permissions API. This flag controls B2B functionality at the authentication and authorization level, enabling the drop-in to automatically fetch B2B customer role permissions on initialization and re-fetch when authentication state changes. See the [User Auth initialization documentation](/dropins/user-auth/initialization/) for details.
+- **`commerce-companies-enabled`** - Boolean flag to enable or disable Commerce B2B company features within the storefront. This flag controls company-specific features such as company management, company structure, and company-related blocks.
+
+<Aside type="note" title="B2B Configuration Flags">
+**Understanding the difference:**
+
+- **`commerce-b2b-enabled`** - Controls B2B functionality at the authentication and authorization level. When set to `true`, this flag enables the customer role permissions API in the Auth drop-in (via the `customerPermissionRoles` parameter), which automatically fetches B2B customer role permissions including purchase order and company management capabilities. This is required for B2B features to work properly. See the [User Auth v3.0.0 changelog](/releases/changelog/) for implementation details.
+
+- **`commerce-companies-enabled`** - Controls company-specific features and blocks. This flag enables or disables company management features, company structure, and company-related commerce blocks.
+
+**Relationship:** While these flags serve different purposes, `commerce-b2b-enabled` is typically required for B2B features to function correctly, as it enables the underlying authentication and permission system. `commerce-companies-enabled` can be used independently to control company-specific features, but company features will only work properly when `commerce-b2b-enabled` is also set to `true`.
+
+For a complete B2B storefront with company features, set both flags to `true`:
+```json
+{
+  "commerce-b2b-enabled": true,
+  "commerce-companies-enabled": true
+}
+```
+
+**Implementation:** To use `commerce-b2b-enabled` in your storefront, read it from config in your Auth initializer and pass it to the Auth drop-in:
+
+```javascript title="scripts/initializers/user-auth.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-auth';
+import { getConfigValue } from '../../scripts/configs.js';
+
+const isB2BEnabled = await getConfigValue('commerce-b2b-enabled');
+
+await initializers.mountImmediately(initialize, {
+  customerPermissionRoles: isB2BEnabled,
+  // ... other options
+});
+```
+
+This enables the customer role permissions API when B2B features are enabled in your configuration.
+</Aside>
 
 ## Configuration Examples
 

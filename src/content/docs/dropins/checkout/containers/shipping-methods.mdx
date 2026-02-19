@@ -61,6 +61,62 @@ export interface ShippingMethodsProps extends HTMLAttributes<HTMLDivElement>, Ti
 - The `slots (*)` property is inherited from the `TitleProps` interface. It is an object that contains the following properties:
   - Use the `Title (*)` property to render a custom title. This property is inherited from `TitleProps` interface.
 
+### ShippingMethod model
+
+Each shipping method is represented by the following model:
+
+```ts
+type ShippingMethod = {
+  amount: Money;
+  carrier: {
+    code: string;
+    title: string;
+  };
+  code: string;
+  title: string;
+  value: string;
+  amountExclTax?: Money;
+  amountInclTax?: Money;
+  originalAmount?: Money;
+};
+```
+
+## Strikethrough pricing
+
+The `ShippingMethods` container supports displaying strikethrough pricing for discounted shipping methods. When a shipping method includes an `originalAmount` field, the component automatically displays the original price crossed out next to the discounted price, making promotional shipping offers more visible to customers.
+
+To enable this feature, merchants must:
+
+1. **Extend the GraphQL schema on the backend** to add an `original_amount` field to the `AvailableShippingMethod` type with `value` and `currency` subfields.
+
+2. **Extend the checkout GraphQL fragment** to request the `original_amount` field by modifying the `build.mjs` script:
+
+```js title='build.mjs'
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/storefront-checkout',
+    operations: [
+      `
+      fragment CHECKOUT_DATA_FRAGMENT on Cart {
+        shipping_addresses {
+          available_shipping_methods {
+            original_amount {
+              value
+              currency
+            }
+          }
+        }
+      }
+      `,
+    ],
+  },
+]);
+```
+
+When the `original_amount` field is present in the GraphQL response, the component automatically renders it with a strikethrough style next to the discounted price.
+
 ## Example
 
 The following example renders the `ShippingMethods` container on a checkout page. It includes configurations to hide the title, show a message if the chosen shipping method is `Best Way` (Table Rate), and show an error message in case there was an issue saving the selected shipping method to the backend.
