@@ -141,6 +141,13 @@ export function generateSidebar() {
                 { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
             },
+            {
+              label: 'Product Details',
+              collapsed: true,
+              items: [
+                { label: 'Add Notify Me CTA for out-of-stock products', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+              ],
+            },
           ],
         },
         // ---------- DROP-INS Overview ----------

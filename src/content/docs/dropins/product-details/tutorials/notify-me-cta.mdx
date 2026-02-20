@@ -1,0 +1,165 @@
+---
+title: Add "Notify Me" CTA for out-of-stock products
+description: Learn how to replace the Add to Cart button with a "Notify Me" CTA when a product or variant is out of stock on the PDP.
+---
+
+import Aside from '@components/Aside.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+When a product or selected variant is out of stock, the primary CTA button on the Product Detail Page (PDP) can display **"Notify Me"** instead of **"Add to Cart"**. This applies to both simple products and configurable products with multiple options (for example, size and color). When the shopper switches to a different variant, the CTA updates dynamically based on that variant's stock status.
+
+This tutorial walks through the changes needed in `blocks/product-details/product-details.js` in the [boilerplate repository](https://github.com/hlxsites/aem-boilerplate-commerce) to implement this behavior.
+
+## Behavior
+
+The following table summarizes how the CTA behaves across different product and stock states:
+
+<TableWrapper>
+
+| Scenario | CTA text | Button state | On click |
+|----------|----------|--------------|----------|
+| Simple product, in stock | Add to Cart | Enabled (when valid) | Adds to cart |
+| Simple product, out of stock | Notify Me | Enabled | Runs custom notify-me callback |
+| Configurable, selected variant in stock | Add to Cart | Enabled (when valid) | Adds to cart |
+| Configurable, selected variant out of stock | Notify Me | Enabled | Runs custom notify-me callback |
+| Update mode, in stock | Update in Cart | Enabled (when valid) | Updates cart item |
+| Update mode, out of stock | Notify Me | Enabled | Runs custom notify-me callback |
+
+</TableWrapper>
+
+## Step-by-step
+
+The following steps describe how to modify the PDP block to swap the primary CTA based on stock status.
+
+<Tasks>
+<Task>
+### Replace the button text helper with `updatePrimaryCTA`
+
+Replace the existing `updateAddToCartButtonText` function with a new `updatePrimaryCTA` helper that manages all CTA states in one place. When the product is out of stock, it sets the button text to **"Notify Me"**, removes the cart icon, and keeps the button enabled. When in stock, it restores **"Add to Cart"** or **"Update in Cart"** with the cart icon based on the current cart context.
+
+```js
+function updatePrimaryCTA(buttonInstance, { isOutOfStock, isUpdateMode, labels }) {
+  if (!buttonInstance) return;
+
+  if (isOutOfStock) {
+    buttonInstance.setProps((prev) => ({
+      ...prev,
+      children: labels.Global?.NotifyMe || 'Notify Me',
+      icon: null,
+      disabled: false,
+    }));
+  } else {
+    const buttonText = isUpdateMode
+      ? labels.Global?.UpdateProductInCart
+      : labels.Global?.AddProductToCart;
+    buttonInstance.setProps((prev) => ({
+      ...prev,
+      children: buttonText,
+      icon: h(Icon, { source: 'Cart' }),
+    }));
+  }
+}
+```
+
+<Aside>
+Add a `NotifyMe` placeholder label to the Global placeholders spreadsheet. The code falls back to the hardcoded string `"Notify Me"` if the label is not configured.
+</Aside>
+
+</Task>
+<Task>
+### Add the `isOutOfStock` state variable
+
+Add a state variable alongside the existing `isUpdateMode` flag to track the stock status of the currently selected product or variant.
+
+```js
+let isUpdateMode = false;
+let isOutOfStock = false;
+```
+
+</Task>
+<Task>
+### Subscribe to `pdp/data` for stock status changes
+
+Add a `pdp/data` event listener with `{ eager: true }` so it fires on both the initial product load and subsequent variant switches. The listener reads the `inStock` property from the product data and calls `updatePrimaryCTA` to swap the CTA accordingly.
+
+```js
+events.on('pdp/data', (data) => {
+  isOutOfStock = data?.inStock === false;
+  updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+}, { eager: true });
+```
+
+See the [`pdp/data` event reference](/dropins/product-details/events/#pdpdata-emits-and-listens) for the full event payload.
+
+</Task>
+<Task>
+### Guard the `pdp/valid` listener
+
+Update the existing `pdp/valid` event handler so it only disables the button when the product is **in stock** and the product configuration is **invalid** (for example, the shopper has not completed all required option selections). When out of stock, the **"Notify Me"** button stays enabled regardless of configuration validity.
+
+```js
+events.on('pdp/valid', (valid) => {
+  if (!isOutOfStock) {
+    addToCart.setProps((prev) => ({ ...prev, disabled: !valid }));
+  }
+}, { eager: true });
+```
+
+</Task>
+<Task>
+### Add an out-of-stock guard in the click handler
+
+At the top of the button's `onClick` handler, check `isOutOfStock`. When `true`, emit a custom event and return early so that no cart logic executes.
+
+```js
+onClick: async () => {
+  if (isOutOfStock) {
+    const values = pdpApi.getProductConfigurationValues();
+    console.log('TODO: Notify Me Callback', { sku: product?.sku, values });
+    return;
+  }
+
+  // ... existing Add to Cart / Update in Cart logic
+}
+```
+
+Replace the `console.log` with your own notification logic, such as opening a modal, calling a back-in-stock notification API, or emitting a custom event that other components can listen to.
+
+</Task>
+<Task>
+### Update the `cart/data` listener
+
+Update the existing `cart/data` event listener to use `updatePrimaryCTA` instead of the old helper. This ensures consistent CTA rendering across all state dimensions — stock status, update mode, and labels.
+
+```js
+events.on(
+  'cart/data',
+  (data) => {
+    // ...existing logic to determine itemIsInCart...
+    isUpdateMode = itemIsInCart;
+    updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+  },
+  { eager: true },
+);
+```
+
+</Task>
+<Task>
+### Reset the CTA after cart actions
+
+In the `finally` block of the click handler, use `updatePrimaryCTA` to restore the correct button state after an add-to-cart or update-in-cart action completes.
+
+```js
+finally {
+  updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+  addToCart.setProps((prev) => ({
+    ...prev,
+    disabled: false,
+  }));
+}
+```
+
+</Task>
+</Tasks>
