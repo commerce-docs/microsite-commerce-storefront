@@ -141,13 +141,6 @@ export function generateSidebar() {
                 { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
             },
-            {
-              label: 'Product Details',
-              collapsed: true,
-              items: [
-                { label: 'Add Notify Me CTA for out-of-stock products', link: '/dropins/product-details/tutorials/notify-me-cta/' },
-              ],
-            },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -332,6 +325,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-tos',
+                  collapsed: false,
+                  items: [
+                    { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Styles', link: '/dropins/product-details/styles/' },
                 {
