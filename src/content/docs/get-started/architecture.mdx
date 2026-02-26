@@ -1,129 +1,17 @@
 ---
 title: Storefront Architecture
-description: Learn how to plan, develop, and launch a headless Adobe Commerce storefront with Edge Delivery Services.
+description: Learn how to plan, develop, and launch a headless Adobe Commerce storefront with Edge Delivery Services. Understand blocks, drop-ins, boilerplate, and backend options.
 ---
 
 import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
-import Options from '@components/Options.astro';
-import Option from '@components/Option.astro';
 import Link from '@components/Link.astro';
-import TableWrapper from '@components/TableWrapper.astro';
 
-Headless Adobe Commerce storefronts on Edge Delivery Services use [drop-in components](/dropins/all/introduction/) that connect through APIs. Drop-ins integrate with the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" />. Edge Delivery Services supports three authoring approaches: document-based (DA.live, Google Docs, SharePoint), in-context (Universal Editor, Storefront Builder), and AEM Sites authoring. Content is rendered as blocks. See the <Link href="https://www.aem.live/docs/authoring-guide" text="AEM authoring guide" /> for details. This page helps you identify your backend and confirm prerequisites before setup.
+Headless Adobe Commerce storefronts on Edge Delivery Services use [drop-in components](/dropins/all/introduction/) that connect through APIs and integrate with the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" />.
 
-## Backend options
+Content is authored in documents (DA.live, Google Docs, SharePoint), in-context (Universal Editor, Storefront Builder), or AEM Sites—and rendered as blocks. See the <Link href="https://www.aem.live/docs/authoring-guide" text="AEM authoring guide" /> for details.
 
-Storefront supports three backend types. Follow only the guidance for your backend. Prerequisites and setup differ, and mixing steps from different backends causes errors.
-
-- **Commerce PaaS** — Existing PaaS customer without Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer licenses
-- **Adobe Commerce as a Cloud Service** — New ACCS customer; license includes Storefront
-- **Adobe Commerce Optimizer** — New Optimizer customer, or existing PaaS customer who added Optimizer
-
-<TableWrapper nowrap={[0]}>
-
-| Feature | Commerce PaaS | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
-|---------|---------------|-----------------------------------|--------------------------|
-| **License includes Storefront** | No | Yes | Yes |
-| **Setup** | Manual install required (see Prerequisites below) | Fully automated | Fully automated |
-| **Version** | v2.4.7+ self-managed | Auto-managed | Fully managed SaaS |
-
-</TableWrapper>
-
-{/* TODO: Update Link href when ACO Connector (PaaS-to-ACO) documentation is published. */}
-
-<Aside type="note" title="PaaS + Adobe Commerce Optimizer Connector">
-The Adobe Commerce Optimizer Connector (PaaS-to-ACO) requires manually installing the PHP extension on the PaaS platform and configuring the ACO UI. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer" text="Adobe Commerce Optimizer documentation" /> for connector setup.
-</Aside>
-
-<Diagram type="mermaid" code={`
-graph TB
-    subgraph Storefronts["Storefronts"]
-        EDS["<b>Edge Delivery Services</b><br/>Drop-ins, boilerplate"]
-        Luma["<b>Luma / PHP</b><br/>Cart, checkout, account<br/>PaaS only"]
-    end
-    subgraph Bridge["Session bridge (optional)"]
-        LB["<b>Luma Bridge</b><br/>Shared cookies, JWT/cart IDs<br/>Same domain"]
-    end
-    subgraph Backends["Backends"]
-        PaaS["<b>Commerce PaaS</b><br/>Catalog, pricing, orders"]
-        ACCS["<b>Adobe Commerce as a Cloud Service</b><br/>Fully managed, license includes Storefront"]
-        ACO["<b>Adobe Commerce Optimizer</b><br/>Catalog v2, merchandising<br/>Commerce Storefront drop-ins"]
-    end
-    Connector["<b>ACO Connector</b><br/>PaaS-to-ACO sync<br/>Catalog, pricing"]
-    EDS <--> LB
-    LB <--> Luma
-    EDS --> PaaS
-    EDS --> ACCS
-    EDS --> ACO
-    Luma --> PaaS
-    PaaS -->|"Manual install"| Connector
-    Connector --> ACO
-    classDef storefront fill:#e8f5e9,stroke:#4caf50
-    classDef bridge fill:#fff3e0,stroke:#ff9800
-    classDef backend fill:#e3f2fd,stroke:#2196f3
-    classDef connector fill:#f3e5f5,stroke:#9c27b0
-    class EDS,Luma storefront
-    class LB bridge
-    class PaaS,ACCS,ACO backend
-    class Connector connector
-`} caption="Key components: EDS connects to PaaS, ACCS, or ACO. Luma Bridge (PaaS only) bridges EDS and Luma—independent of ACO. ACCS has no Luma; it pairs with ACO for catalog. The ACO Connector syncs PaaS catalog/pricing into ACO." />
-
-<Options label="Prerequisites" numbered={false}>
-<Option>
-
-### Commerce Platform-as-a-Service (PaaS)
-
-- **Product license**: Adobe Commerce Cloud or on-premises (Magento Open Source not supported). Alternatively, Adobe Commerce Cloud or on-premises with the Adobe Commerce Optimizer Connector; this extension requires the Storefront Compatibility package.
-- **Version**: v2.4.7 or later
-- **Storefront Compatibility package**: Required. See [Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (2.4.7 or 2.4.8).
-- **Storefront services** (manual install):
-  - **PaaS without ACO Connector**: Data Connection, Services Connector, Catalog Service, Live Search, Product Recommendations. See <Link href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas" text="Commerce Services Connector" />.
-  - **PaaS with Adobe Commerce Optimizer Connector**: Adobe Commerce Optimizer Connector (PHP extension on PaaS platform and ACO UI configuration). Data Connection support when using the ACO Connector may differ—see connector documentation. {/* TODO: Clarify Data Connection support once ACO Connector documentation is published. */}
-
-:::note
-**Luma Bridge and Adobe Commerce Optimizer:** You do not need an Adobe Commerce Optimizer license or the ACO Connector to use [Luma Bridge](/setup/discovery/luma-bridge/) on PaaS with a Luma store. Luma Bridge is the session bridge between Edge Delivery Services and a Luma/PHP storefront—it is separate from ACO, which solves catalog and merchandising problems. If you add Adobe Commerce Optimizer and deploy the ACO Connector, you can still use Luma Bridge for session sharing while migrating. See [Luma Bridge](/setup/discovery/luma-bridge/).
-:::
-
-</Option>
-
-<Option>
-
-### Adobe Commerce as a Cloud Service
-
-- **Product license**: Adobe Commerce as a Cloud Service (License includes Storefront)
-- **All requirements**: Automatically managed by Adobe. No manual installation.
-
-</Option>
-
-<Option>
-
-### Adobe Commerce Optimizer
-
-- **Product license**: Adobe Commerce Optimizer (License includes Storefront)
-- **All requirements**: Fully managed SaaS. No manual installation.
-
-:::note
-**Adobe Commerce Optimizer + PaaS:** PaaS customers who add Adobe Commerce Optimizer can use [Luma Bridge](/setup/discovery/luma-bridge/) to keep cart, checkout, and account on PaaS while migrating to Edge Delivery Services drop-ins.
-:::
-
-</Option>
-
-</Options>
-
-<TableWrapper nowrap={[0]}>
-
-| Backend | Next step |
-|---------|-----------|
-| **Commerce PaaS** | Complete prerequisites above, then [Storefront Setup](/get-started/create-storefront/) |
-| **Adobe Commerce as a Cloud Service** | [Storefront Setup](/get-started/create-storefront/) |
-| **Adobe Commerce Optimizer** | [Storefront Setup](/get-started/create-storefront/) |
-
-</TableWrapper>
-
-<Aside type="tip" title="What you'll touch">
-Your storefront project has three moving parts: the **boilerplate** (config + blocks), **drop-in components** (commerce UI), and **Commerce services** (APIs). The sections below explain each one.
-</Aside>
+This page explains the architecture, then points you to [Backend options](/get-started/backends/) to identify your backend and confirm prerequisites.
 
 ## Architecture overview
 
@@ -160,53 +48,85 @@ graph TB
     class PaaS paas
     class CloudService cloudService
     class Optimizer optimizer
-`} caption="Storefront architecture: blocks and drop-ins connect to the Commerce boilerplate, which routes to your backend (PaaS, Cloud Service, or Optimizer) and Commerce services." />
+`} caption="Storefront architecture: blocks and drop-ins connect to the Commerce boilerplate, which routes to your backend (PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer) and Commerce services." />
 
 ## How it works
 
+<Diagram type="mermaid" code={`
+graph LR
+    A["<b>Author</b><br/><small>Creates table in document</small>"]
+    B["<b>Edge Delivery Services</b><br/><small>Server-side transform</small>"]
+    C["<b>Browser</b><br/><small>Loads HTML</small>"]
+    D["<b>Block decorator</b><br/><small>Client-side JS</small>"]
+    E["<b>Drop-in</b><br/><small>Renders UI</small>"]
+    F["<b>Commerce API</b><br/><small>GraphQL data</small>"]
+    
+    A -->|"Document"| B
+    B -->|"HTML with divs"| C
+    C -->|"Runs scripts"| D
+    D -->|"Initialize"| E
+    E -->|"Fetch"| F
+    F -->|"Response"| E
+    
+    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
+`} caption="Flow from authoring to rendering: document table → HTML → block decoration → drop-in initialization → GraphQL fetch." />
+
 An author creates a table (for example, Commerce Cart) in a document or uses in-context editing. Edge Delivery Services transforms it to HTML (`<div class="commerce-cart">`). The browser loads the HTML, the block decorator initializes the drop-in, and the drop-in fetches from the Commerce API to render UI.
+
+<Aside type="tip" title="What you'll touch">
+Your storefront project has three moving parts: the **boilerplate** (config + blocks), **drop-in components** (commerce UI), and **Commerce services** (APIs). The sections below explain each one.
+</Aside>
 
 ## Boilerplate and blocks
 
 The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce Boilerplate" /> has four layers:
 
-- **scripts.js** — page load, block decoration, fonts
-- **commerce.js** — backend connections, templates, data layer
-- **initializers** — cart, checkout, account, and more
-- **blocks** — content blocks (Cards, Columns, Headers) + Commerce blocks (cart, checkout, account)
+- **scripts.js** — Page load, block decoration, fonts
+- **commerce.js** — Backend connections, templates, data layer
+- **initializers** — Cart, checkout, account, and more
+- **blocks** — Content blocks (Cards, Columns, Headers) and Commerce blocks (cart, checkout, account)
 
-Commerce blocks use Commerce APIs; the boilerplate uses <Link href="https://preactjs.com/" text="Preact" />/HTM for complex state. See [Getting started](/boilerplate/getting-started/) for file structure. **Customize:** [Blocks reference](/boilerplate/blocks-reference/), [Blocks configuration](/boilerplate/configuration/), [Storefront configuration](/setup/configuration/commerce-configuration/).
+Commerce blocks use Commerce APIs; the boilerplate uses <Link href="https://preactjs.com/" text="Preact" />/HTM for complex state. See [Getting started](/boilerplate/getting-started/) for file structure.
+
+#### Customize
+
+[Blocks reference](/boilerplate/blocks-reference/) · [Blocks configuration](/boilerplate/configuration/) · [Storefront configuration](/setup/configuration/commerce-configuration/)
 
 ## Drop-in components
 
-[Drop-ins](/dropins/all/introduction/) are domain-driven commerce components. Install from NPM (for example, `npm install @dropins/storefront-cart`). See the [full list](/dropins/all/introduction/) for all available packages and use the [extension](/dropins/all/extending/) patterns when customizing.
+[Drop-ins](/dropins/all/introduction/) are domain-driven commerce components. Install from NPM (for example, `npm install @dropins/storefront-cart`). Use the [extension](/dropins/all/extending/) patterns when customizing.
 
 <Aside type="note" title="Existing storefront?">
-You can reuse parts of an existing Luma storefront with an Edge Delivery Services storefront by connecting them with [Luma Bridge](/setup/discovery/luma-bridge/). Luma Bridge does not require an Adobe Commerce Optimizer license or the ACO Connector—it is the session bridge between EDS and your Luma/PHP pages.
+Reuse parts of an existing Luma storefront with an Edge Delivery Services storefront by connecting them with [Luma Bridge](/setup/discovery/luma-bridge/). Luma Bridge works without an Adobe Commerce Optimizer license or the Adobe Commerce Optimizer Connector. It is the session bridge between EDS and Luma/PHP pages.
 </Aside>
 
 <Diagram type="mermaid" code={`
-graph LR
-    subgraph S1["PaaS + Luma + EDS (no ACO)"]
+graph TB
+    subgraph S1["PaaS + Luma"]
         A1["EDS"]
         B1["Luma Bridge"]
         C1["Luma"]
         A1 <--> B1
         B1 <--> C1
     end
-    subgraph S2["PaaS + Luma + EDS + ACO"]
+    subgraph S2["PaaS + Luma + Adobe Commerce Optimizer"]
         A2["EDS"]
         B2["Luma Bridge"]
         C2["Luma"]
-        D2["ACO Connector"]
+        D2["Adobe Commerce Optimizer Connector"]
         A2 <--> B2
         B2 <--> C2
         A2 -.-> D2
     end
-    subgraph S3["ACCS + ACO (no Luma)"]
+    subgraph S3["Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer"]
         A3["EDS"]
-        B3["ACO"]
-        C3["ACCS"]
+        B3["Adobe Commerce Optimizer"]
+        C3["Adobe Commerce as a Cloud Service"]
         A3 --> B3
         A3 --> C3
     end
@@ -220,7 +140,7 @@ graph LR
     class C1,C2 luma
     class D2,B3 aco
     class C3 accs
-`} caption="Luma Bridge scenarios: PaaS + Luma can use Luma Bridge without ACO (left). PaaS + ACO can also use Luma Bridge while migrating (center). ACCS (Adobe Commerce as a Cloud Service) + ACO has no Luma storefront, so Luma Bridge does not apply (right)." />
+`} caption="Luma Bridge scenarios: PaaS + Luma can use Luma Bridge without Adobe Commerce Optimizer. PaaS + Adobe Commerce Optimizer can also use Luma Bridge while migrating. Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer has no Luma storefront, so Luma Bridge does not apply." />
 
 ## Event system
 
@@ -239,7 +159,7 @@ graph LR
     YourCode(Your Code)
 
     Auth -->|"authenticated"| EB
-    PDP -->|"product/updated"| EB
+    PDP -->|"pdp/data"| EB
     Cart -->|"cart/updated, cart/data"| EB
     Checkout -->|"checkout/updated"| EB
     Order -->|"order/placed, cart/reset"| EB
@@ -275,26 +195,9 @@ Each drop-in indicates which events it emits and listens to. See the [event bus 
 The event bus handles **internal** communication between drop-ins on the page. It is separate from [ACDL analytics events](/setup/analytics/instrumentation/), which send user behavior data to Adobe Commerce services (Live Search, Product Recommendations).
 </Aside>
 
-## PaaS: required packages and services
+## Backend options and next steps
 
-<Aside type="note">
-**Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer** auto-install and auto-configure everything below. Skip this section if you are not on PaaS.
-</Aside>
+Storefront supports three backend types: **Commerce PaaS**, **Adobe Commerce as a Cloud Service**, and **Adobe Commerce Optimizer**. Prerequisites and setup differ by backend.
 
-**Storefront Compatibility package** extends the GraphQL schema for cart, checkout, account, and order. See [Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (2.4.7 or 2.4.8).
-
-**Storefront services** provide read-only catalog data via GraphQL. These services are required for the performance needed to achieve high Lighthouse scores.
-
-| Service | Link |
-|---------|------|
-| Data Connection | <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection Guide" /> |
-| Services Connector | <Link href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas" text="Commerce Services Connector" /> |
-| Catalog Service | <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service Guide" /> |
-| Live Search | <Link href="https://experienceleague.adobe.com/en/docs/commerce/live-search/overview" text="Live Search" />; [eventing](/setup/analytics/instrumentation/) for headless |
-| Product Recommendations | <Link href="https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/developer/events" text="Events" />; [setup](/merchants/blocks/product-recommendations/) |
-
-<Aside type="caution" title="Multiple stores in one Commerce environment">
-Contact Adobe Commerce Support if only one store migrates to Edge Delivery Services—Live Search must stay active without disabling Elasticsearch for other stores.
-</Aside>
-
-**Next:** [Storefront Setup](/get-started/create-storefront/)
+1. [Backend options](/get-started/backends/) — Comparison table, prerequisites by backend
+2. [Storefront Setup](/get-started/create-storefront/) — Create your storefront and configure your backend

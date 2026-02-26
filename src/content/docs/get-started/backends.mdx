@@ -1,0 +1,174 @@
+---
+title: Storefront Backend Options
+description: Identify your Adobe Commerce backend type (PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer) and confirm prerequisites before storefront setup.
+---
+
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+import Options from '@components/Options.astro';
+import Option from '@components/Option.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Storefront supports three backend types. Follow only the guidance for your backend—prerequisites and setup differ, and mixing steps causes errors.
+
+- **Commerce PaaS** — Existing Adobe Commerce Cloud or on-premises (no Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license)
+- **Adobe Commerce as a Cloud Service** — Cloud Service customer; license includes Storefront
+- **Adobe Commerce Optimizer** — New Adobe Commerce Optimizer customer, or existing PaaS customer who added Adobe Commerce Optimizer
+
+<Aside type="tip" title="Not sure which backend you have?">
+Commerce PaaS = existing cloud or on-premises. Adobe Commerce as a Cloud Service = Customer with Storefront in license. Adobe Commerce Optimizer = Adobe Commerce Optimizer customer or PaaS + Adobe Commerce Optimizer.
+</Aside>
+
+<TableWrapper nowrap={[0]}>
+
+| Feature | Commerce PaaS | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
+|---------|---------------|-----------------------------------|--------------------------|
+| **License includes Storefront** | No | Yes | Yes |
+| **Setup** | Manual install required (see Prerequisites below) | Fully automated | Fully automated |
+| **Version** | v2.4.7+ self-managed | Auto-managed | Fully managed SaaS |
+
+</TableWrapper>
+
+{/* TODO: Update Link href when ACO Connector (PaaS-to-ACO) documentation is published. */}
+
+<Aside type="note" title="PaaS + Adobe Commerce Optimizer Connector">
+The Adobe Commerce Optimizer Connector (PaaS-to-Adobe Commerce Optimizer) requires manually installing the PHP extension on the PaaS platform and configuring the Adobe Commerce Optimizer UI. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/get-started" text="Adobe Commerce Optimizer documentation" /> for connector setup.
+</Aside>
+
+<Diagram type="mermaid" code={`
+graph TB
+    subgraph Storefronts["Storefronts"]
+        EDS["<b>Edge Delivery Services</b><br/>Drop-ins, boilerplate"]
+        Luma["<b>Luma / PHP</b><br/>Cart, checkout, account<br/>PaaS only"]
+    end
+    subgraph Bridge["Session bridge (optional)"]
+        LB["<b>Luma Bridge</b><br/>Shared cookies, JWT/cart IDs<br/>Same domain"]
+    end
+    subgraph Backends["Backends"]
+        PaaS["<b>Commerce PaaS</b><br/>Catalog, pricing, orders"]
+        ACCS["<b>Adobe Commerce as a Cloud Service</b><br/>Fully managed, license includes Storefront"]
+        ACO["<b>Adobe Commerce Optimizer</b><br/>Catalog v2, merchandising<br/>Commerce Storefront drop-ins"]
+    end
+    Connector["<b>ACO Connector</b><br/>PaaS-to-ACO sync<br/>Catalog, pricing"]
+    EDS <--> LB
+    LB <--> Luma
+    EDS --> PaaS
+    EDS --> ACCS
+    EDS --> ACO
+    Luma --> PaaS
+    PaaS -->|"Manual install"| Connector
+    Connector --> ACO
+    classDef storefront fill:#e8f5e9,stroke:#4caf50
+    classDef bridge fill:#fff3e0,stroke:#ff9800
+    classDef backend fill:#e3f2fd,stroke:#2196f3
+    classDef connector fill:#f3e5f5,stroke:#9c27b0
+    class EDS,Luma storefront
+    class LB bridge
+    class PaaS,ACCS,ACO backend
+    class Connector connector
+`} caption="Key components: EDS connects to PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. Luma Bridge (PaaS only) bridges EDS and Luma—independent of Adobe Commerce Optimizer. Cloud Service has no Luma; it pairs with Adobe Commerce Optimizer for catalog. The Adobe Commerce Optimizer Connector syncs PaaS catalog/pricing into Adobe Commerce Optimizer." />
+
+## Prerequisites
+
+<Options label="By backend" numbered={false}>
+<Option>
+
+### Commerce Platform-as-a-Service (PaaS)
+
+#### Product license
+
+Adobe Commerce Cloud or on-premises (Magento Open Source not supported). Or with the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/get-started" text="Adobe Commerce Optimizer Connector" />—requires Storefront Compatibility package.
+
+#### Version
+
+v2.4.7 or later
+
+#### Storefront Compatibility package
+
+Required. See [Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (2.4.7 or 2.4.8).
+
+#### Storefront services (manual install)
+
+- **Without Adobe Commerce Optimizer Connector:** Data Connection, Services Connector, Catalog Service, Live Search, Product Recommendations. See <Link href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas" text="Commerce Services Connector" />.
+- **With Adobe Commerce Optimizer Connector:** PHP extension on PaaS + Adobe Commerce Optimizer UI configuration. Data Connection support may differ—see connector documentation. {/* TODO: Clarify Data Connection support once ACO Connector documentation is published. */}
+
+<Aside type="note" title="Luma Bridge and Adobe Commerce Optimizer">
+Luma Bridge works without an Adobe Commerce Optimizer license or the Adobe Commerce Optimizer Connector on PaaS with a Luma store. Luma Bridge is the session bridge between Edge Delivery Services and a Luma/PHP storefront. It is separate from Adobe Commerce Optimizer, which solves catalog and merchandising problems. With Adobe Commerce Optimizer and the Adobe Commerce Optimizer Connector, Luma Bridge still works for session sharing during migration. See [Luma Bridge](/setup/discovery/luma-bridge/).
+</Aside>
+
+</Option>
+
+<Option>
+
+### Adobe Commerce as a Cloud Service
+
+#### Product license
+
+Adobe Commerce as a Cloud Service (License includes Storefront)
+
+#### All requirements
+
+Automatically managed by Adobe. No manual installation.
+
+</Option>
+
+<Option>
+
+### Adobe Commerce Optimizer
+
+#### Product license
+
+Adobe Commerce Optimizer (License includes Storefront)
+
+#### All requirements
+
+Fully managed SaaS. No manual installation.
+
+<Aside type="note" title="Adobe Commerce Optimizer + PaaS">
+PaaS customers who add Adobe Commerce Optimizer can use [Luma Bridge](/setup/discovery/luma-bridge/) to keep cart, checkout, and account on PaaS while migrating to Edge Delivery Services drop-ins.
+</Aside>
+
+</Option>
+
+</Options>
+
+<TableWrapper nowrap={[0]}>
+
+| Backend | Next step |
+|---------|-----------|
+| **Commerce PaaS** | Complete prerequisites below, then [Storefront Setup](/get-started/create-storefront/) |
+| **Adobe Commerce as a Cloud Service** | [Storefront Setup](/get-started/create-storefront/) |
+| **Adobe Commerce Optimizer** | [Storefront Setup](/get-started/create-storefront/) |
+
+</TableWrapper>
+
+## PaaS: required packages and services
+
+<Aside type="note">
+**Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer** auto-install and auto-configure everything below. Skip this section if you are not on Commerce PaaS.
+</Aside>
+
+### Storefront Compatibility package
+
+Extends the GraphQL schema for cart, checkout, account, and order. See [Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (2.4.7 or 2.4.8).
+
+### Storefront services
+
+Read-only catalog data via GraphQL; required for high Lighthouse scores.
+
+| Service | Documentation |
+|---------|---------------|
+| Data Connection | <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection Guide" /> |
+| Services Connector | <Link href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas" text="Commerce Services Connector" /> |
+| Catalog Service | <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service Guide" /> |
+| Live Search | <Link href="https://experienceleague.adobe.com/en/docs/commerce/live-search/overview" text="Live Search" />; [eventing](/setup/analytics/instrumentation/) for headless |
+| Product Recommendations | <Link href="https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/developer/events" text="Events" />; [setup](/merchants/blocks/product-recommendations/) |
+
+<Aside type="caution" title="Multiple stores in one Commerce environment">
+Contact Adobe Commerce Support if only one store migrates to Edge Delivery Services—Live Search must stay active without disabling Elasticsearch for other stores.
+</Aside>
+
+## Next steps
+
+[Storefront Setup](/get-started/create-storefront/) — Create your storefront from the boilerplate and configure your backend.
