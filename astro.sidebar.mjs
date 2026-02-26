@@ -40,6 +40,7 @@ export function generateSidebar() {
             { label: 'Blocks configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },

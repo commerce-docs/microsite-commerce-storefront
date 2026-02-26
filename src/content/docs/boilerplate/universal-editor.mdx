@@ -1,0 +1,68 @@
+---
+title: Universal Editor for developers
+description: Enable Universal Editor for your Commerce storefront on DA.live, configure the editor path, and instrument custom blocks for in-context editing.
+sidebar:
+  label: Universal Editor
+  order: 6
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Aside from '@components/Aside.astro';
+
+The Commerce boilerplate ships with Universal Editor instrumentation already in place for all standard blocks. This page covers what developers need to do to activate it and how to instrument custom blocks you add to your project. **UE setup and block instrumentation are identical for PaaS, ACCS, and ACO** — no backend-specific configuration. Backend connection (config.json) is covered in [Create a storefront](/get-started/create-storefront/) and [Architecture](/get-started/architecture/).
+
+## Enable Universal Editor for your DA.live site
+
+<Aside type="note">
+Universal Editor on DA.live is part of Adobe's Early Access Technology program and requires AEM Sites credits on your IMS Org. Only Chrome and Safari browsers are supported.
+</Aside>
+
+Add the `editor.path` key-value to your DA org config at `https://da.live/config#/{your-org}/`. See [Setup Universal Editor](https://docs.da.live/developers/guides/setup-universal-editor) for the exact format, placeholders, and behavior.
+
+## Built-in block instrumentation
+
+All standard blocks in the Commerce boilerplate include the three JSON files that Universal Editor requires:
+
+| File | Purpose |
+|------|---------|
+| `component-definition.json` | Registers blocks and their table structure |
+| `component-models.json` | Defines the fields shown in the UE properties panel |
+| `component-filters.json` | Controls which child components a container block accepts |
+
+No additional setup is needed for these blocks — they are ready to edit in context out of the box.
+
+## Instrument custom blocks
+
+When you add a new block to your project, create a JSON file in that block's folder so Universal Editor can recognize and edit it. The Commerce boilerplate uses `blocks/{block-name}/_{block-name}.json` (e.g. `blocks/product-recommendations/_product-recommendations.json`) with `definitions`, `models`, and `filters` objects.
+
+<Steps>
+
+1. Create `blocks/{your-block}/_{your-block}.json` with `definitions`, `models`, and `filters`. Use [product-recommendations](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-recommendations/_product-recommendations.json) as a reference for a key-value block, or [accordion](https://github.com/aemsites/da-block-collection/blob/main/ue/models/blocks/accordion.json) for a container block.
+
+2. For **Commerce blocks** (e.g. `commerce-myblock`), the `models/_component-definition.json` glob `../blocks/commerce-*/_*.json#/definitions` picks them up automatically. For **other blocks**, add a new entry to the Blocks group in `models/_component-definition.json`:
+   ```json
+   { "...": "../blocks/your-block/_*.json#/definitions" }
+   ```
+
+3. Run the bundler to regenerate the root-level JSON files:
+
+   ```bash
+   npm run build:json
+   ```
+
+</Steps>
+
+<Aside type="tip">
+Open a page in Universal Editor while developing. Blocks without instrumentation appear as **(no definition)** in the content tree — a quick visual signal that a definition file is needed.
+</Aside>
+
+For detailed definitions, models, and filters syntax, see the [Universal Editor developer reference](https://docs.da.live/developers/reference/universal-editor).
+
+## Resources
+
+- [Using the Universal Editor](/merchants/quick-start/universal-editor/) — For content authors and merchants
+- [Setup Universal Editor](https://docs.da.live/developers/guides/setup-universal-editor) — DA.live guide, including the `editor.path` config detail
+- [Universal Editor developer reference](https://docs.da.live/developers/reference/universal-editor) — full instrumentation reference for DA.live
+- [da-block-collection](https://github.com/aemsites/da-block-collection) — reference project with complete UE instrumentation and bundling scripts
+- [UE field types](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/field-types) — all available field component types for `component-models.json`
+- [UE component definition](https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/developing/universal-editor/component-definition) — AEM documentation for the definition JSON format
