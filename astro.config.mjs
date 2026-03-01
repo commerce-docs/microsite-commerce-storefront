@@ -57,6 +57,7 @@ async function config() {
     markdown: {
       remarkPlugins: [remarkBasePathLinks],
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
+      shikiConfig: { theme: 'css-variables' },
     },
     trailingSlash: 'ignore',
     outDir: './dist',
