@@ -24,7 +24,7 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Learn the architecture', link: '/get-started/architecture/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
@@ -39,8 +39,9 @@ export function generateSidebar() {
             { label: 'Getting started', link: '/boilerplate/getting-started/' },
             { label: 'Configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Updates', link: '/boilerplate/updates/' },
+            { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },
         {
@@ -761,28 +762,23 @@ export function generateSidebar() {
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
             { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
-            { label: 'Using the Visual Editor', link: '/merchants/quick-start/visual-editor/' },
+            { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
             { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
             { label: 'Section metadata', link: '/merchants/quick-start/section-metadata/' },
-            {
-              label: 'Localization',
-              collapsed: true,
-              items: [
-                { label: 'Document Authoring workflow', link: '/merchants/quick-start/content-localization/' },
-                { label: 'Universal Editor workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
-                { label: 'Commerce-specific tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
-              ],
-            },
           ],
         },
         {
           label: 'Commerce blocks',
+          link: '/merchants/blocks/',
+        },
+        {
+          label: 'B2C Commerce blocks',
           items: [
-            { label: 'Overview', link: '/merchants/commerce-blocks/' },
-            { label: 'Personalization', link: '/merchants/commerce-blocks/personalization/' },
-            { label: 'Product recommendations', link: '/merchants/commerce-blocks/product-recommendations/' },
+            { label: 'Overview', link: '/merchants/blocks/b2c/' },
+            { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
+            { label: 'Product Recommendations setup', link: '/merchants/blocks/product-recommendations/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -811,19 +807,17 @@ export function generateSidebar() {
             { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
             { label: 'Product Details', link: '/merchants/blocks/product-details/' },
             { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
-            { label: 'Product Recommendations', link: '/merchants/blocks/product-recommendations/' },
           ],
         },
         // B2B Commerce blocks (30 total): commerce-b2b-* (18), commerce-company-* (7),
-        // commerce-customer-company (1), plus commerce-{account-header,account-nav,account-sidebar,checkout-success} (4)
+        // commerce-customer-company (1), plus commerce-{account-nav,checkout-success} (2)
+        // Note: Account Header and Account Sidebar are shared B2C/B2B blocks listed in the main Commerce blocks section
         {
           label: 'B2B Commerce blocks',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/merchants/blocks/' },
-            { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
+            { label: 'Overview', link: '/merchants/blocks/b2b/' },
             { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
-            { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Checkout Success', link: '/merchants/blocks/commerce-checkout-success/' },
             { label: 'Company Accept Invitation', link: '/merchants/blocks/commerce-company-accept-invitation/' },
             { label: 'Company Create', link: '/merchants/blocks/commerce-company-create/' },
@@ -851,6 +845,15 @@ export function generateSidebar() {
             { label: 'Quote Checkout', link: '/merchants/blocks/commerce-b2b-quote-checkout/' },
             { label: 'Requisition List', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
             { label: 'Requisition List View', link: '/merchants/blocks/commerce-b2b-requisition-list-view/' },
+          ],
+        },
+        {
+          label: 'Localization',
+          collapsed: true,
+          items: [
+            { label: 'Document Authoring workflow', link: '/merchants/quick-start/content-localization/' },
+            { label: 'Universal Editor workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
+            { label: 'Commerce-specific tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },
         {
