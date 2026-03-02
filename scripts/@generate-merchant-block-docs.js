@@ -344,7 +344,6 @@ function extractConfigFromSource(blockPath) {
     if (assignmentMatch) {
         const configVarName = assignmentMatch[1]; // e.g., "config" or "blockConfig"
 
-<<<<<<< HEAD
         // PATTERN 3: Check for subsequent destructuring from the config variable
         // This handles cases where destructuring happens on a separate line (even with blank lines)
         // Example: const blockConfig = readBlockConfig(block);
@@ -355,11 +354,6 @@ function extractConfigFromSource(blockPath) {
             'gs' // Global + dotall flags to handle multiline patterns and blank lines
         );
         const destructMatch = sourceCode.match(subsequentDestructPattern);
-=======
-        // Find nested destructuring FIRST (most reliable): const { key, key2 } = config
-        const nestedDestructurePattern = new RegExp(`const\\s*\\{([^}]+)\\}\\s*=\\s*${configVarName}\\s*;`, 'g');
-        let nestedMatch;
->>>>>>> origin/develop
 
         if (destructMatch) {
             // Found subsequent destructuring - parse it like PATTERN 1

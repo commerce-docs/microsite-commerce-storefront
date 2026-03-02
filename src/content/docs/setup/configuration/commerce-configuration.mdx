@@ -139,7 +139,7 @@ Adobe Commerce PaaS environments use standard Adobe Commerce header naming conve
 
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service (SaaS)">
+<TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
 
 Adobe Commerce as a Cloud Service uses standard Adobe Commerce header naming conventions but does not require API keys or environment IDs in the default configuration.
 
@@ -179,7 +179,6 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
   "headers": {
     "cs": {
       "AC-View-ID": "{{CATALOG_VIEW_ID}}",
-      "AC-Source-Locale": "{{LOCALE}}",
       "AC-Price-Book-ID": "{{PRICE_BOOK_ID}}",
       "AC-Policy-{{*}}": "{{ATTRIBUTE_VALUE}}"
     }
@@ -191,7 +190,6 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
 
 - **`cs`** - Headers applied to all GraphQL requests
   - **`AC-View-ID`** - (Required) The unique ID assigned to the catalog view that products will be sold through. You can find this in the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="Adobe Commerce Optimizer UI" />.
-  - **`AC-Source-Locale`** - (Required) Catalog source locale (language or geography) to filter products for display, for example `en_US`. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="catalog view configuration" /> to determine the correct value.
   - **`AC-Price-Book-ID`** - (Optional) Specifies the Price Book ID to use for pricing. Each catalog view defines a default Price Book. If a customer has an assigned Price Book, it is used when it falls within the allowed Price Books for the catalog view. Otherwise, the default Price Book for the catalog view is used. See <Link href="/setup/configuration/price-book-setup/" text="Price Book ID setup" /> for implementation details.
   - **`AC-Policy-{{*}}`** - (Optional) Policy trigger for filtering products by attribute. The header should match the "name" of the trigger. For example, `AC-Policy-Brand:Cruz` for brand filtering using "Cruz". You can specify multiple policy headers per request.
 
@@ -474,15 +472,14 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
 ```
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service (SaaS)">
+<TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
 
-This example shows the configuration for Adobe Commerce as a Cloud Service, which uses standard Adobe Commerce header naming conventions. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
+This example shows the configuration for Adobe Commerce as a Cloud Service (ACCS). For ACCS you only need to set **`commerce-endpoint`** to your ACCS GraphQL URL; the same endpoint is used for catalog and core. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
 
 ```json title="ACCS config.json" showLineNumbers
 {
   "public": {
     "default": {
-      "commerce-core-endpoint": "https://na1-sandbox.api.commerce.adobe.com/LwndYQs37CvkUQk9WEmNkz/graphql",
       "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/LwndYQs37CvkUQk9WEmNkz/graphql",
       "headers": {
         "all": {
@@ -521,15 +518,15 @@ This example shows the configuration for Adobe Commerce as a Cloud Service, whic
 
 </TabItem>
 
-<TabItem label="Adobe Commerce Optimizer">
+<TabItem label="Adobe Commerce Optimizer (ACO)">
 
-This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes Optimizer-specific settings. This configuration is used on this site: https://main--boilerplate-aco--adobe-commerce.aem.live/
+This example shows the configuration for Adobe Commerce Optimizer (ACO), which uses different header naming conventions and includes ACO-specific settings. For ACO, set commerce-endpoint (ACO GraphQL URL for catalog) at a minimum. Set commerce-core-endpoint (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is from https://main--boilerplate-aco--adobe-commerce.aem.live/ and does not include a core endpoint.
 
-```json title="Optimizer config.json" showLineNumbers
+```json title="ACO config.json" showLineNumbers
 {
   "public": {
     "default": {
-      "commerce-core-endpoint": "https://na1-sandbox.api.commerce.adobe.com/8idEEDDiVwjCEJAyB5kjfi/graphql",
+      "adobe-commerce-optimizer": true,
       "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/8idEEDDiVwjCEJAyB5kjfi/graphql",
       "headers": {
         "cs": {
@@ -598,9 +595,10 @@ To work with your own Commerce backend locally:
    - Copy the configuration to your clipboard and paste it into your `config.json` file in your code repo.
 
 2. **Edit config.json** with your Commerce backend values:
-   - Update `commerce-endpoint` and `commerce-core-endpoint` (if needed)
-   - Update `headers` for authentication
-   - Update `analytics` values for your store
+   - Update `commerce-endpoint` (required).
+   - Add/update `commerce-core-endpoint` if necessary.
+   - Update `headers`.
+   - Update `analytics` values for your store.
    - Update any other values as needed, such as `commerce-assets-enabled`, etc.
 
 3. **Add config.json to .gitignore** (optional):
