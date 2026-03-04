@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { logger } from './lib/logger.js';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
 import { wrapCodeNames } from './lib/utils.js';
 
 // Get drop-in name from command line
@@ -224,8 +225,9 @@ ${data.section_topics.intro}
 ${sectionTopics}
 `;
 
-// Write the file
-writeFileSync(outputPath, mdx, 'utf8');
+// Write the file (preserve existing frontmatter and first paragraph)
+const finalContent = mergePreservingPreamble(outputPath, mdx);
+writeFileSync(outputPath, finalContent, 'utf8');
 
 console.log(`✅ Generated overview page for ${dropinName}`);
 console.log('');
