@@ -22,3 +22,10 @@ This pull request (PR) ...
 
 <!--OPTIONAL Link to any associated source code PRs related to update-->
 
+### What's New highlights
+
+<!--  _OPTIONAL - REMOVE THIS SECTION IF NOT USED._
+
+If this pull request introduces changes that should be highlighted in What's New documentation reports.
+-->
+
