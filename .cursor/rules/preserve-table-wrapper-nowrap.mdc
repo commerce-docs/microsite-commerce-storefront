@@ -1,0 +1,22 @@
+---
+description: Generators must not change TableWrapper nowrap parameters; existing values are preserved
+globs:
+  - scripts/**/*.js
+  - scripts/lib/**/*.js
+alwaysApply: false
+---
+
+# Preserve TableWrapper nowrap Parameters
+
+**RULE: Generators must not change the TableWrapper `nowrap` parameters in existing MDX files.**
+
+When merging generated content with existing files, `mergePreservingPreamble` preserves the `nowrap` values from the existing file. The generator's computed values (e.g. based on type length) are overwritten with the existing values when the file already exists.
+
+## Implementation
+
+- **preserve-preamble.js**: `mergePreservingPreamble()` extracts `nowrap` values from the existing file's body and replaces them in the merged output (by position).
+- **Generators**: Do not need to change—they compute nowrap as before; the merge step preserves existing values.
+
+## Examples
+
+If the existing file has `<TableWrapper nowrap={[0,1]}>` and the generator would produce `<TableWrapper nowrap={[0]}>`, the merged output keeps `[0,1]`.
