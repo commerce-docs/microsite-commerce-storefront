@@ -40,13 +40,11 @@ export function insertSidebarEntry(dropinName, repoConfig, entryLabel, reference
     // Check if the entry already exists
     const entryPattern = new RegExp(`label:\\s*'${entryLabel}',\\s*link:\\s*'${entryPath}'`);
     if (entryPattern.test(config)) {
-        console.log(`  ℹ️  Sidebar entry already exists for ${repoConfig.displayName} ${entryLabel}`);
         return false;
     }
 
-    // If no reference label provided, just report that manual addition is needed
+    // If no reference label provided, skip
     if (!referenceLabel) {
-        console.log(`  ℹ️  Sidebar entry can be added manually for ${repoConfig.displayName} ${entryLabel}`);
         return false;
     }
 
@@ -70,56 +68,44 @@ export function insertSidebarEntry(dropinName, repoConfig, entryLabel, reference
         return true;
     }
 
-    // Reference not found
-    console.log(`  ℹ️  Could not find reference entry '${referenceLabel}' for ${repoConfig.displayName}`);
+    // Reference not found (silent - sidebar may already be configured)
     return false;
 }
 
 /**
  * Update sidebar navigation for functions
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForFunctions(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Functions', 'Slots');
+export function updateSidebarForFunctions(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertSidebarEntry(dropin.name, dropin, 'Functions', 'Slots');
+    }
 }
 
 /**
  * Update sidebar navigation for events
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForEvents(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Events', 'Functions');
+export function updateSidebarForEvents(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertSidebarEntry(dropin.name, dropin, 'Events', 'Functions');
+    }
 }
 
 /**
  * Update sidebar navigation for slots
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForSlots(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Slots', 'Functions');
+export function updateSidebarForSlots(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertSidebarEntry(dropin.name, dropin, 'Slots', 'Functions');
+    }
 }
 
 /**
- * Update sidebar navigation for containers
- * 
- * Note: Container entries are manually maintained in the collapsible groups
- * within astro.config.mjs. We don't auto-add a standalone "Containers" link
- * to avoid duplicates.
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Update sidebar navigation for containers (per-dropin)
  */
-export function updateSidebarForContainers(dropinName, repoConfig) {
+function updateContainersForDropin(dropinName, repoConfig) {
     const configPath = join(projectRoot, 'astro.config.mjs');
     let config = readFileSync(configPath, 'utf8');
 
@@ -233,39 +219,52 @@ export function updateSidebarForContainers(dropinName, repoConfig) {
 }
 
 /**
- * Update sidebar navigation for dictionary
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Update sidebar navigation for containers
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForDictionary(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Dictionary', 'Containers');
+export function updateSidebarForContainers(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        updateContainersForDropin(dropin.name, dropin);
+    }
+}
+
+/**
+ * Update sidebar navigation for dictionary
+ * Called by generator-core with (projectRoot, targetDropins)
+ */
+export function updateSidebarForDictionary(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertSidebarEntry(dropin.name, dropin, 'Dictionary', 'Containers');
+    }
 }
 
 /**
  * Update sidebar navigation for quick start pages
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForInstallation(dropinName, repoConfig) {
-    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
-    // Overview links to root (e.g., /dropins/cart/), not /dropins/cart/overview/
-    const overviewPath = `/${basePath}/${dropinName}/`;
-    return insertSidebarEntry(dropinName, repoConfig, 'Quick Start', 'Overview', overviewPath);
+export function updateSidebarForInstallation(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        const basePath = dropin.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+        const overviewPath = `/${basePath}/${dropin.name}/`;
+        insertSidebarEntry(dropin.name, dropin, 'Quick Start', 'Overview', overviewPath);
+    }
+}
+
+/**
+ * Update sidebar navigation for initialization (per-dropin)
+ */
+function insertInitializationEntry(dropinName, repoConfig) {
+    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Quick Start');
 }
 
 /**
  * Update sidebar navigation for initialization
- * 
- * @param {string} dropinName - Name of the drop-in
- * @param {Object} repoConfig - Repository configuration
- * @returns {boolean} True if successful
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-export function updateSidebarForInitialization(dropinName, repoConfig) {
-    return insertSidebarEntry(dropinName, repoConfig, 'Initialization', 'Quick Start'); // After Quick Start
+export function updateSidebarForInitialization(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertInitializationEntry(dropin.name, dropin);
+    }
 }
 
 /**

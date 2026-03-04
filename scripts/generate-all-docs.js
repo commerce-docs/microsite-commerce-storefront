@@ -86,7 +86,7 @@ const generators = [
     },
     {
         name: 'Merchant Blocks',
-        command: 'npm run generate-merchant-block-docs',
+        command: 'npm run generate-merchant-docs',
         description: 'Business user documentation for blocks (29 pages)',
         estimatedTime: '1-2 minutes'
     },
@@ -233,6 +233,18 @@ if (isDryRun) {
 
     if (results.failed.length === 0) {
         console.log('\n✨ All generators completed successfully!');
+
+        // Verify code examples (import paths, null safety, types)
+        console.log('\n🔍 Verifying code examples...');
+        try {
+            execSync('npm run verify:examples', { stdio: 'inherit', cwd: projectRoot });
+            execSync('npm run typecheck:examples', { stdio: 'inherit', cwd: projectRoot });
+            execSync('npm run test:example-runtime', { stdio: 'inherit', cwd: projectRoot });
+        } catch (err) {
+            console.error('\n❌ Example verification failed. Fix the issues above.\n');
+            process.exit(1);
+        }
+
         console.log('\n📄 Generated documentation includes:');
         console.log('   • 70+ drop-in documentation pages');
         console.log('   • 33 boilerplate block pages');

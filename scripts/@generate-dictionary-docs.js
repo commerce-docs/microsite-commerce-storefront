@@ -76,7 +76,9 @@ function countLeafValues(obj) {
 
 /**
  * Scan repository for dictionary file
- * 
+ * Validates JSON and returns parsed data. Output is formatted with 2-space
+ * indentation for readability (readability over avoiding formatting diffs).
+ *
  * @param {string} repoPath - Path to the repository
  * @returns {Object|null} Dictionary data with content and count
  */
@@ -88,12 +90,13 @@ function scanForDictionary(repoPath) {
     }
 
     try {
-        const content = readFileSync(dictionaryPath, 'utf8');
-        const json = JSON.parse(content);
+        const rawContent = readFileSync(dictionaryPath, 'utf8');
+        const json = JSON.parse(rawContent);
 
         // Count only leaf values (translatable strings)
         const keyCount = countLeafValues(json);
 
+        // Format with 2-space indentation for readability in docs
         return {
             content: JSON.stringify(json, null, 2),
             keyCount,
@@ -238,7 +241,9 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo
     if (!dictionaryData || !dictionaryData.content) {
         dictionaryJson = '{\n  "placeholder": "No dictionary file found in this drop-in"\n}';
     } else {
-        dictionaryJson = dictionaryData.content;
+        // Trim trailing newlines to avoid extra blank line before closing ``` in template.
+        // Template has DICTIONARY_JSON\n``` so content ending with \n produces blank line.
+        dictionaryJson = dictionaryData.content.replace(/\n+$/, '');
         customExample = generateCustomizationExample(dictionaryJson);
     }
 

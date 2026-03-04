@@ -5,7 +5,7 @@
  * to generate consistent, developer-friendly descriptions across all drop-ins.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { getProjectRoot } from './generator-core.js';
 
@@ -16,18 +16,23 @@ let patternsCache = null;
  * @returns {Object} Patterns object
  */
 export function loadParameterPatterns() {
-    if (patternsCache) {
+    if (patternsCache !== null) {
         return patternsCache;
     }
 
     try {
         const patternsPath = join(getProjectRoot(), '_dropin-enrichments', 'parameter-patterns.json');
+        if (!existsSync(patternsPath)) {
+            patternsCache = { patterns: {} };
+            return patternsCache;
+        }
         const patternsContent = readFileSync(patternsPath, 'utf-8');
         patternsCache = JSON.parse(patternsContent);
         return patternsCache;
     } catch (error) {
+        patternsCache = { patterns: {} };
         console.warn('  ⚠️  Could not load parameter-patterns.json:', error.message);
-        return { patterns: {} };
+        return patternsCache;
     }
 }
 
