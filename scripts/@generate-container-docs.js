@@ -22,14 +22,25 @@
  * - Generates independently: Configuration tables, slots content, usage examples
  *
  * IMPORTANT: Generates multiple files (one per container)
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/{dropin-name}
+ * Verify: API signatures, prop types, import paths. If you cannot verify, do not invent.
+ *
+ * RULE - SOURCE OF TRUTH (see scripts/GENERATOR-RULES.md):
+ * TypeScript is the source of truth for parameters. Only include params that exist in Props.
+ * Enrichment provides descriptions only—never add params from enrichment that aren't in source.
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'fs';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
 import { join } from 'path';
 
 // Import shared utilities
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
-import { loadContainerEnrichments } from './lib/enrichment.js';
+import { loadContainerEnrichments, mergeContainerDescriptionsIntoEnrichment } from './lib/enrichment.js';
+import { isPathPreserved } from './lib/preserve-paths.js';
 import { updateSidebarForContainers } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion, toKebabCase, capitalize, wrapCodeNames } from './lib/utils.js';
@@ -37,9 +48,11 @@ import { logger } from './lib/logger.js';
 
 // Import Phase 2 shared libraries
 import { extractPropsFromComponent } from './lib/react/props-extractor.js';
-import { generatePropertyDescription } from './lib/description-generator.js';
+import { generatePropertyDescription, generateContainerDescription, normalizeWritingStyle } from './lib/description-generator.js';
 import { generatePropertyTable, generateSlotsTable } from './lib/markdown/table-generator.js';
-import { generateContainerExample } from './lib/markdown/example-generator.js';
+import { generateContainerExample, ensureSlotsComment } from './lib/markdown/example-generator.js';
+import { extractExistingParameterDescriptions, extractExistingContainerIndexDescriptions } from './lib/content-extractor.js';
+import { isRicherDescription, isJunk } from './lib/richer-description.js';
 
 const projectRoot = getProjectRoot();
 
@@ -174,7 +187,8 @@ function extractContainerInfo(filePath, containerName, repoPath) {
             repoPath,
             {
                 includeSlots: false,  // We extract slots separately
-                descriptionGenerator: generatePropertyDescription
+                descriptionGenerator: generatePropertyDescription,
+                includeContainerBaseProps: true  // Add initialData for Elsie Container<Props, Data>
             }
         );
 
@@ -299,6 +313,8 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             continue;
         }
 
+        const basePath = (enrichment?.b2b) ? 'dropins-b2b' : (repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins');
+
         // Auto-discover image for this container
         const imageName = findImageForContainer(containerInfo.containerName, repoName, basePath);
         const hasImage = imageName !== null;
@@ -319,14 +335,36 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
 
         const nowrapColumns = hasOnlyShortTypes ? [0, 1] : [0];
 
+        // Richer Description Rule: extract existing param descriptions for comparison
+        const containerOutputPath = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'containers', `${toKebabCase(containerInfo.containerName)}.mdx`);
+        const existingParamDescriptions = extractExistingParameterDescriptions(containerOutputPath);
+
         // Enrich props with descriptions from enrichment file
-        const enrichedProps = containerInfo.props.map(prop => {
-            const enrichedDesc = enrichment?.parameters?.[prop.name]?.description;
-            return {
-                ...prop,
-                description: enrichedDesc || prop.description || ''
-            };
-        });
+        const propsByName = new Map(
+            containerInfo.props.map(prop => {
+                const enrichedDesc = enrichment?.parameters?.[prop.name]?.description;
+                const generatedDesc = prop.description || '';
+                let desc = enrichedDesc || generatedDesc;
+                // Richer Description Rule: if no enrichment, prefer existing if it's richer than generated
+                if (!enrichedDesc) {
+                    const existing = existingParamDescriptions.get(prop.name);
+                    if (existing && isRicherDescription(existing, generatedDesc)) {
+                        desc = existing;
+                    }
+                }
+                return [
+                    prop.name,
+                    {
+                        ...prop,
+                        description: wrapCodeNames(normalizeWritingStyle(desc))
+                    }
+                ];
+            })
+        );
+
+        // TypeScript is the source of truth for parameters. Only include params that exist in the
+        // Props interface. Enrichment provides descriptions only—parameter order comes from TypeScript.
+        const enrichedProps = [...propsByName.values()];
 
         // Build configurations table using shared library
         const configurationsTable = generatePropertyTable(enrichedProps, {
@@ -337,33 +375,71 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
         // Enrich slots with descriptions from enrichment file
         const enrichedSlots = containerInfo.slots.map(slot => {
             const enrichedDesc = enrichment?.slots?.[slot.name]?.description;
+            const description = enrichedDesc || slot.description || '';
             return {
                 ...slot,
-                description: enrichedDesc || slot.description || ''
+                description: normalizeWritingStyle(description)
             };
         });
 
         // Build slots content
         const slotsContent = generateSlotsContent(containerInfo.containerName, enrichedSlots);
 
-        // Build usage example using boilerplate provider.render() pattern
-        const usageExample = generateContainerExample({
-            componentName: containerInfo.containerName,
-            packageName: repoConfig.packageName,
-            props: enrichedProps, // Use enriched props for better examples
-            maxProps: 3,
-            includeSlots: enrichedSlots.length > 0
-        });
+        // Build usage example - prefer enrichment examples over auto-generated
+        let usageExample;
+        if (enrichment?.examples) {
+            // Use the first enrichment example (typically "basic") for the Usage section
+            const exampleKeys = Object.keys(enrichment.examples);
+            const basicKey = exampleKeys.find(k => k === 'basic') || exampleKeys[0];
+            if (basicKey && enrichment.examples[basicKey]) {
+                usageExample = '```js\n' + ensureSlotsComment(enrichment.examples[basicKey]) + '\n```';
+            }
+        }
+        
+        // Fall back to auto-generated example if no enrichment
+        if (!usageExample) {
+            // Only show required props + up to 2 optional props for clean examples
+            // Skip className/children-only when no other config (matches "no configurations" style)
+            const requiredProps = enrichedProps.filter(p => p.required);
+            const optionalProps = enrichedProps.filter(p => !p.required);
+            const trivialOnly = enrichedProps.every(p => p.name === 'className' || p.name === 'children');
+            const exampleProps = trivialOnly
+                ? []
+                : [...requiredProps, ...optionalProps.slice(0, Math.max(0, 3 - requiredProps.length))];
+            
+            usageExample = generateContainerExample({
+                componentName: containerInfo.containerName,
+                packageName: repoConfig.packageName,
+                props: exampleProps,
+                maxProps: exampleProps.length,
+                includeSlots: enrichedSlots.length > 0
+            });
+        }
 
-        // Build complete example section if enrichment provides it
+        // Build complete example section if enrichment provides additional examples
         let completeExample = '';
-        if (enrichment?.completeExample) {
+        if (enrichment?.examples && Object.keys(enrichment.examples).length > 1) {
+            // Show additional examples beyond the basic one
+            const exampleKeys = Object.keys(enrichment.examples);
+            const basicKey = exampleKeys.find(k => k === 'basic') || exampleKeys[0];
+            const additionalExamples = exampleKeys.filter(k => k !== basicKey);
+            
+            if (additionalExamples.length > 0) {
+                completeExample = '\n## Additional examples\n\n';
+                additionalExamples.forEach(key => {
+                    const title = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    completeExample += `### ${title}\n\n`;
+                    completeExample += '```js\n' + ensureSlotsComment(enrichment.examples[key]) + '\n```\n\n';
+                });
+            }
+        } else if (enrichment?.completeExample) {
+            // Legacy format support
             const ce = enrichment.completeExample;
             completeExample = `\n## ${ce.title}\n\n`;
             if (ce.intro) {
                 completeExample += `${ce.intro}\n\n`;
             }
-            completeExample += `${ce.code}\n\n`;
+            completeExample += ensureSlotsComment(ce.code) + '\n\n';
             if (ce.keyPoints && ce.keyPoints.length > 0) {
                 completeExample += `### Key patterns demonstrated\n\n`;
                 ce.keyPoints.forEach((point, index) => {
@@ -373,14 +449,18 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             }
         }
 
-        // Use enriched description if available
-        const description = enrichment?.description || containerInfo.description;
+        // Use enriched description if available, normalize writing style
+        const description = normalizeWritingStyle(enrichment?.description || containerInfo.description);
 
         // Build image section if image exists
         const diagramImport = hasImage ? "import Diagram from '@components/Diagram.astro';\n" : '';
         const imageSection = hasImage
             ? `\n<Diagram caption="${containerInfo.containerName} container">\n  ![${containerInfo.containerName} container](../images/${imageName})\n</Diagram>\n`
             : '';
+
+        // Usage intro: enrichment can override default
+        const usageIntro = enrichment?.usageIntro
+            ?? `The following example demonstrates how to use the \`${containerInfo.containerName}\` container:`;
 
         // Replace placeholders
         let mdxContent = replacePlaceholders(template, {
@@ -392,6 +472,7 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             'CONTAINER_DESCRIPTION': splitDescription(description),
             'CONFIGURATIONS_TABLE': configurationsTable,
             'SLOTS_CONTENT': slotsContent,
+            'USAGE_INTRO': usageIntro,
             'USAGE_EXAMPLE': usageExample,
             'COMPLETE_EXAMPLE': completeExample,
             'REPO_URL': repoConfig.gitUrl.replace('.git', '')
@@ -487,7 +568,16 @@ function writeContainerDocs(repoName, repoConfig, containerDocsData, versionInfo
         }
 
         const outputPath = join(outputDir, `${fileName}.mdx`);
-        writeFileSync(outputPath, containerData.content, 'utf8');
+        if (isPathPreserved(outputPath)) {
+            console.log(`   ⏭️  Skipped (preserve-paths): ${repoName}/containers/${fileName}.mdx`);
+            continue;
+        }
+
+        // RULE: Never overwrite frontmatter or first paragraph. mergePreservingPreamble
+        // preserves them from the existing file; we do not sync with enrichment.
+        const finalContent = mergePreservingPreamble(outputPath, containerData.content);
+
+        writeFileSync(outputPath, finalContent, 'utf8');
 
         const relativeUrl = `/${basePath}/${repoName}/containers/${fileName}`;
         logger.generated(outputPath, relativeUrl);
@@ -497,6 +587,58 @@ function writeContainerDocs(repoName, repoConfig, containerDocsData, versionInfo
     // Use default base path for overview (B2C containers overview)
     const outputDir = join(projectRoot, 'src', 'content', 'docs', defaultBasePath, repoName, 'containers');
     generateOverviewPage(repoName, repoConfig, containerDocs, containersArray, enrichmentData, version, outputDir, defaultBasePath);
+}
+
+/**
+ * Extract the first paragraph (description) from an existing container MDX file.
+ * Used when enrichment and scanned source have no description.
+ *
+ * @param {string} mdxPath - Path to the container MDX file
+ * @returns {string|null} First paragraph text or null if not found
+ */
+function extractDescriptionFromExistingMDX(mdxPath) {
+    if (!existsSync(mdxPath)) return null;
+    try {
+        const content = readFileSync(mdxPath, 'utf8');
+        // Remove frontmatter
+        const withoutFrontmatter = content.replace(/^---[\s\S]*?---\s*\n/, '');
+        const lines = withoutFrontmatter.split('\n');
+        let pastImports = false;
+        const paragraphs = [];
+        let current = [];
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) {
+                if (current.length) {
+                    const para = current.join(' ').trim();
+                    if (para.length > 10 && !para.startsWith('import')) paragraphs.push(para);
+                    current = [];
+                }
+            } else if (trimmed.startsWith('import ') || trimmed.startsWith('import{')) {
+                pastImports = true;
+                if (current.length) {
+                    const para = current.join(' ').trim();
+                    if (para.length > 10 && !para.startsWith('import')) paragraphs.push(para);
+                    current = [];
+                }
+            } else if (pastImports && (trimmed.startsWith('<') || trimmed.startsWith('{/*') || trimmed.startsWith('##'))) {
+                if (current.length) {
+                    const para = current.join(' ').trim();
+                    if (para.length > 10) paragraphs.push(para);
+                }
+                break;
+            } else if (!trimmed.startsWith('#') && !trimmed.startsWith('|') && !trimmed.startsWith('```')) {
+                current.push(trimmed);
+            }
+        }
+        if (current.length) {
+            const para = current.join(' ').trim();
+            if (para.length > 10 && !para.startsWith('import')) paragraphs.push(para);
+        }
+        return paragraphs[0] || null;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -513,6 +655,11 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
     let containersTable = '| Container | Description |\n';
     containersTable += '| --------- | ----------- |\n';
 
+    // Richer Description Rule: extract existing index row descriptions for comparison
+    const overviewPath = join(outputDir, 'index.mdx');
+    const existingIndexDescriptions = extractExistingContainerIndexDescriptions(overviewPath);
+    const descriptionsToAddToEnrichment = new Map();
+
     for (const containerInfo of containersArray) {
         const fileName = toKebabCase(containerInfo.containerName);
         const displayName = containerInfo.containerName; // Use actual PascalCase name
@@ -525,12 +672,30 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
             continue;
         }
 
-        let description = enrichment?.description || containerInfo.description;
+        // Priority: enrichment > existing MDX first paragraph (if not junk) > scanned (JSDoc) > generate
+        // Prefer MDX body over JSDoc—container pages are often manually improved
+        const mdxPath = join(outputDir, `${fileName}.mdx`);
+        const fromMdx = extractDescriptionFromExistingMDX(mdxPath);
+        const scannedDesc = normalizeWritingStyle(containerInfo.description);
+        const mdxDesc = fromMdx && !isJunk(fromMdx) ? normalizeWritingStyle(fromMdx) : null;
+        const useScanned = scannedDesc && !isJunk(scannedDesc);
 
-        // If no description available, indicate enrichment is needed
+        let description = normalizeWritingStyle(enrichment?.description);
         if (!description) {
-            description = '*Enrichment needed - add description to `_dropin-enrichments/' + repoName + '/containers.json`*';
-        } else {
+            description = mdxDesc || (useScanned ? scannedDesc : null);
+        }
+
+        // If no description available, generate one and add to enrichment for next run
+        // Also persist MDX-derived or scanned-derived descriptions so enrichment is source of truth
+        if (!description) {
+            const generated = generateContainerDescription(containerInfo.containerName, repoConfig.displayName);
+            descriptionsToAddToEnrichment.set(containerInfo.containerName, generated);
+            description = generated;
+        } else if (!enrichment?.description && !isJunk(description)) {
+            descriptionsToAddToEnrichment.set(containerInfo.containerName, description);
+        }
+
+        if (description) {
             // Remove "The ContainerName container" prefix if present
             description = description.replace(/^The\s+\w+\s+container\s+/i, '');
 
@@ -545,6 +710,12 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
             description = wrapCodeNames(description);
         }
 
+        // Richer Description Rule: prefer existing index row if richer than generated
+        const existing = existingIndexDescriptions.get(containerInfo.containerName);
+        if (existing && isRicherDescription(existing, description)) {
+            description = wrapCodeNames(existing);
+        }
+
         containersTable += `| [${displayName}](/${basePath}/${repoName}/containers/${fileName}/) | ${description} |\n`;
     }
 
@@ -554,11 +725,20 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
         'CONTAINERS_LIST': containersTable
     });
 
-    const overviewPath = join(outputDir, 'index.mdx');
-    writeFileSync(overviewPath, overviewContent, 'utf8');
+    if (isPathPreserved(overviewPath)) {
+        console.log(`   ⏭️  Skipped (preserve-paths): ${repoName}/containers/index.mdx`);
+    } else {
+        const finalOverviewContent = mergePreservingPreamble(overviewPath, overviewContent);
+        writeFileSync(overviewPath, finalOverviewContent, 'utf8');
+        const relativeUrl = `/${basePath}/${repoName}/containers/`;
+        logger.generated(overviewPath, relativeUrl);
+    }
 
-    const relativeUrl = `/${basePath}/${repoName}/containers/`;
-    logger.generated(overviewPath, relativeUrl);
+    // Persist generated descriptions to enrichment so they're used on future runs
+    if (descriptionsToAddToEnrichment.size > 0) {
+        mergeContainerDescriptionsIntoEnrichment(repoName, descriptionsToAddToEnrichment);
+        console.log(`  📝 Added ${descriptionsToAddToEnrichment.size} container description(s) to _dropin-enrichments/${repoName}/containers.json`);
+    }
 }
 
 // ============================================================================
