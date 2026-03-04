@@ -423,10 +423,33 @@ export function findPropsInTypeFiles(repoPath, componentName) {
  * );
  * // Returns: { props: [...], slots: [...], interfaceContent: '...', fullText: '...' }
  */
+/**
+ * Detect if a component uses the Elsie Container<Props, Data> pattern.
+ * Container adds initialData?: Data to runtime props (not in Props interface).
+ *
+ * @param {string} content - Component file content
+ * @returns {{ isContainer: boolean; dataType: string } | null}
+ */
+function detectElsieContainer(content) {
+    if (!content || !content.includes('Container<')) return null;
+    // Extract Data type from Container<PropsType, DataType> - use object for docs (avoids nested generic parsing)
+    const match = content.match(/Container\s*<\s*[^,]+,\s*([^>]+)\s*>/);
+    let dataType = 'object';
+    if (match) {
+        const raw = match[1].trim();
+        // Use simple type name if it's an identifier (e.g. ProductModel), else object
+        if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(raw)) {
+            dataType = raw;
+        }
+    }
+    return { isContainer: true, dataType };
+}
+
 export function extractPropsFromComponent(filePath, componentName, repoPath, options = {}) {
     const {
         includeSlots = false,
-        descriptionGenerator = null
+        descriptionGenerator = null,
+        includeContainerBaseProps = false
     } = options;
 
     try {
@@ -479,10 +502,26 @@ export function extractPropsFromComponent(filePath, componentName, repoPath, opt
         }
 
         // Parse props and slots
-        const props = parsePropsInterface(propsInterfaceContent, fullText, {
+        let props = parsePropsInterface(propsInterfaceContent, fullText, {
             includeSlots,
             descriptionGenerator
         });
+
+        // Elsie Container<Props, Data> adds initialData?: Data at runtime.
+        // Add it when requested and not already in Props (e.g. ProductList declares it).
+        if (includeContainerBaseProps) {
+            const containerInfo = detectElsieContainer(content);
+            if (containerInfo?.isContainer && !props.some(p => p.name === 'initialData')) {
+                const dataType = simplifyType(containerInfo.dataType);
+                const description = descriptionGenerator
+                    ? descriptionGenerator('initialData', containerInfo.dataType)
+                    : 'Preloaded data for the model before backend data is fetched.';
+                props = [
+                    ...props,
+                    { name: 'initialData', type: dataType, required: false, description }
+                ];
+            }
+        }
 
         const slots = extractSlotsFromInterface(propsInterfaceContent);
 

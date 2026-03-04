@@ -16,6 +16,11 @@
  *                       payment-services, company-management
  *
  * OUTPUT: Single quick-start.mdx file per drop-in
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/{dropin-name}
+ * Verify: package names, container names, import paths. If you cannot verify, do not invent.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
@@ -171,9 +176,9 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
     let customSectionsAfter = '';
 
     if (enrichmentData) {
-        // Custom intro
+        // Custom intro (single trailing newline; template provides spacing)
         if (enrichmentData.intro) {
-            customIntro = wrapCodeNames(enrichmentData.intro) + '\n';
+            customIntro = wrapCodeNames(enrichmentData.intro) + '\n\n';
         }
 
         // Custom sections before steps
@@ -230,5 +235,6 @@ runGenerator({
     scanRepo: scanForInstallation,
     generateContent: generateInstallationMDX,
     updateSidebar: updateSidebarForInstallation,
-    outputFileName: 'quick-start.mdx'
+    outputFileName: 'quick-start.mdx',
+    mergeOptions: { anchorHeading: 'Quick example', preserveRicherQuickExampleIntro: true }
 });

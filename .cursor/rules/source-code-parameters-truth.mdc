@@ -1,0 +1,56 @@
+---
+description: Use TypeScript/source code as source of truth for all parameters
+globs:
+  - scripts/**/*.js
+  - _dropin-enrichments/**/*.json
+alwaysApply: false
+---
+
+# Source Code is Source of Truth for Parameters
+
+**RULE: ALWAYS use TypeScript and source code as the source of truth for all parameters, types, and API surface.**
+
+Enrichment files provide **descriptions only**—they must never invent or add parameters that do not exist in the source.
+
+## Parameters vs Descriptions
+
+| What | Source of truth | Enrichment role |
+|------|------------------|-----------------|
+| **Parameters** (names, types, required) | TypeScript / source code | None—only document what exists |
+| **Descriptions** | Enrichment (when available) | Richer, curated text; fall back to JSDoc |
+
+## Implementation
+
+1. **Extract parameters from source** (Props interfaces, function signatures, etc.).
+2. **Use enrichment for descriptions** when available: `enrichment?.parameters?.[name]?.description || prop.description`.
+3. **Never add parameters from enrichment** that are not present in the source.
+4. **Never override types or required status** from enrichment—those come from source.
+
+## Example (Container Props)
+
+```javascript
+// ✅ CORRECT: TypeScript defines params; enrichment adds descriptions
+const propsByName = new Map(
+  containerInfo.props.map(prop => [
+    prop.name,
+    {
+      ...prop,
+      description: enrichment?.parameters?.[prop.name]?.description || prop.description
+    }
+  ])
+);
+// Do NOT add enrichment.parameters entries that aren't in propsByName
+
+// ❌ WRONG: Adding params from enrichment that don't exist in TypeScript
+if (enrichment?.parameters) {
+  for (const [name, param] of Object.entries(enrichment.parameters)) {
+    if (!propsByName.has(name)) {
+      propsByName.set(name, { ... });  // Never do this
+    }
+  }
+}
+```
+
+## When in Doubt
+
+Check the actual source: `.temp-repos/{dropin-name}/src/` or `.temp-repos/StorefrontSDK/`. If a parameter is not in the Props interface or function signature, do not document it.

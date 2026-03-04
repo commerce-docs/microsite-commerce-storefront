@@ -34,6 +34,8 @@ const { join, basename, dirname } = path;
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
 import { insertSidebarEntry } from './lib/sidebar.js';
 import { replacePlaceholders } from './lib/markdown.js';
+import { extractExistingStylesContent } from './lib/content-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
 import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { logger } from './lib/logger.js';
 
@@ -44,16 +46,25 @@ const projectRoot = getProjectRoot();
 // ============================================================================
 
 /**
+ * Strip CSS comments to avoid false positives (e.g. /* .old-class *\/ matching)
+ */
+function stripCSSComments(cssContent) {
+    return cssContent.replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+/**
  * Extract CSS classes from a CSS file
+ * Strips comments first to ensure 100% accuracy (no false positives from commented classes)
  */
 function extractCSSClasses(cssContent) {
+    const contentWithoutComments = stripCSSComments(cssContent);
     const classes = new Set();
     // Match CSS class selectors (must start with a letter, not a number)
     // This prevents matching things like "1fr" or "0.5" as class names
     const classRegex = /\.([a-z][a-z0-9_-]*(?:__[a-z0-9_-]+)?(?:--[a-z0-9_-]+)?)/gi;
     let match;
 
-    while ((match = classRegex.exec(cssContent)) !== null) {
+    while ((match = classRegex.exec(contentWithoutComments)) !== null) {
         const className = match[1];
         // Additional validation:
         // - Not pure numbers
@@ -925,9 +936,24 @@ function generateStylesMDX(repoName, repoConfig, cssFiles, versionInfo, enrichme
     let content = readFileSync(templatePath, 'utf-8');
 
     // Generate sections
-    const componentClassesSection = generateComponentClassesSection(stylesData, repoConfig.displayName, repoConfig);
-    const customizationIntro = generateCustomizationIntro(repoConfig.displayName);
+    let componentClassesSection = generateComponentClassesSection(stylesData, repoConfig.displayName, repoConfig);
+    let customizationIntro = generateCustomizationIntro(repoConfig.displayName);
     const customCSSExamples = generateCustomCSSExamples(stylesData, repoConfig.displayName);
+
+    // Richer Description Rule: prefer existing if richer
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const outputPath = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'styles.mdx');
+    const existing = extractExistingStylesContent(outputPath);
+    if (existing.customizationIntro && isRicherDescription(existing.customizationIntro, customizationIntro)) {
+        customizationIntro = existing.customizationIntro;
+    }
+    if (existing.componentClassesSection) {
+        if (existing.componentClassesSection.includes('|') || existing.componentClassesSection.length > componentClassesSection.length * 1.2) {
+            componentClassesSection = existing.componentClassesSection;
+        } else if (isRicherDescription(existing.componentClassesSection, componentClassesSection)) {
+            componentClassesSection = existing.componentClassesSection;
+        }
+    }
 
     // Replace placeholders
     // Remove 'v' prefix from version if present to match events page format
@@ -952,14 +978,12 @@ function generateStylesMDX(repoName, repoConfig, cssFiles, versionInfo, enrichme
 
 /**
  * Update sidebar for styles documentation
+ * Called by generator-core with (projectRoot, targetDropins)
  */
-function updateSidebarForStyles(dropinName, repoConfig) {
-    insertSidebarEntry(
-        dropinName,
-        repoConfig,
-        'Styles',
-        'Slots'  // Insert after Slots
-    );
+function updateSidebarForStyles(projectRoot, targetDropins) {
+    for (const dropin of targetDropins) {
+        insertSidebarEntry(dropin.name, dropin, 'Styles', 'Slots');
+    }
 }
 
 // ============================================================================
