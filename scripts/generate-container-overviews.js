@@ -17,7 +17,9 @@
  * - Called automatically by prebuild hook
  */
 
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { cleanVersion } from './lib/utils.js';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -109,9 +111,10 @@ for (const [key, config] of Object.entries(DROPINS_WITH_CONTAINERS)) {
         mkdirSync(outputDir, { recursive: true });
     }
 
-    // Generate content
+    // Generate content (preserve existing frontmatter and first paragraph)
     const content = generateOverviewContent(key, config);
-    writeFileSync(outputPath, content, 'utf8');
+    const finalContent = mergePreservingPreamble(outputPath, content);
+    writeFileSync(outputPath, finalContent, 'utf8');
 
     console.log(`  ✅ ${key}/containers/index.mdx`);
     generated++;
