@@ -25,6 +25,7 @@ The Checkout drop-in exposes slots for customizing specific UI sections. Use slo
 | [`LoginForm`](#loginform-slots) | `Heading` |
 | [`PaymentMethods`](#paymentmethods-slots) | None |
 | [`PlaceOrder`](#placeorder-slots) | `Content` |
+| [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem` |
 | [`TermsAndConditions`](#termsandconditions-slots) | `Agreements` |
 
 </TableWrapper>
@@ -110,6 +111,78 @@ await provider.render(PlaceOrder, {
       ctx.appendChild(element);
     }
   }
+})(block);
+```
+
+## ShippingMethods slots
+
+The slots for the `ShippingMethods` container allow you to fully replace the default shipping method UI with a custom implementation.
+
+```typescript
+interface ShippingMethodsProps {
+  slots?: {
+    ShippingMethodItem?: SlotProps<{
+      method: ShippingMethod;
+      isSelected: boolean;
+      onSelect: () => void;
+    }>;
+  };
+}
+```
+
+### ShippingMethodItem slot
+
+The ShippingMethodItem slot allows you to replace the default RadioButton or ToggleButton UI for each shipping method with a completely custom element. Use `ctx.replaceWith()` to provide your own UI and `ctx.onRender()` to update it when the context changes.
+
+The slot receives a context with the following properties:
+
+- `method` - The shipping method data (`ShippingMethod` model with carrier, amount, title, and so on.)
+- `isSelected` - Whether this method is currently selected
+- `onSelect` - Callback that selects this shipping method and triggers the API call to set it on the cart
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
+
+function buildShippingMethodCard(ctx) {
+  const { method, isSelected } = ctx;
+  const price = method.amount.value === 0
+    ? 'FREE'
+    : `$${method.amount.value.toFixed(2)}`;
+
+  const card = document.createElement('label');
+  card.className = `custom-shipping-card ${isSelected ? 'custom-shipping-card--selected' : ''}`;
+  card.innerHTML = `
+    <input type="radio" name="shipping-method" value="${method.value}"
+      ${isSelected ? 'checked' : ''} style="display:none" />
+    <div>
+      <strong>${method.carrier.title}</strong>
+      <span>${method.title}</span>
+      <span>${price}</span>
+    </div>
+  `;
+
+  card.querySelector('input').addEventListener('change', () => {
+    ctx.onSelect();
+  });
+
+  return card;
+}
+
+await provider.render(ShippingMethods, {
+  slots: {
+    ShippingMethodItem: (ctx) => {
+      const card = buildShippingMethodCard(ctx);
+      ctx.replaceWith(card);
+
+      ctx.onRender((updatedCtx) => {
+        card.className = `custom-shipping-card ${updatedCtx.isSelected ? 'custom-shipping-card--selected' : ''}`;
+        card.querySelector('input').checked = updatedCtx.isSelected;
+      });
+    },
+  },
 })(block);
 ```
 
