@@ -1,12 +1,11 @@
 ---
 title: Notify Me CTA
-description: Learn how to add a "Notify Me" CTA when a product or variant is out of stock on the PDP, using the event bus and CTA element updates.
+description: Learn how to add a "Notify Me" CTA when a product or variant is out of stock on the PDP. Use the event bus and CTA element updates to switch between Add to Cart and Notify Me based on stock status.
 ---
 
 import Aside from '@components/Aside.astro';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
-import { Steps } from '@astrojs/starlight/components';
 
 When a product or selected variant is out of stock, the primary Call to Action (CTA) button on the Product Detail Page (PDP) can display **"Notify Me"** instead of **"Add to Cart"**. This applies to both simple products and configurable products with multiple options (for example, size and color). When the shopper switches to a different variant, the CTA updates dynamically based on that variant's stock status.
 
@@ -23,7 +22,7 @@ Before following these steps, you should understand:
 - [Cart Events](/dropins/cart/events/) — `cart/data` for detecting when the product is already in the cart
 - **Add to Cart button** — Your block must have an Add to Cart button created with the SDK [Button component](/sdk/components/button/), with the instance stored for `setProps` calls. Step 1 shows how to create it; if you already have one, start at Step 2.
 
-This how-to uses the basic tools exposed by the Product Details drop-in: the [event bus](/sdk/reference/events) and a CTA element in your block. For a full implementation reference example in the Commerce boilerplate, see [hlxsites/aem-boilerplate-commerce#1116](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1116).
+This tutorial uses the basic tools exposed by the Product Details drop-in: the [event bus](/sdk/reference/events) and a CTA element in your block. For a full implementation reference example in the Commerce boilerplate, see [hlxsites/aem-boilerplate-commerce#1116](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1116).
 
 ## Overview
 
@@ -31,14 +30,7 @@ You'll create the Add to Cart button, subscribe to `pdp/data`, `pdp/valid`, and 
 
 ## Implementation steps
 
-All code below runs inside your block's `decorate(block)` function. **Order:**
-
-<Steps>
-1. Define `updatePrimaryCTA` and state vars at the start of `decorate`.
-2. Create the button.
-3. Add event listeners.
-4. Modify the `onClick` handler created in Step 1 (guard at top, then `finally` block).
-</Steps>
+All code below runs inside your block's `decorate(block)` function.
 
 <Tasks>
 <Task>
@@ -110,7 +102,7 @@ If your block uses a placeholders spreadsheet, add a `NotifyMe` entry. Otherwise
 <Task>
 ### Track stock and update mode state
 
-Maintain state variables for the currently selected product's stock status and whether the item is in the cart (update mode). These drive the CTA update logic.
+Define these state variables at the start of `decorate`. They drive the CTA update logic.
 
 ```js
 let isUpdateMode = false;
@@ -121,7 +113,7 @@ let isOutOfStock = false;
 <Task>
 ### Subscribe to `pdp/data` for stock status
 
-Subscribe to `pdp/data` with `{ eager: true }` so the handler runs on initial load and whenever the product or variant changes. Read `inStock` from the payload and update the CTA accordingly. Uses `events` from the Step 1 imports.
+Subscribe to `pdp/data` with `{ eager: true }` so the handler runs on initial load and whenever the product or variant changes. Read `inStock` from the payload and update the CTA accordingly.
 
 **Why:** Product data (including stock) changes when the page loads or when the shopper selects a different variant. You need to react to both.
 
