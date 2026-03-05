@@ -5,7 +5,7 @@
  * This runs automatically after documentation generation to catch issues.
  */
 
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { GenericTypeHandler } from './core/generic-type-handler.js';
 
@@ -75,8 +75,8 @@ function extractPayloadTypes(mdxContent, filePath) {
                     }
                 }
 
-                // Check for 'any' within complex types (excluding legitimate uses)
-                if (payloadType.includes('any') && !GenericTypeHandler.isLegitimateAnyUsage(payloadType)) {
+                // Check for 'any' as a type token (not substring like "companyName"), excluding legitimate uses
+                if (/\bany\b/.test(payloadType) && !GenericTypeHandler.isLegitimateAnyUsage(payloadType)) {
                     issues.push({
                         file: filePath,
                         event: currentEvent,
@@ -115,27 +115,33 @@ function extractPayloadTypes(mdxContent, filePath) {
 
 /**
  * Validate all event documentation files
+ * @param {string} projectRoot - Project root path
+ * @param {string[]} [dirs] - Optional: ['dropins', 'dropins-b2b'] to scan; defaults to both
  */
-export function validateAllEventDocs(projectRoot) {
+export function validateAllEventDocs(projectRoot, dirs = ['dropins', 'dropins-b2b']) {
     console.log('\n🔍 Validating event documentation for generic types...');
-
-    const dropinsDir = join(projectRoot, 'src/content/docs/dropins');
-    const dropins = readdirSync(dropinsDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
 
     let allIssues = [];
 
-    for (const dropin of dropins) {
-        const eventsFile = join(dropinsDir, dropin, 'events.mdx');
+    for (const dir of dirs) {
+        const dropinsDir = join(projectRoot, 'src/content/docs', dir);
+        if (!existsSync(dropinsDir)) continue;
 
-        try {
-            const content = readFileSync(eventsFile, 'utf8');
-            const issues = extractPayloadTypes(content, `dropins/${dropin}/events.mdx`);
-            allIssues = allIssues.concat(issues);
-        } catch (error) {
-            // File might not exist (e.g., no events page for this dropin)
-            continue;
+        const dropins = readdirSync(dropinsDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+        for (const dropin of dropins) {
+            const eventsFile = join(dropinsDir, dropin, 'events.mdx');
+
+            try {
+                const content = readFileSync(eventsFile, 'utf8');
+                const issues = extractPayloadTypes(content, `${dir}/${dropin}/events.mdx`);
+                allIssues = allIssues.concat(issues);
+            } catch (error) {
+                // File might not exist (e.g., no events page for this dropin)
+                continue;
+            }
         }
     }
 

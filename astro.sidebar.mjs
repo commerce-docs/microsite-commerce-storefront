@@ -41,7 +41,9 @@ export function generateSidebar() {
             { label: 'Blocks configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         {
@@ -762,7 +764,7 @@ export function generateSidebar() {
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
             { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
-            { label: 'Using the Visual Editor', link: '/merchants/quick-start/visual-editor/' },
+            { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
             { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },

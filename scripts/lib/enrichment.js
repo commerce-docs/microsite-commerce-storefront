@@ -11,9 +11,10 @@
  * - (Future: containers.json, slots.json, etc.)
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { isJunk } from './richer-description.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -162,5 +163,40 @@ export function getEnrichedValue(enrichmentData, itemName, field, fallback = nul
         return enrichmentData[itemName][field];
     }
     return fallback;
+}
+
+/**
+ * Merge generated container descriptions into the enrichment file.
+ * Creates the file if it doesn't exist; preserves existing entries and adds/updates only description.
+ *
+ * @param {string} dropinName - Drop-in name (e.g. 'product-details')
+ * @param {Map<string, string>} descriptionsToAdd - Map of containerName -> generated description
+ */
+export function mergeContainerDescriptionsIntoEnrichment(dropinName, descriptionsToAdd) {
+    if (!descriptionsToAdd || descriptionsToAdd.size === 0) return;
+
+    const enrichmentDir = join(projectRoot, '_dropin-enrichments', dropinName);
+    const enrichmentPath = join(enrichmentDir, 'containers.json');
+
+    let data = {};
+    if (existsSync(enrichmentPath)) {
+        try {
+            data = JSON.parse(readFileSync(enrichmentPath, 'utf8'));
+        } catch (e) {
+            console.warn(`  ⚠️  Could not parse ${enrichmentPath}, will overwrite`);
+        }
+    }
+
+    for (const [containerName, description] of descriptionsToAdd) {
+        if (!data[containerName]) data[containerName] = {};
+        const existing = data[containerName].description;
+        // Never overwrite a good description with junk
+        if (existing && isJunk(description) && !isJunk(existing)) continue;
+        if (isJunk(description)) continue;  // Never persist junk
+        data[containerName].description = description;
+    }
+
+    mkdirSync(enrichmentDir, { recursive: true });
+    writeFileSync(enrichmentPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
 }
 

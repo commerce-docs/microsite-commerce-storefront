@@ -33,14 +33,23 @@
  * 
  * IMPORTANT: Always verify against source repositories rather than making assumptions.
  * This ensures accuracy in type definitions, API patterns, and code examples.
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/{dropin-name}
+ * Verify: event names, payload shapes, emit/listen patterns. If you cannot verify, do not invent.
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, execFileSync } from 'child_process';
 import { DROPIN_REPOS } from './lib/dropin-config.js';
 import { loadEventEnrichments, getPayloadPropertyDescription, getEventDescription } from './lib/event-enrichment.js';
+import { extractExistingEventDescriptions } from './lib/event-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
+import { normalizeWritingStyle } from './lib/description-generator.js';
 import { TypeInferenceChecklist } from './lib/type-inference.js';
 import { validateAllEventDocs } from './lib/payload-type-validator.js';
 import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
@@ -68,8 +77,9 @@ function cloneOrUpdateBoilerplate() {
         execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
     } else {
         console.log(`  Updating boilerplate...`);
-        // Reset any local changes before pulling
+        // Reset any local changes and ensure we're on main (handles detached HEAD from other generators)
         execFileSync('git', ['reset', '--hard', 'HEAD'], { cwd: boilerplatePath, stdio: 'pipe' });
+        execFileSync('git', ['checkout', 'main'], { cwd: boilerplatePath, stdio: 'pipe' });
         execFileSync('git', ['pull'], { stdio: 'inherit', cwd: boilerplatePath });
 
         console.log(`  Updating dependencies...`);
@@ -86,15 +96,28 @@ function getBoilerplatePackageVersions(boilerplatePath) {
 }
 
 /**
- * Load B2B drop-in versions from the b2b-suite-release1 branch
+ * Load B2B drop-in versions from the b2b branch
  * This is necessary because B2B drop-ins are not in the main branch
  */
 function getB2BPackageVersions() {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateB2BPath = join(projectRoot, '.temp-repos', 'boilerplate-b2b');
     const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
-    const b2bBranch = 'b2b-suite-release1';
+    const b2bBranch = 'b2b';
 
     console.log(`\n📦 Loading B2B versions from ${b2bBranch} branch...`);
+
+    // Prefer boilerplate-b2b worktree if it exists (direct read)
+    const packageJsonPath = join(boilerplateB2BPath, 'package.json');
+    if (existsSync(packageJsonPath)) {
+        try {
+            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+            console.log(`  ✅ Loaded B2B versions from boilerplate-b2b`);
+            return packageJson.dependencies || {};
+        } catch (error) {
+            console.warn(`  ⚠️  Could not read from boilerplate-b2b: ${error.message}`);
+        }
+    }
 
     if (!existsSync(boilerplatePath)) {
         console.log(`  Cloning boilerplate...`);
@@ -570,8 +593,8 @@ function generateEventDescription(eventName, emits, listeners) {
             ? `Fired by ${sourceComponent.formatted} (\`${sourceComponent.original}\`) when`
             : `Fired by ${sourceComponent.formatted} when`;
     } else if (isBoth) {
-        // For bidirectional events, use neutral language that doesn't imply redundancy
-        verb = 'Triggered when';
+        // Bidirectional events are emitted when conditions occur; use "Emitted when" for consistency
+        verb = 'Emitted when';
     }
 
     // Common patterns we can safely infer from naming conventions
@@ -596,11 +619,17 @@ function generateEventDescription(eventName, emits, listeners) {
     if (name.includes('/changed')) {
         return `${verb} a change occurs.`;
     }
+    if (name === 'recommendations/data') {
+        return `${verb} product recommendations are loaded. Includes recommended products based on user behavior, cart contents, or product associations.`;
+    }
     if (name.includes('/data')) {
         return `${verb} data is available or changes.`;
     }
     if (name.includes('/values')) {
         return `${verb} form or configuration values change.`;
+    }
+    if (name === 'search/error') {
+        return `${verb} an error occurs during search operations such as query execution or facet loading.`;
     }
     if (name.includes('/error')) {
         return `${verb} an error occurs.`;
@@ -804,7 +833,7 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     template = template.replace(/DROPIN_VERSION/g, cleanVersion(version));
 
     // Replace overview with enriched content or fallback to generic
-    const dropinOverview = enrichments.overview ||
+    const dropinOverview = enrichments?.overview ||
         `The **${repoConfig.displayName}** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.`;
     template = template.replace(/DROPIN_OVERVIEW/g, dropinOverview);
 
@@ -900,6 +929,11 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     const repeatTemplate = template.substring(repeatStart + '{/* REPEAT_FOR_EACH_EVENT */}'.length, repeatEnd);
     const afterRepeat = template.substring(repeatEnd + '{/* END_REPEAT */}'.length);
 
+    // Extract existing descriptions for Richer Description Rule (compare existing vs generated)
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const outputPath = join(projectRoot, 'src/content/docs', basePath, dropinName, 'events.mdx');
+    const existingDescriptions = extractExistingEventDescriptions(outputPath);
+
     // Generate content for each event
     let eventsContent = '';
     sortedEvents.forEach(eventName => {
@@ -946,7 +980,15 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
             description = documentedDescriptions.get(eventName);
         } else {
             const generatedDescription = generateEventDescription(eventName, emits, listeners);
-            description = getEventDescription(eventName, eventEnrichment, generatedDescription);
+            let candidate = getEventDescription(eventName, eventEnrichment, generatedDescription);
+            // Richer Description Rule: if no enrichment, prefer existing if it's richer than generated
+            if (!eventEnrichment?.description) {
+                const existing = existingDescriptions.get(eventName);
+                if (existing && isRicherDescription(existing, generatedDescription)) {
+                    candidate = normalizeWritingStyle(existing);
+                }
+            }
+            description = candidate;
         }
 
         // Wrap code names in backticks
@@ -1279,7 +1321,7 @@ async function main() {
     // Get package versions from boilerplate (B2C drop-ins)
     const packageVersions = getBoilerplatePackageVersions(boilerplatePath);
 
-    // Get B2B package versions from b2b-suite-release1 branch
+    // Get B2B package versions from b2b branch
     const b2bPackageVersions = getB2BPackageVersions();
 
     // Merge both version sets
@@ -1327,7 +1369,8 @@ async function main() {
                 console.log(`  📁 Created directory ${outputDir}`);
             }
 
-            writeFileSync(outputPath, mdxContent);
+            const finalContent = mergePreservingPreamble(outputPath, mdxContent);
+            writeFileSync(outputPath, finalContent);
             console.log(`  ✅ Generated ${outputPath}`);
 
             // Show preview link for single drop-in generation

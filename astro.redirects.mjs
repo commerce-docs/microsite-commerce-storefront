@@ -129,7 +129,7 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/': `${basePath}/merchants/quick-start`,
         '/merchants/storefront-builder/create-content': `${basePath}/merchants/quick-start/create-content`,
         '/merchants/storefront-builder/document-authoring': `${basePath}/merchants/quick-start/document-authoring`,
-        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/visual-editor`,
+        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
@@ -182,6 +182,7 @@ export function generateRedirects(basePath) {
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
-        '/setup/aem-assets-integration': `${basePath}/merchants/storefront-builder/visual-editor`,
+        '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
+        '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
     };
 }
