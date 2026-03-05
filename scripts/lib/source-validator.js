@@ -370,8 +370,8 @@ export function createValidationReport() {
             console.log(`Warnings issued: ${report.warnings.length}`);
 
             if (report.itemsWithConflicts > 0) {
-                console.log(`\n⚠️  ${report.itemsWithConflicts} items had conflicts between source and manual docs.`);
-                console.log('   All conflicts resolved by using source code as the source of truth.');
+                console.log(`\n⚠️  ${report.itemsWithConflicts} items had conflicts in parameters/signature between source and manual docs.`);
+                console.log('   Technical specs (names, types) resolved using source code. Descriptions from enrichment and existing docs are preserved separately.');
             } else {
                 console.log(`\n✅ All items validated successfully - source and docs are in sync!`);
             }

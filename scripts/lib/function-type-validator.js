@@ -5,7 +5,7 @@
  * in function signatures, parameters, or return types.
  */
 
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { GenericTypeHandler } from './core/generic-type-handler.js';
 
@@ -90,27 +90,33 @@ function extractFunctionSignatures(mdxContent, filePath) {
 
 /**
  * Validate all function documentation files
+ * @param {string} projectRoot - Project root path
+ * @param {string[]} [dirs] - Optional: ['dropins', 'dropins-b2b'] to scan; defaults to both
  */
-export function validateAllFunctionDocs(projectRoot) {
+export function validateAllFunctionDocs(projectRoot, dirs = ['dropins', 'dropins-b2b']) {
     console.log('\n🔍 Validating function documentation for generic types...');
-
-    const dropinsDir = join(projectRoot, 'src/content/docs/dropins');
-    const dropins = readdirSync(dropinsDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
 
     let allIssues = [];
 
-    for (const dropin of dropins) {
-        const functionsFile = join(dropinsDir, dropin, 'functions.mdx');
+    for (const dir of dirs) {
+        const dropinsDir = join(projectRoot, 'src/content/docs', dir);
+        if (!existsSync(dropinsDir)) continue;
 
-        try {
-            const content = readFileSync(functionsFile, 'utf8');
-            const issues = extractFunctionSignatures(content, `dropins/${dropin}/functions.mdx`);
-            allIssues = allIssues.concat(issues);
-        } catch (error) {
-            // File might not exist
-            continue;
+        const dropins = readdirSync(dropinsDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+        for (const dropin of dropins) {
+            const functionsFile = join(dropinsDir, dropin, 'functions.mdx');
+
+            try {
+                const content = readFileSync(functionsFile, 'utf8');
+                const issues = extractFunctionSignatures(content, `${dir}/${dropin}/functions.mdx`);
+                allIssues = allIssues.concat(issues);
+            } catch (error) {
+                // File might not exist
+                continue;
+            }
         }
     }
 

@@ -3,15 +3,15 @@ interface Props {
   square?: boolean;
 }
 
-const { square } = Astro.props;
-const radius = square ? 0 : 0;
+const { square: _square } = Astro.props;
+// _square reserved for future use (e.g. border-radius variant)
 ---
 
 <div class="ac-task">
   <slot />
 </div>
 
-<style is:global define:vars={{ radius }}>
+<style is:global>
   .ac-task.ac-task {
     --bullet-size: 2.5rem;
     border-radius: 0.5rem;
@@ -33,15 +33,23 @@ const radius = square ? 0 : 0;
     padding-left: 1rem;
   }
 
-  .ac-task.ac-task > h3 {
+  /* Support both direct h3 (legacy) and Starlight's sl-heading-wrapper (post-update) */
+  .ac-task.ac-task > h3,
+  .ac-task.ac-task > .sl-heading-wrapper.level-h3 > h3 {
     counter-increment: task;
     color: var(--sl-color-gray-1);
     line-height: 1;
     padding-left: 0;
     margin-bottom: 1rem;
+    margin-top: -0.75rem;
+  }
+  .sl-markdown-content .sl-heading-wrapper.level-h3 {
+    font-size: var(--sl-text-h3);
+    margin-top: 1rem;
   }
 
-  .ac-task.ac-task > h3::before {
+  .ac-task.ac-task > h3::before,
+  .ac-task.ac-task > .sl-heading-wrapper.level-h3 > h3::before {
     content: "Step " counter(task);
     border-radius: 0.2rem;
     display: inline-block;
@@ -54,7 +62,7 @@ const radius = square ? 0 : 0;
     /* Screen rules */
     font-size: 1rem;
     margin-left: -1.75rem;
-    margin-top: -2.75rem;
+    margin-top: -1.75rem;
     margin-right: 0;
     position: absolute;
     color: var(--sl-color-black);
@@ -90,7 +98,8 @@ const radius = square ? 0 : 0;
       margin-bottom: 0;
     }
 
-    .ac-task.ac-task > h3::before {
+    .ac-task.ac-task > h3::before,
+    .ac-task.ac-task > .sl-heading-wrapper.level-h3 > h3::before {
       content: "Step " counter(task);
       border-radius: 0.2rem;
       display: inline-block;
@@ -109,7 +118,8 @@ const radius = square ? 0 : 0;
       color: #cb361d;
       background-color: transparent;
     }
-    .ac-task.ac-task > h3 {
+    .ac-task.ac-task > h3,
+    .ac-task.ac-task > .sl-heading-wrapper.level-h3 > h3 {
       margin-top: 0;
       margin-bottom: 0.75rem;
     }

@@ -10,6 +10,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { normalizeWritingStyle } from '../description-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -54,6 +55,7 @@ export class EnrichmentLoader {
 
     /**
      * Get description for an item from enrichments
+     * Automatically normalizes writing style (Latin abbreviations, etc.)
      * 
      * @param {Object} enrichments - Loaded enrichments
      * @param {string} itemName - Name of the item
@@ -64,7 +66,8 @@ export class EnrichmentLoader {
      * const desc = EnrichmentLoader.getDescription(enrichments, 'cart/data');
      */
     static getDescription(enrichments, itemName) {
-        return enrichments?.[itemName]?.description || null;
+        const description = enrichments?.[itemName]?.description || null;
+        return description ? normalizeWritingStyle(description) : null;
     }
 
     /**
@@ -94,10 +97,11 @@ export class EnrichmentLoader {
 
     /**
      * Get parameter descriptions for an item from enrichments
+     * Automatically normalizes writing style for all descriptions
      * 
      * @param {Object} enrichments - Loaded enrichments
      * @param {string} itemName - Name of the item
-     * @returns {Object} Parameter descriptions object
+     * @returns {Object} Parameter descriptions object with normalized text
      * 
      * @example
      * const enrichments = EnrichmentLoader.load('cart', 'functions');
@@ -108,7 +112,15 @@ export class EnrichmentLoader {
         if (!params || typeof params !== 'object') {
             return {};
         }
-        return params;
+        // Normalize all parameter descriptions
+        const normalized = {};
+        for (const [key, value] of Object.entries(params)) {
+            normalized[key] = {
+                ...value,
+                description: value?.description ? normalizeWritingStyle(value.description) : value?.description
+            };
+        }
+        return normalized;
     }
 
     /**
@@ -128,6 +140,7 @@ export class EnrichmentLoader {
 
     /**
      * Get model description for a specific model
+     * Automatically normalizes writing style (Latin abbreviations, etc.)
      * 
      * @param {Object} enrichments - Loaded enrichments
      * @param {string} modelName - Name of the model
@@ -138,7 +151,8 @@ export class EnrichmentLoader {
      * const desc = EnrichmentLoader.getModelDescription(enrichments, 'CartModel');
      */
     static getModelDescription(enrichments, modelName) {
-        return enrichments?.models?.[modelName]?.description || null;
+        const description = enrichments?.models?.[modelName]?.description || null;
+        return description ? normalizeWritingStyle(description) : null;
     }
 
     /**
@@ -193,20 +207,23 @@ export function loadEventEnrichments(dropinName) {
 
 /**
  * Get event description (backward compatible)
+ * Automatically normalizes writing style
  */
 export function getEventDescription(eventName, enrichment, fallback) {
     const description = EnrichmentLoader.getDescription(enrichment, eventName);
-    return description || fallback || '';
+    return description || (fallback ? normalizeWritingStyle(fallback) : '');
 }
 
 /**
  * Get payload property description (backward compatible)
+ * Automatically normalizes writing style
  */
 export function getPayloadPropertyDescription(enrichment, eventName, propertyName) {
     const payload = enrichment?.[eventName]?.payload;
     if (!payload || typeof payload !== 'object') {
         return null;
     }
-    return payload[propertyName]?.description || null;
+    const description = payload[propertyName]?.description || null;
+    return description ? normalizeWritingStyle(description) : null;
 }
 

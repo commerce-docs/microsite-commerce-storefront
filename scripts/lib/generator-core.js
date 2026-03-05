@@ -5,9 +5,12 @@
  * Handles CLI parsing, boilerplate setup, and output generation.
  */
 
-import { existsSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
+import { mergePreservingPreamble } from './preserve-preamble.js';
+import { isPathPreserved } from './preserve-paths.js';
 import { fileURLToPath } from 'url';
+import { cloneDropinAtVersion, useExistingDropinRepo } from './repository.js';
 
 /**
  * Determine which boilerplate branch to use based on drop-in types being processed
@@ -16,16 +19,9 @@ import { fileURLToPath } from 'url';
  * @returns {string|null} - Branch name or null for latest release
  */
 export function getBoilerplateBranch(dropinNames, repoConfig) {
-    // Check if ANY of the drop-ins being processed are B2B
-    const hasB2BDropins = dropinNames.some(name => {
-        const dropin = repoConfig.dropins.find(d => d.name === name);
-        return dropin && dropin.type === 'B2B';
-    });
-
-    // Use b2b-suite-release1 branch if processing ANY B2B drop-ins, otherwise use latest release tag
-    const boilerplateBranch = hasB2BDropins ? 'b2b-suite-release1' : null;
-
-    return boilerplateBranch;
+    // Always use latest release tag for main boilerplate checkout.
+    // B2B versions are loaded via git show origin/b2b in populateDropinVersions.
+    return null;
 }
 
 /**
@@ -96,18 +92,41 @@ export async function loadPackageVersions(boilerplatePath, branch) {
 }
 
 /**
- * Populate drop-in versions from boilerplate
+ * Load project package versions from package.json (dependencies + devDependencies)
+ * @param {string} projectRoot - Path to project root
+ * @returns {Object} - Package dependencies object
+ */
+function loadProjectPackageVersions(projectRoot) {
+    const packageJsonPath = join(projectRoot, 'package.json');
+    try {
+        const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+        return { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+    } catch {
+        return {};
+    }
+}
+
+/**
+ * Populate drop-in versions from boilerplate, preferring project package.json when available
  * @param {Array<Object>} dropins - Array of drop-in configurations
  * @param {string} boilerplatePath - Path to boilerplate repo
+ * @param {string} [projectRoot] - Optional project root; when provided, project versions take precedence
  * @returns {Promise<Array<Object>>} - Drop-ins with version property added
  */
-export async function populateDropinVersions(dropins, boilerplatePath) {
-    // Load versions from both main branch (B2C) and b2b-suite-release1 branch (B2B)
-    const b2cVersions = await loadPackageVersions(boilerplatePath, null); // Current checkout
-    const b2bVersions = await loadPackageVersions(boilerplatePath, 'b2b-suite-release1');
+export async function populateDropinVersions(dropins, boilerplatePath, projectRoot = null) {
+    // Load versions from both main branch (B2C) and b2b branch (B2B) via git show
+    // so we don't depend on current checkout state
+    const b2cVersions = await loadPackageVersions(boilerplatePath, 'main');
+    const b2bVersions = await loadPackageVersions(boilerplatePath, 'b2b');
 
     // Merge both version sets (B2B versions take precedence)
-    const allVersions = { ...b2cVersions, ...b2bVersions };
+    let allVersions = { ...b2cVersions, ...b2bVersions };
+
+    // Prefer project package.json versions when available (project docs reflect installed versions)
+    if (projectRoot) {
+        const projectVersions = loadProjectPackageVersions(projectRoot);
+        allVersions = { ...allVersions, ...projectVersions };
+    }
 
     // Add version to each drop-in
     return dropins.map(dropin => {
@@ -246,6 +265,8 @@ export function getProjectRoot() {
  * @param {Function} config.generateContent - Function to generate MDX content
  * @param {Function} config.updateSidebar - Function to update sidebar
  * @param {string} config.outputFileName - Output filename (e.g., 'dictionary.mdx')
+ * @param {{ anchorHeading?: string }} [config.mergeOptions] - When set, mergePreservingPreamble
+ *   preserves everything before ## anchorHeading in existing files (e.g. 'Quick example' for quick-start).
  */
 export async function runGenerator(config) {
     const { DROPIN_REPOS } = await import('./dropin-config.js');
@@ -270,16 +291,22 @@ export async function runGenerator(config) {
     // Setup boilerplate
     await setupBoilerplate(boilerplatePath, boilerplateBranch);
 
-    // Populate drop-in versions from boilerplate
-    const dropinsWithVersions = await populateDropinVersions(dropins, boilerplatePath);
+    // Populate drop-in versions from boilerplate (project package.json takes precedence)
+    const dropinsWithVersions = await populateDropinVersions(dropins, boilerplatePath, projectRoot);
     repoConfig.dropins = dropinsWithVersions;
 
     // Filter dropins
-    const targetDropins = filterDropinsByType(
+    let targetDropins = filterDropinsByType(
         repoConfig.dropins,
         args.type,
         args.dropins
     );
+
+    // Exclude drop-ins that this generator should skip
+    if (config.skipDropins && config.skipDropins.length > 0) {
+        const skipSet = new Set(config.skipDropins);
+        targetDropins = targetDropins.filter(d => !skipSet.has(d.name));
+    }
 
     logGenerationStart(config.name, targetDropins);
 
@@ -287,7 +314,10 @@ export async function runGenerator(config) {
 
     for (const dropin of targetDropins) {
         try {
-            const repoPath = getDropinRepoPath(dropin.name, tempReposDir);
+            // Ensure drop-in repo exists at correct version (boilerplate-aligned) before scanning
+            const { path: repoPath } = (dropin.version && dropin.version !== '0.0.0')
+                ? cloneDropinAtVersion(dropin.name, dropin, dropin.version)
+                : useExistingDropinRepo(dropin.name, dropin);
 
             // Scan repository
             const data = config.scanRepo(repoPath);
@@ -318,9 +348,17 @@ export async function runGenerator(config) {
             } else {
                 // Default single-file write
                 const outputDir = getDropinOutputPath(dropin.name, dropin.type, contentDir);
-                mkdirSync(outputDir, { recursive: true });
                 const outputPath = join(outputDir, config.outputFileName);
-                writeFileSync(outputPath, content, 'utf8');
+                if (isPathPreserved(outputPath)) {
+                    console.log(`   ⏭️  Skipped (preserve-paths): ${dropin.name}/${config.outputFileName}`);
+                } else {
+                    mkdirSync(outputDir, { recursive: true });
+                    const mergeOptions = config.mergeOptions || {};
+                    const finalContent = (outputPath.endsWith('.mdx') || outputPath.endsWith('.md'))
+                        ? mergePreservingPreamble(outputPath, content, mergeOptions)
+                        : content;
+                    writeFileSync(outputPath, finalContent, 'utf8');
+                }
             }
 
             successCount++;

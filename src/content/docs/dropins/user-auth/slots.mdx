@@ -1,6 +1,6 @@
 ---
 title: User Auth Slots
-description: Customize UI sections in the User Auth drop-in using slots.
+description: Customize UI sections in the User Auth drop-in using slots. Replace or extend SignIn, SignUp, ResetPassword, UpdatePassword, and SuccessNotification containers with custom slot render functions.
 sidebar:
   label: Slots
   order: 5
@@ -12,13 +12,13 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The User Auth drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The User Auth drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. Slot render functions receive a context object (for example, `DefaultSlotContext`, `ResetPasswordSlotContext`) with properties such as `isLoading`, `isSuccessful`, and where relevant `passwordError`. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.0-beta2</strong>
+<strong>Version: 3.1.0</strong>
 </div>
 
-<Aside type="tip" title="Slot usage best practice">
+<Aside type="tip" title="Slot usage best practices">
 Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
 </Aside>
 
@@ -26,14 +26,13 @@ Do not use context methods inside other context methods (for example, `appendChi
 
 | Container | Slots |
 |-----------|-------|
-| [`SignIn`](#signin-slots) | `SuccessNotification` |
-| [`SignUp`](#signup-slots) | `SuccessNotification`, `PrivacyPolicyConsent` |
+| [`SignIn`](#signin-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification` |
+| [`SignUp`](#signup-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification`, `PrivacyPolicyConsent` |
+| [`ResetPassword`](#resetpassword-slots) | `Title`, `Form`, `Buttons` |
 | [`SuccessNotification`](#successnotification-slots) | `SuccessNotificationActions` |
-| [`UpdatePassword`](#updatepassword-slots) | `SuccessNotification` |
+| [`UpdatePassword`](#updatepassword-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification` |
 
 </TableWrapper>
-
-
 
 ## SignIn slots
 
@@ -42,9 +41,51 @@ The slots for the `SignIn` container allow you to customize its appearance and b
 ```typescript
 interface SignInProps {
   slots?: {
+    Title?: SlotProps<DefaultSlotContext>;
+    Form?: SlotProps<DefaultSlotContext>;
+    Buttons?: SlotProps<DefaultSlotContext>;
     SuccessNotification?: SlotProps<DefaultSlotContext>;
   };
 }
+```
+
+### Title slot
+
+The `Title` slot allows you to customize the form title/header.
+
+### Form slot
+
+The `Form` slot allows you to customize the main form area (email + password fields and layout).
+
+### Buttons slot
+
+The `Buttons` slot allows you to customize the button row (for example, forgot password, sign up link, submit).
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import { SignIn } from '@dropins/storefront-auth/containers/SignIn.js';
+
+await provider.render(SignIn, {
+  slots: {
+    Title: (ctx) => {
+      const element = document.createElement('p');
+      element.innerText = 'Welcome. Please login to shop with your account.';
+      ctx.appendChild(element);
+    },
+    Form: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = '<p class="custom-intro">Enter your credentials below.</p>';
+      ctx.prependSibling(wrapper);
+    },
+    Buttons: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'signin-buttons';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ### SuccessNotification slot
@@ -76,10 +117,52 @@ The slots for the `SignUp` container allow you to customize its appearance and b
 ```typescript
 interface SignUpProps {
   slots?: {
+    Title?: SlotProps<DefaultSlotContext>;
+    Form?: SlotProps<DefaultSlotContext>;
+    Buttons?: SlotProps<DefaultSlotContext>;
     SuccessNotification?: SlotProps<DefaultSlotContext>;
     PrivacyPolicyConsent: SlotProps;
   };
 }
+```
+
+### Title slot
+
+The `Title` slot allows you to customize the form title/header.
+
+### Form slot
+
+The `Form` slot allows you to customize the main form area (password, confirm password, consent, and more).
+
+### Buttons slot
+
+The `Buttons` slot allows you to customize the button row (for example, sign in link, submit).
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import { SignUp } from '@dropins/storefront-auth/containers/SignUp.js';
+
+await provider.render(SignUp, {
+  slots: {
+    Title: (ctx) => {
+      const element = document.createElement('h2');
+      element.innerText = 'Create an account';
+      ctx.appendChild(element);
+    },
+    Form: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'custom-signup-form';
+      ctx.appendChild(element);
+    },
+    Buttons: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'signup-buttons';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ### SuccessNotification slot
@@ -120,6 +203,59 @@ await provider.render(SignUp, {
       // Your custom implementation
       const element = document.createElement('div');
       element.innerText = 'Custom PrivacyPolicyConsent';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## ResetPassword slots
+
+The slots for the `ResetPassword` container allow you to customize its appearance and behavior. The slot context (for example, `ResetPasswordSlotContext`) includes properties such as `isLoading`.
+
+```typescript
+interface ResetPasswordProps {
+  slots?: {
+    Title?: SlotProps<ResetPasswordSlotContext>;
+    Form?: SlotProps<ResetPasswordSlotContext>;
+    Buttons?: SlotProps<ResetPasswordSlotContext>;
+  };
+}
+```
+
+### Title slot
+
+The `Title` slot allows you to customize the form title/header for the reset password flow.
+
+### Form slot
+
+The `Form` slot allows you to customize the main form area (for example, email field for requesting the reset link).
+
+### Buttons slot
+
+The `Buttons` slot allows you to customize the button row (for example, submit to request reset link).
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import { ResetPassword } from '@dropins/storefront-auth/containers/ResetPassword.js';
+
+await provider.render(ResetPassword, {
+  slots: {
+    Title: (ctx) => {
+      const element = document.createElement('h2');
+      element.innerText = 'Reset your password';
+      ctx.appendChild(element);
+    },
+    Form: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'custom-reset-password-form';
+      ctx.appendChild(element);
+    },
+    Buttons: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'reset-password-buttons';
       ctx.appendChild(element);
     }
   }
@@ -167,9 +303,51 @@ The slots for the `UpdatePassword` container allow you to customize its appearan
 ```typescript
 interface UpdatePasswordProps {
   slots?: {
+    Title?: SlotProps<DefaultSlotContext>;
+    Form?: SlotProps<DefaultSlotContext>;
+    Buttons?: SlotProps<DefaultSlotContext>;
     SuccessNotification?: SlotProps<DefaultSlotContext>;
   };
 }
+```
+
+### Title slot
+
+The `Title` slot allows you to customize the form title/header.
+
+### Form slot
+
+The `Form` slot allows you to customize the update-password form (for example, new password field and layout).
+
+### Buttons slot
+
+The `Buttons` slot allows you to customize the submit button area.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import { UpdatePassword } from '@dropins/storefront-auth/containers/UpdatePassword.js';
+
+await provider.render(UpdatePassword, {
+  slots: {
+    Title: (ctx) => {
+      const element = document.createElement('h2');
+      element.innerText = 'Set a new password';
+      ctx.appendChild(element);
+    },
+    Form: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'custom-update-password-form';
+      ctx.appendChild(element);
+    },
+    Buttons: (ctx) => {
+      const element = document.createElement('div');
+      element.className = 'update-password-buttons';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
 ```
 
 ### SuccessNotification slot
@@ -193,7 +371,5 @@ await provider.render(UpdatePassword, {
   }
 })(block);
 ```
-
-
 
 {/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-auth */}
