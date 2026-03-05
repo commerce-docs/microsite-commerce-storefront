@@ -42,6 +42,7 @@ export function generateSidebar() {
             { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         {
