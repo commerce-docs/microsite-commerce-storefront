@@ -24,7 +24,7 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Storefront Setup', link: '/get-started/create-storefront/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
