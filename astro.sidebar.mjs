@@ -24,11 +24,11 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
-            { label: 'Storefront Setup', link: '/get-started/create-storefront/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
             { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
+            { label: 'Storefront Setup', link: '/get-started/create-storefront/' },
+            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
@@ -38,7 +38,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/boilerplate/' },
             { label: 'Getting started', link: '/boilerplate/getting-started/' },
-            { label: 'Configuration', link: '/boilerplate/configuration/' },
+            { label: 'Blocks configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
