@@ -25,8 +25,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/get-started/' },
             { label: 'Storefront Setup', link: '/get-started/create-storefront/' },
-            { label: 'Storefront Architecture', link: '/get-started/architecture/' },
-            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Learn the architecture', link: '/get-started/architecture/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
