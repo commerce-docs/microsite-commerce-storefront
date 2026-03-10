@@ -2,6 +2,39 @@
 
 Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs.
 
+## Release notes
+
+To generate release notes and changelog for a new release (e.g. March 2026), the AI uses the [release-notes skill](.cursor/skills/release-notes/SKILL.md). The skill uses the **previous** release as a structural template only, analyzes **code changes** (Files changed) between release versions for boilerplate, drop-ins, SDK, and tools, and updates both `index.mdx` and `changelog.mdx`.
+
+### How to run it
+
+1. **Authenticate** (required for private repos): run `gh auth login` in your terminal.
+2. **In Cursor**, ask the AI to add the new release. For example:
+   - *"Add the March 2026 release. Use B2C PR https://github.com/hlxsites/aem-boilerplate-commerce/pull/XXXX and B2B PR https://github.com/hlxsites/aem-boilerplate-commerce/pull/YYYY."*
+3. **Optionally** supply a **code comparison URL** so the AI knows exactly which changes to analyze (especially for boilerplate). For example:
+   - *"Use this comparison for the boilerplate: https://github.com/hlxsites/aem-boilerplate-commerce/compare/january-2026...b2c-february-2026"*
+   If you don't supply comparison URLs, the AI will derive version ranges from the previous release and the PRs' package.json; if it can't find a comparison for a repo, it will ask you to supply the URL or refs.
+4. The AI runs the skill, analyzes code changes, and adds a new suite section and changelog entries in `src/content/docs/releases/`.
+
+**Optional:** To update only one file, say so (e.g. *"Update only the changelog for March 2026"* or *"Update only the release index for March 2026"*). The same analysis runs but only the requested file is written.
+
+**Example PRs** (February 2026):
+
+- B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1096  
+- B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1107
+
+### Manual updates required
+
+These sections are **not** filled from code and must be updated manually before publishing:
+
+| Section | Where it appears | What to do |
+|---------|------------------|------------|
+| **Known issues** | Each suite’s `### Known issues` | Add bullets from release notes or your team, or use: “There are no known issues for this release suite.” |
+| **Adobe Commerce version(s)** | Component compatibility → first table, left column (e.g. `2.4.7`, `2.4.8`) | Confirm supported versions from release/product spec or team; add one row per version. |
+| **Adobe Commerce B2B version** | Component compatibility → second table, left column (e.g. `1.5.2`) | Confirm supported B2B version from release/product spec or team; add the single row. |
+
+See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details (including “Sections that cannot be confirmed from code”).
+
 ## Custom components
 
 This documentation site includes a collection of custom Astro components that enhance content presentation and interactivity. Below is a complete list of available components with links to examples of their usage:
