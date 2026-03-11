@@ -24,10 +24,11 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
+            { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Learn the architecture', link: '/get-started/architecture/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
+            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
@@ -358,6 +359,7 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins/product-details/slots/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
                 { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
+                { label: 'Troubleshooting', link: '/dropins/product-details/troubleshooting/' },
               ],
             },
             {
