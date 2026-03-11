@@ -9,19 +9,23 @@ To generate release notes and changelog for a new release (e.g. March 2026), the
 ### How to run it
 
 1. **Authenticate** (required for private repos): run `gh auth login` in your terminal.
-2. **In Cursor**, ask the AI to add the new release. For example:
-   - *"Add the March 2026 release. Use B2C PR https://github.com/hlxsites/aem-boilerplate-commerce/pull/XXXX and B2B PR https://github.com/hlxsites/aem-boilerplate-commerce/pull/YYYY."*
-3. **Optionally** supply a **code comparison URL** so the AI knows exactly which changes to analyze (especially for boilerplate). For example:
+2. **In Cursor**, prompt the agent to add the new release. For example:
+
+"Add the March 2026 release. Use these urls to parse all the code changes:
+- B2C changes: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152 and 
+- B2B changes: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156/changes"
+
+3. **Optionally** supply a **code comparison URL** so the Cursor knows exactly which changes to analyze (especially for boilerplate). For example:
    - *"Use this comparison for the boilerplate: https://github.com/hlxsites/aem-boilerplate-commerce/compare/january-2026...b2c-february-2026"*
-   If you don't supply comparison URLs, the AI will derive version ranges from the previous release and the PRs' package.json; if it can't find a comparison for a repo, it will ask you to supply the URL or refs.
+   If you don't supply comparison URLs, Cursor will derive version ranges from the previous release and the PRs' package.json; if it can't find a comparison for a repo, it will ask you to supply the URL or refs.
 4. The AI runs the skill, analyzes code changes, and adds a new suite section and changelog entries in `src/content/docs/releases/`.
 
 **Optional:** To update only one file, say so (e.g. *"Update only the changelog for March 2026"* or *"Update only the release index for March 2026"*). The same analysis runs but only the requested file is written.
 
-**Example PRs** (February 2026):
+**Example PRs** (March 2026):
 
-- B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1096  
-- B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1107
+- B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152  
+- B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156
 
 ### Manual updates required
 
@@ -32,8 +36,31 @@ These sections are **not** filled from code and must be updated manually before 
 | **Known issues** | Each suite’s `### Known issues` | Add bullets from release notes or your team, or use: “There are no known issues for this release suite.” |
 | **Adobe Commerce version(s)** | Component compatibility → first table, left column (e.g. `2.4.7`, `2.4.8`) | Confirm supported versions from release/product spec or team; add one row per version. |
 | **Adobe Commerce B2B version** | Component compatibility → second table, left column (e.g. `1.5.2`) | Confirm supported B2B version from release/product spec or team; add the single row. |
+| **Storefront Compatibility Package versions** | Component compatibility → right column of both tables | **Source:** Branch names in the SCP repos (not GitHub Releases). B2C: [storefront-compatibility](https://github.com/magento-commerce/storefront-compatibility) branches — use latest `4.7.x` and `4.8.x`. B2B: [storefront-compatibility-b2b](https://github.com/magento-commerce/storefront-compatibility-b2b) branches — use latest `1.0.x`. Example: `gh api "repos/magento-commerce/storefront-compatibility/branches?per_page=100" --jq ".[].name" | grep -E '^4\\.(7|8)\\.' | sort -V`. |
 
-See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details (including “Sections that cannot be confirmed from code”).
+See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details (including “Sections that cannot be confirmed from code” and **§3 SCP** for how to find latest compatibility package versions).
+
+### Testing the skill (compare your version with a from-scratch run)
+
+To test the skill by regenerating the release notes from scratch and comparing with your current version:
+
+1. **Stash only the release files** (keeps other uncommitted changes in place):
+   ```bash
+   git stash push -m "Release notes before skill test" -- src/content/docs/releases/changelog.mdx src/content/docs/releases/index.mdx
+   ```
+
+2. **Run the skill from scratch** in Cursor. For example: *"Add the March 2026 release from scratch. Use B2C PR #1152 and B2B PR #1156."* (Supply the same comparison URLs or PRs you used for your current version so the run is comparable.)
+
+3. **Compare stashed version (yours) with the new version (skill output):**
+   ```bash
+   git diff stash@{0} -- src/content/docs/releases/changelog.mdx src/content/docs/releases/index.mdx
+   ```
+   - The diff shows: **stashed** = your version, **current working tree** = what the skill just wrote.
+   - To save the diff to a file: `git diff stash@{0} -- src/content/docs/releases/changelog.mdx src/content/docs/releases/index.mdx > release-notes-test.diff`
+
+4. **Restore your version** if you want to keep it: `git stash pop`. Or keep the skill's version and drop the stash: `git stash drop`.
+
+**Alternative (backup copies):** Before running the skill, copy the files to `.current` (for example `changelog.mdx.current`, `index.mdx.current`). After the skill runs, compare with `diff -u src/content/docs/releases/changelog.mdx.current src/content/docs/releases/changelog.mdx` and the same for `index.mdx`.
 
 ## Custom components
 
