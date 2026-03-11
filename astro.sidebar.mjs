@@ -328,6 +328,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-tos',
+                  collapsed: false,
+                  items: [
+                    { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Styles', link: '/dropins/product-details/styles/' },
                 {
