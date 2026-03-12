@@ -360,7 +360,8 @@ Each drop-in exports one or more `GraphQL` fragments that you can extend using `
 |---|---|---|---|
 | `@dropins/storefront-cart` | `CART_FRAGMENT` | `Cart` | Extends cart queries with additional fields on the `Cart` type. |
 | `@dropins/storefront-checkout` | `CHECKOUT_DATA_FRAGMENT` | `Cart` | Extends checkout queries with additional fields on the `Cart` type. |
-| `@dropins/storefront-order` | `GUEST_ORDER_FRAGMENT` | `CustomerOrder` | Extends all order detail queries (guest and authenticated) with additional fields on the `CustomerOrder` type. |
+| `@dropins/storefront-order` | `GUEST_ORDER_FRAGMENT` | `CustomerOrder` | Extends unauthenticated guest order detail queries with additional fields on the `CustomerOrder` type. |
+| `@dropins/storefront-order` | `CUSTOMER_ORDER_FRAGMENT` | `CustomerOrder` | Extends authenticated order detail queries with additional fields on the `CustomerOrder` type. |
 | `@dropins/storefront-account` | `CUSTOMER_ORDER_FRAGMENT` | `CustomerOrder` | Extends the orders list query with additional fields on the `CustomerOrder` type. |
 
 </TableWrapper>
@@ -377,6 +378,9 @@ overrideGQLOperations([
     npm: '@dropins/storefront-order',
     operations: [
       `fragment GUEST_ORDER_FRAGMENT on CustomerOrder {
+        custom_attribute
+      }`,
+      `fragment CUSTOMER_ORDER_FRAGMENT on CustomerOrder {
         custom_attribute
       }`,
     ],
@@ -396,6 +400,10 @@ After updating `build.mjs`, run `npm install` to apply the fragment extensions. 
 
 <Aside type="tip">
 You can extend multiple drop-ins in a single `overrideGQLOperations` call. Each entry in the array targets a different drop-in package.
+</Aside>
+
+<Aside type="note" text="Limitations">
+The `returns` field on `CustomerOrder` cannot be extended via fragments because it requires query-specific arguments (like `pageSize`). To extend return data, use the model transformer approach instead.
 </Aside>
 
 ### Mapping extended data with model transformers
