@@ -1,0 +1,98 @@
+---
+title: Quick Order Quick Start
+description: Quick reference and getting started guide for the Quick Order B2B drop-in.
+sidebar:
+  label: Quick Start
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+
+Enable bulk ordering by SKU, search, and CSV upload in your B2B storefront with the Quick Order drop-in.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-quick-order</strong> (for example 1.0.0-beta1 — verify compatibility with your Commerce instance)
+</div>
+
+## Block DOM skeleton
+
+The block creates the container divs, then runs `provider.render` into them. Use these class names when building your block or matching the boilerplate:
+
+- `.quick-order-title` — Page title (optional; boilerplate uses Header component).
+- `.quick-order-main-container` — Wrapper for the two-column layout.
+- `.quick-order-items-container` — Target for QuickOrderItems.
+- `.quick-order-right-side` — Wrapper for the right column.
+- `.quick-order-multiple-sku-container` — Target for QuickOrderMultipleSku.
+- `.quick-order-csv-upload-container` — Target for QuickOrderCsvUpload.
+
+## Quick example
+
+The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" /> uses this pattern for the Quick Order page with all three containers:
+
+```js
+// 1. Import initializers (Quick Order + dependencies: cart, PDP, search)
+import '../../scripts/initializers/quick-order.js';
+import '../../scripts/initializers/cart.js';
+import '../../scripts/initializers/pdp.js';
+import '../../scripts/initializers/search.js';
+
+// 2. Import containers, provider, APIs, and commerce helpers
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+import QuickOrderItems from '@dropins/storefront-quick-order/containers/QuickOrderItems.js';
+import QuickOrderMultipleSku from '@dropins/storefront-quick-order/containers/QuickOrderMultipleSku.js';
+import QuickOrderCsvUpload from '@dropins/storefront-quick-order/containers/QuickOrderCsvUpload.js';
+import * as pdpApi from '@dropins/storefront-pdp/api.js';
+import * as searchApi from '@dropins/storefront-product-discovery/api.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import { rootLink } from '../../scripts/commerce.js';
+
+// 3. Render in your block (for example commerce-b2b-quick-order)
+export default async function decorate(block) {
+  const itemsContainer = block.querySelector('.quick-order-items-container');
+  const multipleSkuContainer = block.querySelector('.quick-order-multiple-sku-container');
+  const csvUploadContainer = block.querySelector('.quick-order-csv-upload-container');
+
+  quickOrderProvider.render(QuickOrderItems, {
+    getProductsData: pdpApi.getProductsData,
+    productsSearch: searchApi.search,
+    searchFilter: [
+      { attribute: 'categoryPath', eq: '' },
+      { attribute: 'visibility', in: ['Search', 'Catalog, Search'] },
+    ],
+    handleAddToCart: async (values) => {
+      if (!values.length) return;
+      try {
+        await cartApi.addProductsToCart(values);
+        window.location.href = rootLink('/cart');
+      } catch (error) {
+        return error.message || 'Failed to add products to cart.';
+      }
+    },
+    slots: { ProductPrice: (ctx) => { /* ... */ }, ProductOptions: (ctx) => { /* ... */ } },
+  })(itemsContainer);
+
+  quickOrderProvider.render(QuickOrderMultipleSku, { className: 'quick-order-multiple-sku' })(multipleSkuContainer);
+  quickOrderProvider.render(QuickOrderCsvUpload, { className: 'quick-order-csv-upload' })(csvUploadContainer);
+}
+```
+
+**New to drop-ins?** See [Using drop-ins](/dropins/all/quick-start/) for step-by-step instructions.
+
+## Quick reference
+
+**Import paths:**
+- Initializer: `import '../../scripts/initializers/quick-order.js'`
+- Containers: `import ContainerName from '@dropins/storefront-quick-order/containers/ContainerName.js'`
+- Provider: `import { render } from '@dropins/storefront-quick-order/render.js'`
+
+**Package:** `@dropins/storefront-quick-order`
+
+**Example containers:** `QuickOrderItems`, `QuickOrderMultipleSku`, `QuickOrderCsvUpload`
+
+## Learn more
+
+- [Containers](/dropins-b2b/quick-order/containers/) — Available UI components and configuration options
+- [Initialization](/dropins-b2b/quick-order/initialization/) — Configure initializer and language definitions
+- [Events](/dropins-b2b/quick-order/events/) — Event-driven coordination between containers
+- [Slots](/dropins-b2b/quick-order/slots/) — Extend containers with custom content

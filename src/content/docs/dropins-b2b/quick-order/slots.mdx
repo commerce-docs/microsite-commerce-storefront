@@ -1,0 +1,105 @@
+---
+title: Quick Order Slots
+description: Customize UI sections in the Quick Order drop-in using slots.
+sidebar:
+  label: Slots
+  order: 7
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Quick Order drop-in exposes slots for specific UI sections, primarily on **QuickOrderItems**. Use slots to replace or extend the product price, product options (configurables), add-to-cart button, and search UI. See [Extending drop-in components](/dropins/all/extending/) for slot behavior.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-quick-order</strong>
+</div>
+
+<TableWrapper nowrap={[0]}>
+
+| Container | Slots |
+|-----------|-------|
+| [QuickOrderItems](#quickorderitems-slots) | `ProductPrice`, `ProductOptions`, `AddAllToCartButton`, `QuickOrderItemSearch`, `QuickOrderSearchAutocompleteItem` |
+| QuickOrderMultipleSku | `AddToListButton` (optional) |
+
+</TableWrapper>
+
+## QuickOrderItems slots
+
+The `QuickOrderItems` slots let you replace the default product price, configurable product options, "Add All to Cart" button, and search/autocomplete UI.
+
+```typescript
+interface QuickOrderItemsProps {
+  slots?: {
+    ProductPrice?: SlotProps<ProductPriceContext>;
+    ProductOptions?: SlotProps<ProductOptionsContext>;
+    AddAllToCartButton?: SlotProps<AddAllToCartContext>;
+    QuickOrderItemSearch?: SlotProps<QuickOrderItemSearchContext>;
+    QuickOrderSearchAutocompleteItem?: SlotProps<QuickOrderSearchAutocompleteItemContext>;
+  };
+}
+```
+
+### ProductPrice slot
+
+Context: `{ item: OrderItem; scope: string }`. Use this slot to render price with the PDP drop-in `ProductPrice` container (or a custom component) for correct tier pricing and currency. The boilerplate passes `scope` and `initialData: ctx.item` to the PDP container.
+
+### ProductOptions slot
+
+Context: `{ item: OrderItem; scope: string }`. Use this slot to render configurable product options (for example size, color) with the PDP drop-in `ProductOptions` container. Required for configurables in the quick order list so users can select options before adding to cart.
+
+### AddAllToCartButton slot
+
+Context: `{ handleAddToCart: () => void | undefined; clearItems: () => void | undefined; loading?: boolean; isDisabledButton?: boolean }`. Replace the default "Add All to Cart" button with custom UI or behavior.
+
+### QuickOrderItemSearch slot
+
+Context: `{ item; scope; handleSearchChange; searchResults; searchValue; shouldShowResults; handleItemClick }`. Customize the search input and results area for adding or replacing an item by search.
+
+### QuickOrderSearchAutocompleteItem slot
+
+Context: `{ item; index; activeIndex; createItemClickHandler }`. Customize how each search result option renders in the autocomplete list.
+
+## Example: ProductPrice and ProductOptions
+
+The Commerce boilerplate wires PDP containers into Quick Order so each list item shows price and options correctly:
+
+```js
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+import QuickOrderItems from '@dropins/storefront-quick-order/containers/QuickOrderItems.js';
+import { render as pdpProvider } from '@dropins/storefront-pdp/render.js';
+import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
+import ProductOptions from '@dropins/storefront-pdp/containers/ProductOptions.js';
+
+await quickOrderProvider.render(QuickOrderItems, {
+  getProductsData: pdpApi.getProductsData,
+  productsSearch: searchApi.search,
+  handleAddToCart: async (values) => { /* ... */ },
+  slots: {
+    ProductPrice: (ctx) => {
+      const priceContainer = document.createElement('div');
+      priceContainer.className = 'product-price-slot';
+      pdpProvider.render(ProductPrice, {
+        scope: ctx.scope,
+        initialData: ctx.item,
+      })(priceContainer);
+      ctx.replaceWith(priceContainer);
+    },
+    ProductOptions: (ctx) => {
+      const optionsContainer = document.createElement('div');
+      optionsContainer.className = 'product-options-slot';
+      pdpProvider.render(ProductOptions, {
+        scope: ctx.scope,
+      })(optionsContainer);
+      ctx.replaceWith(optionsContainer);
+    },
+  },
+})(quickOrderItemsContainer);
+```
+
+<Aside type="tip">
+For configurable products, providing the `ProductOptions` slot is required so users can select options before adding to cart; otherwise validation will show "Configuration required" for those items.
+</Aside>

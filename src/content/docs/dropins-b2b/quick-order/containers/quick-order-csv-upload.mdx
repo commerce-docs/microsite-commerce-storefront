@@ -1,0 +1,63 @@
+---
+title: QuickOrderCsvUpload Container
+description: Learn about the QuickOrderCsvUpload container in the Quick Order B2B drop-in.
+sidebar:
+  label: QuickOrderCsvUpload
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `QuickOrderCsvUpload` container provides CSV file upload for bulk quick order. The file must include "SKU" and "QTY" columns (max 200 rows). The container validates the file, parses the content, and emits `quick-order/add-items`; QuickOrderItems fetches product data and updates the list. Users can download a sample CSV when `routeSampleCSV` is configured.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-quick-order</strong>
+</div>
+
+## Configuration
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | CSS class applied to the container root (for example `quick-order-csv-upload`). |
+| `routeSampleCSV` | `() => string` | No | Returns the URL or path for the sample CSV download (for example `/path/to/sample.csv`). |
+| `onFileUpload` | `(values: SubmitSkuValue) => void` | No | Optional callback when a valid file is parsed; otherwise the container emits `quick-order/add-items`. |
+
+</TableWrapper>
+
+## CSV requirements
+
+- **Format:** CSV with header row.
+- **Required columns:** "SKU" and "QTY".
+- **Max rows:** 200 (excluding header).
+- **QTY:** Must be a positive integer per row.
+- **SKU:** Required for each row; invalid or empty rows produce validation errors.
+
+## Validation errors
+
+The container displays specific messages for: invalid file type, empty file, missing or extra columns, max rows exceeded, invalid quantity, SKU required, no valid data rows, and parse/read failures. See [Quick Order Dictionary](/dropins-b2b/quick-order/dictionary/) for `CsvFileInput.uploadCSVErrors` keys and [Dictionary customization](/dropins/all/dictionaries/).
+
+## Behavior
+
+1. User selects a CSV file.
+2. Container validates format and content.
+3. On success: emits `quick-order/add-items` with parsed `SubmitSkuValue` (or calls `onFileUpload` if provided).
+4. QuickOrderItems receives the event and fetches product data, updating the list.
+5. User can download a sample CSV via "Download sample" when `routeSampleCSV` is configured.
+
+## Usage
+
+```js
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+import QuickOrderCsvUpload from '@dropins/storefront-quick-order/containers/QuickOrderCsvUpload.js';
+
+await quickOrderProvider.render(QuickOrderCsvUpload, {
+  className: 'quick-order-csv-upload',
+  routeSampleCSV: () => '/path/to/quick-order-sample.csv',
+})(quickOrderCsvUploadContainer);
+```
+
+## Events
+
+- **Emits:** `quick-order/add-items` (with parsed SKU/quantity array from valid CSV), `quick-order/loading` (during validation/processing).

@@ -1,0 +1,137 @@
+---
+title: Quick Order Data & Events
+description: Learn about the events used by the Quick Order drop-in and the data available within the events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coordinate containers (QuickOrderItems, QuickOrderMultipleSku, QuickOrderCsvUpload) and to integrate with the Cart drop-in. Events coordinate adding items, loading states, and add-to-cart success or error handling.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-quick-order</strong>
+</div>
+
+## Events reference
+
+<TableWrapper nowrap={[0,1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [`quick-order/add-items`](#quick-orderadd-items-emits-and-listens) | Emits and listens | Items added via CSV upload or multiple SKU entry. Payload: `SubmitSkuValue` (array of `{ sku, quantity }`). Triggers product fetch and list update in QuickOrderItems. |
+| [`quick-order/loading`](#quick-orderloading-emits-and-listens) | Emits and listens | Loading state changed. Payload: `boolean`. Disables inputs and shows loading indicators while processing. |
+| [`quick-order/add-to-cart`](#quick-orderadd-to-cart-emits) | Emits | Request to add items to cart when no custom `handleAddToCart` is used. Payload: array of cart item values. Default cart handler processes items. |
+| [`quick-order/add-to-cart-error`](#quick-orderadd-to-cart-error-emits) | Emits | Add-to-cart operation failed. Payload: `{ message: string }`. Shows error notification. |
+| [`cart/product/added`](#cartproductadded-listens) | Listens | Products added to cart successfully. Payload: `any[]`. Quick Order shows success notification. |
+
+</TableWrapper>
+
+## Event details
+
+### `quick-order/add-items` (emits and listens)
+
+QuickOrderMultipleSku and QuickOrderCsvUpload emit this when the user adds items via CSV or the SKU text area. QuickOrderItems listens, fetches product data, and updates the list.
+
+#### Event payload
+
+```typescript
+type SubmitSkuValue = Array<{ sku: string; quantity: number }>;
+```
+
+#### When triggered
+
+- After CSV file is validated and parsed
+- After user clicks "Add to List" in QuickOrderMultipleSku with parsed SKUs
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quick-order/add-items', (payload) => {
+  console.log('Items to add:', payload); // SubmitSkuValue
+});
+```
+
+### `quick-order/loading` (emits and listens)
+
+Containers emit this when a loading state starts or ends (for example while fetching products or adding to cart).
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quick-order/loading', (isLoading) => {
+  console.log('Quick Order loading:', isLoading);
+});
+```
+
+### `quick-order/add-to-cart` (emits)
+
+QuickOrderItems emits this when the user clicks "Add All to Cart" and no custom `handleAddToCart` is provided. A default handler may listen and call the Cart API.
+
+#### Event payload
+
+```typescript
+any[]  // Cart item values (sku, quantity, options, and so on)
+```
+
+### `quick-order/add-to-cart-error` (emits)
+
+QuickOrderItems emits this when add-to-cart fails (backend error or custom handler returns an error message string).
+
+#### Event payload
+
+```typescript
+{ message: string }
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quick-order/add-to-cart-error', ({ message }) => {
+  console.error('Add to cart failed:', message);
+});
+```
+
+### `cart/product/added` (listens)
+
+The Cart drop-in emits this when products are added to the cart. Quick Order listens and shows a success notification.
+
+#### Event payload
+
+```typescript
+any[]
+```
+
+## Listening to events
+
+All Quick Order events use the centralized event bus:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quick-order/add-items', handleAddItems);
+events.on('quick-order/loading', handleLoading);
+events.on('quick-order/add-to-cart-error', handleAddToCartError);
+events.on('cart/product/added', handleCartProductAdded);
+
+// Clean up when needed
+events.off('quick-order/add-items', handleAddItems);
+```
+
+<Aside type="tip">
+When using a custom `handleAddToCart` in QuickOrderItems, you control redirects and error messages; the drop-in still emits `quick-order/add-to-cart-error` when your handler returns an error message string.
+</Aside>

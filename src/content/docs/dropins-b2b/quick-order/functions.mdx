@@ -1,0 +1,62 @@
+---
+title: Quick Order Functions
+description: API functions provided by the Quick Order drop-in for programmatic access to store configuration.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The Quick Order drop-in exposes API functions for store configuration. Use them to determine whether Quick Order is enabled. Containers use this to show or hide the disabled overlay.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-quick-order</strong>
+</div>
+
+## Functions reference
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getStoreConfig`](#getstoreconfig) | Returns store configuration including the Quick Order feature flag (`quickOrderActive`). |
+
+</TableWrapper>
+
+## getStoreConfig
+
+Fetches store configuration via GraphQL and returns `quickorder_active` (mapped to `quickOrderActive`). The drop-in uses it to show a disabled overlay when Quick Order is off in Adobe Commerce Admin.
+
+```ts
+const getStoreConfig = async (): Promise<{
+  storeConfig: {
+    quickOrderActive: boolean;
+  };
+}>
+```
+
+### Returns
+
+- `storeConfig.quickOrderActive` — `true` when Quick Order is enabled in store config.
+
+### Example
+
+```js
+import { getStoreConfig } from '@dropins/storefront-quick-order/api.js';
+
+const { storeConfig } = await getStoreConfig();
+if (storeConfig.quickOrderActive) {
+  console.log('Quick Order is enabled');
+} else {
+  console.log('Quick Order is disabled');
+}
+```
+
+<Aside type="note">
+The initializer sets the GraphQL endpoint via `setEndpoint()` and loads store config during initialization. Containers read the feature state from the drop-in context. Call `getStoreConfig` in your block only when building custom logic around the feature flag.
+</Aside>
