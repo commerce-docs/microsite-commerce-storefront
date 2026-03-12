@@ -83,22 +83,23 @@ src/
 
 ### Navigation Configuration
 
-The site navigation is configured in `astro.config.mjs`. When adding new pages, you may need to update the sidebar configuration to ensure proper navigation.
+The site navigation is configured in `astro.sidebar.mjs`. When adding new pages, you may need to update the sidebar configuration to ensure proper navigation.
+
+**Standard drop-in sidebar order:** Overview → Quick Start → **How-tos** → Initialization → [Styles, etc.] → Containers → Functions → Slots → Events → Dictionary. Place How-tos immediately after Quick Start so developers can find task-oriented content quickly.
 
 ## Content Types
 
 Choose the right content type for your documentation:
 
-### 1. **Tutorials** (`/tutorials/` or `/dropins/[component]/tutorials/`)
+### 1. **How-tos** (`/dropins/[component]/tutorials/`)
 
-**When to use:** Step-by-step instructions for completing a specific task
+**When to use:** Task-oriented instructions for solving a specific problem (Diataxis how-to guides)
 **Structure:**
 
 - Clear objective statement
-- Prerequisites listed
-- Numbered steps with screenshots
+- **Prerequisites** — Links to the essential topics within the drop-in and related drop-ins that the developer must know to complete the how-to. Keep this minimal; do not list everything.
+- Numbered steps with code examples
 - Expected outcomes
-- Next steps or related tutorials
 
 ### 2. **Guides** (`/get-started/`, `/setup/`)
 
