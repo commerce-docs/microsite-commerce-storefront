@@ -6,13 +6,20 @@ sidebar:
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The `QuickOrderItems` container displays the quick order product list (SKU, name, price, quantity), supports search by SKU or name, and exposes product options for configurables via slots. It validates items and handles "Add All to Cart" with a custom handler or the default `quick-order/add-to-cart` event. It listens for `quick-order/add-items` from QuickOrderMultipleSku or QuickOrderCsvUpload.
+The `QuickOrderItems` container serves as the central component for managing and reviewing products in the Quick Order workflow. It displays items added via CSV upload, multiple SKU entry, and product search. Each item shows name, SKU, price, and quantity. Users can update quantities, remove items, and configure options for configurable products. An integrated search input allows adding products through autocomplete without leaving the page.
+
+The container surfaces validation issues through contextual notifications and highlights problematic items with clickable SKU references that scroll to the relevant product. It handles full-success and partial-success add-to-cart scenarios, informing users which products were added and which require attention. Loading states are managed at global and item levels. When Quick Order is disabled, the container displays an overlay while preserving the underlying content.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Package: @dropins/storefront-quick-order</strong>
 </div>
+
+<Diagram caption="QuickOrderItems container with product list and search">
+  ![QuickOrderItems container](@images/quick-order-items.png)
+</Diagram>
 
 ## Configuration
 
@@ -21,16 +28,20 @@ The `QuickOrderItems` container displays the quick order product list (SKU, name
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `className` | `string` | No | CSS class applied to the container root. |
-| `getProductsData` | `(items: OrderItemInput[]) => Promise<OrderItem[]>` | No | Fetches product data for the given SKUs/items. Typically from PDP drop-in `getProductsData`. Required for resolving products when items are added. |
-| `productsSearch` | `(params: { phrase: string; filter: Array<{ attribute: string; in: string[] }> }) => Promise<{ items: OrderItem[] }>` | No | Search API for product search by SKU or name. Typically from Product Discovery drop-in `search`. |
-| `searchFilter` | `Array<{ attribute: string; eq?: string; in?: string[] }>` | No | Filters applied to product search (for example `categoryPath`, `visibility`). The Commerce boilerplate uses both `eq` (for categoryPath) and `in` (for visibility); the drop-in type definition may list only `in`. |
-| `handleAddToCart` | `(items: any[], clearItems: () => void) => void \| string \| Promise<void \| string>` | No | Custom handler when "Add All to Cart" is clicked. If omitted, the drop-in emits `quick-order/add-to-cart`. Return an error message string to show a notification and emit `quick-order/add-to-cart-error`. |
+| `getProductsData` | `(items: OrderItemInput[]) => Promise<OrderItem[]>` | Yes | Fetches product data for the given SKUs/items. `OrderItemInput`: `{ sku: string; variantSku?: string; quantity?: number; replaceItemSku?: string }`. Typically from PDP drop-in `getProductsData`. Required for resolving products when items are added. |
+| `productsSearch` | `(params: { phrase: string; filter: Array<{ attribute: string; in: string[] }> }) => Promise<{ items: OrderItem[] }>` | No | Search API for product search by SKU or name. Typically from Product Discovery drop-in `search`. If not provided, search functionality is disabled in the UI. |
+| `searchFilter` | `Array<{ attribute: string; eq?: string; in?: string[] }>` | No | Filters applied to product search. Default: `[{ attribute: 'visibility', in: ['Search', 'Catalog, Search'] }]`. The Commerce boilerplate uses both `eq` (for categoryPath) and `in` (for visibility); the drop-in type definition may list only `in`. |
+| `handleAddToCart` | `(items: any[], clearItems: () => void) => void \| string \| Promise<void \| string>` | No | Custom handler when "Add All to Cart" is clicked. Receives the cart items array and a `clearItems` function to reset the list after successful addition. If omitted, the drop-in emits `quick-order/add-to-cart`. Return an error message string to show a notification and emit `quick-order/add-to-cart-error`. Invoke `clearItems()` after successful addition to reset the Quick Order list. |
 | `slots` | `object` | No | Slots for ProductPrice, ProductOptions, AddAllToCartButton, QuickOrderItemSearch, QuickOrderSearchAutocompleteItem. See [Slots](/dropins-b2b/quick-order/slots/). |
 
 </TableWrapper>
 
 <Aside type="note">
-The TypeScript type for `searchFilter` in the drop-in may show only `{ attribute: string; in: string[] }`. The Commerce boilerplate passes both `eq` and `in`; use the shape that your search API expects.
+The TypeScript type for `searchFilter` in the drop-in may show only `{ attribute: string; in: string[] }`. The Commerce boilerplate passes both `eq` and `in`. Use the shape that your search API expects.
+</Aside>
+
+<Aside type="note">
+The `ProductOptions` slot is required to support configurable products. Without it, validation will show "Configuration required" for configurable items. Use the PDP drop-in `ProductOptions` container as the baseline implementation.
 </Aside>
 
 ## Slots
@@ -39,20 +50,22 @@ This container exposes slots for price display, product options (configurables),
 
 ## Usage
 
+This container relies on external API methods to retrieve product data and perform product search. Use the PDP and Product Discovery drop-in APIs as the default setup (as shown below). Providing `getProductsData` and `productsSearch` (or compatible equivalents) is required for the container to function correctly. The `handleAddToCart` prop requires a function that adds products to the cart; if not provided, the container emits `quick-order/add-to-cart` for external handlers.
+
 Example: render `QuickOrderItems` with PDP and Cart integration:
 
 ```js
 import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
 import QuickOrderItems from '@dropins/storefront-quick-order/containers/QuickOrderItems.js';
-import * as pdpApi from '@dropins/storefront-pdp/api.js';
-import * as searchApi from '@dropins/storefront-product-discovery/api.js';
-import * as cartApi from '@dropins/storefront-cart/api.js';
 import { render as pdpProvider } from '@dropins/storefront-pdp/render.js';
 import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
 import ProductOptions from '@dropins/storefront-pdp/containers/ProductOptions.js';
+import * as pdpApi from '@dropins/storefront-pdp/api.js';
+import * as cartApi from '@dropins/storefront-cart/api.js';
+import * as searchApi from '@dropins/storefront-product-discovery/api.js';
 import { rootLink } from '../../scripts/commerce.js';
 
-await quickOrderProvider.render(QuickOrderItems, {
+quickOrderProvider.render(QuickOrderItems, {
   getProductsData: pdpApi.getProductsData,
   productsSearch: searchApi.search,
   searchFilter: [
@@ -71,16 +84,16 @@ await quickOrderProvider.render(QuickOrderItems, {
   },
   slots: {
     ProductPrice: (ctx) => {
-      const el = document.createElement('div');
-      el.className = 'product-price-slot';
-      pdpProvider.render(ProductPrice, { scope: ctx.scope, initialData: ctx.item })(el);
-      ctx.replaceWith(el);
+      const priceContainer = document.createElement('div');
+      priceContainer.className = 'product-price-slot';
+      pdpProvider.render(ProductPrice, { scope: ctx.scope, initialData: ctx.item })(priceContainer);
+      ctx.replaceWith(priceContainer);
     },
     ProductOptions: (ctx) => {
-      const el = document.createElement('div');
-      el.className = 'product-options-slot';
-      pdpProvider.render(ProductOptions, { scope: ctx.scope })(el);
-      ctx.replaceWith(el);
+      const optionsContainer = document.createElement('div');
+      optionsContainer.className = 'product-options-slot';
+      pdpProvider.render(ProductOptions, { scope: ctx.scope })(optionsContainer);
+      ctx.replaceWith(optionsContainer);
     },
   },
 })(quickOrderItemsContainer);
@@ -89,8 +102,14 @@ await quickOrderProvider.render(QuickOrderItems, {
 ## Events
 
 - **Listens:** `quick-order/add-items` (adds/merges items and fetches product data), `quick-order/loading` (updates loading state), `cart/product/added` (from Cart drop-in; shows success notification).
-- **Emits:** `quick-order/loading`, `quick-order/add-to-cart` (when no custom handler), `quick-order/add-to-cart-error`.
+- **Emits:** `quick-order/add-items` (from integrated search when user adds via autocomplete), `quick-order/loading`, `quick-order/add-to-cart` (when no custom handler), `quick-order/add-to-cart-error`.
 
 ## Notifications
 
 The container shows notifications for: validation errors (missing options, not found, out of stock), backend add-to-cart errors, partial success (count added and failed SKUs), and full success (item count).
+
+## Admin panel
+
+There are no admin panel configurations that directly affect the container's functionality. The Quick Order (B2B) feature must be enabled in Adobe Commerce:
+
+- **Stores > Settings > Configuration > General > B2B Features > Enable Quick Order**

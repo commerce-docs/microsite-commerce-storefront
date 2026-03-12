@@ -9,7 +9,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coordinate containers (QuickOrderItems, QuickOrderMultipleSku, QuickOrderCsvUpload) and to integrate with the Cart drop-in. Events coordinate adding items, loading states, and add-to-cart success or error handling.
+The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coordinate containers (QuickOrderCsvUpload, QuickOrderItems, QuickOrderMultipleSku) and to integrate with the Cart drop-in. Events coordinate adding items, loading states, and add-to-cart success or error handling.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Package: @dropins/storefront-quick-order</strong>
@@ -21,7 +21,7 @@ The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coord
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [`quick-order/add-items`](#quick-orderadd-items-emits-and-listens) | Emits and listens | Items added via CSV upload or multiple SKU entry. Payload: `SubmitSkuValue` (array of `{ sku, quantity }`). Triggers product fetch and list update in QuickOrderItems. |
+| [`quick-order/add-items`](#quick-orderadd-items-emits-and-listens) | Emits and listens | Items added via CSV upload, multiple SKU entry, or Quick Order search within QuickOrderItems. Payload: `SubmitSkuValue` (array of `{ sku, quantity }`). Triggers product fetch and list update in QuickOrderItems. |
 | [`quick-order/loading`](#quick-orderloading-emits-and-listens) | Emits and listens | Loading state changed. Payload: `boolean`. Disables inputs and shows loading indicators while processing. |
 | [`quick-order/add-to-cart`](#quick-orderadd-to-cart-emits) | Emits | Request to add items to cart when no custom `handleAddToCart` is used. Payload: array of cart item values. Default cart handler processes items. |
 | [`quick-order/add-to-cart-error`](#quick-orderadd-to-cart-error-emits) | Emits | Add-to-cart operation failed. Payload: `{ message: string }`. Shows error notification. |
@@ -29,11 +29,15 @@ The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coord
 
 </TableWrapper>
 
+<Aside type="note">
+The drop-in also emits `quick-order/add-to-cart-success` (payload: `void`) internally when add-to-cart completes. For integration, listen to `cart/product/added` from the Cart drop-in instead.
+</Aside>
+
 ## Event details
 
 ### `quick-order/add-items` (emits and listens)
 
-QuickOrderMultipleSku and QuickOrderCsvUpload emit this when the user adds items via CSV or the SKU text area. QuickOrderItems listens, fetches product data, and updates the list.
+QuickOrderCsvUpload and QuickOrderMultipleSku emit this when the user adds items via CSV or the SKU text area. QuickOrderItems also emits it when the user adds a product via the integrated search (autocomplete). QuickOrderItems listens, fetches product data, and updates the list.
 
 #### Event payload
 
@@ -43,8 +47,9 @@ type SubmitSkuValue = Array<{ sku: string; quantity: number }>;
 
 #### When triggered
 
-- After CSV file is validated and parsed
+- After CSV file is validated and parsed (QuickOrderCsvUpload)
 - After user clicks "Add to List" in QuickOrderMultipleSku with parsed SKUs
+- When user selects a product from the search autocomplete in QuickOrderItems
 
 #### Example
 
@@ -115,6 +120,35 @@ The Cart drop-in emits this when products are added to the cart. Quick Order lis
 ```typescript
 any[]
 ```
+
+## PDP integration events (internal)
+
+QuickOrderItems emits PDP-scoped events to enable reuse of PDP containers (for example ProductPrice, ProductOptions) within the Quick Order interface:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Event | Payload | Description |
+|-------|---------|--------------|
+| `{scope}/pdp/data` | `OrderItem` | Scoped event for product data updates per item. |
+| `{scope}/pdp/values` | option values | Captures selected product options for configurable products. |
+
+</TableWrapper>
+
+These events are used internally by the slot system and typically do not require custom handling.
+
+## Grid Ordering events
+
+The QuickOrderVariantsGrid container (Grid Ordering on PDP) uses these events:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `quick-order/grid-ordering-variants` | Emitted externally (integration layer) | Provides variant data to QuickOrderVariantsGrid. Payload: array of product variants. Typically emitted after variants are fetched on the PDP. Not required if `initialVariants` prop is used. |
+| `quick-order/grid-ordering-selected-variants` | Emitted by QuickOrderVariantsGrid | Notifies when selected variants or quantities change. Payload: array of selected variants (quantity > 0) with enriched data (sku, attributes, price, quantity, subtotal). Captured by PDP integration for bulk add-to-cart. Emissions are debounced. |
+| `quick-order/grid-ordering-reset-selected-variants` | Emitted externally | Resets current grid selection (clears all quantities). Typically used after successful add-to-cart. |
+
+</TableWrapper>
 
 ## Listening to events
 

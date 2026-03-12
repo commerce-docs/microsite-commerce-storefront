@@ -9,7 +9,7 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Quick Order** drop-in provides three main container components that work together on the Quick Order page: **QuickOrderItems**, **QuickOrderMultipleSku**, and **QuickOrderCsvUpload**. A fourth container, **QuickOrderVariantsGrid**, is used on the product detail page for Grid Ordering when that feature is enabled.
+The **Quick Order** drop-in provides three main container components that work together on the Quick Order page: **QuickOrderCsvUpload**, **QuickOrderItems**, and **QuickOrderMultipleSku**. A fourth container, **QuickOrderVariantsGrid**, is used on the product detail page for Grid Ordering when that feature is enabled.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Package: @dropins/storefront-quick-order</strong>
@@ -17,24 +17,29 @@ The **Quick Order** drop-in provides three main container components that work t
 
 ## What are containers?
 
-Containers are pre-built UI components that combine functionality, state management, and presentation. They communicate via events such as `quick-order/add-items` and `quick-order/loading`; SKUs added in QuickOrderMultipleSku or QuickOrderCsvUpload appear in the QuickOrderItems list.
+Containers are pre-built UI components that combine functionality, state management, and presentation. They communicate exclusively via the event bus (for example `quick-order/add-items`, `quick-order/loading`). SKUs added in QuickOrderCsvUpload, QuickOrderMultipleSku, or via the search within QuickOrderItems appear in the QuickOrderItems list.
 
-## Available Containers (Quick Order page)
+Because communication is event-driven, each container remains independent. Any container can be replaced with a custom implementation that follows the defined event contracts and payload structure. All Quick Order containers support extensibility through [Slots](/dropins-b2b/quick-order/slots/).
+
+## Available Containers
 
 <TableWrapper nowrap={[0,1]}>
 
 | Container | Description |
 | --------- | ----------- |
+| [QuickOrderCsvUpload](/dropins-b2b/quick-order/containers/quick-order-csv-upload/) | CSV file upload with required "SKU" and "QTY" columns (max 200 rows). Validates file, parses data, and emits `quick-order/add-items`. Provides sample CSV download. |
 | [QuickOrderItems](/dropins-b2b/quick-order/containers/quick-order-items/) | Product list with search, quantity editing, product options for configurables, validation, and "Add All to Cart". Listens to `quick-order/add-items` and coordinates with the other two containers. |
 | [QuickOrderMultipleSku](/dropins-b2b/quick-order/containers/quick-order-multiple-sku/) | Text area for entering multiple SKUs (comma, space, or newline separated). Parses and deduplicates SKUs, then emits `quick-order/add-items` to add them to the list. |
-| [QuickOrderCsvUpload](/dropins-b2b/quick-order/containers/quick-order-csv-upload/) | CSV file upload with required "SKU" and "QTY" columns (max 200 rows). Validates file, parses data, and emits `quick-order/add-items`. Provides sample CSV download. |
+| [QuickOrderVariantsGrid](/dropins-b2b/quick-order/containers/quick-order-variants-grid/) | Grid interface on the product detail page for configurable products. Displays variants with quantity inputs and bulk add-to-cart. Used when Grid Ordering is enabled. |
 
 </TableWrapper>
 
 ## Grid Ordering (PDP)
 
-**QuickOrderVariantsGrid** runs on the product detail page when Grid Ordering is enabled for configurable products. It displays variants in a grid with quantity inputs and bulk add-to-cart. The Product Details block integrates it; see the Product Details drop-in and block configuration for setup.
+The Grid Ordering feature introduces a new B2B purchasing experience designed specifically for configurable products. Buyers view all product variants within a single grid interface and specify quantities for multiple variants at once before adding them to the cart. This feature is exclusive to Adobe Storefront and provides an efficient workflow for purchasing multiple variant combinations without navigating through individual product pages.
+
+**QuickOrderVariantsGrid** runs on the Product Details Page (PDP) when Grid Ordering is enabled for configurable products. The Product Details block integrates it. See the [QuickOrderVariantsGrid container](/dropins-b2b/quick-order/containers/quick-order-variants-grid/) for configuration and the Product Details drop-in for block setup.
 
 <Aside type="tip">
-Each Quick Order page container is designed to work with the others via events. Render QuickOrderItems, QuickOrderMultipleSku, and QuickOrderCsvUpload in the same block (or page) so that adding SKUs from the text area or CSV updates the central list in QuickOrderItems.
+Each Quick Order page container is designed to work with the others via events. Render QuickOrderCsvUpload, QuickOrderItems, and QuickOrderMultipleSku in the same block or page so that SKUs added from the text area or CSV appear in QuickOrderItems.
 </Aside>

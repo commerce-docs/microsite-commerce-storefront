@@ -658,9 +658,10 @@ export function generateSidebar() {
                   collapsed: false,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/quick-order/containers/' },
+                    { label: 'QuickOrderCsvUpload', link: '/dropins-b2b/quick-order/containers/quick-order-csv-upload/' },
                     { label: 'QuickOrderItems', link: '/dropins-b2b/quick-order/containers/quick-order-items/' },
                     { label: 'QuickOrderMultipleSku', link: '/dropins-b2b/quick-order/containers/quick-order-multiple-sku/' },
-                    { label: 'QuickOrderCsvUpload', link: '/dropins-b2b/quick-order/containers/quick-order-csv-upload/' },
+                    { label: 'QuickOrderVariantsGrid', link: '/dropins-b2b/quick-order/containers/quick-order-variants-grid/' },
                   ],
                 },
                 { label: 'Slots', link: '/dropins-b2b/quick-order/slots/' },
