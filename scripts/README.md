@@ -1,6 +1,9 @@
 # Documentation Automation Scripts
 
 This directory contains automation tools for managing drop-in documentation, including:
+
+- **[GENERATOR-RULES.md](./GENERATOR-RULES.md)** – Rules all generators must follow (e.g., TypeScript as source of truth for parameters)
+- **[B2B-SMALL-CHANGES-ROLL-IN.md](./B2B-SMALL-CHANGES-ROLL-IN.md)** – Tracks fixes made during b2b-small-changes testing for roll-in to generators
 - **Dropin Management CLI** - Create and remove drop-in components
 - **Documentation Generators** - Auto-generate function and event documentation
 - **Shared Library** - Reusable utilities for all generators
@@ -350,7 +353,6 @@ npm run generate-all-docs -- --dry-run
 ✨ All generators completed successfully!
 ```
 
->>>>>>> origin/develop
 ## Available Generators
 
 ### Function Documentation Generator
@@ -1045,6 +1047,24 @@ runGenerator({
 - 100% consistent workflow
 - Fixes/improvements benefit all generators instantly
 
+### `preserve-preamble.js`
+
+**RULE: Never overwrite frontmatter and first paragraph of existing MDX files.**
+
+When writing MDX, generators must use `mergePreservingPreamble()` so that:
+- **Frontmatter** (YAML between `---` delimiters) is preserved
+- **First paragraph(s)** (content until the first `##` heading) is preserved
+- Only the body (from first `##` onward) comes from generated content
+
+```javascript
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
+
+const finalContent = mergePreservingPreamble(outputPath, generatedContent);
+writeFileSync(outputPath, finalContent, 'utf8');
+```
+
+For new files (file does not exist), generated content is used as-is.
+
 ### `logger.js`
 
 Standardized logging utilities for consistent console output.
@@ -1119,7 +1139,6 @@ content = normalizeWhitespace(content);
 - Reusable transformation logic
 - Cleaner generated output
 
->>>>>>> origin/develop
 ### `dropin-config.js`
 
 Centralized configuration for all drop-in repositories.

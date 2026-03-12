@@ -49,6 +49,7 @@ function getLatestBoilerplateTag(boilerplatePath) {
  */
 export function cloneOrUpdateBoilerplate(branch = null) {
     const boilerplatePath = join(projectRoot, '.temp-repos', 'boilerplate');
+    const boilerplateB2BPath = join(projectRoot, '.temp-repos', 'boilerplate-b2b');
     const boilerplateUrl = 'https://github.com/hlxsites/aem-boilerplate-commerce.git';
 
     console.log(`\n📦 Setting up boilerplate repository...`);
@@ -63,26 +64,43 @@ export function cloneOrUpdateBoilerplate(branch = null) {
         execFileSync('git', ['fetch', '--all', '--tags'], { cwd: boilerplatePath, stdio: 'pipe' });
     }
 
-    // Clean working directory before checkout (discard uncommitted changes from npm install)
-    try {
-        execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
-    } catch (error) {
-        console.warn(`  ⚠️  Could not reset working directory: ${error.message}`);
-    }
-
     let targetRef;
-    if (branch) {
-        // Use specific branch (for B2B integration)
+    let effectivePath = boilerplatePath;
+
+    if (branch === 'b2b') {
+        // Use boilerplate-b2b worktree for B2B branch
+        targetRef = branch;
+        console.log(`  Using boilerplate branch: ${branch} (boilerplate-b2b worktree)`);
+
+        if (!existsSync(boilerplateB2BPath)) {
+            console.log(`  Creating boilerplate-b2b worktree...`);
+            mkdirSync(dirname(boilerplateB2BPath), { recursive: true });
+            execFileSync('git', ['worktree', 'add', boilerplateB2BPath, 'origin/b2b'], { cwd: boilerplatePath, stdio: 'pipe' });
+        }
+
+        try {
+            execFileSync('git', ['fetch', 'origin'], { cwd: boilerplateB2BPath, stdio: 'pipe' });
+            execFileSync('git', ['reset', '--hard', 'origin/b2b'], { cwd: boilerplateB2BPath, stdio: 'pipe' });
+            effectivePath = boilerplateB2BPath;
+            console.log(`  ✓ Updated ${branch}`);
+        } catch (error) {
+            console.warn(`  ⚠️  Could not pull ${branch}: ${error.message}`);
+            if (existsSync(boilerplateB2BPath)) {
+                effectivePath = boilerplateB2BPath;
+            }
+        }
+    } else if (branch) {
+        // Use specific branch in main boilerplate
         targetRef = branch;
         console.log(`  Using boilerplate branch: ${branch}`);
 
         try {
+            execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
             execFileSync('git', ['checkout', branch], { cwd: boilerplatePath, stdio: 'pipe' });
             execFileSync('git', ['pull', 'origin', branch], { cwd: boilerplatePath, stdio: 'pipe' });
             console.log(`  ✓ Checked out and updated ${branch}`);
         } catch (error) {
-            console.warn(`  ⚠️  Could not checkout ${branch}, staying on current branch`);
-            console.warn(`     Reason: ${error.message}`);
+            console.warn(`  ⚠️  Could not checkout ${branch}: ${error.message}`);
         }
     } else {
         // Use latest release tag (for B2C drop-ins)
@@ -90,18 +108,18 @@ export function cloneOrUpdateBoilerplate(branch = null) {
         console.log(`  Using boilerplate release: ${targetRef}`);
 
         try {
+            execFileSync('git', ['reset', '--hard'], { cwd: boilerplatePath, stdio: 'pipe' });
             execFileSync('git', ['checkout', targetRef], { cwd: boilerplatePath, stdio: 'pipe' });
             console.log(`  ✓ Checked out ${targetRef}`);
         } catch (error) {
-            console.warn(`  ⚠️  Could not checkout ${targetRef}, staying on current branch`);
-            console.warn(`     Reason: ${error.message}`);
+            console.warn(`  ⚠️  Could not checkout ${targetRef}: ${error.message}`);
         }
     }
 
     console.log(`  Installing boilerplate dependencies...`);
-    execFileSync('npm', ['install'], { stdio: 'inherit', cwd: boilerplatePath });
+    execFileSync('npm', ['install'], { stdio: 'inherit', cwd: effectivePath });
 
-    return { path: boilerplatePath, tag: targetRef };
+    return { path: effectivePath, tag: targetRef };
 }
 
 /**

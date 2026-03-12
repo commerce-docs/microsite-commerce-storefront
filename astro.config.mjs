@@ -57,8 +57,9 @@ async function config() {
     markdown: {
       remarkPlugins: [remarkBasePathLinks],
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
+      shikiConfig: { theme: 'css-variables' },
     },
-    trailingSlash: 'always',
+    trailingSlash: 'ignore',
     outDir: './dist',
     build: {
       inlineStylesheets: 'always',
@@ -172,7 +173,7 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
             }
           ),
           starlightHeadingBadges(),

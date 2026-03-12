@@ -29,6 +29,9 @@ import { updateSidebarForInitialization } from './lib/sidebar.js';
 import { readTemplate, replacePlaceholders } from './lib/markdown.js';
 import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { generatePropertyTable } from './lib/markdown/table-generator.js';
+import { extractExistingModelDescriptions, extractExistingIntroParagraph, extractExistingDropinConfigIntro, extractExistingConfigOptionDescriptions } from './lib/content-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
+import { generateConfigDescription } from './lib/description-generator.js';
 
 const projectRoot = getProjectRoot();
 
@@ -423,6 +426,11 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
     const template = readTemplate('dropin-initialization.mdx');
 
+    // Output path for richer-description extraction (needed before config loop)
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const outputPath = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'initialization.mdx');
+    const existingConfigDescriptions = extractExistingConfigOptionDescriptions(outputPath);
+
     // Build standard options dynamically based on what's in source ConfigProps
     const standardOptions = [];
 
@@ -497,6 +505,20 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
 
         let displayType = prop.type;
 
+        // Richer Description Rule: compute desc once for both table and Configuration types section
+        // Use pattern-based fallback from description-generator, then generic for inline types
+        const patternDesc = generateConfigDescription(prop.name, prop.type);
+        const generatedFallback = patternDesc || (prop.inlineDefinition ? `Configuration object for ${prop.name}.` : '');
+        let desc = enrichedDesc || '';
+        if (!enrichedDesc) {
+            const existing = existingConfigDescriptions.get(prop.name);
+            if (existing && isRicherDescription(existing, generatedFallback)) {
+                desc = wrapCodeNames(existing);
+            } else if (prop.inlineDefinition) {
+                desc = generatedFallback;
+            }
+        }
+
         // If this property has an inline object definition, save it for the Configuration types section
         if (prop.inlineDefinition) {
             const anchor = prop.name.toLowerCase();
@@ -507,7 +529,7 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
             configTypesWithDefinitions.push({
                 name: prop.name,
                 definition: `${prop.name}${prop.required ? '' : '?'}: ${typeDef.trim()}`,
-                description: enrichedDesc || `Configuration object for ${prop.name}.`
+                description: desc || `Configuration object for ${prop.name}.`
             });
 
             // Link to the definition
@@ -535,7 +557,7 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
             name: prop.name,
             type: displayType,
             required: prop.required,
-            description: enrichedDesc || '' // Leave blank if no enrichment - parameter name is self-documenting
+            description: desc
         });
     });
 
@@ -563,11 +585,22 @@ function generateInitializationMDX(repoName, repoConfig, initData, versionInfo, 
     // Pick first model for example, or use a generic placeholder  
     const primaryModel = models.length > 0 ? models[0].name : 'CustomModel';
 
+    // Richer Description Rule: extract existing model descriptions for comparison
+    const existingModelDescriptions = extractExistingModelDescriptions(outputPath);
+
     // Merge enrichment descriptions and definitions with extracted models
     const enrichedModels = models.map(model => {
         const enrichedDesc = enrichmentData?.models?.[model.name]?.description;
         const enrichedDef = enrichmentData?.models?.[model.name]?.definition;
-        const desc = enrichedDesc || `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`;
+        const generatedDesc = `Transforms ${model.name.replace(/-/g, ' ')} data from GraphQL.`;
+        let desc = enrichedDesc || generatedDesc;
+        // Richer Description Rule: if no enrichment, prefer existing if it's richer than generated
+        if (!enrichedDesc) {
+            const existing = existingModelDescriptions.get(model.name);
+            if (existing && isRicherDescription(existing, generatedDesc)) {
+                desc = existing;
+            }
+        }
         return {
             ...model,
             description: wrapCodeNames(desc),
@@ -627,8 +660,14 @@ No customizable models are available for this drop-in.
             ? `beyond the standard ${standardOptionsList.join(' and ')}`
             : '';
 
-        const enrichedIntro = enrichmentData?.intro ||
-            `Configure the **${repoConfig.displayName}** drop-in ${standardOptionsText.replace('beyond the standard', 'with')}. All configuration options are optional unless marked as required.`;
+        const generatedConfigIntro = `Configure the **${repoConfig.displayName}** drop-in ${standardOptionsText.replace('beyond the standard', 'with')}. All configuration options are optional unless marked as required.`;
+        let enrichedIntro = enrichmentData?.intro || generatedConfigIntro;
+        if (!enrichmentData?.intro) {
+            const existingConfigIntro = extractExistingDropinConfigIntro(outputPath);
+            if (existingConfigIntro && isRicherDescription(existingConfigIntro, generatedConfigIntro)) {
+                enrichedIntro = existingConfigIntro;
+            }
+        }
 
         customConfigSection = `## Drop-in configuration
 
@@ -651,8 +690,15 @@ Refer to the [Configuration options](#configuration-options) table for detailed 
     }
 
     // Get intro paragraph from enrichment or use default
-    const introParagraph = enrichmentData?.intro ||
-        `The **${repoConfig.displayName} initializer** configures the drop-in with global settings. Pass configuration options to the \`initialize()\` function during drop-in setup to customize language definitions, data models, and drop-in-specific behaviors.`;
+    const generatedIntro = `The **${repoConfig.displayName} initializer** configures the drop-in with global settings. Pass configuration options to the \`initialize()\` function during drop-in setup to customize language definitions, data models, and drop-in-specific behaviors.`;
+    let introParagraph = enrichmentData?.intro || generatedIntro;
+    // Richer Description Rule: if no enrichment, prefer existing if it's richer than generated
+    if (!enrichmentData?.intro) {
+        const existingIntro = extractExistingIntroParagraph(outputPath);
+        if (existingIntro && isRicherDescription(existingIntro, generatedIntro)) {
+            introParagraph = existingIntro;
+        }
+    }
 
     // Create version display with warning if mismatch
     // For B2B drop-ins, versionInfo.requested doesn't exist, so use actual version

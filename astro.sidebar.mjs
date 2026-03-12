@@ -24,10 +24,11 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
+            { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Learn the architecture', link: '/get-started/architecture/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
+            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
@@ -39,8 +40,10 @@ export function generateSidebar() {
             { label: 'Getting started', link: '/boilerplate/getting-started/' },
             { label: 'Configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Updates', link: '/boilerplate/updates/' },
+            { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         {
@@ -325,6 +328,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-tos',
+                  collapsed: false,
+                  items: [
+                    { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Styles', link: '/dropins/product-details/styles/' },
                 {
@@ -349,6 +359,7 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins/product-details/slots/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
                 { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
+                { label: 'Troubleshooting', link: '/dropins/product-details/troubleshooting/' },
               ],
             },
             {
@@ -761,7 +772,7 @@ export function generateSidebar() {
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
             { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
-            { label: 'Using the Visual Editor', link: '/merchants/quick-start/visual-editor/' },
+            { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
             { label: 'Page metadata', link: '/merchants/quick-start/page-metadata/' },
@@ -774,7 +785,6 @@ export function generateSidebar() {
         },
         {
           label: 'B2C Commerce blocks',
-          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
             { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
@@ -858,21 +868,12 @@ export function generateSidebar() {
         },
         {
           label: 'Content customizations',
-          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
-          ],
-        },
-        {
-          label: 'Edge Delivery Services',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
-            { label: 'Access permissions', link: '/merchants/edge-delivery-services/permissions/' },
           ],
         },
       ],

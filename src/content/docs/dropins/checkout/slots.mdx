@@ -15,22 +15,20 @@ import { Aside } from '@astrojs/starlight/components';
 The Checkout drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.0-beta3</strong>
+<strong>Version: 3.1.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
 
 | Container | Slots |
 |-----------|-------|
-| [`LoginForm`](#loginform-slots) | `Heading` |
+| [`LoginForm`](#loginform-slots) | `Heading`, `Preferences` |
 | [`PaymentMethods`](#paymentmethods-slots) | None |
 | [`PlaceOrder`](#placeorder-slots) | `Content` |
 | [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem` |
 | [`TermsAndConditions`](#termsandconditions-slots) | `Agreements` |
 
 </TableWrapper>
-
-
 
 ## LoginForm slots
 
@@ -40,7 +38,12 @@ The slots for the `LoginForm` container allow you to customize its appearance an
 interface LoginFormProps {
   slots?: {
     Heading?: SlotProps<{
-    authenticated: boolean;
+      authenticated: boolean;
+    }>;
+    Preferences?: SlotProps<{
+      email: string;
+      isEmailValid: boolean;
+      isAuthenticated: boolean;
     }>;
   };
 }
@@ -62,6 +65,40 @@ await provider.render(LoginForm, {
       // Your custom implementation
       const element = document.createElement('div');
       element.innerText = 'Custom Heading';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Preferences slot
+
+The Preferences slot allows you to add custom marketing preference fields within the login form. This slot enables merchants to add their own consent options (such as newsletter subscriptions, SMS updates, or promotional offers) based on their specific business needs and compliance requirements.
+
+The slot receives a context with the following properties:
+
+- `email` - The current email address entered by the user
+- `isEmailValid` - A boolean indicating whether the email address is valid
+- `isAuthenticated` - A boolean indicating whether the user is authenticated
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import { LoginForm } from '@dropins/storefront-checkout/containers/LoginForm.js';
+
+await provider.render(LoginForm, {
+  slots: {
+    Preferences: (ctx) => {
+      if (!ctx.isEmailValid || ctx.isAuthenticated) return;
+
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <label>
+          <input type="checkbox" name="newsletter" />
+          Subscribe to our newsletter
+        </label>
+      `;
       ctx.appendChild(element);
     }
   }
