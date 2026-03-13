@@ -1,0 +1,82 @@
+---
+title: RequisitionListHeader container
+description: Learn about the RequisitionListHeader container.
+---
+
+import Diagram from '@components/Diagram.astro';
+import OptionsTable from '@components/OptionsTable.astro';
+
+This container provides a header component for the requisition list view with actions such as rename and delete. It displays the requisition list name and provides quick access to common actions.
+
+<Diagram caption="RequisitionListHeader container">
+  ![RequisitionListHeader container](@images/dropins/requisition-list/requisition-list-header.png)
+</Diagram>
+
+## Configurations
+
+The `RequisitionListHeader` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Options', 'Type', 'Req?', 'Description'],
+    [
+      'requisitionList',
+      'object',
+      'Yes',
+      'The requisition list object containing UID, name, and other properties.',
+    ],
+    [
+      'routeRequisitionListGrid',
+      'function',
+      'No',
+      'Function that returns the URL to navigate back to the requisition list grid view.',
+    ],
+    [
+      'onUpdate',
+      'function',
+      'No',
+      'Callback function called when the requisition list is updated (e.g., renamed). Receives the updated requisition list.',
+    ],
+    [
+      'enrichConfigurableProducts',
+      '(items: Item[]) => Promise<Item[]>',
+      'Yes',
+      'Function that given an array of requisition list items, enriches the configurable products contained in it',
+    ],
+  ]}
+/>
+
+## Example
+
+The following example demonstrates how to render the `RequisitionListHeader` container:
+
+```javascript
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import RequisitionListHeader from '@dropins/storefront-requisition-list/containers/RequisitionListHeader.js';
+
+const requisitionList = {
+  uid: 'MQ==',
+  name: 'My Requisition List',
+  description: 'Description',
+  items_count: 5,
+  updated_at: '2025-01-01T00:00:00Z',
+};
+
+provider.render(RequisitionListHeader, {
+  requisitionList,
+  routeRequisitionListGrid: () => '/requisition-lists',
+  onUpdate: (updatedList) => {
+    console.log('Requisition list updated:', updatedList);
+  },
+  enrichConfigurableProducts: enrichConfigurableProducts,
+});
+```
+
+## Features
+
+- Display requisition list name
+- Rename action
+- Delete action with confirmation
+- Navigate back to requisition list grid
+- Alert notifications for actions
