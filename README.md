@@ -111,7 +111,7 @@ See the <Link href="https://example.com/docs" text="external documentation" /> f
 
 ## How to add a PR
 
-If you don't have write access to the repo, [fork it](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork instead of the repo, push to your fork, then open a PR from your fork to `develop`.
+If you don't have write access to the repo, [fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork instead of the repo, push to your fork, then open a PR from your fork to `develop`.
 
 1. Create a new branch for your changes, based on `develop`:
 
