@@ -6,9 +6,14 @@ sidebar:
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Displays the contents of a specific requisition list including items, quantities, and management actions.
+Displays the contents of a specific requisition list, including items, quantities, and management actions. Provides functionality to view products, update quantities, delete items, add items to cart, and manage the requisition list itself.
+
+<Diagram caption="RequisitionListView container">
+  ![RequisitionListView container](@images/dropins-b2b/requisition-list/requisition-list-view.png)
+</Diagram>
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 1.1.0</strong>
@@ -28,6 +33,8 @@ The `RequisitionListView` container provides the following configuration options
 | `selectedItems` | `Set<string>` | Yes | Provides a Set of selected item UIDs for batch operations. Tracks which items are selected for actions like adding to cart or deleting. Required to enable multi-select functionality. |
 | `routeRequisitionListGrid` | `function` | No | Generates the URL for navigating back to the requisition list grid view. Use to implement breadcrumb navigation, back buttons, or custom routing logic that preserves query parameters or application state. |
 | `fallbackRoute` | `string` | No | Sets the fallback URL to redirect when requisition lists are not enabled or unavailable. Defaults to '/customer/account'. Use to provide graceful degradation when B2B features are disabled. |
+| `getProductData` | `(skus: string[]) => Promise<Product[] \| null>` | Yes | Fetches products by SKU from the catalog service. Takes an array of SKUs and returns an array of products with all their data. |
+| `enrichConfigurableProducts` | `(items: Item[]) => Promise<Item[]>` | Yes | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
 
 </TableWrapper>
 
@@ -37,19 +44,132 @@ This container does not expose any customizable slots.
 
 ## Usage
 
-The following example demonstrates how to use the `RequisitionListView` container:
+The following example demonstrates how to use the `RequisitionListView` container with the required `getProductData` and `enrichConfigurableProducts` props:
 
 ```js
 import { render as provider } from '@dropins/storefront-requisition-list/render.js';
-import { RequisitionListView } from '@dropins/storefront-requisition-list/containers/RequisitionListView.js';
+import RequisitionListView from '@dropins/storefront-requisition-list/containers/RequisitionListView.js';
+import {
+  getProductData as pdpGetProductData,
+  getRefinedProduct as pdpGetRefinedProduct,
+} from '@dropins/storefront-pdp/api.js';
+
+const selectedItems = new Set();
+
+/**
+ * Normalizes a product object into the shape expected by the requisition list UI:
+ * url, urlKey, images[].url, and price (final.amount.{ value, currency }).
+ * Handles multiple PDP response shapes (GraphQL, transformed prices, priceRange).
+ *
+ * @param {Object} product - Raw product from PDP (getProductData / getRefinedProduct).
+ * @returns {Object} Product with normalized url, urlKey, images, price; or original if null.
+ */
+function ensureProductShape(product) {
+  if (!product) return product;
+  const url = product.url ?? product.canonicalUrl ?? '';
+  const urlKey = product.urlKey ?? product.url_key ?? '';
+  const images = Array.isArray(product.images)
+    ? product.images.map((img) => ({
+        url: img?.url ?? '',
+        label: img?.label ?? '',
+        roles: Array.isArray(img?.roles) ? img.roles : [],
+      }))
+    : [];
+  let { price } = product;
+  const { final: priceFinal } = price || {};
+  const { amount: amt } = priceFinal || {};
+  if (amt != null && typeof amt === 'object' && 'value' in amt) {
+    // Already in GraphQL shape; no change
+  } else if (amt != null && typeof amt === 'number') {
+    price = { final: { amount: { value: amt, currency: priceFinal?.currency ?? '' } } };
+  } else if (product.prices?.final != null) {
+    const { final: pf, regular: pr } = product.prices;
+    const regularAmount = pr != null
+      ? { amount: { value: pr.amount ?? 0, currency: pr.currency ?? '' } }
+      : undefined;
+    price = {
+      final: { amount: { value: pf.amount ?? 0, currency: pf.currency ?? '' } },
+      regular: regularAmount,
+    };
+  } else if (product.priceRange?.minimum?.final?.amount != null) {
+    price = {
+      final: { amount: product.priceRange.minimum.final.amount },
+      regular: product.priceRange.minimum.regular,
+    };
+  }
+  return {
+    ...product,
+    url,
+    urlKey,
+    images,
+    ...(price != null && { price }),
+  };
+}
+
+/**
+ * Fetches products by SKU and normalizes them for the requisition list.
+ * PDP exposes getProductData(sku) → single product; this adapts it to
+ * getProductData(skus) → products[] and is passed as a required prop to RequisitionListView.
+ *
+ * @param {string[]} skus - Product SKUs to fetch.
+ * @returns {Promise<Object[]>} Resolved array of normalized products (falsy results omitted).
+ */
+const getProductData = async (skus) => {
+  const results = await Promise.all(skus.map((sku) => pdpGetProductData(sku)));
+  return results.filter(Boolean).map(ensureProductShape);
+};
+
+/**
+ * Enriches requisition list line items that have configurable options by resolving
+ * the configured variant via PDP getRefinedProduct and attaching it as configured_product.
+ *
+ * @param {Object[]} items - Requisition list items (each with product, configurable_options).
+ * @returns {Promise<Object[]>} Same items with configured_product set where resolution succeeds.
+ */
+const enrichConfigurableProducts = async (items) => {
+  if (!items?.length) return items;
+  return Promise.all(
+    items.map(async (item) => {
+      const { product, configurable_options: opts } = item;
+      if (!product?.sku || !opts?.length) return item;
+      const optionIds = opts.map((o) => {
+        const optionUid = o.option_uid ?? o.configurable_product_option_uid;
+        const valueUid = o.value_uid ?? o.configurable_product_option_value_uid;
+        return btoa(`configurable/${atob(optionUid)}/${atob(valueUid)}`);
+      });
+      try {
+        const configured = await pdpGetRefinedProduct(product.sku, optionIds);
+        if (!configured) return item;
+        const images = Array.isArray(configured.images)
+          ? configured.images.map((img) => ({ url: img?.url ?? '' }))
+          : [];
+        return { ...item, configured_product: { ...configured, images } };
+      } catch {
+        return item;
+      }
+    }),
+  );
+};
 
 await provider.render(RequisitionListView, {
-  requisitionListUid: "abc-123",
-  selectedItems: "example",
-  skipProductLoading: true,
+  requisitionListUid: 'MQ==',
+  selectedItems,
+  pageSize: 20,
+  routeRequisitionListGrid: () => '/requisition-lists',
+  getProductData,
+  enrichConfigurableProducts,
 })(block);
 ```
 
+## Features
 
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-requisition-list */}
+- Display all items in a requisition list
+- Update item quantities
+- Delete individual items or multiple items (batch delete)
+- Add items to cart (individual or batch)
+- Rename the requisition list
+- Delete the entire requisition list
+- Pagination support for large numbers of items
+- Empty state when the requisition list has no items
+- Not found state when the requisition list doesn't exist or is inaccessible
+- Product data loading and display
