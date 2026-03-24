@@ -3,7 +3,7 @@
 ###############################################################################
 # Setup B2B Safety Hooks
 #
-# Installs Git hooks that prevent accidental direct merges to develop
+# Installs Git hooks that prevent accidental direct merges to release
 # without proper B2B consolidation workflow.
 #
 # Usage:
@@ -63,15 +63,15 @@ echo "  SETUP COMPLETE"
 echo "========================================================================"
 echo ""
 echo "What was configured:"
-echo "  ✅ pre-push hook (blocks direct B2B pushes to develop)"
+echo "  ✅ pre-push hook (blocks direct B2B pushes to release)"
 echo ""
 echo "What happens now:"
 echo "  1. Before every push, Git will run .githooks/pre-push"
-echo "  2. If you try to push B2B work directly to develop, it will BLOCK"
+echo "  2. If you try to push B2B work directly to release, it will BLOCK"
 echo "  3. You'll see instructions for the correct workflow"
 echo ""
 echo "Test it:"
-echo "  Try: git push origin develop (from a B2B branch)"
+echo "  Try: git push origin release (from a B2B branch)"
 echo "  Expected: Hook blocks with error message"
 echo ""
 echo "Disable (if needed):"

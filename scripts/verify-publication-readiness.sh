@@ -3,7 +3,7 @@
 ###############################################################################
 # Verify Publication Readiness
 #
-# Verifies that releases/b2b-nov-release is ready to merge to develop
+# Verifies that releases/b2b-nov-release is ready to merge to release
 # Checks for:
 # - All expected content is present
 # - No pollution or unexpected files
@@ -19,7 +19,7 @@ set -e
 RELEASE_BRANCH="releases/b2b-nov-release"
 INFRA_BRANCH="releases/b2b-infrastructure"
 DOCS_BRANCH="releases/b2b-docs-only"
-TARGET_BRANCH="develop"
+TARGET_BRANCH="release"
 
 echo ""
 echo "========================================================================"

@@ -1,6 +1,6 @@
 ---
 name: Publication to Production
-about: Merge B2B documentation to develop for production release
+about: Merge B2B documentation to release for production release
 ---
 
 # 🚀 B2B Documentation Publication
@@ -36,7 +36,7 @@ about: Merge B2B documentation to develop for production release
 ## This PR Should Be
 
 - **From**: `releases/b2b-nov-release`
-- **To**: `develop`
+- **To**: `release`
 - **Type**: Merge commit (not squash, not rebase)
 
 ## What's Being Published
@@ -61,7 +61,7 @@ about: Merge B2B documentation to develop for production release
 ## Verification
 
 - [ ] Ran `./scripts/verify-publication-readiness.sh` ✅
-- [ ] Reviewed commit history (`git log --oneline develop..releases/b2b-nov-release`)
+- [ ] Reviewed commit history (`git log --oneline release..releases/b2b-nov-release`)
 - [ ] Verified no unexpected files
 - [ ] Confirmed all attributions preserved
 - [ ] Stakeholders notified
@@ -72,11 +72,11 @@ If issues arise post-merge:
 
 ```bash
 # Find the merge commit
-git log --oneline --graph develop | head -20
+git log --oneline --graph release | head -20
 
 # Revert the merge
 git revert -m 1 <merge-commit-sha>
-git push origin develop
+git push origin release
 ```
 
 ---

@@ -1,20 +1,20 @@
 #!/bin/bash
 
 ###############################################################################
-# Pre-Merge to Develop Check
+# Pre-Merge to Release Check
 #
-# Prevents accidental direct merges to develop without going through
+# Prevents accidental direct merges to release without going through
 # the publication consolidation workflow.
 #
 # Usage:
-#   Run before merging any B2B branch to develop:
+#   Run before merging any B2B branch to release:
 #   ./scripts/pre-merge-to-develop-check.sh <branch-to-merge>
 ###############################################################################
 
 set -e
 
 BRANCH_TO_MERGE="${1}"
-TARGET_BRANCH="develop"
+TARGET_BRANCH="release"
 PUBLICATION_BRANCH="releases/b2b-nov-release"
 
 if [[ -z "$BRANCH_TO_MERGE" ]]; then
@@ -27,7 +27,7 @@ fi
 
 echo ""
 echo "========================================================================"
-echo "  PRE-MERGE TO DEVELOP CHECK"
+echo "  PRE-MERGE TO RELEASE CHECK"
 echo "========================================================================"
 echo ""
 echo "Checking: $BRANCH_TO_MERGE → $TARGET_BRANCH"
@@ -51,10 +51,10 @@ if [[ "$BRANCH_TO_MERGE" == *"b2b"* ]] || [[ "$BRANCH_TO_MERGE" == "releases/b2b
         echo ""
         exit 0
     else
-        echo "❌ ERROR: Cannot merge B2B branch directly to develop"
+        echo "❌ ERROR: Cannot merge B2B branch directly to release"
         echo ""
         echo "You're attempting to merge:"
-        echo "  $BRANCH_TO_MERGE → develop"
+        echo "  $BRANCH_TO_MERGE → release"
         echo ""
         echo "This bypasses the publication consolidation workflow!"
         echo ""
@@ -72,8 +72,8 @@ if [[ "$BRANCH_TO_MERGE" == *"b2b"* ]] || [[ "$BRANCH_TO_MERGE" == "releases/b2b
         echo "Step 3: Verify readiness"
         echo "  ./scripts/verify-publication-readiness.sh"
         echo ""
-        echo "Step 4: Merge to develop"
-        echo "  git checkout develop"
+        echo "Step 4: Merge to release"
+        echo "  git checkout release"
         echo "  git merge releases/b2b-nov-release --no-ff"
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -85,7 +85,7 @@ if [[ "$BRANCH_TO_MERGE" == *"b2b"* ]] || [[ "$BRANCH_TO_MERGE" == "releases/b2b
 else
     echo "ℹ️  Not a B2B branch - standard merge workflow applies"
     echo ""
-    echo "Proceed with normal merge to develop:"
+    echo "Proceed with normal merge to release:"
     echo "  git merge $BRANCH_TO_MERGE"
     echo ""
     exit 0
