@@ -1,66 +1,17 @@
 # Adobe Commerce Storefront documentation
 
-Welcome to the storefront documentation site! To contribute documentation to this site follow the instructions below to install the prerequisites, configure your local environment, create new pages, submit PRs.
+Welcome to the storefront documentation site! This site is built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build). To contribute documentation, follow the instructions below to install the prerequisites, configure your local environment, create new pages, and submit PRs.
 
-## Custom components
-
-This documentation site includes a collection of custom Astro components that enhance content presentation and interactivity. Below is a complete list of available components with links to examples of their usage:
-
-- **[Aside](/src/content/docs/dropins/all/labeling.mdx)** - Callout boxes for tips, warnings, notes, and other highlighted content
-- **[Callouts](/src/content/docs/dropins/all/extend-or-create.mdx)** - Visual callout elements for emphasizing important information
-- **[Card](/src/content/docs/dropins/all/branding.mdx)** - Content card component for displaying information in a contained format
-- **[CardGrid](/src/content/docs/dropins/all/branding.mdx)** - Grid layout for displaying multiple cards
-- **[Checklist](/src/content/docs/setup/launch/index.mdx)** - Interactive checklist component for tracking tasks
-- **[CodeExample](/src/content/docs/dropins/all/branding.mdx)** - Code snippet display with syntax highlighting
-- **[CodeImport](/src/content/docs/dropins/all/_eventbus.mdx)** - Imports code from external files
-- **[CodeInclude](/src/content/docs/dropins/all/labeling.mdx)** - Includes code snippets from repositories
-- **[Diagram](/src/content/docs/dropins/all/branding.mdx)** - Visual diagrams and flowcharts
-- **[Embed](/src/content/docs/get-started/create-storefront.mdx)** - Embeds external content like videos
-- **[ExternalLink](/src/content/docs/dropins/all/creating.mdx)** - External link component with custom styling
-- **[FileTree](/src/content/docs/dropins/all/branding.mdx)** - Displays file and folder structures
-- **[Flex](/src/content/docs/sdk/components/overview.mdx)** - Flexbox layout container
-- **[FullWidthContainer](/src/content/docs/playgrounds/commerce-optimizer.mdx)** - Full-width content container
-- **[GraphiQLEditor](/src/content/docs/playgrounds/commerce-optimizer.mdx)** - Interactive GraphQL query editor
-- **[IFrame](/src/content/docs/sdk/components/accordion.mdx)** - Embeds external content in an iframe
-- **[Link](/src/content/docs/get-started/browser-compatibility.mdx)** - Internal link component
-- **[LinkCard](/src/content/docs/dropins/all/introduction.mdx)** - Card component with link functionality
-- **[List](/src/content/docs/dropins/product-details/index.mdx)** - Styled list component
-- **[Option](/src/content/docs/dropins/all/extend-or-create.mdx)** - Individual option element for Options component
-- **[Options](/src/content/docs/dropins/all/extend-or-create.mdx)** - Options selector component
-- **[OptionsTable](/src/content/docs/dropins/all/labeling.mdx)** - Table displaying configuration options
-- **[Panel](/src/content/docs/sdk/components/overview.mdx)** - Content panel with optional header and styling
-- **[PDFViewer](/src/content/docs/merchants/storefront-builder/create-content.mdx)** - Embeds PDF documents
-- **[Prerequisites](/src/content/docs/dropins/all/branding.mdx)** - Lists prerequisites for a feature or tutorial
-- **[Screenshot](/src/content/docs/dropins/user-auth/recaptcha.mdx)** - Displays screenshots with captions
-- **[Summary](/src/content/docs/dropins/all/branding.mdx)** - Summary or overview section
-- **[TableWrapper](/src/content/docs/dropins/all/events.mdx)** - Wrapper for responsive table displays
-- **[Task](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Individual task item for Tasks component
-- **[Tasks](/src/content/docs/dropins/wishlist/quick-start.mdx)** - Task list component
-- **[Vocabulary](/src/content/docs/dropins/cart/quick-start.mdx)** - Defines and explains technical terms
-
-### Using custom components
-
-To use a custom component in your documentation page:
-
-1. Import the component in your MDX file after the frontmatter:
-
-   ```mdx
-   ---
-   title: Your Page Title
-   description: Your page description
-   ---
-
-   import Aside from '@components/Aside.astro';
-   import Diagram from '@components/Diagram.astro';
-   ```
-
-2. Use the component in your content:
-
-   ```mdx
-   <Aside type="tip" title="Pro Tip">
-   This is helpful information for the reader.
-   </Aside>
-   ```
+- [Prerequisites](#prerequisites)
+- [Set up your local environment](#set-up-your-local-environment)
+- [Development commands](#development-commands)
+- [Content structure](#content-structure)
+- [How to add a page](#how-to-add-a-page)
+- [How to add images](#how-to-add-images)
+- [How to add a diagram](#how-to-add-a-diagram)
+- [How to link between docs](#how-to-link-between-docs)
+- [How to add a PR](#how-to-add-a-pr)
+- [How to add release notes](#how-to-add-release-notes)
 
 ## Prerequisites
 
@@ -71,153 +22,118 @@ Install node and pnpm:
 
 ## Set up your local environment
 
-1. Clone the GitHub repository:
+1. Clone the repository and install dependencies:
 
    ```bash
    git clone git@github.com:commerce-docs/microsite-commerce-storefront.git
-   ```
-
-1. Navigate to the root of your local repository:
-
-   ```bash
    cd microsite-commerce-storefront
-   ```
-
-1. Install the dependencies using `pnpm`:
-
-   ```bash
    pnpm install
    ```
 
-1. Run the docs site
+2. Run the docs site locally:
 
    ```bash
    pnpm dev
    ```
 
-   The site should open a broswer window at [http://localhost:4321/](http://localhost:4321/).
-
-## Available scripts
-
-The available scripts for running the project are defined in the `package.json` file:
-
-- `build:prod`: Builds the production site with the `/developer/commerce/storefront` base path.
-- `preview:prod`: Previews the production site.
-- `build`: Builds a static, optimized development site **without** the production base path.
-- `preview`: Previews the static development site.
-
-- `dev`: Starts the development server and auto-opens the site in the browser.
-- `lint`: Runs prettier formatting on all the project files.
-- `clean`: Removes the dist, .astro, and node_modules directories and reinstalls the dependencies.
-- `scrub`: Does the same as clean but also removes the pnpm-lock.yaml file and the ~./.pnpm-store directory.
+   This starts the development server, builds the site, and opens a browser at [http://localhost:4321/](http://localhost:4321/). The site auto-reloads when you save changes.
 
 ## Development commands
 
-- `pnpm dev` to start the local dev server and preview your changes during development. Site auto-reloads when you save changes.
-- `pnpm lint` to batch format all your files with the `prettier` module.
-- `pnpm clean` to resolve dependency issues by deleting the `node_modules` and `dist` directories, then reinstalling dependencies.
-- `pnpm scrub` to remove everything and reinstall dependencies. The nuclear option.
+- `pnpm dev` — Start the local dev server. The site auto-reloads when you save.
+- `pnpm build:prod-fast` — Run a test production build before opening a PR.
+- `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
+- `pnpm scrub` — Nuclear option: same as clean but also removes `pnpm-lock.yaml`.
 
-## How to contribute PRs
+## Content structure
 
-1. Clone the repository.
-1. Create a new branch for your changes.
-1. Make your changes.
-1. Push your changes to your branch.
-1. Create a pull request to the `develop` branch of the `commerce-docs/microsite-commerce-storefront` repository.
-1. Wait for the PR to be reviewed and merged.
+Docs live in `src/content/docs/`. Use `dropins/` for B2C (cart, checkout, wishlist), `dropins-b2b/` for B2B (requisition list, quote management). Folder structure maps to the sidebar, mostly.
 
-### Publishing to production
+## How to add a page
 
-Content updates from merged PRs are published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) production site automatically by the nightly build job that runs daily between 19:00 and 20:00 CDT.
-
-## How to create a new docs page
-
-1. Create a new `.mdx` file in the `src/content/docs/<docs-directory>`.
-1. Add the frontmatter to the top of the file. The frontmatter should include the title of the page and the description. The `title` will render as an `<h1>` on the page. The `description` will be used for SEO and social sharing. For example:
-
-   ```mdx
-   ---
-   title: Slots
-   description: Learn about slots and how to use them to customize drop-in components.
-   sidebar:
-     label: Awesome Slots!   // Overrides the title in the sidebar
-     order: 4                // Use order for auto-generated sidebar links. See src/content/docs/customize files for example.
-   ---
-   ```
-
-1. Write the content of the page using the markdow/MDX syntax.
-
-1. Add imports for any Astro components you want to use below the frontmatter fence. For example:
-
-   ```mdx
-   ---
-   title: Slots
-   description: Learn about slots and how to use them to customize drop-in components.
-   sidebar:
-   label: Slots
-   order: 4
-   ---
-
-   import Diagram from '@components/Diagram.astro';
-   import Vocabulary from '@components/Vocabulary.astro';
-   import Aside from '@components/Aside.astro';
-   import Callouts from '@components/Callouts.astro';
-   ```
-
-## How to create and use content fragments
-
-Content fragments allow you to write reusable content once and include it across multiple pages. This is perfect for maintaining consistency and reducing duplication.
-
-### Step 1: Create a content fragment
-
-1. Create a new `.mdx` file in the `src/content/fragments/` directory
-2. Add any imports you need (like Starlight components)
-3. Write your reusable content using standard MDX/Markdown syntax
-
-**Example fragment file** (`src/content/fragments/my-note.mdx`):
+- Docs pages are `.mdx` files in `src/content/docs/<section>/` (e.g. `dropins/cart`, `dropins-b2b/requisition-list`).
+- Add frontmatter: `title`, `description`, and a `sidebar` entry so the page appears in the nav.
+- Use `sidebar.label` and `sidebar.order` to control placement within the navigation sidebar on the left of a page.
 
 ```mdx
-import { Aside } from '@astrojs/starlight/components';
+---
+title: Page Title
+description: Brief description for SEO and social sharing.
+sidebar:
+  label: Sidebar Label
+  order: 4
+---
+
+import Aside from '@components/Aside.astro';
+
+Your content here. Use components like:
 
 <Aside type="tip" title="Pro Tip">
-This content will appear exactly the same on every page where it's imported.
-You can use **markdown formatting**, lists, and Starlight components.
+  Helpful information for the reader.
 </Aside>
 ```
 
-### Step 2: Use the fragment in your pages
+## How to add images
 
-Import and use the fragment in any MDX page:
+- **Shared images:** Put files in `public/images/` (optionally in subfolders like `dropins/cart/`). Reference with `![Alt text](@images/path/to/image.png)`.
+- **Colocated images:** Put an `images/` folder next to your docs (e.g. `src/content/docs/how-tos/images/`). Reference with `![Alt text](images/filename.png)` from pages in that section.
+- For images inside a diagram with a caption, wrap in the Diagram component, below.
+
+## How to add a diagram
+
+Import the Diagram component and wrap images or Mermaid code:
 
 ```mdx
----
-title: My Documentation Page
-description: Example page using a content fragment
----
+import Diagram from '@components/Diagram.astro';
 
-import MyNote from 'src/content/fragments/my-note.mdx';
+<Diagram caption="Optional caption for the image.">![Alt text](@images/path/to/image.png)</Diagram>
 
-<MyNote />  
-
-More content...
+<Diagram type="mermaid" code={`graph LR; A --> B`} />
 ```
 
-The name `MyNote` import is an example name/variable specific in the fragments directory: src/content/fragments. You can use any name you want to save the fragment. For example, `EDSNote`.
+Use `caption` for images; use `type="mermaid"` and `code` for flowcharts and sequence diagrams. Example pages of each:
 
-### Best Practices
+- Images `src/content/docs/dropins/all/slots.mdx`
+- Mermaid `src/content/docs/setup/configuration/aem-prerender.mdx`
 
-- **Naming**: Use descriptive names like `prerequisites.mdx` or `api-warning.mdx`
-- **Organization**: Keep fragments in `src/content/fragments/` for easy discovery
-- **Import paths**: Use the same path `src/content/fragments/<your-file.mdx>` so you don't have to worry about deciphering relative paths from your file's location in the project.
-- **Content scope**: Use fragments for content that appears on multiple pages (obviously).
-- **Updates**: Edit the fragment file once to update all instances.
+## How to link between docs
 
-### Common Fragment Use Cases
+Links outside the storefront site must use the Link component. Internal links use standard markdown.
 
-- Prerequisites and requirements
-- Warning messages and cautions
-- Legal disclaimers
-- Contact information
-- Version compatibility notes
-- Troubleshooting tips
+- **Internal links** (within the storefront docs): Use standard markdown with a path starting with `/`. For example, `[SEO metadata](/setup/seo/metadata/)`.
+- **External links** (outside the storefront site): Use the Link component so they open in a new tab with proper styling:
+
+```mdx
+import Link from '@components/Link.astro';
+
+See the <Link href="https://example.com/docs" text="external documentation" /> for details.
+```
+
+## How to add a PR
+
+If you don't have write access to the repo, [fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork instead of the repo, push to your fork, then open a PR from your fork to `develop`.
+
+1. Create a new branch for your changes, based on `develop`:
+
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout -b your-branch-name
+   ```
+
+2. Make your changes to the docs (edit or add `.mdx` files in `src/content/docs/`).
+
+3. Run `pnpm build:prod-fast` to verify your changes build, then commit, push, and open a PR against `develop`. The `develop` branch is the main branch used for publishing the site.
+
+4. After your PR is merged into `develop`, content is published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site by the nightly build.
+
+## How to add release notes
+
+1. Run `gh auth login` (required for Cursor to access private repos).
+2. In Cursor, prompt the agent with the release month and PR merge links. Example:
+
+   > Add the [Month] 2026 release. Use the release merge PRs to generate the release notes and all the code changes:
+   > B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152
+   > B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156
+
+See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details.
