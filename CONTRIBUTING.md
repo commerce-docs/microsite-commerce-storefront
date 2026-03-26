@@ -752,11 +752,6 @@ git push origin b2b-documentation
 - **Infrastructure Separation**: Generator updates don't clutter feature branch PRs
 - **Complete Preview**: `b2b-documentation` shows the final integrated result
 
-**When to Use:**
-- Use this workflow when working on B2B merchant block documentation
-- For B2C merchant blocks, commit directly to `develop` branch
-- For developer dropin docs, use the standard development workflow
-
 ## Common Tasks
 
 ### Adding a New Tutorial
