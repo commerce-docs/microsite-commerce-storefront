@@ -1,19 +1,24 @@
 ---
-title: Storefront Architecture
-description: Learn how to plan, develop, and launch a headless Adobe Commerce storefront with Edge Delivery Services. Understand blocks, drop-ins, boilerplate, and backend options.
+title: Learn the Storefront architecture
+description: Learn how to plan, develop, and launch a headless Adobe Commerce storefront with Edge Delivery Services.
 ---
 
 import Aside from '@components/Aside.astro';
+import { CardGrid, Card, Tabs, TabItem } from '@astrojs/starlight/components';
+import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
 
-Headless Adobe Commerce storefronts on Edge Delivery Services use [drop-in components](/dropins/all/introduction/) that connect through APIs and integrate with the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" />.
+This overview guides you to the right resources for building headless Adobe Commerce storefronts with [Edge Delivery Services](https://www.aem.live/).
 
 Content is authored in documents (DA.live, Google Docs, SharePoint), in-context (Universal Editor, Storefront Builder), or AEM Sites—and rendered as blocks. See the <Link href="https://www.aem.live/docs/authoring-guide" text="AEM authoring guide" /> for details.
 
 This page explains the architecture, then points you to [Backend options](/get-started/backends/) to identify your backend and confirm prerequisites.
 
-## Architecture overview
+<Diagram caption="Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.">
+  ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery
+  Services.](@images/implementation/Architecture.svg)
+</Diagram>
 
 <Diagram type="mermaid" code={`
 graph TB
@@ -54,16 +59,16 @@ graph TB
 
 <Diagram type="mermaid" code={`
 graph LR
-    A["<b>Author</b><br/><small>Creates table in document</small>"]
-    B["<b>Edge Delivery Services</b><br/><small>Server-side transform</small>"]
-    C["<b>Browser</b><br/><small>Loads HTML</small>"]
-    D["<b>Block decorator</b><br/><small>Client-side JS</small>"]
-    E["<b>Drop-in</b><br/><small>Renders UI</small>"]
-    F["<b>Commerce API</b><br/><small>GraphQL data</small>"]
+    A["Author<br/><small>Creates table</small>"]
+    B["Edge Delivery<br/><small>Server-side transform</small>"]
+    C["Browser<br/><small>Loads HTML</small>"]
+    D["Block Decorator<br/><small>Client-side JS</small>"]
+    E["Drop-in<br/><small>Renders UI</small>"]
+    F["Commerce API<br/><small>Data</small>"]
     
     A -->|"Document"| B
     B -->|"HTML with divs"| C
-    C -->|"Runs scripts"| D
+    C -->|"Decorates blocks"| D
     D -->|"Initialize"| E
     E -->|"Fetch"| F
     F -->|"Response"| E
@@ -74,7 +79,7 @@ graph LR
     style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
     style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
     style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
-`} caption="Flow from authoring to rendering: document table → HTML → block decoration → drop-in initialization → GraphQL fetch." />
+`} />
 
 ### Runtime flow
 
@@ -105,9 +110,15 @@ Commerce blocks use Commerce APIs; the boilerplate uses <Link href="https://prea
 
 [Drop-ins](/dropins/all/introduction/) are domain-driven commerce components. Install from NPM (for example, `npm install @dropins/storefront-cart`). Use the [extension](/dropins/all/extending/) patterns when customizing.
 
-<Aside type="note" title="Existing storefront?">
-Reuse parts of an existing Luma storefront with an Edge Delivery Services storefront by connecting them with [Luma Bridge](/setup/discovery/luma-bridge/). Luma Bridge works without an Adobe Commerce Optimizer license or the Adobe Commerce Optimizer Connector. It is the session bridge between EDS and Luma/PHP pages.
-</Aside>
+- **Product license**: Adobe Commerce as a Cloud Service, Cloud, or on-premises (Magento Open Source is not supported)
+- **Version**: v2.4.7 or later
+- **PHP**: 8.3/8.2 for Adobe Commerce 2.4.7
+- **Storefront services**: Ensure that the latest version of following services are installed and configured:
+  - Data Connection service
+  - Services Connector
+  - Catalog Service
+  - Live Search
+  - Product Recommendations
 
 <Diagram type="mermaid" code={`
 graph TB
@@ -150,58 +161,16 @@ graph TB
 
 Drop-ins communicate through a shared event bus (`@dropins/tools/event-bus.js`) using a publish-subscribe pattern. This keeps components loosely coupled. No drop-in depends directly on another.
 
-<Diagram type="mermaid" code={`
-%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
-graph LR
-    Auth(User Auth)
-    PDP(Product Details)
-    Cart(Cart)
-    Checkout(Checkout)
-    Order(Order)
-    Account(User Account)
-    EB(Event Bus)
-    YourCode(Your Code)
-
-    Auth -->|"authenticated"| EB
-    PDP -->|"pdp/data"| EB
-    Cart -->|"cart/updated, cart/data"| EB
-    Checkout -->|"checkout/updated"| EB
-    Order -->|"order/placed, cart/reset"| EB
-    YourCode -->|"locale, authenticated"| EB
-
-    EB -.->|"authenticated"| Cart
-    EB -.->|"authenticated"| Checkout
-    EB -.->|"cart/updated, cart/data"| Checkout
-    EB -.->|"cart/initialized"| Checkout
-    EB -.->|"order/placed"| Cart
-    EB -.->|"cart/updated"| Account
-
-    linkStyle 0,1,2,3,4,5 stroke:#3b82f6,stroke-width:2px
-    linkStyle 6,7,8,9,10,11 stroke:#6366f1,stroke-width:1.5px,stroke-dasharray:5
-
-    style EB fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
-    style Auth fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
-    style PDP fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style Cart fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
-    style Order fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
-    style Account fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
-    style YourCode fill:#fce7f3,stroke:#ec4899,stroke-width:2px
-`} caption="Solid arrows: events emitted. Dashed arrows: events consumed. Your custom code (pink) can emit and listen to events alongside drop-ins." />
-
-- **`events.on(name, handler)`** — subscribe to an event
-- **`events.emit(name, payload)`** — publish an event
-- **`subscription.off()`** — unsubscribe
-
-Each drop-in indicates which events it emits and listens to. See the [event bus API reference](/sdk/reference/events/) and the [drop-in events overview](/dropins/all/events/) for details.
-
-<Aside type="tip" title="Events vs. analytics">
-The event bus handles **internal** communication between drop-ins on the page. It is separate from [ACDL analytics events](/setup/analytics/instrumentation/), which send user behavior data to Adobe Commerce services (Live Search, Product Recommendations).
-</Aside>
+- [System requirements for cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
+- [Setup for Commerce on cloud infrastructure](https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/overview)
+  :::
 
 ## Backend options and next steps
 
-Storefront supports three backend types: **Commerce PaaS**, **Adobe Commerce as a Cloud Service**, and **Adobe Commerce Optimizer**. Prerequisites and setup differ by backend.
+3. **Initializers** – A directory of scripts that initialize commerce drop-in components (such as account, cart, order, personalization, etc.). Each script is responsible for bootstrapping its respective feature, wiring it to the storefront, and ensuring it integrates with the rest of the application.
 
-1. [Backend options](/get-started/backends/) — Comparison table, prerequisites by backend
-2. [Storefront Setup](/get-started/create-storefront/) — Create your storefront and configure your backend
+4. **Blocks**
+   - **AEM Blocks**: Authored in **DA.live**, Google Docs, or Microsoft Word using tables. Rendered server-side as basic HTML `<divs>` and decorated client-side. Developers can enrich these blocks with semantic HTML, accessibility attributes, and dynamic DOM transformations.
+   - **Commerce Blocks**: Extend the AEM Blocks with Commerce drop-in components. They use the same authoring model but dynamically render the client-side UI based on the configuration provided in the authored tables.
+
+For a detailed breakdown of the file structure and where to find specific files, see the [Getting started](/boilerplate/getting-started/) page.

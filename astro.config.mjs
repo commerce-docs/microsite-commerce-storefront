@@ -70,7 +70,7 @@ async function config() {
     integrations: [
       starlight({
         editLink: {
-          baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/develop/',
+          baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/release/',
         },
 
         head: [
@@ -173,7 +173,7 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
             }
           ),
           starlightHeadingBadges(),
@@ -217,7 +217,7 @@ async function config() {
         },
 
         social: [
-          { icon: 'github', label: 'GitHub', href: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/develop' },
+          { icon: 'github', label: 'GitHub', href: 'https://github.com/commerce-docs/microsite-commerce-storefront/tree/release' },
           { icon: 'discord', label: 'Discord', href: 'https://discord.com/channels/1131492224371277874/1220042081209421945' },
         ],
       }),

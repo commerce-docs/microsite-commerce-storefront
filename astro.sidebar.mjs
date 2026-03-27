@@ -24,11 +24,10 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
+            { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Storefront Architecture', link: '/get-started/architecture/' },
-            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Run Lighthouse audits', link: '/get-started/run-lighthouse/' },
+            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
@@ -328,6 +327,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-tos',
+                  collapsed: false,
+                  items: [
+                    { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Styles', link: '/dropins/product-details/styles/' },
                 {
@@ -352,6 +358,7 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins/product-details/slots/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
                 { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
+                { label: 'Troubleshooting', link: '/dropins/product-details/troubleshooting/' },
               ],
             },
             {
@@ -634,6 +641,31 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins-b2b/requisition-list/slots/' },
                 { label: 'Styles', link: '/dropins-b2b/requisition-list/styles/' },
                 { label: 'Dictionary', link: '/dropins-b2b/requisition-list/dictionary/' },
+              ],
+            },
+            {
+              label: 'Quick Order',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/dropins-b2b/quick-order/' },
+                { label: 'Quick start', link: '/dropins-b2b/quick-order/quick-start/' },
+                { label: 'Functions', link: '/dropins-b2b/quick-order/functions/' },
+                { label: 'Events', link: '/dropins-b2b/quick-order/events/' },
+                { label: 'Initialization', link: '/dropins-b2b/quick-order/initialization/' },
+                {
+                  label: 'Containers',
+                  collapsed: false,
+                  items: [
+                    { label: 'Overview', link: '/dropins-b2b/quick-order/containers/' },
+                    { label: 'QuickOrderCsvUpload', link: '/dropins-b2b/quick-order/containers/quick-order-csv-upload/' },
+                    { label: 'QuickOrderItems', link: '/dropins-b2b/quick-order/containers/quick-order-items/' },
+                    { label: 'QuickOrderMultipleSku', link: '/dropins-b2b/quick-order/containers/quick-order-multiple-sku/' },
+                    { label: 'QuickOrderVariantsGrid', link: '/dropins-b2b/quick-order/containers/quick-order-variants-grid/' },
+                  ],
+                },
+                { label: 'Slots', link: '/dropins-b2b/quick-order/slots/' },
+                { label: 'Styles', link: '/dropins-b2b/quick-order/styles/' },
+                { label: 'Dictionary', link: '/dropins-b2b/quick-order/dictionary/' },
               ],
             },
           ],

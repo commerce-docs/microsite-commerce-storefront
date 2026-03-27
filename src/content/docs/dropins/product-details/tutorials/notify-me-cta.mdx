@@ -1,0 +1,201 @@
+---
+title: Notify Me CTA
+description: Learn how to add a "Notify Me" CTA when a product or variant is out of stock on the PDP. Use the event bus and CTA element updates to switch between Add to Cart and Notify Me based on stock status.
+---
+
+import Aside from '@components/Aside.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+When a product or selected variant is out of stock, the primary Call to Action (CTA) button on the Product Detail Page (PDP) can display **"Notify Me"** instead of **"Add to Cart"**. This applies to both simple products and configurable products with multiple options (for example, size and color). When the shopper switches to a different variant, the CTA updates dynamically based on that variant's stock status.
+
+<Aside type="note" title="Notify Me as customization">
+"Notify Me" is a frequently requested customization. This tutorial shows how to add it using the event bus and CTA updates. If your implementation requires backend integration (for example, an admin toggle for back-in-stock notifications), this approach keeps the logic in your block. If it becomes standard behavior in the future, it may be added to the boilerplate directly.
+</Aside>
+
+## Prerequisites
+
+Before following these steps, you should understand:
+
+- [Events](/dropins/product-details/events/) — `pdp/data`, `pdp/valid`, and subscription patterns
+- [Functions](/dropins/product-details/functions/) — `getProductConfigurationValues` for reading selected options
+- [Cart Events](/dropins/cart/events/) — `cart/data` for detecting when the product is already in the cart
+- **Add to Cart button** — Your block must include an Add to Cart button. This can be a standard HTML `<button>` element or any other button implementation. Step 1 shows how to create one using the SDK's [Button component](/sdk/components/button/), which supports `setProps` for the CTA updates in this tutorial. If you already have an Add to Cart button, start at Step 2.
+
+This tutorial uses the basic tools exposed by the Product Details drop-in: the [event bus](/sdk/reference/events) and a CTA element in your block. For a full implementation reference example in the Commerce boilerplate, see [hlxsites/aem-boilerplate-commerce#1116](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1116).
+
+## Overview
+
+You'll create the Add to Cart button, subscribe to `pdp/data`, `pdp/valid`, and `cart/data`, and update the CTA in each callback based on stock status, configuration validity, and cart state.
+
+## Implementation steps
+
+All code below runs inside your block's `decorate(block)` function.
+
+<Tasks>
+<Task>
+### Create the Add to Cart button
+
+Create the primary CTA button using the [Button component](/sdk/components/button/) from the SDK. The `render` call returns a Promise that resolves to the button instance—store it so you can call `setProps` on it later.
+
+If your block already has this button, skip to the next step.
+
+In the boilerplate, the element comes from the layout fragment (see [layouts](/dropins/all/layouts/) for the full structure). After creating the fragment and calling `block.replaceChildren(fragment)`, get the element and render the button. The `onClick` body is expanded in Steps 6 and 7.
+
+```js
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+import { events } from '@dropins/tools/event-bus.js';
+import * as pdpApi from '@dropins/storefront-pdp/api.js';
+
+// Inside decorate(block): product, labels, fragment already created (see layouts)
+const $addToCart = fragment.querySelector('.product-details__buttons__add-to-cart');
+block.replaceChildren(fragment);
+
+const addToCart = await UI.render(Button, {
+  children: labels.Global?.AddProductToCart,
+  icon: h(Icon, { source: 'Cart' }),
+  onClick: async () => {
+    // Step 6: out-of-stock guard (top of handler)
+    // Step 7: try-catch-finally with Add to Cart / Update in Cart logic
+  },
+})($addToCart);
+```
+
+</Task>
+<Task>
+### Implement a CTA update function
+
+Create a function that updates the CTA element based on stock status, update mode (item in cart), and labels. When out of stock, set the button text to **"Notify Me"**, remove the cart icon, and keep the button enabled. When in stock, show **"Add to Cart"** or **"Update in Cart"** with the cart icon based on cart context.
+
+Define this at module level (before `decorate`). It uses `h` and `Icon` from the Step 1 imports.
+
+```js
+function updatePrimaryCTA(buttonInstance, { isOutOfStock, isUpdateMode, labels }) {
+  if (!buttonInstance) return;
+
+  if (isOutOfStock) {
+    buttonInstance.setProps((prev) => ({
+      ...prev,
+      children: labels.Global?.NotifyMe || 'Notify Me',
+      icon: null,
+      disabled: false,
+    }));
+  } else {
+    const buttonText = isUpdateMode
+      ? labels.Global?.UpdateProductInCart
+      : labels.Global?.AddProductToCart;
+    buttonInstance.setProps((prev) => ({
+      ...prev,
+      children: buttonText,
+      icon: h(Icon, { source: 'Cart' }),
+    }));
+  }
+}
+```
+
+<Aside>
+If your block uses a placeholders spreadsheet, add a `NotifyMe` entry. Otherwise the code falls back to the hardcoded string `"Notify Me"`.
+</Aside>
+
+</Task>
+<Task>
+### Track stock and update mode state
+
+Define these state variables at the start of `decorate`. They drive the CTA update logic.
+
+```js
+let isUpdateMode = false;
+let isOutOfStock = false;
+```
+
+</Task>
+<Task>
+### Subscribe to `pdp/data` for stock status
+
+Subscribe to `pdp/data` with `{ eager: true }` so the handler runs on initial load and whenever the product or variant changes. Read `inStock` from the payload and update the CTA accordingly.
+
+**Why:** Product data (including stock) changes when the page loads or when the shopper selects a different variant. You need to react to both.
+
+```js
+events.on('pdp/data', (data) => {
+  isOutOfStock = data?.inStock === false;
+  updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+}, { eager: true });
+```
+
+See the [`pdp/data` event reference](/dropins/product-details/events/#pdpdata-emits-and-listens) for the full event payload.
+
+</Task>
+<Task>
+### Subscribe to `pdp/valid` for configuration validity
+
+Subscribe to `pdp/valid` with `{ eager: true }`. When the product is **in stock**, disable the button if the configuration is invalid (for example, required options not selected). When **out of stock**, keep the **"Notify Me"** button enabled regardless of configuration validity.
+
+**Why:** For Add to Cart, the button should be disabled until the shopper completes required selections. For Notify Me, the button can stay enabled so the shopper can request notification even before selecting options.
+
+```js
+events.on('pdp/valid', (valid) => {
+  if (!isOutOfStock) {
+    addToCart.setProps((prev) => ({ ...prev, disabled: !valid }));
+  }
+}, { eager: true });
+```
+
+</Task>
+<Task>
+### Handle out-of-stock clicks in the button handler
+
+Add this at the **top** of the `onClick` handler you created in Step 1. When `isOutOfStock` is `true`, run your custom notify-me logic and return early so no cart logic executes.
+
+```js
+// Inside the onClick from Step 1:
+if (isOutOfStock) {
+  const values = pdpApi.getProductConfigurationValues();
+  // Replace with your logic: open modal, call back-in-stock API, emit custom event, etc.
+  console.log('Notify Me', { sku: product?.sku, values });
+  return;
+}
+
+// ... existing Add to Cart / Update in Cart logic (try block)
+```
+
+</Task>
+<Task>
+### Subscribe to `cart/data` for update mode
+
+Subscribe to `cart/data` with `{ eager: true }`. When the cart data changes, determine whether the current product is already in the cart. If so, set `isUpdateMode` and call `updatePrimaryCTA` so the button shows **"Update in Cart"** instead of **"Add to Cart"**.
+
+**Why:** The CTA text and behavior differ when the item is already in the cart. Cart data changes when items are added, updated, or removed.
+
+```js
+events.on(
+  'cart/data',
+  (data) => {
+    // Determine if current product/variant is in cart...
+    isUpdateMode = itemIsInCart;
+    updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+  },
+  { eager: true },
+);
+```
+
+</Task>
+<Task>
+### Reset the CTA after cart actions
+
+After an add-to-cart or update-in-cart action completes (for example, in the `finally` block of your click handler), call `updatePrimaryCTA` to restore the correct button state.
+
+```js
+// Inside the onClick from Step 1, in the finally block:
+} finally {
+  updatePrimaryCTA(addToCart, { isOutOfStock, isUpdateMode, labels });
+  addToCart.setProps((prev) => ({
+    ...prev,
+    disabled: false,
+  }));
+}
+```
+
+</Task>
+</Tasks>
