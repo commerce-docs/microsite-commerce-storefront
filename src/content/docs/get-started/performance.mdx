@@ -1,0 +1,36 @@
+---
+title: Performance best practices
+description: Align your Commerce storefront with Adobe Edge Delivery performance guidance (Keeping it 100), with boilerplate-specific file locations and links to storefront docs.
+sidebar:
+  label: Performance best practices
+  order: 3
+---
+
+import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+Adobe Commerce storefronts on Edge Delivery Services follow the same performance model as other AEM boilerplate projects. The authoritative explanation—**Eager, Lazy, and Delayed** loading, **LCP**, what belongs in each phase, fonts, and common anti-patterns (including when **not** to preload or use early hints)—is in <Link href="https://www.aem.live/developer/keeping-it-100" text="Web Performance, Keeping your Lighthouse Score 100" /> on AEM.live. Read that first; this page only maps those ideas to the **Commerce boilerplate** and points to related storefront docs.
+
+## Where it shows up in the Commerce boilerplate
+
+### Delayed phase
+
+<Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" /> describes a **Delayed** phase for third-party tags, marketing tooling, extended analytics, consent, chat, and similar scripts—usually via `delayed.js`, and timed so they do not compete with **LCP** and the rest of the experience.
+
+In the Commerce boilerplate, put that work in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/delayed.js" text="`scripts/delayed.js`" />, not on the eager path. For Adobe Experience Platform and related patterns, see [Adobe Experience Platform analytics](/setup/analytics/adobe-experience-platform/).
+
+### Eager vs lazy styles
+
+The "Keeping it 100" guide’s **eager** phase is where everything required for the real **LCP** element must be ready (markup, CSS, and JS for that experience), within the **network and payload constraints** it describes— including why **indiscriminate** `preload`, early hints, and preconnect can **hurt** mobile **LCP** if they pull bandwidth away from what the visitor actually needs first.
+
+In the Commerce boilerplate, global design tokens and site-wide styles typically live in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css" text="`styles/styles.css`" />; non-critical styles are deferred per [Branding and styles](/dropins/all/branding/) (for example **`lazy-styles.css`** after LCP). Tune **`head.html`** and loading order in line with **Keeping it 100**, not a separate set of rules. The "Keeping it 100" guide also explains why **preloading web fonts** is usually **counterproductive** for performance—prefer the boilerplate’s font fallback behavior unless you have a measured exception.
+
+<Aside type="tip" title="Related storefront docs">
+Catalog-oriented tips (images, APIs, loading order) are in the [FAQ](/troubleshooting/faq#how-can-i-improve-the-performance-of-my-catalog-pages). Validate changes with [Lighthouse audits](/get-started/run-lighthouse/) and the [launch checklist](/setup/launch/#performance-and-monitoring).
+</Aside>
+
+## See also
+
+- <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100 — Web Performance (AEM.live)" />
+- [Run Lighthouse audits](/get-started/run-lighthouse/)
+- [Launch checklist — Performance and monitoring](/setup/launch/#performance-and-monitoring)
