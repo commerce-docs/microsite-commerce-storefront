@@ -1,0 +1,147 @@
+---
+/**
+ * Adds vertical rhythm and readable measure for long-form / hub MDX pages.
+ * Use sparingly on selected docs to avoid fighting Starlight defaults globally.
+ */
+interface Props {
+  /** 'hub' = extra space around h2 and card grids; 'article' = slightly tighter */
+  variant?: "hub" | "article";
+}
+
+const { variant = "hub" } = Astro.props;
+---
+
+<div class:list={["prose-flow", `prose-flow--${variant}`]}>
+  <slot />
+</div>
+
+<style>
+  .prose-flow {
+    --prose-flow-h2-gap: clamp(2rem, 3.5vw, 2.75rem);
+    --prose-flow-h2-gap-after-lead: clamp(1.5rem, 2.75vw, 2.1rem);
+    --prose-flow-h2-to-steps: clamp(0.85rem, 1.75vw, 1.25rem);
+    --prose-flow-line: 1.65;
+    --prose-flow-measure: min(100%, 52rem);
+  }
+
+  .prose-flow--article {
+    --prose-flow-h2-gap: clamp(1.75rem, 3vw, 2.4rem);
+    --prose-flow-h2-gap-after-lead: clamp(1.35rem, 2.25vw, 1.85rem);
+    --prose-flow-h2-to-steps: clamp(0.75rem, 1.5vw, 1.1rem);
+  }
+
+  .prose-flow :global(> p) {
+    line-height: var(--prose-flow-line);
+    max-width: var(--prose-flow-measure);
+  }
+
+  /*
+   * Starlight wraps H2 in .sl-heading-wrapper; margin must live on the wrapper or it won't
+   * separate sections from cards/grids. Override Starlight's 1.5em with clearer section breaks.
+   */
+  .prose-flow :global(.sl-heading-wrapper.level-h2 h2) {
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  /* General: section break after cards, steps, paragraphs, etc. */
+  .prose-flow--hub
+    :global(> :not(.sl-heading-wrapper) + .sl-heading-wrapper.level-h2) {
+    margin-top: var(--prose-flow-h2-gap) !important;
+  }
+
+  /* Narrower gap only after the lead paragraph (must follow general rule) */
+  .prose-flow--hub :global(> p:first-of-type + .sl-heading-wrapper.level-h2) {
+    margin-top: var(--prose-flow-h2-gap-after-lead) !important;
+  }
+
+  .prose-flow--article
+    :global(> :not(.sl-heading-wrapper) + .sl-heading-wrapper.level-h2) {
+    margin-top: var(--prose-flow-h2-gap) !important;
+  }
+
+  .prose-flow--article :global(> p:first-of-type + .sl-heading-wrapper.level-h2) {
+    margin-top: var(--prose-flow-h2-gap-after-lead) !important;
+  }
+
+  /* Hero LinkCard then first H2 (performance): full section gap */
+  .prose-flow--article :global(.sl-link-card + .sl-heading-wrapper.level-h2) {
+    margin-top: var(--prose-flow-h2-gap) !important;
+  }
+
+  .prose-flow :global(.sl-heading-wrapper.level-h2 + p) {
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    max-width: var(--prose-flow-measure);
+    line-height: var(--prose-flow-line);
+    color: color-mix(in srgb, var(--sl-color-text) 90%, transparent);
+  }
+
+  .prose-flow :global(.sl-heading-wrapper.level-h2 + .card-grid) {
+    margin-top: 1rem;
+  }
+
+  /* Space between section title and Steps list (Starlight’s .sl-steps sits flush otherwise) */
+  .prose-flow :global(.sl-heading-wrapper.level-h2 + .sl-steps) {
+    margin-top: var(--prose-flow-h2-to-steps);
+  }
+
+  /* Plain ordered lists (not Starlight Steps): comfortable, not loose */
+  .prose-flow :global(ol:not([class])) {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+    max-width: var(--prose-flow-measure);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .prose-flow :global(ol:not([class]) > li) {
+    margin: 0;
+    padding-left: 0.35rem;
+    line-height: var(--prose-flow-line);
+  }
+
+  .prose-flow :global(ol:not([class]) > li::marker) {
+    font-weight: 600;
+    color: color-mix(in srgb, var(--sl-color-text) 75%, transparent);
+  }
+
+  .prose-flow :global(.sl-steps) {
+    margin-top: 0;
+    margin-bottom: 0.35rem;
+    max-width: var(--prose-flow-measure);
+  }
+
+  .prose-flow :global(.card-grid) {
+    margin-top: 1.125rem;
+    margin-bottom: clamp(1.25rem, 2.25vw, 1.85rem);
+  }
+
+  @media (min-width: 50rem) {
+    .prose-flow--hub :global(.card-grid) {
+      margin-top: 1.35rem;
+    }
+  }
+
+  .prose-flow--article :global(h3) {
+    margin-top: 1.75rem;
+    margin-bottom: 0.65rem;
+    letter-spacing: -0.015em;
+  }
+
+  .prose-flow--article :global(p) {
+    line-height: var(--prose-flow-line);
+    margin-bottom: 1rem;
+  }
+
+  .prose-flow--article :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .prose-flow--article :global(.sl-heading-wrapper + .sl-steps) {
+    margin-bottom: 0.25rem;
+  }
+</style>
