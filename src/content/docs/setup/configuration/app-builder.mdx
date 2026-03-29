@@ -1,0 +1,122 @@
+---
+title: App Builder setup
+description: Set up an Adobe Developer Console project with App Builder for Commerce storefront integrations, including API Mesh, Commerce Eventing, and the Data Connection extension.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import ProseFlow from '@components/ProseFlow.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+<ProseFlow variant="article">
+
+Adobe App Builder is the serverless extension platform for Adobe Experience Cloud. Several Commerce storefront features depend on an App Builder project: **API Mesh**, **Commerce Eventing**, and the **Data Connection extension** all run as App Builder services or require Developer Console credentials from an App Builder workspace.
+
+This page walks you through creating an Adobe Developer Console project with App Builder and preparing it for storefront integrations. It covers more than the prerender use case — see [AEM Commerce Prerender](/setup/configuration/aem-prerender/) if you specifically need prerendering.
+
+## Prerequisites
+
+- Your Adobe organization has App Builder entitlement. Verify this in the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" />: after creating a project, you should see App Builder as an available template.
+- Your user account has **Developer** or **Admin** access to the Adobe Developer Console for your organization.
+- The Adobe CLI (`aio`) is installed locally.
+
+```bash
+npm install -g @adobe/aio-cli
+aio login
+```
+
+## Create a Developer Console project
+
+<Steps>
+
+1. Sign in to the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" />.
+
+1. Select your organization from the org switcher (top right).
+
+1. Click **Create new project**.
+
+1. Select **Project from template**, then choose **App Builder**.
+
+1. Enter a project name that identifies your Commerce storefront (for example, `My Commerce Storefront`).
+
+1. Create workspaces for **Stage** and **Production** (the **Development** workspace is created automatically).
+
+1. Click **Save**.
+
+</Steps>
+
+<Aside type="tip" title="One project per environment">
+Use a single Developer Console project with multiple workspaces (Development, Stage, Production) rather than separate projects. Workspace-level credentials keep environment configurations isolated while sharing the same App Builder entitlement.
+</Aside>
+
+## Add APIs to your workspace
+
+Each storefront integration requires specific APIs to be added to your Developer Console workspace.
+
+<TableWrapper nowrap={[0]}>
+
+| Integration | APIs to add | Credential type |
+|------------|-------------|----------------|
+| API Mesh | API Mesh for Adobe Developer App Builder | API key |
+| Commerce Eventing | Adobe Commerce → Commerce Events | OAuth server-to-server |
+| Data Connection | Adobe Commerce, Adobe Experience Platform, I/O Events | OAuth server-to-server |
+| AEM Commerce Prerender | Adobe Commerce | OAuth server-to-server |
+
+</TableWrapper>
+
+**To add an API to a workspace:**
+
+<Steps>
+
+1. In your project, select the workspace you want to configure (for example, **Development**).
+
+1. Click **Add service**, then select **API**.
+
+1. Search for the API by name and select it.
+
+1. Choose a credential type (OAuth server-to-server is preferred for new integrations; API key for API Mesh).
+
+1. Configure scopes or roles as prompted, then click **Save configured API**.
+
+</Steps>
+
+Repeat for each API required by your integrations.
+
+## Download credentials
+
+After adding APIs, download the credential file for each workspace to use in your local development environment and deployment pipeline.
+
+<Steps>
+
+1. In the workspace, click **Download all** or select individual credentials from the **Credentials** tab.
+
+1. Store the downloaded JSON securely — it contains your client secret and should never be committed to version control.
+
+1. For Commerce Eventing and Data Connection, follow the respective integration guides to configure the credential in your Commerce Admin.
+
+</Steps>
+
+## Install required aio CLI plugins
+
+API Mesh and Commerce Eventing each require a dedicated CLI plugin:
+
+```bash
+aio plugins:install @adobe/aio-cli-plugin-api-mesh
+aio plugins:install @adobe/aio-cli-plugin-commerce-events
+```
+
+Verify installed plugins:
+
+```bash
+aio plugins:list
+```
+
+## Next steps
+
+With a Developer Console project configured:
+
+- [Configure API Mesh](/setup/configuration/api-mesh/) to aggregate Commerce and third-party APIs for your storefront.
+- Follow the <Link href="https://developer.adobe.com/commerce/extensibility/events/" text="Commerce Eventing documentation" /> to complete the Data Connection setup.
+- See [AEM Commerce Prerender](/setup/configuration/aem-prerender/) if your project requires the prerender solution.
+
+</ProseFlow>

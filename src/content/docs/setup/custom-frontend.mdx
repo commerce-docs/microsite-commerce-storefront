@@ -1,0 +1,171 @@
+---
+title: Custom frontend (React / Next.js)
+description: Build a custom React or Next.js storefront using Commerce drop-ins and the Storefront SDK, instead of the Edge Delivery Services boilerplate.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import ProseFlow from '@components/ProseFlow.astro';
+import CardGrid from '@components/CardGrid.astro';
+import LinkCard from '@components/LinkCard.astro';
+
+<ProseFlow variant="article">
+
+Commerce drop-ins and the Storefront SDK are framework-agnostic. If your team prefers React, Next.js, or another JavaScript framework, you can build a custom storefront that uses the same Commerce building blocks as the Edge Delivery Services boilerplate — without adopting EDS's document-based authoring model.
+
+<Aside type="note" title="EDS boilerplate vs. custom frontend">
+The [Commerce Boilerplate](/get-started/create-storefront/) is the recommended starting point for most projects: it ships with Edge Delivery Services, performance tooling, and pre-integrated drop-ins. Choose a custom frontend only if your organization has an existing React/Next.js app, requires server-side rendering beyond the [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution, or has architectural constraints that prevent adopting EDS.
+</Aside>
+
+## How drop-ins work
+
+Commerce drop-ins are **not** web components or npm-installable React packages — they are ES modules published under the `@dropins/` namespace, designed to be loaded via [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap). Each drop-in package (for example, `@dropins/storefront-cart`) exports:
+
+- A **provider** (`render.js`) that mounts containers into a DOM element.
+- One or more **containers** (pre-built UI components such as `CartSummaryList`, `SignIn`, `ProductDetails`).
+- An **initializer** that configures the drop-in (sets GraphQL endpoint, loads translations).
+
+The boilerplate resolves `@dropins/*` imports via an import map in `head.html` that points to the CDN-hosted drop-in modules. To use drop-ins outside the EDS boilerplate, you must provide equivalent import map resolution — either through your own CDN, bundler aliases, or by copying the import map from the boilerplate.
+
+<Aside type="note" title="Drop-ins are built for the EDS boilerplate">
+The drop-in render pattern (`provider.render(Container, props)(element)`) is designed around the EDS boilerplate's block architecture. Using it in a standalone React or Next.js app requires wrapping the `provider.render()` call in a `useEffect` with a ref to a host DOM element. The steps below show this pattern.
+</Aside>
+
+## Prerequisites
+
+- An ACCS or ACO Commerce environment with an accessible GraphQL endpoint. See [Commerce Cloud Manager](/setup/configuration/cloud-manager/).
+- Storefront configuration (`config.json`) populated for your environment. See [Storefront configuration](/setup/configuration/commerce-configuration/).
+- Node.js 18+ and a React or Next.js project scaffolded.
+- The boilerplate's import map (from `head.html`) added to your app's HTML, or equivalent bundler aliases for `@dropins/*`.
+
+## Set up the import map
+
+Drop-in modules are resolved through an import map. Copy the relevant entries from the boilerplate's `head.html` into your app's `<head>`:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "@dropins/tools/": "https://cdn.jsdelivr.net/npm/@dropins/tools@latest/",
+    "@dropins/storefront-cart/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-cart@latest/",
+    "@dropins/storefront-pdp/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-pdp@latest/",
+    "@dropins/storefront-auth/": "https://cdn.jsdelivr.net/npm/@dropins/storefront-auth@latest/"
+  }
+}
+</script>
+```
+
+Check the boilerplate's `head.html` for the current pinned versions. Using `@latest` is fine for development but pin versions in production.
+
+## Initialize drop-ins
+
+Before mounting any drop-in containers, register and mount the drop-in initializers. Call this once at app startup (for example, in your root component's `useEffect` or `_app.js`):
+
+```js
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize as initCart } from '@dropins/storefront-cart/initialize.js';
+import { initialize as initAuth } from '@dropins/storefront-auth/initialize.js';
+
+// Register each drop-in with its configuration
+initializers.register(initCart, {
+  langDefinitions: '/i18n',
+  currentLanguageCode: 'en_US',
+});
+
+initializers.register(initAuth, {
+  langDefinitions: '/i18n',
+  currentLanguageCode: 'en_US',
+});
+
+// Mount all registered initializers
+window.addEventListener('load', initializers.mount);
+```
+
+Each initializer reads your `config.json` at mount time to set the correct GraphQL endpoints and store context. See [Storefront configuration](/setup/configuration/commerce-configuration/).
+
+## Mount drop-ins in React
+
+Drop-ins render into a DOM element using `provider.render(Container, props)(element)`. In a React component, use a `ref` to get the host element and call `render()` inside a `useEffect`:
+
+```jsx
+'use client'; // Required for Next.js App Router
+
+import { useEffect, useRef } from 'react';
+import { CartSummaryList } from '@dropins/storefront-cart/containers/CartSummaryList.js';
+import { render as cartProvider } from '@dropins/storefront-cart/render.js';
+
+export function CartPage() {
+  const cartRef = useRef(null);
+
+  useEffect(() => {
+    if (!cartRef.current) return;
+
+    cartProvider.render(CartSummaryList, {
+      // Container configuration — see the drop-in's Containers reference
+    })(cartRef.current);
+  }, []);
+
+  return <div ref={cartRef} className="cart-container" />;
+}
+```
+
+Replace `CartSummaryList` with any container from the drop-in's containers reference (for example, [Cart containers](/dropins/cart/containers/)). The same `useEffect + ref` pattern applies to all drop-ins.
+
+<Aside type="caution" title="Server-side rendering">
+The drop-in `provider.render()` function requires a browser environment (it writes to the DOM directly). If you are using Next.js with the App Router, place the component in a Client Component (`'use client'`). For server-rendered product page HTML for SEO, see the [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution instead.
+</Aside>
+
+## Storefront configuration for custom frontends
+
+The drop-in initializers read `config.json` at mount time. For a custom frontend deployed outside of EDS, serve `config.json` as a static file from your web server, or host it on Edge Delivery Services and reference the EDS URL. Either approach works — the initializers only need the file to be accessible at the path you configure.
+
+See [Storefront configuration](/setup/configuration/commerce-configuration/) for all available fields and the Config Generator tool.
+
+## API Mesh for custom frontends
+
+If your custom frontend aggregates multiple APIs, use API Mesh as the unified GraphQL endpoint. Set `commerce-core-endpoint` in `config.json` to the mesh endpoint URL. The drop-in initializers pick up the mesh endpoint automatically. See [API Mesh configuration](/setup/configuration/api-mesh/).
+
+## Data Connection and AEP
+
+The drop-in initializers emit standardized behavioral events (add-to-cart, page view, etc.) through the `@dropins/tools` event bus regardless of rendering framework. To forward those events to Adobe Experience Platform, configure the Data Connection extension in Commerce Admin and set the AEP environment ID in `config.json`.
+
+For AEP integration steps, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/data-connection/overview" text="Data Connection documentation" />.
+
+## Related resources
+
+<CardGrid columns={2}>
+  <LinkCard
+    noborder
+    icon="document"
+    title="Drop-ins reference"
+    description="Available drop-in packages, containers, slots, and customization API."
+    link="/dropins/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Storefront configuration"
+    description="All config.json fields and the Config Generator tool."
+    link="/setup/configuration/commerce-configuration/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="API Mesh configuration"
+    description="Aggregate Commerce and third-party APIs behind a single endpoint."
+    link="/setup/configuration/api-mesh/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="AEM Commerce Prerender"
+    description="Server-side rendering for SEO and LLM crawlability."
+    link="/setup/configuration/aem-prerender/"
+    rightIcon="right-arrow"
+  />
+</CardGrid>
+
+</ProseFlow>

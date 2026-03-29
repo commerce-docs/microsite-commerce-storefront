@@ -8,6 +8,7 @@ import Badge from '@components/overrides/Badge.astro';
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import Task from '@components/Task.astro';
 import Tasks from '@components/Tasks.astro';
+import Link from '@components/Link.astro';
 
 A CDN is a critical component of your Commerce Storefront. It is responsible for delivering content to your customers in the most efficient and secure way possible.
 <Badge tooltip="Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only." text="PaaS only" variant="note" href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/product-solutions" /> 
@@ -23,6 +24,66 @@ Drop-in components automatically add image optimization parameters (such as widt
 For Adobe Commerce on Cloud projects, Fastly is included with your Adobe Commerce license and is the default CDN provider. The [`fastly-magento2`](https://github.com/fastly/fastly-magento2) module exposes Fastly service configurations in the Commerce Admin.
 
 The remaining sections on this page provide instructions and guidance for configuring Adobe Commerce on Cloud projects with the Fastly module. It focuses on routing use cases, configuration, validation, and debugging.
+
+## DNS and custom domains
+
+Before you can serve your storefront from a custom domain (for example, `www.example.com`), you need to configure DNS records, provision a TLS certificate, and tell Edge Delivery Services about your hostname.
+
+### How custom domains work with Edge Delivery Services
+
+Edge Delivery Services assigns each project a default hostname (for example, `main--your-repo--your-org.aem.live`). To serve from a custom domain, you configure DNS at your registrar to point to EDS or your CDN, which then forwards requests to the EDS origin.
+
+For a full walkthrough of the BYO CDN + custom domain flow, see the <Link href="https://www.aem.live/docs/byo-cdn-setup" text="BYO CDN Setup" /> documentation on AEM Live.
+
+### DNS record types
+
+The following DNS records are typically required:
+
+| Record | Purpose | Target |
+|--------|---------|--------|
+| `CNAME` (for `www`) | Routes `www.example.com` to your CDN or EDS origin | Your CDN CNAME (for example, Fastly) or `main--repo--org.aem.live` |
+| `A` or `ALIAS` (for apex) | Routes `example.com` (the apex domain) to your CDN | CDN IP addresses or CDN CNAME (if your DNS provider supports ALIAS/ANAME records) |
+| `TXT` | Domain ownership verification | As instructed by your TLS certificate provider or Adobe |
+
+<Aside type="note" title="Apex domain limitations">
+Standard `CNAME` records cannot be placed at the apex (root) of a domain (`example.com`). Some DNS providers offer `ALIAS` or `ANAME` records as a workaround. If your provider does not support these, use A records pointing to your CDN's IP addresses, or redirect the apex to `www` using your registrar's redirect feature.
+</Aside>
+
+### Set up a custom domain on Edge Delivery Services
+
+<Steps>
+
+1. Confirm your domain ownership with your Adobe account team. Adobe must whitelist custom domains before EDS accepts traffic for them.
+
+1. At your DNS registrar, create a `CNAME` record pointing `www.example.com` to your EDS project hostname (for example, `main--your-repo--your-org.aem.live`) or to your CDN's CNAME (for Fastly deployments).
+
+1. If you are using Fastly as your CDN, add your custom domain to the Fastly service under **Domains** in the Fastly dashboard or Commerce Admin, then activate the service version.
+
+1. Confirm that TLS is provisioned. EDS and Fastly manage TLS automatically for registered hostnames. Allow up to 24 hours for certificate propagation.
+
+1. Validate the DNS record propagation using a tool such as [dnschecker.org](https://dnschecker.org) or `dig`:
+
+   ```bash
+   dig www.example.com CNAME
+   ```
+
+1. Test end-to-end delivery by requesting your storefront URL and confirming that it serves content from the correct origin:
+
+   ```bash
+   curl -sI https://www.example.com | grep -i 'server\|x-backend\|x-cache'
+   ```
+
+</Steps>
+
+### TLS certificate management
+
+Adobe manages TLS certificates for Edge Delivery Services hostnames automatically through Let's Encrypt. For custom domains fronted by Fastly, Fastly issues and renews the certificate as part of its TLS offering.
+
+If your organization requires a custom TLS certificate (for example, an EV or wildcard certificate from a specific CA), contact your Adobe account team to discuss options before starting domain setup.
+
+### Redirect apex to www
+
+As a best practice, redirect traffic from the apex domain to `www` to avoid TLS issues and improve cache performance. With Fastly, you can do this in the `recv` VCL snippet — see the [recv snippet example](#recv) in the [VCL configuration](#vcl-configuration) section below.
 
 ## Routing
 

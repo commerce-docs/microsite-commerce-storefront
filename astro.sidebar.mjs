@@ -79,33 +79,44 @@ export function generateSidebar() {
               label: 'Compatibility package',
               collapsed: true,
               items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            }
-          ]
-        },
-        {
-          label: 'Launch preparation',
-          collapsed: true,
-          items: [
-            { label: 'Launch checklist', link: '/setup/launch/' },
-            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            { label: 'SEO indexing', link: '/setup/seo/indexing/' },
-            { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-          ],
-        },
-        // ---------- HOW-TOS ----------
-        {
-          label: 'How-Tos',
-          collapsed: true,
-          items: [
-            { label: 'Federated search', link: '/how-tos/federated-search/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
-            { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
+                {
+                  label: 'Overview',
+                  link: '/setup/',
+                },
+                { label: 'Pre-onboarding', link: '/setup/pre-onboarding/' },
+                {
+                  label: 'Configuration',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/setup/configuration/' },
+                    { label: 'Experience Cloud access', link: '/setup/configuration/experience-cloud-access/' },
+                    { label: 'Commerce Cloud Manager', link: '/setup/configuration/cloud-manager/' },
+                    { label: 'App Builder setup', link: '/setup/configuration/app-builder/' },
+                    { label: 'API Mesh', link: '/setup/configuration/api-mesh/' },
+                    { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                    { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
+                    { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+                    { label: 'AEM Commerce prerender', link: '/setup/configuration/aem-prerender/' },
+                    { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
+                    { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
+                    { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+                    { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+                    { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+                  ],
+                },
+                {
+                  label: 'Compatibility package',
+                  collapsed: true,
+                  items: [
+                    { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                    { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
+                    { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                    { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
+                  ],
+                },
+                { label: 'Custom frontend', link: '/setup/custom-frontend/' },
+              ]
+            },
             {
               label: 'Cart',
               collapsed: true,
