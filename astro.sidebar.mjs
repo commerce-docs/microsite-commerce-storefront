@@ -29,6 +29,7 @@ export function generateSidebar() {
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
+            { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
