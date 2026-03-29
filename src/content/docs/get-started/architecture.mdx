@@ -135,6 +135,24 @@ In the repo, that split is AEM-style block delivery and decoration (shared with 
 
 Drop-in components are domain-driven Commerce UI packages (for example, `npm install @dropins/storefront-cart`). See the [Drop-ins introduction](/dropins/all/introduction/) for the full set. Commerce blocks and initializers mount them and call Commerce APIs. Customize them with [extension](/dropins/all/extending/) patterns.
 
+You can add drop-ins to your project as npm packages:
+
+- `@dropins/storefront-account`
+- `@dropins/storefront-auth`
+- `@dropins/storefront-cart`
+- `@dropins/storefront-checkout`
+- `@dropins/storefront-order`
+- `@dropins/storefront-payment-services`
+- `@dropins/storefront-pdp`
+- `@dropins/storefront-recommendations`
+- `@dropins/storefront-wishlist`
+- `@dropins/storefront-personalization`
+- `@dropins/storefront-product-discovery`
+
+<Aside type="note" title="Extension patterns">
+Adobe recommends using the [documented extension patterns](/dropins/all/extending/) for drop-in components.
+</Aside>
+
 <h3 id="commerce-blocks">Commerce blocks in this stack</h3>
 
 Tables on the Commerce blocks path resolve to these npm packages and their GraphQL usage. That wiring matches the Four layers section above.
@@ -143,12 +161,14 @@ Tables on the Commerce blocks path resolve to these npm packages and their Graph
 
 Commerce services are the shared APIs and capabilities your Commerce backend provides (for example, Catalog Service, Live Search, Product Recommendations, and core GraphQL), as shown in the [system stack](#system-stack) diagram. Drop-in components call them through the boilerplate and keep them on supported versions for the storefront to behave correctly.
 
+For a complete list of merchandising services available for your Adobe Commerce storefront, refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/home" text="Adobe Commerce Services Guides" />.
+
 <h3 id="storefront-services">Requirements and related services</h3>
 
-- Product license: Adobe Commerce as a Cloud Service, Cloud, or on-premises (Magento Open Source is not supported)
-- Version: v2.4.7 or later
-- PHP: 8.3/8.2 for Adobe Commerce 2.4.7
-- Required storefront services (keep on current versions):
+- **Product license**: Adobe Commerce as a Cloud Service, Cloud, or on-premises (Magento Open Source is not supported)
+- **Version**: v2.4.7 or later
+- **PHP**: 8.3/8.2 for Adobe Commerce 2.4.7
+- **Required storefront services** (keep on current versions):
   - Data Connection service
   - Services Connector
   - Catalog Service
@@ -159,6 +179,40 @@ Commerce services are the shared APIs and capabilities your Commerce backend pro
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements" text="System requirements for cloud infrastructure" />
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/overview" text="Setup for Commerce on cloud infrastructure" />
 </Aside>
+
+### Data Connection service
+
+The Data Connection extension connects your Adobe Commerce storefront to the Adobe Experience Platform and the Edge Network so that you can enrich and personalize the shopping experience for your customers. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection Guide" /> for details and installation instructions.
+
+### Services Connector
+
+The Services Connector connects your Commerce storefront to the Commerce backend services listed below. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas" text="Commerce Services Connector Guide" /> for details and installation instructions.
+
+### Catalog Service
+
+The Catalog Service module provides fast read-only access to Commerce catalog data. The product details drop-in component requires this service to render product data in the storefront. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service Guide" /> for details and installation instructions.
+
+### Live Search
+
+The Live Search service replaces the default Commerce catalog search. This service powers the Product Discovery drop-in component, which provides a variety of customizable controls to showcase your products and build interactive experiences that engage customers.
+
+Live Search uses events to power search algorithms such as "Most Viewed" and "Viewed This, Viewed That". For headless implementations, learn how to [set up eventing](/setup/analytics/instrumentation/) for your storefront.
+
+<Aside type="note" title="Multiple stores in a single Adobe Commerce environment">
+When using a single Adobe Commerce environment for multiple stores and only a single store should be migrated to Edge Delivery Services, you may need to contact Adobe Commerce Support to ensure that Live Search is activated without disabling Elasticsearch, which should continue to drive the search of the other stores.
+</Aside>
+
+### Product Recommendations
+
+Product Recommendations uses artificial intelligence and machine-learning algorithms (Adobe Sensei) to create personalized storefront experiences. While not a strict requirement, Adobe recommends it for Commerce storefronts. Refer to the [Product Recommendations setup](/merchants/blocks/product-recommendations/) for details.
+
+Similar to Live Search, Product Recommendations uses events for collecting data to power recommendations. Learn how to [implement eventing](/setup/analytics/instrumentation/) for your storefront.
+
+See [Backend options](/get-started/backends/) for setup by backend type.
+
+## Storefront Compatibility package
+
+The Storefront Compatibility package extends the GraphQL schema provided with Adobe Commerce. It provides new mutations and adds missing fields that are needed to implement low-funnel drop-in components, such as the cart, checkout, user account, and order drop-in components. See [Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) for installation instructions.
 
 ## Migration and hybrid patterns
 
@@ -219,8 +273,58 @@ graph TB
 
 Drop-in components communicate through a shared event bus (`@dropins/tools/event-bus.js`) using publish-subscribe. Components stay loosely coupled. No drop-in component depends directly on another.
 
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    Auth(User Auth)
+    PDP(Product Details)
+    Cart(Cart)
+    Checkout(Checkout)
+    Order(Order)
+    Account(User Account)
+    EB(Event Bus)
+    YourCode(Your Code)
+
+    Auth -->|"authenticated"| EB
+    PDP -->|"pdp/data"| EB
+    Cart -->|"cart/updated, cart/data"| EB
+    Checkout -->|"checkout/updated"| EB
+    Order -->|"order/placed, cart/reset"| EB
+    YourCode -->|"locale, authenticated"| EB
+
+    EB -.->|"authenticated"| Cart
+    EB -.->|"authenticated"| Checkout
+    EB -.->|"cart/updated, cart/data"| Checkout
+    EB -.->|"cart/initialized"| Checkout
+    EB -.->|"order/placed"| Cart
+    EB -.->|"cart/updated"| Account
+
+    linkStyle 0,1,2,3,4,5 stroke:#3b82f6,stroke-width:2px
+    linkStyle 6,7,8,9,10,11 stroke:#6366f1,stroke-width:1.5px,stroke-dasharray:5
+
+    style EB fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style Auth fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style PDP fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Cart fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Order fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Account fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style YourCode fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+`} caption="Solid arrows: events emitted. Dashed arrows: events consumed. Your custom code (pink) can emit and listen to events alongside drop-ins." />
+
+- **`events.on(name, handler)`** — subscribe to an event
+- **`events.emit(name, payload)`** — publish an event
+- **`subscription.off()`** — unsubscribe
+
+Each drop-in indicates which events it emits and listens to. See the [event bus API reference](/sdk/reference/events/) and the [drop-in events overview](/dropins/all/events/) for details.
+
+<Aside type="tip" title="Events vs. analytics">
+The event bus handles **internal** communication between drop-ins on the page. It is separate from [ACDL analytics events](/setup/analytics/instrumentation/), which send user behavior data to Adobe Commerce services (Live Search, Product Recommendations).
+</Aside>
+
 ## Next steps
 
+- [Backend options](/get-started/backends/) — Comparison table, prerequisites, and setup steps by backend type (PaaS, Adobe Commerce as a Cloud Service, Adobe Commerce Optimizer)
 - [Commerce configuration](/setup/configuration/commerce-configuration/) — Endpoints, headers, and options for PaaS, Adobe Commerce as a Cloud Service, and Adobe Commerce Optimizer
 - [Create a storefront](/get-started/create-storefront/) — Step-by-step project setup
 - [Getting started](/boilerplate/getting-started/) — Boilerplate file layout
