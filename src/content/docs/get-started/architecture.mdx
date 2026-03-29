@@ -66,10 +66,10 @@ graph TB
     class Optimizer optimizer
 `} caption="Edge Delivery serves every page. AEM blocks are presentational only. Commerce blocks load drop-in components through the Adobe Commerce boilerplate, which connects to your backend and shared Commerce services. Configuration differs by backend type—see [Backend options](/get-started/backends/) for details." />
 
-<Aside type="note" title="Blocks compared to Commerce blocks">
-AEM blocks (for example, Cards, Columns, and Headers) ship as HTML and optional generic decoration. They do not load drop-in components or call Adobe Commerce GraphQL.
+<Aside type="note" title="AEM blocks compared to Commerce blocks">
+**AEM blocks** (sometimes called *AEM* or *presentational* blocks—for example, Cards, Columns, Headers) are layout and marketing UI. Edge Delivery renders them as HTML and optional decoration. They **do not** use the Commerce boilerplate, load drop-in components, or call Adobe Commerce GraphQL. In the [system stack](#system-stack) diagram, only the **Commerce blocks** path continues past Edge Delivery into drop-ins and the boilerplate.
 
-Commerce blocks use the same authoring surfaces (for example, DA.live tables) but map to initializers and drop-in components in the Adobe Commerce boilerplate. Only that path reaches Commerce backends (GraphQL and related APIs).
+**Commerce blocks** use the same table-based authoring (for example, in DA.live) but are wired in the boilerplate to initializers and `@dropins/*` packages. **Commerce** integration is the difference: Commerce blocks reach your Commerce backend **through drop-ins and the boilerplate** (GraphQL and related APIs). AEM blocks never do.
 </Aside>
 
 When the model makes sense, use [Commerce configuration](/setup/configuration/commerce-configuration/) to align your storefront with your Commerce backend (PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer).
@@ -134,6 +134,10 @@ In the repo, that split is AEM-style block delivery and decoration (shared with 
 ## Drop-in components
 
 Drop-in components are domain-driven Commerce UI packages (for example, `npm install @dropins/storefront-cart`). See the [Drop-ins introduction](/dropins/all/introduction/) for the full set. Commerce blocks and initializers mount them and call Commerce APIs. Customize them with [extension](/dropins/all/extending/) patterns.
+
+<Aside type="note" title="Existing Luma storefront?">
+Use [Luma Bridge](/setup/discovery/luma-bridge/) **only** when you are migrating or operating a **hybrid** experience: cart, checkout, or account still run on the **Luma** theme on Adobe Commerce PaaS while content and commerce marketing move to Edge Delivery. You do **not** need Luma Bridge for a greenfield Edge Delivery storefront, for Adobe Commerce as a Cloud Service + Optimizer with no Luma theme, or when the full funnel runs on drop-ins. Luma Bridge is a **session** layer on Commerce—it does not plug into or extend drop-in components; drop-ins run on EDS and set cookies that the bridge aligns with Luma.
+</Aside>
 
 You can add drop-ins to your project as npm packages:
 
@@ -218,15 +222,15 @@ For prerequisite details on PaaS + ACO Connector migrations, see [Backend option
 <Diagram type="mermaid" code={`
 graph TB
     subgraph S1["PaaS + Luma"]
-        A1["<b>EDS</b><br/><small>Drop-ins (cart, auth, …)</small>"]
-        B1["<b>Luma Bridge</b><br/><small>PHP on Commerce</small>"]
+        A1["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
+        B1["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
         C1["<b>Luma</b><br/><small>Theme storefront</small>"]
         A1 <--> B1
         B1 <--> C1
     end
     subgraph S2["PaaS + Luma + Adobe Commerce Optimizer"]
-        A2["<b>EDS</b><br/><small>Drop-ins (cart, auth, …)</small>"]
-        B2["<b>Luma Bridge</b><br/><small>PHP on Commerce</small>"]
+        A2["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
+        B2["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
         C2["<b>Luma</b><br/><small>Theme storefront</small>"]
         D2["Adobe Commerce Optimizer Connector"]
         A2 <--> B2
@@ -250,7 +254,7 @@ graph TB
     class C1,C2 luma
     class D2,B3 aco
     class C3 accs
-`} caption="Phased migration topologies. Drop-in components run in the EDS box. Luma Bridge is PHP on Commerce and aligns Luma with cookies that drop-in components already set, not wiring into drop-in components. In PaaS + Luma, the bridge without Optimizer is possible. In PaaS + Luma + Optimizer, use the bridge plus connector during migration. For Adobe Commerce as a Cloud Service + Optimizer, you usually deploy no Luma, so you use no Luma Bridge." />
+`} caption="Phased migration topologies. The EDS storefront hosts drop-in UIs; arrows to Luma Bridge mean **shared session cookies** between Edge Delivery and Commerce, not a connection from the bridge into drop-in code. Luma Bridge runs on Commerce and adapts Luma to cookies that drop-ins on EDS already set. In PaaS + Luma, the bridge without Optimizer is possible. In PaaS + Luma + Optimizer, use the bridge plus connector during migration. For Adobe Commerce as a Cloud Service + Optimizer, you usually deploy no Luma, so you use no Luma Bridge." />
 
 ## Event system
 
