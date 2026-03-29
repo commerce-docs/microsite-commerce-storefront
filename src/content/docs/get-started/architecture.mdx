@@ -1,14 +1,16 @@
 ---
-title: Learn the Storefront architecture
+title: Architecture
 description: Understand how Edge Delivery Services, the Adobe Commerce boilerplate, drop-in components, and Commerce APIs connect.
 ---
 
 import Aside from '@components/Aside.astro';
+import CardGrid from '@components/CardGrid.astro';
 import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
+import LinkCard from '@components/LinkCard.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-This page explains how Edge Delivery Services (EDS), the Adobe Commerce boilerplate, drop-in components, and your Commerce backend fit together. Read in the following order: visual overview, system stack, runtime sequence, then the sections that map to files and packages.
+Edge Delivery hosts your site. **Commerce blocks** use the boilerplate and **drop-ins** to reach your Commerce backend and services. **Content blocks** do not. This topic shows the big picture, then dives into the details.
 
 <Steps>
 1. Visual overview — How experience delivery and commerce share one Edge Delivery surface.
@@ -16,6 +18,12 @@ This page explains how Edge Delivery Services (EDS), the Adobe Commerce boilerpl
 3. Runtime flow — What happens from a document table to a GraphQL response.
 4. Reference — Boilerplate layers, drop-ins, Commerce services, then optional migration (Luma Bridge), event bus.
 </Steps>
+
+<Aside type="tip" title="How to read this page">    
+- **View the two diagrams** ([Visual overview](#visual-overview), [System stack](#system-stack)) to get the big picture.
+- **Follow [Runtime flow](#runtime-flow)** to trace the path from a document table to a Commerce API call.
+- **Open [Boilerplate and blocks](#boilerplate-and-blocks) onward** when you map concepts to repo folders (`scripts/`, `blocks/`, `config.json`).
+</Aside>
 
 You author in documents (for example, [DA.live](https://docs.da.live/), Google Docs, or SharePoint), in-context (Universal Editor), or AEM Sites. Edge Delivery renders the result as blocks. For Edge project concepts, see <Link href="https://www.aem.live/docs/" text="AEM documentation" /> and the <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" />.
 
@@ -110,11 +118,11 @@ The sections that follow document the same stack in more depth: [Boilerplate and
 
 ## Boilerplate and blocks
 
-### Commerce Boilerplate architecture
+### Commerce boilerplate architecture
 
 The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" /> uses a modular architecture that separates core AEM functionality from Commerce-specific features. That split keeps the codebase maintainable and aligned with the upstream AEM Boilerplate while preserving full Commerce capabilities.
 
-In the repo, that split is AEM-style block delivery and decoration (shared with the upstream pattern) versus Commerce-only layers: `commerce.js`, initializers, drop-in components, and API configuration that wire Commerce blocks to Adobe Commerce. The four layers below list the concrete files and folders.
+In the repo, that split is AEM-style block delivery and decoration (shared with the upstream pattern) versus Commerce-only layers: `scripts/commerce.js`, `scripts/initializers/`, drop-in components, and API configuration that wire Commerce blocks to Adobe Commerce. The four layers below list the concrete files and folders.
 
 ### Four layers
 
@@ -130,6 +138,8 @@ These map to the [boilerplate `scripts/` folder](https://github.com/hlxsites/aem
 </Steps>
 
 #### Customization and configuration links
+
+Use these topics when you customize blocks or connect the storefront to Commerce.
 
 [Blocks reference](/boilerplate/blocks-reference/) · [Blocks configuration](/boilerplate/configuration/) · [Storefront configuration](/setup/configuration/commerce-configuration/)
 
@@ -161,7 +171,7 @@ Adobe recommends using the [documented extension patterns](/dropins/all/extendin
 
 <h3 id="commerce-blocks">Commerce blocks in this stack</h3>
 
-Commerce blocks on the authoring path resolve to npm packages and call Commerce GraphQL. The wiring follows the four layers described in [Boilerplate and blocks](#boilerplate-and-blocks).
+Commerce blocks on the authoring path resolve to npm packages and call Commerce GraphQL. The wiring follows the four layers in [Boilerplate and blocks](#boilerplate-and-blocks).
 
 ## Commerce services
 
@@ -173,25 +183,25 @@ Prerequisites and installation steps for each service vary by backend type (PaaS
 
 ### Data Connection service
 
-The Data Connection extension connects your Adobe Commerce storefront to the Adobe Experience Platform and the Edge Network so that you can enrich and personalize the shopping experience for your shoppers. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection Guide" /> for details and installation instructions.
+The Data Connection extension connects your Adobe Commerce storefront to the Adobe Experience Platform and the Edge Network so that you can enrich and personalize the experience for shoppers. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection Guide" /> for details and installation instructions.
 
 ### Services Connector
 
-The Services Connector connects your Commerce storefront to the Commerce backend services listed below. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector Guide" /> for details and installation instructions.
+The Services Connector connects your storefront to the Commerce backend services listed below. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector Guide" /> for details and installation instructions.
 
 ### Catalog Service
 
-The Catalog Service module provides fast read-only access to Commerce catalog data. The product details drop-in component requires this service to render product data in the storefront. Refer to the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service Guide" /> for details and installation instructions.
+The Catalog Service module provides fast read-only access to Commerce catalog data. The Product Details drop-in component requires this service to render product data on the storefront. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service Guide" /> for details and installation instructions.
 
 ### Live Search
 
-The Live Search service replaces the default Commerce catalog search. This service powers the Product Discovery drop-in component, which provides a variety of customizable controls to showcase your products and build interactive experiences that engage shoppers.
+The Live Search service replaces the default Commerce catalog search. This service powers the Product Discovery drop-in, which provides customizable controls to showcase products and build interactive experiences for shoppers.
 
 Live Search uses events to power search algorithms such as "Most Viewed" and "Viewed This, Viewed That". For headless requirements, see [Headless data collection](https://experienceleague.adobe.com/en/docs/commerce/live-search/workspace#data-collection) in the Live Search workspace. On Edge Delivery Services, implement required storefront events with [Storefront event collection](/setup/analytics/instrumentation/).
 
 ### Product Recommendations
 
-Product Recommendations uses artificial intelligence and machine-learning algorithms (Adobe Sensei) to create personalized storefront experiences. While not a strict requirement, Adobe recommends it for Commerce storefronts. Refer to the [Product Recommendations setup](/merchants/blocks/product-recommendations/) for details.
+Product Recommendations uses artificial intelligence and machine-learning algorithms (Adobe Sensei) to create personalized storefront experiences. Adobe recommends it for Commerce storefronts, though it is not strictly required. See [Product Recommendations setup](/merchants/blocks/product-recommendations/) for details.
 
 Similar to Live Search, Product Recommendations uses events for collecting data to power recommendations. For headless storefronts, see [Headless integration](https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/getting-started/headless). On Edge Delivery Services, implement required storefront events with [Storefront event collection](/setup/analytics/instrumentation/).
 
@@ -217,7 +227,7 @@ For session details, see [How does session management work?](/setup/discovery/lu
 EDS ↔ Luma Bridge means shared session cookies, not “the bridge hooks into drop-in components.” Drop-in components run on EDS. Luma Bridge on Commerce follows their cookies when shoppers move between EDS and Luma URLs.
 </Aside>
 
-For prerequisite details on PaaS + ACO Connector migrations, see [Backend options](/get-started/backends/#architecture-overview).
+For prerequisite details on PaaS + ACO Connector migrations, see [Backend options](/get-started/backends/#backend-topology).
 
 #### Migration topologies
 
@@ -313,7 +323,42 @@ The event bus handles **internal** communication between drop-ins on the page. I
 
 ## Next steps
 
-- [Backend options](/get-started/backends/) — Comparison table, prerequisites, and setup steps by backend type (PaaS, Adobe Commerce as a Cloud Service, Adobe Commerce Optimizer)
-- [Commerce configuration](/setup/configuration/commerce-configuration/) — Endpoints, headers, and options for PaaS, Adobe Commerce as a Cloud Service, and Adobe Commerce Optimizer
-- [Create a storefront](/get-started/create-storefront/) — Step-by-step project setup
-- [Getting started](/boilerplate/getting-started/) — Boilerplate file layout
+Choose a topic based on what you are building next.
+
+<CardGrid columns={4}>
+  <LinkCard
+    noborder
+    icon="document"
+    title="Backend options"
+    description="Compare backends and confirm prerequisites before you configure or build."
+    link="/get-started/backends/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Create a storefront"
+    description="Step-by-step: repo, tooling, and first deploy from the boilerplate."
+    link="/get-started/create-storefront/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Boilerplate getting started"
+    description="Folders, terminology, and how documents become rendered pages."
+    link="/boilerplate/getting-started/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Commerce configuration"
+    description="Endpoints, headers, and `config.json` for your backend type."
+    link="/setup/configuration/commerce-configuration/"
+    rightIcon="right-arrow"
+  />
+</CardGrid>
+
+- [Drop-ins introduction](/dropins/all/introduction/) — B2C and B2B drop-in components
+- [Storefront event collection](/setup/analytics/instrumentation/) — Adobe Client Data Layer and storefront events for Commerce services
