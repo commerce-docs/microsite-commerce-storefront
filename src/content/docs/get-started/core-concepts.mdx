@@ -1,0 +1,85 @@
+---
+title: Core concepts
+description: A plain-English map of the five building blocks of an Adobe Commerce storefront—Edge Delivery Services, Commerce APIs, drop-ins, the boilerplate, and the SDK—and how they relate.
+sidebar:
+  order: 3
+---
+
+import Diagram from '@components/Diagram.astro';
+import { Aside } from '@astrojs/starlight/components';
+import LinkCard from '@components/LinkCard.astro';
+import ProseFlow from '@components/ProseFlow.astro';
+
+<ProseFlow variant="article">
+
+Adobe Commerce storefronts are built from five interlocking pieces. Each has a distinct responsibility. Understanding the boundaries before you start saves hours of confusion later.
+
+## Edge Delivery Services
+
+Edge Delivery Services (EDS) is the delivery and rendering layer. It serves your storefront pages from CDN edge nodes worldwide, achieving near-instant Time to First Byte. It also handles document-based authoring — business users write content in Google Docs or SharePoint and EDS converts it to pages automatically.
+
+You never manage servers. Your code lives in a GitHub repository; EDS pulls from it on every publish.
+
+**Where it lives in your project:** The boilerplate repository itself is an EDS project.
+
+## Commerce APIs
+
+Adobe Commerce exposes your catalog, pricing, inventory, cart, checkout, order, and customer data through GraphQL and REST APIs. Drop-ins consume these APIs to render commerce experiences.
+
+Commerce APIs are hosted on your Adobe Commerce instance (cloud or on-premise). The storefront calls them from the browser over HTTPS.
+
+**Where it lives in your project:** API endpoints and credentials are configured in `config.js` and referenced by each drop-in's initializer.
+
+## Drop-in components
+
+Drop-in components are the commerce UI layer — Cart, Checkout, Product Details Page, Product List Page, User Account, and others. Each drop-in is a self-contained package that renders a complete commerce experience, wires itself to Commerce APIs, and exposes extension points (slots, events, transformers, styling) so you can customize it without modifying the source.
+
+Adobe publishes and maintains drop-in components. You install, configure, and extend them.
+
+**Where they live in your project:** Installed via npm/pnpm as `@dropins/*` packages. Registered in `scripts/commerce.js`.
+
+<Aside type="tip">
+Drop-ins are the most important concept to understand before diving into any per-component reference. Read [Drop-ins introduction](/dropins/all/introduction/) before the B2C or B2B reference docs.
+</Aside>
+
+## The boilerplate
+
+The [Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) is a GitHub repository template you use to scaffold a new storefront project. It wires together Edge Delivery Services, drop-ins, CSS, and the block authoring system so you start from a working storefront rather than from scratch.
+
+The boilerplate is a reference starter kit — your project is a snapshot of it at the point you created it, not a live fork. Updates arrive in two ways: drop-in packages upgrade via npm, and integration layer files (blocks, initializers, `commerce.js`) are updated selectively by merging changes from upstream. See [Boilerplate updates](/boilerplate/updates/) for the full upgrade process.
+
+**Where it lives:** It *is* your project repo. Everything you write lives alongside the scaffolded boilerplate code.
+
+## The SDK
+
+The Storefront SDK (`@dropins/storefront-sdk`) is a shared library that drop-ins build on. It provides:
+
+- The **initializer** — sets up API connections and authentication
+- **UI components** — design-system primitives (Button, Input, Modal, etc.) used inside drop-ins
+- **Design tokens** — CSS custom properties that drive the visual theme
+- **Utilities** — shared helpers (debounce, deepmerge, etc.)
+
+Most developers interact with the SDK indirectly through drop-ins. You interact with it directly when initializing drop-ins in `commerce.js`, when using SDK components to build custom UI, or when creating a new drop-in from scratch.
+
+**Where it lives:** Installed as `@dropins/storefront-sdk`. Documented in [SDK introduction](/sdk/).
+
+## How the five pieces connect
+
+```
+Browser request
+  → Edge Delivery Services (serves the page shell + blocks)
+    → Commerce Boilerplate (your code, blocks, config)
+      → Drop-ins (commerce UI, installed via npm)
+        → Commerce APIs (data from Adobe Commerce backend)
+      → SDK (shared components, initializer, tokens)
+```
+
+The boilerplate bootstraps the SDK, which initializes the drop-ins, which call Commerce APIs. EDS serves the resulting page from the edge.
+
+## Next steps
+
+- [Storefront architecture](/get-started/architecture/) — detailed diagram and technical deep-dive
+- [Drop-ins introduction](/dropins/all/introduction/) — the extension model (slots, events, transformers)
+- [Build a B2C storefront](/get-started/create-storefront/) — guided walkthrough
+
+</ProseFlow>

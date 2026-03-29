@@ -1,9 +1,12 @@
 /**
  * Sidebar navigation configuration
- * 
+ *
  * This file maintains the sidebar structure for the Adobe Commerce Storefront documentation.
  * The sidebar is organized by audience (Developers, Merchants, etc.) and uses the Starlight Sidebar Topics plugin.
- * 
+ *
+ * IA: Developers order follows learn → concepts → reference → SDK → tasks. Validate internal onboarding
+ * tickets (for example COMDOX-1472) when acceptance criteria are available.
+ *
  * @returns {Array} Sidebar topics configuration array
  */
 
@@ -20,135 +23,98 @@ export function generateSidebar() {
       icon: 'seti:json',
       items: [
         {
-          label: 'Essentials',
+          label: 'Get started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/get-started/' },
-            { label: 'Storefront architecture', link: '/get-started/architecture/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
-            { label: 'Performance best practices', link: '/get-started/performance/' },
-            { label: "Launch checklist", link: "setup/launch/" },
+            { label: 'Introduction', link: '/get-started/' },
+            { label: 'Prerequisites', link: '/get-started/prerequisites/' },
+            { label: 'Core concepts', link: '/get-started/core-concepts/' },
+            { label: 'Architecture', link: '/get-started/architecture/' },
+            { label: 'Build a B2C storefront', link: '/get-started/create-storefront/' },
+            { label: 'Build a B2B storefront', link: '/dropins-b2b/' },
+            { label: 'Sample projects', link: '/get-started/sample-projects/' },
+            { label: "What's new", link: '/get-started/whats-new/' },
           ],
         },
         {
-          label: 'The Boilerplate',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/boilerplate/' },
-            { label: 'Getting started', link: '/boilerplate/getting-started/' },
-            { label: 'Configuration', link: '/boilerplate/configuration/' },
-            { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
-          ],
-        },
-        {
-          label: 'Licensing',
-          collapsed: true,
-          autogenerate: { directory: '/licensing/' },
-        },
-        {
-          label: 'Storefront setup',
-          collapsed: true,
+          label: 'Guides',
+          collapsed: false,
           items: [
             {
-              label: 'Overview',
-              link: '/setup/',
-            },
-            {
-              label: 'Configuration',
+              label: 'The Boilerplate',
               collapsed: true,
               items: [
-                { label: 'Overview', link: '/setup/configuration/' },
-                { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
-                { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
-                { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
-                { label: 'AEM Commerce prerender', link: '/setup/configuration/aem-prerender/' },
-                { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
-                { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
-                { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-                { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-                { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+                { label: 'Overview', link: '/boilerplate/' },
+                { label: 'Getting started', link: '/boilerplate/getting-started/' },
+                { label: 'Configuration', link: '/boilerplate/configuration/' },
+                { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
+                { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+                { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
+                { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+                { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
               ],
             },
             {
-              label: 'Compatibility package',
+              label: 'Storefront Setup',
               collapsed: true,
               items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            }
-          ]
-        },
-        {
-          label: 'Launch preparation',
-          collapsed: true,
-          items: [
-            { label: 'Launch checklist', link: '/setup/launch/' },
-            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            { label: 'SEO indexing', link: '/setup/seo/indexing/' },
-            { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-          ],
-        },
-        // ---------- HOW-TOS ----------
-        {
-          label: 'How-Tos',
-          collapsed: true,
-          items: [
-            { label: 'Federated search', link: '/how-tos/federated-search/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
-            { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
+                {
+                  label: 'Overview',
+                  link: '/setup/',
+                },
+                {
+                  label: 'Configuration',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/setup/configuration/' },
+                    { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                    { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
+                    { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+                    { label: 'AEM Commerce prerender', link: '/setup/configuration/aem-prerender/' },
+                    { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
+                    { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
+                    { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+                    { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+                    { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+                  ],
+                },
+                {
+                  label: 'Compatibility package',
+                  collapsed: true,
+                  items: [
+                    { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                    { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
+                    { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                    { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
+                  ],
+                }
+              ]
+            },
             {
-              label: 'Cart',
+              label: 'Launch and observability',
               collapsed: true,
               items: [
-                { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
-                { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
-                { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
-                { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
-                { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
-                { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+                { label: 'Launch checklist', link: '/setup/launch/' },
+                { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+                { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+                { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+                { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+                { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
+                { label: 'Performance', link: '/get-started/performance/' },
               ],
             },
             {
-              label: 'Checkout',
+              label: 'Reference',
               collapsed: true,
               items: [
-                { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-                { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
-                { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
-                { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-                { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
-              ],
-            },
-            {
-              label: 'Order',
-              collapsed: true,
-              items: [
-                { label: 'Enable order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
-              ],
-            },
-            {
-              label: 'User Account',
-              collapsed: true,
-              items: [
-                { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
-                { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
+                { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
               ],
             },
           ],
         },
-        // ---------- DROP-INS Overview ----------
+        // ---------- CONCEPTS: DROP-INS ----------
         {
-          label: 'Drop-ins',
+          label: 'Concepts: Drop-ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
@@ -169,9 +135,9 @@ export function generateSidebar() {
           ],
         },
 
-        // ---------- B2C DROP-INS ----------
+        // ---------- REFERENCE: B2C DROP-INS ----------
         {
-          label: 'B2C Drop-ins',
+          label: 'Reference: B2C drop-ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/' },
@@ -492,9 +458,9 @@ export function generateSidebar() {
           ],
         },
 
-        // ---------- B2B DROP-INS ----------
+        // ---------- REFERENCE: B2B DROP-INS ----------
         {
-          label: 'B2B Drop-ins',
+          label: 'Reference: B2B drop-ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins-b2b/' },
@@ -672,15 +638,15 @@ export function generateSidebar() {
           ],
         },
 
-        // ---------- DROP-INS SDK ----------
+        // ---------- SDK ----------
         {
-          label: 'Drop-ins SDK',
+          label: 'SDK',
           collapsed: true,
           items: [
-            { label: 'SDK introduction', link: '/sdk/' },
-            { label: 'SDK CLI usage', link: '/sdk/get-started/cli/' },
+            { label: 'Introduction', link: '/sdk/' },
+            { label: 'CLI usage', link: '/sdk/get-started/cli/' },
             {
-              label: 'SDK components',
+              label: 'Components',
               collapsed: true,
               items: [
                 { label: 'Components overview', link: '/sdk/components/overview/' },
@@ -726,7 +692,7 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'SDK design',
+              label: 'Design',
               collapsed: true,
               items: [
                 { label: 'Design overview', link: '/sdk/design/' },
@@ -739,7 +705,7 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'SDK reference',
+              label: 'API reference',
               collapsed: true,
               items: [
                 { label: 'Reference overview', link: '/sdk/reference/' },
@@ -754,7 +720,7 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'SDK utilities',
+              label: 'Utilities',
               collapsed: true,
               items: [
                 { label: 'Utilities overview', link: '/sdk/utilities/' },
@@ -768,6 +734,60 @@ export function generateSidebar() {
               ],
             },
           ],
+        },
+
+        // ---------- HOW-TOS ----------
+        {
+          label: 'How-Tos',
+          collapsed: true,
+          items: [
+            { label: 'Federated search', link: '/how-tos/federated-search/' },
+            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
+            {
+              label: 'Cart',
+              collapsed: true,
+              items: [
+                { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
+                { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
+                { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+                { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+              ],
+            },
+            {
+              label: 'Checkout',
+              collapsed: true,
+              items: [
+                { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
+                { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
+                { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+              ],
+            },
+            {
+              label: 'Order',
+              collapsed: true,
+              items: [
+                { label: 'Enable order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+              ],
+            },
+            {
+              label: 'User Account',
+              collapsed: true,
+              items: [
+                { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Licensing',
+          collapsed: true,
+          autogenerate: { directory: '/licensing/' },
         },
 
         // ---------- OTHER ----------

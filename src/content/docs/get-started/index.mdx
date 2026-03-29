@@ -1,71 +1,183 @@
 ---
-title: Overview
-description: Learn how to get started with Adobe Commerce Storefronts and build your first high-performance e-commerce experience.
+title: Introduction
+description: Adobe Commerce storefronts deliver high-performance, composable shopping experiences on Edge Delivery Services. This introduction covers what a storefront is, how it fits the Adobe Commerce ecosystem, and the five building blocks every developer needs to understand before writing a line of code.
 ---
 
 import CardGrid from '@components/CardGrid.astro';
 import LinkCard from '@components/LinkCard.astro';
-import { Aside } from '@astrojs/starlight/components';
-import Callouts from '@components/Callouts.astro';
+import ProseFlow from '@components/ProseFlow.astro';
 import Diagram from '@components/Diagram.astro';
-import Tasks from '@components/Tasks.astro';
-import Task from '@components/Task.astro';
-import SecurityNotice from 'src/content/fragments/security-notice.mdx';
-import Link from '@components/Link.astro';
-import Screenshot from '@components/Screenshot.astro';
-import BoilerplateHomePage from 'images/default-storefront.webp';
-import { Tabs, TabItem } from '@astrojs/starlight/components';
 import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-Quick Start provides everything you need to begin building with Adobe Commerce Storefronts, from understanding the architecture to creating your first storefront and optimizing performance.
+<ProseFlow variant="hub">
 
-<CardGrid columns={4}>
+Adobe Commerce Storefronts are modern, headless shopping experiences built on **Edge Delivery Services** — fast by design, composable by architecture, and backed by the full power of **Adobe Commerce**. This documentation covers everything a developer needs to build, customize, and launch one, whether you're targeting B2C shoppers or B2B buyers.
+
+## What is an Adobe Commerce storefront?
+
+A storefront is the customer-facing layer of your Adobe Commerce site. Unlike a traditional monolithic storefront where the UI is generated server-side by Adobe Commerce itself, an Edge Delivery storefront is **headless** — the frontend is a separate, JavaScript-based application that calls Commerce APIs for its data and is delivered from CDN edge nodes worldwide.
+
+This separation has a concrete consequence: pages load faster, Lighthouse scores are higher, and the frontend and backend can be developed, deployed, and scaled independently. Business users author content through [DA.live](https://da.live/); developers build commerce experiences using composable drop-in components; and Edge Delivery handles everything in between.
+
+Adobe Commerce is your backend — catalog, pricing, inventory, orders, customers, and all the business logic that powers commerce. The storefront is the front door.
+
+## Where storefronts fit in the Adobe Commerce ecosystem
+
+Adobe Commerce comes in several deployment forms, and a storefront on Edge Delivery can connect to any of them:
+
+**Adobe Commerce** is the core platform — a feature-complete, self-managed commerce engine available on cloud infrastructure or on-premises. It powers catalog, cart, checkout, order management, promotions, B2B features, and much more through its GraphQL and REST APIs. Version 2.4.7 or later is required for storefront compatibility.
+
+**Adobe Commerce as a Cloud Service (ACCS)** is the fully managed SaaS deployment. Adobe provisions and operates the infrastructure, handles upgrades, and ensures availability. ACCS is the recommended deployment for new storefronts — it reduces operational overhead and provides automatic access to the latest Commerce capabilities and storefront services.
+
+**Adobe Commerce Optimizer (ACO)** is Adobe's catalog and storefront performance layer. It sits between your Commerce backend and the storefront, providing ultra-fast catalog APIs optimized for high-traffic product browsing, search, and discovery — without requiring changes to your Commerce configuration. If your project uses ACO, your storefront calls its APIs for catalog data while still using Commerce for transactional operations.
+
+**Edge Delivery Services (EDS)** is the delivery and rendering platform. Your storefront code lives in a GitHub repository; EDS pulls from it on every publish and serves pages from edge nodes close to your customers. This architecture is what makes Lighthouse scores of 100 achievable — there are no server round-trips on the critical path.
+
+**Adobe Experience Platform (AEP)** and the Data Connection extension close the loop by streaming behavioral and transactional events from the storefront into Adobe's data platform. This powers personalization, product recommendations, Live Search, and analytics. It's not required to launch, but most production storefronts connect to it.
+
+<Aside type="tip" title="Which backend do I have?">
+If you're not sure which Commerce deployment your project uses, check with your Adobe account team or system integrator. The storefront setup steps are similar across all backends, but the API endpoints and service configuration differ. See [Prerequisites](/get-started/prerequisites/) for the checklist.
+</Aside>
+
+## The five building blocks
+
+Every storefront is assembled from the same five pieces. Understanding what each one does — and doesn't do — before you start is the fastest path to confidence.
+
+**Drop-ins** are the commerce UI components Adobe builds and publishes. Cart, Checkout, Product Details Page, Product List Page, User Account, Order History, Authentication — each is a self-contained npm package that renders a complete commerce experience, wires itself to Commerce APIs, and exposes structured extension points so you can customize it without modifying the source. Drop-ins are the most important concept in this documentation. Everything in the **Concepts: Drop-ins** section covers how to extend, style, and configure them.
+
+**The Commerce boilerplate** is a GitHub repository template you use to scaffold your project. It wires together Edge Delivery, the SDK, drop-in registrations, CSS, and the block authoring system so you begin from a working storefront rather than a blank canvas. The boilerplate is a reference starter kit — your project is a snapshot of it at a point in time. When you see references to `scripts/commerce.js`, `styles/styles.css`, `blocks/`, or `config.js` throughout these docs, those are all files that live in your project, created from the boilerplate template.
+
+**The Storefront SDK** (`@dropins/storefront-sdk`) is the shared library that every drop-in is built on. It provides the initializer that sets up API connections, the UI component primitives that drop-ins use internally, design tokens that drive your visual theme, and utilities used across the stack. Most developers interact with the SDK indirectly — you call it directly when initializing drop-ins in `commerce.js`, using SDK components in custom UI, or creating a new drop-in from scratch.
+
+**Commerce APIs** — primarily GraphQL, supplemented by REST — are how the storefront gets its data. Catalog queries, cart mutations, checkout flows, customer authentication, order retrieval: all of it goes through APIs hosted on your Commerce backend. API endpoints and authentication credentials are configured in `config.js`; each drop-in's initializer wires itself to the right endpoints automatically.
+
+**Edge Delivery Services** is the serving layer. It transforms documents (Google Docs or SharePoint tables) into HTML, decorates them with your block JavaScript, and delivers the result from the edge. No servers to manage. Your code is in GitHub; EDS deploys it. This is also where document-based content authoring lives — business users can manage non-commerce page content entirely without developer involvement.
+
+[Core concepts](/get-started/core-concepts/) maps all five in detail, including how they connect at runtime. [Storefront architecture](/get-started/architecture/) has the full technical diagram and a layer-by-layer breakdown of the boilerplate's code structure.
+
+<Diagram>![Adobe Commerce Storefront architecture overview — showing shoppers, Edge Delivery Services, the storefront building blocks (Drop-ins, Boilerplate, SDK), Commerce APIs, backends, and AEP.](/images/get-started/storefront-overview.svg)</Diagram>
+
+## Choose your path
+
+Both B2C and B2B storefronts are built from the same foundation. B2B adds company management, purchase orders, requisition lists, negotiable quotes, and approval workflows through additional drop-in packages.
+
+<CardGrid columns={2}>
   <LinkCard
     noborder
-    icon='document'
-    title="Storefront Architecture"
-    description="Understand the underlying architecture and design patterns of Adobe Commerce Storefronts."
-    link="/get-started/architecture/"
-    rightIcon="right-arrow"
-  />
-  <LinkCard
-    noborder
-    icon='document'
-    title="Create a Storefront"
-    description="Get started by creating your first Adobe Commerce Storefront with our step-by-step guide."
+    icon="document"
+    title="Build a B2C storefront"
+    description="Step-by-step guide to a shopper-facing storefront with catalog, cart, checkout, and account drop-ins on Edge Delivery."
     link="/get-started/create-storefront/"
     rightIcon="right-arrow"
   />
   <LinkCard
     noborder
-    icon='document'
-    title="Browser Compatibility"
-    description="Learn which browsers and versions are supported for optimal storefront performance."
-    link="/get-started/browser-compatibility/"
+    icon="document"
+    title="Build a B2B storefront"
+    description="B2B drop-ins overview — requisition lists, purchase orders, company management, and negotiable quotes on top of the B2C foundation."
+    link="/dropins-b2b/"
+    rightIcon="right-arrow"
+  />
+</CardGrid>
+
+## Recommended order
+
+New to the platform? This is the most efficient path from zero to a working, launch-ready storefront.
+
+<Steps>
+1. **Prerequisites** — [Confirm access](/get-started/prerequisites/) to Adobe Commerce (ACCS or 2.4.7+), Edge Delivery Services, Node.js 18+, and GitHub before touching any setup steps.
+
+2. **Core concepts** — [Read the 5-minute map](/get-started/core-concepts/) of how Edge Delivery, Commerce APIs, drop-ins, the boilerplate, and the SDK connect. This is worth doing before the architecture page — it's plain language, not a diagram.
+
+3. **Architecture** — [Storefront architecture](/get-started/architecture/) for the complete composable architecture diagram, the runtime rendering flow, and the layer-by-layer breakdown of the boilerplate.
+
+4. **Drop-ins concepts** — [Drop-ins introduction](/dropins/all/introduction/) and [Using drop-ins](/dropins/all/quick-start/) cover the extension model — slots, events, transformers, styling, and configuration — before you dive into per-component reference.
+
+5. **SDK** — [SDK introduction](/sdk/) for the CLI, [UI components](/sdk/components/overview/), and [API reference](/sdk/reference/).
+
+6. **Guides** — Boilerplate setup and [storefront configuration](/setup/) when you're ready to connect Commerce APIs, configure CDN, and set up CORS.
+
+7. **Performance** — [Performance best practices](/get-started/performance/) before you tune any loading behavior. Read alongside [Keeping it 100](https://www.aem.live/developer/keeping-it-100). Validate with [Lighthouse](/get-started/run-lighthouse/).
+
+8. **Launch** — [Launch checklist](/setup/launch/), analytics, SEO, and observability in **Guides → Launch and observability**.
+</Steps>
+
+## Explore
+
+<CardGrid columns={3}>
+  <LinkCard
+    noborder
+    icon="document"
+    title="Prerequisites"
+    description="Services, tools, and backend access you need before the first setup step."
+    link="/get-started/prerequisites/"
     rightIcon="right-arrow"
   />
   <LinkCard
     noborder
-    icon='document'
-    title="Run Lighthouse Audits"
-    description="Learn how to run performance audits to ensure your storefront meets high-performance standards."
-    link="/get-started/run-lighthouse/"
+    icon="document"
+    title="Core concepts"
+    description="Plain-English map of the five pieces — EDS, Commerce APIs, drop-ins, boilerplate, and SDK."
+    link="/get-started/core-concepts/"
     rightIcon="right-arrow"
   />
   <LinkCard
     noborder
-    icon='document'
+    icon="document"
+    title="Storefront architecture"
+    description="Composable architecture diagram, runtime rendering flow, and boilerplate layer breakdown."
+    link="/get-started/architecture/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Drop-ins concepts"
+    description="Slots, events, transformers, styling, and configuration before using per-component reference."
+    link="/dropins/all/introduction/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Storefront SDK"
+    description="CLI, UI components, design tokens, and API reference for building with drop-ins."
+    link="/sdk/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="Sample projects"
+    description="Scaffold from the Commerce boilerplate template or explore reference implementations to start fast."
+    link="/get-started/sample-projects/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
     title="Performance best practices"
-    description='Apply best practices to ensure your site performance is optimized and aligned with <a href="https://www.aem.live/developer/keeping-it-100" target="_blank" rel="noopener noreferrer" style="position: relative; z-index: 2;">Keeping it 100</a>.'
+    description="Edge Delivery loading model, eager/lazy/delayed CSS, and alignment with Keeping it 100."
     link="/get-started/performance/"
     rightIcon="right-arrow"
   />
   <LinkCard
     noborder
-    icon='document'
-    title="Launch Checklist"
-    description="Verify that you have completed all recommended steps before launching your storefront project."
-    link="/setup/launch/"
+    icon="document"
+    title="What's new"
+    description="Recent releases, drop-in changelogs, and boilerplate suite updates."
+    link="/get-started/whats-new/"
+    rightIcon="right-arrow"
+  />
+  <LinkCard
+    noborder
+    icon="document"
+    title="FAQ"
+    description="Answers to common questions about architecture, performance, and customization."
+    link="/troubleshooting/faq/"
     rightIcon="right-arrow"
   />
 </CardGrid>
+
+</ProseFlow>

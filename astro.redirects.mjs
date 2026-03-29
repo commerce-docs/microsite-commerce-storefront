@@ -81,14 +81,22 @@ export function generateRedirects(basePath) {
         '/dropins/other/search': `${basePath}/dropins/product-discovery`,
 
         // ========= GET STARTED REDIRECTS =========
+        '/get-started/launch': `${basePath}/setup/launch`,
         '/get-started/launch-checklist': `${basePath}/launch`,
-        '/get-started/requirements': `${basePath}/get-started/architecture`,
+        '/get-started/requirements': `${basePath}/get-started/prerequisites`,
         '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
         '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
-        '/get-started/release': `${basePath}/releases/`,
+        '/get-started/release': `${basePath}/get-started/whats-new`,
+        '/get-started/releases': `${basePath}/get-started/whats-new`,
         '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/introduction/': `${basePath}/get-started/`,
+        // "create-storefront" URL is preserved; title/H1 changed to "Build a B2C storefront"
+        '/get-started/build-b2c-storefront/': `${basePath}/get-started/create-storefront`,
+        '/get-started/build-b2b-storefront/': `${basePath}/dropins-b2b`,
+        '/get-started/key-concepts/': `${basePath}/get-started/core-concepts`,
+        '/get-started/concepts/': `${basePath}/get-started/core-concepts`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
