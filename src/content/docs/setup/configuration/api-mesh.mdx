@@ -1,0 +1,139 @@
+---
+title: API Mesh configuration
+description: Configure Adobe API Mesh to route Commerce GraphQL and REST requests through a unified endpoint for your Edge Delivery Services storefront.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import ProseFlow from '@components/ProseFlow.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+<ProseFlow variant="article">
+
+**API Mesh for Adobe Developer App Builder** is a managed reverse proxy service that unifies multiple API sources behind a single GraphQL endpoint. For Commerce storefronts, API Mesh is the recommended approach for combining Commerce GraphQL with third-party APIs, adding authentication headers, or applying response transformations — without modifying frontend code.
+
+<Aside type="note" title="API Mesh vs. CDN workarounds">
+Earlier storefront guides described CDN-level header injection as a workaround for accessing Commerce APIs. API Mesh is the production-grade alternative: it handles authentication, request routing, and schema stitching server-side, removing those concerns from your CDN configuration and frontend code.
+</Aside>
+
+## When to use API Mesh
+
+Use API Mesh for your storefront when:
+
+- You need to combine Commerce GraphQL with a third-party API (for example, a loyalty service, ERP, or custom catalog source).
+- Your Commerce instance requires authentication headers that should not be exposed in frontend code.
+- You want to apply transformations or field resolvers without modifying Commerce or deploying custom modules.
+- You are migrating from a REST-based architecture and need schema stitching to expose REST endpoints as GraphQL.
+
+For standard ACCS deployments where the storefront connects directly to Commerce GraphQL, you do not need API Mesh unless the above scenarios apply.
+
+## Prerequisites
+
+- A Developer Console project with the **API Mesh** API added to your workspace. See [App Builder setup](/setup/configuration/app-builder/).
+- The `@adobe/aio-cli-plugin-api-mesh` plugin installed:
+
+  ```bash
+  aio plugins:install @adobe/aio-cli-plugin-api-mesh
+  ```
+
+- Your Commerce GraphQL endpoint URL from [Commerce Cloud Manager](/setup/configuration/cloud-manager/).
+
+## Create a mesh configuration
+
+A mesh configuration file (`mesh.json`) defines the API sources that API Mesh aggregates. The following example creates a mesh with Commerce GraphQL as the primary source:
+
+```json
+{
+  "meshConfig": {
+    "sources": [
+      {
+        "name": "Commerce",
+        "handler": {
+          "graphql": {
+            "endpoint": "https://your-commerce-instance.example.com/graphql"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Replace `https://your-commerce-instance.example.com/graphql` with the endpoint from your Commerce Cloud Manager environment.
+
+## Deploy the mesh
+
+<Steps>
+
+1. Sign in to the Adobe CLI and select your organization and project:
+
+   ```bash
+   aio login
+   aio app use <workspace>
+   ```
+
+1. Create the mesh from your configuration file:
+
+   ```bash
+   aio api-mesh:create mesh.json
+   ```
+
+1. After creation, retrieve your mesh endpoint URL:
+
+   ```bash
+   aio api-mesh:get
+   ```
+
+   Copy the **Mesh endpoint URL** from the output — this is the value for `commerce-core-endpoint` in your storefront `config.json`.
+
+1. Update your storefront configuration to use the mesh endpoint instead of the direct Commerce GraphQL URL. See [Storefront configuration](/setup/configuration/commerce-configuration/).
+
+</Steps>
+
+## Update an existing mesh
+
+When your Commerce configuration changes (for example, a new Commerce instance URL or additional API source), update your mesh:
+
+```bash
+aio api-mesh:update mesh.json
+```
+
+## Add authentication headers
+
+If your Commerce instance requires an `Authorization` header, add it as a source-level header in your mesh configuration rather than exposing it in your storefront `config.json`:
+
+```json
+{
+  "meshConfig": {
+    "sources": [
+      {
+        "name": "Commerce",
+        "handler": {
+          "graphql": {
+            "endpoint": "https://your-commerce-instance.example.com/graphql",
+            "operationHeaders": {
+              "Authorization": "Bearer {context.headers['x-commerce-token']}"
+            }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+For the full API Mesh documentation including advanced schema stitching, transformations, and multi-source configurations, see the <Link href="https://developer.adobe.com/graphql-mesh-gateway/" text="API Mesh for Adobe Developer App Builder" /> documentation.
+
+## Storefront configuration with API Mesh
+
+Once your mesh is deployed, set `commerce-core-endpoint` in your storefront `config.json` to the mesh endpoint URL:
+
+```json
+{
+  "commerce-core-endpoint": "https://graph.adobe.io/api/<mesh-id>/graphql?api_key=<api-key>"
+}
+```
+
+The storefront's drop-ins will route all GraphQL requests through the mesh, which in turn proxies them to Commerce.
+
+</ProseFlow>

@@ -61,11 +61,16 @@ export function generateSidebar() {
                   label: 'Overview',
                   link: '/setup/',
                 },
+                { label: 'Pre-onboarding', link: '/setup/pre-onboarding/' },
                 {
                   label: 'Configuration',
                   collapsed: true,
                   items: [
                     { label: 'Overview', link: '/setup/configuration/' },
+                    { label: 'Experience Cloud access', link: '/setup/configuration/experience-cloud-access/' },
+                    { label: 'Commerce Cloud Manager', link: '/setup/configuration/cloud-manager/' },
+                    { label: 'App Builder setup', link: '/setup/configuration/app-builder/' },
+                    { label: 'API Mesh', link: '/setup/configuration/api-mesh/' },
                     { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
                     { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
                     { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
@@ -86,7 +91,8 @@ export function generateSidebar() {
                     { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                     { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
                   ],
-                }
+                },
+                { label: 'Custom frontend', link: '/setup/custom-frontend/' },
               ]
             },
             {

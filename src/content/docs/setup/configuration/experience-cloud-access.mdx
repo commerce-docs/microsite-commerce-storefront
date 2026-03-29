@@ -1,0 +1,98 @@
+---
+title: Adobe Experience Cloud access
+description: Set up Adobe Admin Console access, product profiles, and entitlements required for an Adobe Commerce storefront on Edge Delivery Services.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import ProseFlow from '@components/ProseFlow.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+<ProseFlow variant="article">
+
+Adobe Commerce storefronts on Edge Delivery Services depend on several Adobe cloud services that are managed through the Adobe Admin Console. This page explains what access you need, how product profiles map to storefront roles, and how to verify that your organization has the correct entitlements before starting setup.
+
+## Adobe Admin Console overview
+
+The <Link href="https://adminconsole.adobe.com" text="Adobe Admin Console" /> is the central hub for managing user access and product licenses across all Adobe Experience Cloud services. Your system administrator uses it to:
+
+- Assign users to product profiles for each service.
+- Manage organization-level entitlements.
+- Provision API credentials for non-UI integrations.
+
+Your organization is identified by an **IMS Org ID** (for example, `ABCD1234@AdobeOrg`). This ID is required when configuring API Mesh, the Data Connection extension, and the AEP data stream. Retrieve it from the Admin Console or the Adobe Developer Console URL.
+
+## Required products and entitlements
+
+Before you begin storefront setup, your Adobe account team must provision the following products in your Admin Console:
+
+<TableWrapper nowrap={[0]}>
+
+| Product | Required for | Notes |
+|---------|-------------|-------|
+| Adobe Commerce (ACCS or ACO) | Commerce backend, APIs | Provisioned by your Adobe account team |
+| Edge Delivery Services | Storefront delivery and CDN | Provisioned through your EDS contract |
+| Adobe I/O / App Builder | API Mesh, Data Connection, Commerce Eventing | Requires App Builder entitlement |
+| Adobe Experience Platform | Data Connection, Live Search, Product Recommendations | Optional but recommended for production |
+
+</TableWrapper>
+
+<Aside type="tip" title="Verify entitlements">
+If a product is not listed in your Admin Console, contact your Adobe account team or Customer Success Manager. Provisioning for ACCS, EDS, and App Builder must be requested through your Adobe contract — they are not self-service.
+</Aside>
+
+## Product profiles for storefront developers
+
+Product profiles control what each user can access within a product. The following profiles are relevant for storefront developers:
+
+<TableWrapper nowrap={[0]}>
+
+| Service | Profile / role | Who needs it |
+|---------|---------------|-------------|
+| Adobe Commerce (ACCS) | Admin or Integration user | Developers who manage Commerce configuration or APIs |
+| Edge Delivery Services | DA.live access | All developers who author or publish content |
+| Adobe Developer Console | Developer or Admin | Developers who create App Builder projects and API Mesh |
+| Adobe Experience Platform | Developer or Data Engineer | Developers who configure Data Connection and AEP data streams |
+
+</TableWrapper>
+
+## Add users to product profiles
+
+<Steps>
+
+1. Sign in to the <Link href="https://adminconsole.adobe.com" text="Adobe Admin Console" /> as a system administrator.
+
+1. Select **Products** from the top navigation.
+
+1. Select the product you want to configure (for example, Adobe Commerce as a Cloud Service).
+
+1. Select the product profile, then click **Add users**.
+
+1. Enter the user's email address and assign the appropriate role.
+
+1. Click **Save**. The user receives an email invitation to accept access.
+
+</Steps>
+
+For detailed Admin Console documentation, see the <Link href="https://helpx.adobe.com/enterprise/using/admin-console.html" text="Admin Console enterprise guide" />.
+
+## API credentials for non-UI integrations
+
+Several storefront services use service-account credentials (OAuth or API key) rather than user-based login. You create these in the Adobe Developer Console, not the Admin Console.
+
+- **API Mesh**: Requires an API key scoped to your Developer Console project.
+- **Data Connection**: Requires an OAuth server-to-server credential for the Commerce Eventing and AEP integration.
+- **Catalog Service / Live Search**: API keys are provisioned from your Commerce instance after the service connector is installed.
+
+See [App Builder setup](/setup/configuration/app-builder/) for how to create and manage Developer Console credentials.
+
+## Verify access
+
+Before starting [Create a storefront](/get-started/create-storefront/), confirm the following:
+
+- Your IMS Org ID is available in the Admin Console (**Settings** > **Organization details**).
+- Your user account can sign in to <Link href="https://da.live" text="DA.live" /> with your Adobe ID.
+- Your user account can access the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" /> and see your organization's projects.
+- Your user account can access Commerce Cloud Manager with at least the **Developer** role (ACCS deployments only).
+
+</ProseFlow>
