@@ -1,6 +1,6 @@
 ---
-title: Build a B2C storefront
-description: Step-by-step guide to creating an Edge Delivery Services storefront with Commerce drop-in components for a standard B2C catalog and checkout.
+title: Create a storefront
+description: Step-by-step guide to creating an Adobe Commerce Edge Delivery Services storefront. Covers both B2C and B2B paths — from boilerplate setup and content initialization to drop-in configuration.
 time: ~20 minutes
 ---
 
@@ -27,7 +27,11 @@ import ProseFlow from '@components/ProseFlow.astro';
 
 <ProseFlow variant="article">
 
-This tutorial walks you through creating a new Edge Delivery Services storefront step by step. Each section starts with an overview and key vocabulary, then guides you through the details.
+This tutorial walks you through creating a new Edge Delivery Services storefront step by step. The setup is the same whether you're building a B2C or B2B storefront — the paths diverge only when choosing your storefront theme and, for B2B, installing the additional B2B drop-in packages.
+
+<Aside type="tip" title="B2C or B2B?">
+Steps 1-5 are identical for both storefront types. In **Add content** (step 4), choose the **B2B** theme if you're building a B2B storefront — the Site Creator configures your content folder with B2B-specific pages and navigation. A final step walks through the six B2B drop-in packages that layer on top of the B2C foundation.
+</Aside>
 
 ## Tutorial overview
 
@@ -58,19 +62,19 @@ The following diagram shows the steps you'll take to create and configure your s
 
 {/* TODO: When Backend options (/get-started/backends/) is available, point the links below to that page for backend types and prerequisites. */}
 
-Storefront supports three distinct customer scenarios. Each has different prerequisites and setup steps. Follow only the guidance for your backend. See the [Get started](/get-started/) section for architecture and setup guidance.
+Adobe Commerce Storefront supports three distinct customer scenarios. Each has different prerequisites and setup steps. Follow only the guidance for your backend.
 
 <TableWrapper nowrap={[0]}>
 
 | Scenario | Description | Prerequisites |
 |----------|-------------|---------------|
-| **Commerce PaaS** | Existing Adobe Commerce Platform-as-a-Service customers who previously accessed Storefront without Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer licenses | Manual installation: Storefront Compatibility package, Storefront services (Data Connection, Services Connector, Catalog Service, Live Search, Product Recommendations). See [Get started](/get-started/) for prerequisites. |
-| **Adobe Commerce as a Cloud Service** | New Adobe Commerce as a Cloud Service customers whose license includes Storefront | All requirements and services are automatically managed. See [Get started](/get-started/) for prerequisites. |
-| **Adobe Commerce Optimizer** | New Adobe Commerce Optimizer customers whose license includes Storefront, or existing Commerce customers who add Adobe Commerce Optimizer | Fully managed SaaS. See [Get started](/get-started/) for supported backend combinations. |
+| **Commerce PaaS** | Existing Adobe Commerce Platform-as-a-Service customers who previously accessed Storefront without Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer licenses | Manual installation required: Storefront Compatibility package, Data Connection, Services Connector, Catalog Service, Live Search, Product Recommendations. See [Prerequisites](/get-started/prerequisites/) and [Compatibility package installation](/setup/configuration/storefront-compatibility/install/). |
+| **Adobe Commerce as a Cloud Service** | New Adobe Commerce as a Cloud Service customers whose license includes Storefront | All requirements and services are automatically managed. See [Prerequisites](/get-started/prerequisites/). |
+| **Adobe Commerce Optimizer** | New Adobe Commerce Optimizer customers whose license includes Storefront, or existing Commerce customers who add Adobe Commerce Optimizer | Fully managed SaaS. No manual service installation required. |
 
 </TableWrapper>
 
-Confirm your backend's prerequisites before continuing (see the [Get started](/get-started/) section for setup guidance). Unless a step says otherwise, it applies to all backend types; only **Link repo to commerce data** is backend-specific.
+Confirm your backend's prerequisites before continuing (see [Prerequisites](/get-started/prerequisites/)). Unless a step says otherwise, it applies to all backend types; only **Link repo to commerce data** is backend-specific.
 
 :::note[Import an existing EDS site]
 If you have an existing Edge Delivery Service site for your Commerce project, you can skip the store creation process, and import both the code and the content into the Document Author environment using the <Link href="https://da.live/docs/operations/import" text="Site importer tool" />.
@@ -124,7 +128,7 @@ Before you begin, take a moment to set up these required tools and accounts as n
   icon="commerce"
   title="Adobe Commerce backend"
   description="Verify prerequisites for your backend type."
-  link="/get-started/"
+  link="/get-started/prerequisites/"
   rightIcon="right-arrow"
 />
 <LinkCard
@@ -299,12 +303,29 @@ Now let's create and initialize the content side of your storefront. We'll creat
 If you do not want demo content, you can create a file in <Link href="https://da.live/" text="https://da.live/#/{org}/{site}/" /> replacing `{org}` and `{site}` with your own. This reserves the org and site for you to add your own content.
 </Aside>
 
-<Callouts>
+<Steps>
 1. Open the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator app" /> in DA, and select **Use existing repository**.
 1. Copy the GitHub owner and site values to the input fields and click **Create site**.
-1. Follow the prompts, and by the end the content will have been copied to your content folder.
-1. You may have to manually preview or publish the content, depending on whether you followed the prerequisites.
-</Callouts>
+1. Follow the prompts. When asked to select a base theme, choose your storefront type:
+
+    <Tabs>
+
+    <TabItem label="B2C storefront">
+
+    Keep the default **B2C** theme selection. The Site Creator populates your content folder with a standard catalog and checkout page structure.
+
+    </TabItem>
+
+    <TabItem label="B2B storefront">
+
+    Select the **B2B** theme. The Site Creator configures your content folder with B2B-specific pages, navigation, and layout structure — including company management, purchase orders, and requisition list pages. After completing the remaining setup steps, proceed to **Install B2B drop-ins** to wire the B2B commerce functionality.
+
+    </TabItem>
+
+    </Tabs>
+
+4. You may have to manually preview or publish the content, depending on whether you followed the prerequisites.
+</Steps>
 
 <Diagram caption="Initialize your storefront content">
   ![Initialize your storefront content](images/site-creator.png)
@@ -365,6 +386,33 @@ Sidekick is automatically installed on new EDS sites. Configuration of Sidekick 
 1. Open the project in your favorite code editor. You're now ready to explore the boilerplate and start customizing your storefront!
 
 </Steps>
+
+</Task>
+
+<Task>
+
+### (B2B) Install B2B drop-ins
+
+If you selected the **B2B** theme when adding content, your storefront pages and navigation are already configured for B2B. This task adds the commerce functionality through six drop-in packages that layer on top of the B2C foundation.
+
+<Aside type="note" title="Already in the boilerplate">
+The B2B packages and their initializers ship with the boilerplate and are pre-registered when you use the B2B theme. The initializers live in `scripts/initializers/`. This task is a reference to what each package provides and where to find detailed configuration guidance.
+</Aside>
+
+<TableWrapper nowrap={[0,1]}>
+
+| Drop-in | Package | What it adds |
+|---|---|---|
+| [Company Management](/dropins-b2b/company-management/) | `@dropins/storefront-company-management` | Company profiles, role-based permissions, and user invitations |
+| [Company Switcher](/dropins-b2b/company-switcher/) | `@dropins/storefront-company-switcher` | UI for users associated with multiple companies |
+| [Purchase Order](/dropins-b2b/purchase-order/) | `@dropins/storefront-purchase-order` | Purchase order workflows and approval rules |
+| [Quote Management](/dropins-b2b/quote-management/) | `@dropins/storefront-quote-management` | Negotiable quotes and quote templates |
+| [Quick Order](/dropins-b2b/quick-order/) | `@dropins/storefront-quick-order` | Bulk ordering by SKU, search, and CSV upload |
+| [Requisition List](/dropins-b2b/requisition-list/) | `@dropins/storefront-requisition-list` | Reusable product lists for repeat ordering |
+
+</TableWrapper>
+
+Each drop-in's reference documentation covers initialization options, containers, events, slots, and styling. See the [B2B drop-ins overview](/dropins-b2b/) for the full reference.
 
 </Task>
 
