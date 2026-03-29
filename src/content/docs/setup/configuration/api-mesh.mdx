@@ -18,14 +18,14 @@ Earlier storefront guides described CDN-level header injection as a workaround f
 
 ## When to use API Mesh
 
-Use API Mesh for your storefront when:
+Consider API Mesh when you need to:
 
-- You need to combine Commerce GraphQL with a third-party API (for example, a loyalty service, ERP, or custom catalog source).
-- Your Commerce instance requires authentication headers that should not be exposed in frontend code.
-- You want to apply transformations or field resolvers without modifying Commerce or deploying custom modules.
-- You are migrating from a REST-based architecture and need schema stitching to expose REST endpoints as GraphQL.
+- Combine Commerce GraphQL with one or more third-party GraphQL or REST APIs (for example, ERP, PIM, CRM, payment) behind a single endpoint.
+- Reduce client-side complexity — one endpoint, one auth model, no credentials exposed in frontend code.
+- Add custom logic or data transformations at the gateway without modifying Commerce.
+- Migrate from a REST-based architecture by exposing REST endpoints as GraphQL.
 
-For standard ACCS deployments where the storefront connects directly to Commerce GraphQL, you do not need API Mesh unless the above scenarios apply.
+**If your storefront only talks to Adobe Commerce and Catalog Service, you likely do not need API Mesh.** See [Storefront configuration](/setup/configuration/commerce-configuration/) and [Content delivery network](/setup/configuration/content-delivery-network/) for direct routing without a mesh layer.
 
 ## Prerequisites
 
@@ -135,5 +135,15 @@ Once your mesh is deployed, set `commerce-core-endpoint` in your storefront `con
 ```
 
 The storefront's drop-ins will route all GraphQL requests through the mesh, which in turn proxies them to Commerce.
+
+## CDN and Fastly considerations
+
+If you use Adobe Commerce on Cloud with Fastly in front of your storefront, keep the following in mind when routing traffic through API Mesh:
+
+- **Header size limit** — API Mesh has a header size limit. Your CDN configuration may need to strip third-party cookies from GraphQL requests. See the [API Mesh section](/setup/configuration/content-delivery-network/#api-mesh) of the CDN doc for a VCL snippet that removes third-party cookies.
+- **Maintenance page** — Ensure your CDN maintenance page configuration does not block GraphQL or Mesh requests. See the [maintenance page workaround](/setup/configuration/content-delivery-network/#maintainance-page-workaround).
+- **Multiple set-cookie headers** — There is a known issue where API Mesh combines multiple `set-cookie` headers. See the [multiple set-cookie headers workaround](/setup/configuration/content-delivery-network/#mulitple-set-cookie-headers-workaround) for a VCL fix.
+
+These apply when the storefront calls an API Mesh endpoint routed through the same Fastly service as your Commerce backend.
 
 </ProseFlow>
