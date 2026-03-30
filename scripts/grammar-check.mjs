@@ -1,6 +1,6 @@
 /**
  * LanguageTool (via gramma) for Markdown/MDX prose.
- * Complements cspell: the "typos" category is disabled to reduce overlap with spelling checks.
+ * The "typos" category is disabled here so spelling is reviewed separately (editor or other tools).
  *
  * Env:
  *   LANGUAGETOOL_API_KEY — optional; higher limits at https://languagetool.org/ (recommended for CI / full-repo runs).
@@ -22,7 +22,7 @@ const gramma = require('gramma');
 
 const MAX_CHUNK_CHARS = 8000;
 
-/** Typos: cspell. Others: reduce MDX / technical-doc false positives vs. prose-only LanguageTool defaults. */
+/** Typos off (spelling checked elsewhere); other categories reduce MDX / technical-doc false positives. */
 const LT_RULES_TECH_DOCS = {
   typos: false,
   typography: false,

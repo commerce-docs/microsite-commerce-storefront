@@ -1015,13 +1015,11 @@ A: Create a GitHub issue or submit a quick PR to fix it. Don't let broken docs p
 ### Essential Commands
 
 ```bash
-pnpm dev           # Spell-check, then start development server
-pnpm build         # Spell-check, then build (same for build:prod and build:prod-fast)
+pnpm dev           # Start development server
+pnpm build         # Build (same for build:prod and build:prod-fast)
 pnpm preview       # Preview production build
 pnpm lint          # Check for linting errors
-pnpm spellcheck    # Spell-check Markdown and MDX only (cspell; also runs before dev/build)
-pnpm grammar-check # LanguageTool via gramma (changed files vs release by default; see scripts/grammar-check.mjs)
-pnpm prose:check   # spellcheck then grammar-check
+pnpm grammar-check # Optional LanguageTool via gramma (changed files vs release by default; see scripts/grammar-check.mjs)
 ```
 
 ### File Templates
