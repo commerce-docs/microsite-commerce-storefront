@@ -111,21 +111,21 @@ See the <Link href="https://example.com/docs" text="external documentation" /> f
 
 ## How to add a PR
 
-If you don't have write access to the repo, [fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork instead of the repo, push to your fork, then open a PR from your fork to `develop`.
+If you don't have write access to the repo, [fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork instead of the repo, push to your fork, then open a PR from your fork to `release`.
 
-1. Create a new branch for your changes, based on `develop`:
+1. Create a new branch for your changes, based on `release`:
 
    ```bash
-   git checkout develop
-   git pull origin develop
+   git checkout release
+   git pull origin release
    git checkout -b your-branch-name
    ```
 
 2. Make your changes to the docs (edit or add `.mdx` files in `src/content/docs/`).
 
-3. Run `pnpm build:prod-fast` to verify your changes build, then commit, push, and open a PR against `develop`. The `develop` branch is the main branch used for publishing the site.
+3. Run `pnpm build:prod-fast` to verify your changes build, then commit, push, and open a PR against `release`. The `release` branch is the main branch used for publishing the site.
 
-4. After your PR is merged into `develop`, content is published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site by the nightly build.
+4. After your PR is merged into `release`, content is published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site by the nightly build.
 
 ## How to add release notes
 

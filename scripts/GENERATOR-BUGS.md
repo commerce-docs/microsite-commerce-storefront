@@ -18,7 +18,7 @@ This file tracks bugs found in documentation generators, their fixes, and any ma
 - **Branches Affected**: 
   - `merchant-documentation` (needs manual sidebar fixes)
   - `merchant-documentation-gaps` (sidebar fixes applied)
-  - `develop` (needs verification)
+  - `release` (needs verification)
 - **Manual Fix Required**: 
   - Add missing sidebar entries to `astro.config.mjs`:
     - Order → Installation
