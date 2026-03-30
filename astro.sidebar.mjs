@@ -62,6 +62,15 @@ export function generateSidebar() {
             },
             { label: 'Pre-onboarding', link: '/setup/pre-onboarding/' },
             {
+              label: 'Discovery',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/discovery/' },
+                { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+                { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+              ],
+            },
+            {
               label: 'Configuration',
               collapsed: true,
               items: [
@@ -78,7 +87,6 @@ export function generateSidebar() {
                 { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
                 { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
                 { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-                { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
               ],
             },
             {
@@ -111,7 +119,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Federated search', link: '/how-tos/federated-search/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
             {
               label: 'Cart',
