@@ -1019,6 +1019,7 @@ pnpm dev           # Start development server
 pnpm build         # Build for production
 pnpm preview       # Preview production build
 pnpm lint          # Check for linting errors
+pnpm spellcheck    # Spell-check Markdown and MDX (cspell)
 ```
 
 ### File Templates
