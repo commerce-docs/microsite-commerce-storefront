@@ -40,9 +40,11 @@ Install Node.js and pnpm:
 
 ## Development commands
 
-- `pnpm dev` — Start the local dev server. The site auto-reloads when you save.
-- `pnpm spellcheck` — Check spelling in Markdown and MDX using [cspell](https://cspell.org/) (`cspell.json`, `cspell-words.txt`).
-- `pnpm build:prod-fast` — Run a test production build before opening a PR.
+- `pnpm dev` — Run [cspell](https://cspell.org/) on Markdown and MDX, then start the local dev server. The site auto-reloads when you save. Spelling issues fail the command before the server starts.
+- `pnpm spellcheck` — Spell-check only (same check used by `dev` and builds). Configuration: `cspell.json`, `cspell-words.txt`.
+- `pnpm grammar-check` — [LanguageTool](https://languagetool.org/) grammar and punctuation (via [gramma](https://github.com/caderek/gramma)) on Markdown/MDX under `src/content/` by default. By default only **changed** files vs branch `release` (plus unstaged/staged); set `GRAMMAR_ALL=1` for the whole tree. Expect some false positives on MDX tables, code, and API names. Optional: set `LANGUAGETOOL_API_KEY` in `.env` for higher API limits. See `scripts/grammar-check.mjs` for env vars (`GRAMMAR_SKIP`, `GRAMMAR_BASE`, …).
+- `pnpm prose:check` — Runs `spellcheck` then `grammar-check` (use before a PR if you want both). Dev and production builds still run **spelling only** so local grammar noise does not block `pnpm dev` or CI builds.
+- `pnpm build`, `pnpm build:prod`, and `pnpm build:prod-fast` — Spell-check first, then run the Astro build. Spelling issues fail the build. `build:prod-fast` skips compression for a faster production check (handy before opening a PR).
 - `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
 - `pnpm scrub` — Nuclear option: same as clean but also removes `pnpm-lock.yaml`.
 
