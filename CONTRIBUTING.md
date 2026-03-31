@@ -1016,7 +1016,7 @@ A: Create a GitHub issue or submit a quick PR to fix it. Don't let broken docs p
 
 ```bash
 pnpm dev           # Start development server
-pnpm build         # Build for production
+pnpm build         # Build (same for build:prod and build:prod-fast)
 pnpm preview       # Preview production build
 pnpm lint          # Check for linting errors
 ```
