@@ -41,7 +41,6 @@ Install Node.js and pnpm:
 ## Development commands
 
 - `pnpm dev` — Start the local dev server and open a browser. The site auto-reloads when you save.
-- `pnpm grammar-check` — Optional [LanguageTool](https://languagetool.org/) grammar and style pass (via [gramma](https://github.com/caderek/gramma)) on Markdown/MDX under `src/content/` by default. By default only **changed** files vs branch `release` (plus unstaged/staged); set `GRAMMAR_ALL=1` for the whole tree. Expect some false positives on MDX tables, code, and API names. Optional: set `LANGUAGETOOL_API_KEY` in `.env` for higher API limits. See `scripts/grammar-check.mjs` for env vars (`GRAMMAR_SKIP`, `GRAMMAR_BASE`, …). **Versioning:** `gramma` is pinned to an exact release in `package.json` for predictable CLI behavior.
 - `pnpm build`, `pnpm build:prod`, and `pnpm build:prod-fast` — Run the Astro build. `build:prod-fast` skips compression for a faster production check (handy before opening a PR).
 - `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
 - `pnpm scrub` — Nuclear option: same as clean but also removes `pnpm-lock.yaml`.

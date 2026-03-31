@@ -1019,7 +1019,6 @@ pnpm dev           # Start development server
 pnpm build         # Build (same for build:prod and build:prod-fast)
 pnpm preview       # Preview production build
 pnpm lint          # Check for linting errors
-pnpm grammar-check # Optional LanguageTool via gramma (changed files vs release by default; see scripts/grammar-check.mjs)
 ```
 
 ### File Templates
