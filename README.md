@@ -15,10 +15,10 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 
 ## Prerequisites
 
-Install node and pnpm:
+Install Node.js and pnpm:
 
 - `Node.js 20.13.1` or later.
-- `Pnpm 9.x` or later. See the [pnpm installation instructions](https://pnpm.io/installation).
+- `pnpm 9.x` or later. See the [pnpm installation instructions](https://pnpm.io/installation).
 
 ## Set up your local environment
 
@@ -40,8 +40,8 @@ Install node and pnpm:
 
 ## Development commands
 
-- `pnpm dev` — Start the local dev server. The site auto-reloads when you save.
-- `pnpm build:prod-fast` — Run a test production build before opening a PR.
+- `pnpm dev` — Start the local dev server and open a browser. The site auto-reloads when you save.
+- `pnpm build`, `pnpm build:prod`, and `pnpm build:prod-fast` — Run the Astro build. `build:prod-fast` skips compression for a faster production check (handy before opening a PR).
 - `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
 - `pnpm scrub` — Nuclear option: same as clean but also removes `pnpm-lock.yaml`.
 
