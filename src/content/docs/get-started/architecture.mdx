@@ -174,61 +174,6 @@ Commerce services are the shared APIs and capabilities your Commerce backend pro
 
 </TableWrapper>
 
-## Migrating from Luma
-
-**Not migrating from Luma?** Skip to [How drop-ins communicate](#how-drop-ins-communicate).
-
-Some projects move content and marketing to EDS first while cart, checkout, or account still run on the Luma theme on Adobe Commerce PaaS. This section covers only that phased, dual-surface setup.
-
-### What Luma Bridge does
-
-Use Luma Bridge on Adobe Commerce PaaS when Luma-themed cart, checkout, or account still run on Commerce while content and marketing move to Edge Delivery first.
-
-Drop-in components vs. the bridge: [User authentication](/dropins/user-auth/) and [cart](/dropins/cart/) run only on EDS. They set cart and authentication cookies. Luma Bridge is a PHP module on Commerce that matches that cookie contract so Luma pages share session with EDS. It does not initialize or plug into drop-in components. Commerce adapts to what drop-in components already do.
-
-- **Session behavior** — [How does session management work?](/setup/discovery/luma-bridge/#how-does-session-management-work)
-- **Topology and limitations** — [Luma Bridge](/setup/discovery/luma-bridge/) (for example, when not to use this approach with PWA Studio or Vue Storefront)
-- **PaaS + Adobe Commerce Optimizer Connector migrations** — [Backend options](/get-started/backends/#backend-topology)
-
-#### Migration scenarios
-
-<Diagram type="mermaid" code={`
-graph TB
-    subgraph S1["PaaS + Luma"]
-        A1["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
-        B1["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
-        C1["<b>Luma</b><br/><small>Theme storefront</small>"]
-        A1 -- "session cookies" --> B1
-        B1 <--> C1
-    end
-    subgraph S2["PaaS + Luma + Adobe Commerce Optimizer"]
-        A2["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
-        B2["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
-        C2["<b>Luma</b><br/><small>Theme storefront</small>"]
-        D2["Adobe Commerce Optimizer Connector"]
-        A2 -- "session cookies" --> B2
-        B2 <--> C2
-        A2 -.-> D2
-    end
-    subgraph S3["Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer"]
-        A3["EDS"]
-        B3["Adobe Commerce Optimizer"]
-        C3["Adobe Commerce as a Cloud Service"]
-        A3 --> B3
-        A3 --> C3
-    end
-    classDef eds fill:#e8f5e9,stroke:#4caf50
-    classDef bridge fill:#fff3e0,stroke:#ff9800
-    classDef luma fill:#e3f2fd,stroke:#2196f3
-    classDef aco fill:#f3e5f5,stroke:#9c27b0
-    classDef accs fill:#f3e5f5,stroke:#9c27b0
-    class A1,A2,A3 eds
-    class B1,B2 bridge
-    class C1,C2 luma
-    class D2,B3 aco
-    class C3 accs
-`} caption="Migration topologies: PaaS + Luma (bridge only), PaaS + Luma + Adobe Commerce Optimizer (bridge and connector during migration), and Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer (no Luma storefront, no Luma Bridge)." />
-
 ## How drop-ins communicate
 
 Drop-in components communicate through a shared event bus (`@dropins/tools/event-bus.js`) using publish-subscribe. Components stay loosely coupled. No drop-in component depends directly on another.
@@ -281,6 +226,61 @@ Each drop-in component documents which events it emits and listens to. See the [
 <Aside type="tip" title="Events vs. analytics">
 The event bus handles **internal** communication between drop-in components on the page. It is separate from [storefront events sent through the Adobe Client Data Layer](/setup/analytics/instrumentation/) for Adobe Commerce services (Live Search, Product Recommendations).
 </Aside>
+
+## Migrating from Luma
+
+**Not migrating from Luma?** Skip this section and go to [Next steps](#next-steps).
+
+Some projects move content and marketing to EDS first while cart, checkout, or account still run on the Luma theme on Adobe Commerce PaaS. This section covers only that phased, dual-surface setup.
+
+### What Luma Bridge does
+
+Use Luma Bridge on Adobe Commerce PaaS when Luma-themed cart, checkout, or account still run on Commerce while content and marketing move to Edge Delivery first.
+
+**Drop-in components and the bridge:** [User authentication](/dropins/user-auth/) and [cart](/dropins/cart/) run only on EDS. They set cart and authentication cookies. Luma Bridge is a PHP module on Commerce that matches that cookie contract so Luma pages share session with EDS. It does not initialize or plug into drop-in components. Commerce adapts to what drop-in components already do.
+
+- **Session behavior** — [How does session management work?](/setup/discovery/luma-bridge/#how-does-session-management-work)
+- **Topology and limitations** — [Luma Bridge](/setup/discovery/luma-bridge/) (for example, when not to use this approach with PWA Studio or Vue Storefront)
+- **PaaS + Adobe Commerce Optimizer Connector migrations** — [Backend options](/get-started/backends/#backend-topology)
+
+#### Migration scenarios
+
+<Diagram type="mermaid" code={`
+graph TB
+    subgraph S1["PaaS + Luma"]
+        A1["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
+        B1["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
+        C1["<b>Luma</b><br/><small>Theme storefront</small>"]
+        A1 -- "session cookies" --> B1
+        B1 <--> C1
+    end
+    subgraph S2["PaaS + Luma + Adobe Commerce Optimizer"]
+        A2["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
+        B2["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
+        C2["<b>Luma</b><br/><small>Theme storefront</small>"]
+        D2["Adobe Commerce Optimizer Connector"]
+        A2 -- "session cookies" --> B2
+        B2 <--> C2
+        A2 -.-> D2
+    end
+    subgraph S3["Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer"]
+        A3["EDS"]
+        B3["Adobe Commerce Optimizer"]
+        C3["Adobe Commerce as a Cloud Service"]
+        A3 --> B3
+        A3 --> C3
+    end
+    classDef eds fill:#e8f5e9,stroke:#4caf50
+    classDef bridge fill:#fff3e0,stroke:#ff9800
+    classDef luma fill:#e3f2fd,stroke:#2196f3
+    classDef aco fill:#f3e5f5,stroke:#9c27b0
+    classDef accs fill:#f3e5f5,stroke:#9c27b0
+    class A1,A2,A3 eds
+    class B1,B2 bridge
+    class C1,C2 luma
+    class D2,B3 aco
+    class C3 accs
+`} caption="Migration topologies: PaaS + Luma (bridge only), PaaS + Luma + Adobe Commerce Optimizer (bridge and connector during migration), and Adobe Commerce as a Cloud Service + Adobe Commerce Optimizer (no Luma storefront, no Luma Bridge)." />
 
 ## Next steps
 
