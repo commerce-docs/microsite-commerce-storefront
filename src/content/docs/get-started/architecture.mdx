@@ -224,7 +224,7 @@ Drop-in components vs bridge: [User authentication](/dropins/user-auth/) and [ca
 For session details, see [How does session management work?](/setup/discovery/luma-bridge/#how-does-session-management-work). For topology and when not to use this approach (for example, PWA Studio or Vue Storefront), see the [Luma Bridge](/setup/discovery/luma-bridge/) guide.
 
 <Aside type="note" title="Reading the diagrams">
-EDS ↔ Luma Bridge means shared session cookies, not “the bridge hooks into drop-in components.” Drop-in components run on EDS. Luma Bridge on Commerce follows their cookies when shoppers move between EDS and Luma URLs.
+Drop-in components on EDS set session cookies. Luma Bridge on Commerce reads those cookies so Luma pages share the session when shoppers move between EDS and Luma URLs. The arrow runs from EDS toward Luma Bridge to show this direction — the bridge does not connect to or hook into drop-in components.
 </Aside>
 
 For prerequisite details on PaaS + ACO Connector migrations, see [Backend options](/get-started/backends/#backend-topology).
@@ -237,7 +237,7 @@ graph TB
         A1["<b>EDS storefront</b><br/><small>Commerce UI on Edge Delivery</small>"]
         B1["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
         C1["<b>Luma</b><br/><small>Theme storefront</small>"]
-        A1 <--> B1
+        A1 -- "session cookies" --> B1
         B1 <--> C1
     end
     subgraph S2["PaaS + Luma + Adobe Commerce Optimizer"]
@@ -245,7 +245,7 @@ graph TB
         B2["<b>Luma Bridge</b><br/><small>PHP on Commerce · session only</small>"]
         C2["<b>Luma</b><br/><small>Theme storefront</small>"]
         D2["Adobe Commerce Optimizer Connector"]
-        A2 <--> B2
+        A2 -- "session cookies" --> B2
         B2 <--> C2
         A2 -.-> D2
     end
@@ -266,7 +266,7 @@ graph TB
     class C1,C2 luma
     class D2,B3 aco
     class C3 accs
-`} caption="Phased migration topologies. The EDS storefront hosts drop-in UIs; arrows to Luma Bridge mean **shared session cookies** between Edge Delivery and Commerce, not a connection from the bridge into drop-in code. Luma Bridge runs on Commerce and adapts Luma to cookies that drop-ins on EDS already set. In PaaS + Luma, the bridge without Optimizer is possible. In PaaS + Luma + Optimizer, use the bridge plus connector during migration. For Adobe Commerce as a Cloud Service + Optimizer, you usually deploy no Luma, so you use no Luma Bridge." />
+`} caption="Phased migration topologies. Drop-in components on EDS set session cookies; Luma Bridge on Commerce reads those cookies so Luma pages share the session. The labeled arrows show this one-way cookie flow — the bridge does not connect into drop-in code. In PaaS + Luma, the bridge without Optimizer is possible. In PaaS + Luma + Optimizer, use the bridge plus connector during migration. For Adobe Commerce as a Cloud Service + Optimizer, there is no Luma storefront, so Luma Bridge does not apply." />
 
 ## Event system
 
