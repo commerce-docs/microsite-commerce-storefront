@@ -42,6 +42,7 @@ Install Node.js and pnpm:
 
 - `pnpm dev` — Start the local dev server and open a browser. The site auto-reloads when you save.
 - `pnpm build`, `pnpm build:prod`, and `pnpm build:prod-fast` — Run the Astro build. `build:prod-fast` skips compression for a faster production check (handy before opening a PR).
+- `pnpm build:stage` — Build for a staging environment. Requires a `STAGE_URL` environment variable to set the site URL (e.g. `STAGE_URL=https://my-stage.example.com pnpm build:stage`).
 - `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
 - `pnpm scrub` — Nuclear option: same as clean but also removes `pnpm-lock.yaml`.
 
