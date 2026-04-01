@@ -16,7 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
 The Requisition List drop-in provides **11 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, and managing list metadata.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.3.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -349,13 +349,95 @@ Emits the `requisitionList/data` event.
 
 Returns [`RequisitionList`](#requisitionlist) or `null`.
 
+## moveItemsBetweenRequisitionLists
+
+Moves items from one requisition list to another for a logged-in user.
+
+```ts
+const moveItemsBetweenRequisitionLists = async (
+  sourceRequisitionListUid: string,
+  destinationRequisitionListUid: string,
+  requisitionListItemUids: string[],
+  pageSize: number,
+  currentPage: number
+): Promise<MoveItemsResult | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sourceRequisitionListUid` | `string` | Yes | The unique identifier for the requisition list from which items will be moved. |
+| `destinationRequisitionListUid` | `string` | Yes | The unique identifier for the requisition list to which items will be moved. |
+| `requisitionListItemUids` | `string[]` | Yes | An array of requisition list item UIDs to move. These are the unique identifiers for specific items within the source list. |
+| `pageSize` | `number` | Yes | The number of items to return per page in the updated requisition list responses. |
+| `currentPage` | `number` | Yes | The page number for pagination (1-indexed) in the updated requisition list responses. |
+
+</TableWrapper>
+
+### Events
+
+Emits the `requisitionList/data` event for the source list after items are moved.
+
+### Returns
+
+Returns an object with the following structure, or `null` if the operation fails:
+
+```ts
+interface MoveItemsResult {
+  sourceList: RequisitionList | null;
+  destinationList: RequisitionList | null;
+}
+```
+
+- `sourceList`: The updated source requisition list after items have been moved, or `null` if not available.
+- `destinationList`: The updated destination requisition list after items have been added, or `null` if not available.
+
+## copyItemsBetweenRequisitionLists
+
+Copies items from one requisition list to another for a logged-in user.
+
+```ts
+const copyItemsBetweenRequisitionLists = async (
+  sourceRequisitionListUid: string,
+  destinationRequisitionListUid: string,
+  requisitionListItemUids: string[]
+): Promise<CopyItemsResult | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `sourceRequisitionListUid` | `string` | Yes | The unique identifier for the requisition list from which items will be copied. |
+| `destinationRequisitionListUid` | `string` | Yes | The unique identifier for the requisition list to which items will be copied. |
+| `requisitionListItemUids` | `string[]` | Yes | An array of requisition list item UIDs to copy. These are the unique identifiers for specific items within the source list. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an object with the following structure, or `null` if the operation fails:
+
+```ts
+interface CopyItemsResult {
+  destinationList: RequisitionList | null;
+}
+```
+
+- `destinationList`: The updated destination requisition list after items have been copied, or `null` if not available.
+
 ## Data Models
 
 The following data models are used by functions in this drop-in.
 
 ### RequisitionList
 
-The `RequisitionList` object is returned by the following functions: [`addProductsToRequisitionList`](#addproductstorequisitionlist), [`createRequisitionList`](#createrequisitionlist), [`deleteRequisitionList`](#deleterequisitionlist), [`deleteRequisitionListItems`](#deleterequisitionlistitems), [`getRequisitionList`](#getrequisitionlist), [`getRequisitionLists`](#getrequisitionlists), [`updateRequisitionList`](#updaterequisitionlist), [`updateRequisitionListItems`](#updaterequisitionlistitems).
+The `RequisitionList` object is returned by the following functions: [`addProductsToRequisitionList`](#addproductstorequisitionlist), [`createRequisitionList`](#createrequisitionlist), [`deleteRequisitionList`](#deleterequisitionlist), [`deleteRequisitionListItems`](#deleterequisitionlistitems), [`getRequisitionList`](#getrequisitionlist), [`getRequisitionLists`](#getrequisitionlists), [`updateRequisitionList`](#updaterequisitionlist), [`updateRequisitionListItems`](#updaterequisitionlistitems), [`moveItemsBetweenRequisitionLists`](#moveitemsbetweenrequisitionlists), [`copyItemsBetweenRequisitionLists`](#copyitemsbetweenrequisitionlists).
 
 ```ts
 interface RequisitionList {
