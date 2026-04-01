@@ -10,19 +10,87 @@ import Link from '@components/Link.astro';
 import LinkCard from '@components/LinkCard.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Edge Delivery hosts your site. **Commerce blocks** use the boilerplate and **drop-in components** to reach your Commerce backend and services. **Content blocks** do not. This topic shows the overall architecture, then explains how each part fits together.
+Edge Delivery Services hosts your site. **Commerce blocks** use the boilerplate and **drop-in components** to reach your Commerce backend and services. **Content blocks** do not. This topic shows the overall architecture, then explains how each part fits together.
 
 <Aside type="tip" title="How to read this page">
+- **New to this stack?** Read [How the storefront parts fit together](#how-the-storefront-parts-fit-together) first for documents, blocks, drop-in components, and how they differ from a classic theme.
 - **View the two diagrams** ([The big picture](#the-big-picture), [How the pieces connect](#how-the-pieces-connect)) for context.
 - **Follow [How a page loads](#how-a-page-loads)** to trace the path from a document table to a Commerce API call.
 - **Open [Boilerplate and blocks](#boilerplate-and-blocks) onward** when you map concepts to repo folders (`scripts/`, `blocks/`, `config.json`).
 
-New to Edge Delivery? See the <Link href="https://www.aem.live/docs/" text="AEM documentation" /> and <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" /> for project concepts.
+New to Edge Delivery? See the <Link href="https://www.aem.live/docs/" text="AEM documentation" /> (Build, Publish, Launch) and <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" />. For Document Authoring on da.live, see <Link href="https://docs.da.live/" text="Document Authoring documentation" />.
+</Aside>
+
+## Storefront
+
+The **storefront** is the shopper-facing layer of your Adobe Commerce site: it renders the UI and connects to Commerce and services through APIs. On Edge Delivery Services, you build that experience with **Commerce blocks**, **drop-in components**, and the Adobe Commerce boilerplate.
+
+For the Quick Start path from concepts to deployment, see [Get started](/get-started/). For a hands-on walkthrough, see [Create a storefront](/get-started/create-storefront/).
+
+<Aside type="note" title="Already have an Adobe Commerce storefront?">
+You can connect an existing theme-based storefront to an Edge Delivery Services storefront using [Luma Bridge](/setup/discovery/luma-bridge/) when you need a shared session across hybrid surfaces.
+</Aside>
+
+## How the storefront parts fit together
+
+This section explains how **authoring**, **blocks**, **drop-in components**, and **your repository** work together so the rest of this topic is easier to follow.
+
+### Documents, blocks, and your repository
+
+Storefront **pages start as documents**. Authors build them in **[Document Authoring](/merchants/quick-start/document-authoring/)** (DA.live) or the **[Universal Editor](/merchants/quick-start/universal-editor/)**, structuring the page with **tables**.
+
+In the Edge Delivery model, **each table becomes a block**: a named slice of the page (for example a hero, a card row, or a commerce cart). Edge Delivery Services **transforms** the document into HTML. Each block becomes markup the browser can load, such as a `div` with a class that identifies the block type.
+
+**Content blocks** and **commerce blocks** both come from that same authoring pattern. The difference is what happens next: content blocks stay mostly presentational, while commerce blocks connect to the **Adobe Commerce boilerplate** in your repo—JavaScript that runs in the browser, **decorates** the block, and **initializes** **drop-in components** (the interactive Commerce UI shipped as npm packages).
+
+Your **Git repository** holds that boilerplate—decorators, `scripts/initializers/`, styles, and `config.json`—plus any custom blocks you add. When you push to GitHub, Edge Delivery Services **builds and deploys**; shoppers receive HTML, CSS, and JavaScript from the Edge network.
+
+For more on authoring documents and blocks, see [Document Authoring documentation](https://docs.da.live/), this guide's [Document Authoring](/merchants/quick-start/document-authoring/) and [Universal Editor](/merchants/quick-start/universal-editor/) Quick Starts, and the <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" /> with the full <Link href="https://www.aem.live/docs/" text="AEM documentation" /> for Edge Delivery Services (build, publish, launch).
+
+### Headless storefront vs a classic theme
+
+If you know **Luma** or another **Adobe Commerce theme**, that model is different from this one. A classic theme storefront renders many pages with **PHP on the Commerce application**, such as the theme's templates and layout controlling cart, checkout, and account. The Commerce storefront on Edge Delivery Services is **headless** from Commerce's perspective: **Edge Delivery serves the HTML and client-side JavaScript**, and **drop-in components** call Adobe Commerce **APIs** and shared **Commerce services** (catalog, search, recommendations, and more). You are not replacing the Commerce **Admin**, product catalog, or orders—you are choosing a **shopper-facing rendering layer** built on documents, blocks, and drop-in components.
+
+If you still run Luma while you adopt Edge Delivery, you can align shopper sessions with [Luma Bridge](/setup/discovery/luma-bridge/). Backend types and prerequisites (Commerce PaaS, Adobe Commerce as a Cloud Service, Adobe Commerce Optimizer) are covered in [Backend options](/get-started/backends/).
+
+### Compare content blocks, commerce blocks, and drop-in components
+
+Use this table as a map. Later sections go deeper on each part.
+
+<TableWrapper>
+
+| | Content blocks | Commerce blocks | Drop-in components |
+|---|----------------|-----------------|---------------------|
+| **Role** | Layout and marketing UI (cards, heroes, columns, headers, footers) | Interactive Commerce experiences (cart, checkout, account, PDP, …) | Packaged **UI and logic** that commerce blocks load and initialize |
+| **Where it comes from** | Block Collection and custom blocks in `blocks/` | Commerce blocks in `blocks/`, mapped in the boilerplate | **npm packages** such as `@dropins/storefront-cart` |
+| **Authored as document tables** | Yes | Yes | No—developers add packages and wire **initializers** in code |
+| **Typical tie to Adobe Commerce** | None—no Commerce GraphQL for most blocks | Yes—GraphQL, REST, and services through the boilerplate | Encapsulated inside the package; blocks **mount** the drop-in |
+| **Learn more** | <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" /> | [Boilerplate and blocks](#boilerplate-and-blocks) · [Blocks reference](/boilerplate/blocks-reference/) | [Drop-ins introduction](/dropins/all/introduction/) |
+
+</TableWrapper>
+
+### Commerce Storefront SDK
+
+Drop-in components are built on shared **Commerce Storefront SDK** patterns—initialization, rendering, slots, and extension hooks—so behavior and structure stay consistent across cart, checkout, product discovery, and the rest of the set.
+
+- [Commerce Storefront SDK](/sdk/) — Reference for APIs, design components, and utilities used across drop-in components  
+- [Drop-ins introduction](/dropins/all/introduction/) — Full map of B2C and B2B drop-in components and how they install into the boilerplate  
+
+Terminology for **Commerce blocks**, **drop-in components**, and **content blocks** also appears in the [Boilerplate getting started](/boilerplate/getting-started/) vocabulary.
+
+<Aside type="tip" title="Documentation hubs outside this storefront guide">
+This guide focuses on the **Commerce storefront on Edge Delivery Services** (boilerplate, drop-in components, SDK, configuration). For broader context:
+
+- **[Document Authoring](https://docs.da.live/)** — da.live (authors, administrators, developers).
+- **[Adobe Commerce documentation](https://experienceleague.adobe.com/en/docs/commerce)** — Admin, deployment, merchandising services, and integrations on Experience League.
+- **[Adobe Experience Manager documentation](https://www.aem.live/docs/)** — Edge Delivery **Build**, **Publish**, and **Launch** (CDN, redirects, go-live).
+
+Within this storefront guide, [Get started](/get-started/) is the hub for every major topic. You can also go straight to [Create a storefront](/get-started/create-storefront/), [Browser compatibility](/get-started/browser-compatibility/), [Backend options](/get-started/backends/), or [Setup](/setup/) for configuration, analytics, SEO, and launch.
 </Aside>
 
 ## The big picture
 
-The figure below shows the high-level composable story: content and commerce both publish through Edge Delivery.
+The figure below shows the high-level composable story: content and commerce both publish through Edge Delivery Services.
 
 <Diagram caption="Composable architecture of a headless Adobe Commerce storefront on Edge Delivery Services.">
   ![Composable architecture of a headless Adobe Commerce storefront on Edge Delivery
@@ -65,18 +133,18 @@ graph TB
     class PaaS paas
     class CloudService cloudService
     class Optimizer optimizer
-`} caption="Edge Delivery serves every page. Content blocks (Block Collection) are presentational only. Commerce blocks load drop-in components through the Adobe Commerce boilerplate, which connects to your backend and shared Commerce services. Configuration differs by backend type—see [Backend options](/get-started/backends/) for details." />
+`} caption="Edge Delivery Services serves every page. Content blocks (Block Collection) are presentational only. Commerce blocks load drop-in components through the Adobe Commerce boilerplate, which connects to your backend and shared Commerce services. Configuration differs by backend type—see [Backend options](/get-started/backends/) for details." />
 
-When you understand how the pieces fit together, use [Commerce configuration](/setup/configuration/commerce-configuration/) to align your storefront with your Commerce backend. See [Backend options](/get-started/backends/) for how backend types differ.
+When you understand how the pieces fit together, align your storefront with your Commerce backend using [Commerce configuration](/setup/configuration/commerce-configuration/). For backend types and prerequisites, see [Backend options](/get-started/backends/).
 
 ## How a page loads
 
-The [system stack diagram](#how-the-pieces-connect) is structural. This diagram adds the time dimension: what happens from document authoring to a Commerce API call when the page loads. The sequence reads left to right (author → Edge Delivery → browser → decorator → drop-in → Commerce API).
+The [system stack diagram](#how-the-pieces-connect) is structural. This diagram adds the time dimension: what happens from document authoring to a Commerce API call when the page loads. The sequence reads left to right (author → Edge Delivery Services → browser → decorator → drop-in → Commerce API).
 
 <Diagram type="mermaid" code={`
 graph LR
     A["Author<br/><small>Creates table</small>"]
-    B["Edge Delivery<br/><small>Server-side transform</small>"]
+    B["Edge Delivery Services<br/><small>Server-side transform</small>"]
     C["Browser<br/><small>Loads HTML</small>"]
     D["Block Decorator<br/><small>Client-side JS</small>"]
     E["Drop-in<br/><small>Renders UI</small>"]
@@ -95,7 +163,7 @@ graph LR
     style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
 `} />
 
-Each stage matches a box in the diagram. You create a table in the document (for example, Commerce Cart), or you use in-context editing. Edge Delivery Services turns it into HTML (for example, `<div class="commerce-cart">`). The browser loads that HTML. The block decorator runs in the browser, initializes the drop-in component, and the drop-in component fetches from the Commerce API to render the UI.
+Each stage matches a box in the diagram. In Document Authoring or the Universal Editor, you create a table in the page (for example, Commerce Cart), or you use in-context editing. Edge Delivery Services turns it into HTML (for example, `<div class="commerce-cart">`). The browser loads that HTML. The block decorator runs in the browser and initializes the drop-in component. The drop-in component then fetches from the Commerce API to render the UI.
 
 The sections below go deeper: [Boilerplate and blocks](#boilerplate-and-blocks) (files and block wiring), [Drop-in components](#drop-in-components) (the UI packages), and [Commerce services](#commerce-services) (APIs and GraphQL).
 
@@ -103,10 +171,17 @@ The sections below go deeper: [Boilerplate and blocks](#boilerplate-and-blocks) 
 
 ### Content blocks and Commerce blocks
 
-Blocks are the basic units of a page delivered by Edge Delivery Services. Each block encapsulates the styles and code for a logical component of a page.
+Blocks are the fundamental parts of a page delivered by Edge Delivery Services. A block encapsulates styling and code for a logical slice of the page. Edge Delivery Services ships a broad library of **content** and **commerce** blocks that you customize for your project. You manage storefront code in GitHub and push it to Edge Delivery Services, which hosts and serves it to visitors.
 
-- **Content blocks** — Presentational layout and marketing UI (Cards, Columns, Headers, Footers, and more from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />). Edge Delivery renders them as HTML and optional decoration. They do not mount drop-in components or call Adobe Commerce GraphQL.
-- **Commerce blocks** — Built on the same authoring model but mapped in the boilerplate to initializers and `@dropins/*` packages. They render interactive storefront UIs and load data through Adobe Commerce GraphQL and related APIs.
+#### Content blocks
+
+Content blocks provide layout and marketing UI for **non-commerce** pages on the storefront. They include Cards, Columns, Headers, Footers, and more from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />. Edge Delivery renders them as HTML and optional decoration. They do not mount drop-in components or call Adobe Commerce GraphQL.
+
+#### Commerce blocks
+
+Commerce blocks enable Adobe Commerce experiences (cart, checkout, account, and more). They use the same document-based authoring model as content blocks, but the boilerplate maps them to initializers and `@dropins/*` packages. They render interactive storefront UIs, load data through Adobe Commerce GraphQL and related APIs, and are typically more complex because they coordinate with Commerce services.
+
+Commerce blocks that need complex client-side state and multiple render states can follow the buildless <Link href="https://preactjs.com/" text="Preact" /> and <Link href="https://github.com/developit/htm" text="HTM" /> patterns used in the boilerplate; otherwise prefer plain JavaScript. For a short rule of thumb, see [Libraries](/troubleshooting/faq/#libraries) in the storefront FAQ.
 
 ### Key files and folders
 
@@ -133,11 +208,15 @@ Use these topics when you customize blocks or connect the storefront to Commerce
 
 ## Drop-in components
 
-Drop-in components are domain-driven Commerce UI packages (for example, `npm install @dropins/storefront-cart`). Commerce blocks and initializers mount them and call Commerce APIs. Customize them using the [documented extension patterns](/dropins/all/extending/).
+[Drop-in components](/dropins/all/introduction/) are domain-driven Commerce UI packages that provide specific functionality for your storefront. They are reusable and can be shared across multiple projects. They connect to Adobe Commerce and other services through APIs and can be developed, tested, and deployed independently so teams can iterate on their own timelines.
 
-The [Drop-ins introduction](/dropins/all/introduction/) lists the current B2C and shared packages. For B2B flows (for example, company, quote, purchase order, requisition lists), see [Drop-ins B2B](/dropins-b2b/).
+Commerce blocks and initializers mount drop-in components and call Commerce APIs. You can study integration patterns in the [Commerce boilerplate repository](https://github.com/hlxsites/aem-boilerplate-commerce)—for example, pull requests that show how blocks wire to packages. Drop-in source repositories are private; add them to your project as npm packages (for example, `npm install @dropins/storefront-cart`).
 
-Representative B2C `@dropins/storefront-*` packages include:
+The [Drop-ins introduction](/dropins/all/introduction/) lists B2C and shared packages. B2B storefront flows use additional packages and topics—see [Drop-ins B2B](/dropins-b2b/) for company, quotes, purchase orders, requisition lists, and related experiences.
+
+The list below is **B2C-only** (`@dropins/storefront-*`). It illustrates the pattern. B2B package names and installs are covered in [Drop-ins B2B](/dropins-b2b/).
+
+Representative B2C packages include:
 
 - `@dropins/storefront-account`
 - `@dropins/storefront-auth`
@@ -152,6 +231,10 @@ Representative B2C `@dropins/storefront-*` packages include:
 - `@dropins/storefront-product-discovery`
 
 Use the introductions and install topics for each drop-in as the source of truth when package names or versions change.
+
+<Aside type="note" title="Extension patterns">
+Adobe recommends using the [documented extension patterns](/dropins/all/extending/) for drop-in components.
+</Aside>
 
 <Aside type="note" title="Existing Luma storefront?">
 Use [Luma Bridge](/setup/discovery/luma-bridge/) **only** when you are migrating or operating a **hybrid** experience: cart, checkout, or account still run on the **Luma** theme on Adobe Commerce PaaS while content and commerce marketing move to Edge Delivery. You do **not** need Luma Bridge for a greenfield Edge Delivery storefront, for Adobe Commerce as a Cloud Service + Optimizer with no Luma theme, or when the full funnel runs on drop-in components. Luma Bridge is a **session** layer on Commerce—it does not plug into or extend drop-in components; drop-in components run on EDS and set cookies that the bridge aligns with Luma.
@@ -174,7 +257,7 @@ Commerce services are the shared APIs and capabilities your Commerce backend pro
 
 </TableWrapper>
 
-## How drop-ins communicate
+## How drop-in components communicate
 
 Drop-in components communicate through a shared event bus (`@dropins/tools/event-bus.js`) using publish-subscribe. Components stay loosely coupled. No drop-in component depends directly on another.
 
@@ -284,8 +367,6 @@ graph TB
 
 ## Next steps
 
-Choose a topic based on what you are building next.
-
 <CardGrid columns={4}>
   <LinkCard
     noborder
@@ -321,5 +402,4 @@ Choose a topic based on what you are building next.
   />
 </CardGrid>
 
-- [Drop-ins introduction](/dropins/all/introduction/) — B2C and B2B drop-in components
-- [Storefront event collection](/setup/analytics/instrumentation/) — Adobe Client Data Layer and storefront events for Commerce services
+**See also:** [Get started](/get-started/) · [Drop-ins introduction](/dropins/all/introduction/) · [Storefront event collection](/setup/analytics/instrumentation/)
