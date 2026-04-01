@@ -4,102 +4,117 @@
  * Boilerplate Version Updater
  *
  * Updates the version number in boilerplate documentation files while leaving
- * all other content untouched. This allows manually-maintained docs to stay
- * current with the boilerplate version without regenerating the entire file.
+ * all other content untouched.
  *
  * USAGE:
- * - Update all boilerplate doc versions: npm run update-boilerplate-versions
+ *   npm run update-boilerplate-versions
  *
- * PROCESS:
- * 1. Extracts version from boilerplate's package.json
- * 2. Finds all boilerplate MDX files with version elements
- * 3. Updates only the version number in those elements
- * 4. Reports which files were updated
+ * VERSION SOURCE:
+ *   Fetches package.json from the boilerplate's main branch on GitHub
+ *   (hlxsites/aem-boilerplate-commerce, public repo, no auth required).
+ *   No local clones or temp repos are read.
+ *
+ * VERSION PATTERNS UPDATED:
+ *   1. Styled div badge:  <strong>Version: X.Y.Z</strong>
+ *   2. Text label:        Boilerplate version: X.Y.Z
+ *   3. Text label:        Current Version: X.Y.Z
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { getProjectRoot } from './lib/generator-core.js';
-import { cloneOrUpdateBoilerplate } from './lib/repository.js';
 
 const projectRoot = getProjectRoot();
 
+const BOILERPLATE_REPO = 'hlxsites/aem-boilerplate-commerce';
+const PACKAGE_JSON_URL = `https://raw.githubusercontent.com/${BOILERPLATE_REPO}/main/package.json`;
+
 // ============================================================================
-// VERSION EXTRACTION
+// VERSION PATTERNS
+// Factory functions return a fresh regex on each call, avoiding the stateful
+// lastIndex resets that module-level /g regexes require.
+// ============================================================================
+
+// Matches: <strong>Version: 7.0.0</strong>
+const VERSION_DIV_RE         = () => /(<strong>Version: )\d+\.\d+\.\d+(<\/strong>)/g;
+
+// Matches: Boilerplate version: 7.0.0
+const VERSION_BOILERPLATE_RE = () => /(Boilerplate version:)\s*(\d+\.\d+\.\d+|latest)/g;
+
+// Matches: Current Version: 7.0.0
+const VERSION_CURRENT_RE     = () => /(Current Version:)\s*(\d+\.\d+\.\d+|latest)/g;
+
+// ============================================================================
+// LIVE VERSION FETCH
 // ============================================================================
 
 /**
- * Get the boilerplate version from package.json
- * Falls back to 'latest' if version cannot be determined
+ * Fetch the current version from the boilerplate's package.json on main.
+ *
+ * The boilerplate uses date-based release tags (e.g. "b2c-march-2026"), not
+ * semver tags, so the version field in package.json is the authoritative source.
+ *
+ * @returns {Promise<string>} semver string (e.g. "7.0.0")
  */
-function getBoilerplateVersion(boilerplatePath) {
-    try {
-        const packageJsonPath = join(boilerplatePath, 'package.json');
-        if (existsSync(packageJsonPath)) {
-            const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-            if (packageJson.version) {
-                return packageJson.version;
-            }
-        }
-    } catch (error) {
-        console.warn('  ⚠️  Could not read package.json version:', error.message);
+async function getLatestBoilerplateVersion() {
+    const response = await fetch(PACKAGE_JSON_URL);
+
+    if (!response.ok) {
+        throw new Error(`Could not fetch boilerplate package.json: ${response.status} ${response.statusText}`);
     }
 
-    return 'latest';
+    const pkg = await response.json();
+
+    if (!pkg.version) {
+        throw new Error('package.json did not include a version field');
+    }
+
+    // The boilerplate sometimes sets a named tag (e.g. "b2b-march-2026-hotfix") on
+    // non-release commits. Reject anything that isn't a plain semver so we never
+    // stamp a tag name into the docs.
+    if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) {
+        throw new Error(
+            `Boilerplate package.json version "${pkg.version}" is not a semver string.\n` +
+            `The main branch may be on a hotfix or pre-release tag. ` +
+            `Check https://github.com/${BOILERPLATE_REPO} and update manually if needed.`
+        );
+    }
+
+    return pkg.version;
 }
 
 // ============================================================================
-// VERSION UPDATING
+// FILE UPDATING
 // ============================================================================
 
 /**
- * Update version in a single MDX file
- * Only updates the version number, leaves all other content unchanged
- * 
- * @param {string} filePath - Full path to the MDX file
- * @param {string} newVersion - New version to set
- * @returns {boolean} - True if file was updated, false otherwise
+ * Update all version patterns in a single MDX file.
+ * Only writes if content actually changed.
+ *
+ * @param {string} filePath
+ * @param {string} version - semver string, e.g. "7.0.0"
+ * @returns {boolean} true if file was written
  */
-function updateVersionInFile(filePath, newVersion) {
-    if (!existsSync(filePath)) {
-        return false;
-    }
-
+function updateVersionInFile(filePath, version) {
     const content = readFileSync(filePath, 'utf8');
 
-    // Pattern matches the version element with any version number
-    // Captures everything except the version number itself
-    const versionPattern = /(Boilerplate version:|Current Version:)\s*(\d+\.\d+\.\d+|latest)/g;
+    const updated = content
+        .replace(VERSION_DIV_RE(),         `$1${version}$2`)
+        .replace(VERSION_BOILERPLATE_RE(), `$1 ${version}`)
+        .replace(VERSION_CURRENT_RE(),     `$1 ${version}`);
 
-    // Check if file contains a version element
-    if (!versionPattern.test(content)) {
-        return false;
-    }
+    if (updated === content) return false;
 
-    // Reset regex lastIndex
-    versionPattern.lastIndex = 0;
-
-    // Replace version number while keeping the label
-    const updatedContent = content.replace(
-        versionPattern,
-        `$1 ${newVersion}`
-    );
-
-    // Only write if content actually changed
-    if (updatedContent !== content) {
-        writeFileSync(filePath, updatedContent, 'utf8');
-        return true;
-    }
-
-    return false;
+    writeFileSync(filePath, updated, 'utf8');
+    return true;
 }
 
 /**
- * Update versions in all boilerplate documentation files
- * 
- * @param {string} newVersion - Version to set in all files
+ * Update versions in all boilerplate documentation files.
+ *
+ * @param {string} version
  */
-function updateBoilerplateDocVersions(newVersion) {
+function updateBoilerplateDocVersions(version) {
     const boilerplateDocsDir = join(projectRoot, 'src/content/docs/boilerplate');
 
     if (!existsSync(boilerplateDocsDir)) {
@@ -111,15 +126,15 @@ function updateBoilerplateDocVersions(newVersion) {
         .filter(file => file.endsWith('.mdx'))
         .map(file => join(boilerplateDocsDir, file));
 
-    console.log(`\n📝 Updating boilerplate versions to: ${newVersion}`);
+    console.log(`\n📝 Updating boilerplate versions to: ${version}`);
     console.log(`   Found ${files.length} MDX files to check\n`);
 
     let updatedCount = 0;
     let skippedCount = 0;
 
     for (const filePath of files) {
-        const fileName = filePath.split('/').pop();
-        const wasUpdated = updateVersionInFile(filePath, newVersion);
+        const fileName = basename(filePath);
+        const wasUpdated = updateVersionInFile(filePath, version);
 
         if (wasUpdated) {
             console.log(`   ✅ Updated: ${fileName}`);
@@ -136,27 +151,20 @@ function updateBoilerplateDocVersions(newVersion) {
 }
 
 // ============================================================================
-// MAIN EXECUTION
+// MAIN
 // ============================================================================
 
 async function main() {
-    console.log('🔄 Boilerplate Version Updater');
-    console.log('================================\n');
+    console.log('🔄 Boilerplate Version Updater (live GitHub API)');
+    console.log('=================================================\n');
 
-    // Clone/update boilerplate repository
-    console.log('📦 Syncing boilerplate repository...');
-    const boilerplateResult = await cloneOrUpdateBoilerplate();
-    console.log(`   ✓ Boilerplate ready at: ${boilerplateResult.path}\n`);
+    console.log(`📡 Fetching package.json from github.com/${BOILERPLATE_REPO} (main)...`);
+    const version = await getLatestBoilerplateVersion();
+    console.log(`📌 Latest boilerplate release: ${version}\n`);
 
-    // Get current boilerplate version
-    const version = getBoilerplateVersion(boilerplateResult.path);
-    console.log(`📌 Current boilerplate version: ${version}`);
-
-    // Update all boilerplate doc files
     updateBoilerplateDocVersions(version);
 }
 
-// Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
     main().catch(error => {
         console.error('\n❌ Error:', error.message);
@@ -164,5 +172,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     });
 }
 
-export { updateBoilerplateDocVersions, getBoilerplateVersion };
-
+export { updateBoilerplateDocVersions };
