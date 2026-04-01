@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The `OrderSummaryLine` container renders individual line items within the order summary such as subtotal, shipping, or tax rows.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.1.2</strong>
 </div>
 
 ## Configuration
@@ -24,10 +24,11 @@ The `OrderSummaryLine` container provides the following configuration options:
 |---|---|---|---|
 | `label` | `VNode \| string` | Yes | Yes \| Label text or component for the line item. |
 | `price` | `VNode<HTMLAttributes<HTMLSpanElement>>` | Yes | Price component for the line item. |
-| `classSuffixes` | `Array<string>` | No | Provides an array of CSS class suffixes for styling variants. Use this to apply different visual styles to order summary line items based on their type or context. |
+| `classSuffixes` | `Array<string>` | No | Provides an array of CSS class suffixes for styling variants. Use to apply different visual styles to order summary line items based on their type or context. |
 | `labelClassSuffix` | `string` | No | CSS class suffix specifically for the label. |
 | `testId` | `string` | No | Test ID for automated testing. |
 | `children` | `any` | No | Child elements to render within the container |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
 
 </TableWrapper>
 
@@ -43,13 +44,15 @@ The following example demonstrates how to use the `OrderSummaryLine` container:
 import { render as provider } from '@dropins/storefront-quote-management/render.js';
 import { OrderSummaryLine } from '@dropins/storefront-quote-management/containers/OrderSummaryLine.js';
 
+// In updateLineItems or a slot - lineItem from quote prices/order summary data
+const label = lineItem.label ?? 'Subtotal';
+const price = document.createElement('span');
+price.textContent = lineItem.formattedValue ?? String(lineItem.value ?? 0);
 await provider.render(OrderSummaryLine, {
-  label: label,
-  price: price,
-  classSuffixes: [],
+  label,
+  price,
+  classSuffixes: [lineItem.key]
 })(block);
 ```
-
-
 
 {/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-quote-management */}
