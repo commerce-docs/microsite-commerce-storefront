@@ -10,8 +10,8 @@
  *   npm run update-boilerplate-versions
  *
  * VERSION SOURCE:
- *   Fetches the latest release tag from the GitHub API for
- *   hlxsites/aem-boilerplate-commerce (public repo, no auth required).
+ *   Fetches package.json from the boilerplate's main branch on GitHub
+ *   (hlxsites/aem-boilerplate-commerce, public repo, no auth required).
  *   No local clones or temp repos are read.
  *
  * VERSION PATTERNS UPDATED:
