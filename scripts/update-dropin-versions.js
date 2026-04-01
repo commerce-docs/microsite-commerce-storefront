@@ -20,7 +20,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { execFileSync } from 'child_process';
 import { getProjectRoot } from './lib/generator-core.js';
 import { DROPIN_REPOS } from './lib/dropin-config.js';
@@ -29,13 +29,12 @@ const projectRoot = getProjectRoot();
 
 // ============================================================================
 // VERSION PATTERNS
+// Factory functions return a fresh regex on each call, avoiding the stateful
+// lastIndex resets that module-level /g regexes require.
 // ============================================================================
 
-// Matches: <strong>Version: 3.1.0</strong>
-const VERSION_DIV_RE = /(<strong>Version: )\d+\.\d+\.\d+(<\/strong>)/g;
-
-// Matches: **Version:** 3.1.0 (verify compatibility with your Commerce instance)
-const VERSION_REF_RE = /(\*\*Version:\*\* )\d+\.\d+\.\d+( \(verify compatibility[^)]*\))/g;
+const VERSION_DIV_RE = () => /(<strong>Version: )\d+\.\d+\.\d+(<\/strong>)/g;
+const VERSION_REF_RE = () => /(\*\*Version:\*\* )\d+\.\d+\.\d+( \(verify compatibility[^)]*\))/g;
 
 // ============================================================================
 // NPM REGISTRY LOOKUP
@@ -49,11 +48,10 @@ const VERSION_REF_RE = /(\*\*Version:\*\* )\d+\.\d+\.\d+( \(verify compatibility
  */
 function getNpmVersion(packageName) {
     try {
-        const version = execFileSync('npm', ['view', packageName, 'version'], {
+        return execFileSync('npm', ['view', packageName, 'version'], {
             encoding: 'utf8',
             stdio: 'pipe',
-        }).trim();
-        return version || null;
+        }).trim() || null;
     } catch {
         return null;
     }
@@ -72,19 +70,9 @@ function getNpmVersion(packageName) {
 function getMdxFiles(dir) {
     if (!existsSync(dir)) return [];
 
-    const entries = readdirSync(dir, { withFileTypes: true });
-    const files = [];
-
-    for (const entry of entries) {
-        const fullPath = join(dir, entry.name);
-        if (entry.isDirectory()) {
-            files.push(...getMdxFiles(fullPath));
-        } else if (entry.name.endsWith('.mdx')) {
-            files.push(fullPath);
-        }
-    }
-
-    return files;
+    return readdirSync(dir, { withFileTypes: true, recursive: true })
+        .filter(entry => entry.isFile() && entry.name.endsWith('.mdx'))
+        .map(entry => join(entry.parentPath ?? entry.path, entry.name));
 }
 
 /**
@@ -93,25 +81,14 @@ function getMdxFiles(dir) {
  *
  * @param {string} filePath
  * @param {string} version - semver string, e.g. "3.1.0"
- * @returns {boolean} true if file was written
+ * @returns {boolean} true if the file was written
  */
 function updateVersionInFile(filePath, version) {
     const content = readFileSync(filePath, 'utf8');
 
-    VERSION_DIV_RE.lastIndex = 0;
-    VERSION_REF_RE.lastIndex = 0;
-
-    const hasDiv = VERSION_DIV_RE.test(content);
-    const hasRef = VERSION_REF_RE.test(content);
-
-    if (!hasDiv && !hasRef) return false;
-
-    VERSION_DIV_RE.lastIndex = 0;
-    VERSION_REF_RE.lastIndex = 0;
-
     const updated = content
-        .replace(VERSION_DIV_RE, `$1${version}$2`)
-        .replace(VERSION_REF_RE, `$1${version}$2`);
+        .replace(VERSION_DIV_RE(), `$1${version}$2`)
+        .replace(VERSION_REF_RE(), `$1${version}$2`);
 
     if (updated === content) return false;
 
@@ -119,112 +96,107 @@ function updateVersionInFile(filePath, version) {
     return true;
 }
 
-/**
- * Update all MDX files in a drop-in's docs directory.
- *
- * @param {string} docsDir
- * @param {string} version
- * @returns {{ updatedCount: number, skippedCount: number }}
- */
-function updateDropinDocs(docsDir, version) {
-    const files = getMdxFiles(docsDir);
-    let updatedCount = 0;
-    let skippedCount = 0;
+// ============================================================================
+// GROUP PROCESSOR
+// ============================================================================
 
-    for (const filePath of files) {
-        const rel = filePath.replace(projectRoot + '/', '');
-        const wasUpdated = updateVersionInFile(filePath, version);
-        if (wasUpdated) {
-            console.log(`      ✅ ${rel}`);
-            updatedCount++;
-        } else {
-            skippedCount++;
+/**
+ * Fetch live versions and update all MDX files for a set of drop-in entries.
+ *
+ * @param {string} label          - Display label, e.g. "B2C"
+ * @param {Array}  entries        - [dropinKey, config] pairs from DROPIN_REPOS
+ * @param {string} docsSubdir     - "dropins" or "dropins-b2b"
+ * @returns {{ updated: number, skipped: number, warnings: number }}
+ */
+function processGroup(label, entries, docsSubdir) {
+    console.log(`📦 ${label} drop-ins\n`);
+
+    let updated = 0;
+    let skipped = 0;
+    let warnings = 0;
+
+    for (const [dropinKey, config] of entries) {
+        const version = getNpmVersion(config.packageName);
+
+        if (!version) {
+            console.log(`   ⚠️  ${config.displayName}: could not fetch ${config.packageName} from npm`);
+            console.log(`        Ensure npm is authenticated with the @dropins registry.\n`);
+            warnings++;
+            continue;
+        }
+
+        const docsDir = join(projectRoot, 'src/content/docs', docsSubdir, dropinKey);
+
+        if (!existsSync(docsDir)) {
+            console.log(`   ⏭️  ${config.displayName}: docs directory not found, skipping`);
+            continue;
+        }
+
+        console.log(`   📝 ${config.displayName} (${version})`);
+
+        for (const filePath of getMdxFiles(docsDir)) {
+            if (updateVersionInFile(filePath, version)) {
+                console.log(`      ✅ ${relative(projectRoot, filePath)}`);
+                updated++;
+            } else {
+                skipped++;
+            }
         }
     }
 
-    return { updatedCount, skippedCount };
+    return { updated, skipped, warnings };
 }
+
+// ============================================================================
+// GROUP CONFIG
+// Add a row here if a new drop-in type is introduced (e.g. B2B2C).
+// label must match the `type` field used in dropin-config.js.
+// ============================================================================
+
+const GROUPS = [
+    { label: 'B2C', docsSubdir: 'dropins' },
+    { label: 'B2B', docsSubdir: 'dropins-b2b' },
+];
 
 // ============================================================================
 // MAIN
 // ============================================================================
 
-async function main() {
+function main() {
     console.log('🔄 Drop-in Version Updater (live npm registry)');
     console.log('================================================\n');
 
-    let totalUpdated = 0;
-    let totalSkipped = 0;
-    let totalWarnings = 0;
+    const allEntries = Object.entries(DROPIN_REPOS);
 
-    const b2cEntries = Object.entries(DROPIN_REPOS).filter(([, cfg]) => cfg.type === 'B2C');
-    const b2bEntries = Object.entries(DROPIN_REPOS).filter(([, cfg]) => cfg.type === 'B2B');
+    const results = GROUPS.map(({ label, docsSubdir }, i) => {
+        if (i > 0) console.log('');
+        const entries = allEntries.filter(([, cfg]) => cfg.type === label);
+        return processGroup(label, entries, docsSubdir);
+    });
 
-    // ── B2C ──────────────────────────────────────────────────────────────────
-    console.log('📦 B2C drop-ins\n');
+    const total = results.reduce(
+        (acc, { updated, skipped, warnings }) => ({
+            updated:  acc.updated  + updated,
+            skipped:  acc.skipped  + skipped,
+            warnings: acc.warnings + warnings,
+        }),
+        { updated: 0, skipped: 0, warnings: 0 }
+    );
 
-    for (const [dropinKey, config] of b2cEntries) {
-        const version = getNpmVersion(config.packageName);
-
-        if (!version) {
-            console.log(`   ⚠️  ${config.displayName}: could not fetch ${config.packageName} from npm`);
-            console.log(`        Ensure npm is authenticated with the @dropins registry.\n`);
-            totalWarnings++;
-            continue;
-        }
-
-        const docsDir = join(projectRoot, 'src/content/docs/dropins', dropinKey);
-
-        if (!existsSync(docsDir)) {
-            console.log(`   ⏭️  ${config.displayName}: docs directory not found, skipping`);
-            continue;
-        }
-
-        console.log(`   📝 ${config.displayName} (${version})`);
-        const { updatedCount, skippedCount } = updateDropinDocs(docsDir, version);
-        totalUpdated += updatedCount;
-        totalSkipped += skippedCount;
-    }
-
-    // ── B2B ──────────────────────────────────────────────────────────────────
-    console.log('\n📦 B2B drop-ins\n');
-
-    for (const [dropinKey, config] of b2bEntries) {
-        const version = getNpmVersion(config.packageName);
-
-        if (!version) {
-            console.log(`   ⚠️  ${config.displayName}: could not fetch ${config.packageName} from npm`);
-            console.log(`        Ensure npm is authenticated with the @dropins registry.\n`);
-            totalWarnings++;
-            continue;
-        }
-
-        const docsDir = join(projectRoot, 'src/content/docs/dropins-b2b', dropinKey);
-
-        if (!existsSync(docsDir)) {
-            console.log(`   ⏭️  ${config.displayName}: docs directory not found, skipping`);
-            continue;
-        }
-
-        console.log(`   📝 ${config.displayName} (${version})`);
-        const { updatedCount, skippedCount } = updateDropinDocs(docsDir, version);
-        totalUpdated += updatedCount;
-        totalSkipped += skippedCount;
-    }
-
-    // ── SUMMARY ──────────────────────────────────────────────────────────────
     console.log('\n✨ Complete!');
-    console.log(`   Files updated : ${totalUpdated}`);
-    console.log(`   Files skipped : ${totalSkipped} (no version element or already current)`);
-    if (totalWarnings > 0) {
-        console.log(`   Warnings      : ${totalWarnings} (see above)`);
+    console.log(`   Files updated : ${total.updated}`);
+    console.log(`   Files skipped : ${total.skipped} (no version element or already current)`);
+    if (total.warnings > 0) {
+        console.log(`   Warnings      : ${total.warnings} (see above)`);
     }
     console.log('');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-    main().catch(error => {
+    try {
+        main();
+    } catch (error) {
         console.error('\n❌ Error:', error.message);
         process.exit(1);
-    });
+    }
 }

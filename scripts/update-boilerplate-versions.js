@@ -21,7 +21,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { getProjectRoot } from './lib/generator-core.js';
 
 const projectRoot = getProjectRoot();
@@ -31,16 +31,18 @@ const PACKAGE_JSON_URL = `https://raw.githubusercontent.com/${BOILERPLATE_REPO}/
 
 // ============================================================================
 // VERSION PATTERNS
+// Factory functions return a fresh regex on each call, avoiding the stateful
+// lastIndex resets that module-level /g regexes require.
 // ============================================================================
 
 // Matches: <strong>Version: 7.0.0</strong>
-const VERSION_DIV_RE = /(<strong>Version: )\d+\.\d+\.\d+(<\/strong>)/g;
+const VERSION_DIV_RE         = () => /(<strong>Version: )\d+\.\d+\.\d+(<\/strong>)/g;
 
 // Matches: Boilerplate version: 7.0.0
-const VERSION_BOILERPLATE_RE = /(Boilerplate version:)\s*(\d+\.\d+\.\d+|latest)/g;
+const VERSION_BOILERPLATE_RE = () => /(Boilerplate version:)\s*(\d+\.\d+\.\d+|latest)/g;
 
 // Matches: Current Version: 7.0.0
-const VERSION_CURRENT_RE = /(Current Version:)\s*(\d+\.\d+\.\d+|latest)/g;
+const VERSION_CURRENT_RE     = () => /(Current Version:)\s*(\d+\.\d+\.\d+|latest)/g;
 
 // ============================================================================
 // LIVE VERSION FETCH
@@ -83,31 +85,12 @@ async function getLatestBoilerplateVersion() {
  * @returns {boolean} true if file was written
  */
 function updateVersionInFile(filePath, version) {
-    if (!existsSync(filePath)) return false;
-
     const content = readFileSync(filePath, 'utf8');
 
-    // Reset before testing
-    VERSION_DIV_RE.lastIndex = 0;
-    VERSION_BOILERPLATE_RE.lastIndex = 0;
-    VERSION_CURRENT_RE.lastIndex = 0;
-
-    const hasAny =
-        VERSION_DIV_RE.test(content) ||
-        VERSION_BOILERPLATE_RE.test(content) ||
-        VERSION_CURRENT_RE.test(content);
-
-    if (!hasAny) return false;
-
-    // Reset before replacing
-    VERSION_DIV_RE.lastIndex = 0;
-    VERSION_BOILERPLATE_RE.lastIndex = 0;
-    VERSION_CURRENT_RE.lastIndex = 0;
-
     const updated = content
-        .replace(VERSION_DIV_RE, `$1${version}$2`)
-        .replace(VERSION_BOILERPLATE_RE, `$1 ${version}`)
-        .replace(VERSION_CURRENT_RE, `$1 ${version}`);
+        .replace(VERSION_DIV_RE(),         `$1${version}$2`)
+        .replace(VERSION_BOILERPLATE_RE(), `$1 ${version}`)
+        .replace(VERSION_CURRENT_RE(),     `$1 ${version}`);
 
     if (updated === content) return false;
 
@@ -139,7 +122,7 @@ function updateBoilerplateDocVersions(version) {
     let skippedCount = 0;
 
     for (const filePath of files) {
-        const fileName = filePath.split('/').pop();
+        const fileName = basename(filePath);
         const wasUpdated = updateVersionInFile(filePath, version);
 
         if (wasUpdated) {
