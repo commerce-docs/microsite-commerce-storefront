@@ -69,6 +69,17 @@ async function getLatestBoilerplateVersion() {
         throw new Error('package.json did not include a version field');
     }
 
+    // The boilerplate sometimes sets a named tag (e.g. "b2b-march-2026-hotfix") on
+    // non-release commits. Reject anything that isn't a plain semver so we never
+    // stamp a tag name into the docs.
+    if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) {
+        throw new Error(
+            `Boilerplate package.json version "${pkg.version}" is not a semver string.\n` +
+            `The main branch may be on a hotfix or pre-release tag. ` +
+            `Check https://github.com/${BOILERPLATE_REPO} and update manually if needed.`
+        );
+    }
+
     return pkg.version;
 }
 
