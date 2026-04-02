@@ -18,6 +18,7 @@ The `ProductAttributes` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+    ['formatValue', '(value, id, label) => string', 'No', 'Custom formatter for attribute display values.'],
   ]}
 />
 
@@ -28,5 +29,33 @@ The following example demonstrates how to configure the `ProductAttributes` cont
 ```js
 return productRenderer.render(ProductAttributes, {
   scope: 'modal', // optional
+});
+```
+
+### Formatting numeric attributes
+
+Numeric attributes from the catalog (e.g., `10.000000`) are displayed as-is by default. To format them, use the `formatValue` prop with the built-in `formatNumeric` utility:
+
+```js
+import { isNumericValue, formatNumeric } from '@dropins/storefront-pdp/lib/number';
+
+return productRenderer.render(ProductAttributes, {
+  formatValue: (value) =>
+    isNumericValue(value) ? formatNumeric(value) : value,
+});
+```
+
+This strips trailing zeros: `10.000000` becomes `10`, `0.010000` becomes `0.01`.
+
+To format only specific attributes, use the `id` parameter:
+
+```js
+import { formatNumeric } from '@dropins/storefront-pdp/lib/number';
+
+return productRenderer.render(ProductAttributes, {
+  formatValue: (value, id) => {
+    if (id === 'weight') return formatNumeric(value);
+    return value;
+  },
 });
 ```
