@@ -1,0 +1,113 @@
+---
+title: Initializers
+description: Learn how boilerplate initializers configure drop-in components at import time, before any block renders.
+sidebar:
+  label: Initializers
+  order: 3
+---
+
+import Aside from '@components/Aside.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Initializers are JavaScript files in `scripts/initializers/` that configure each drop-in component once, at import time — before any block renders. The boilerplate ships one initializer file per drop-in.
+
+## What an initializer does
+
+An initializer runs once as a side-effect import. It performs three setup tasks in sequence.
+
+### Sets the GraphQL endpoint
+
+```javascript
+setEndpoint(CORE_FETCH_GRAPHQL);
+```
+
+This points the drop-in at your Commerce backend so it knows where to send API calls. `CORE_FETCH_GRAPHQL` comes from `scripts/commerce.js`, which reads the endpoint from `config.json`.
+
+### Loads translations
+
+```javascript
+const labels = await fetchPlaceholders('placeholders/cart.json');
+const langDefinitions = { default: { ...labels } };
+```
+
+Fetches UI text strings from your placeholders file and passes them to the drop-in as `langDefinitions`. To change or translate any label in the drop-in UI, override the corresponding key in `placeholders/<drop-in>.json` — no code change required.
+
+### Registers and mounts the drop-in
+
+```javascript
+await initializers.mountImmediately(initialize, { langDefinitions });
+```
+
+Calls `mountImmediately` from `@dropins/tools/initializer.js`, which registers the drop-in's `initialize` function and runs it immediately with your configuration.
+
+## Anatomy of a typical initializer
+
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize, setEndpoint } from '@dropins/storefront-cart/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL, fetchPlaceholders } from '../commerce.js';
+
+await initializeDropin(async () => {
+  setEndpoint(CORE_FETCH_GRAPHQL);
+  const labels = await fetchPlaceholders('placeholders/cart.json');
+  const langDefinitions = { default: { ...labels } };
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+<Aside type="note" title="initializeDropin helper">
+The `initializeDropin` wrapper from `scripts/initializers/index.js` coordinates initialization order across drop-ins and handles errors gracefully. Use it instead of calling `mountImmediately` directly.
+</Aside>
+
+## How initialization fits the page-load sequence
+
+A commerce block imports its initializer as a side-effect at the top of the decorator file:
+
+```javascript title="blocks/commerce-cart/commerce-cart.js"
+// Side-effect import — triggers all three setup steps immediately
+import '../../scripts/initializers/cart.js';
+```
+
+That import runs all three setup steps before the `decorate()` function body executes. When `decorate()` later calls the drop-in's render provider, the drop-in is already pointing at the correct endpoint, has its strings loaded, and is fully registered.
+
+The initializer is the wiring layer between your boilerplate configuration (`config.json`, `scripts/commerce.js`) and the drop-in package.
+
+## Customize an initializer
+
+Each initializer accepts additional configuration beyond `langDefinitions`. Common options include custom data models (`models`), feature flags, and auth configuration. See the initialization reference page for each drop-in:
+
+### B2C drop-ins
+
+<TableWrapper>
+
+| Drop-in | Initialization page |
+|---------|---------------------|
+| Cart | [Cart initialization](/dropins/cart/initialization/) |
+| Checkout | [Checkout initialization](/dropins/checkout/initialization/) |
+| Order | [Order initialization](/dropins/order/initialization/) |
+| User auth | [User auth initialization](/dropins/user-auth/initialization/) |
+| User account | [User account initialization](/dropins/user-account/initialization/) |
+| Product details | [Product details initialization](/dropins/product-details/initialization/) |
+| Product discovery | [Product discovery initialization](/dropins/product-discovery/initialization/) |
+| Recommendations | [Recommendations initialization](/dropins/recommendations/initialization/) |
+| Payment services | [Payment services initialization](/dropins/payment-services/initialization/) |
+| Wishlist | [Wishlist initialization](/dropins/wishlist/initialization/) |
+| Personalization | [Personalization initialization](/dropins/personalization/initialization/) |
+
+</TableWrapper>
+
+### B2B drop-ins
+
+<TableWrapper>
+
+| Drop-in | Initialization page |
+|---------|---------------------|
+| Company management | [Company management initialization](/dropins-b2b/company-management/initialization/) |
+| Company switcher | [Company switcher initialization](/dropins-b2b/company-switcher/initialization/) |
+| Quick order | [Quick order initialization](/dropins-b2b/quick-order/initialization/) |
+| Requisition list | [Requisition list initialization](/dropins-b2b/requisition-list/initialization/) |
+| Quote management | [Quote management initialization](/dropins-b2b/quote-management/initialization/) |
+| Purchase order | [Purchase order initialization](/dropins-b2b/purchase-order/initialization/) |
+
+</TableWrapper>
