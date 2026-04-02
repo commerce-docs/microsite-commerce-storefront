@@ -31,6 +31,25 @@ For the Quick Start path from concepts to deployment, see [Get started](/get-sta
 
 This section explains how **authoring**, **blocks**, **drop-in components**, and **your repository** work together so the rest of this topic is easier to follow.
 
+<Diagram type="mermaid" code={`
+flowchart TB
+    Table["<b>Document table</b><br/>Authored in DA.live or Universal Editor"]
+    Table -->|"EDS transforms to HTML"| Block["<b>HTML block</b><br/>&lt;div class='block-name'&gt;"]
+    Block --> ContentPath["<b>Content block</b><br/>Hero, card, column<br/>Stays presentational"]
+    Block --> CommercePath["<b>Commerce block</b><br/>Cart, checkout, PDP<br/>Decorator runs in browser"]
+    CommercePath -->|"mounts"| DropIn["<b>Drop-in component</b><br/>@dropins/storefront-* or @dropins/b2b-*<br/>UI + Commerce logic"]
+    DropIn -->|"API calls from browser"| API["<b>Adobe Commerce APIs</b><br/>GraphQL · REST · Services"]
+    Boilerplate["<b>Your repository</b><br/>decorators · initializers · config.json"]
+    CommercePath -.->|"decorator loaded from"| Boilerplate
+    Boilerplate -.->|"initializes"| DropIn
+    classDef eds fill:#e8f5e9,stroke:#4caf50
+    classDef commerce fill:#e3f2fd,stroke:#2196f3
+    classDef api fill:#fff3e0,stroke:#ff9800
+    class Table,Block,ContentPath eds
+    class CommercePath,DropIn,Boilerplate commerce
+    class API api
+`} caption="A document table authors both content and commerce blocks through the same EDS pipeline. Content blocks stay presentational. Commerce blocks load drop-in components through the boilerplate, which calls Adobe Commerce APIs directly from the browser." />
+
 ### Documents, blocks, and your repository
 
 Storefront **pages start as documents**. Authors build them in **[Document Authoring](/merchants/quick-start/document-authoring/)** (DA.live) or the **[Universal Editor](/merchants/quick-start/universal-editor/)**, structuring the page with **tables**.
@@ -191,7 +210,7 @@ The table maps the [boilerplate `scripts/` folder](https://github.com/hlxsites/a
 |-------------|------|
 | `scripts/scripts.js` | Page load, block decoration, fonts, and imports from `scripts/aem.js` and `scripts/commerce.js`. |
 | `scripts/commerce.js` | Commerce-specific loading, templates, and storefront configuration from `config.json`. |
-| `scripts/initializers/` | Bootstraps each drop-in component (account, cart, order, personalization) and wires it to the storefront. |
+| `scripts/initializers/` | One file per drop-in. Each initializer sets the GraphQL endpoint, loads UI string translations, and registers the drop-in for rendering — all at import time, before any block decorates. See [Using drop-ins](/dropins/all/quick-start/) for the code pattern. |
 | `blocks/` | Commerce and content blocks. See [Content blocks and Commerce blocks](#content-blocks-and-commerce-blocks) above and [Getting started](/boilerplate/getting-started/) for the repo layout. |
 
 </TableWrapper>
