@@ -61,7 +61,7 @@ graph TB
         Luma["<b>Luma / PHP</b><br/>Cart, checkout, account<br/>PaaS only"]
     end
     subgraph Bridge["Session bridge (optional)"]
-        LB["<b>Luma Bridge</b><br/>Shared cookies, JWT/cart IDs<br/>Same domain"]
+        LB["<b>Luma Bridge</b><br/>PHP on Commerce · session only<br/>Same domain"]
     end
     subgraph Backends["Backends"]
         PaaS["<b>Commerce PaaS</b><br/>Catalog, pricing, orders"]
@@ -69,7 +69,7 @@ graph TB
         ACO["<b>Adobe Commerce Optimizer</b><br/>Catalog v2, merchandising<br/>Commerce Storefront drop-ins"]
     end
     Connector["<b>ACO Connector</b><br/>PaaS-to-ACO sync<br/>Catalog, pricing"]
-    EDS <--> LB
+    EDS -->|"session cookies"| LB
     LB <--> Luma
     EDS --> PaaS
     EDS --> ACCS
@@ -85,7 +85,7 @@ graph TB
     class LB bridge
     class PaaS,ACCS,ACO backend
     class Connector connector
-`} caption="EDS connects to PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. Luma Bridge (PaaS only) bridges EDS and Luma—independent of Adobe Commerce Optimizer. The Adobe Commerce Optimizer Connector syncs PaaS catalog and pricing into Adobe Commerce Optimizer." />
+`} caption="EDS connects to PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. EDS drop-in components set session cookies that Luma Bridge (a PHP module on PaaS) reads to share sessions with Luma — independent of Adobe Commerce Optimizer. The Adobe Commerce Optimizer Connector syncs PaaS catalog and pricing into Adobe Commerce Optimizer." />
 
 ## Prerequisites by backend
 
@@ -109,7 +109,7 @@ v2.4.7 or later
 Manual installation is required. See [PaaS: required packages and services](#paas-required-packages-and-services) below for step-by-step instructions.
 
 <Aside type="note" title="Luma Bridge and Adobe Commerce Optimizer">
-Luma Bridge is the session bridge between Edge Delivery Services and a Luma/PHP storefront. It works with or without Adobe Commerce Optimizer. With the Adobe Commerce Optimizer Connector, Luma Bridge continues to share sessions during migration. See [Luma Bridge](/setup/discovery/luma-bridge/).
+Luma Bridge is a PHP module on Commerce (PaaS) that reads the session cookies set by EDS drop-in components, allowing Luma pages to share cart and authentication sessions with EDS. It does not plug into drop-in components. It works with or without Adobe Commerce Optimizer. With the Adobe Commerce Optimizer Connector, Luma Bridge continues to share sessions during migration. See [Luma Bridge](/setup/discovery/luma-bridge/).
 </Aside>
 
 </Option>
@@ -141,7 +141,7 @@ Adobe Commerce Optimizer (license includes Storefront)
 Adobe manages all requirements in a fully managed SaaS model. No manual installation is required.
 
 <Aside type="note" title="Adobe Commerce Optimizer + PaaS">
-If you use Commerce PaaS and add Adobe Commerce Optimizer, you can use [Luma Bridge](/setup/discovery/luma-bridge/) to keep cart, checkout, and account on PaaS while you migrate to Edge Delivery Services drop-in components.
+If you are on Commerce PaaS with an existing Luma storefront and add Adobe Commerce Optimizer, you can use [Luma Bridge](/setup/discovery/luma-bridge/) to share sessions between EDS and Luma's cart, checkout, and account pages while content and marketing move to Edge Delivery first.
 </Aside>
 
 </Option>
