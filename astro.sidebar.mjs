@@ -93,7 +93,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Launch checklist', link: '/setup/launch/' },
-            { label: 'Storefront event collection', link: '/setup/analytics/instrumentation/' },
+            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'SEO indexing', link: '/setup/seo/indexing/' },
             { label: 'SEO metadata', link: '/setup/seo/metadata/' },
