@@ -234,7 +234,7 @@ async function config() {
           // Patch the Vite logger after config is resolved so the filter applies
           // to all logging paths, including environment-level loggers in Vite 6+.
           name: 'suppress-known-build-warnings',
-          configResolved(config) {
+          configResolved(resolvedConfig) {
             const isKnownSafe = (msg) =>
               typeof msg === 'string' && (
                 // Public SVG assets used in CSS url() — resolved correctly by the browser
@@ -260,12 +260,12 @@ async function config() {
             };
 
             // Patch the root logger.
-            patchLogger(config.logger);
+            patchLogger(resolvedConfig.logger);
             // Patch each environment logger (Vite 6+). Environment-level loggers are
             // separate instances; the CSS url() resolution warning is emitted via
             // environment.logger, so the root logger patch alone may not catch it.
-            if (config.environments) {
-              for (const env of Object.values(config.environments)) {
+            if (resolvedConfig.environments) {
+              for (const env of Object.values(resolvedConfig.environments)) {
                 patchLogger(env.logger);
               }
             }
