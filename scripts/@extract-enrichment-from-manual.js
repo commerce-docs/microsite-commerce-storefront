@@ -4,7 +4,7 @@
  * Enrichment Extraction Script
  * 
  * This script extracts structured content from manually-created functions.mdx files
- * on the develop branch and converts them to enrichment JSON format.
+ * on the release branch and converts them to enrichment JSON format.
  * 
  * USAGE: node scripts/@extract-enrichment-from-manual.js <dropin-name>
  * Example: node scripts/@extract-enrichment-from-manual.js cart
@@ -129,12 +129,12 @@ async function main() {
 
     console.log(`\n🔍 Extracting enrichment data for ${dropinName}...\n`);
 
-    // Get the file from develop branch
+    // Get the file from release branch
     try {
         const mdxPath = `src/content/docs/dropins/${dropinName}/functions.mdx`;
-        console.log(`  📖 Reading ${mdxPath} from develop branch...`);
+        console.log(`  📖 Reading ${mdxPath} from release branch...`);
 
-        const mdxContent = execSync(`git show origin/develop:${mdxPath}`, {
+        const mdxContent = execSync(`git show origin/release:${mdxPath}`, {
             encoding: 'utf8',
             cwd: projectRoot
         });

@@ -3,7 +3,7 @@ title: Launch checklist
 description: Verify that you have completed all recommended steps before launching your Adobe Commerce on Edge Delivery Services storefront project.
 ---
 
-import Callouts from '@components/Callouts.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 import { Card, CardGrid } from '@astrojs/starlight/components';
 import Checklist from '@components/Checklist.astro';
 import { Icon } from '@astrojs/starlight/components';
@@ -21,8 +21,8 @@ As you develop, carefully track all changes made in development or staging envir
 <Checklist checklistKey="seo">
 ### SEO and indexing
 
-* [ ] Add a document title metadata for key pages (especially PDPs and PLPs). See the [SEO metadata](/setup/seo/metadata/) documentation for details.
-* [ ] Ensure that your PDPs have [metadata and structured data](/setup/seo/metadata/) (for example, LD-JSON data is configured).
+* [ ] Add document title metadata for key pages (especially PDPs and PLPs). See the [SEO metadata](/setup/seo/metadata/) documentation for details.
+* [ ] Ensure that your PDPs have [metadata and structured data](/setup/seo/metadata/) (for example, JSON-LD is configured).
 * [ ] Standardize URL formats for products (example: `domain/product-name`).
 * [ ] Redirect all vanity URLs to canonical URLs.
 * [ ] Add a `robots.txt` file to your project, which allows your site to be indexed by search
@@ -39,7 +39,7 @@ As you develop, carefully track all changes made in development or staging envir
 ### Enable pre-rendering
 
 * [ ] Add pre-rendering for key pages. See the [pre-rendering documentation](/setup/configuration/aem-prerender/) for details.
-* [ ] Verify that all URLs are in lower case to support pre-rendering without breaking any links.
+* [ ] Verify that all URLs are lowercase to support pre-rendering without breaking any links.
 * [ ] Validate HTML source for metadata and enriched body content (to ensure pre-rendering is working).
 * [ ] Check availability of page translations for locales with different languages.
 </Checklist>
@@ -47,6 +47,7 @@ As you develop, carefully track all changes made in development or staging envir
 <Checklist checklistKey="performance">
 ### Performance and monitoring
 
+* [ ] Ensure you have followed all [Performance best practices](/get-started/performance/).
 * [ ] (Optional) Configure Google Analytics and Google Tag Manager.
 * [ ] Validate your [storefront
       events](https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger)
@@ -54,7 +55,7 @@ As you develop, carefully track all changes made in development or staging envir
       Recommendation dashboards in the Adobe Commerce Admin.
 * [ ] Ensure that the `environment` analytics config parameter is set appropriately in your [Commerce configuration](/setup/configuration/commerce-configuration). It should be set to `"Testing"` when you are developing your storefront, and `"Production"` when you are ready to deploy your storefront. See the [Instrumentation](/setup/analytics/instrumentation/) documentation for more information.
 * [ ] Ensure that the site's Lighthouse score is green; targeting `100` on every page (taking into
-      account previous considerations mentioned on this document).
+      account previous considerations mentioned in this document).
 </Checklist>
 
 <Checklist checklistKey="security">
@@ -70,14 +71,11 @@ As you develop, carefully track all changes made in development or staging envir
 <Checklist checklistKey="cdn">
 ### CDN and caching
 
-* [ ] Update your CDN configuration with your production GraphQL endpoint `yourproject.com/graphql`. Make sure to also use this for all the Sidekick extensions and scripts (for example, sitemap generation, image importer).
-{/* TODO: How do we update CDN purge token for config service or da.live, non-config site */}
-* [ ] When using Adobe Commerce Fastly, request a new CDN purge token for Commerce production
-      environment. Update in Sharepoint in the `.helix/config.xlsx` file (`authToken` and
-      `serviceId`).
+* [ ] Update your CDN configuration with your production GraphQL endpoint (`yourproject.com/graphql`). Use that endpoint for all Sidekick extensions and scripts (for example, sitemap generation and the image importer).
+* [ ] Request a new CDN purge token for the Adobe Commerce production environment when you use Adobe Commerce Fastly. Update the `.helix/config.xlsx` file in SharePoint with the `authToken` and `serviceId` values.
 * [ ] Validate your [CDN configuration](/setup/configuration/content-delivery-network/) and ensure that caching
       and cache invalidation work as expected.
-* [ ] For [multi-store setups](/setup/seo/indexing/#multi-store-setups), add a store-specific cache buster (for example, a query parameter or proxy through CDN configuration) to Catalog Service and Live Search requests.
+* [ ] Add a store-specific cache buster to the Catalog Service and Live Search requests for [multi-store setups](/setup/seo/indexing/#multi-store-setups) (for example, a query parameter or proxy through your CDN configuration).
 </Checklist>
 
 <Checklist checklistKey="catalog">
@@ -104,15 +102,17 @@ As you develop, carefully track all changes made in development or staging envir
 
 For complete documentation on launching your storefront, visit the [Launch section](https://www.aem.live/docs/#launch) on the Adobe Experience Manager site or select the direct links below. You should also review the Commerce-specific [launch checklist](#launch-checklist).
 
-<Callouts color="#eb1000">
+<TableWrapper nowrap={[0]}>
 
-1. [Go-Live Checklist](https://www.aem.live/docs/go-live-checklist): The go-live checklist is a summary of best practices to consider when launching a website.
-1. [Push Invalidation](https://www.aem.live/docs/setup-byo-cdn-push-invalidation): Automatically purge content on your production CDN, whenever an author publishes content changes.
-1. [Cloudflare Worker Setup](https://www.aem.live/docs/byo-cdn-cloudflare-worker-setup): Learn how to configure Cloudflare to deliver content.
-1. [Akamai Setup](https://www.aem.live/docs/byo-cdn-akamai-setup): Discover how to use the Akamai Property Manager to configure a property to deliver content.
-1. [Fastly Setup](https://www.aem.live/docs/byo-cdn-fastly-setup): This guide illustrates how to configure Fastly to deliver content.
-1. [CloudFront Setup](https://www.aem.live/docs/byo-cdn-cloudfront-setup): Set up Amazon Web Services Cloudfront to deliver your AEM site with push invalidation.
-1. [Bring your own DNS](https://www.aem.live/docs/byo-dns): A custom domain without having to set up a content delivery network.
-1. [Redirects](https://www.aem.live/docs/redirects): You can manage redirects as a spreadsheet from the `redirects` document in the root of your project folder.
+| Topic | Description |
+| ----- | ----------- |
+| [Go-Live Checklist](https://www.aem.live/docs/go-live-checklist) | Summary of best practices to consider when launching a website. |
+| [Push Invalidation](https://www.aem.live/docs/setup-byo-cdn-push-invalidation) | Automatically purge content on your production CDN whenever an author publishes content changes. |
+| [Cloudflare Worker Setup](https://www.aem.live/docs/byo-cdn-cloudflare-worker-setup) | Configure Cloudflare to deliver content. |
+| [Akamai Setup](https://www.aem.live/docs/byo-cdn-akamai-setup) | Use the Akamai Property Manager to configure a property to deliver content. |
+| [Fastly Setup](https://www.aem.live/docs/byo-cdn-fastly-setup) | Configure Fastly to deliver content. |
+| [CloudFront Setup](https://www.aem.live/docs/byo-cdn-cloudfront-setup) | Set up Amazon Web Services CloudFront to deliver your AEM site with push invalidation. |
+| [Bring your own DNS](https://www.aem.live/docs/byo-dns) | Custom domain without having to set up a content delivery network. |
+| [Redirects](https://www.aem.live/docs/redirects) | Manage redirects as a spreadsheet from the `redirects` document in the root of your project folder. |
 
-</Callouts>
+</TableWrapper>

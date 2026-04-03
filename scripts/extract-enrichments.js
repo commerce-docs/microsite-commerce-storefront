@@ -3,7 +3,7 @@
 /**
  * Enrichment Extraction Helper
  * 
- * This script helps extract manual function documentation from the develop branch
+ * This script helps extract manual function documentation from the release branch
  * and converts it into enrichment JSON files.
  * 
  * USAGE:
@@ -32,12 +32,12 @@ if (!dropinName) {
 
 console.log(`\n🔍 Extracting enrichment data for ${dropinName}...\n`);
 
-// Get the file from develop branch
+// Get the file from release branch
 let mdxContent;
 try {
-    mdxContent = execFileSync('git', ['show', `origin/develop:src/content/docs/dropins/${dropinName}/functions.mdx`], { encoding: 'utf8' });
+    mdxContent = execFileSync('git', ['show', `origin/release:src/content/docs/dropins/${dropinName}/functions.mdx`], { encoding: 'utf8' });
 } catch (error) {
-    console.error(`❌ Could not find functions.mdx for ${dropinName} on develop branch`);
+    console.error(`❌ Could not find functions.mdx for ${dropinName} on release branch`);
     process.exit(1);
 }
 
