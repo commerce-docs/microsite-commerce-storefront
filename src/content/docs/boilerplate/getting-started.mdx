@@ -91,19 +91,27 @@ To understand how documents transform into rendered commerce experiences at runt
 - **Commerce config** - Update initializers in `scripts/initializers/`.
 - **Add/remove blocks** - Use only the Commerce blocks you need.
 
-### What is safe to change
+### Customization strategy
 
-Different layers of the boilerplate carry different expectations. Use this table to decide whether to customize freely, extend carefully, or treat a file as infrastructure.
+Everything in the boilerplate can be modified. The guidance below is not about permission; it is about keeping your fork easy to maintain as the upstream boilerplate evolves.
+
+**Some files must not be edited:**
+
+- `scripts/aem.js` — The core AEM runtime. Pulled verbatim from the upstream [AEM Boilerplate](https://github.com/adobe/aem-boilerplate); any local edit will conflict on the next sync.
+- `package.json` lifecycle scripts (`postinstall`, `postupdate`, `install:dropins`) — These run automatically during `npm install` to install and configure drop-ins. Changing them will break drop-in installation.
+
+**When customizing blocks or initializers, extract your changes to new files rather than editing existing ones.** For example, you can add slot customizations to a new `blocks/commerce-cart/slots.js` and import it at the top of `commerce-cart.js`. Your customizations stay in a file you own, so when a boilerplate update arrives your changes to the original file are minimal — an import and a small usage change — rather than custom code scattered throughout it.
 
 <TableWrapper nowrap={[0]}>
 
-| Layer | Guidance |
+| Layer | Strategy |
 |-------|----------|
-| `styles/` | Safe to change fully — design tokens, fonts, and layout |
-| `blocks/` | Safe to modify decorators and styles; keep block names stable to avoid breaking authored content |
-| `scripts/initializers/` | Safe to configure; do not remove an initializer without also removing the corresponding usages |
-| `scripts/commerce.js` | Extend using the available hooks; avoid rewriting core logic |
-| `scripts/scripts.js` | Treat as infrastructure — keep it aligned with the upstream [AEM Boilerplate](https://github.com/adobe/aem-boilerplate) before modifying |
+| `styles/` | Change colors, fonts, spacing, and layout here. Tokens in `styles/styles.css` apply across the whole site. |
+| `blocks/` | Edit block appearance and behavior. Keep block folder names unchanged — authors reference them by name in documents. |
+| `scripts/initializers/` | Configure each drop-in's API endpoint and UI labels — one file per drop-in (for example, `cart.js`, `checkout.js`). If you remove a drop-in, also remove its initializer file and all imports of it in the codebase. See [Using drop-ins](/dropins/all/quick-start/). |
+| `scripts/commerce.js` | Edit this file to add Commerce-specific logic such as consent handling (`getConsent`) or custom page type detection. It reads your [storefront configuration](/setup/configuration/commerce-configuration/) and sets up Commerce API connections on every page. |
+| `scripts/scripts.js` | Add auto-generated blocks to `buildAutoBlocks` (the boilerplate uses this for the hero block). Load third-party scripts, tag managers, or analytics tools in `scripts/delayed.js` — it runs 3 seconds after page load so they don't affect initial render performance. |
+| `build.mjs` | Edit this file to customize what data drop-ins fetch from Commerce. For example, you can add a custom product field to the PDP query or skip query fragments your project doesn't need. Use the existing entries as patterns. Changes take effect after running `npm install`. |
 
 </TableWrapper>
 
