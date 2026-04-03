@@ -6,13 +6,13 @@ description: Surface Adobe Payment Services vaulted cards on My Account by addin
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-Shoppers who **save a card with Payment Services** during checkout can see and remove those vaulted methods on a **My Account** page. The Commerce boilerplate does **not** include a payment-methods block out of the box—**this tutorial** shows how to add one yourself (for example a **`commerce-payment-methods`** block) that renders the User Account [PaymentMethods](../containers/payment-methods/) container. That container loads tokens with the same GraphQL **`customerPaymentTokens`** query used for vault data elsewhere—so what was vaulted through Payment Services appears here when the shopper is signed in.
+Shoppers who **save a card with Payment Services** during checkout can see and remove those vaulted methods on a **My Account** page. The Commerce boilerplate does **not** include a payment-methods block out of the box—**this tutorial** shows how to add one yourself (for example a **`commerce-payment-methods`** block) that renders the User Account [PaymentMethods](/dropins/user-account/containers/payment-methods/) container. That container loads tokens with the same GraphQL **`customerPaymentTokens`** query used for vault data elsewhere—so what was vaulted through Payment Services appears here when the shopper is signed in.
 
 This page is **Payment Services–specific**: it assumes vaulting is enabled for your Payment Services integration and focuses on wiring the account experience with a small custom block.
 
 ## Prerequisites
 
-- **Payment Services** is <Link href="https://experienceleague.adobe.com/en/docs/commerce/payment-services/get-started/onboard" text="onboarded" /> and the <Link href="../../payment-services/installation/" text="Payment Services drop-in" /> meets version requirements for your storefront.
+- **Payment Services** is <Link href="https://experienceleague.adobe.com/en/docs/commerce/payment-services/get-started/onboard" text="onboarded" /> and the <Link href="/dropins/payment-services/installation/" text="Payment Services drop-in" /> meets version requirements for your storefront.
 - **Save / vault** is available for your payment flow (see Adobe’s <Link href="https://developer.adobe.com/commerce/webapi/graphql/payment-services-extension/workflows/vaulted-card/" text="vaulted card workflow" /> for how tokens are created at checkout).
 - Checkout (or another flow) already initializes Payment Services where shoppers vault cards—for example the boilerplate <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js" text="commerce-checkout" /> loads <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/payment-services.js" text="payment-services.js" />.
 - Account pages run the **account** initializer so GraphQL calls use the customer token. Import <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/account.js" text="scripts/initializers/account.js" /> (or your equivalent) before rendering the container.
@@ -86,14 +86,14 @@ Adjust the prefix list if your Admin / integration uses a different method code 
 ## How data reaches the UI
 
 - By default the container calls **`getCustomerPaymentTokens`**, which runs the **`customerPaymentTokens`** query and maps vault **details** JSON (including Payment Services **brand** / **last four** style fields) into rows for **PaymentCard**.
-- If another part of the page already has token rows on the client, you can emit **`account/customerPaymentTokens`** on the event bus so the container consumes that payload first (see [Events](../events/#accountcustomerpaymenttokens-listens)). That is optional; Payment Services + GraphQL alone is the usual path for My Account.
+- If another part of the page already has token rows on the client, you can emit **`account/customerPaymentTokens`** on the event bus so the container consumes that payload first (see [Events](/dropins/user-account/events/#accountcustomerpaymenttokens-listens)). That is optional; Payment Services + GraphQL alone is the usual path for My Account.
 
 ## Related documentation
 
-- [PaymentMethods container](../containers/payment-methods/) — props, GraphQL vs bus, and errors.
-- [User Account functions](../functions/) — **`getCustomerPaymentTokens`**, **`deletePaymentToken`**.
-- [Payment Services installation](../../payment-services/installation/) and [initialization](../../payment-services/initialization/).
-- Checkout: [Add payment method](../../checkout/tutorials/add-payment-method/) when customizing how cards are vaulted at purchase time.
+- [PaymentMethods container](/dropins/user-account/containers/payment-methods/) — props, GraphQL vs bus, and errors.
+- [User Account functions](/dropins/user-account/functions/) — **`getCustomerPaymentTokens`**, **`deletePaymentToken`**.
+- [Payment Services installation](/dropins/payment-services/installation/) and [initialization](/dropins/payment-services/initialization/).
+- Checkout: [Add payment method](/dropins/checkout/tutorials/add-payment-method/) when customizing how cards are vaulted at purchase time.
 
 <Aside type="caution" title="PCI and SDK UI">
 Payment card entry at checkout stays inside the **Payment Services** drop-in / SDK for PCI boundaries. **My Account** only **lists and removes** tokens already stored on the customer; it does not replace the hosted card form at checkout.
