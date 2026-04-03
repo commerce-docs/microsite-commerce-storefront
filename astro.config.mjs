@@ -259,7 +259,16 @@ async function config() {
               }
             };
 
+            // Patch the root logger.
             patchLogger(config.logger);
+            // Patch each environment logger (Vite 6+). Environment-level loggers are
+            // separate instances; the CSS url() resolution warning is emitted via
+            // environment.logger, so the root logger patch alone may not catch it.
+            if (config.environments) {
+              for (const env of Object.values(config.environments)) {
+                patchLogger(env.logger);
+              }
+            }
           },
         },
       ],
