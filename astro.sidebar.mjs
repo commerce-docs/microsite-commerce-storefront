@@ -432,6 +432,8 @@ export function generateSidebar() {
                     { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                     { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                     { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                    { label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
+                    },
                   ],
                 },
               ],

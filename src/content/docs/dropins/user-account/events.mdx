@@ -22,6 +22,7 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
+| [account/customerPaymentTokens](#accountcustomerpaymenttokens-listens) | Listens | Optional injected list of stored payment tokens for the PaymentMethods UI; consumed eagerly when present. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
 </TableWrapper>
@@ -31,6 +32,34 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
+### `account/customerPaymentTokens` (listens)
+
+The **PaymentMethods** container and `usePaymentMethods` hook subscribe to this event. When a payload is already on the event bus, the hook uses it instead of calling GraphQL `getCustomerPaymentTokens`. Use this to inject token rows from another drop-in (for example, Payment Services) or tests.
+
+Subscribe with an **eager** listener so any payload that was emitted before subscribe is still applied (same pattern as cart data events).
+
+#### Event payload
+
+| Shape | Description |
+| ----- | ----------- |
+| Array of token rows | Each item matches the **StoredPaymentMethodDisplay** shape: `publicHash`, `cardBrand`, `lastFourDigits`, optional `expired`, optional `variant`. |
+| `null` | Explicit empty list (same convention as cart `cart/data`). |
+
+When the list comes from the event bus, removing a token in the UI updates local state only; the **deletePaymentToken** mutation is not called.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on(
+  'account/customerPaymentTokens',
+  (payload) => {
+    console.log('Stored payment tokens:', payload);
+  },
+  { eager: true }
+);
+```
 
 ### `companyContext/changed` (listens)
 

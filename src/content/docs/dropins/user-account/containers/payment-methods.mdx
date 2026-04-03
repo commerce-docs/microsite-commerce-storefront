@@ -1,0 +1,93 @@
+---
+title: PaymentMethods container
+description: Learn about the PaymentMethods container for saved payment methods in My Account.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+
+The `PaymentMethods` container lists a customer's stored payment methods (for example, vaulted cards), lets them remove a method, and supports a compact layout for account dashboards. It uses the same card presentation as checkout-style flows via the internal `PaymentCard` component.
+
+## Data loading
+
+The container uses the `usePaymentMethods` hook in the `@dropins/storefront-account` package, which chooses a data source as follows:
+
+1. **Event bus (eager)** — The hook subscribes to `account/customerPaymentTokens` on `events.on` with the listener option `eager` set to `true` so any existing payload is applied immediately. If an event payload is already available, the list is taken from the **event bus** and **no** GraphQL load runs on mount. Removing an item updates **local state only** (the `deletePaymentToken` mutation is not called).
+2. **GraphQL** — If nothing is consumed from the bus, the hook calls **`getCustomerPaymentTokens`**. Removing an item calls **`deletePaymentToken`** with the token's **public_hash** value.
+
+Changing `filterPaymentMethodCodes` after the initial load triggers a refetch **only** when the current source is GraphQL (not when data came from the event bus).
+
+<Aside type="tip" title="Injecting tokens from another drop-in">
+Emit the **account/customerPaymentTokens** event with an array of display rows (the same shape as the **StoredPaymentMethodDisplay** model in the drop-in source) when you already have token data on the client—for example, after checkout or Payment Services initialization. Emit a **null** payload for an explicit empty list if your integration follows the same convention as the cart **cart/data** event.
+</Aside>
+
+## Layout
+
+### Full layout
+
+Use the default layout on a dedicated **Payments** or account settings page: section header (unless disabled), list of cards with remove actions, and full empty state when there are no saved methods.
+
+### Minified layout
+
+Set **`minifiedView`** when the container sits beside other dashboard widgets. The empty state and each card use a single-row layout (brand, masked number, optional expired tag, Remove).
+
+## Configurations
+
+The `PaymentMethods` container accepts standard HTML div attributes plus the following options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Options', 'Type', 'Req?', 'Description'],
+    [
+      'className',
+      'string',
+      'No',
+      'Additional CSS class on the outer wrapper (inner root also uses the account-payment-methods-root class).',
+    ],
+    [
+      'withHeader',
+      'boolean',
+      'No',
+      'When true (default), shows the section title from the dictionary key Account.Payments.containerTitle. When false, the header is hidden.',
+    ],
+    [
+      'minifiedView',
+      'boolean',
+      'No',
+      'Compact empty state and one-row cards for dashboard-style embeds. Default false.',
+    ],
+    [
+      'filterPaymentMethodCodes',
+      'string array',
+      'No',
+      'If set, only tokens whose payment_method_code equals or starts with one of these strings are shown (for example, Payment Services vault method codes).',
+    ],
+  ]}
+/>
+
+## Example
+
+The following example shows the usual boilerplate pattern: initializer, container import, and `render` from the account drop-in.
+
+```javascript
+import '../../scripts/initializers/account.js';
+import PaymentMethods from '@dropins/storefront-account/containers/PaymentMethods.js';
+import { render as accountRenderer } from '@dropins/storefront-account/render.js';
+
+export default async function decorate(block) {
+  if (!checkIsAuthenticated()) {
+    window.location.href = CUSTOMER_LOGIN_PATH;
+    return;
+  }
+
+  await accountRenderer.render(PaymentMethods, {
+    minifiedView: false,
+    withHeader: true,
+    // Optional: limit to specific gateway codes
+    // filterPaymentMethodCodes: ['payment_services'],
+  })(block);
+}
+```
+
+For programmatic access to the same data and removal behavior outside this container, see [User Account functions](../../functions/) for `getCustomerPaymentTokens` and `deletePaymentToken`, and [Events](../../events/) for `account/customerPaymentTokens`.
