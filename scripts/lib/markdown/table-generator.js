@@ -14,10 +14,36 @@
 import { simplifyType } from '../react/props-extractor.js';
 
 /**
+ * Unescape text that was previously escaped by sanitizeText.
+ * Used when content is extracted from existing MDX (e.g. Richer Description Rule)
+ * to avoid double-escaping on each generator run.
+ *
+ * @param {string} text - Possibly escaped text
+ * @returns {string} Raw text (unescaped)
+ */
+function unescapeTableContent(text) {
+    if (!text) return '';
+    let prev = '';
+    while (prev !== text) {
+        prev = text;
+        text = text
+            .replace(/\\\*/g, '*')
+            .replace(/\\\|/g, '|')
+            .replace(/\\\{/g, '{')
+            .replace(/\\\}/g, '}')
+            .replace(/\\\[/g, '[')
+            .replace(/\\\]/g, ']')
+            .replace(/\\\\/g, '\\');
+    }
+    return text;
+}
+
+/**
  * Sanitize text for safe use in markdown table cells
  * 
  * Escapes special markdown characters and normalizes whitespace
- * to prevent table formatting issues.
+ * to prevent table formatting issues. First unescapes any already-escaped
+ * content (e.g. from extracted MDX) to prevent double-escaping.
  * 
  * @param {string} text - Text to sanitize
  * @returns {string} Sanitized text safe for markdown tables
@@ -29,12 +55,16 @@ import { simplifyType } from '../react/props-extractor.js';
 export function sanitizeText(text) {
     if (!text) return '';
 
+    // Unescape first to handle content extracted from existing MDX (avoids escalating backslashes)
+    text = unescapeTableContent(text);
+
     return text
-        .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
+        .replace(/\\`/g, '`')          // Remove backslash before backtick - backticks render correctly in MDX table cells
+        .replace(/\\/g, '\\\\')        // Escape remaining backslashes
         .replace(/\n/g, ' ')           // Remove line breaks
         .replace(/\r/g, '')            // Remove carriage returns
         .replace(/\|/g, '\\|')         // Escape pipes
-        .replace(/`/g, '\\`')          // Escape backticks
+        // Never escape backticks - they render correctly in MDX table cells
         .replace(/\{/g, '\\{')         // Escape curly braces (MDX expressions)
         .replace(/\}/g, '\\}')         // Escape curly braces (MDX expressions)
         .replace(/</g, '&lt;')         // Escape less-than (HTML/JSX tags)
@@ -67,7 +97,7 @@ export function sanitizeInlineCode(text) {
         .replace(/\\/g, '\\\\')        // Escape backslashes FIRST
         .replace(/\n/g, ' ')           // Remove line breaks
         .replace(/\r/g, '')            // Remove carriage returns
-        .replace(/`/g, '\\`')          // Escape backticks (would break inline code)
+        // Never escape backticks - they render correctly in MDX
         .replace(/\|/g, '\\|')         // Escape pipes (would break table cell)
         .replace(/\s+/g, ' ')          // Collapse multiple spaces
         .trim();

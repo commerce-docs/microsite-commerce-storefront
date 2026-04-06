@@ -17,6 +17,9 @@
  * - Generate all documentation: npm run generate-boilerplate-docs
  *
  * OUTPUT: Multiple MDX files in src/content/docs/boilerplate/
+ *
+ * NOTE: All boilerplate docs are manually maintained (BOILERPLATE_DOCS_MANUALLY_MAINTAINED).
+ * The generator runs for version extraction and other scripts that depend on it, but does not overwrite any files.
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
@@ -779,6 +782,12 @@ function generateBuildDocs(boilerplateVersion, outputPath) {
 }
 
 /**
+ * All boilerplate documentation is manually maintained.
+ * When true, the generator runs (for version extraction, etc.) but does not overwrite any files.
+ */
+const BOILERPLATE_DOCS_MANUALLY_MAINTAINED = true;
+
+/**
  * Generate configuration documentation
  */
 function generateConfigDocs(boilerplateVersion, outputPath) {
@@ -831,49 +840,45 @@ try {
     // Generate documentation
     const outputDir = join(projectRoot, 'src', 'content', 'docs', 'boilerplate');
 
-    // Ensure blocks directory exists
-    ensureParentDirectoryExists(join(outputDir, 'blocks', 'placeholder.md'));
+    if (BOILERPLATE_DOCS_MANUALLY_MAINTAINED) {
+        console.log('\n⏭️  All boilerplate docs are manually maintained - skipping file generation');
+        console.log(`   📂 /boilerplate/ (${blocks.length} blocks detected, no files overwritten)`);
+        console.log('\n✨ Boilerplate documentation generation complete!\n');
+    } else {
+        // Ensure blocks directory exists
+        ensureParentDirectoryExists(join(outputDir, 'blocks', 'placeholder.md'));
 
-    // Generate overview
-    generateOverview(blocks, initializers, boilerplateVersion, join(outputDir, 'index.mdx'));
+        // Generate overview
+        generateOverview(blocks, initializers, boilerplateVersion, join(outputDir, 'index.mdx'));
 
-    // Generate blocks overview page
-    generateBlocksOverview(blocks, join(outputDir, 'blocks', 'index.mdx'));
+        // Generate blocks overview page
+        generateBlocksOverview(blocks, join(outputDir, 'blocks', 'index.mdx'));
 
-    // Individual block documentation removed - consolidated into overview page
-    // See /boilerplate/blocks/ for complete block reference
-    // See /boilerplate/customizing-blocks/ for implementation guidance
+        // Generate additional documentation
+        generateConfigDocs(boilerplateVersion, join(outputDir, 'configuration.mdx'));
 
-    // Generate additional documentation
-    // NOTE: structure.mdx and build-process.mdx have been consolidated into working-with-boilerplate.mdx
-    // generateStructureDocs(boilerplateVersion, join(outputDir, 'structure.mdx'));
-    // generateBuildDocs(boilerplateVersion, join(outputDir, 'build-process.mdx'));
-    generateConfigDocs(boilerplateVersion, join(outputDir, 'configuration.mdx'));
+        // Update sidebar
+        updateSidebarNavigation(blocks);
 
-    // Update sidebar
-    updateSidebarNavigation(blocks);
+        // Summary
+        console.log('\n' + '='.repeat(60));
+        console.log('\n📊 Generation Summary:\n');
+        console.log(`✅ Overview page: 1`);
+        console.log(`✅ Blocks overview page: 1 (${blocks.length} blocks listed)`);
+        console.log(`✅ Configuration docs: 1`);
+        console.log(`ℹ️  Sidebar navigation: Manually managed`);
+        console.log(`📄 Total: 3 pages`);
 
-    // Summary
-    console.log('\n' + '='.repeat(60));
-    console.log('\n📊 Generation Summary:\n');
-    console.log(`✅ Overview page: 1`);
-    console.log(`✅ Blocks overview page: 1 (${blocks.length} blocks listed)`);
-    console.log(`✅ Structure docs: 1`);
-    console.log(`✅ Build docs: 1`);
-    console.log(`✅ Configuration docs: 1`);
-    console.log(`ℹ️  Sidebar navigation: Manually managed`);
-    console.log(`📄 Total: 5 pages`);
+        console.log('\n📝 Generated Documentation:\n');
+        console.log(`   📂 /boilerplate/`);
+        console.log(`      📄 index.mdx (Overview)`);
+        console.log(`      📄 configuration.mdx`);
+        console.log(`      📂 blocks/`);
+        console.log(`         📄 index.mdx (Overview for ${blocks.length} blocks)`);
+        console.log(`\n   ℹ️  Customization guide at /boilerplate/customizing-blocks/`);
 
-    console.log('\n📝 Generated Documentation:\n');
-    console.log(`   📂 /boilerplate/`);
-    console.log(`      📄 index.mdx (Overview)`);
-    console.log(`      📄 configuration.mdx`);
-    console.log(`      📂 blocks/`);
-    console.log(`         📄 index.mdx (Overview for ${blocks.length} blocks)`);
-    console.log(`\n   ℹ️  Individual block pages removed - see /boilerplate/blocks/`);
-    console.log(`   ℹ️  Customization guide at /boilerplate/customizing-blocks/`);
-
-    console.log('\n✨ Boilerplate documentation generation complete!\n');
+        console.log('\n✨ Boilerplate documentation generation complete!\n');
+    }
 
 } catch (error) {
     console.error('\n❌ Error generating boilerplate documentation:');

@@ -22,6 +22,15 @@
  * 
  * IMPORTANT: Always verify against source repositories rather than making assumptions.
  * This ensures accuracy in function signatures, parameters, and usage examples.
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/{dropin-name}
+ * Verify: function signatures, parameters, return types. If you cannot verify, do not invent.
+ *
+ * RULE - SOURCE OF TRUTH (see scripts/GENERATOR-RULES.md):
+ * TypeScript is the source of truth for parameters and signatures. Enrichment provides
+ * descriptions only—never add params from enrichment that aren't in the function signature.
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
@@ -36,6 +45,8 @@ import { cleanVersion, wrapCodeNames } from './lib/utils.js';
 import { getAllExamples } from './lib/example-extractor.js';
 import { validateAndMerge, validateFunctionSignature, createValidationReport } from './lib/source-validator.js';
 import { getParameterDescription } from './lib/parameter-patterns.js';
+import { extractExistingFunctionParameterDescriptions, extractExistingFunctionDescriptions } from './lib/content-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
 
 // Import new core shared libraries
 import { GenericTypeHandler } from './lib/core/generic-type-handler.js';
@@ -272,6 +283,48 @@ function extractModelFromSourceHint(modelName, sourceHint, repoName) {
 // ============================================================================
 // LINK CONVERSION
 // ============================================================================
+
+/**
+ * Repair URLs corrupted by wrapCodeNames (erroneous backticks around letters).
+ * Fixes patterns like developer.adobe.`c`o`m and apply-gift-card-to-`c`a`r`t.
+ * Also normalizes href=`url` to href="url" so wrapCodeNames protection works.
+ */
+function repairCorruptedUrls(text) {
+    if (!text || typeof text !== 'string') return text;
+    // Fix corrupted URLs: remove erroneous backticks around single letters (e.g. `c`o`m -> com)
+    const fixBackticksInUrl = (url) => {
+        let prev = '';
+        while (prev !== url) {
+            prev = url;
+            url = url.replace(/`([a-z])`/g, '$1');
+        }
+        return url;
+    };
+    let result = text.replace(/(https?:\/\/[^\s>]+)/g, fixBackticksInUrl);
+    // Normalize href=`url` to href="url" so wrapCodeNames can protect it
+    result = result.replace(/href=`((?:[^`]|`[a-z]`)+)`/g, (_, url) => {
+        return `href="${fixBackticksInUrl(url)}"`;
+    });
+    // Fix partially repaired URLs: href="...co"m/`commerce/... -> href="...com/commerce/...
+    result = result.replace(/href="(https:\/\/[^"]*)"([a-z])([^"]*")/g, (_, prefix, letter, rest) => {
+        return `href="${prefix}${letter}${fixBackticksInUrl(rest)}`;
+    });
+    // Fix trailing backticks: ..."/` text= -> ..." text= (remove stray /`)
+    result = result.replace(/\/`\s+text=/g, ' text=');
+    // Fix double-quote after href URL: href="...url"" -> href="...url"
+    result = result.replace(/href="(https:\/\/[^"]+)"\s*"/g, 'href="$1"');
+    // Fix href missing closing quote before text=: href="...url text="updateCartItems` -> href="...url" text=`updateCartItems`
+    result = result.replace(/href="(https:\/\/[^"]+)\s+text="([^`"]+)`/g, 'href="$1" text=`$2`');
+    // Fix backticks around single letters in text= attributes: text=`updateCartItem`s` -> text=`updateCartItems`
+    result = result.replace(/text=`([^`]*?)`([a-z])`/g, 'text=`$1$2`');
+    // Fix backticks around letters in event names: `s`h`i`p`p`i`n`g/e`s`t`i`m`a`t`e` -> `shipping/estimate`
+    let prev = '';
+    while (prev !== result) {
+        prev = result;
+        result = result.replace(/`([a-z])`(?=[a-z`\/]|$)/g, '$1');
+    }
+    return result;
+}
 
 /**
  * Convert external markdown links to Link component for proper external link handling
@@ -574,11 +627,6 @@ function scanForFunctions(repoPath) {
  * @returns {string|null} Function signature or null if not found
  */
 function extractFunctionSignature(tsContent, functionName) {
-    // Debug logging
-    if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
-        console.log(`\n🔍 DEBUG: extractFunctionSignature called for ${functionName}`);
-    }
-
     // Use regex to find the function start, then manually extract with balanced parenthesis matching
     const patterns = [
         // .d.ts format: export declare const functionName: (...) => ...
@@ -722,14 +770,6 @@ function extractFunctionSignature(tsContent, functionName) {
 
             // Clean up params string (remove extra whitespace, normalize line breaks)
             const params = paramsStr.trim().replace(/\s+/g, ' ');
-
-            // Debug logging
-            if (functionName === 'getFetchedProductData' || functionName === 'setProductConfigurationValid') {
-                console.log(`\n🔍 DEBUG: Extracted ${functionName}:`);
-                console.log('  Raw params:', JSON.stringify(paramsStr));
-                console.log('  Cleaned params:', JSON.stringify(params));
-                console.log('  Return type:', returnType);
-            }
 
             return { params, returnType };
         }
@@ -1104,6 +1144,14 @@ function cleanFunctionDescription(mdxContent, functionName) {
 }
 
 /**
+ * Fix "Return " to "Returns " at start of description (correct grammar for functions that return values).
+ */
+function fixReturnToReturns(description) {
+    if (!description || typeof description !== 'string') return description;
+    return description.replace(/^Return /, 'Returns ');
+}
+
+/**
  * Normalize description to start with a verb for parallel structure in function tables
  * 
  * @param {string} description - Function description
@@ -1174,7 +1222,7 @@ function generateFunctionFromEnrichment(func, enrichment) {
 
     // Description
     if (enrichment.description) {
-        content += `${enrichment.description}\n\n`;
+        content += `${fixReturnToReturns(enrichment.description)}\n\n`;
     }
 
     // Signature
@@ -1301,6 +1349,12 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     // Calculate repository path
     const repoPath = join(getProjectRoot(), '.temp-repos', repoName);
 
+    // Richer Description Rule: extract existing param and function descriptions for comparison
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const outputPath = join(getProjectRoot(), 'src', 'content', 'docs', basePath, repoName, 'functions.mdx');
+    const existingParamDescriptions = extractExistingFunctionParameterDescriptions(outputPath);
+    const existingFunctionDescriptions = extractExistingFunctionDescriptions(outputPath);
+
     // Create TypeExtractor instance for this repository
     const typeExtractor = new TypeExtractor(repoPath);
 
@@ -1356,6 +1410,7 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         if (!description && func.mdxContent) {
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
+        description = fixReturnToReturns(description);
 
         // Normalize description to start with a verb for parallel structure
         description = normalizeDescriptionToVerb(description, func.name);
@@ -1510,7 +1565,15 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
             // Only try to extract from MDX if it exists (not TypeScript-only functions)
             description = cleanFunctionDescription(func.mdxContent, func.name);
         }
+        description = fixReturnToReturns(description);
+        // Richer Description Rule: prefer existing function description if richer than generated
+        const existing = existingFunctionDescriptions.get(func.name);
+        if (existing && isRicherDescription(existing, description || '')) {
+            description = existing;
+        }
         if (description) {
+            // Repair URLs corrupted by previous runs (erroneous backticks)
+            description = repairCorruptedUrls(description);
             // Wrap code names in backticks
             description = wrapCodeNames(description);
             // Convert external markdown links to Link components
@@ -1583,14 +1646,21 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                         if (nestedProps.length > 0) {
                             // Show each nested property as a separate row
                             nestedProps.forEach(nestedProp => {
-                                const description = getParameterDescription(
+                                const enrichedDesc = enrichment?.parameters?.[nestedProp.name]?.description;
+                                const generatedDesc = getParameterDescription(
                                     nestedProp.name,
                                     enrichment,
                                     nestedProp.comment,
                                     repoName,
                                     func.name
                                 );
-
+                                let description = enrichedDesc || generatedDesc;
+                                if (!enrichedDesc) {
+                                    const existing = existingParamDescriptions.get(`${func.name}#${nestedProp.name}`);
+                                    if (existing && isRicherDescription(existing, generatedDesc)) {
+                                        description = existing;
+                                    }
+                                }
                                 tableItems.push({
                                     name: nestedProp.name,
                                     type: nestedProp.type,
@@ -1616,13 +1686,21 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
                     }
 
                     // Get description using parameter patterns with fallback hierarchy
-                    const description = getParameterDescription(
+                    const enrichedDesc = enrichment?.parameters?.[param.name]?.description;
+                    const generatedDesc = getParameterDescription(
                         param.name,
                         enrichment,
                         null, // No inline comment for top-level params
                         repoName,
                         func.name
                     );
+                    let description = enrichedDesc || generatedDesc;
+                    if (!enrichedDesc) {
+                        const existing = existingParamDescriptions.get(`${func.name}#${param.name}`);
+                        if (existing && isRicherDescription(existing, generatedDesc)) {
+                            description = existing;
+                        }
+                    }
 
                     tableItems.push({
                         name: param.name,
@@ -2195,20 +2273,11 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     const commentStart = template.indexOf('{/*');
     const commentEnd = template.indexOf('*/}');
 
-    console.log(`🔍 DEBUG: commentStart=${commentStart}, commentEnd=${commentEnd}`);
-
     if (commentStart !== -1 && commentEnd !== -1) {
-        // Check if this is the template guide comment (contains "TEMPLATE USAGE GUIDE")
         const commentBlock = template.substring(commentStart, commentEnd + 3);
-        console.log(`🔍 DEBUG: commentBlock length=${commentBlock.length}, contains guide=${commentBlock.includes('TEMPLATE USAGE GUIDE')}`);
-
         if (commentBlock.includes('TEMPLATE USAGE GUIDE')) {
-            // Remove the entire comment block
-            const beforeLength = template.length;
             template = template.substring(0, commentStart) +
                 template.substring(commentEnd + 3);
-            const afterLength = template.length;
-            console.log(`✅ DEBUG: Removed comment block: ${beforeLength} → ${afterLength} (removed ${beforeLength - afterLength} chars)`);
         }
     }
 
@@ -2230,13 +2299,16 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
         ? enrichmentData.overview
         : `The ${repoConfig.displayName} drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.`;
 
+    // Post-process to fix any corrupted URLs in the full content (catches all sources)
+    const fullContent = repairCorruptedUrls(functionsContent + dataModelsSection + additionalContent);
+
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
         DROPIN_VERSION: cleanVersion(version),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
-        FUNCTIONS_CONTENT: functionsContent + dataModelsSection + additionalContent
+        FUNCTIONS_CONTENT: fullContent
     });
 }
 
@@ -2270,7 +2342,8 @@ await runGenerator({
     scanRepo: scanForFunctions,
     generateContent: generateFunctionsMDX,
     updateSidebar: updateSidebarForFunctions,
-    outputFileName: 'functions.mdx'
+    outputFileName: 'functions.mdx',
+    skipDropins: []  // Manual docs—do not overwrite
 });
 
 // ============================================================================

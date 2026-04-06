@@ -213,31 +213,69 @@ export function wrapCodeNames(text) {
         return text;
     }
 
+    let result = text;
+
+    // Protect URLs from pattern matching - the event pattern would wrap path segments
+    // like commerce/webapi/... in backticks, corrupting links
+    const urlPlaceholders = [];
+    // Markdown links: [text](url)
+    result = result.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, (match, linkText, url) => {
+        const idx = urlPlaceholders.length;
+        urlPlaceholders.push(url);
+        return `[${linkText}](__URL_PLACEHOLDER_${idx}__)`;
+    });
+    // Link component href: href="url", href='url', or href=`url` (backtick-delimited)
+    result = result.replace(/href=["'](https?:\/\/[^"']+)["']/g, (match, url) => {
+        const idx = urlPlaceholders.length;
+        urlPlaceholders.push(url);
+        return `href="__URL_PLACEHOLDER_${idx}__"`;
+    });
+    // href=`url` - URL may contain `x` (backtick-letter-backtick) from prior corruption
+    result = result.replace(/href=`((?:[^`]|`[a-z]`)+)`/g, (match, url) => {
+        const fixed = url.replace(/`([a-z])`/g, '$1');
+        const idx = urlPlaceholders.length;
+        urlPlaceholders.push(fixed);
+        return `href="__URL_PLACEHOLDER_${idx}__"`;
+    });
+
+    // Convert single/double-quoted code literals to backticks (e.g. 'create' → `create`, "update" → `update`)
+    // Matches quoted identifiers that look like code values, not prose
+    // Negative lookbehind avoids matching contractions (don't, it's, etc.)
+    result = result.replace(/(?<![a-zA-Z])'([a-zA-Z_][a-zA-Z0-9_-]*)'/g, '`$1`');
+    result = result.replace(/(?<![a-zA-Z])"([a-zA-Z_][a-zA-Z0-9_-]*)"/g, '`$1`');
+
     // Patterns to match code names (but not already backticked)
     const patterns = [
         // PascalCase identifiers (2+ words, starts with capital)
-        // Must be preceded by space, comma, or start of string
-        // Must be followed by space, comma, period, or end of string
         /(?<!`|[a-z])([A-Z][a-z]+[A-Z][a-zA-Z0-9]*)(?!`)/g,
 
         // camelCase identifiers (starts lowercase, has uppercase letter)
-        // Must be preceded by space, comma, or start of string
-        // Must be followed by space, comma, period, or end of string
         /(?<!`|\w)([a-z][a-z0-9]*[A-Z][a-zA-Z0-9]*)(?!`)/g,
 
-        // Event names with slashes (e.g., cart/initialized)
+        // Event names with slashes (e.g., cart/initialized) - exclude MIME types (application/pdf, image/jpeg)
         /(?<!`)([a-z][a-z0-9-]*\/[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*)(?!`)/g
     ];
 
-    let result = text;
-
     // Apply each pattern
     for (const pattern of patterns) {
-        result = result.replace(pattern, '`$1`');
+        if (pattern === patterns[2]) {
+            // Event pattern: skip MIME types (application/pdf, image/jpeg, etc.) - keep as code examples
+            result = result.replace(pattern, (match, p1) => {
+                if (/^(application|image|text|video|audio|multipart|font)\//.test(p1)) return match;
+                return '`' + p1 + '`';
+            });
+        } else {
+            result = result.replace(pattern, '`$1`');
+        }
     }
 
     // Clean up any double backticks that might have been created
     result = result.replace(/``+/g, '`');
+
+    // Restore protected URLs
+    for (let i = 0; i < urlPlaceholders.length; i++) {
+        result = result.replace(`__URL_PLACEHOLDER_${i}__`, urlPlaceholders[i]);
+    }
 
     return result;
 }

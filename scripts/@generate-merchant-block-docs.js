@@ -16,9 +16,18 @@
  * - Generate all merchant block docs: npm run generate-merchant-docs
  *
  * OUTPUT: Multiple MDX files in src/content/docs/merchants/blocks/
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/boilerplate, .temp-repos/boilerplate-b2b
+ * Verify: block config keys, property types. If you cannot verify, do not invent.
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
+import { isPathPreserved } from './lib/preserve-paths.js';
+import { extractExistingBlockDescription } from './lib/content-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
 import { join, basename } from 'path';
 import { execSync } from 'child_process';
 
@@ -139,8 +148,7 @@ function updateEnrichmentMetadata(boilerplatePath, blockCount) {
     const enrichmentPath = join(projectRoot, '_dropin-enrichments', 'merchant-blocks', 'descriptions.json');
 
     if (!existsSync(enrichmentPath)) {
-        console.warn('  ⚠️  Enrichment file not found - skipping metadata update');
-        return;
+        return; // Optional - skip silently when descriptions.json doesn't exist
     }
 
     try {
@@ -150,7 +158,7 @@ function updateEnrichmentMetadata(boilerplatePath, blockCount) {
         data.metadata = {
             last_verified_commit: getBoilerplateCommitHash(boilerplatePath),
             last_verified_date: new Date().toISOString().split('T')[0],
-            boilerplate_branch: 'b2b-suite-release1',
+            boilerplate_branch: 'b2b',
             total_blocks: blockCount,
             verified_blocks: Object.values(data.blocks || {}).filter(b => b.verified).length,
             verification_method: 'source-code-first'
@@ -664,6 +672,22 @@ function loadDescriptionEnrichments() {
 }
 
 /**
+ * Extract a bullet or list item from content that contains both of the given patterns.
+ * Returns the bullet text cleaned of markdown, or null if none found.
+ */
+function extractBulletContaining(content, pattern1, pattern2) {
+    const bullets = content.split(/\n(?=\s*[-*]\s|\s*\d+\.\s)/);
+    for (const bullet of bullets) {
+        const text = bullet.replace(/^\s*[-*]\s*|\s*\d+\.\s*/, '').replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+        if (pattern1.test(text) && pattern2.test(text)) {
+            const firstSentence = text.match(/^[^.]*\./)?.[0]?.trim();
+            return (firstSentence && firstSentence.length <= 180) ? firstSentence : text;
+        }
+    }
+    return null;
+}
+
+/**
  * Extract important notes from README
  * Looks for key information merchants need to know
  */
@@ -710,10 +734,11 @@ function extractImportantNotes(blockPath) {
                 }
             }
 
-            // Extract modal integration notes
-            if (behavior.match(/modal|popup/i)) {
-                if (behavior.match(/authentication.*modal|sign[- ]in.*modal/i)) {
-                    notes.push('May display authentication modal for guest users attempting certain actions.');
+            // Extract modal integration notes from source (no hardcoded text)
+            if (behavior.match(/modal|popup/i) && behavior.match(/authentication|sign[- ]in/i)) {
+                const extracted = extractBulletContaining(behavior, /modal|popup/i, /authentication|sign[- ]in/i);
+                if (extracted) {
+                    notes.push(extracted);
                 }
             }
         }
@@ -987,7 +1012,7 @@ function generateCommonConfigurations(blockName, configs) {
         output += `- Enable only required features\n\n`;
 
         output += `**Full configuration** (all features enabled):\n`;
-        const enabledKeys = toggleConfigs.slice(0, 3).map(c => `\`${c.key}\``).join(', ');
+        const enabledKeys = toggleConfigs.slice(0, 3).map(c => `\`${toMerchantTableKey(c.key)}\``).join(', ');
         output += `- Enable ${enabledKeys} for full functionality\n\n`;
     }
 
@@ -1186,13 +1211,33 @@ function generateTips(blockName, configs) {
 }
 
 /**
- * Convert kebab-case to Title Case (matching AEM document authoring format)
- * e.g., "enable-item-quantity-update" -> "Enable Item Quantity Update"
+ * Map of lowercase compound keys to their kebab-case form for merchant tables.
+ * readBlockConfig uses toClassName() which produces kebab-case from "URL Path" etc.
  */
-function toTitleCase(str) {
-    return str.split('-').map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+const LOWERCASE_TO_KEBAB = {
+    urlpath: 'url-path',
+    redirecturl: 'redirect-url',
+    checkouturl: 'checkout-url',
+    carturl: 'cart-url',
+    startshoppingurl: 'start-shopping-url'
+};
+
+/**
+ * Normalize config key to kebab-case for merchant document authoring tables.
+ * Multi-word keys must use kebab-case in AEM tables.
+ * e.g., "minifiedView" -> "minified-view", "urlpath" -> "url-path"
+ */
+function toMerchantTableKey(str) {
+    if (!str || typeof str !== 'string') return str;
+    // Already kebab-case
+    if (str.includes('-')) return str;
+    // camelCase -> kebab-case: split before each capital, lowercase, join with hyphens
+    if (/[A-Z]/.test(str)) {
+        return str.split(/(?=[A-Z])/).map(s => s.toLowerCase()).join('-');
+    }
+    // Known lowercase compounds
+    const lower = str.toLowerCase();
+    return LOWERCASE_TO_KEBAB[lower] ?? str;
 }
 
 /**
@@ -1583,12 +1628,12 @@ function generateDocumentAuthoringTable(blockName, configs) {
     output += `<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">${blockName}</td>\n`;
     output += `</tr>\n`;
 
-    // Property rows: Title Case names and formatted values with examples
+    // Property rows: use kebab-case key (merchant table format) so developers copy the correct spelling
     for (const config of validConfigs) {
-        const titleCaseName = toTitleCase(config.key);
+        const tableKey = toMerchantTableKey(config.key);
         const formattedValue = formatValueForAEM(config.default, config.type, config.key);
         output += `<tr>\n`;
-        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${titleCaseName}</td>\n`;
+        output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${tableKey}</td>\n`;
         output += `<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">${formattedValue}</td>\n`;
         output += `</tr>\n`;
     }
@@ -1601,7 +1646,6 @@ function generateDocumentAuthoringTable(blockName, configs) {
     if (configsWithDescriptions.length > 0) {
         output += `### Property descriptions\n\n`;
         for (const config of configsWithDescriptions) {
-            const titleCaseName = toTitleCase(config.key);
             const enhancedDesc = generateEnhancedPropertyDescription(
                 config.key,
                 config.description.trim(),
@@ -1609,7 +1653,8 @@ function generateDocumentAuthoringTable(blockName, configs) {
                 config.default,
                 blockName  // ADDED: Pass blockName for enrichment lookup
             );
-            output += `**${titleCaseName}**: ${enhancedDesc}\n\n`;
+            const tableKey = toMerchantTableKey(config.key);
+            output += `**\`${tableKey}\`**: ${enhancedDesc}\n\n`;
         }
     }
 
@@ -1753,7 +1798,16 @@ const setupGuideMapping = {
  * Generate merchant documentation for a single block
  */
 function generateMerchantBlockDoc(block, outputDir, boilerplateVersion) {
-    const description = generateMerchantDescription(block.name, block.path);
+    let description = generateMerchantDescription(block.name, block.path);
+    const enrichments = loadDescriptionEnrichments();
+    const key = block.name.replace('commerce-', '');
+    if (!enrichments[key]) {
+        const outputPath = join(outputDir, 'blocks', `${block.name}.mdx`);
+        const existing = extractExistingBlockDescription(outputPath);
+        if (existing && isRicherDescription(existing, description)) {
+            description = existing;
+        }
+    }
     const documentAuthoringTable = generateDocumentAuthoringTable(block.name, block.configs);
     const metadataTable = generateMetadataTable(block.name, block.displayName);
     const requirementsSection = generateRequirementsSection(block.name, block.path);
@@ -1812,10 +1866,15 @@ Before using this block, see the [${block.displayName} setup guide](${setupGuide
     // Add section metadata table (available to ALL blocks)
     content += generateSectionMetadataTable(block.name);
 
-    // Write file
+    // Write file (preserve everything before ## Configuration—e.g. Setup steps, Prerequisites)
     const outputPath = join(outputDir, 'blocks', `${block.name}.mdx`);
+    if (isPathPreserved(outputPath)) {
+        console.log(`   ⏭️  Skipped (preserve-paths): ${block.name}.mdx`);
+        return;
+    }
     ensureParentDirectoryExists(outputPath);
-    writeFileSync(outputPath, content, 'utf8');
+    const finalContent = mergePreservingPreamble(outputPath, content, { anchorHeading: 'Configuration' });
+    writeFileSync(outputPath, finalContent, 'utf8');
 }
 
 // ============================================================================
@@ -1827,8 +1886,8 @@ try {
     console.log('  MERCHANT BLOCK DOCUMENTATION GENERATOR');
     console.log('='.repeat(60));
 
-    // Clone/update boilerplate - use b2b-suite-release1 branch for B2B blocks
-    const { path: boilerplatePath } = cloneOrUpdateBoilerplate('b2b-suite-release1');
+    // Clone/update boilerplate - use b2b branch for B2B blocks
+    const { path: boilerplatePath } = cloneOrUpdateBoilerplate('b2b');
 
     // Extract blocks
     const blocks = extractCommerceBlocks(boilerplatePath);
