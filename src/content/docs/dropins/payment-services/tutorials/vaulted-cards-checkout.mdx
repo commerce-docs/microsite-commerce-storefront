@@ -1,0 +1,62 @@
+---
+title: Vaulted cards at checkout
+description: How the Payment Services drop-in shows saved cards and paying with a new card during checkout, including how the Commerce boilerplate wires the checkout block.
+---
+
+import Link from '@components/Link.astro';
+import Diagram from '@components/Diagram.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+This page is **checkout-focused**: it describes the **Credit card** experience when vaulted tokens exist (stored rows + **Pay with a new card**), the Payment Services **containers and APIs** you use to build it, and where the **Commerce boilerplate** integrates that flow. Saved payment methods on **My Account** use the [User Account](/dropins/user-account/) drop-in (for example the **PaymentMethods** container when documented for your storefront version).
+
+When **Credit card** is selected and the shopper is signed in with vaulted cards, checkout shows **Stored payment methods**: each saved card as a selectable row, plus **Pay with a new card** to open the card form. The [CreditCard](/dropins/payment-services/containers/credit-card/) and [StoredCards](/dropins/payment-services/containers/stored-cards/) containers work together with helpers from [`@dropins/storefront-payment-services/api.js`](/dropins/payment-services/functions/) and [initialization](/dropins/payment-services/initialization/) (for example `getCustomerToken`).
+
+<Aside type="note">
+Vaulting requires Payment Services and vault to be configured in Adobe Commerce. Shoppers only see saved cards when tokens exist for their account.
+</Aside>
+
+## Prerequisites
+
+- **Payment Services** is <Link href="https://experienceleague.adobe.com/en/docs/commerce/payment-services/get-started/onboard" text="onboarded" /> and the <Link href="/dropins/payment-services/installation/" text="Payment Services drop-in" /> meets the version your storefront uses for vault checkout.
+- Vaulted card creation and token behavior follow Adobe’s <Link href="https://developer.adobe.com/commerce/webapi/graphql/payment-services-extension/workflows/vaulted-card/" text="vaulted card workflow" />.
+- Checkout loads the Payment Services initializer (for example the boilerplate <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/payment-services.js" text="scripts/initializers/payment-services.js" />).
+- Use a storefront / boilerplate revision that includes **vaulted checkout** wiring if you are copying the reference implementation below.
+
+## Pay with a saved card
+
+The shopper can select a vaulted card to charge that instrument without typing full card details again.
+
+<Diagram caption="Checkout Payment section with a stored card selected">
+  ![Checkout with a stored Visa card selected](@images/payment-services-checkout-stored-card-selected.png)
+</Diagram>
+
+## Pay with a new card
+
+Choosing **Pay with a new card** shows the secure card form (card number, expiration, CVV), card brand icons, and optionally **Save this card for future purchases** when vaulting is allowed for that session.
+
+<Diagram caption="Checkout Payment section with Pay with a new card selected and card form visible">
+  ![Checkout with Pay with a new card selected](@images/payment-services-checkout-pay-with-new-card.png)
+</Diagram>
+
+## Reference implementation (Commerce boilerplate)
+
+The [Commerce boilerplate](https://github.com/hlxsites/aem-boilerplate-commerce) checkout block is a working example of composing the Checkout **PaymentMethods** slot with Payment Services **StoredCards** and **CreditCard**. Integrators can study the same files they would customize on a project:
+
+- **`blocks/commerce-checkout/containers.js`** — For **Credit card**, the block loads eligible vault tokens (signed-in shoppers), renders **StoredCards** with props from vault data (`getVaultEligibleTokensFromCustomerPaymentTokensData`, `normalizedVaultTokenToStoredCardProps`), calls **`syncVaultToCart`** when the shopper picks a saved card, and mounts **CreditCard** when they choose **Pay with a new card**. Payment method sync and `autoSync` are adjusted when vault tokens exist so the cart stays aligned with the visible UI.
+- **`blocks/commerce-checkout/commerce-checkout.js`** — **Place order** uses the effective payment method (including the vault path) so a stored card can complete the order without submitting the hosted card form.
+- **`blocks/commerce-checkout/commerce-checkout.css`** — Layout and stacking for the credit card region with vault (for example the wrapper around stored cards and the new-card form).
+
+Use the repository’s history or your integration branch to match the revision that includes this wiring; file names stay stable on `main` over time.
+
+<Aside type="caution" title="PCI and hosted fields">
+Card number entry stays inside the **Payment Services** / SDK **CreditCard** flow. **StoredCards** is selection and vault sync UI—it does not replace the hosted card form for new PAN entry.
+</Aside>
+
+## Related documentation
+
+- [StoredCards container](/dropins/payment-services/containers/stored-cards/) — props and behavior for the stored-card list at checkout.
+- [CreditCard container](/dropins/payment-services/containers/credit-card/) — hosted form, **Save this card**, and refs.
+- [Functions (API)](/dropins/payment-services/functions/) — vault helpers, tokens, and GraphQL entry points exported from the drop-in.
+- [Initialization](/dropins/payment-services/initialization/) — Payment Services configuration and customer token.
+- [Add payment method](/dropins/checkout/tutorials/add-payment-method/) — Checkout **PaymentMethods** slot patterns for other providers.
+- [User Account](/dropins/user-account/) — account experiences, including saved payment methods when your docs version includes them.

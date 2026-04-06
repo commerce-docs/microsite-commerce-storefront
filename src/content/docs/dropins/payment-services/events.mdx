@@ -8,8 +8,22 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-This drop-in does not emit or listen to any drop-in-specific events.
+The Payment Services drop-in does not define **namespaced** events (such as `payment-services/...`) for vault or payment method UI. Checkout integration usually relies on the [Checkout](/dropins/checkout/) drop-in’s values and events; the [Vaulted cards at checkout](/dropins/payment-services/tutorials/vaulted-cards-checkout/) tutorial describes how the Commerce boilerplate composes **StoredCards** and **CreditCard**.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
+## Network errors and the `error` event
+
+GraphQL used for vault flows (for example loading customer payment tokens) can use a shared fetch error handler. When a request fails and it is not an **abort**, the handler may emit the global **`error`** event on the Adobe Commerce event bus with a payload like:
+
+```json
+{
+  "source": "payment-services",
+  "type": "network",
+  "error": { }
+}
+```
+
+Subscribe to **`error`** if you need to correlate network failures with Payment Services. For broader patterns, see [Common events](/dropins/all/common-events/).
+
+<Aside type="note">
+There is no separate catalog of Payment Services–only event names for stored-card selection or card form state; the host block coordinates containers and cart APIs.
+</Aside>

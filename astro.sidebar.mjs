@@ -144,6 +144,13 @@ export function generateSidebar() {
                 { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
             },
+            {
+              label: 'Payment Services',
+              collapsed: true,
+              items: [
+                { label: 'Vaulted cards at checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-checkout/' },
+              ],
+            },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -295,7 +302,8 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
-                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
+                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                    { label: 'StoredCards', link: '/dropins/payment-services/containers/stored-cards/' }
                   ],
                 },
               ],
