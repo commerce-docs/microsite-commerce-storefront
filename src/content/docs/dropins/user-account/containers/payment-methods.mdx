@@ -7,7 +7,7 @@ import Diagram from '@components/Diagram.astro';
 import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 
-The `PaymentMethods` container lists a customer's stored payment methods (for example, vaulted cards), lets them remove a method, and supports a compact layout for account dashboards. It uses the same card presentation as checkout-style flows via the internal `PaymentCard` component.
+The `PaymentMethods` container lists a customer's stored payment methods (for example, vaulted cards), lets them remove a method after confirming in a dialog, and supports a compact layout for account dashboards. It uses the same card presentation as checkout-style flows via the internal `PaymentCard` component.
 
 ## Data loading
 
@@ -15,6 +15,8 @@ The container uses the `usePaymentMethods` hook in the `@dropins/storefront-acco
 
 1. **Event bus (eager)** — The hook subscribes to `account/customerPaymentTokens` on `events.on` with the listener option `eager` set to `true` so any existing payload is applied immediately. If an event payload is already available, the list is taken from the **event bus** and **no** GraphQL load runs on mount. Removing an item updates **local state only** (the `deletePaymentToken` mutation is not called).
 2. **GraphQL** — If nothing is consumed from the bus, the hook calls **`getCustomerPaymentTokens`**. Removing an item calls **`deletePaymentToken`** with the token's **public_hash** value.
+
+In the default **PaymentMethods** container, the shopper must **confirm in the removal modal** before the hook runs that delete (or the local-only update when the list came from the event bus).
 
 Changing `filterPaymentMethodCodes` after the initial load triggers a refetch **only** when the current source is GraphQL (not when data came from the event bus).
 
@@ -39,6 +41,27 @@ Set **`minifiedView`** when the container sits beside other dashboard widgets. T
 <Diagram caption="Minified layout with multiple saved cards">
   ![Minified layout with multiple saved cards](@images/dropins/user-account/payment-methods-minified.png)
 </Diagram>
+
+## Remove confirmation
+
+Removing a stored method is a **two-step** flow:
+
+1. The shopper chooses **Remove** on a row. A **confirmation modal** opens (it can show a compact **PaymentCard** preview with brand, last digits, and expired state when that data is available).
+2. **Cancel** closes the modal and does **not** call the API. **Remove** runs the **`deletePaymentToken`** mutation (or the equivalent path for your data source—see [Data loading](#data-loading)).
+
+### Full layout
+
+<Diagram caption="Remove payment confirmation modal (full Payments page)">
+  ![Remove payment confirmation modal on a full Payments page](@images/dropins/user-account/remove-payment-confirmation-modal.png)
+</Diagram>
+
+### Minified layout
+
+<Diagram caption="Remove payment confirmation modal (minified dashboard)">
+  ![Remove payment confirmation modal in minified layout](@images/dropins/user-account/remove-payment-confirmation-modal-minified.png)
+</Diagram>
+
+While a removal request is in progress, the modal shows a **loading** state on the confirm action, and **remove controls on all rows are disabled** until the operation finishes. Customize modal copy with the dictionary keys under **`Account.Payments.removePaymentModal`** (see [Stored payment methods (Payments)](/dropins/user-account/dictionary/#stored-payment-methods-payments)).
 
 ## Configurations
 
