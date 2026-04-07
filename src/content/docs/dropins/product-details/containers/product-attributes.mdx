@@ -18,6 +18,7 @@ The `ProductAttributes` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events.'],
+    ['formatValue', '(value, id, label) => string', 'No', ''A function that formats an attribute value for display. Receives the raw value, attribute ID, and label; returns the string to display.''],
   ]}
 />
 
@@ -28,5 +29,40 @@ The following example demonstrates how to configure the `ProductAttributes` cont
 ```js
 return productRenderer.render(ProductAttributes, {
   scope: 'modal', // optional
+});
+```
+
+### Formatting numeric attributes
+
+Numeric attributes from the catalog (for example, `10.000000`) appear exactly as stored. To change how a number displays, pass a formatting function to the `formatValue` prop:
+
+```js
+const formatNumericAttribute = (value) => {
+  const trimmed = value.trim();
+
+  if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
+    return value;
+  }
+
+  return new Intl.NumberFormat(document.documentElement.lang).format(
+    Number(trimmed),
+  );
+};
+
+return productRenderer.render(ProductAttributes, {
+  formatValue: formatNumericAttribute,
+});
+```
+
+This strips trailing zeros: `10.000000` becomes `10`, `0.010000` becomes `0.01`.
+
+To format only specific attributes, use the `id` parameter:
+
+```js
+return productRenderer.render(ProductAttributes, {
+  formatValue: (value, id) => {
+    if (id === 'weight') return formatNumericAttribute(value);
+    return value;
+  },
 });
 ```
