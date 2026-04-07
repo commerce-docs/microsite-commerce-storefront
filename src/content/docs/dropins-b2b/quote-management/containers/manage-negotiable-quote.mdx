@@ -8,12 +8,12 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The `ManageNegotiableQuote` container provides comprehensive quote management capabilities for existing quotes.  It displays quote details (creation date, sales rep, expiration), manages quote status and updates, shows the product list with pricing and quantity controls, provides quote actions (print, copy, delete, send for review), displays shipping information, and includes a quote comments section.
+The `ManageNegotiableQuote` container provides comprehensive quote management capabilities for existing quotes. It displays quote details (creation date, sales rep, expiration), manages quote status and updates, shows the product list with pricing and quantity controls, provides quote actions (print, copy, delete, send for review), displays shipping information, and includes a quote comments section.
 
 All actions respect permission-based access control.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.1.2</strong>
 </div>
 
 ## Configuration
@@ -24,13 +24,14 @@ The `ManageNegotiableQuote` container provides the following configuration optio
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `onActionsDropdownChange` | `function` | No | Callback function triggered when actions dropdown change |
-| `onActionsButtonClick` | `function` | No | Callback function triggered when actions button click |
-| `onSendForReview` | `function` | No | Callback function triggered when send for review |
+| `onActionsDropdownChange` | `function` | No | Callback when the actions dropdown selection changes. Use for custom action handling, analytics, or to intercept actions before they execute. |
+| `onActionsButtonClick` | `function` | No | Callback when an action button is clicked. Use for custom action handling, analytics, or to add additional behavior when users trigger quote actions. |
+| `onSendForReview` | `function` | No | Callback when the quote is sent for review. Use to implement custom notifications, trigger follow-up workflows, or integrate with external systems. |
 | `maxFiles` | `number` | No | Sets the maximum number of files that can be attached when sending a quote for review. Enforces company policies on attachment limits and prevents excessive file uploads that could impact performance or storage. |
 | `maxFileSize` | `number` | No | Sets the maximum file size in bytes for attachments. Controls the upper limit for individual file uploads. Use to prevent large file uploads that could impact performance, storage, or network bandwidth. |
-| `acceptedFileTypes` | `string[]` | No | Specifies an array of MIME types allowed for file attachments (for example \\\`\['application/pdf', 'image/jpeg', 'image/png'\]\\\`). Use to restrict uploads to specific document types required by your quote approval process. |
-| `onDuplicateQuote` | `function` | No | Callback function triggered when duplicate quote |
+| `acceptedFileTypes` | `string[]` | No | Specifies an array of MIME types allowed for file attachments (for example, `\['application/pdf', 'image/jpeg', 'image/png'\]`). Use to restrict uploads to specific document types required by your quote approval process. |
+| `onDuplicateQuote` | `function` | No | Callback when the quote is duplicated. Use to implement custom notifications, navigate to the new quote, or sync with external systems. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
 
 </TableWrapper>
 
@@ -71,15 +72,9 @@ import { render as provider } from '@dropins/storefront-quote-management/render.
 import { ManageNegotiableQuote } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuote.js';
 
 await provider.render(ManageNegotiableQuote, {
-  onActionsDropdownChange: onActionsDropdownChange,
-  onActionsButtonClick: onActionsButtonClick,
-  onSendForReview: onSendForReview,
-  slots: {
-    // Add custom slot implementations here
-  }
+  acceptedFileTypes: ACCEPTED_FILE_TYPES,
+  onActionsButtonClick: (action) => { switch (action) { case 'print': window.print(); break; default: break; } },
+  slots: { Footer: async (ctx) => { ctx.appendChild(checkoutButtonContainer); // Get the current user email currentUserEmail = await getCurrentUserEmail(); // Checkout button is enabled if the quote can be checked out // and the current user email is the same as the quote email const enabled = ctx.quoteData?.canCheckout && currentUserEmail === ctx.quoteData?.email; // Initial render renderCheckoutButton(ctx, enabled); // Re-render on state changes ctx.onChange((next) => { // Checkout button is enabled if the quote can be checked out // and the current user email is the same as the quote email const nextEnabled = next.quoteData?.canCheckout && currentUserEmail === next.quoteData?.email; renderCheckoutButton(next, nextEnabled); }); }, ShippingInformation: (ctx) => { // Append the address error container to the shipping information container ctx.appendChild(addressErrorContainer); const shippingInformation = document.createElement('div'); shippingInformation.classList.add('negotiable-quote__select-shipping-information'); ctx.appendChild(shippingInformation); const progressSpinner = document.createElement('div'); progressSpinner.classList.add('negotiable-quote__progress-spinner-container'); progressSpinner.setAttribute('hidden', true); ctx.appendChild(progressSpinner); UI.render(ProgressSpinner, { className: 'negotiable-quote__progress-spinner', size: 'large', })(progressSpinner); ctx.onChange((next) => { // Remove existing content from the shipping information container shippingInformation.innerHTML = ''; const { quoteData } = next; if (!quoteData) return; if (!quoteData.canSendForReview) return; if (quoteData.canSendForReview) { accountRenderer.render(Addresses, { minifiedView: false, withActionsInMinifiedView: false, selectable: true, className: 'negotiable-quote__shipping-information-addresses', selectShipping: true, defaultSelectAddressId: 0, onAddressData: (params) => { const { data, isDataValid: isValid } = params; const addressUid = data?.uid; if (!isValid) return; if (!addressUid) return; progressSpinner.removeAttribute('hidden'); shippingInformation.setAttribute('hidden', true); setShippingAddress({ quoteUid: quoteId, addressId: addressUid, }).finally(() => { progressSpinner.setAttribute('hidden', true); shippingInformation.removeAttribute('hidden'); }); }, onSubmit: (event, formValid) => { if (!formValid) return; const formValues = getFormValues(event.target); const [regionCode, regionId] = formValues.region?.split(', ') || []; const regionIdNumber = parseInt(regionId, 10); // iterate through the object entries and combine the values of keys that have // a prefix of 'street' into an array const streetInputValues = Object.entries(formValues) .filter(([key]) => key.startsWith('street')) .map(([_, value]) => value); const createCustomerAddressInput = { city: formValues.city, company: formValues.company, countryCode: formValues.countryCode, defaultBilling: !!formValues.defaultBilling || false, defaultShipping: !!formValues.defaultShipping || false, fax: formValues.fax, firstname: formValues.firstName, lastname: formValues.lastName, middlename: formValues.middlename, postcode: formValues.postcode, prefix: formValues.prefix, region: regionCode ? { regionCode, regionId: regionIdNumber, } : undefined, street: streetInputValues, suffix: formValues.suffix, telephone: formValues.telephone, vatId: formValues.vatId, }; progressSpinner.removeAttribute('hidden'); shippingInformation.setAttribute('hidden', true); createCustomerAddress(createCustomerAddressInput) .then((result) => { const addressUid = typeof result === 'string' ? result : result?.uid; if (!addressUid) { throw new Error('Address uid not returned from createCustomerAddress.'); } return setShippingAddress({ quoteUid: quoteId, addressId: addressUid, }); }) .catch((error) => { addressErrorContainer.removeAttribute('hidden'); UI.render(InLineAlert, { type: 'error', description: `${error}`, })(addressErrorContainer); }) .finally(() => { progressSpinner.setAttribute('hidden', true); shippingInformation.removeAttribute('hidden'); }); }, })(shippingInformation); } }); }, }
 })(block);
 ```
 
-
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-quote-management */}
