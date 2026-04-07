@@ -34,14 +34,23 @@ return productRenderer.render(ProductAttributes, {
 
 ### Formatting numeric attributes
 
-Numeric attributes from the catalog (e.g., `10.000000`) are displayed as-is by default. To format them, use the `formatValue` prop with the built-in `formatNumeric` utility:
+Numeric attributes from the catalog (e.g., `10.000000`) are displayed as-is by default. To format them, use the `formatValue` prop with your own formatter:
 
 ```js
-import { isNumericValue, formatNumeric } from '@dropins/storefront-pdp/lib/number';
+const formatNumericAttribute = (value) => {
+  const trimmed = value.trim();
+
+  if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
+    return value;
+  }
+
+  return new Intl.NumberFormat(document.documentElement.lang).format(
+    Number(trimmed),
+  );
+};
 
 return productRenderer.render(ProductAttributes, {
-  formatValue: (value) =>
-    isNumericValue(value) ? formatNumeric(value) : value,
+  formatValue: formatNumericAttribute,
 });
 ```
 
@@ -50,11 +59,21 @@ This strips trailing zeros: `10.000000` becomes `10`, `0.010000` becomes `0.01`.
 To format only specific attributes, use the `id` parameter:
 
 ```js
-import { formatNumeric } from '@dropins/storefront-pdp/lib/number';
+const formatNumericAttribute = (value) => {
+  const trimmed = value.trim();
+
+  if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
+    return value;
+  }
+
+  return new Intl.NumberFormat(document.documentElement.lang).format(
+    Number(trimmed),
+  );
+};
 
 return productRenderer.render(ProductAttributes, {
   formatValue: (value, id) => {
-    if (id === 'weight') return formatNumeric(value);
+    if (id === 'weight') return formatNumericAttribute(value);
     return value;
   },
 });
