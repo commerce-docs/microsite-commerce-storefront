@@ -32,7 +32,7 @@ const DROPINS_WITH_CONTAINERS = {
     'cart': { name: 'Cart', containers: 11 },
     'checkout': { name: 'Checkout', containers: 7 },
     'order': { name: 'Order', containers: 7 },
-    'payment-services': { name: 'Payment Services', containers: 3 },
+    'payment-services': { name: 'Payment Services', containers: 1 },
     'personalization': { name: 'Personalization', containers: 1 },
     'product-details': { name: 'Product Details', containers: 10 },
     'product-discovery': { name: 'Product Discovery', containers: 4 },
