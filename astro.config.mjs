@@ -203,9 +203,12 @@ async function config() {
 
         pagefind: {
           ranking: {
-            // Reduce term saturation so pages with many incidental mentions of a
-            // term don't outrank pages whose *title* matches the query.
-            // Starlight's default is 2 (maximum); 1.4 is Pagefind's own default.
+            // Starlight's maximum and default value. Pagefind's own default is 1.4.
+            // Ranking improvements on this site come from two other mechanisms:
+            // the h1 weight boost in PageTitle.astro (data-pagefind-weight="300")
+            // and the body de-weighting in MarkdownContent.astro for high-volume
+            // index pages (data-pagefind-weight="0.1"). This value was tuned by
+            // testing and left at 2.0 after those two changes produced better results.
             termSaturation: 2.0,
           },
         },
