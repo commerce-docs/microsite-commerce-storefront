@@ -13,13 +13,17 @@ The `PaymentMethods` container lists a customer's stored payment methods (for ex
 
 The container uses the `usePaymentMethods` hook in the `@dropins/storefront-account` package, which chooses a data source as follows:
 
-1. **Event bus (eager)** — The hook subscribes to `account/customerPaymentTokens` on `events.on` with the listener option `eager` set to `true` so any existing payload is applied immediately. If an event payload is already available, the list is taken from the **event bus** and **no** GraphQL load runs on mount. Removing an item updates **local state only** (the `deletePaymentToken` mutation is not called).
-2. **GraphQL** — If nothing is consumed from the bus, the hook calls **`getCustomerPaymentTokens`**. Removing an item calls **`deletePaymentToken`** with the token's **public_hash** value.
+1. **Event bus (eager)** — The hook subscribes to `account/customerPaymentTokens` on `events.on` with the listener option `eager` set to `true` so any existing payload is applied immediately. If an event payload is already available, the **display list** is taken from the **event bus** and **no** GraphQL load runs on mount. This path is **injection only**; it does not define how removal works.
+2. **GraphQL** — If nothing is consumed from the bus, the hook calls **`getCustomerPaymentTokens`**.
+
+**Remove** always uses the GraphQL **`deletePaymentToken`** mutation with the token's **public_hash** (never the event bus), then updates the list on success—whether the rows were first shown from the bus or from **`getCustomerPaymentTokens`**.
 
 Changing `filterPaymentMethodCodes` after the initial load triggers a refetch **only** when the current source is GraphQL (not when data came from the event bus).
 
+For the **`account/customerPaymentTokens`** payload type in TypeScript, see [TypeScript declaration](/dropins/user-account/events/#typescript-declaration) on the Events page.
+
 <Aside type="tip" title="Injecting tokens from another drop-in">
-Emit the **account/customerPaymentTokens** event with an array of display rows (the same shape as the **StoredPaymentMethodDisplay** model in the drop-in source) when you already have token data on the client—for example, after checkout or Payment Services initialization. Emit a **null** payload for an explicit empty list if your integration follows the same convention as the cart **cart/data** event.
+Emit the **account/customerPaymentTokens** event with an array of display rows (the same shape as the **StoredPaymentMethodDisplay** model in the drop-in source) when you already have token data on the client—for example, after checkout or Payment Services initialization. Emit a **null** payload for an explicit empty list if your integration follows the same convention as the cart **cart/data** event. That event only **feeds the list**; **Remove** in the UI still runs **`deletePaymentToken`** via GraphQL. Re-emit an updated array after removal if other listeners need to match the new vault state.
 </Aside>
 
 ## Layout

@@ -22,7 +22,7 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [account/customerPaymentTokens](#accountcustomerpaymenttokens-listens) | Listens | Optional injected list of stored payment tokens for the PaymentMethods UI; consumed eagerly when present. |
+| [account/customerPaymentTokens](#accountcustomerpaymenttokens-listens) | Listens | Optional **display list** of stored payment tokens for the PaymentMethods UI (injection only); consumed eagerly when present. Does not participate in removal. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
 </TableWrapper>
@@ -34,7 +34,7 @@ The following sections provide detailed information about each event, including 
 
 ### `account/customerPaymentTokens` (listens)
 
-The **PaymentMethods** container and `usePaymentMethods` hook subscribe to this event. When a payload is already on the event bus, the hook uses it instead of calling GraphQL `getCustomerPaymentTokens`. Use this to inject token rows from another drop-in (for example, Payment Services) or tests.
+The **PaymentMethods** container and `usePaymentMethods` hook subscribe to this event. When a payload is already on the event bus, the hook uses it instead of calling GraphQL `getCustomerPaymentTokens`. Use this to **push a list into the UI** from another drop-in (for example, Payment Services) or tests.
 
 Subscribe with an **eager** listener so any payload that was emitted before subscribe is still applied (same pattern as cart data events).
 
@@ -45,7 +45,26 @@ Subscribe with an **eager** listener so any payload that was emitted before subs
 | Array of token rows | Each item matches the **StoredPaymentMethodDisplay** shape: `publicHash`, `cardBrand`, `lastFourDigits`, optional `expired`, optional `variant`. |
 | `null` | Explicit empty list (same convention as cart `cart/data`). |
 
-When the list comes from the event bus, removing a token in the UI updates local state only; the **deletePaymentToken** mutation is not called.
+#### Removal (not on the event bus)
+
+**Removing** a stored method is **not** handled through this event. When the shopper uses **Remove** in the PaymentMethods UI, the drop-in always calls the GraphQL **`deletePaymentToken`** mutation, then updates the list in memory—whether the rows were first shown from this event or from **`getCustomerPaymentTokens`**. The event bus is **not** used to delete tokens. If another part of the page must stay in sync after removal, emit an updated **`account/customerPaymentTokens`** payload (optional).
+
+#### TypeScript declaration
+
+The User Account drop-in still **augments** `@adobe-commerce/event-bus` with this channel so `emit` / `on` are type-safe for **list injection**. The payload type is **not** related to deletion—there is no separate “delete on the bus” event; removal stays on **`deletePaymentToken`**.
+
+```ts title='src/types/events.d.ts (User Account drop-in)'
+import type { StoredPaymentMethodDisplay } from '../data/models/stored-payment-method';
+
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    /** PaymentMethods list injection only; `null` means an empty list (same idea as cart `cart/data`). Not used for removal—use GraphQL `deletePaymentToken`. */
+    'account/customerPaymentTokens': StoredPaymentMethodDisplay[] | null;
+  }
+}
+```
+
+This declaration is **only** for typing **list injection**; it does not add a bus-based delete API. Use the same **`StoredPaymentMethodDisplay`** shape as [`getCustomerPaymentTokens`](/dropins/user-account/functions/#getcustomerpaymenttokens) return items. JavaScript storefronts can ignore the `.d.ts` file; runtime behavior is the same.
 
 #### Example
 
