@@ -198,6 +198,16 @@ async function config() {
           ContentPanel: './src/components/overrides/ContentPanel.astro',
           CardGrid: './src/components/CardGrid.astro',
           Pagination: './src/components/overrides/Pagination.astro',
+          MarkdownContent: './src/components/overrides/MarkdownContent.astro',
+        },
+
+        pagefind: {
+          ranking: {
+            // Reduce term saturation so pages with many incidental mentions of a
+            // term don't outrank pages whose *title* matches the query.
+            // Starlight's default is 2 (maximum); 1.4 is Pagefind's own default.
+            termSaturation: 2.0,
+          },
         },
 
         customCss: [

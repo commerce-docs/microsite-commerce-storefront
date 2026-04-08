@@ -1,0 +1,35 @@
+---
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+
+const slug = Astro.locals.starlightRoute?.entry?.slug ?? '';
+
+// Developer drop-in docs, release/update pages, and merchant block overview pages
+// accumulate high body-content term frequency that overwhelms shorter, focused
+// merchant block pages in search. Reducing their body weight keeps them findable
+// by their page titles (h1 is unaffected) but stops incidental term repetition
+// from outranking dedicated merchant topic pages for queries like "create company".
+// The b2b/b2c merchant index pages are comprehensive listing pages — they reference
+// every block by name, so they shouldn't outrank the specific pages they list.
+const isHighVolumeIndex =
+  slug === 'releases' || slug.startsWith('releases/') ||
+  slug === 'boilerplate/updates' ||
+  slug === 'dropins-b2b' || slug.startsWith('dropins-b2b/') ||
+  slug === 'merchants/blocks/b2b' ||
+  slug === 'merchants/blocks/b2c' ||
+  slug.startsWith('licensing/') ||
+  slug === 'dropins/all/creating';
+---
+
+{
+  isHighVolumeIndex ? (
+    <div data-pagefind-weight="0.1">
+      <Default {...Astro.props}>
+        <slot />
+      </Default>
+    </div>
+  ) : (
+    <Default {...Astro.props}>
+      <slot />
+    </Default>
+  )
+}
