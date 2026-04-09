@@ -343,8 +343,9 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/product-details/containers/' },
                     { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
-                    { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
                     { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
+                    { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                    { label: 'ProductDownloadableOptions', link: '/dropins/product-details/containers/product-downloadable-options/' },
                     { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
                     { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
                     { label: 'ProductGiftcardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
