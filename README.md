@@ -157,12 +157,6 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
 
 1. After your PR merges into `release`, the nightly build publishes updates to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site.
 
-<<<<<<< Updated upstream
-## How to add release notes
-
-1. Run `gh auth login` (required for Cursor to access private repos).
-2. In Cursor, prompt the agent with the release month and PR merge links. Example:
-=======
 ## How to prepare for a new release
 
 Use this when you are starting a coordinated release branch for the team.
@@ -189,18 +183,13 @@ The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](htt
    - Store the token in **macOS Keychain** using the command in the [release-notes skill README](.cursor/skills/release-notes/README.md). The skill reads the token from Keychain. Tokens expire; renew the token and update Keychain when needed.
 
 1. In Cursor, ask the agent to draft the release. Include the month and the **merge PR** links for the B2C and B2B boilerplate suites. Example:
->>>>>>> Stashed changes
 
    > Add the [Month] 2026 release. Use the release merge PRs to generate the release notes and all the code changes:
    > B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152
    > B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156
 
-<<<<<<< Updated upstream
-See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details.
-=======
 1. Commit the updated docs on your release-notes branch.
 
 1. Push your release-notes branch to GitHub.
 
 1. Open a pull request for the release notes. Set the base branch to your release integration branch (for example `april-release`).
->>>>>>> Stashed changes
