@@ -60,8 +60,6 @@ Documentation source files live in `src/content/docs/`.
 - Use `dropins/` for **business-to-consumer (B2C)** topics (cart, checkout, wishlist).
 - Use `dropins-b2b/` for **business-to-business (B2B)** topics (requisition list, quote management).
 
-The folder layout controls the left sidebar navigation for most pages.
-
 ## How to add a page
 
 Doc pages are **MDX** files (Markdown plus optional components). Put each page in `src/content/docs/<section>/`. Examples: `dropins/cart`, `dropins-b2b/requisition-list`.
@@ -145,7 +143,7 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
    pnpm build:prod-fast
    ```
 
-   If the command finishes without errors, your changes are ready to share.
+   If the command finishes without errors, your changes are ready for review.
 
 1. Commit your changes on your branch.
 
@@ -167,18 +165,17 @@ Use this when you are starting a coordinated release branch for the team.
 
 ## How to add release notes
 
-Follow the steps below to create a new release section to the docs and matching changelog entries. The release notes skill defines the release notes generation.
+Follow the steps below to create a new release section with matching changelog entries.
 
 The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](https://cli.github.com/) tool, called `gh` in the terminal. Install `gh` if you don't have it. As needed, use the `gh auth login` command once on your machine so Cursor can reach private repositories when it generates notes.
 
 1. Create a local branch for release notes (for example `april-release-notes`).
 
 1. **Jira (optional):** GitHub pull requests sometimes link to **Jira** tickets. The skill can pull ticket text to improve release wording. To use that feature, you need network access to Adobe corporate Jira and a token stored on your Mac. If you skip this block, you can still write release notes from GitHub only.
-
    - Stay on the **Adobe corporate VPN**.
    - Confirm your Jira account can **read** the projects those tickets belong to.
    - Create a **Personal Access Token** on your Jira profile.
-   - Store the token in **macOS Keychain** using the command in the [release-notes skill README](.cursor/skills/release-notes/README.md). The skill reads the token from Keychain. Tokens expire; renew the token and update Keychain when needed.
+   - Store the token in **macOS Keychain** using the command in the [release-notes skill README](.cursor/skills/release-notes/README.md). The skill reads the token from Keychain.
 
 1. In Cursor, ask the agent to draft the release. Include the month and the **merge PR** links for the B2C and B2B boilerplate suites. Example:
 
@@ -190,4 +187,4 @@ The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](htt
 
 1. Push your release-notes branch to GitHub.
 
-1. Open a pull request for the release notes. Set the base branch to your release integration branch (for example `april-release`).
+1. Open a pull request for the release notes. Set the base branch to your release integration branch (for example, `april-release`).
