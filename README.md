@@ -11,6 +11,7 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 - [How to add a diagram](#how-to-add-a-diagram)
 - [How to link between docs](#how-to-link-between-docs)
 - [How to add a PR](#how-to-add-a-pr)
+- [How to prepare for a new release](#how-to-prepare-for-a-new-release)
 - [How to add release notes](#how-to-add-release-notes)
 
 ## Prerequisites
@@ -128,13 +129,24 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
 
 4. After your PR is merged into `release`, content is published to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site by the nightly build.
 
+## How to prepare for a new release
+
+1. Create a new release branch from the main `release` branch. For example, `april-release`.
+1. Push the new branch up to GitHub so it's available to all contributors.
+
 ## How to add release notes
 
-1. Run `gh auth login` (required for Cursor to access private repos).
-2. In Cursor, prompt the agent with the release month and PR merge links. Example:
+This workflow uses the [GitHub CLI](https://cli.github.com/) (`gh`) so Cursor can read private repos when the agent pulls changes for release notes. Install `gh` if needed, then run `gh auth login` once on your machine.
+
+1. Create a local release notes branch, such as `april-release-notes`.
+1. **Jira (optional):** When GitHub PR bodies link Jira issues, the skill can fetch ticket summaries and descriptions to enrich release copy. That only works if you can reach Adobe corporate Jira and authenticate to the REST API. Stay on the **Adobe corporate VPN**, confirm your Jira account can **read** the projects those tickets belong to, then create a **Personal Access Token** on your Jira profile and store it in **macOS Keychain** (the skill reads it from there). PATs expire on a schedule, so renew the token and update Keychain when needed. See the [release-notes skill README](.cursor/skills/release-notes/README.md) for the Keychain command and details.
+1. In Cursor, prompt the agent with the release month and PR merge links. Example:
 
    > Add the [Month] 2026 release. Use the release merge PRs to generate the release notes and all the code changes:
    > B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152
    > B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156
 
-See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for full details.
+1. Commit the changes and push the release notes branch to GitHub.
+1. Create a PR for the release notes with the target branch set to, for example, `april-release`.
+
+See the [release-notes skill](.cursor/skills/release-notes/SKILL.md) for the full workflow (boilerplate drill-down, benefit-first copy, and how Jira text is verified against PR diffs).
