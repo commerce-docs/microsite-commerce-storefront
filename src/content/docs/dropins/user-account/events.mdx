@@ -22,6 +22,7 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
+| [error](#error-emits) | Emits | Emitted when a network error occurs during any API call. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
 </TableWrapper>
@@ -31,6 +32,37 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
+
+### `error` (emits)
+
+Emitted when a network error occurs during any User Account API call. Does not fire for intentional user cancellations (`AbortError`).
+
+#### Event payload
+
+```typescript
+{
+  source: 'auth';
+  type: 'network';
+  error: Error;
+}
+```
+
+#### When triggered
+
+- When any API mutation or query fails due to a network error.
+- Does **not** fire when the request is deliberately aborted.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('error', ({ source, type, error }) => {
+  if (source === 'auth') {
+    console.error('User Account network error:', error.message);
+  }
+});
+```
 
 ### `companyContext/changed` (listens)
 
