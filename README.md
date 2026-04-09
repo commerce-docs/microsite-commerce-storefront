@@ -1,6 +1,6 @@
 # Adobe Commerce Storefront documentation
 
-Welcome to the storefront documentation site! This site is built with [Astro](https://astro.build) (a web framework for content sites) and [Starlight](https://starlight.astro.build) (a documentation theme for Astro). This readme helps you install tools, run the site on your computer, add doc pages, and open pull requests. Reading and following the setup section takes about **10 minutes**. When you finish **Set up your local environment**, you'll have the docs running in your browser at [http://localhost:4321/](http://localhost:4321/).
+Welcome to the storefront documentation site! This site is built with [Astro](https://astro.build) (a web framework for content sites) and [Starlight](https://starlight.astro.build) (a documentation theme for Astro). This readme helps you install tools, run the site on your computer, add doc pages, and open pull requests. Reading and following the setup section takes about **5 minutes**. When you finish **Set up your local environment**, you'll have the docs running in your browser at [http://localhost:4321/](http://localhost:4321/).
 
 - [Prerequisites](#prerequisites)
 - [Set up your local environment](#set-up-your-local-environment)
@@ -127,8 +127,6 @@ See the <Link href="https://example.com/docs" text="external documentation" /> f
 
 ## How to add a PR
 
-A **pull request (PR)** is how you propose changes for review. The team publishes from the `release` branch.
-
 If you don't have write access to the repo, [fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) first. Clone your fork, push to your fork, then open a PR from your fork to `release`.
 
 1. Create a new branch from `release`:
@@ -169,13 +167,13 @@ Use this when you are starting a coordinated release branch for the team.
 
 ## How to add release notes
 
-You'll add a new release section to the docs and matching changelog entries. The steps below get you started; the [release-notes skill](.cursor/skills/release-notes/SKILL.md) covers the full workflow (boilerplate drill-down, benefit-first copy, and how Jira text is checked against pull request diffs).
+Follow the steps below to create a new release section to the docs and matching changelog entries. The release notes skill defines the release notes generation.
 
-The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](https://cli.github.com/) tool, called `gh` in the terminal. Install `gh` if you don't have it. Run `gh auth login` once on your machine so Cursor can reach private repositories when it generates notes.
+The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](https://cli.github.com/) tool, called `gh` in the terminal. Install `gh` if you don't have it. As needed, use the `gh auth login` command once on your machine so Cursor can reach private repositories when it generates notes.
 
 1. Create a local branch for release notes (for example `april-release-notes`).
 
-1. **Jira (optional):** GitHub pull requests sometimes link **Jira** tickets (Adobe's issue tracker). The skill can pull ticket text to improve release wording. To use that feature, you need network access to Adobe corporate Jira and a token stored on your Mac. If you skip this block, you can still write release notes from GitHub only.
+1. **Jira (optional):** GitHub pull requests sometimes link to **Jira** tickets. The skill can pull ticket text to improve release wording. To use that feature, you need network access to Adobe corporate Jira and a token stored on your Mac. If you skip this block, you can still write release notes from GitHub only.
 
    - Stay on the **Adobe corporate VPN**.
    - Confirm your Jira account can **read** the projects those tickets belong to.
