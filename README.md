@@ -11,6 +11,7 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 - [How to add a diagram](#how-to-add-a-diagram)
 - [How to link between docs](#how-to-link-between-docs)
 - [How to add a PR](#how-to-add-a-pr)
+- [How to prepare for a new release](#how-to-prepare-for-a-new-release)
 - [How to add release notes](#how-to-add-release-notes)
 
 ## Prerequisites
@@ -156,6 +157,8 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
 ## How to prepare for a new release
 
 Use this when you are starting a coordinated release branch for the team.
+
+**Non-release updates:** Not every change belongs in the coordinated release. You might fix a typo or make a small edit that can merge whenever it is ready. For that work, use a **regular feature branch** from `release` with a normal branch name. A **release integration branch** is the branch the team shares for one release (for example `april-release`). Use it only for work that ships with that release. Reviewers can then tell which pull requests are for the release and which are not.
 
 1. Create a new branch from `release`.
 
