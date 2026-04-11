@@ -28,6 +28,7 @@ export function generateSidebar() {
           items: [
             { label: 'Introduction', link: '/get-started/' },
             { label: 'Prerequisites', link: '/get-started/prerequisites/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Core concepts', link: '/get-started/core-concepts/' },
             { label: 'Architecture', link: '/get-started/architecture/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
