@@ -65,7 +65,7 @@ function ensureMermaidInitialized(): void {
   mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
-    securityLevel: 'loose',
+    securityLevel: 'strict',
     fontFamily: 'Arial, sans-serif',
   });
 }
