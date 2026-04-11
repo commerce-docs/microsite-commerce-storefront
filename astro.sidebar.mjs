@@ -26,6 +26,7 @@ export function generateSidebar() {
             { label: 'Overview', link: '/get-started/' },
             { label: 'Prerequisites', link: '/get-started/prerequisites/' },
             { label: 'Storefront architecture', link: '/get-started/architecture/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
