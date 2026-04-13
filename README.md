@@ -142,9 +142,9 @@ This workflow uses the [GitHub CLI](https://cli.github.com/) (`gh`) so Cursor ca
 1. **Jira (optional):** When GitHub PR bodies link Jira issues, the skill can fetch ticket summaries and descriptions to enrich release copy. That only works if you can reach Adobe corporate Jira and authenticate to the REST API. Stay on the **Adobe corporate VPN**, confirm your Jira account can **read** the projects those tickets belong to, then create a **Personal Access Token** on your Jira profile and store it in **macOS Keychain** (the skill reads it from there). PATs expire on a schedule, so renew the token and update Keychain when needed. See the [release-notes skill README](.cursor/skills/release-notes/README.md) for the Keychain command and details.
 1. In Cursor, prompt the agent with the release month and PR merge links. Example:
 
-   > Add the [Month] 2026 release. Use the release merge PRs to generate the release notes and all the code changes:
+   >Add the [Month] 2026 release. Use the release merge PRs to generate the release notes and all the code changes:
    > B2C: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152
-   > B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156
+   > B2B: https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156 
 
 1. Commit the changes and push the release notes branch to GitHub.
 1. Create a PR for the release notes with the target branch set to, for example, `april-release`.

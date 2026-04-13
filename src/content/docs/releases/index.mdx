@@ -14,87 +14,90 @@ The following sections provide high-level summaries of each release suite and de
 
 ## March 2026 suite
 
-This suite moves the storefront to Drop-in SDK (Elsie) 1.8.0, adds product video in the product detail gallery, extends checkout shipping with slots and GraphQL fragments, and ships Quick Order v1.0.0 in the B2B boilerplate. B2C changes merged in ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152)); B2B changes merged in ([#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)). For per-component version details, see the [changelog](/releases/changelog/).
+This suite ships Elsie 1.8 and `@dropins/tools` 1.8 across B2C and B2B boilerplate merges, adds native product video on the Product Details Page block, extends checkout shipping customization, and brings B2B Quick Order plus Storefront Compatibility Package updates. For per-component version details, see the [changelog](/releases/changelog/).
+
+<Aside type="caution" title="Breaking changes">
+
+- **Product Recommendations (B2C)**: The B2C boilerplate moves to **v4.0.1**. Treat this as a **major** upgrade from the 3.x line. Review the [Product Recommendations](/dropins/recommendations/) documentation and the [v4.0.0](https://github.com/adobe-commerce/storefront-recommendations/releases/tag/v4.0.0) and [v4.0.1](https://github.com/adobe-commerce/storefront-recommendations/releases/tag/v4.0.1) release notes before upgrading.
+- **Product Discovery and URLs**: Search and category URL handling now lives primarily in the boilerplate Product List Page block, and filter changes reset pagination in the drop-in ([#1119](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1119)). Retest any custom URL or routing logic that assumed the previous drop-in-only behavior.
+- **Requisition List (B2B)**: Version **1.2.0** replaces built-in catalog API helpers with **props your integration must inject**. Plan updates to any custom Requisition List wiring before upgrading.
+
+</Aside>
 
 ### Highlights
 
-#### Product gallery video on the PDP
+#### Native product video on the Product Details Page
 
-Merchants can show catalog video in the product gallery without a custom player. The boilerplate demonstrates optional `videos` configuration on the product detail block ([#1100](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1100)). The Product Details Page drop-in adds gallery props, video utilities, and catalog data support ([#57](https://github.com/adobe-commerce/storefront-pdp/pull/57)).
+Merchants can show product video in the gallery without building a custom media pipeline. The boilerplate Product Details block wires the new Product Gallery behavior from the Product Details Page drop-in ([#1100](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1100)). Developers keep full control through existing slots and configuration.
 
-#### Checkout shipping customization and pickup extensions
+#### Checkout shipping you can own end to end
 
-You can replace how each shipping method renders and extend estimated shipping with custom GraphQL. The ShippingMethods container adds a `ShippingMethodItem` slot; `estimateShippingMethods` supports a fragment extension model ([#300](https://github.com/adobe-commerce/storefront-checkout/pull/300), [#307](https://github.com/adobe-commerce/storefront-checkout/pull/307)); hooks and samples support custom shipping UI ([#305](https://github.com/adobe-commerce/storefront-checkout/pull/305), [#303](https://github.com/adobe-commerce/storefront-checkout/pull/303)). Address autocomplete and buy online, pick up in store (BOPIS) ship as extension patterns ([#299](https://github.com/adobe-commerce/storefront-checkout/pull/299)).
+Checkout adds a **ShippingMethodItem** slot so you can replace how each shipping method renders while still driving selection through the drop-in APIs. GraphQL extensibility for **estimateShippingMethods** includes **EstimateShippingModel** and **ESTIMATE_SHIPPING_METHOD_FRAGMENT**, plus a **checkout/shipping-methods-render** hook for extension samples shipped in the boilerplate. Teams that customize shipping UX get clearer extension points without forking core UI.
 
-#### Multi-store wishlist and translation overrides
+#### Multi-store wishlists and cleaner catalog URLs
 
-Shoppers keep separate guest and authenticated wishlist data per store view when you pass an optional `storeCode` during initialization ([#73](https://github.com/adobe-commerce/storefront-wishlist/pull/73)). Wishlist, Personalization, and several B2B drop-ins merge custom `langDefinitions` with bundled defaults so label overrides apply consistently ([#79](https://github.com/adobe-commerce/storefront-wishlist/pull/79), [#27](https://github.com/adobe-commerce/storefront-personalization/pull/27)).
+Wishlist storage keys and cookies can scope per store view when you pass **storeCode**, so multi-store deployments stop leaking guest wishlists across stores. Product Discovery improves pathname handling when the store code appears in the path and resets listing pagination when filters change, which reduces dead ends on localized URLs ([#86](https://github.com/adobe-commerce/storefront-search-dropin/pull/86), [#88](https://github.com/adobe-commerce/storefront-search-dropin/pull/88), [#91](https://github.com/adobe-commerce/storefront-search-dropin/pull/91)). Together with boilerplate URL handling ([#1119](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1119)), shoppers land on the right list and page after search and filter actions.
 
-#### PDP data, options, and pricing display
+#### B2B Quick Order and compatibility hardening
 
-The Product Details Page drop-in adds `getProductsData` for bulk SKU loads used by Quick Order ([#56](https://github.com/adobe-commerce/storefront-pdp/pull/56)), a `transformer` prop on product options ([#51](https://github.com/adobe-commerce/storefront-pdp/pull/51)), optional variant SKU labeling ([#63](https://github.com/adobe-commerce/storefront-pdp/pull/63)), and number formatting on product attributes ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)). Pricing display with Adobe Commerce Optimizer and PaaS is corrected for wishlist flows ([#58](https://github.com/adobe-commerce/storefront-pdp/pull/58)).
-
-#### Quick Order for B2B
-
-The B2B boilerplate pins `@dropins/storefront-quick-order` at v1.0.0 ([#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)). The Quick Order drop-in includes the Variants Grid container, stronger Cypress coverage, and language-definition merging ([#21](https://github.com/adobe-commerce/storefront-quick-order/pull/21), [#23](https://github.com/adobe-commerce/storefront-quick-order/pull/23)).
+The B2B boilerplate adds **@dropins/storefront-quick-order@~1.0.0** so buyers can use the [Quick Order](/dropins-b2b/quick-order/) drop-in on Edge Delivery storefronts. Storefront Compatibility B2B **1.0.19** adds requisition list sharing and PHP 8.5 support paths, while Storefront Compatibility **4.8.18** fixes guest order cancel responses when order comments are present.
 
 ### Updated boilerplate
 
 #### Infrastructure
 
-- **Drop-in SDK and build tools**: `@dropins/tools` ~1.7.0 → ~1.8.0; `@dropins/build-tools` ~1.0.1 → 1.1.0 ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152), [#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)).
+- **Drop-in SDK and build tools**: `@dropins/tools` moves to **~1.8.0** and `@dropins/build-tools` to **1.1.0** on both boilerplate branches merged for this suite ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152), [#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)).
+- **Site configuration cleanup**: Removed legacy folder-mapping references from default site metadata ([#1148](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1148)).
+- **Demo defaults**: Demo configs default assets on and set the Adobe Commerce Optimizer flag for ACO-focused demos ([#1114](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1114), [#1124](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1124)).
 
 #### Document Authoring
 
-- **Component models**: Updates to `component-models.json` for authoring alignment with the suite ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152)).
+No Document Authoring changes in this release suite.
 
 #### Fixes and improvements
 
-- **Layout**: Full-width sections and padding-based gutters in default styles ([#1133](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1133)).
-- **Product List Page**: Search and URL handling refactors, including a dedicated `search-url` helper and README updates ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152)).
-- **Product detail block**: Example wiring for optional gallery video ([#1100](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1100)).
-- **Demo configuration**: Default demo configs enable AEM Assets ([#1114](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1114)); ACO demo config defaults the Adobe Commerce Optimizer flag ([#1124](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1124)).
-- **Repository metadata**: Removed folders map reference ([#1148](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1148)).
+- **Search and category URLs in the boilerplate**: Product List Page block now owns URL construction and sync with the Product Discovery drop-in, including default sort and visibility handling ([#1119](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1119)).
+- **Layout columns**: Full-width sections and padding-based gutters improve responsive column layouts ([#1133](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1133)).
+- **Product Details block**: Example integration for native PDP video and tighter validation when product payloads are incomplete ([#1100](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1100)).
+- **B2B wishlist deep links (B2B)**: Wishlist alert links use `rootLink` so store codes in the path resolve correctly ([#1130](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1130)).
+- **B2B website switches (B2B)**: Cart state clears when shoppers change websites so stale carts cannot trigger 403 responses ([#1137](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1137)).
 
 ### Updated Drop-in SDK
 
 <Aside type="note" title="Internal Links">
+
   Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+
 </Aside>
 
-- **GraphQL client generation** - `skipFragments` can be combined with explicit operation lists for predictable client output ([#178](https://github.com/adobe-commerce/StorefrontSDK/pull/178)).
-- **Elsie 1.8.0** - Drop-ins in this suite build on `@adobe-commerce/elsie` 1.8.0 ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152)).
+**Elsie 1.8.0** (published as `@adobe-commerce/elsie@1.8.0`) is the runtime behind `@dropins/tools@~1.8.0` in this suite. Drop-in packages pick up coordinated fixes and extension patterns, including the checkout shipping hooks and fragments noted above. See the [@adobe-commerce/elsie@1.8.0](https://github.com/adobe-commerce/StorefrontSDK/releases/tag/%40adobe-commerce%2Felsie%401.8.0) release on GitHub for the full change log.
 
-### Updated storefront tools
-
-- **`@dropins/build-tools` 1.1.0** - Vite-based dist builds emit `package.json`, license, and changelog assets for published packages, alongside Changesets-driven release automation ([#1152](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1152)).
-
-### Updated drop-in components
+### Updated B2C drop-in components
 
 | Component | Improvements |
 |-----------|--------------|
-| [**Cart**](/dropins/cart/) v3.2.0 | `includeOutOfStockItems` on CartSummaryList; Elsie 1.8.0 ([#102](https://github.com/adobe-commerce/storefront-cart/pull/102)) |
-| [**Checkout**](/dropins/checkout/) v3.2.0 | `ShippingMethodItem` slot; `estimateShippingMethods` GraphQL extension; shipping-methods hooks and extension samples; BOPIS and address autocomplete samples; Elsie 1.8.0 ([#299](https://github.com/adobe-commerce/storefront-checkout/pull/299), [#300](https://github.com/adobe-commerce/storefront-checkout/pull/300), [#307](https://github.com/adobe-commerce/storefront-checkout/pull/307)) |
-| [**Order**](/dropins/order/) v3.2.0 | Exported guest and customer order fragments for GraphQL extension; authenticated orders no longer use the guest cancellation path by mistake ([#70](https://github.com/adobe-commerce/storefront-order/pull/70), [#82](https://github.com/adobe-commerce/storefront-order/pull/82)) |
-| [**Product Details Page**](/dropins/product-details/) v3.0.2 | Gallery video support; `getProductsData`; options `transformer`; variant SKU display options; `formatValue` on product attributes; ACO and PaaS wishlist price fix ([#51](https://github.com/adobe-commerce/storefront-pdp/pull/51), [#56](https://github.com/adobe-commerce/storefront-pdp/pull/56), [#57](https://github.com/adobe-commerce/storefront-pdp/pull/57), [#58](https://github.com/adobe-commerce/storefront-pdp/pull/58), [#63](https://github.com/adobe-commerce/storefront-pdp/pull/63), [#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)) |
-| [**User Account**](/dropins/user-account/) v3.2.0 | `orderTime` on order models and `OrdersListOrderTime` slot; CustomerOrder fragment extension ([#45](https://github.com/adobe-commerce/storefront-account/pull/45), [#46](https://github.com/adobe-commerce/storefront-account/pull/46)) |
-| [**User Auth**](/dropins/user-auth/) v3.2.0 | Title, form, and button slots across auth containers; Reset Password slot fixes ([#58](https://github.com/adobe-commerce/storefront-auth/pull/58), [#64](https://github.com/adobe-commerce/storefront-auth/pull/64)) |
-| [**Wishlist**](/dropins/wishlist/) v3.2.0 | Multi-store storage and cookies; `langDefinitions` merge ([#73](https://github.com/adobe-commerce/storefront-wishlist/pull/73), [#79](https://github.com/adobe-commerce/storefront-wishlist/pull/79)) |
-| [**Personalization**](/dropins/personalization/) v3.1.1 | `langDefinitions` merge; Elsie 1.8.0 ([#27](https://github.com/adobe-commerce/storefront-personalization/pull/27)) |
-| [**Product Discovery**](/dropins/product-discovery/) v3.1.0 | Pathname handling when the store code appears in the URL; quick search behavior ([#88](https://github.com/adobe-commerce/storefront-search-dropin/pull/88), [#91](https://github.com/adobe-commerce/storefront-search-dropin/pull/91)) |
-| [**Product Recommendations**](/dropins/recommendations/) v3.0.0 | Elsie 1.8.0 alignment; no user-facing changes |
-| [**Payment Services**](/dropins/payment-services/) v3.0.0 | No user-facing changes in this release |
+| [**Cart**](/dropins/cart/) v3.2.0 | `includeOutOfStockItems` on **CartSummaryList**; Elsie 1.8 alignment |
+| [**Checkout**](/dropins/checkout/) v3.2.0 | **ShippingMethodItem** slot; **EstimateShippingModel** and **ESTIMATE_SHIPPING_METHOD_FRAGMENT** for `estimateShippingMethods`; **checkout/shipping-methods-render** hook and extension sample |
+| [**Order**](/dropins/order/) v3.2.0 | Exported **GUEST_ORDER_FRAGMENT** and related fragments for GraphQL extensions; cancellation flow distinguishes guest versus authenticated paths |
+| [**Product Details Page**](/dropins/product-details/) v3.0.2 | Native **ProductGallery** video support; **`getProductsData`** API for catalog lookups; price display fix for Adobe Commerce Optimizer and PaaS ([#56](https://github.com/adobe-commerce/storefront-pdp/pull/56), [#58](https://github.com/adobe-commerce/storefront-pdp/pull/58)) |
+| [**User Account**](/dropins/user-account/) v3.2.0 | **`orderTime`** on **OrderModel** with **OrdersListOrderTime** slot; CustomerOrder fragment extensibility |
+| [**User Auth**](/dropins/user-auth/) v3.2.0 | Title, Form, and Buttons slots across containers; missing Reset Password slot props restored |
+| [**Wishlist**](/dropins/wishlist/) v3.2.0 | Optional **`storeCode`** with per-store storage keys and cookies for multi-store isolation |
+| [**Personalization**](/dropins/personalization/) v3.1.1 | Provider merges custom **`langDefinitions`** with bundled defaults |
+| [**Product Discovery**](/dropins/product-discovery/) v3.1.0 | Filter changes reset to page 1; pathname fixes when store codes appear in URLs ([#86](https://github.com/adobe-commerce/storefront-search-dropin/pull/86), [#88](https://github.com/adobe-commerce/storefront-search-dropin/pull/88), [#91](https://github.com/adobe-commerce/storefront-search-dropin/pull/91)) |
+| [**Product Recommendations**](/dropins/recommendations/) v4.0.1 | **Major** 4.x line for B2C; title rendering fix ([#36](https://github.com/adobe-commerce/storefront-recommendations/pull/36)) |
+| [**Payment Services**](/dropins/payment-services/) v3.0.x | B2C boilerplate pins `@dropins/storefront-payment-services@~3.0.0` on the **3.0.x** line with Elsie 1.8 |
 
 ### Updated B2B drop-in components
 
 | Component | Improvements |
 |-----------|--------------|
-| [**Company Management**](/dropins-b2b/company-management/) v1.2.0 | Initializer matches other drop-ins; `langDefinitions` merge ([#77](https://github.com/adobe-commerce/storefront-company-management/pull/77), [#76](https://github.com/adobe-commerce/storefront-company-management/pull/76)) |
-| [**Company Switcher**](/dropins-b2b/company-switcher/) v1.1.1 | Elsie 1.8.0 alignment; no user-facing changes |
-| [**Purchase Order**](/dropins-b2b/purchase-order/) v1.1.1 | Elsie 1.8.0 alignment; no user-facing changes |
-| [**Quote Management**](/dropins-b2b/quote-management/) v1.1.2 | `langDefinitions` merge ([#89](https://github.com/adobe-commerce/storefront-quote-management/pull/89)) |
-| [**Requisition List**](/dropins-b2b/requisition-list/) v1.2.0 | Catalog integration uses injected props instead of internal API helpers; `langDefinitions` merge ([#114](https://github.com/adobe-commerce/storefront-requisition-list/pull/114), [#124](https://github.com/adobe-commerce/storefront-requisition-list/pull/124)) |
-| [**Quick Order**](/dropins-b2b/quick-order/) v1.0.0 | Variants grid container; language overrides; suite integration ([#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156), [#21](https://github.com/adobe-commerce/storefront-quick-order/pull/21)) |
+| [**Company Management**](/dropins-b2b/company-management/) v1.2.0 | Initializer matches other drop-ins; Provider merges **`langDefinitions`**; Elsie 1.8 |
+| [**Company Switcher**](/dropins-b2b/company-switcher/) v1.1.1 | Elsie 1.8; Provider merges **`langDefinitions`** |
+| [**Purchase Order**](/dropins-b2b/purchase-order/) v1.1.1 | Elsie 1.8; Provider merges **`langDefinitions`** |
+| [**Quote Management**](/dropins-b2b/quote-management/) v1.1.2 | Public package metadata on npm; carries 1.1.1 **`langDefinitions`** merge and Elsie 1.8 work |
+| [**Requisition List**](/dropins-b2b/requisition-list/) v1.2.0 | Catalog integration moves to **injected props** instead of built-in catalog helpers (**breaking** for custom callers) |
+| [**Quick Order**](/dropins-b2b/quick-order/) v1.0.0 | First **1.0.0** integration on the B2B boilerplate for CSV, multi-SKU, and variant-grid flows |
 
 ### Known issues
 
@@ -109,11 +112,11 @@ Adobe has tested and verified the following component versions for this release 
 | Adobe Commerce | Storefront Compatibility Package |
 |----------------|----------------------------------|
 | `2.4.7`        | `4.7.11`                         |
-| `2.4.8`        | `4.8.16`                         |
+| `2.4.8`        | `4.8.18`                         |
 
 | Adobe Commerce B2B | Storefront Compatibility B2B Package |
 |--------------------|--------------------------------------|
-| `1.5.2`            | `1.0.17`                             |
+| `1.5.2`            | `1.0.19`                             |
 
 **Drop-in SDK**
 
@@ -131,7 +134,7 @@ Adobe has tested and verified the following component versions for this release 
 - `@dropins/storefront-pdp@~3.0.2`
 - `@dropins/storefront-personalization@~3.1.1`
 - `@dropins/storefront-product-discovery@~3.1.0`
-- `@dropins/storefront-recommendations@~3.0.0`
+- `@dropins/storefront-recommendations@~4.0.1`
 - `@dropins/storefront-wishlist@~3.2.0`
 
 **B2B drop-ins**
