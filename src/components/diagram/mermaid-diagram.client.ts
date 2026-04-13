@@ -57,7 +57,35 @@ type MermaidApi = {
 
 const mermaid = mermaidApi as unknown as MermaidApi;
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
 let mermaidInitialized = false;
+
+/**
+ * Parse Mermaid SVG as XML (never as HTML) so string markup is not reinterpreted through the HTML
+ * parser (CodeQL js/xss-through-dom / CWE-79). Falls back to a second XML MIME when needed.
+ */
+function parseSvgMarkupAsXmlDocument(svgMarkup: string): Document | null {
+  const parser = new DOMParser();
+  const mimeTypes = ['application/xml', 'image/svg+xml'] as const;
+
+  for (const mimeType of mimeTypes) {
+    const doc = parser.parseFromString(svgMarkup, mimeType);
+    if (doc.getElementsByTagName('parsererror').length > 0) {
+      continue;
+    }
+    const root = doc.documentElement;
+    if (!root || root.localName !== 'svg') {
+      continue;
+    }
+    if (root.namespaceURI !== SVG_NAMESPACE && root.namespaceURI !== null) {
+      continue;
+    }
+    return doc;
+  }
+
+  return null;
+}
 
 function ensureMermaidInitialized(): void {
   if (mermaidInitialized) return;
@@ -71,39 +99,40 @@ function ensureMermaidInitialized(): void {
 }
 
 function applySvgRasterHints(svgMarkup: string): { serialized: string; widthAttr: string; heightAttr: string } {
-  const parser = new DOMParser();
-  const svgDoc = parser.parseFromString(svgMarkup, 'image/svg+xml');
-  const svgElement = svgDoc.querySelector('svg');
-
   let widthAttr = String(DEFAULT_RASTER_WIDTH);
   let heightAttr = String(DEFAULT_RASTER_HEIGHT);
 
-  if (svgElement) {
-    let width = DEFAULT_RASTER_WIDTH;
-    let height = DEFAULT_RASTER_HEIGHT;
-    const viewBox = svgElement.getAttribute('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/\s+/).map(Number);
-      const vbWidth = parts[2];
-      const vbHeight = parts[3];
-      if (vbWidth > 0 && vbHeight > 0) {
-        const aspectRatio = vbWidth / vbHeight;
-        if (aspectRatio > 2) {
-          height = Math.round(width / aspectRatio);
-        }
+  const svgDoc = parseSvgMarkupAsXmlDocument(svgMarkup);
+  const svgElement = svgDoc?.documentElement?.localName === 'svg' ? svgDoc.documentElement : null;
+
+  if (!svgDoc || !svgElement) {
+    return { serialized: svgMarkup, widthAttr, heightAttr };
+  }
+
+  let width = DEFAULT_RASTER_WIDTH;
+  let height = DEFAULT_RASTER_HEIGHT;
+  const viewBox = svgElement.getAttribute('viewBox');
+  if (viewBox) {
+    const parts = viewBox.split(/\s+/).map(Number);
+    const vbWidth = parts[2];
+    const vbHeight = parts[3];
+    if (vbWidth > 0 && vbHeight > 0) {
+      const aspectRatio = vbWidth / vbHeight;
+      if (aspectRatio > 2) {
+        height = Math.round(width / aspectRatio);
       }
     }
-    svgElement.setAttribute('width', String(width));
-    svgElement.setAttribute('height', String(height));
-    widthAttr = svgElement.getAttribute('width') || widthAttr;
-    heightAttr = svgElement.getAttribute('height') || heightAttr;
-
-    const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('width', '100%');
-    rect.setAttribute('height', '100%');
-    rect.setAttribute('fill', 'white');
-    svgElement.insertBefore(rect, svgElement.firstChild);
   }
+  svgElement.setAttribute('width', String(width));
+  svgElement.setAttribute('height', String(height));
+  widthAttr = svgElement.getAttribute('width') || widthAttr;
+  heightAttr = svgElement.getAttribute('height') || heightAttr;
+
+  const rect = svgDoc.createElementNS(SVG_NAMESPACE, 'rect');
+  rect.setAttribute('width', '100%');
+  rect.setAttribute('height', '100%');
+  rect.setAttribute('fill', 'white');
+  svgElement.insertBefore(rect, svgElement.firstChild);
 
   return {
     serialized: new XMLSerializer().serializeToString(svgDoc),
