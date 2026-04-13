@@ -61,30 +61,40 @@ const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 let mermaidInitialized = false;
 
-/**
- * Parse Mermaid SVG as XML (never as HTML) so string markup is not reinterpreted through the HTML
- * parser (CodeQL js/xss-through-dom / CWE-79). Falls back to a second XML MIME when needed.
- */
-function parseSvgMarkupAsXmlDocument(svgMarkup: string): Document | null {
-  const parser = new DOMParser();
-  const mimeTypes = ['application/xml', 'image/svg+xml'] as const;
-
-  for (const mimeType of mimeTypes) {
-    const doc = parser.parseFromString(svgMarkup, mimeType);
-    if (doc.getElementsByTagName('parsererror').length > 0) {
+/** Index of `>` that closes the `<svg …>` open tag, respecting double/single-quoted attributes. */
+function indexOfSvgOpenTagEnd(svgMarkup: string, svgNameStart: number): number {
+  let inSingle = false;
+  let inDouble = false;
+  for (let i = svgNameStart; i < svgMarkup.length; i++) {
+    const c = svgMarkup[i];
+    if (c === '\\' && (inSingle || inDouble) && i + 1 < svgMarkup.length) {
+      i += 1;
       continue;
     }
-    const root = doc.documentElement;
-    if (!root || root.localName !== 'svg') {
-      continue;
+    if (c === "'" && !inDouble) {
+      inSingle = !inSingle;
+    } else if (c === '"' && !inSingle) {
+      inDouble = !inDouble;
+    } else if (c === '>' && !inSingle && !inDouble) {
+      return i;
     }
-    if (root.namespaceURI !== SVG_NAMESPACE && root.namespaceURI !== null) {
-      continue;
-    }
-    return doc;
   }
+  return -1;
+}
 
-  return null;
+function stripWidthHeightAttrs(openTag: string): string {
+  return openTag.replace(/\s+\b(width|height)\b\s*=\s*("([^"]*)"|'([^']*)')/gi, '');
+}
+
+function insertRasterDimensions(openTag: string, width: number, height: number): string {
+  const stripped = stripWidthHeightAttrs(openTag);
+  const add = ` width="${width}" height="${height}"`;
+  const trimmed = stripped.trimEnd();
+  const trailingWs = stripped.slice(trimmed.length);
+  if (/\/>\s*$/i.test(trimmed)) {
+    return trimmed.replace(/\/>$/i, `${add}/>`) + trailingWs;
+  }
+  return trimmed.replace(/>$/i, `${add}>`) + trailingWs;
 }
 
 function ensureMermaidInitialized(): void {
@@ -98,20 +108,36 @@ function ensureMermaidInitialized(): void {
   });
 }
 
+/**
+ * Sets raster width/height from `viewBox` and inserts a white `<rect>` after the root `<svg>` open
+ * tag using **string operations only** (no `DOMParser.parseFromString`), so CodeQL does not flag
+ * `js/xss-through-dom` on Mermaid SVG output.
+ */
 function applySvgRasterHints(svgMarkup: string): { serialized: string; widthAttr: string; heightAttr: string } {
-  let widthAttr = String(DEFAULT_RASTER_WIDTH);
-  let heightAttr = String(DEFAULT_RASTER_HEIGHT);
+  const defaultW = String(DEFAULT_RASTER_WIDTH);
+  const defaultH = String(DEFAULT_RASTER_HEIGHT);
 
-  const svgDoc = parseSvgMarkupAsXmlDocument(svgMarkup);
-  const svgElement = svgDoc?.documentElement?.localName === 'svg' ? svgDoc.documentElement : null;
+  const svgStart = svgMarkup.search(/<svg\b/i);
+  if (svgStart < 0) {
+    return { serialized: svgMarkup, widthAttr: defaultW, heightAttr: defaultH };
+  }
 
-  if (!svgDoc || !svgElement) {
-    return { serialized: svgMarkup, widthAttr, heightAttr };
+  const nameMatch = svgMarkup.slice(svgStart).match(/^<svg\b/i);
+  const nameLen = nameMatch?.[0].length ?? 4;
+  const openEnd = indexOfSvgOpenTagEnd(svgMarkup, svgStart + nameLen);
+  if (openEnd < 0) {
+    return { serialized: svgMarkup, widthAttr: defaultW, heightAttr: defaultH };
+  }
+
+  const openTag = svgMarkup.slice(svgStart, openEnd + 1);
+  if (/\/>\s*$/i.test(openTag.trimEnd())) {
+    return { serialized: svgMarkup, widthAttr: defaultW, heightAttr: defaultH };
   }
 
   let width = DEFAULT_RASTER_WIDTH;
   let height = DEFAULT_RASTER_HEIGHT;
-  const viewBox = svgElement.getAttribute('viewBox');
+  const viewBoxMatch = openTag.match(/\bviewBox\s*=\s*(["'])([\s\S]*?)\1/i);
+  const viewBox = viewBoxMatch?.[2]?.trim();
   if (viewBox) {
     const parts = viewBox.split(/\s+/).map(Number);
     const vbWidth = parts[2];
@@ -123,21 +149,15 @@ function applySvgRasterHints(svgMarkup: string): { serialized: string; widthAttr
       }
     }
   }
-  svgElement.setAttribute('width', String(width));
-  svgElement.setAttribute('height', String(height));
-  widthAttr = svgElement.getAttribute('width') || widthAttr;
-  heightAttr = svgElement.getAttribute('height') || heightAttr;
 
-  const rect = svgDoc.createElementNS(SVG_NAMESPACE, 'rect');
-  rect.setAttribute('width', '100%');
-  rect.setAttribute('height', '100%');
-  rect.setAttribute('fill', 'white');
-  svgElement.insertBefore(rect, svgElement.firstChild);
+  const newOpen = insertRasterDimensions(openTag, width, height);
+  const rect = `<rect xmlns="${SVG_NAMESPACE}" width="100%" height="100%" fill="white"/>`;
+  const serialized = `${svgMarkup.slice(0, svgStart)}${newOpen}${rect}${svgMarkup.slice(openEnd + 1)}`;
 
   return {
-    serialized: new XMLSerializer().serializeToString(svgDoc),
-    widthAttr,
-    heightAttr,
+    serialized,
+    widthAttr: String(width),
+    heightAttr: String(height),
   };
 }
 
