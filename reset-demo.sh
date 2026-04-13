@@ -7,7 +7,10 @@
 #   and collapses legacy multiline {/** … **Title** … */} section markers to single-line {/* Title */}.
 #   (Astro MDX treats ** on its own line inside { … } as markdown and can throw "lazy line" errors.)
 #
-# Does NOT delete: .cursor/, .env*, .temp-repos/, node_modules/, dist/, .astro/
+# Does NOT read, write, or delete: .cursor/ (including .cursor/skills/release-notes/SKILL.md),
+#   .env*, .temp-repos/, node_modules/, dist/, .astro/
+# Does NOT run git (no checkout, reset, or restore) — nothing in this script can revert SKILL.md
+#   or other files outside the paths listed above.
 #
 # Usage (from repo root):
 #   pnpm run demo:reset
