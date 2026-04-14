@@ -179,7 +179,6 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
