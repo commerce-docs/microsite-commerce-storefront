@@ -198,6 +198,19 @@ async function config() {
           ContentPanel: './src/components/overrides/ContentPanel.astro',
           CardGrid: './src/components/CardGrid.astro',
           Pagination: './src/components/overrides/Pagination.astro',
+          MarkdownContent: './src/components/overrides/MarkdownContent.astro',
+        },
+
+        pagefind: {
+          ranking: {
+            // Starlight's maximum and default value. Pagefind's own default is 1.4.
+            // Ranking improvements on this site come from two other mechanisms:
+            // the h1 weight boost in PageTitle.astro (data-pagefind-weight="300")
+            // and the body de-weighting in MarkdownContent.astro for high-volume
+            // index pages (data-pagefind-weight="0.1"). This value was tuned by
+            // testing and left at 2.0 after those two changes produced better results.
+            termSaturation: 2.0,
+          },
         },
 
         customCss: [
