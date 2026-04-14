@@ -173,11 +173,16 @@ function buildStarlightZoomable(imgSrc: string, widthAttr: string, heightAttr: s
   const zoomButton = document.createElement('button');
   zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
   zoomButton.className = 'starlight-image-zoom-control';
-  zoomButton.innerHTML = `
-    <svg aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-      <use href="#starlight-image-zoom-icon-zoom"></use>
-    </svg>
-  `;
+  // Build SVG via createElementNS rather than innerHTML to avoid any future static-analysis
+  // complaints about DOM-based XSS (content is static, but CodeQL already flagged this file once).
+  const svgIcon = document.createElementNS(SVG_NAMESPACE, 'svg');
+  svgIcon.setAttribute('aria-hidden', 'true');
+  svgIcon.setAttribute('fill', 'currentColor');
+  svgIcon.setAttribute('viewBox', '0 0 24 24');
+  const useEl = document.createElementNS(SVG_NAMESPACE, 'use');
+  useEl.setAttribute('href', '#starlight-image-zoom-icon-zoom');
+  svgIcon.appendChild(useEl);
+  zoomButton.appendChild(svgIcon);
 
   zoomableWrapper.append(img, zoomButton);
   return { zoomableWrapper, img };
@@ -214,7 +219,7 @@ function resolveMermaidContainer(containerId: string): HTMLElement | null {
   return outsideSearch[0] ?? matches[0];
 }
 
-/** Prefer embedded JSON (see Diagram.astro); optional legacy `data-mermaid-code`. */
+/** Reads Mermaid source from the embedded JSON script tag injected by Diagram.astro. */
 function readMermaidSourceFromContainer(container: HTMLElement): string {
   const scriptEl = container.querySelector('script.mermaid-diagram__source[type="application/json"]');
   const raw = scriptEl?.textContent?.trim();
@@ -228,7 +233,7 @@ function readMermaidSourceFromContainer(container: HTMLElement): string {
       /* fall through */
     }
   }
-  return (container.getAttribute('data-mermaid-code')?.trim() || '').trim();
+  return '';
 }
 
 /**
@@ -340,7 +345,10 @@ export function attachMermaidDiagramLifecycle(options: { rootId: string; mermaid
     if (startMount()) {
       return;
     }
-    if (attempt >= 100) {
+    if (attempt === 10) {
+      console.warn('[Diagram] Container still not found after 500 ms, keep retrying:', rootId);
+    }
+    if (attempt >= 20) {
       console.error('[Diagram] Container not found after retries:', rootId);
       return;
     }
