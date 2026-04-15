@@ -140,6 +140,7 @@ export function generateSidebar() {
               label: 'User Account',
               collapsed: true,
               items: [
+                { label: 'Payment Services in My Account', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
                 { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
                 { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
@@ -432,6 +433,8 @@ export function generateSidebar() {
                     { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                     { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                     { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
+                    { label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
+                    },
                   ],
                 },
               ],
