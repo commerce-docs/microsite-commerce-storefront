@@ -116,7 +116,16 @@ function resolveMermaidContainer(containerId: string): HTMLElement | null {
   return outsideSearch[0] ?? matches[0];
 }
 
-/** Reads Mermaid source from the embedded JSON template element injected by Diagram.astro. */
+/**
+ * Reads Mermaid source from the embedded JSON template element injected by Diagram.astro.
+ *
+ * Note: `innerHTML` on a `<template>` serialises its DocumentFragment, which can round-trip
+ * HTML entities differently than `textContent` on a `<script>` element would.  Diagram.astro
+ * pre-escapes `<`, `>`, and `&` to Unicode escapes (\u003c etc.) before embedding, so those
+ * sequences survive the round-trip.  However, complex Mermaid syntax that produces other entity
+ * sequences (e.g. `&amp;`, `&lt;` inside labels) should be regression-tested when upgrading
+ * Mermaid or changing the escaping strategy in Diagram.astro.
+ */
 function readMermaidSourceFromContainer(container: HTMLElement): string {
   const templateEl = container.querySelector<HTMLTemplateElement>('template.mermaid-diagram__source');
   const raw = templateEl?.innerHTML?.trim();
@@ -155,6 +164,17 @@ function revokeBlobUrlForContainer(container: HTMLElement): void {
  * naturalWidth/naturalHeight — which starlight-image-zoom uses to compute the zoom scale
  * and starting position.  Without this, an SVG with width="100%" reports natural dimensions
  * of 0×0, breaking the zoom translate calculation.
+ *
+ * **Why Blob URLs instead of data URIs?**
+ * An earlier iteration used `data:image/svg+xml;base64,…` to avoid blob lifecycle management.
+ * However, Chromium does not decode naturalWidth/naturalHeight for data URI SVGs that lack
+ * explicit pixel dimensions — both values stay 0 even after the image loads.  Because
+ * starlight-image-zoom reads naturalWidth/naturalHeight to compute the zoom scale and the
+ * starting-position translate, 0×0 natural dimensions cause the zoomed image to render at the
+ * wrong size and position.  Blob URLs do not have this limitation: once the <img> fires its
+ * `load` event, naturalWidth/naturalHeight reflect the explicit `width`/`height` attributes
+ * we set on the clone below.  The added lifecycle cost (revocation on navigation + re-mount)
+ * is the necessary trade-off.
  *
  * The caller is responsible for revoking the URL via URL.revokeObjectURL() when done.
  */
@@ -287,9 +307,14 @@ export async function mountMermaidDiagram(options: {
         // img clicks are already handled by starlight-image-zoom's document listener;
         // button clicks are handled by the button's own listener — skip both.
         if (event.target instanceof HTMLImageElement || event.target instanceof HTMLButtonElement) return;
-        // Stop propagation before triggering zoom: without this the original click continues
-        // bubbling to starlight-image-zoom's document #onClick, which sees currentZoom is
-        // now set and immediately closes the dialog that was just opened.
+        // FRAGILE: relies on starlight-image-zoom's document-level #onClick checking currentZoom.
+        // Stop propagation before triggering zoom so the original click doesn't continue
+        // bubbling to that listener — which would see currentZoom is now set and immediately
+        // close the dialog that was just opened.  If the plugin changes its event-handling
+        // model (e.g. moves to a capture listener or drops the currentZoom guard), this will
+        // break silently.  The alternative would be dispatching a click directly on imgEl
+        // (which the plugin already observes), but that requires keeping a reference to imgEl
+        // and changes the click-target semantics for the zoom plugin.
         event.stopPropagation();
         zoomButton.click();
       };
