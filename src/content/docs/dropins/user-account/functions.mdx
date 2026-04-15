@@ -28,8 +28,8 @@ The User Account drop-in provides API functions that enable you to programmatica
 | [`getCountries`](#getcountries) | Calls the countries query to retrieve a list of countries. |
 | [`getCustomer`](#getcustomer) | Retrieves the customer information for the logged-in customer. |
 | [`getCustomerAddress`](#getcustomeraddress) | Returns an array of addresses associated with the current customer. |
-| [`getCustomerPaymentTokens`](#getcustomerpaymenttokens) | Retrieves stored payment tokens for the logged-in customer via the customerPaymentTokens query. |
-| [`deletePaymentToken`](#deletepaymenttoken) | Removes a stored payment token using the deletePaymentToken mutation. |
+| [`getCustomerPaymentTokens`](#getcustomerpaymenttokens) | Retrieves stored payment tokens for the logged-in customer via the `customerPaymentTokens query`. |
+| [deletePaymentToken](#deletepaymenttoken) | Removes a stored payment token using the `deletePaymentToken mutation`. |
 | [`getOrderHistoryList`](#getorderhistorylist) | Retrieves a list of customer orders asynchronously using the customer query. |
 | [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country. |
 | [`getStoreConfig`](#getstoreconfig) | Calls the `storeConfig` query to retrieve details about password requirements. |
@@ -163,7 +163,7 @@ See [`CustomerAddressesModel`](#customeraddressesmodel).
 
 ## getCustomerPaymentTokens
 
-The `getCustomerPaymentTokens` function loads saved payment methods (vault tokens) for the logged-in customer. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/checkout/queries/customer-payment-tokens/" text="customerPaymentTokens" /> query over the drop-in GraphQL client (GET, no cache). Results are transformed into display rows for the **PaymentMethods** container.
+The `getCustomerPaymentTokens` function retrieves saved payment methods (vault tokens) for the logged-in customer. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/checkout/queries/customer-payment-tokens/" text="`customerPaymentTokens`" /> query via the drop-in GraphQL client (GET, no cache), then transforms the results into display rows for the `PaymentMethods` container.
 
 ```ts
 const getCustomerPaymentTokens = async (
@@ -181,7 +181,7 @@ const getCustomerPaymentTokens = async (
 
 ### Events
 
-Does not emit any drop-in events. To **populate the PaymentMethods list** from client-side data without calling this query first, emit **account/customerPaymentTokens** on the event bus (see [Events](/dropins/user-account/events/#accountcustomerpaymenttokens-listens)). That event is for **display data only**; removing a token uses **`deletePaymentToken`**, not the bus.
+Does not emit any drop-in events. To populate the `PaymentMethods` list from client-side data without calling this query, emit `account/customerPaymentTokens` on the event bus (see [Events](/dropins/user-account/events/#accountcustomerpaymenttokens-listens)). This event is for display data only. Token removal still uses `deletePaymentToken`, not the bus.
 
 ### Returns
 
@@ -191,7 +191,7 @@ Returns [`StoredPaymentMethodDisplay[]`](#storedpaymentmethoddisplay).
 
 The `deletePaymentToken` function removes a stored payment token for the logged-in customer. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/checkout/mutations/delete-payment-token/" text="deletePaymentToken" /> mutation with the token `public_hash`.
 
-The built-in **[PaymentMethods](/dropins/user-account/containers/payment-methods/)** container calls this **only after** the shopper confirms removal in the confirmation dialog. If you call `deletePaymentToken` from your own code, the mutation runs **immediately**—there is no confirmation UI unless you implement it.
+The built-in [PaymentMethods](/dropins/user-account/containers/payment-methods/) container calls this **only after** the shopper confirms removal in the confirmation dialog. If you call `deletePaymentToken` from your own code, the mutation runs immediately and there is no confirmation UI unless you implement it.
 
 ```ts
 const deletePaymentToken = async (publicHash: string): Promise<boolean>
@@ -525,7 +525,7 @@ interface StoreConfigModel {
 
 ### StoredPaymentMethodDisplay
 
-The `StoredPaymentMethodDisplay` object is returned as list items by [`getCustomerPaymentTokens`](#getcustomerpaymenttokens). The same shape is the typed payload for the **`account/customerPaymentTokens`** event when you inject a list on the bus (see [Events](/dropins/user-account/events/#typescript-declaration)). It matches the **PaymentMethods** / **PaymentCard** view model (plus `publicHash` for keys and for **`deletePaymentToken`**).
+The StoredPaymentMethodDisplay object is returned as list items by [`getCustomerPaymentTokens`](#getcustomerpaymenttokens). The same shape is also used as the typed payload for the `account/customerPaymentTokens` event when injecting a list via the event bus (see [Events](/dropins/user-account/events/#typescript-declaration)). It aligns with the `PaymentMethods` / `PaymentCard` view model and includes `publicHash` for keys and for use with `deletePaymentToken`.
 
 ```ts
 type StoredPaymentMethodDisplay = {

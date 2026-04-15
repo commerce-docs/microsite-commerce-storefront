@@ -34,24 +34,24 @@ The following sections provide detailed information about each event, including 
 
 ### `account/customerPaymentTokens` (listens)
 
-The **PaymentMethods** container and `usePaymentMethods` hook subscribe to this event. When a payload is already on the event bus, the hook uses it instead of calling GraphQL `getCustomerPaymentTokens`. Use this to **push a list into the UI** from another drop-in (for example, Payment Services) or tests.
+The PaymentMethods container and `usePaymentMethods` hook subscribe to this event. If a payload is already available on the event bus, the hook uses it instead of calling the GraphQL `getCustomerPaymentTokens` query. This allows you to inject a list into the UI from another drop-in (for example, Payment Services) or from tests.
 
-Subscribe with an **eager** listener so any payload that was emitted before subscribe is still applied (same pattern as cart data events).
+Subscribe with an eager listener so any payload emitted before subscription is still received and applied (following the same pattern as cart data events).
 
 #### Event payload
 
 | Shape | Description |
 | ----- | ----------- |
-| Array of token rows | Each item matches the **StoredPaymentMethodDisplay** shape: `publicHash`, `cardBrand`, `lastFourDigits`, optional `expired`, optional `variant`. |
+| Array of token rows | Each item matches the `StoredPaymentMethodDisplay` shape: `publicHash`, `cardBrand`, `lastFourDigits`, optional `expired`, optional `variant`. |
 | `null` | Explicit empty list (same convention as cart `cart/data`). |
 
 #### Removal (not on the event bus)
 
-**Removing** a stored method is **not** handled through this event. When the shopper uses **Remove** in the PaymentMethods UI, they **confirm in the removal modal** first; the drop-in then calls the GraphQL **`deletePaymentToken`** mutation and updates the list in memory—whether the rows were first shown from this event or from **`getCustomerPaymentTokens`**. The event bus is **not** used to delete tokens. If another part of the page must stay in sync after removal, emit an updated **`account/customerPaymentTokens`** payload (optional).
+Removing a stored method is **not** handled through this event. When a shopper selects Remove in the PaymentMethods UI, they first confirm in a removal modal. The drop-in then calls the GraphQL `deletePaymentToken` mutation and updates the in-memory list—regardless of whether the rows were initially sourced from the event or from `getCustomerPaymentTokens`. The event bus is not used for deletion. If another part of the page needs to stay in sync after removal, you can optionally emit an updated `account/customerPaymentTokens` payload.
 
 #### TypeScript declaration
 
-The User Account drop-in still **augments** `@adobe-commerce/event-bus` with this channel so `emit` / `on` are type-safe for **list injection**. The payload type is **not** related to deletion—there is no separate “delete on the bus” event; removal stays on **`deletePaymentToken`**.
+The User Account drop-in still extends `@adobe-commerce/event-bus` with this channel, making emit and `on` type-safe for list injection. This payload type is not used for deletion—there is no “delete via the bus” event. Removal is handled exclusively through `deletePaymentToken`.
 
 ```ts title='src/types/events.d.ts (User Account drop-in)'
 import type { StoredPaymentMethodDisplay } from '../data/models/stored-payment-method';
@@ -64,7 +64,7 @@ declare module '@adobe-commerce/event-bus' {
 }
 ```
 
-This declaration is **only** for typing **list injection**; it does not add a bus-based delete API. Use the same **`StoredPaymentMethodDisplay`** shape as [`getCustomerPaymentTokens`](/dropins/user-account/functions/#getcustomerpaymenttokens) return items. JavaScript storefronts can ignore the `.d.ts` file; runtime behavior is the same.
+This declaration is only for typing list injection; it does not introduce a bus-based delete API. Use the same `StoredPaymentMethodDisplay` shape as the return items from [`getCustomerPaymentTokens`](/dropins/user-account/functions/#getcustomerpaymenttokens). JavaScript storefronts can ignore the `.d.ts file` as runtime behavior remains the same.
 
 #### Example
 
