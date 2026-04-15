@@ -10,10 +10,6 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 See the `CardType` type and related payment types in the `@adobe-commerce/payment-services-sdk/payment` module.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
-
 ## Configuration
 
 The `CreditCard` container provides the following configuration options:
@@ -26,6 +22,7 @@ The `CreditCard` container provides the following configuration options:
 | `creditCardFormRef` | `RefObject<CreditCardFormRef>` | Yes | References the credit card form. Pass \{ current: null \} initially. After rendering, the container sets `current` to a \{ validate: () =&gt; boolean; submit: () =&gt; Promise&lt;void&gt; \} object for programmatic validation and submission. |
 | `onSuccess` | `function` | Yes | Executes when the payment flow completes successfully. |
 | `onError` | `function` | Yes | Executes when the payment flow aborts due to an error. Receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and translatable through the "PaymentServices.CreditCard.errors" language definitions. **Note:** When omitted, the promise rejects properly so the calling code can catch errors directly. |
+| `getCustomerToken` | `(() => string \| null) \| null` | No | Optional override for retrieving the customer auth token. If it returns a non-null string, the Save this card checkbox is shown and vaulting can be requested on submit. If not provided, the container uses [`getCustomerToken` from initialization](/dropins/payment-services/initialization/). |
 
 </TableWrapper>
 
@@ -33,7 +30,7 @@ The `CreditCard` container provides the following configuration options:
 
 The CreditCard container shows a **Save this card for future purchases** checkbox when both of the following are true:
 
-- The shopper is **logged in** — the host application must emit the [`authenticated`](/dropins/payment-services/events/#authenticated) event through the event bus.
+- The shopper is **logged in** — the host application must emit the [`authenticated`](/dropins/all/common-events/#authenticated) event through the event bus.
 - Card vaulting is **enabled** in the Adobe Commerce Admin at **Stores > Configuration > Sales > Payment Methods > Adobe Payment Services > Credit Card Fields > Vault Enabled**.
 
 If the shopper selects the checkbox and submits, the card is saved for future purchases. The checkbox is automatically hidden when either the shopper is a guest or vaulting is disabled.

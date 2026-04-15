@@ -242,49 +242,6 @@ async function config() {
     ],
 
     vite: {
-      plugins: [
-        {
-          // Patch the Vite logger after config is resolved so the filter applies
-          // to all logging paths, including environment-level loggers in Vite 6+.
-          name: 'suppress-known-build-warnings',
-          configResolved(resolvedConfig) {
-            const isKnownSafe = (msg) =>
-              typeof msg === 'string' && (
-                // Public SVG assets used in CSS url() — resolved correctly by the browser
-                // at runtime even though Vite can't resolve them at build time.
-                (msg.includes("didn't resolve at build time") && (
-                  msg.includes('hero-bg-light.svg') ||
-                  msg.includes('hero-bg-dark.svg')
-                )) ||
-                // Empty chunk from starlight-heading-badges — deduplication artifact.
-                (msg.includes('empty chunk') && msg.includes('HeadingBadgesTableOfContents')) ||
-                // Unused import noise from expressive-code packages.
-                (msg.includes('@expressive-code/plugin-text-markers') && msg.includes('never used'))
-              );
-
-            const patchLogger = (logger) => {
-              if (!logger) return;
-              for (const method of ['warn', 'warnOnce']) {
-                const original = logger[method]?.bind(logger);
-                if (original) {
-                  logger[method] = (msg, opts) => { if (!isKnownSafe(msg)) original(msg, opts); };
-                }
-              }
-            };
-
-            // Patch the root logger.
-            patchLogger(resolvedConfig.logger);
-            // Patch each environment logger (Vite 6+). Environment-level loggers are
-            // separate instances; the CSS url() resolution warning is emitted via
-            // environment.logger, so the root logger patch alone may not catch it.
-            if (resolvedConfig.environments) {
-              for (const env of Object.values(resolvedConfig.environments)) {
-                patchLogger(env.logger);
-              }
-            }
-          },
-        },
-      ],
       build: {
         chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
         rollupOptions: {
@@ -296,17 +253,21 @@ async function config() {
                 warning.source.includes('expressive-code'))) {
               return;
             }
-            // Suppress empty chunk warning from starlight-heading-badges plugin — the
-            // starlight-toc custom element it re-registers is deduplicated by Rollup.
-            if (warning.code === 'EMPTY_BUNDLE' &&
-              warning.names?.some((n) => n.includes('HeadingBadgesTableOfContents'))) {
-              return;
-            }
             warn(warning);
           }
         }
       },
       logLevel: 'warn',
+      customLogger: {
+        warn(msg, options) {
+          // Suppress specific expressive-code warnings
+          if (msg.includes('@expressive-code/plugin-text-markers') &&
+            msg.includes('never used')) {
+            return;
+          }
+          console.warn(msg, options);
+        }
+      }
     }
   });
 }

@@ -36,14 +36,106 @@ tableOfContents:
 */}
 
 import TableWrapper from '@components/TableWrapper.astro';
-import Link from '@components/Link.astro';
-import { Aside } from '@astrojs/starlight/components';
 
-This drop-in currently has no functions defined.
+The Payment Services drop-in provides GraphQL helpers for vaulted (saved) card checkout. Additional functions may appear in the generated section below when sourced from the drop-in repository.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getCustomerPaymentTokens`](#getcustomerpaymenttokens) | Loads vaulted Payment Services card tokens for the signed-in customer via the `customerPaymentTokens` query. |
+| [`createPaymentOrderForVault`](#createpaymentorderforvault) | Creates a PayPal / MP payment order for vault checkout using `createPaymentOrder`. |
+| [`syncVaultToCart`](#syncvaulttocart) | Runs vault `createPaymentOrder` then `setPaymentMethod` using your checkout `fetchGraphQl` and cart APIs. |
+| [`normalizedVaultTokenToStoredCardProps`](#normalizedvaulttokentostoredcardprops) | Maps a `NormalizedVaultToken` to props for the [StoredCards](/dropins/payment-services/containers/stored-cards/) container. |
+
+</TableWrapper>
+
+## getCustomerPaymentTokens
+
+The `getCustomerPaymentTokens` function retrieves customer payment tokens using this package’s GraphQL client (GET). The initializer must configure the endpoint and headers (see [Initialization](/dropins/payment-services/initialization/)). Results are filtered to Payment Services vaulted card tokens and returned as **`NormalizedVaultToken[]`**.
+
+```ts
+export async function getCustomerPaymentTokens(): Promise<NormalizedVaultToken[]>
+```
+
+### Returns
+
+Returns **`NormalizedVaultToken[]`**. See the [StoredCards container](/dropins/payment-services/containers/stored-cards/) and [`normalizedVaultTokenToStoredCardProps`](#normalizedvaulttokentostoredcardprops) (including **Related types**).
+
+## createPaymentOrderForVault
+
+The `createPaymentOrderForVault` function calls the vault `createPaymentOrder` mutation and returns the PayPal and MP order IDs used to build the payment method payload.
+
+```ts
+export async function createPaymentOrderForVault(
+  cartId: string
+): Promise<VaultPaymentOrderIds>
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `cartId` | `string` | Yes | Active cart id for the checkout session. |
+
+</TableWrapper>
+
+### Returns
+
+Returns **`{ paypalOrderId, paymentsOrderId }`**. Throws if the mutation returns no order ids.
+
+## syncVaultToCart
+
+The `syncVaultToCart` function manages the vault checkout flow for storefronts that provide checkout (or mesh) `fetchGraphQl` and cart `setPaymentMethod`. It follows the same `createPaymentOrder` flow as `createPaymentOrderForVault`, builds the vault-specific additional data using the token’s `public_hash`, and then calls `setPaymentMethod` with `PaymentMethodCode.VAULT`.
+
+```ts
+export async function syncVaultToCart(
+  token: { publicHash?: string },
+  cartId: string | undefined,
+  deps: VaultCheckoutSyncDeps
+): Promise<Record<string, unknown> | null>
+```
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Parameter | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `token` | `{ publicHash?: string }` | Yes | Vault token; must include **`publicHash`** for vault additional data. |
+| `cartId` | `string \| undefined` | Yes | Active cart id; if missing, the function returns `null`. |
+| `deps` | `VaultCheckoutSyncDeps` | Yes | **`fetchGraphQl`** and **`setPaymentMethod`** implementations from your checkout integration. |
+
+</TableWrapper>
+
+### Returns
+
+Returns the payment method payload passed to **`setPaymentMethod`**, or **`null`** on failure.
+
+## normalizedVaultTokenToStoredCardProps
+
+Maps a **`NormalizedVaultToken`** to the **`VaultStoredCardProps`** shape (aligned with **StoredCards** **`cards`** rows).
+
+```ts
+export function normalizedVaultTokenToStoredCardProps(
+  token: NormalizedVaultToken
+): VaultStoredCardProps
+```
+
+### Related types
+
+Use these types from `@dropins/storefront-payment-services/api.js` for advanced integrations:
+
+```ts
+/** Normalized vault token used in checkout / StoredCards wiring. */
+type NormalizedVaultToken = {
+  publicHash?: string;
+  methodCode: string;
+  type: string;
+  brand: string;
+  masked: string;
+  expiry: string;
+  holder: string;
+};
+```
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 

@@ -9,40 +9,22 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The **Payment Services** drop-in uses the [event bus](/dropins/all/events/) to listen for events from the host application.
+The Payment Services drop-in does not define its own namespaced events (for example, payment-services/...) for vault or payment UI. Instead, checkout integrations typically use the [Checkout](/dropins/checkout/) drop-in’s values and events. See the [Vaulted cards at checkout](/dropins/payment-services/tutorials/vaulted-cards-checkout/) tutorial for how the Commerce boilerplate combines `StoredCards` and `CreditCard`.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
+## Network errors and the `error` event
 
-## Events
+GraphQL requests used in vault flows (for example, loading customer payment tokens) can share a common fetch error handler. If a request fails—and the error is not due to an abort—the handler can emit the global error event on the Adobe Commerce event bus with a payload such as:
 
-<TableWrapper nowrap={[0]}>
-
-| Event | Direction | Description |
-|---|---|---|
-| `authenticated` | Listens | Fired by the host application when the shopper logs in or out. Used by the CreditCard container to show or hide the save-card checkbox. |
-
-</TableWrapper>
-
-## `authenticated`
-
-The host application must emit this event on login, logout, and once on page load. The payload is a `boolean` — `true` when the shopper is logged in, `false` otherwise.
-
-```javascript
-import { events } from '@dropins/tools/event-bus.js';
-
-async function login(email, password) {
-  const token = await generateCustomerToken(email, password);
-  localStorage.setItem('customerToken', token);
-  events.emit('authenticated', true);
+```json
+{
+  "source": "payment-services",
+  "type": "network",
+  "error": { }
 }
-
-function logout() {
-  localStorage.removeItem('customerToken');
-  events.emit('authenticated', false);
-}
-
-// Emit on page load so the drop-in has the correct initial state
-events.emit('authenticated', !!localStorage.getItem('customerToken'));
 ```
+
+Subscribe to **`error`** if you need to correlate network failures with Payment Services. For broader patterns, see [Common events](/dropins/all/common-events/).
+
+<Aside type="note">
+There is no separate catalog of Payment Services–specific event names for stored-card selection or card form state. Instead, the host block coordinates the containers and cart APIs.
+</Aside>
