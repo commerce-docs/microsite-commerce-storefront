@@ -7,9 +7,42 @@ sidebar:
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-This drop-in does not emit or listen to any drop-in-specific events.
+The **Payment Services** drop-in uses the [event bus](/dropins/all/events/) to listen for events from the host application.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 3.1.0</strong>
 </div>
+
+## Events
+
+<TableWrapper nowrap={[0]}>
+
+| Event | Direction | Description |
+|---|---|---|
+| `authenticated` | Listens | Fired by the host application when the shopper logs in or out. Used by the CreditCard container to show or hide the save-card checkbox. |
+
+</TableWrapper>
+
+## `authenticated`
+
+The host application must emit this event on login, logout, and once on page load. The payload is a `boolean` — `true` when the shopper is logged in, `false` otherwise.
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+async function login(email, password) {
+  const token = await generateCustomerToken(email, password);
+  localStorage.setItem('customerToken', token);
+  events.emit('authenticated', true);
+}
+
+function logout() {
+  localStorage.removeItem('customerToken');
+  events.emit('authenticated', false);
+}
+
+// Emit on page load so the drop-in has the correct initial state
+events.emit('authenticated', !!localStorage.getItem('customerToken'));
+```
