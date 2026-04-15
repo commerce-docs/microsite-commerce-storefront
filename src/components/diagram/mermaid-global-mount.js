@@ -22,8 +22,5 @@ function mountPendingMermaidDiagrams() {
 
 mountPendingMermaidDiagrams();
 
-let pageLoadListenerRegistered = false;
-if (!pageLoadListenerRegistered) {
-  pageLoadListenerRegistered = true;
-  document.addEventListener('astro:page-load', mountPendingMermaidDiagrams);
-}
+// Re-run on every Astro client navigation so freshly-swapped pages get their diagrams mounted.
+document.addEventListener('astro:page-load', mountPendingMermaidDiagrams);

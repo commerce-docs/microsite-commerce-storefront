@@ -1,11 +1,14 @@
 ---
-const { caption, width, type = "image", code } = Astro.props;
-const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
+const { caption, type = "image", code } = Astro.props;
+const id = `diagram-${Math.random().toString(36).substring(2, 11)}`;
 // Embed Mermaid text as JSON inside the markup — not in define:vars. Large or multiline
 // sources break or bloat the hoisted module script; a broken module leaves "Loading…" forever.
 const mermaidSourceJson =
   type === "mermaid" && code != null
-    ? JSON.stringify(String(code)).replace(/</g, "\\u003c")
+    ? JSON.stringify(String(code))
+        .replace(/</g, "\\u003c")   // prevent </script> from closing the JSON block
+        .replace(/>/g, "\\u003e")   // prevent --> from being parsed as an HTML comment
+        .replace(/&/g, "\\u0026")   // prevent &foo; sequences being decoded by HTML parser
     : "";
 ---
 
@@ -20,13 +23,11 @@ const mermaidSourceJson =
         {/*
           set:html is intentional: Astro's default child-expression escaping would double-escape
           the JSON (e.g. `"` → `&amp;quot;`), producing unreadable source. mermaidSourceJson is
-          already sanitised above (</g, "\\u003c") — no user-controlled HTML reaches this slot.
+          already sanitised above (< → \u003c) — no user-controlled HTML reaches this slot.
+          Using <template> instead of <script type="application/json"> avoids confusing the
+          Astro language server, which treats any <script> element in the template body specially.
         */}
-        <script
-          type="application/json"
-          class="mermaid-diagram__source"
-          set:html={mermaidSourceJson}
-        />
+        <template class="mermaid-diagram__source" set:html={mermaidSourceJson}></template>
         <div class="mermaid-loading">Loading diagram...</div>
       </div>
     ) : (
@@ -36,7 +37,7 @@ const mermaidSourceJson =
   <div class="caption">{caption}</div>
 </div>
 
-<style define:vars={{ imageWidth: width }} is:global>
+<style is:global>
   .diagram {
     margin: 1rem 0;
     display: flex;
@@ -52,7 +53,9 @@ const mermaidSourceJson =
     justify-content: center;
     align-items: center;
     padding: 1rem;
-    overflow: hidden;
+    overflow-x: auto;
+    max-height: 500px;
+    position: relative;
   }
 
   .diagram.diagram > .diagram-content > p {
@@ -89,49 +92,36 @@ const mermaidSourceJson =
   /* Mermaid-specific styles */
   .mermaid-diagram {
     width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-family: Arial, sans-serif;
   }
 
-  /*
-    starlight-image-zoom: global `starlight-image-zoom-zoomable` is width 100%; the zoom control is
-    `position: absolute` with top/left insets. On a full-width row the control sits in empty flex space
-    and looks like a stray corner chip.
-
-    Two rules also fight: `button:not(:focus)` (1px + clip) vs `.starlight-image-zoom-control` (44px,
-    border, nav background) → a visible gray sliver. Shrink-wrap the zoomable and fully hide the
-    unfocused control; zoom still opens from the image click once the plugin rescans.
-  */
+  /* starlight-image-zoom wraps the img in this element; keep it block and full-width. */
   .mermaid-diagram starlight-image-zoom-zoomable {
     display: block;
-    width: fit-content;
-    max-width: 100%;
-    margin-inline: auto;
+    width: 100%;
   }
 
-  .mermaid-diagram
-    starlight-image-zoom-zoomable
-    > button.starlight-image-zoom-control:not(:focus):not(:focus-within) {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    clip: rect(0, 0, 0, 0) !important;
-    height: 1px !important;
-    margin: -1px !important;
-    opacity: 0 !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-    width: 1px !important;
+  /* The entire content area is made clickable via a JS listener in mermaid-diagram.client.ts.
+     Show zoom cursor so users know the whole area is interactive. */
+  .diagram-content:has(.mermaid-diagram) {
+    cursor: zoom-in;
   }
-  
-  .mermaid-diagram svg {
+
+  /* <img> loaded from Blob URL — width 100% + height auto lets the SVG viewBox aspect ratio
+     control the displayed height. Using <img> instead of inline <svg> avoids two zoom bugs:
+     cloneNode(true) on <svg> duplicates <defs> marker IDs (arrows disappear in zoomed view),
+     and the zoom plugin's natural-dimension logic treats <svg> as full-viewport-sized. */
+  .mermaid-diagram img.mermaid-diagram__img {
+    display: block;
+    width: auto;
     max-width: 100%;
     height: auto;
-    display: block;
+    max-height: calc(500px - 2rem); /* subtract .diagram-content padding */
+    margin: 0 auto;
+    background-color: #fff;
+    cursor: zoom-in;
   }
-  
+
   .mermaid-loading {
     padding: 2rem;
     color: var(--sl-color-gray-2);
@@ -151,9 +141,5 @@ const mermaidSourceJson =
       box-shadow: none;
       background-color: #fff;
     }
-  }
-
-  :global(img[alt="Mermaid diagram"]) {
-    background-color: white !important;
   }
 </style>
