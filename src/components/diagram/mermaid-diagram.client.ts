@@ -92,6 +92,9 @@ function ensureMermaidInitialized(): void {
   mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
+    themeVariables: {
+      background: '#ffffff',
+    },
     securityLevel: 'strict',
     fontFamily: 'Arial, sans-serif',
   });
@@ -181,6 +184,8 @@ function revokeBlobUrlForContainer(container: HTMLElement): void {
 function svgToBlobUrl(svgEl: SVGSVGElement): string {
   const viewBox = svgEl.getAttribute('viewBox') ?? '';
   const parts = viewBox.split(/[\s,]+/).map(Number);
+  const vbX = Number.isFinite(parts[0]) ? parts[0] : 0;
+  const vbY = Number.isFinite(parts[1]) ? parts[1] : 0;
   const vbWidth = Number.isFinite(parts[2]) && parts[2] > 0 ? parts[2] : 800;
   const vbHeight = Number.isFinite(parts[3]) && parts[3] > 0 ? parts[3] : 600;
 
@@ -193,6 +198,17 @@ function svgToBlobUrl(svgEl: SVGSVGElement): string {
   if (!clone.hasAttribute('xmlns')) {
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   }
+
+  // Add a hard white background behind Mermaid content so the rendered Blob image
+  // remains readable in dark mode even if browser or theme CSS influences SVG styling.
+  const backgroundRect = document.createElementNS(SVG_NAMESPACE, 'rect');
+  backgroundRect.setAttribute('x', String(vbX));
+  backgroundRect.setAttribute('y', String(vbY));
+  backgroundRect.setAttribute('width', String(vbWidth));
+  backgroundRect.setAttribute('height', String(vbHeight));
+  backgroundRect.setAttribute('fill', '#ffffff');
+  backgroundRect.setAttribute('data-mermaid-background', 'true');
+  clone.insertBefore(backgroundRect, clone.firstChild);
 
   const svgString = new XMLSerializer().serializeToString(clone);
   const blob = new Blob([svgString], { type: 'image/svg+xml' });
