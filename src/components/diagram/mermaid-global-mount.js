@@ -1,17 +1,17 @@
 /**
- * Single entry for mounting Mermaid diagrams. Imported once from MarkdownContent.astro
- * so Vite bundles `mermaid-diagram.client` from a stable module path (not per-Diagram inline
- * scripts, which cannot resolve bare aliases and resolve `./` against the page URL).
+ * Single entry for mounting Mermaid diagrams. Loaded via `injectScript('page', …)` in
+ * `astro.config.mjs` so Vite bundles this module with `mermaid-diagram.client` and `mermaid`.
+ * Do not load this file with `import … ?url` — that emits only this file and leaves bare imports
+ * that do not resolve on the CDN.
  */
 
 import { attachMermaidDiagramLifecycle } from './mermaid-diagram.client';
 
-// Guard against accidental server-side imports (e.g. in tests or SSR bundles that pull this module).
 if (typeof document === 'undefined') {
   throw new Error('[Diagram] mermaid-global-mount must only be imported in a browser context.');
 }
 
-function mountPendingMermaidDiagrams(): void {
+function mountPendingMermaidDiagrams() {
   for (const el of document.querySelectorAll('.mermaid-diagram[data-pending-mermaid="true"]')) {
     if (!(el instanceof HTMLElement) || !el.id) continue;
     if (el.closest('#starlight__search')) continue;
@@ -22,8 +22,6 @@ function mountPendingMermaidDiagrams(): void {
 
 mountPendingMermaidDiagrams();
 
-// Module-level flag: the module stays in memory across Astro client navigations, so this persists
-// without polluting window with a string-keyed property (avoids name collisions and type gaps).
 let pageLoadListenerRegistered = false;
 if (!pageLoadListenerRegistered) {
   pageLoadListenerRegistered = true;
