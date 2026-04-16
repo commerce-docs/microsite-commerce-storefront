@@ -169,6 +169,10 @@ async function config() {
             `,
           },
           {
+            tag: 'script',
+            content: `<script src="https://t.contentsquare.net/uxa/a1dbc6ab8ae12.js"></script>`,
+          },
+          {
             tag: 'meta',
             attrs: {
               name: 'google-site-verification',
