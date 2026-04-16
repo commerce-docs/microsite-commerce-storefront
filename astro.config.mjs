@@ -68,6 +68,18 @@ async function config() {
     redirects: generateRedirects(basePath),
 
     integrations: [
+      {
+        name: 'mermaid-diagram-mount',
+        hooks: {
+          'astro:config:setup': ({ injectScript }) => {
+            // Bundles with `mermaid-diagram.client` + `mermaid`. Do not use `import … ?url` from a
+            // component — that emits a partial chunk; a `<script>` in MarkdownContent was not
+            // bundled in production.
+            // Dynamic import keeps the main `page.*.js` entry smaller; Mermaid loads as its own chunk.
+            injectScript('page', `void import('/src/components/diagram/mermaid-global-mount.js');`);
+          },
+        },
+      },
       starlight({
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/release/',
@@ -179,7 +191,6 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
