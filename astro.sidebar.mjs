@@ -30,6 +30,7 @@ export function generateSidebar() {
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
+            { label: 'Get to know SEO', link: '/get-started/seo/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
