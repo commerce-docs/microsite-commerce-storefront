@@ -171,6 +171,7 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
 
         // ========= MISC REDIRECTS =========
+        '/build-with-ai': `${basePath}/resources/build-with-ai`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
