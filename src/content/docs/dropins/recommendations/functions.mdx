@@ -23,18 +23,18 @@ The Recommendations drop-in provides API functions that enable you to programmat
 
 | Function | Description |
 | --- | --- |
-| [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids) | Retrieves product recommendations for specified recommendation unit IDs. |
+| [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids) | Retrieves product recommendations based on various parameters such as current SKU, recommendation ID, and user history. |
 | [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | Publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance. |
 
 </TableWrapper>
 
 ## getRecommendationsByUnitIds
 
-The `getRecommendationsByUnitIds` function retrieves product recommendations for specified recommendation unit IDs. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/recommendations/" text="recommendations" /> GraphQL query and transforms the response into a standardized format.
+The `getRecommendationsByUnitIds` function retrieves product recommendations based on various parameters such as current SKU, recommendation ID, and user history. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql-api/saas/index.html#query-recommendationsByUnitIds" text="recommendationsByUnitIds" /> GraphQL query and transforms the response into a standardized format.
 
 ```ts
 const getRecommendationsByUnitIds = async (
-  params: GetRecommendationsByUnitIdsProps
+  params: GetRecommendationsProps
 ): Promise<RecommendationUnitModel[] | null>
 ```
 
@@ -42,7 +42,7 @@ const getRecommendationsByUnitIds = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `GetRecommendationsByUnitIdsProps` | Yes | Parameters for retrieving recommendations. See [`GetRecommendationsByUnitIdsProps`](#getrecommendationsbyunitidsprops) below. |
+| `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
 
 </TableWrapper>
 
@@ -100,32 +100,6 @@ Returns `void`.
 ## Data Models
 
 The following data models are used by functions in this drop-in.
-
-### GetRecommendationsByUnitIdsProps
-
-The `GetRecommendationsByUnitIdsProps` object is accepted by [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids).
-
-```ts
-interface GetRecommendationsByUnitIdsProps {
-  unitIds: string[];
-  currentSku?: string;
-  cartSkus?: string[];
-  userPurchaseHistory?: any[];
-  userViewHistory?: any[];
-}
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Property | Type | Req? | Description |
-|---|---|---|---|
-| `unitIds` | `string[]` | Yes | The recommendation unit IDs to fetch. Each ID corresponds to a configured recommendation unit in Adobe Commerce. |
-| `currentSku` | `string` | No | The SKU of the product currently being viewed. Used by contextual recommendation algorithms. |
-| `cartSkus` | `string[]` | No | The SKUs of products currently in the cart. Used to refine recommendation results. |
-| `userPurchaseHistory` | `any[]` | No | The customer's previous purchase records. Passed to the backend to personalise recommendations. |
-| `userViewHistory` | `any[]` | No | The customer's previously viewed products. Passed to the backend to personalise recommendations. |
-
-</TableWrapper>
 
 ### RecommendationUnitModel
 
