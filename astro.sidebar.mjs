@@ -1,9 +1,9 @@
 /**
  * Sidebar navigation configuration
- * 
+ *
  * This file maintains the sidebar structure for the Adobe Commerce Storefront documentation.
  * The sidebar is organized by audience (Developers, Merchants, etc.) and uses the Starlight Sidebar Topics plugin.
- * 
+ *
  * @returns {Array} Sidebar topics configuration array
  */
 
@@ -25,9 +25,9 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/get-started/' },
             { label: 'Storefront architecture', link: '/get-started/architecture/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],

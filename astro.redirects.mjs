@@ -1,9 +1,9 @@
 /**
  * Site-wide redirects configuration
- * 
+ *
  * This file maintains all URL redirects for the Adobe Commerce Storefront documentation.
  * Redirects are organized by category for easier maintenance.
- * 
+ *
  * @returns {Object} Redirects object keyed by old path, valued by new path
  */
 
@@ -88,6 +88,7 @@ export function generateRedirects(basePath) {
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
+        '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
 
         // ========= BOILERPLATE REDIRECTS =========
@@ -140,22 +141,15 @@ export function generateRedirects(basePath) {
         // Commerce blocks redirects (storefront-builder → blocks)
         '/merchants/storefront-builder/': `${basePath}/merchants/blocks`,
         '/merchants/storefront-builder/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/storefront-builder/personalization/': `${basePath}/merchants/blocks/personalization`,
         '/merchants/storefront-builder/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
-        '/merchants/storefront-builder/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
         '/merchants/get-started/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/get-started/personalization/': `${basePath}/merchants/blocks/personalization`,
         '/merchants/get-started/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
-        '/merchants/get-started/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
-        
+
         // Commerce blocks folder consolidation redirects (commerce-blocks → blocks)
-        '/merchants/commerce-blocks/': `${basePath}/merchants/blocks`,
         '/merchants/commerce-blocks': `${basePath}/merchants/blocks`,
         '/merchants/commerce-blocks/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/commerce-blocks/personalization/': `${basePath}/merchants/blocks/personalization`,
         '/merchants/commerce-blocks/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
-        '/merchants/commerce-blocks/product-recommendations/': `${basePath}/merchants/blocks/product-recommendations`,
-        
+
         // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
         // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
 
