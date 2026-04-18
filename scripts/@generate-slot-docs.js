@@ -22,10 +22,21 @@
  * - Generates independently: Slot interfaces and documentation
  *
  * OUTPUT: Single consolidated slots.mdx file per drop-in
+ *
+ * RULE - EXAMPLE VERIFICATION:
+ * NEVER create code examples without thoroughly verifying every line against source code.
+ * Always check: .temp-repos/StorefrontSDK, .temp-repos/{dropin-name}
+ * Verify: slot signatures, provider.render usage. If you cannot verify, do not invent.
+ *
+ * RULE - SOURCE OF TRUTH (see scripts/GENERATOR-RULES.md):
+ * TypeScript is the source of truth for slots and their parameters. Enrichment provides
+ * descriptions only—never add slots or params from enrichment that aren't in source.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
+import { extractExistingSlotDescriptions } from './lib/content-extractor.js';
+import { isRicherDescription } from './lib/richer-description.js';
 
 // Import shared utilities
 import { runGenerator, getProjectRoot } from './lib/generator-core.js';
@@ -132,7 +143,7 @@ function scanForSlots(repoPath) {
  * @param {Object} enrichmentData - Optional enrichment data for slots
  * @returns {string} Generated MDX content for slots
  */
-function generateSlotsContent(containers, repoName, repoConfig, enrichmentData = null) {
+function generateSlotsContent(containers, repoName, repoConfig, enrichmentData = null, existingSlotDescriptions = new Map()) {
     if (containers.length === 0) {
         return ''; // No additional content needed for empty slots
     }
@@ -177,33 +188,36 @@ function generateSlotsContent(containers, repoName, repoConfig, enrichmentData =
                 // Use enrichment data if available
                 const slotEnrichment = enrichmentData?.[slotName];
 
-                if (slotEnrichment?.description) {
-                    // Use enriched description (wrap code names)
-                    content += `${wrapCodeNames(slotEnrichment.description)}\n\n`;
-
-                    // Add context properties section if available
-                    if (slotEnrichment.context_properties && Object.keys(slotEnrichment.context_properties).length > 0) {
-                        content += `#### Context properties\n\n`;
-                        content += `The slot receives the following context properties:\n\n`;
-
-                        for (const [propName, propData] of Object.entries(slotEnrichment.context_properties)) {
-                            content += `- **\`${propName}\`** - ${propData.description}\n`;
-                        }
-                        content += `\n`;
+                const slotKey = `${container.containerName}#${slotName}`;
+                const enrichedDesc = slotEnrichment?.description;
+                const generatedDesc = wrapCodeNames(`The ${slotName} slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the ${container.containerName} container.`);
+                let slotDescription = enrichedDesc ? wrapCodeNames(enrichedDesc) : generatedDesc;
+                if (!enrichedDesc) {
+                    const existing = existingSlotDescriptions.get(slotKey);
+                    if (existing && isRicherDescription(existing, generatedDesc)) {
+                        slotDescription = wrapCodeNames(existing);
                     }
+                }
+                content += `${slotDescription}\n\n`;
 
-                    // Add usage scenarios if available
-                    if (slotEnrichment.usage_scenarios && slotEnrichment.usage_scenarios.length > 0) {
-                        content += `#### Usage scenarios\n\n`;
-                        for (const scenario of slotEnrichment.usage_scenarios) {
-                            content += `- ${scenario}\n`;
-                        }
-                        content += `\n`;
+                // Add context properties section if available (enrichment only)
+                if (slotEnrichment?.context_properties && Object.keys(slotEnrichment.context_properties).length > 0) {
+                    content += `#### Context properties\n\n`;
+                    content += `The slot receives the following context properties:\n\n`;
+
+                    for (const [propName, propData] of Object.entries(slotEnrichment.context_properties)) {
+                        content += `- **\`${propName}\`** - ${propData.description}\n`;
                     }
-                } else {
-                    // Fallback to generic description
-                    const genericDesc = wrapCodeNames(`The ${slotName} slot allows you to customize the ${slotName.replace(/([A-Z])/g, ' $1').toLowerCase().trim()} section of the ${container.containerName} container.`);
-                    content += `${genericDesc}\n\n`;
+                    content += `\n`;
+                }
+
+                // Add usage scenarios if available (enrichment only)
+                if (slotEnrichment?.usage_scenarios && slotEnrichment.usage_scenarios.length > 0) {
+                    content += `#### Usage scenarios\n\n`;
+                    for (const scenario of slotEnrichment.usage_scenarios) {
+                        content += `- ${scenario}\n`;
+                    }
+                    content += `\n`;
                 }
 
                 // Add example with proper imports based on boilerplate
@@ -283,7 +297,10 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
 
     // Generate summary table, examples, and detailed content
     const summaryTable = generateSummaryTable(containers);
-    const slotsContent = generateSlotsContent(containers, repoName, repoConfig, enrichmentData);
+    const basePath = repoConfig.type === 'B2B' ? 'dropins-b2b' : 'dropins';
+    const outputPath = join(projectRoot, 'src', 'content', 'docs', basePath, repoName, 'slots.mdx');
+    const existingSlotDescriptions = extractExistingSlotDescriptions(outputPath);
+    const slotsContent = generateSlotsContent(containers, repoName, repoConfig, enrichmentData, existingSlotDescriptions);
 
     // Generate intro text based on whether slots exist
     let introText;

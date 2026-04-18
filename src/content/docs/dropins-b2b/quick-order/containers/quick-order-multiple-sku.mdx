@@ -1,0 +1,94 @@
+---
+title: QuickOrderMultipleSku Container
+description: Learn about the QuickOrderMultipleSku container in the Quick Order B2B drop-in.
+sidebar:
+  label: QuickOrderMultipleSku
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The **QuickOrderMultipleSku** container provides a text area for entering multiple SKUs in the drop-in. Users can paste or type SKU lists in space-separated, comma-separated, or line-separated format—convenient for B2B buyers who have SKUs from catalogs, previous orders, spreadsheets, or external procurement systems.
+
+The container parses the input, removes duplicates, and aggregates quantities when the same SKU appears multiple times. Input processing is debounced (300ms) for good performance with large SKU lists. After entry, users click "Add to List" to add SKUs to the Quick Order list. When Quick Order is disabled, the container displays an overlay indicating that functionality is unavailable.
+
+<Diagram caption="QuickOrderMultipleSku container with SKU text area">
+  ![QuickOrderMultipleSku container showing text area for entering multiple SKUs and Add to List button](@images/quick-order-multiple-sku.png)
+</Diagram>
+
+## Configuration
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `className` | `string` | No | CSS class applied to the container root (for example, `quick-order-multiple-sku`). |
+| `onChange` | `(payload: SubmitSkuValue) => void` | No | Callback invoked when the SKU list in the textarea changes (debounced 300ms). Receives parsed and deduplicated SKUs with quantities: `Array<{ sku: string; quantity: number }>`. Use for analytics, validation, or mirroring to external state. |
+| `slots` | `object` | No | Slot for `AddToListButton`. Context: `{ handleAddToList: (values?: SubmitSkuValue) => void; loading: boolean; textAreaValue: string }`. Use this to replace the default "Add to List" button with custom UI. If not customized, the default button emits `quick-order/add-items` with parsed SKUs when clicked. |
+
+</TableWrapper>
+
+## Behavior
+
+1. User enters SKUs in the text area (comma, space, or newline separated).
+2. User clicks "Add to List".
+3. Container parses input, deduplicates SKUs and sums quantities for duplicates.
+4. Container emits `quick-order/add-items` with payload `SubmitSkuValue` (array of `{ sku, quantity }`).
+5. QuickOrderItems receives the event, fetches product data via `getProductsData`, and updates the list.
+6. Text area can be cleared on successful submission (implementation-dependent).
+
+## Usage
+
+Basic integration:
+
+```js
+import QuickOrderMultipleSku from '@dropins/storefront-quick-order/containers/QuickOrderMultipleSku.js';
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+
+quickOrderProvider.render(QuickOrderMultipleSku, {
+  className: 'quick-order-multiple-sku',
+})(quickOrderMultipleSkuContainer);
+```
+
+With `onChange` callback:
+
+```js
+quickOrderProvider.render(QuickOrderMultipleSku, {
+  className: 'quick-order-multiple-sku',
+  onChange: (payload) => {
+    console.log('Parsed TextArea content', payload);
+    // Output: [{ sku: 'SKU123', quantity: 2 }, { sku: 'SKU456', quantity: 1 }]
+  },
+})(quickOrderMultipleSkuContainer);
+```
+
+With custom `AddToListButton` slot:
+
+```js
+quickOrderProvider.render(QuickOrderMultipleSku, {
+  className: 'quick-order-multiple-sku',
+  slots: {
+    AddToListButton: (ctx) => {
+      const { handleAddToList, loading, textAreaValue } = ctx;
+      const button = document.createElement('button');
+      button.className = 'add-to-list-button';
+      button.textContent = 'Custom add to list';
+      button.addEventListener('click', () => handleAddToList(textAreaValue));
+      ctx.replaceWith(button);
+    },
+  },
+})(quickOrderMultipleSkuContainer);
+```
+
+## Events
+
+- **Emits:** `quick-order/add-items` (with parsed SKU/quantity array), `quick-order/loading` (during processing).
+
+## Admin panel
+
+No container-specific settings. Enable Quick Order in Adobe Commerce: **Stores** > **Settings** > **Configuration** > **General** > **B2B Features** > **Enable Quick Order**.
+
+## Dictionary
+
+Labels such as "Add Products by SKU", "Use commas or paragraphs to separate SKUs.", "Enter SKUs here...", and "Add to List" come from the Quick Order dictionary. See [Quick Order Dictionary](/dropins-b2b/quick-order/dictionary/) and [Dictionary customization](/dropins/all/dictionaries/).

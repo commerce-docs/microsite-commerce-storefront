@@ -1,12 +1,33 @@
 ---
-const { caption, width, type = "image", code } = Astro.props;
-const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
+const { caption, type = "image", code } = Astro.props;
+const id = `diagram-${Math.random().toString(36).substring(2, 11)}`;
+// Embed Mermaid text as JSON inside the markup — not in define:vars. Large or multiline
+// sources break or bloat the hoisted module script; a broken module leaves "Loading…" forever.
+const mermaidSourceJson =
+  type === "mermaid" && code != null
+    ? JSON.stringify(String(code))
+        .replace(/</g, "\\u003c")   // prevent </script> from closing the JSON block
+        .replace(/>/g, "\\u003e")   // prevent --> from being parsed as an HTML comment
+        .replace(/&/g, "\\u0026")   // prevent &foo; sequences being decoded by HTML parser
+    : "";
 ---
 
-<div class="diagram" data-diagram-type={type}>
+<div
+  class="diagram"
+  data-diagram-type={type}
+  {...(type === "mermaid" ? { "data-pagefind-ignore": true } : {})}
+>
   <div class="diagram-content">
     {type === "mermaid" ? (
-      <div id={id} class="mermaid-diagram" data-mermaid-code={code}>
+      <div id={id} class="mermaid-diagram" data-pending-mermaid="true">
+        {/*
+          set:html is intentional: Astro's default child-expression escaping would double-escape
+          the JSON (e.g. `"` → `&amp;quot;`), producing unreadable source. mermaidSourceJson is
+          already sanitised above (< → \u003c) — no user-controlled HTML reaches this slot.
+          Using <template> instead of <script type="application/json"> avoids confusing the
+          Astro language server, which treats any <script> element in the template body specially.
+        */}
+        <template class="mermaid-diagram__source" set:html={mermaidSourceJson}></template>
         <div class="mermaid-loading">Loading diagram...</div>
       </div>
     ) : (
@@ -16,176 +37,7 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
   <div class="caption">{caption}</div>
 </div>
 
-{type === "mermaid" && (
-  <script define:vars={{ id, code }}>
-    // Mermaid rendering script
-    async function renderMermaidDiagram() {
-      const diagramElement = document.getElementById(id);
-      if (!diagramElement) {
-        console.error('Diagram element not found:', id);
-        return;
-      }
-      
-      if (!code) {
-        console.error('No mermaid code provided');
-        return;
-      }
-      
-      try {
-        // Import and initialize mermaid
-        const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'loose',
-          fontFamily: 'Arial, sans-serif'
-        });
-        
-        // Generate SVG
-        const { svg } = await mermaid.render(`${id}-svg`, code);
-        
-        // Parse and enhance SVG for zoom
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
-        const svgElement = svgDoc.querySelector('svg');
-        
-        if (svgElement) {
-          // Calculate dimensions preserving aspect ratio
-          let width = 1920;
-          let height = 1080;
-          
-          const viewBox = svgElement.getAttribute('viewBox');
-          if (viewBox) {
-            const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
-            const aspectRatio = vbWidth / vbHeight;
-            if (aspectRatio > 2) {
-              height = Math.round(width / aspectRatio);
-            }
-          }
-          
-          svgElement.setAttribute('width', width.toString());
-          svgElement.setAttribute('height', height.toString());
-          
-          // Add white background
-          const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rect.setAttribute('width', '100%');
-          rect.setAttribute('height', '100%');
-          rect.setAttribute('fill', 'white');
-          svgElement.insertBefore(rect, svgElement.firstChild);
-        }
-        
-        const enhancedSvg = new XMLSerializer().serializeToString(svgDoc);
-        
-        // Create blob URL for the SVG
-        const blob = new Blob([enhancedSvg], { type: 'image/svg+xml' });
-        const blobUrl = URL.createObjectURL(blob);
-        
-        // Create zoomable wrapper structure (same as working version)
-        const zoomableWrapper = document.createElement('starlight-image-zoom-zoomable');
-        const img = document.createElement('img');
-        img.src = blobUrl;
-        img.alt = 'Mermaid diagram';
-        
-        // Store blob URL for zoom (don't revoke until zoom is done)
-        img.dataset.blobUrl = blobUrl;
-        
-        img.setAttribute('width', svgElement?.getAttribute('width') || '1920');
-        img.setAttribute('height', svgElement?.getAttribute('height') || '1080');
-        img.style.cssText = 'max-width: 100%; height: auto; display: block;';
-        
-        const zoomButton = document.createElement('button');
-        zoomButton.setAttribute('aria-label', 'Zoom image: Mermaid diagram');
-        zoomButton.className = 'starlight-image-zoom-control';
-        zoomButton.innerHTML = `
-          <svg aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-            <use href="#starlight-image-zoom-icon-zoom"></use>
-          </svg>
-        `;
-        
-        zoomableWrapper.appendChild(img);
-        zoomableWrapper.appendChild(zoomButton);
-        diagramElement.innerHTML = '';
-        diagramElement.appendChild(zoomableWrapper);
-        
-        // Wire up zoom functionality
-        // CRITICAL FIX: starlight-image-zoom scans for zoomables on DOMContentLoaded
-        // Since we create this dynamically AFTER that scan, we must trigger a re-scan
-        async function setupZoom() {
-          // Wait for starlight-image-zoom custom element to be defined
-          await customElements.whenDefined('starlight-image-zoom');
-          
-          let zoomElement = document.querySelector('starlight-image-zoom');
-          let attempts = 0;
-          while (!zoomElement && attempts < 20) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-            zoomElement = document.querySelector('starlight-image-zoom');
-            attempts++;
-          }
-          
-          if (!zoomElement) return;
-          
-          // Wire up button click handler - click the image directly
-          // The zoom element listens for image clicks and will handle it
-          zoomButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            img.click();
-          });
-          
-          // Debounced re-scan: only trigger once after all diagrams are created
-          // Use a namespaced property to avoid conflicts
-          const RESCAN_KEY = '__starlightMermaidZoomRescan';
-          if (window[RESCAN_KEY]) {
-            clearTimeout(window[RESCAN_KEY]);
-          }
-          window[RESCAN_KEY] = setTimeout(() => {
-            document.dispatchEvent(new CustomEvent('astro:after-swap'));
-            window[RESCAN_KEY] = null;
-          }, 150);
-          
-          // Clean up timeout on page navigation
-          document.addEventListener('astro:before-preparation', () => {
-            if (window[RESCAN_KEY]) {
-              clearTimeout(window[RESCAN_KEY]);
-              window[RESCAN_KEY] = null;
-            }
-          }, { once: true });
-        }
-        
-        setupZoom();
-        
-        // Clean up blob URL on page unload/navigation (same as working version)
-        img.onload = () => {
-          window.addEventListener('beforeunload', () => {
-            URL.revokeObjectURL(blobUrl);
-          });
-          
-          document.addEventListener('astro:before-preparation', () => {
-            URL.revokeObjectURL(blobUrl);
-          });
-        };
-        
-      } catch (error) {
-        console.error('Error rendering mermaid diagram:', error);
-        diagramElement.innerHTML = `<div style="color: red; padding: 1rem; border: 1px solid red;">Error: ${error.message}</div>`;
-      }
-    }
-    
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderMermaidDiagram);
-    } else {
-      renderMermaidDiagram();
-    }
-    
-    // Handle Astro page transitions
-    document.addEventListener('astro:page-load', () => {
-      setTimeout(renderMermaidDiagram, 100);
-    });
-  </script>
-)}
-
-<style define:vars={{ imageWidth: width }} is:global>
+<style is:global>
   .diagram {
     margin: 1rem 0;
     display: flex;
@@ -201,7 +53,9 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
     justify-content: center;
     align-items: center;
     padding: 1rem;
-    overflow: hidden;
+    overflow-x: auto;
+    max-height: 700px;
+    position: relative;
   }
 
   .diagram.diagram > .diagram-content > p {
@@ -238,22 +92,47 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
   /* Mermaid-specific styles */
   .mermaid-diagram {
     width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-family: Arial, sans-serif;
   }
-  
-  .mermaid-diagram svg {
+
+  /* starlight-image-zoom wraps the img in this element; keep it block and full-width. */
+  .mermaid-diagram starlight-image-zoom-zoomable {
+    display: block;
+    width: 100%;
+  }
+
+  /* The entire content area is made clickable via a JS listener in mermaid-diagram.client.ts.
+     Show zoom cursor so users know the whole area is interactive. */
+  .diagram-content:has(.mermaid-diagram) {
+    cursor: zoom-in;
+  }
+
+  /* <img> loaded from Blob URL — width 100% + height auto lets the SVG viewBox aspect ratio
+     control the displayed height. Using <img> instead of inline <svg> avoids two zoom bugs:
+     cloneNode(true) on <svg> duplicates <defs> marker IDs (arrows disappear in zoomed view),
+     and the zoom plugin's natural-dimension logic treats <svg> as full-viewport-sized. */
+  .mermaid-diagram img.mermaid-diagram__img {
+    display: block;
+    width: auto;
     max-width: 100%;
     height: auto;
-    display: block;
+    max-height: calc(700px - 2rem); /* subtract .diagram-content padding */
+    margin: 0 auto;
+    background-color: #fff;
+    cursor: zoom-in;
   }
-  
+
   .mermaid-loading {
     padding: 2rem;
     color: var(--sl-color-gray-2);
     font-style: italic;
+  }
+
+  .diagram-mermaid-error {
+    padding: 1rem;
+    border: 1px solid var(--sl-color-red);
+    color: var(--sl-color-red);
+    background-color: color-mix(in srgb, var(--sl-color-red) 8%, transparent);
   }
 
   @media print {
@@ -262,10 +141,5 @@ const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
       box-shadow: none;
       background-color: #fff;
     }
-  }
-
-  /* Force white background for Mermaid diagrams in zoom modals */
-  :global(img[alt="Mermaid diagram"]) {
-    background-color: white !important;
   }
 </style>

@@ -5,7 +5,7 @@ description: Configure the PlaceOrder container to handle the final checkout ste
 
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `PlaceOrder` container is designed to handle the final step in the checkout process, where the user confirms and places their order. You can configure it to disable the button, perform some validations before submitting the form, handle the place order action, and manage the content slot for the place order button.
+The `PlaceOrder` container handles the final step in the checkout process, where the user confirms and places an order. Configure it to disable the button, perform validations before submitting the form, handle the place order action, and manage the content slot for the place order button.
 
 ## PlaceOrder configurations
 
@@ -17,23 +17,23 @@ The `PlaceOrder` container provides the following configuration options:
     ['Option', 'Type', 'Req?', 'Description'],
     ['active', 'boolean', 'No', 'Activates/deactivates the container (default value is true).'],
     ['disabled', 'boolean', 'No', 'Disables the Place Order button.'],
-    ['handleValidation', 'function', 'No', 'A function that performs validation checks and returns a boolean indicating whether the validation passed; in case it returns false, the order will not be placed.'],
-    ['handlePlaceOrder', 'function', 'Yes', 'An asynchronous function that handles the order placement process. It receives a context object containing the selected payment method code and the cart ID.'],
-    ['slots', 'object', 'No', 'Object with the content to be displayed on the container. This slot allows setting the PlaceOrder container content dynamically based on the selected payment method.'],
+    ['handleValidation', 'function', 'No', 'Performs validation checks and returns a boolean or Promise&lt;boolean&gt;. Supports asynchronous validation for server-side fraud checks. The order proceeds only when this function returns true (or a promise that resolves to true).'],
+    ['handlePlaceOrder', 'function', 'Yes', 'Handles the order placement process asynchronously. Receives a context object containing the selected payment method code and the cart ID.'],
+    ['slots', 'object', 'No', 'Sets the PlaceOrder container content dynamically based on the selected payment method.'],
   ]}
 />
 
-These configuration options are implementing the `PlaceOrderProps` interface:
+These configuration options implement the `PlaceOrderProps` interface:
 
 ### PlaceOrderProps interface
 
-The `PlaceOrder` container receives an object as parameter which implements the `PlaceOrderProps` interface with the following properties:
+The `PlaceOrder` container receives an object that implements the `PlaceOrderProps` interface:
 
 ```ts
 export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
   active?: boolean;
   disabled?: boolean;
-  handleValidation?: () => boolean;
+  handleValidation?: () => boolean | Promise<boolean>;
   handlePlaceOrder: (ctx: HandlePlaceOrderContext) => Promise<void>;
   slots?: {
     Content?: SlotProps<ContentSlotContext>;
@@ -41,12 +41,10 @@ export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
 }
 ```
 
-- Set the `active` property to _true_ to have the container in reactive mode (it is visible and responds to system events). If it is set to _false_, the container is deactivated (it does not subscribe to system events and is not rendered).
-- The `disabled` property set to _true_ forces the Place Order button to be disabled.
-- The `handleValidation` property is a handler used to perform some validation checks before submitting the checkout forms and placing the order.
-- The `handlePlaceOrder` property is a handler used to perform some actions related to the order placement process. It is executed when the Place Order button is clicked and if the `handleValidation` returns _true_ (in case it is provided, otherwise it will be executed without validation checks).
-  
-  The asynchronous function provided accepts a context as parameter which implements the `HandlePlaceOrderContext` interface:
+- The `active` property controls whether the container responds to system events and renders. Set to _true_ (default) for reactive mode. Set to _false_ to deactivate and hide the container.
+- The `disabled` property forces the Place Order button into a disabled state when set to _true_.
+- The `handleValidation` property performs validation checks before submitting the checkout forms and placing the order. It returns a `boolean` synchronously or a `Promise<boolean>` for asynchronous validation (for example, server-side fraud checks).
+- The `handlePlaceOrder` property executes when the user clicks the Place Order button and `handleValidation` returns _true_ (when provided). It accepts a context parameter that implements the `HandlePlaceOrderContext` interface:
 
   ```ts
   export interface HandlePlaceOrderContext {
@@ -55,8 +53,8 @@ export interface PlaceOrderProps extends HTMLAttributes<HTMLDivElement> {
   }
   ```
 
-- The `slots` property is an object containing the following properties:
-  - The `Content` property is a handler used to render the PlaceOrder container content based on the selected payment method code:
+- The `slots` property contains the following:
+  - The `Content` slot renders PlaceOrder container content based on the selected payment method code:
 
   ```ts
   export type SlotProps<T = any> = (

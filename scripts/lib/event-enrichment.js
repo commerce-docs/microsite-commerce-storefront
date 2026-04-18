@@ -6,6 +6,7 @@
  */
 
 import { EnrichmentLoader } from './core/enrichment-loader.js';
+import { normalizeWritingStyle } from './description-generator.js';
 
 /**
  * Load event enrichments for a specific drop-in
@@ -33,7 +34,7 @@ export function loadEventEnrichments(dropinName) {
 export function getPayloadPropertyDescription(eventName, propertyName, propertyType, enrichment) {
     // Priority 1: Enrichment (manual override)
     if (enrichment?.payload?.[propertyName]?.description) {
-        return enrichment.payload[propertyName].description;
+        return normalizeWritingStyle(enrichment.payload[propertyName].description);
     }
 
     // Priority 2: Pattern-based generation for common properties
@@ -139,6 +140,7 @@ function inferDescriptionFromType(propertyName, propertyType) {
 
 /**
  * Get event description from enrichment or generate default
+ * Automatically normalizes writing style (Latin abbreviations, etc.)
  * @param {string} eventName - Event name
  * @param {Object} enrichment - Enrichment data for the event
  * @param {string} generatedDescription - Default generated description
@@ -147,10 +149,10 @@ function inferDescriptionFromType(propertyName, propertyType) {
 export function getEventDescription(eventName, enrichment, generatedDescription) {
     // Use enrichment description if available
     if (enrichment?.description) {
-        return enrichment.description;
+        return normalizeWritingStyle(enrichment.description);
     }
 
-    // Otherwise use generated description
-    return generatedDescription;
+    // Otherwise use generated description (also normalize)
+    return normalizeWritingStyle(generatedDescription);
 }
 

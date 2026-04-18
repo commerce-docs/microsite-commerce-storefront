@@ -12,6 +12,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
+import { mergePreservingPreamble } from './lib/preserve-preamble.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,8 +45,9 @@ function generateB2BExtensionOverview(dropinSlug) {
     if (!existsSync(outputDir)) {
         mkdirSync(outputDir, { recursive: true });
     }
-    
-    writeFileSync(outputPath, content, 'utf-8');
+
+    const finalContent = mergePreservingPreamble(outputPath, content);
+    writeFileSync(outputPath, finalContent, 'utf-8');
     console.log(`✅ Generated: ${outputPath}`);
     
     return true;
