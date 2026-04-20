@@ -172,7 +172,7 @@ Follow the steps below to create a new release section with matching changelog e
 
 The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](https://cli.github.com/) tool, called `gh` in the terminal. Install `gh` if you don't have it. As needed, use the `gh auth login` command once on your machine so Cursor can reach private repositories when it generates notes.
 
-1. Create a local branch for release notes (for example `april-release-notes`).
+1. Create a local branch for release notes (for example, `april-release-notes`).
 
 1. **Jira (optional):** GitHub pull requests sometimes link to **Jira** tickets. The skill can pull ticket text to improve release wording. To use that feature, you need network access to Adobe corporate Jira and a token stored on your Mac. If you skip this block, you can still write release notes from GitHub only.
    - Stay on the **Adobe corporate VPN**.
