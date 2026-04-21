@@ -20,30 +20,36 @@ export function generateSidebar() {
       icon: 'seti:json',
       items: [
         {
-          label: 'Essentials',
+          label: 'Start here',
           collapsed: false,
           items: [
+            { label: 'Developer journey', link: '/get-started/developer-journey/' },
             { label: 'Overview', link: '/get-started/' },
             { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
-            { label: "Launch checklist", link: "setup/launch/" },
           ],
         },
         {
-          label: 'The Boilerplate',
-          collapsed: true,
+          label: 'Build',
+          collapsed: false,
           items: [
-            { label: 'Overview', link: '/boilerplate/' },
-            { label: 'Getting started', link: '/boilerplate/getting-started/' },
-            { label: 'Configuration', link: '/boilerplate/configuration/' },
-            { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            {
+              label: 'The Boilerplate',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/boilerplate/' },
+                { label: 'Getting started', link: '/boilerplate/getting-started/' },
+                { label: 'Configuration', link: '/boilerplate/configuration/' },
+                { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
+                { label: 'Blocks customization', link: '/boilerplate/customizing-blocks/' },
+                { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
+                { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+                { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
+              ],
+            },
           ],
         },
         {
@@ -58,6 +64,10 @@ export function generateSidebar() {
             {
               label: 'Overview',
               link: '/setup/',
+            },
+            {
+              label: 'Multistore',
+              link: '/setup/configuration/multistore-setup/',
             },
             {
               label: 'Configuration',
@@ -88,7 +98,7 @@ export function generateSidebar() {
           ]
         },
         {
-          label: 'Launch preparation',
+          label: 'Go live',
           collapsed: true,
           items: [
             { label: 'Launch checklist', link: '/setup/launch/' },
@@ -98,14 +108,35 @@ export function generateSidebar() {
             { label: 'SEO metadata', link: '/setup/seo/metadata/' },
           ],
         },
+        // ---------- DROP-INS Overview ----------
+        {
+          label: 'Learn drop-ins',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/dropins/all/introduction/' },
+            { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
+            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
+            { label: 'Commerce blocks', link: '/dropins/all/commerce-blocks/' },
+            { label: 'Styling', link: '/dropins/all/styling/' },
+            { label: 'Branding', link: '/dropins/all/branding/' },
+            { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
+            { label: 'Localizing Links', link: '/dropins/all/linking/' },
+            { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
+            { label: 'Slots', link: '/dropins/all/slots/' },
+            { label: 'Layouts', link: '/dropins/all/layouts/' },
+            { label: 'Events', link: '/dropins/all/events/' },
+            { label: 'Common events', link: '/dropins/all/common-events/' },
+            { label: 'Extending', link: '/dropins/all/extending/' },
+            { label: 'Creating', link: '/dropins/all/creating/' },
+          ],
+        },
         // ---------- HOW-TOS ----------
         {
-          label: 'How-Tos',
+          label: 'Recipes (How-Tos)',
           collapsed: true,
           items: [
             { label: 'Federated search', link: '/how-tos/federated-search/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
-            { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
             {
               label: 'Cart',
               collapsed: true,
@@ -146,32 +177,10 @@ export function generateSidebar() {
             },
           ],
         },
-        // ---------- DROP-INS Overview ----------
-        {
-          label: 'Drop-ins',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Extend or create?', link: '/dropins/all/extend-or-create/' },
-            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
-            { label: 'Commerce blocks', link: '/dropins/all/commerce-blocks/' },
-            { label: 'Styling', link: '/dropins/all/styling/' },
-            { label: 'Branding', link: '/dropins/all/branding/' },
-            { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
-            { label: 'Localizing Links', link: '/dropins/all/linking/' },
-            { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
-            { label: 'Slots', link: '/dropins/all/slots/' },
-            { label: 'Layouts', link: '/dropins/all/layouts/' },
-            { label: 'Events', link: '/dropins/all/events/' },
-            { label: 'Common events', link: '/dropins/all/common-events/' },
-            { label: 'Extending', link: '/dropins/all/extending/' },
-            { label: 'Creating', link: '/dropins/all/creating/' },
-          ],
-        },
 
         // ---------- B2C DROP-INS ----------
         {
-          label: 'B2C Drop-ins',
+          label: 'B2C drop-ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/' },
