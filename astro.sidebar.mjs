@@ -24,6 +24,8 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Storefront Onboarding', link: '/get-started/' },
+            // Route content: src/content/docs/get-started/developer-journey.mdx (must be tracked in git for deploys)
+            { label: 'Developer Journey', link: '/get-started/developer-journey/' },
             { label: 'Storefront Fundamentals', link: '/get-started/architecture/' },
             { label: 'Backend Options', link: '/get-started/backends/' },
             { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
