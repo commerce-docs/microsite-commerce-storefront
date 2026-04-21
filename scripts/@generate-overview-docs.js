@@ -91,7 +91,7 @@ function generateIntroSummary(data, dropinName) {
 
     // Build a concise description from the features
     if (topFeatures.length === 0) {
-        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce storefronts.`;
+        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce Storefronts.`;
     }
 
     /**
@@ -168,17 +168,17 @@ function generateIntroSummary(data, dropinName) {
     let summary = `The ${displayName} drop-in enables `;
 
     if (featureDescriptions.length === 0) {
-        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce storefronts.`;
+        return `The ${displayName} drop-in provides UI containers, API functions, and event notifications for Adobe Commerce Storefronts.`;
     } else if (featureDescriptions.length === 1) {
-        summary += `${featureDescriptions[0]} for Adobe Commerce storefronts.`;
+        summary += `${featureDescriptions[0]} for Adobe Commerce Storefronts.`;
     } else if (featureDescriptions.length === 2) {
-        summary += `${featureDescriptions[0]} and ${featureDescriptions[1]} for Adobe Commerce storefronts.`;
+        summary += `${featureDescriptions[0]} and ${featureDescriptions[1]} for Adobe Commerce Storefronts.`;
     } else {
         // 3+ features: First sentence with top 2, second sentence with additional
         const primaryFeatures = featureDescriptions.slice(0, 2);
         const additionalFeatures = featureDescriptions.slice(2);
 
-        summary += `${primaryFeatures[0]} and ${primaryFeatures[1]} for Adobe Commerce storefronts. `;
+        summary += `${primaryFeatures[0]} and ${primaryFeatures[1]} for Adobe Commerce Storefronts. `;
 
         // Second sentence with additional capabilities (using "supports" for variety)
         if (additionalFeatures.length === 1) {

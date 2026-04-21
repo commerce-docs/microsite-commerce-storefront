@@ -326,7 +326,7 @@ After introducing "Adobe Commerce" in a section, subsequent mentions within that
 
 - ✅ "The **Adobe Commerce boilerplate** applies to building Commerce storefronts..." (second mention shortened)
 - ✅ "Adobe Commerce provides... Commerce also supports..." (subsequent mentions shortened)
-- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce storefronts..." (repetitive, should shorten second mention)
+- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce Storefronts..." (repetitive, should shorten second mention)
 
 This rule applies within the scope of a section (between H2/H3 headings) to avoid repetition and improve readability.
 
