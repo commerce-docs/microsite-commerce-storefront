@@ -813,8 +813,6 @@ export function generateSidebar() {
           label: 'B2C Commerce blocks',
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
-            { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
-            { label: 'Product Recommendations setup', link: '/merchants/blocks/product-recommendations/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -898,6 +896,8 @@ export function generateSidebar() {
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
+            { label: 'Personalization setup', link: '/merchants/content-customizations/personalization/' },
+            { label: 'Product Recommendations setup', link: '/merchants/content-customizations/product-recommendations/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
           ],
