@@ -162,7 +162,7 @@ Use this when you are starting a coordinated release branch for the team.
 
 1. Create a new branch from `release`.
 
-1. Name the branch for the release (for example, `april-release`).
+1. Name the branch for the release (for example `april-release`).
 
 1. Push that branch to GitHub so other contributors can use it.
 
@@ -190,4 +190,4 @@ The skill reads **GitHub** (the code hosting service) using the [GitHub CLI](htt
 
 1. Push your release-notes branch to GitHub.
 
-1. Open a pull request for the release notes. Set the base branch to your release integration branch (for example, `april-release`).
+1. Open a pull request for the release notes. Set the base branch to your release integration branch (for example `april-release`).

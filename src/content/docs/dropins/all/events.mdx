@@ -8,6 +8,7 @@ sidebar:
 import { Aside, Steps } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 import Diagram from '@components/Diagram.astro';
+import Link from '@components/Link.astro';
 
 Drop-in components implement an event-driven architecture that uses the `@dropins/tools/event-bus.js` module to facilitate communication between components. This event system enables drop-ins to respond to application state changes, maintain loose coupling between components, and keep their state synchronized across your storefront.
 
@@ -28,6 +29,12 @@ The system uses a publish-subscribe pattern where components can:
 </Steps>
 
 This pattern allows drop-ins to communicate without having direct dependencies on each other, making your storefront more modular and maintainable.
+
+### Multiple storefront routes
+
+<Aside type="note">
+The bus coordinates drop-ins on the same loaded document. It does not send events from one full page navigation to the next. When the shopper moves from a cart route to a checkout route, the checkout document loads a new bus instance; cart continuity comes from Commerce (server-side cart) and from your storefront wiring that rehydrates the cart on the new page. The Commerce boilerplate persists the cart id when `cart/data` fires (`persistCartDataInSession` in the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/index.js" text="global initializers module" />) and imports the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/cart.js" text="cart initializer" /> on startup. The checkout block listens on that new page's bus; see <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js" text="blocks/commerce-checkout/commerce-checkout.js" /> for `cart/initialized` and related handlers. For a shorter introduction, read [How drop-ins coordinate on a page](/get-started/fundamentals/drop-ins-on-a-page/). For synchronous reads from code, see [Using drop-ins](/dropins/all/quick-start/) (`getCartDataFromCache`).
+</Aside>
 
 <Diagram type="mermaid" code={`
 %%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%

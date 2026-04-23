@@ -82,7 +82,7 @@ export function generateRedirects(basePath) {
 
         // ========= GET STARTED REDIRECTS =========
         '/get-started/launch-checklist': `${basePath}/launch`,
-        '/get-started/requirements': `${basePath}/get-started/architecture`,
+        '/get-started/requirements': `${basePath}/get-started/fundamentals`,
         '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
         '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
@@ -103,11 +103,11 @@ export function generateRedirects(basePath) {
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
         '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
-        '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
+        '/setup/discovery/architecture': `${basePath}/get-started/fundamentals`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
         '/discovery': `${basePath}/setup`,
-        '/discovery/architecture': `${basePath}/get-started/architecture`,
+        '/discovery/architecture': `${basePath}/get-started/fundamentals`,
         '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
         '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
 
@@ -174,7 +174,9 @@ export function generateRedirects(basePath) {
         // ========= MISC REDIRECTS =========
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
-        '/references/requirements': `${basePath}/get-started/architecture`,
+        '/references/requirements': `${basePath}/get-started/fundamentals`,
+        '/get-started/architecture': `${basePath}/get-started/fundamentals`,
+        '/get-started/architecture/': `${basePath}/get-started/fundamentals`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,

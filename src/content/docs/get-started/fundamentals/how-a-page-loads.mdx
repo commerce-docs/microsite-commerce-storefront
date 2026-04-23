@@ -1,0 +1,41 @@
+---
+title: How a page loads
+description: The sequence from authoring a document to a Commerce API call when a shopper opens a page on Edge Delivery Services.
+time: ~5 minutes
+---
+
+import Diagram from '@components/Diagram.astro';
+
+Start with the time order. The [system stack](/get-started/fundamentals/commerce-services-and-backends/#how-the-pieces-connect) topic shows the same parts in a structural view. This page shows what happens from authoring to a Commerce API call when someone opens a page.
+
+In the diagram, the block decorator step is where your repo code runs: the block’s JavaScript file loads an initializer (API endpoint and UI labels), then calls `provider.render()` to mount the drop-in UI into the block’s region of the page.
+
+In Edge Delivery Services, a block decorator is the JavaScript module that runs for each block after the page loads. The framework finds each block's `div` in the HTML, loads the matching file under `blocks/{block-name}/`, and runs its default export. That is your `decorate(block)` code so the block can build layout and call into drop-in components. The sequence below reads left to right: author, Edge Delivery Services, browser, block decorator, drop-in, Commerce API.
+
+<Diagram type="mermaid" code={`
+graph LR
+    A["Author<br/><small>Creates document</small>"]
+    B["Edge Delivery Services<br/><small>Publishes page</small>"]
+    C["Browser<br/><small>Loads HTML</small>"]
+    D["Block decorator<br/><small>decorate(block) · initializer · provider.render()</small>"]
+    E["Drop-in<br/><small>Renders UI</small>"]
+    F["Commerce API<br/><small>Data</small>"]
+    A -->|"Document"| B
+    B -->|"HTML with divs"| C
+    C -->|"Decorates blocks"| D
+    D -->|"Renders"| E
+    E -->|"Fetch"| F
+    F -->|"Response"| E
+    style A fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
+    style B fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    style C fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    style D fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style E fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
+`} />
+
+Each stage matches a box in the diagram. In document-based authoring (DA.live, Google Docs, or SharePoint), you create a table in the document (for example, a Commerce Cart table) that EDS turns into a block. In the Universal Editor, you edit blocks visually on the rendered page. No tables are involved there. Edge Delivery Services turns the page into HTML (for example, `<div class="commerce-cart">`). The browser loads that HTML. The block decorator (`blocks/commerce-cart/commerce-cart.js`) runs in the browser. It imports the initializer (which configures the drop-in's API endpoint and loads UI labels), then calls `provider.render()` to mount the drop-in component into the block. The drop-in component then fetches from the Commerce API to render the UI.
+
+## What's next
+
+You followed the timeline from an authored document to a Commerce API call. The next topic shows the same relationship as a stacked picture: documents become blocks, Commerce blocks connect to your repo, and your repo wires drop-ins to data. That is where content blocks and Commerce blocks are easy to compare side by side. Read [Blocks and the repository](/get-started/fundamentals/blocks-and-repo/).
