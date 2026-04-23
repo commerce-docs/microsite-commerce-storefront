@@ -795,8 +795,9 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/quick-start/' },
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
-            { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
+            { label: 'How block tables work', link: '/merchants/quick-start/block-tables/' },
             { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
+            { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },

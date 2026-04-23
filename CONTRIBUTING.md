@@ -451,6 +451,25 @@ import Link from '@components/Link.astro';
 
 Import and use these components for enhanced documentation:
 
+#### Term Component (Glossary Tooltips)
+
+Use the `Term` component for glossary definitions instead of adding standalone `Vocabulary` sections.
+
+```jsx
+import Term from '@components/Term.astro';
+
+Use the <Term>Code Sync app</Term> to connect your repository.
+```
+
+Tagging rules:
+
+1. Tag the first meaningful mention of each glossary term on a page.
+2. On long pages, tag one additional mention only when a reader can enter at a later section.
+3. Avoid tagging every repeat of the same term in nearby content.
+4. Prefer plain prose mentions over link labels when both are available.
+5. If a term is missing from the glossary, add it in `src/data/glossary.ts` before tagging.
+6. Use a straight apostrophe (ASCII `'` U+0027) in contractions and possessives (for example, `block's`, `you'll`), not a typographic right single quotation mark (U+2019).
+
 #### LinkCard Component
 
 ```jsx

@@ -1,0 +1,345 @@
+export interface GlossaryEntry {
+  term: string;
+  definition: string;
+  aliases?: string[];
+}
+
+const glossaryEntries: GlossaryEntry[] = [
+  {
+    term: 'Boilerplate template',
+    definition: 'Pre-configured storefront with the components and services you need to get started.',
+    aliases: ['Commerce boilerplate', 'boilerplate'],
+  },
+  {
+    term: 'Code Sync app',
+    definition:
+      "Syncs your repository with the Edge Delivery code bus and purges CDN caches when you push. Installing it on a repository also configures your site's content pointer in helix configuration.",
+    aliases: ['AEM Code Sync app', 'Code Sync'],
+  },
+  {
+    term: 'Content folder',
+    definition:
+      'Folder for storefront content such as images, text, and assets. Edge Delivery Services uses it for document-based authoring, previewing, and publishing.',
+  },
+  {
+    term: 'Sidekick',
+    definition:
+      'Browser extension that helps creators edit, preview, and publish content from a content folder, and helps developers open source documents from published pages.',
+  },
+  {
+    term: 'Site Creator',
+    definition:
+      'App in Document Author (DA.live) that creates and initializes a storefront by setting up content, optional code, theme choice, and storefront configuration values.',
+    aliases: ['Site Creator tool'],
+  },
+  {
+    term: 'Drop-in components',
+    definition:
+      'NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.',
+    aliases: ['Commerce drop-in components', 'drop-ins'],
+  },
+  {
+    term: 'Commerce blocks',
+    definition:
+      'JavaScript blocks that integrate drop-in components into Edge Delivery Services pages to power storefront commerce experiences.',
+  },
+  {
+    term: 'Content blocks',
+    definition:
+      'Edge Delivery Services blocks used for non-commerce page content and layout, such as cards, columns, headers, and footers.',
+  },
+  {
+    term: 'Integration layer',
+    definition:
+      'Storefront-level files that connect drop-ins to your site, including block implementations and initialization scripts.',
+    aliases: ['Boilerplate Integration Layer', 'Commerce Integration Layer'],
+  },
+  {
+    term: 'Upstream',
+    definition:
+      'The original source repository your project forks from, used as the canonical source when reviewing and pulling updates.',
+    aliases: ['upstream boilerplate'],
+  },
+  {
+    term: 'Selective updates',
+    definition:
+      'A workflow where you review upstream changes and merge only the files or commits that are relevant to your project.',
+  },
+  {
+    term: 'Breaking changes',
+    definition:
+      'Updates that require code or configuration changes in your project before everything works correctly again.',
+  },
+  {
+    term: 'Post-install scripts',
+    definition:
+      'Scripts that run automatically after package installation to copy and prepare required Commerce integration files.',
+    aliases: ['post-install script'],
+  },
+  {
+    term: 'Initializer',
+    definition:
+      'A JavaScript module that configures a drop-in when imported, such as setting endpoints, registering dictionaries, and preparing runtime behavior.',
+  },
+  {
+    term: 'Container',
+    definition:
+      'A pre-built UI module that renders drop-in functionality and manages logic, state, and data for a feature.',
+  },
+  {
+    term: 'Provider',
+    definition:
+      'The render function exported by a drop-in package that mounts containers into a storefront block.',
+  },
+  {
+    term: 'Decorate function',
+    definition:
+      'The standard block entry point (`decorate`) where a storefront block initializes and renders drop-in containers.',
+  },
+  {
+    term: 'Slot',
+    definition:
+      'An extension point inside a drop-in where custom UI or behavior can be added, replaced, or removed.',
+    aliases: ['Slots'],
+  },
+  {
+    term: 'Component',
+    definition:
+      'A reusable UI building block. In storefront docs, this can refer to drop-in components, containers, or slot-level pieces depending on context.',
+  },
+  {
+    term: 'Placeholder files',
+    definition:
+      'JSON files that store storefront UI labels by drop-in and locale so merchants can change text without changing code.',
+    aliases: ['Placeholders file', 'placeholders files'],
+  },
+  {
+    term: 'Language objects',
+    definition:
+      'Objects such as `langDefinitions` that map translation keys to localized UI text values.',
+  },
+  {
+    term: 'Labeling',
+    definition:
+      'Customizing UI text labels for tone, branding, or clarity while staying in the same language.',
+    aliases: ['Labeling (Customizing Text)', 'UI label changes'],
+  },
+  {
+    term: 'Localizing',
+    definition:
+      'Adapting UI text and formatting for specific languages and regions, including translated labels and locale-specific conventions.',
+    aliases: ['Localizing (Translating for Different Languages)'],
+  },
+  {
+    term: 'Enrichment',
+    definition:
+      'Additional contextual content shown around commerce experiences to improve a shopper’s page experience.',
+  },
+  {
+    term: 'Enrichment blocks',
+    definition:
+      'Blocks that inject enrichment content above or below commerce blocks based on product or category conditions.',
+  },
+  {
+    term: 'Content positioning',
+    definition:
+      'The placement order of content blocks and commerce blocks on a page, including above/below relationships.',
+  },
+  {
+    term: 'A/B experiment',
+    definition:
+      'A controlled test that compares two or more page versions to measure which performs better.',
+  },
+  {
+    term: 'Variant',
+    definition:
+      'An alternative page or experience used in an experiment to compare against a control version.',
+  },
+  {
+    term: 'Control',
+    definition:
+      'The original baseline experience in an experiment used for comparison.',
+  },
+  {
+    term: 'Challenger',
+    definition:
+      'The competing variant in an experiment that is measured against the control.',
+  },
+  {
+    term: 'Experimentation Plugin',
+    definition:
+      'The optional AEM experimentation integration used to run A/B experiments, route audiences, and track outcomes.',
+  },
+  {
+    term: 'Storefront configuration',
+    definition:
+      'The JSON configuration object used by storefront code to resolve endpoints, headers, analytics, and plugin behavior.',
+  },
+  {
+    term: 'Default values',
+    definition:
+      'Starter values in a sample configuration that must be replaced with environment-specific values for your project.',
+    aliases: ['default values'],
+  },
+  {
+    term: 'getConfigValue function',
+    definition:
+      'Helper function that reads a configuration value by dot-notation path from storefront config data.',
+  },
+  {
+    term: 'getHeaders function',
+    definition:
+      'Helper function that returns a header map for a given storefront scope based on configured header entries.',
+  },
+  {
+    term: 'Extend',
+    definition:
+      'Customize existing drop-ins through supported extension points such as slots, events, styling, transformers, and configuration.',
+  },
+  {
+    term: 'Substitute',
+    definition:
+      'Replace an Adobe drop-in with a third-party implementation and own compatibility and maintenance responsibility.',
+  },
+  {
+    term: 'Create',
+    definition:
+      'Build a new drop-in from scratch when extension and substitution are not suitable for the required experience.',
+  },
+  {
+    term: 'Configuration',
+    definition:
+      'Settings used to change behavior without rewriting core implementation logic.',
+  },
+  {
+    term: 'Styling',
+    definition:
+      'Visual customization of drop-ins through CSS overrides, token changes, and layout adjustments.',
+    aliases: ['style'],
+  },
+  {
+    term: 'Events',
+    definition:
+      'Data or lifecycle signals emitted by drop-ins that custom code can listen to in order to run additional behavior.',
+  },
+  {
+    term: 'Transformers',
+    definition:
+      'Functions that modify or shape data before a drop-in displays it.',
+  },
+  {
+    term: 'SDK',
+    definition:
+      'The Drop-in SDK used to build custom drop-ins and related integration logic.',
+    aliases: ['SDK (Drop-in SDK)', 'Drop-in SDK'],
+  },
+  {
+    term: 'Third-party solution',
+    definition:
+      'An external service or component used in place of a native Adobe drop-in implementation.',
+  },
+  {
+    term: 'Design tokens',
+    definition:
+      'CSS custom properties that define reusable design values such as color, type scale, spacing, shape, and layout.',
+    aliases: ['design tokens'],
+  },
+  {
+    term: 'Library components',
+    definition:
+      'Foundational UI pieces such as buttons and inputs that are composed into larger drop-in experiences.',
+    aliases: ['library components'],
+  },
+  {
+    term: 'Adobe Commerce design system',
+    definition:
+      'The set of design tokens, base components, and conventions used to style Commerce storefront drop-ins.',
+  },
+  {
+    term: 'Brand',
+    definition:
+      'Your storefront’s visual identity, including colors, typography, spacing, and shape choices.',
+    aliases: ['brand'],
+  },
+  {
+    term: 'Targeted Block',
+    definition:
+      'A block configuration that conditionally shows content for selected customer groups, segments, or cart rule contexts.',
+  },
+  {
+    term: 'Group',
+    definition:
+      'A Commerce customer group used to segment shoppers for pricing, permissions, or targeted content.',
+  },
+  {
+    term: 'Segment',
+    definition:
+      'A rule-based customer segment used to target experiences to qualifying shopper cohorts.',
+  },
+  {
+    term: 'Cart Rule',
+    definition:
+      'A Commerce cart price rule that can be used as a condition for targeting content or promotions.',
+  },
+  {
+    term: 'Fragment path',
+    definition:
+      'An optional `TargetedBlock` setting that points to a separate content document. When set, the block loads content from that document; when omitted, the content is authored in the last merged full-width row of the `targeted-block` table.',
+    aliases: ['Fragment', 'fragment'],
+  },
+  {
+    term: 'Type of block',
+    definition:
+      'A grouping key for `TargetedBlock` entries. When multiple blocks share this value, only the first matching block of that type renders, which enables fallback-chain behavior.',
+    aliases: ['Type', 'type'],
+  },
+  {
+    term: 'Block table',
+    definition:
+      'A table in a document that begins with a block name row, followed by configuration rows. Edge Delivery uses the name row to map the table to a storefront block implementation.',
+    aliases: ['block table'],
+  },
+  {
+    term: 'Block name row',
+    definition:
+      "The first row in a block table. It usually contains a single `kebab-case` block identifier (for example, `commerce-cart` or `targeted-block`) that tells the system which block to render.",
+  },
+  {
+    term: 'Key-value row',
+    definition:
+      "A two-column table row in a block table. The first cell is a setting name (a key) and the second cell is the value, such as `true`, `10`, or a text label.",
+    aliases: ['key-value rows'],
+  },
+  {
+    term: 'Merged full-width row',
+    definition:
+      "A table row where one cell spans the full table width, so you can add rich page content in one large cell. Some blocks (like `targeted-block`) use this for inline content or layout when a separate fragment document is not used.",
+    aliases: [
+      'Merged full width row',
+      'full-width row',
+      'full width row',
+      'merged full-width',
+      'merged row',
+    ],
+  },
+];
+
+function normalizeTerm(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+const glossaryIndex = new Map<string, GlossaryEntry>();
+
+for (const entry of glossaryEntries) {
+  glossaryIndex.set(normalizeTerm(entry.term), entry);
+  for (const alias of entry.aliases ?? []) {
+    glossaryIndex.set(normalizeTerm(alias), entry);
+  }
+}
+
+export function getGlossaryEntry(term: string): GlossaryEntry | undefined {
+  return glossaryIndex.get(normalizeTerm(term));
+}
