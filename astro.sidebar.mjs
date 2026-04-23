@@ -24,23 +24,24 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Storefront Developer Guide', link: '/get-started/' },
-            {
-              label: 'Storefront Architecture',
-              collapsed: false,
-              items: [
-                { label: 'Overview', link: '/get-started/fundamentals/' },
-                { label: 'How a page loads', link: '/get-started/fundamentals/how-a-page-loads/' },
-                { label: 'Blocks and the repository', link: '/get-started/fundamentals/blocks-and-repo/' },
-                { label: 'Drop-ins at a glance', link: '/get-started/fundamentals/drop-ins-at-a-glance/' },
-                { label: 'Drop-ins and the event bus', link: '/get-started/fundamentals/drop-ins-on-a-page/' },
-                {
-                  label: 'Commerce services and backends',
-                  link: '/get-started/fundamentals/commerce-services-and-backends/',
-                },
-              ],
-            },
+            { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Backend Options', link: '/get-started/backends/' },
+            { label: 'Storefront Architecture', link: '/get-started/fundamentals/' },
             { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
+            { label: 'Run it locally', link: '/boilerplate/getting-started/' },
+          ],
+        },
+        {
+          label: 'Storefront Architecture',
+          collapsed: true,
+          items: [
+            { label: 'How a page loads', link: '/get-started/fundamentals/how-a-page-loads/' },
+            { label: 'Blocks and the repository', link: '/get-started/fundamentals/blocks-and-repo/' },
+            { label: 'Drop-ins at a glance', link: '/get-started/fundamentals/drop-ins-at-a-glance/' },
+            {
+              label: 'Commerce services and backends',
+              link: '/get-started/fundamentals/commerce-services-and-backends/',
+            },
           ],
         },
         {
@@ -57,41 +58,6 @@ export function generateSidebar() {
             { label: 'AI Agent Skills', link: '/boilerplate/ai-agent-skills/' },
             { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance Best Practices', link: '/get-started/performance/' },
-          ],
-        },
-        {
-          label: 'Licensing',
-          collapsed: true,
-          autogenerate: { directory: '/licensing/' },
-        },
-        {
-          label: 'Storefront Setup',
-          collapsed: true,
-          items: [
-            {
-              label: 'Overview',
-              link: '/setup/',
-            },
-            {
-              label: 'Multistore',
-              link: '/setup/configuration/multistore-setup/',
-            },
-            {
-              label: 'Configuration',
-              collapsed: true,
-              items: [
-                { label: 'Overview', link: '/setup/configuration/' },
-                { label: 'Storefront Configuration', link: '/setup/configuration/commerce-configuration/' },
-                { label: 'Price Book ID Setup', link: '/setup/configuration/price-book-setup/' },
-                { label: 'AEM Assets Integration', link: '/setup/configuration/aem-assets-configuration/' },
-                { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
-                { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
-                { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
-                { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-                { label: 'Gated Content', link: '/setup/configuration/gated-content/' },
-                { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
-              ],
-            },
             {
               label: 'Compatibility Package',
               collapsed: true,
@@ -101,26 +67,16 @@ export function generateSidebar() {
                 { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
               ],
-            }
-          ]
-        },
-        {
-          label: 'Go Live',
-          collapsed: true,
-          items: [
-            { label: 'Launch Checklist', link: '/setup/launch/' },
-            { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
-            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
-            { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+            },
           ],
         },
         // ---------- DROP-INS Overview ----------
         {
-          label: 'Learn Drop-Ins',
+          label: 'Working with Drop-Ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
+            { label: 'Drop-in coordination', link: '/get-started/fundamentals/drop-ins-on-a-page/' },
             { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
@@ -132,14 +88,13 @@ export function generateSidebar() {
             { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Layouts', link: '/dropins/all/layouts/' },
             { label: 'Events', link: '/dropins/all/events/' },
-            { label: 'Common Events', link: '/dropins/all/common-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
         // ---------- HOW-TOS ----------
         {
-          label: 'Recipes (How-Tos)',
+          label: 'How-To Guides',
           collapsed: true,
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
@@ -184,6 +139,60 @@ export function generateSidebar() {
             },
           ],
         },
+        {
+          label: 'Storefront Configuration',
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              link: '/setup/',
+            },
+            {
+              label: 'Multistore',
+              link: '/setup/configuration/multistore-setup/',
+            },
+            {
+              label: 'Configuration',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/' },
+                { label: 'Storefront Configuration', link: '/setup/configuration/commerce-configuration/' },
+                { label: 'Price Book ID Setup', link: '/setup/configuration/price-book-setup/' },
+                { label: 'AEM Assets Integration', link: '/setup/configuration/aem-assets-configuration/' },
+                { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
+                { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
+                { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
+                { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+                { label: 'Gated Content', link: '/setup/configuration/gated-content/' },
+                { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
+              ],
+            },
+          ]
+        },
+        {
+          label: 'Go Live',
+          collapsed: true,
+          items: [
+            { label: 'Launch Checklist', link: '/setup/launch/' },
+            { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+            { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
+            { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+          ],
+        },
+        {
+          label: 'Licensing',
+          collapsed: true,
+          autogenerate: { directory: '/licensing/' },
+        },
+        {
+          label: 'Troubleshooting',
+          collapsed: true,
+          autogenerate: { directory: '/troubleshooting/' },
+        },
+
+        // ---------- REFERENCE ----------
+        { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
 
         // ---------- B2C DROP-INS ----------
         {
@@ -690,7 +699,7 @@ export function generateSidebar() {
 
         // ---------- DROP-INS SDK ----------
         {
-          label: 'Drop-Ins SDK',
+          label: 'Drop-In SDK',
           collapsed: true,
           items: [
             { label: 'SDK Introduction', link: '/sdk/' },
@@ -787,11 +796,6 @@ export function generateSidebar() {
         },
 
         // ---------- OTHER ----------
-        {
-          label: 'Troubleshooting',
-          collapsed: true,
-          autogenerate: { directory: '/troubleshooting/' },
-        },
         {
           label: 'Resources',
           collapsed: true,
