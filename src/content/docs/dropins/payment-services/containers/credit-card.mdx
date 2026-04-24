@@ -1,52 +1,51 @@
 ---
-title: CreditCard Container
-description: Learn about the CreditCard container in the Payment Services drop-in.
-sidebar:
-  label: CreditCard
+title: CreditCard container
+description: Use the CreditCard container to render a credit card form during checkout.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
 
-See the `CardType` type and related payment types in the `@adobe-commerce/payment-services-sdk/payment` module.
+The `CreditCard` container allows a shopper to enter credit card details during the checkout process. You can configure it to manage and display the credit card fields.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
-
-## Configuration
+## CreditCard configurations
 
 The `CreditCard` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0, 1, 2]}>
 
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `getCartId` | `function` | Yes | Returns a promise that resolves to the shopper's cart ID. |
-| `creditCardFormRef` | `RefObject<CreditCardFormRef>` | Yes | References the credit card form. Pass \{ current: null \} initially. After rendering, the container sets `current` to a \{ validate: () =&gt; boolean; submit: () =&gt; Promise&lt;void&gt; \} object for programmatic validation and submission. |
-| `onSuccess` | `function` | Yes | Executes when the payment flow completes successfully. |
-| `onError` | `function` | Yes | Executes when the payment flow aborts due to an error. Receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and translatable through the "PaymentServices.CreditCard.errors" language definitions. **Note:** When omitted, the promise rejects properly so the calling code can catch errors directly. |
+    | Option | Type | Req? | Description |
+    |--------|------|------|-------------|
+    | `getCartId` | function | Yes | Should return a promise that resolves to the shopper's cart ID. |
+    | `creditCardFormRef` | object | Yes | Credit card form reference. Initially, `{ current: null }` should be passed. Once rendered, the credit card container will set the `current` property to an `{ validate: () => boolean; submit: () => Promise<void> }` object, which parent containers can use to (programmatically) validate and submit the credit card form. Any error that happens during the payment flow will not only propagate to `onError` but will also cause the promise returned by `submit()` to be rejected.  |
+    | `onSuccess` | function | No | Called when the payment flow finishes successfully. The function receives an `{ cartId: string }` object as an argument. |
+    | `onError` | function | No | Called when the payment flow was aborted due to an error. The function receives an object with two properties: `{name: string, message: string}`, containing the localized error name and message. Both properties are user-facing and can be translated using the `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). |
 
 </TableWrapper>
 
-## Slots
+## Example
 
-This container exposes no customizable slots.
-
-## Usage
-
-The following example demonstrates how to use the `CreditCard` container:
+The following example shows how to render and submit a credit card form.
 
 ```js
-import { render as provider } from '@dropins/storefront-payment-services/render.js';
-import { CreditCard } from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
 
-await provider.render(CreditCard, {
-  getCartId: getCartId,
-  creditCardFormRef: {},
-  onSuccess: onSuccess,
-})(block);
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
+
+PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
+
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
+}
 ```
-
-
-
