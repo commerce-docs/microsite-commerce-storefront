@@ -1,5 +1,20 @@
 ---
+/**
+ * Renders a glossary term with a short definition tooltip. Definitions are plain
+ * text from getGlossaryEntry; Astro escapes them in output. Ids are stable for a
+ * given build: a per-page counter replaces Math.random() so re-runs and snapshots
+ * are reproducible, while the counter still keeps ids unique (including the same
+ * term twice on one page).
+ */
 import { getGlossaryEntry } from '../data/glossary';
+
+const termIdCounterByPath = new Map<string, number>();
+
+function nextTermTooltipSuffix(pathname: string): string {
+  const n = (termIdCounterByPath.get(pathname) ?? 0) + 1;
+  termIdCounterByPath.set(pathname, n);
+  return String(n);
+}
 
 interface Props {
   term?: string;
@@ -10,7 +25,15 @@ const slotContent = await Astro.slots.render('default');
 const fallbackTerm = slotContent.replace(/<[^>]+>/g, '').trim();
 const lookupTerm = (term ?? fallbackTerm).trim();
 const glossaryEntry = lookupTerm ? getGlossaryEntry(lookupTerm) : undefined;
-const tooltipId = `term-${lookupTerm.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Math.random().toString(36).slice(2, 8)}`;
+const pagePath = Astro.url.pathname;
+let tooltipId = '';
+if (glossaryEntry) {
+  const termSlug = lookupTerm
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'term';
+  tooltipId = `term-${termSlug}-${nextTermTooltipSuffix(pagePath)}`;
+}
 
 if (import.meta.env.DEV && lookupTerm && !glossaryEntry) {
   console.warn(`[Term] No glossary entry found for "${lookupTerm}".`);
