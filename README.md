@@ -9,6 +9,7 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 - [How to add a page](#how-to-add-a-page)
 - [How to add images](#how-to-add-images)
 - [How to add a diagram](#how-to-add-a-diagram)
+- [Glossary terms (Term component)](#glossary-terms-term-component)
 - [How to link between docs](#how-to-link-between-docs)
 - [How to add a PR](#how-to-add-a-pr)
 - [How to prepare for a new release](#how-to-prepare-for-a-new-release)
@@ -111,6 +112,31 @@ Example pages:
 
 - Images: `src/content/docs/dropins/all/slots.mdx`
 - Mermaid: `src/content/docs/setup/configuration/aem-prerender.mdx`
+
+## Glossary terms (Term component)
+
+Use the **Term** component so readers get a short definition in a tooltip on first meaningful mention, instead of adding separate vocabulary sections on the page.
+
+Add this to your `.mdx` file:
+
+```mdx
+import Term from '@components/Term.astro';
+
+Use the <Term>Code Sync app</Term> to connect your repository.
+```
+
+Definitions live in `src/data/glossary.ts`. If you introduce a new term, add it there before wrapping it in `<Term>`. The text inside `<Term>…</Term>` must match that entry’s `term` value or one of its `aliases` (the component normalizes the string for lookup).
+
+**Tagging rules**
+
+1. Tag the first meaningful mention of each glossary term on a page.
+2. On long pages, tag one additional mention only when a reader can enter at a later section.
+3. Do not use `<Term>` again for the same glossary entry in later paragraphs, asides, steps, or related links on that page. Use plain wording so the first tagged mention stays the single tooltip anchor (unless the previous item applies for a late-entrant section).
+4. Prefer plain prose mentions over link labels when both are available.
+5. Add missing terms in `src/data/glossary.ts` before tagging.
+6. Use a straight apostrophe (ASCII `'` U+0027) in contractions and possessives (for example, `block's`, `you'll`), not a typographic right single quotation mark (U+2019).
+
+Editor and automation context for the same rules: `.cursor/rules/term-component-glossary.mdc`.
 
 ## How to link between docs
 
