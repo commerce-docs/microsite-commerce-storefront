@@ -21,6 +21,10 @@ The **Quick Order** drop-in uses the [event bus](/sdk/reference/events) to coord
 | [`quick-order/loading`](#quick-orderloading-emits-and-listens) | Emits and listens | Loading state changed. Payload: `boolean`. Disables inputs and shows loading indicators while processing. |
 | [`quick-order/add-to-cart`](#quick-orderadd-to-cart-emits) | Emits | Request to add items to cart when no custom `handleAddToCart` is used. Payload: array of cart item values. Default cart handler processes items. |
 | [`quick-order/add-to-cart-error`](#quick-orderadd-to-cart-error-emits) | Emits | Add-to-cart operation failed. Payload: `{ message: string }`. Shows error notification. |
+| [`b2b-quick-order/error`](#b2b-quick-ordererror-emits) | Emits | Emitted when a network error occurs during any Quick Order API call. |
+| [`quick-order/grid-ordering-variants`](#quick-ordergrid-ordering-variants-emits-and-listens) | Emits and listens | Provides variant data to `QuickOrderVariantsGrid`. Emitted externally or when `initialVariants` is set. |
+| [`quick-order/grid-ordering-selected-variants`](#quick-ordergrid-ordering-selected-variants-emits) | Emits | Notifies when selected variants or quantities change in the `QuickOrderVariantsGrid`. Debounced. |
+| [`quick-order/grid-ordering-reset-selected-variants`](#quick-ordergrid-ordering-reset-selected-variants-listens) | Listens | Resets the current grid selection (clears all quantities). |
 | [`cart/product/added`](#cartproductadded-listens) | Listens | Products added to cart successfully. Payload: `any[]`. Quick Order shows success notification. |
 
 </TableWrapper>
@@ -115,6 +119,98 @@ The Cart drop-in emits this when products are added to the cart. Quick Order lis
 
 ```typescript
 any[]
+```
+
+### `b2b-quick-order/error` (emits)
+
+Emitted when a network error occurs during any Quick Order API call. Does not fire for intentional user cancellations (`AbortError`).
+
+#### Event payload
+
+```typescript
+{
+  source: 'auth';
+  type: 'network';
+  error: Error;
+}
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('b2b-quick-order/error', ({ source, type, error }) => {
+  console.error('Quick Order network error:', error.message);
+});
+```
+
+### `quick-order/grid-ordering-variants` (emits and listens)
+
+Provides variant data to `QuickOrderVariantsGrid`. Emitted externally by the integration layer (for example, the Product Details block) after fetching product variants. Also emitted by `QuickOrderVariantsGrid` itself when `initialVariants` is provided as a prop. Not required if `initialVariants` is passed directly.
+
+#### Event payload
+
+```typescript
+ProductVariant[]  // Array of product variants
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Emit after fetching variants from the PDP
+events.emit('quick-order/grid-ordering-variants', productVariants);
+```
+
+### `quick-order/grid-ordering-selected-variants` (emits)
+
+Emitted by `QuickOrderVariantsGrid` when the user changes quantities for any variant. Payload contains only variants with `quantity > 0`. Emissions are debounced. Captured by the PDP integration layer to execute bulk add-to-cart.
+
+#### Event payload
+
+```typescript
+Array<{
+  sku: string;
+  name: string;
+  inStock: boolean;
+  attributes: Record<string, { label: string; value: string }>;
+  price: number;
+  quantity: number;
+  subtotal: number;
+  image: string;
+}>
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('quick-order/grid-ordering-selected-variants', (selectedVariants) => {
+  console.log('Selected variants:', selectedVariants);
+  // selectedVariants contains only variants with quantity > 0
+});
+```
+
+### `quick-order/grid-ordering-reset-selected-variants` (listens)
+
+Listens for this event to reset all quantities in the `QuickOrderVariantsGrid` to zero. Typically emitted by the integration layer after a successful add-to-cart operation.
+
+#### Event payload
+
+```typescript
+void
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Reset the grid after successful add-to-cart
+events.emit('quick-order/grid-ordering-reset-selected-variants');
 ```
 
 ## PDP integration events (internal)
