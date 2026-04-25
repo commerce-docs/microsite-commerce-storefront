@@ -457,7 +457,7 @@ import Link from '@components/Link.astro';
 
 ### Available Components
 
-Import and use these components for enhanced documentation:
+Import and use these components for enhanced documentation. For the **Term** glossary tooltip (and when to add entries in `src/data/glossary.ts`), see [Glossary terms (Term component)](README.md#glossary-terms-term-component) in this repository’s main readme.
 
 #### LinkCard Component
 
