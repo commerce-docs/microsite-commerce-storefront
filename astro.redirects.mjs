@@ -82,7 +82,7 @@ export function generateRedirects(basePath) {
 
         // ========= GET STARTED REDIRECTS =========
         '/get-started/launch-checklist': `${basePath}/launch`,
-        '/get-started/requirements': `${basePath}/get-started/fundamentals`,
+        '/get-started/requirements': `${basePath}/get-started/architecture`,
         '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
         '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
@@ -103,11 +103,11 @@ export function generateRedirects(basePath) {
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
         '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
-        '/setup/discovery/architecture': `${basePath}/get-started/fundamentals`,
+        '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
         '/discovery': `${basePath}/setup`,
-        '/discovery/architecture': `${basePath}/get-started/fundamentals`,
+        '/discovery/architecture': `${basePath}/get-started/architecture`,
         '/discovery/data-export-validation': `${basePath}/setup/discovery/data-export-validation`,
         '/discovery/luma-bridge': `${basePath}/setup/discovery/luma-bridge`,
 
@@ -161,6 +161,9 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/experiments': `${basePath}/merchants/content-customizations/experiments`,
         '/merchants/get-started/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
+        // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
+        '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
+        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -174,11 +177,12 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
 
         // ========= MISC REDIRECTS =========
+        // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
+        '/create': `${basePath}/get-started/create-storefront`,
+        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
-        '/references/requirements': `${basePath}/get-started/fundamentals`,
-        '/get-started/architecture': `${basePath}/get-started/fundamentals`,
-        '/get-started/architecture/': `${basePath}/get-started/fundamentals`,
+        '/references/requirements': `${basePath}/get-started/architecture`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,

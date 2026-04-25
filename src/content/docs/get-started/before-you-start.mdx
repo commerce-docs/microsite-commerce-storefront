@@ -1,14 +1,12 @@
 ---
 title: Before you start
-description: Tools, accounts, and backend access you need before creating an Adobe Commerce storefront on Edge Delivery Services. Check each item before you open Site Creator.
-time: ~5 minutes
+description: Accounts, Commerce access, GitHub, DA.live, local tooling, the config generator in DA.live, external documentation hubs, and where to continue inside this collection before Site Creator or the manual boilerplate path.
 ---
 
-import Aside from '@components/Aside.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-By the end of this page you will know exactly what to have ready before you create a storefront. If anything here is unfamiliar, follow the link in that row before continuing.
+By the end of this page you will know what to have ready before you create a storefront, whether you use Site Creator or the manual GitHub path. If you open many linked topics as you read, plan extra time in one sitting. If anything here is unfamiliar, follow the link in that row before continuing.
 
 ## What you need
 
@@ -16,27 +14,59 @@ By the end of this page you will know exactly what to have ready before you crea
 
 | What | Why you need it | How to get it |
 |------|-----------------|---------------|
-| **Adobe Commerce backend** | Every drop-in component (cart, checkout, account, and so on) connects to an Adobe Commerce backend. You need to know which type you have. | See [Backend Options](/get-started/backends/) — pick Commerce PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. |
-| **GitHub account** | Site Creator creates or links a GitHub repository for your storefront code. | <Link href="https://github.com/signup" text="Sign up for GitHub" /> (personal or enterprise). |
-| **Document Author (DA.live) access** | Site Creator runs inside DA.live and stores your starter content there. | <Link href="https://da.live" text="Open DA.live" /> and sign in with your Adobe ID. If your organization uses enterprise access, ask your admin for an invitation. |
-| **Node.js 20.13.1 or later** | Running the site locally and installing drop-in packages both require Node.js. | <Link href="https://nodejs.org/en/download" text="Download Node.js" />. Run `node -v` in a terminal to confirm the version. |
-| **pnpm 9.x or later** | The Commerce boilerplate uses pnpm to install packages. | Run `npm install -g pnpm` after you install Node.js, or see the <Link href="https://pnpm.io/installation" text="pnpm installation guide" />. |
-| **Git** | Cloning and pushing to your repository requires Git. | <Link href="https://git-scm.com/downloads" text="Download Git" />, or run `git --version` to check if it is already installed. |
+| Adobe ID | Document Author (DA.live) and other Adobe experiences in this workflow expect you to sign in with an Adobe ID. | Open <Link href="https://www.adobe.com/" text="Adobe.com" />, then use the account menu in the header to sign in or create an Adobe ID. |
+| GitHub account | Site Creator creates or links a GitHub repository for your storefront code. | <Link href="https://github.com/signup" text="Sign up for GitHub" /> (personal or enterprise). |
+| Document Author (DA.live) access | Site Creator runs inside DA.live and stores your starter content there. | <Link href="https://da.live" text="Open DA.live" /> and sign in with the Adobe ID from the first row. For workspace and authoring concepts, see <Link href="https://docs.da.live/" text="Document Authoring documentation" />. If your organization uses enterprise access, ask your admin for an invitation. |
+| Adobe Commerce backend | Every drop-in component (cart, checkout, account, and so on) connects to an Adobe Commerce backend. You need to know which type you have. | See [Backend options](/get-started/backends/) to pick Commerce PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer. |
+| Commerce Admin access and API values | Site Creator reads from your Commerce APIs where it can. After the repo exists, [Storefront configuration](/setup/configuration/commerce-configuration/) needs base URLs, GraphQL endpoints, and credentials your team uses for headless storefronts. Exact fields depend on your backend. | Work with your Commerce administrator or solution partner to gather values before you get stuck in the tool. [Backend options](/get-started/backends/) explains services and constraints per platform. When you have API access and a repository, the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> in DA.live can help you create your storefront configuration from your inputs. Use [Storefront configuration](/setup/configuration/commerce-configuration/) for what each field means. |
+| Node.js 22 long-term support (LTS) | You need Node.js before you run the Commerce boilerplate locally (`npm install`, `npm start`, drop-in updates). The `hlxsites/aem-boilerplate-commerce` template does not declare `engines` in `package.json` or include a `.nvmrc` on `main`, so it does not enforce a patch. Adobe lists Node.js 22.13.1 LTS in the prerequisites for <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/" text="Create a storefront on Experience League" />. Use that release or another Node.js 22.x LTS your team agrees on. | <Link href="https://nodejs.org/en/download" text="Download Node.js" />. Run `node -v` in a terminal. |
+| npm | The Commerce boilerplate on GitHub uses npm for installs and scripts (`npm install`, `npm start`, `npm run postinstall`). npm ships with Node.js. | Run `npm -v` in a terminal after you install Node.js. |
+| AEM CLI | The boilerplate `start` script runs `aem up`, so local preview uses the AEM command line client. Experience League lists the CLI with Node in the storefront prerequisites for <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/get-started/create-storefront/" text="Create a storefront on Experience League" />. | After Node.js and npm are installed, run `npm install -g @adobe/aem-cli`. See <Link href="https://www.aem.live/developer/cli-reference" text="AEM CLI documentation" />. Run `aem --version` to confirm. |
+| Git | Cloning and pushing to your repository requires Git. | <Link href="https://git-scm.com/downloads" text="Download Git" />, or run `git --version` to check if it is already installed. |
 
 </TableWrapper>
 
-<Aside type="note" title="Commerce PaaS only">
-If your backend is Commerce PaaS, complete the [PaaS: required packages and services](/get-started/backends/#paas-required-packages-and-services) checklist before you open Site Creator. The Storefront Compatibility package and Commerce Services (Catalog Service, Live Search, and so on) must be installed on your Commerce instance first, or drop-ins will not work. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer handle these requirements automatically.
-</Aside>
+## Extra steps for some teams
+
+The table above is the common baseline. The sections below only matter when that situation applies to you.
+
+If your backend is Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, you can skip the Commerce PaaS section below. Adobe manages most storefront service requirements for those backends.
+
+### Commerce PaaS backends
+
+If your backend is Commerce PaaS, you can still use Site Creator or the manual GitHub path to create the repository and Document Author starter content. Those tools are not limited to other backend types. What differs is your Commerce instance: complete the [PaaS: required packages and services](/get-started/backends/#paas-required-packages-and-services) checklist there so storefront APIs and drop-ins match what the boilerplate expects. Until that work finishes, Commerce-backed previews and steps that read from Commerce APIs can fail or stay incomplete. That includes the Storefront Compatibility package, Services Connector, Catalog Service, and any other storefront services your rollout needs (for example, Live Search, Product Recommendations, or Data Connection). Install and configure them on your Commerce instance first, or drop-ins will not work. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer handle these requirements automatically.
+
+Drop-in components require an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. Read [Licensing requirements](/licensing/) for who can use drop-ins and how access works. If your backend type is Commerce PaaS as defined on [Backend options](/get-started/backends/), confirm your situation against both topics before you invest in drop-in work.
+
+### Site Creator, manual GitHub setup, and enterprise policies
+
+Site Creator walks you through the repository and starter content in the browser. If you skip it and start from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate template" /> on GitHub, install the <Link href="https://github.com/apps/aem-code-sync" text="AEM Code Sync app" /> on that repository. Code Sync redeploys your storefront when you push to `main` and connects Edge Delivery Services to your repo. Follow [Manual setup without Site Creator](/get-started/create-storefront/#manual-setup-without-site-creator) for the full GitHub and Code Sync sequence.
+
+Some organizations block repository creation or GitHub App installs until an administrator approves them. If you use the manual path, plan time for that approval, or use Site Creator when your organization allows it.
+
+### Sidekick after the site is live
+
+When you provision a new storefront with Site Creator, Edge Delivery Services includes automated Sidekick configuration in site config for that site. You do not add Sidekick project wiring by hand on the Site Creator path. That is different from the Sidekick browser extension: each author still installs the extension from the Chrome Web Store (or follows the Edge steps in <Link href="https://www.aem.live/docs/sidekick" text="Sidekick documentation" /> on AEM Docs) before they can use the toolbar to preview, publish, or open source documents from a page. You do not need the extension before you open Site Creator. For a walkthrough that matches this collection, see the optional Sidekick step in [Create a storefront](/get-started/create-storefront/#optional-sidekick-content-editing).
 
 ## What you do not need right now
 
-You do not need a code editor, a cloned repository, or a local server to create a storefront. Site Creator and DA.live run entirely in the browser. You will set those up in [Run it locally](/boilerplate/getting-started/) after your site exists.
+You do not need a code editor, a cloned repository, or a local server to create a storefront. Site Creator and DA.live run entirely in the browser. You do not need Node.js, npm, the AEM CLI, or local Git workflows while you only work in Site Creator and DA.live in the browser. Install and use those tools when you clone the repository and run the boilerplate on your machine. Follow [Create a storefront](/get-started/create-storefront/) for the full sequence (including the <Link href="https://www.aem.live/developer/cli-reference" text="AEM CLI" /> for local preview). Then use [Run it locally](/boilerplate/getting-started/) for day-to-day commands after your site exists.
+
+## Documentation hubs
+
+These links open related documentation sites outside this storefront collection.
+
+- Edge Delivery Services (blocks, CDN, redirects, authoring concepts): <Link href="https://www.aem.live/docs/" text="AEM documentation" />.
+- Document Authoring (DA.live workspace, tools, admin API): <Link href="https://docs.da.live/" text="Document Authoring documentation" />.
+- Adobe Commerce merchant documentation (Admin configuration, catalog, B2B, upgrades): <Link href="https://experienceleague.adobe.com/en/docs/commerce" text="Commerce on Experience League" />.
+- Adobe Commerce developer documentation (APIs, App Builder, extensibility hub): <Link href="https://developer.adobe.com/commerce/docs/" text="Commerce developer documentation on developer.adobe.com" />.
+
+For drop-ins, the storefront SDK, releases, and the rest of this Adobe Commerce Storefront documentation, you are already in this collection. Continue from [Get started](/get-started/) or open a topic from the sidebar.
 
 ## What's next
 
 When you have the items above in place, confirm your backend type and then create your storefront.
 
-1. [Backend Options](/get-started/backends/) — confirm which Commerce backend you have and complete any prerequisites for that type.
-1. [Storefront Architecture](/get-started/fundamentals/) — optional 25-minute read through how pages load, blocks, drop-ins, and the backend stack connect. Skip it if you prefer to build first and read later.
-1. [Create a Storefront](/get-started/create-storefront/) — use Site Creator in DA.live to provision your repository and starter content.
+1. [Backend options](/get-started/backends/) — confirm which Commerce backend you have and complete any prerequisites for that type.
+1. [Storefront Architecture](/get-started/architecture/) — optional 25-minute read through how pages load, blocks, drop-ins, and the backend stack connect. Skip it if you prefer to build first and read later.
+1. [Create a storefront](/get-started/create-storefront/) — use Site Creator in DA.live to provision your repository and starter content.

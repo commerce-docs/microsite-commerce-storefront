@@ -370,9 +370,17 @@ prerequisites: # List of prerequisites
   css: false
   js: true
   commerce: true
-time: '15 minutes' # Estimated reading/completion time
+# time: optional — see note below
 ---
 ```
+
+### `time` frontmatter (optional)
+
+Starlight renders `time` next to the page title (`PageTitle.astro`). Some readers use it to plan; others skip a page when the value looks long.
+
+- Treat `time` as optional. Prefer it only when a short, credible estimate helps (for example a true quick start under about fifteen minutes).
+- For long tutorials or dense guides, omit `time` so the title does not advertise a large number that can discourage reading.
+- If you use `time`, use a string such as `~10 minutes` for consistency with existing topics.
 
 ## Markdown & Components
 
