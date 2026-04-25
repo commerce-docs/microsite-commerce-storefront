@@ -25,8 +25,8 @@ export function generateSidebar() {
           items: [
             { label: 'Storefront Developer Guide', link: '/get-started/' },
             { label: 'Before you start', link: '/get-started/before-you-start/' },
-            { label: 'Backend Options', link: '/get-started/backends/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
+            { label: 'Backend Options', link: '/get-started/backends/' },
             { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
             { label: 'Run it locally', link: '/boilerplate/getting-started/' },
           ],
@@ -38,6 +38,7 @@ export function generateSidebar() {
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
             { label: 'Blocks and the repository', link: '/get-started/architecture/blocks-and-repo/' },
             { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
+            { label: 'Drop-in coordination', link: '/get-started/architecture/drop-ins-on-a-page/' },
             {
               label: 'Commerce services and backends',
               link: '/get-started/architecture/commerce-services-and-backends/',

@@ -22,13 +22,13 @@ If you still run Luma while you move content and marketing to Edge Delivery, use
 
 The diagram below adds the pieces you implement and operate: Commerce blocks and drop-in components, the Adobe Commerce boilerplate, your backend, and shared Commerce Services.
 
-Your storefront uses GraphQLto read and update Commerce data.
+Your storefront uses GraphQL to read and update Commerce data.
 
 The Commerce Services area in the diagram brings together Catalog Service, Live Search, Product Recommendations, and core GraphQL. Core GraphQL stays on your Commerce instance for carts, checkout, accounts, and other work the hosted catalog services are not built to take over.
 
 The diagram shows two Adobe-managed backends. Adobe Commerce as a Cloud Service is the full Commerce platform as SaaS. Adobe Commerce Optimizer is a SaaS catalog and search layer. You can use Optimizer on its own, or add it on Commerce PaaS so product reads can use Optimizer while cart and checkout stay on the Commerce deployment you already run.
 
-Your real project might be Commerce PaaS instead, which is mostly about what you install on your own Commerce instance. Use [Backend options](/get-started/backends/) to compare all three paths and to see prerequisites. In the diagram, each backend node still connects to the same Commerce Services group.
+The diagram shows all three supported backends. Commerce PaaS is an existing Adobe Commerce deployment where you manage installation yourself. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer are fully managed by Adobe. All three backends connect to the same Commerce Services group. Use [Backend options](/get-started/backends/) after this section to compare the paths and confirm your prerequisites.
 
 <Diagram type="mermaid" code={`
 graph TB
@@ -42,8 +42,9 @@ graph TB
     B2CGroup --> Boilerplate["<b>Commerce boilerplate</b><br/>Storefront configuration + API clients"]
     B2BGroup --> Boilerplate
     Boilerplate --> BackendChoice{Backend}
-    BackendChoice --> CloudService["<b>Adobe Commerce as a Cloud Service</b>"]
-    BackendChoice --> Optimizer["<b>Adobe Commerce Optimizer</b>"]
+    BackendChoice --> CloudService["<b>Adobe Commerce as a Cloud Service</b><br/>Fully managed"]
+    BackendChoice --> Optimizer["<b>Adobe Commerce Optimizer</b><br/>Fully managed SaaS"]
+    BackendChoice --> PaaS["<b>Commerce PaaS</b><br/>Your Adobe Commerce instance"]
     subgraph Services["Commerce Services"]
         direction TB
         CS["<b>Catalog Service</b>"]
@@ -53,19 +54,22 @@ graph TB
     end
     CloudService -.-> Services
     Optimizer -.-> Services
+    PaaS -.-> Services
     style Services fill:#FFF9C4,stroke:#827717,stroke-width:2px
     classDef storefront fill:#e8f5e9,stroke:#4caf50
     classDef cloudService fill:#f3e5f5,stroke:#9c27b0
     classDef optimizer fill:#fff3e0,stroke:#ff9800
+    classDef paas fill:#fce4ec,stroke:#e91e63
     classDef commerceSvcBlock fill:#EDE7F6,stroke:#7E57C2
     class EDS,AEMBlocks,CommerceBlocks,Boilerplate storefront
     class CloudService cloudService
     class Optimizer optimizer
+    class PaaS paas
     class CS,LS,PR,GraphQL commerceSvcBlock
-`} caption="Commerce blocks load drop-ins through the boilerplate, which connects to Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer and shared Commerce Services. Optional Data Connection for self-managed Commerce is shown later on this page. See [Backend options](/get-started/backends/) for prerequisites." />
+`} caption="Commerce blocks load drop-ins through the boilerplate, which connects to your backend — Commerce PaaS, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer — and shared Commerce Services. See [Backend options](/get-started/backends/) for prerequisites and differences between backend types." />
 
-<Aside type="note" title="API Mesh">
-<Link href="https://developer.adobe.com/graphql-mesh-gateway/" text="API Mesh for Adobe Developer App Builder" /> is an option when you want several backends behind one GraphQL address. It can combine data from more than one source so the storefront calls a single GraphQL endpoint.
+<Aside type="note" title="API Mesh (advanced)">
+<Link href="https://developer.adobe.com/graphql-mesh-gateway/" text="API Mesh for Adobe Developer App Builder" /> is an option when your project needs to combine multiple backend sources behind a single GraphQL endpoint. Most new storefronts do not need it — you can add it later if the requirement arises.
 </Aside>
 
 ## Commerce Services and integrations
