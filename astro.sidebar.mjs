@@ -77,7 +77,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Drop-in coordination', link: '/get-started/architecture/drop-ins-on-a-page/' },
             { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
