@@ -16,7 +16,7 @@ Displays the contents of a specific requisition list, including items, quantitie
 </Diagram>
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.3.0</strong>
 </div>
 
 ## Configuration
@@ -35,6 +35,8 @@ The `RequisitionListView` container provides the following configuration options
 | `fallbackRoute` | `string` | No | Sets the fallback URL to redirect when requisition lists are not enabled or unavailable. Defaults to '/customer/account'. Use to provide graceful degradation when B2B features are disabled. |
 | `getProductData` | `(skus: string[]) => Promise<Product[] \| null>` | Yes | Fetches products by SKU from the catalog service. Takes an array of SKUs and returns an array of products with all their data. |
 | `enrichConfigurableProducts` | `(items: Item[]) => Promise<Item[]>` | Yes | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
+| `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. Passed through to the embedded `RequisitionListHeader` to exclude the current user from the share-by-email recipient list. |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Receives the relative share URL and returns the final URL to display in the share modal's copy-link field. Passed through to the embedded `RequisitionListHeader`. Use to produce an absolute URL. Example: `(relativeUrl) => window.location.origin + relativeUrl`. |
 
 </TableWrapper>
 
@@ -158,6 +160,8 @@ await provider.render(RequisitionListView, {
   routeRequisitionListGrid: () => '/requisition-lists',
   getProductData,
   enrichConfigurableProducts,
+  currentCustomerEmail: 'current.user@example.com',
+  routeSharedRequisitionList: (relativeUrl) => window.location.origin + relativeUrl,
 })(block);
 ```
 
@@ -169,6 +173,7 @@ await provider.render(RequisitionListView, {
 - Add items to cart (individual or batch)
 - Rename the requisition list
 - Delete the entire requisition list
+- Share the requisition list with company colleagues via email or a shareable link
 - Pagination support for large numbers of items
 - Empty state when the requisition list has no items
 - Not found state when the requisition list doesn't exist or is inaccessible

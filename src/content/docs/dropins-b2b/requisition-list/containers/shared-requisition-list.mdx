@@ -1,0 +1,75 @@
+---
+title: SharedRequisitionList Container
+description: Learn about the SharedRequisitionList container in the Requisition List drop-in.
+sidebar:
+  label: SharedRequisitionList
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Handles the recipient side of the requisition list sharing flow. When a customer follows a shared link containing a `requisition_id` token, render this container to automatically import the shared list into the customer's account and redirect them to the list detail page on success.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.3.0</strong>
+</div>
+
+## Configuration
+
+The `SharedRequisitionList` container provides the following configuration options:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The share token extracted from the URL query parameter (for example, `?requisition_id=<token>`). Pass this directly to the container; it calls `importSharedRequisitionList` internally and handles success, error, and loading states. |
+| `routeRequisitionList` | `(uid: string, listName: string) => string \| void` | No | Called with the newly imported list's UID and name on a successful import. Use this callback to navigate the customer to the list detail page. If no callback is provided, the container displays an inline success alert instead. Pass a stable reference (module-level function or `useCallback` with no deps) because the callback is captured at mount time. |
+
+</TableWrapper>
+
+<Aside type="note">
+To show a success alert on the detail page after redirect, store the alert payload in `localStorage` before navigating. The `useRequisitionListAlert` hook reads from `localStorage` on mount and surfaces the saved message automatically.
+
+```js
+routeRequisitionList: (uid, listName) => {
+  localStorage.setItem(
+    'requisitionListPendingAlert',
+    JSON.stringify({ action: 'import', type: 'success', context: 'requisitionList', listName })
+  );
+  window.location.href = `/b2b/requisition-list?uid=${uid}`;
+},
+```
+
+</Aside>
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+Create a dedicated page in your storefront that matches the share URL path configured in `requisition_list_share_storefront_path`. Extract the `requisition_id` token from the URL and pass it to the container.
+
+```js
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import { SharedRequisitionList } from '@dropins/storefront-requisition-list/containers/SharedRequisitionList.js';
+
+const params = new URLSearchParams(window.location.search);
+const token = params.get('requisition_id') ?? '';
+
+await provider.render(SharedRequisitionList, {
+  token,
+  routeRequisitionList: (uid, listName) => {
+    localStorage.setItem(
+      'requisitionListPendingAlert',
+      JSON.stringify({
+        action: 'import',
+        type: 'success',
+        context: 'requisitionList',
+        listName,
+      })
+    );
+    window.location.href = `/b2b/requisition-list?uid=${uid}`;
+  },
+})(block);
+```

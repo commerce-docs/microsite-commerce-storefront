@@ -1,0 +1,61 @@
+---
+title: ShareRequisitionListContent Container
+description: Learn about the ShareRequisitionListContent container in the Requisition List drop-in.
+sidebar:
+  label: ShareRequisitionListContent
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Provides the UI for sharing a requisition list with company colleagues. The container renders two sharing methods: an email-based flow where users select recipients from the company's user list, and a copy-link flow that generates a shareable URL others can use to import the list.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.3.0</strong>
+</div>
+
+## Configuration
+
+The `ShareRequisitionListContent` container provides the following configuration options:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | UID of the requisition list to share. Used to generate the shareable token via `shareRequisitionListByToken` and passed to `onSubmit` for the email-based sharing flow. |
+| `isSubmitting` | `boolean` | Yes | Controls the submitting state of the form. Set to `true` while the share-by-email request is in progress to disable the submit button and prevent duplicate submissions. |
+| `onSubmit` | `(customerUids: string[]) => Promise<Array<{ message: string; code: string }> \| null>` | Yes | Called when the user clicks Submit with the selected recipient UIDs. Return `null` on success or an array of error objects on failure. Typically wraps the `shareRequisitionListByEmail` API call. |
+| `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. When provided, this user is excluded from the list of selectable company recipients to prevent self-sharing. |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Receives the relative share URL (e.g. `/b2b/shared-requisition-list?requisition_id=<token>`) and returns the final URL to display. Use this to convert the relative URL to an absolute one. Falls back to using the relative URL as-is. Example: `(relativeUrl) => window.location.origin + relativeUrl` |
+
+</TableWrapper>
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The `ShareRequisitionListContent` container is embedded inside a modal by `RequisitionListHeader`. When the store configuration has sharing enabled (`requisition_list_sharing_enabled`), the header renders a **Share** action button that opens a modal containing this container.
+
+The following example demonstrates how to use the container standalone:
+
+```js
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import { ShareRequisitionListContent } from '@dropins/storefront-requisition-list/containers/ShareRequisitionListContent.js';
+import { shareRequisitionListByEmail } from '@dropins/storefront-requisition-list/api.js';
+
+await provider.render(ShareRequisitionListContent, {
+  requisitionListUid: 'YOUR_LIST_UID',
+  isSubmitting: false,
+  onSubmit: async (customerUids) => {
+    return shareRequisitionListByEmail('YOUR_LIST_UID', customerUids);
+  },
+  currentCustomerEmail: 'current.user@example.com',
+  routeSharedRequisitionList: (relativeUrl) => window.location.origin + relativeUrl,
+})(block);
+```
+
+<Aside type="tip">
+The `ShareRequisitionListContent` container reads `requisition_list_sharing_enabled`, `requisition_list_share_max_recipients`, and `requisition_list_share_storefront_path` from the store configuration. These fields are fetched automatically during drop-in initialization. If your Adobe Commerce instance does not yet expose these GraphQL fields, the container degrades gracefully by disabling the share feature.
+</Aside>
