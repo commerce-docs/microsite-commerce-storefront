@@ -1668,6 +1668,58 @@ import Link from '@components/Link.astro';
 ****************/}
 
     <ChangelogEntry
+      date="2026-04-30"
+      title="User Account 3.3.0"
+      components={['User account']}
+    >
+      The User Account drop-in has been updated with the following changes:
+
+      **Stored payment methods**
+      - **PaymentMethods container**: Shoppers can view all saved payment methods from their account page. The new `PaymentMethods` container displays stored cards with brand, masked number, and expiry status. Cards can be filtered by payment method code and shown in full or minified layout ([#57](https://github.com/adobe-commerce/storefront-account/pull/57)).
+      - **Delete stored card with confirmation**: Removing a stored payment method now shows a confirmation modal with a card preview before deleting. The modal prevents accidental deletion and disables row actions during an active removal operation ([#58](https://github.com/adobe-commerce/storefront-account/pull/58)).
+      - **PaymentCard component**: New `PaymentCard` component renders a single payment method with card type, masked number, and an optional EXPIRED tag ([#51](https://github.com/adobe-commerce/storefront-account/pull/51)).
+
+      **Address and customer attributes**
+      - **fieldIdPrefix on Addresses container**: The `fieldIdPrefix` prop is now correctly forwarded to the internal address form. This prevents duplicate field IDs when shipping and billing address forms are rendered on the same page ([#55](https://github.com/adobe-commerce/storefront-account/pull/55)).
+      - **Customer dropdown attribute prefill**: Customer custom attributes implemented as select/dropdown fields now correctly prefill their saved values from the API. Date-only fields are formatted without timezone shift ([#56](https://github.com/adobe-commerce/storefront-account/pull/56)).
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-02-17"
+      title="User Account v3.1.0"
+      components={['User account']}
+    >
+      The User Account drop-in has been updated with the following changes:
+
+      - **Address UID in create response** - Added `addressUid` to create address response for proper address identification ([#42](https://github.com/adobe-commerce/storefront-account/pull/42)).
+      - **Dynamic form field translations** - Added dynamic i18n support for field labels and placeholders, enabling custom placeholders and floating labels in address forms ([#40](https://github.com/adobe-commerce/storefront-account/pull/40)).
+      - **Improved accessibility** - Enhanced screen reader support for address form edit and remove buttons with descriptive aria labels.
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-01-08"
+      title="User Account v3.0.0"
+      components={['User account']}
+    >
+      **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
+
+      **New features**
+
+      - **Company context switching** - Order history now automatically refreshes when B2B users switch companies via the `companyContext/changed` event. This ensures users only see orders relevant to their current company context without manual page refresh ([#25](https://github.com/adobe-commerce/storefront-account/pull/25)).
+      - **Translation override support** - The Provider component now supports merging custom language definitions with default translations. Developers can pass custom `langDefinitions` through the initialize configuration to override default UI text, enabling easier localization and brand-specific terminology ([#30](https://github.com/adobe-commerce/storefront-account/pull/30)).
+
+      **Improvements**
+
+      - **Fixed configurable product links** - Product URLs in order history now correctly link to configurable product detail pages. The GraphQL query now retrieves `product_sku` and `product_url_key` at the order item level instead of nested product fields, resolving 404 errors when clicking product links from order lists ([#34](https://github.com/adobe-commerce/storefront-account/pull/34)).
+      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes.
+      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
+      - **reCAPTCHA upgrade** - Updated to @adobe-commerce/recaptcha 1.0.3 for improved security and compatibility.
+      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. B2C drop-ins have been tested on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the license agreement restricts use to Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO) only. Use on Platform-as-a-Service (PaaS) or on-premise deployments is not permitted under the license agreement.
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2025-10-14"
       title="User account v1.2.0"
       components={['User account']}
@@ -1707,6 +1759,42 @@ import Link from '@components/Link.astro';
 {/********************* 
 **User authentication** 
 ***********************/}
+
+    <ChangelogEntry
+      date="2026-02-17"
+      title="User Auth v3.1.0"
+      components={['User authentication']}
+    >
+      The User Auth drop-in has been updated with the following changes:
+
+      - **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging ([#53](https://github.com/adobe-commerce/storefront-auth/pull/53)).
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-01-08"
+      title="User Auth v3.0.0"
+      components={['User authentication']}
+    >
+      **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
+
+      **New features**
+
+      - **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates ([#21](https://github.com/adobe-commerce/storefront-auth/pull/21), [#27](https://github.com/adobe-commerce/storefront-auth/pull/27), [#39](https://github.com/adobe-commerce/storefront-auth/pull/39)).
+      - **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` ([#44](https://github.com/adobe-commerce/storefront-auth/pull/44)).
+      - **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks ([#30](https://github.com/adobe-commerce/storefront-auth/pull/30), [#35](https://github.com/adobe-commerce/storefront-auth/pull/35)).
+
+      **Improvements**
+
+      - **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains ([#43](https://github.com/adobe-commerce/storefront-auth/pull/43)).
+      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes ([#41](https://github.com/adobe-commerce/storefront-auth/pull/41)).
+      - **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
+      - **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
+      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
+      - **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
+      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#46](https://github.com/adobe-commerce/storefront-auth/pull/46)).
+
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2025-10-14"
@@ -1818,61 +1906,6 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/*************** 
-**User Account** 
-****************/}
-
-    <ChangelogEntry
-      date="2026-04-30"
-      title="User Account 3.3.0"
-      components={['User account']}
-    >
-      The User Account drop-in has been updated with the following changes:
-
-      **Stored payment methods**
-      - **PaymentMethods container**: Shoppers can view all saved payment methods from their account page. The new `PaymentMethods` container displays stored cards with brand, masked number, and expiry status. Cards can be filtered by payment method code and shown in full or minified layout ([#57](https://github.com/adobe-commerce/storefront-account/pull/57)).
-      - **Delete stored card with confirmation**: Removing a stored payment method now shows a confirmation modal with a card preview before deleting. The modal prevents accidental deletion and disables row actions during an active removal operation ([#58](https://github.com/adobe-commerce/storefront-account/pull/58)).
-      - **PaymentCard component**: New `PaymentCard` component renders a single payment method with card type, masked number, and an optional EXPIRED tag ([#51](https://github.com/adobe-commerce/storefront-account/pull/51)).
-
-      **Address and customer attributes**
-      - **fieldIdPrefix on Addresses container**: The `fieldIdPrefix` prop is now correctly forwarded to the internal address form. This prevents duplicate field IDs when shipping and billing address forms are rendered on the same page ([#55](https://github.com/adobe-commerce/storefront-account/pull/55)).
-      - **Customer dropdown attribute prefill**: Customer custom attributes implemented as select/dropdown fields now correctly prefill their saved values from the API. Date-only fields are formatted without timezone shift ([#56](https://github.com/adobe-commerce/storefront-account/pull/56)).
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Account v3.1.0"
-      components={['User account']}
-    >
-      The User Account drop-in has been updated with the following changes:
-
-      - **Address UID in create response** - Added `addressUid` to create address response for proper address identification ([#42](https://github.com/adobe-commerce/storefront-account/pull/42)).
-      - **Dynamic form field translations** - Added dynamic i18n support for field labels and placeholders, enabling custom placeholders and floating labels in address forms ([#40](https://github.com/adobe-commerce/storefront-account/pull/40)).
-      - **Improved accessibility** - Enhanced screen reader support for address form edit and remove buttons with descriptive aria labels.
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Account v3.0.0"
-      components={['User account']}
-    >
-      **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Company context switching** - Order history now automatically refreshes when B2B users switch companies via the `companyContext/changed` event. This ensures users only see orders relevant to their current company context without manual page refresh ([#25](https://github.com/adobe-commerce/storefront-account/pull/25)).
-      - **Translation override support** - The Provider component now supports merging custom language definitions with default translations. Developers can pass custom `langDefinitions` through the initialize configuration to override default UI text, enabling easier localization and brand-specific terminology ([#30](https://github.com/adobe-commerce/storefront-account/pull/30)).
-
-      **Improvements**
-
-      - **Fixed configurable product links** - Product URLs in order history now correctly link to configurable product detail pages. The GraphQL query now retrieves `product_sku` and `product_url_key` at the order item level instead of nested product fields, resolving 404 errors when clicking product links from order lists ([#34](https://github.com/adobe-commerce/storefront-account/pull/34)).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **reCAPTCHA upgrade** - Updated to @adobe-commerce/recaptcha 1.0.3 for improved security and compatibility.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. B2C drop-ins have been tested on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the license agreement restricts use to Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO) only. Use on Platform-as-a-Service (PaaS) or on-premise deployments is not permitted under the license agreement.
-
-    </ChangelogEntry>
 
 {/************************* 
 **Product Recommendations** 
@@ -1900,45 +1933,6 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/************ 
-**User Auth** 
-*************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Auth v3.1.0"
-      components={['User authentication']}
-    >
-      The User Auth drop-in has been updated with the following changes:
-
-      - **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging ([#53](https://github.com/adobe-commerce/storefront-auth/pull/53)).
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Auth v3.0.0"
-      components={['User authentication']}
-    >
-      **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates ([#21](https://github.com/adobe-commerce/storefront-auth/pull/21), [#27](https://github.com/adobe-commerce/storefront-auth/pull/27), [#39](https://github.com/adobe-commerce/storefront-auth/pull/39)).
-      - **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` ([#44](https://github.com/adobe-commerce/storefront-auth/pull/44)).
-      - **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks ([#30](https://github.com/adobe-commerce/storefront-auth/pull/30), [#35](https://github.com/adobe-commerce/storefront-auth/pull/35)).
-
-      **Improvements**
-
-      - **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains ([#43](https://github.com/adobe-commerce/storefront-auth/pull/43)).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes ([#41](https://github.com/adobe-commerce/storefront-auth/pull/41)).
-      - **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
-      - **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#46](https://github.com/adobe-commerce/storefront-auth/pull/46)).
-
-    </ChangelogEntry>
 
 {/*********************
 **Company Management**
