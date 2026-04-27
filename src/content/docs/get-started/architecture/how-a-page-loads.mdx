@@ -7,7 +7,7 @@ import { Steps } from '@astrojs/starlight/components';
 import Diagram from '@components/Diagram.astro';
 import Term from '@components/Term.astro';
 
-This page shows what happens, in order, from the moment a merchant creates a document to the moment a drop-in component calls the Commerce API in a shopper's browser. Six stages, left to right. Read the diagram first, then follow the numbered breakdown below it.
+The diagram shows six stages from a merchant-authored document to a Commerce API call in the browser. The steps below follow the same order. Use them to decide whether a preview problem comes from authoring, HTML delivery, your block code, or Commerce endpoints instead of assuming every empty UI is only a GraphQL issue.
 
 <Diagram type="mermaid" code={`
 graph LR
@@ -31,26 +31,22 @@ graph LR
     style F fill:#FFCDD2,stroke:#F44336,stroke-width:2px
 `} caption="Six stages from document to data: the author creates a document, Edge Delivery Services publishes it as HTML, the browser loads the page, the block decorator runs your repository code, the drop-in mounts its UI, and the drop-in fetches live Commerce data." />
 
-Here is what happens at each stage.
-
 <Steps>
 
 1. The merchant creates a document in DA.live, Google Docs, or SharePoint. In document-based authoring, a table in the document defines a block on the page — for example, a "Commerce Cart" table becomes the cart block. In the Universal Editor, the merchant edits blocks visually on the rendered page and no document tables are involved.
 
-2. Edge Delivery Services converts the document into an HTML page. Each table becomes a `div` with a class name that matches the block — for example, `<div class="commerce-cart">`. EDS serves this HTML from servers close to the shopper, which is what makes pages load fast.
+1. Edge Delivery Services converts the document into an HTML page. Each table becomes a `div` with a class name that matches the block, for example, `<div class="commerce-cart">`. EDS serves this HTML from servers close to the shopper, which is what makes pages load fast.
 
-3. The shopper's browser requests and loads that HTML.
+1. The shopper's browser requests and loads that HTML.
 
-4. The <Term>block decorator</Term> runs for each block on the page. A block decorator is the JavaScript file in your repository for that block — for example, `blocks/commerce-cart/commerce-cart.js`. Edge Delivery Services finds each block's `div` in the HTML, loads the matching file from your repository, and runs its default export. Inside that function (`decorate(block)`), your code imports the drop-in's <Term>initializer</Term>, which sets the Commerce API endpoint and loads any translated labels. Then it calls `provider.render()` to mount the drop-in UI into that region of the page.
+1. The <Term>block decorator</Term> runs for each block on the page. A block decorator is the JavaScript file in your repository for that block, for example, `blocks/commerce-cart/commerce-cart.js`. Edge Delivery Services finds each block's `div` in the HTML, loads the matching file from your repository, and runs its default export. Inside that function (`decorate(block)`), your code imports the drop-in's <Term>initializer</Term>. The initializer sets the Commerce API endpoint and loads translated labels. Your code then calls `provider.render()` to mount the drop-in UI in that region of the page.
 
-5. The drop-in component renders the shopper-facing UI — the cart, checkout form, product detail page, or whichever Commerce experience that block delivers.
+1. The drop-in component renders the shopper-facing UI — the cart, checkout form, product detail page, or whichever Commerce experience that block delivers.
 
-6. The drop-in sends requests to your Commerce API endpoints and renders the data it gets back. For example, the Cart drop-in calls Commerce GraphQL to load the shopper's cart items and totals. This call goes from the shopper's browser directly to Commerce — Edge Delivery Services is not in the middle of it.
+1. The drop-in sends requests to your Commerce API endpoints and renders the data it gets back. For example, the Cart drop-in calls Commerce GraphQL to load the shopper's cart items and totals. This call goes from the shopper's browser directly to Commerce. Edge Delivery Services is not in the middle of it.
 
 </Steps>
 
-After reading this page, you should be able to name all six stages in order and explain what happens at each one.
-
 ## What's next
 
-You followed the timeline from an authored document to a Commerce API call. The next topic shows the same parts as a side-by-side comparison: how content blocks and Commerce blocks differ, and which folders in your repository hold the wiring between them. Read [Blocks and the repository](/get-started/architecture/blocks-and-repo/).
+[Blocks and the repository](/get-started/architecture/blocks-and-repo/) compares content and Commerce blocks and points at the repo folders that wire them to drop-ins.

@@ -9,12 +9,12 @@ import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
 import Term from '@components/Term.astro';
 
-You've seen what an individual drop-in does. This page explains what happens when more than one drop-in is on the same page — for example, when both a Cart drop-in and an Auth drop-in need to know whether the shopper is signed in. Drop-in components communicate through a shared <Term>event bus</Term> (`@dropins/tools/event-bus.js`) using a publish-subscribe pattern. This keeps them loosely coupled so no drop-in component depends directly on another.
+Multiple drop-ins on one page (for example, Cart and Auth) share a single <Term>event bus</Term> (`@dropins/tools/event-bus.js`). They publish and listen for small messages so each package can react without importing the others directly. Read this page before you rely on [Events](/dropins/all/events/) alone. Otherwise it is easy to mix up in-page bus messages with analytics data or calls to Commerce services.
 
 <Aside type="note" title="Same tab and document">
 The bus is an in-memory channel for one loaded HTML document in one tab. Code that imports `@dropins/tools/event-bus.js` in that same JavaScript context can emit and listen together. A full navigation to another URL, a new tab, or a separate cross-origin iframe loads a different context, so those environments do not share the same bus instance unless you build an explicit bridge (not part of the default Commerce boilerplate pattern).
 
-If you wondered how cart and checkout work when they are different pages: the next document does not inherit the previous page's bus. Commerce keeps the cart on the server, and storefront bootstrap code loads the cart again on the new page so events such as `cart/initialized` happen in that new context. The full walk-through, with Commerce boilerplate file links, is under [Multiple storefront routes](/dropins/all/events/#multiple-storefront-routes) on the [Events](/dropins/all/events/) page; patterns such as `getCartDataFromCache` are in [Using drop-ins](/dropins/all/quick-start/). API details are in the [Event Bus API reference](/sdk/reference/events/).
+If you wondered how cart and checkout work when they are different pages: the next document does not inherit the previous page's bus. Commerce keeps the cart on the server, and storefront bootstrap code loads the cart again on the new page so events such as `cart/initialized` occur in that new context. The full walk-through, with Commerce boilerplate file links, is under [Multiple storefront routes](/dropins/all/events/#multiple-storefront-routes) on the [Events](/dropins/all/events/) page. Patterns such as `getCartDataFromCache` are in [Using drop-ins](/dropins/all/quick-start/). API details are in the [Event Bus API reference](/sdk/reference/events/).
 </Aside>
 
 Each colored box is a drop-in package on the same page. Solid arrows show events emitted to the bus; dashed arrows show events consumed from the bus. Pink is your custom code alongside those drop-ins.
@@ -72,4 +72,4 @@ The event bus handles internal communication between drop-in components on the p
 
 ## What's next
 
-You saw how drop-ins talk to each other on one page through events. That still leaves the bigger wiring question: how Edge Delivery, the boilerplate, your Commerce backend, and hosted services like catalog search fit in one stack, and where to go for prerequisites on your backend. Read [Commerce services and backends](/get-started/architecture/commerce-services-and-backends/).
+[Commerce services and backends](/get-started/architecture/commerce-services-and-backends/) explains Edge Delivery, the boilerplate, backends, hosted catalog and search services, and prerequisites.

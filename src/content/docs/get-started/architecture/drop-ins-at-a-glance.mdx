@@ -8,17 +8,16 @@ import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
 import Term from '@components/Term.astro';
 
-By the end of this page, you will know what a drop-in component is, why it talks to Adobe Commerce from the shopper's browser, and which docs to open when you are ready to install or customize one.
+A drop-in is a packaged piece of UI and logic for one Commerce job, such as cart, checkout, or sign-in. It loads Commerce data through APIs, often GraphQL.
 
-## What is a drop-in?
+To use a drop-in, you need three things: the npm package, initializer settings in your repo, and a mount point on the page.
 
-A drop-in component is a ready-made slice of storefront user interface (UI) and logic for one Commerce job, such as cart, checkout, or sign-in. Think of it as a packaged experience your page can show, instead of you writing all of that behavior from scratch.
-
-Drop-ins are built for Adobe Commerce data. They call Commerce and related services through APIs using GraphQL to fetch and change data. You will see the full map of packages and screens in the [Drop-ins introduction](/dropins/all/introduction/).
+For setup steps, see [Using drop-ins](/dropins/all/quick-start/).  
+For a full package map, see [Drop-ins introduction](/dropins/all/introduction/).
 
 ## One drop-in: what you provide and what it does
 
-This view stays inside one drop-in. It does not repeat the author-to-API timeline from [How a page loads](/get-started/architecture/how-a-page-loads/). That topic shows how documents, Edge Delivery Services, the browser, and the block decorator reach the point where a drop-in mounts. Here the drop-in sits in the center: your project supplies the package, configuration, and a mount point; the drop-in renders the experience and calls Adobe Commerce from the shopper's browser.
+In this model, your project provides the npm package, initializer configuration, and DOM mount point. The drop-in then renders the UI and calls Commerce APIs from the browser. For the full path from document to mount, see [How a page loads](/get-started/architecture/how-a-page-loads/).
 
 <Diagram type="mermaid" code={`
 %%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
@@ -50,7 +49,7 @@ flowchart TB
 
 ## Where drop-ins run
 
-Drop-ins run in the shopper's browser after the page loads. Edge Delivery Services (EDS) delivers the HTML, CSS, and JavaScript for the page. EDS does not sit in the middle of Commerce API calls for drop-ins. The drop-in component sends those requests directly to your configured endpoints.
+After load, drop-ins run in the browser. EDS delivers HTML, CSS, and JS. Commerce requests go straight from the drop-in to your endpoints, not through EDS in the middle.
 
 <Aside type="tip" title="If data never loads in the cart or checkout">
 If your Commerce environment is only reachable on a VPN or a strict IP allow list, remember that the shopper's device must be able to reach the same endpoints you configured. A setup that works for your laptop behind VPN may still fail for a shopper on a normal network.
@@ -58,22 +57,24 @@ If your Commerce environment is only reachable on a VPN or a strict IP allow lis
 
 ## How you add drop-ins to a project
 
-You install drop-ins the same way you install other JavaScript libraries, using <Term>npm</Term> (Node's package manager). Published package names look like `@dropins/storefront-cart`. The source code repos are private, but the built packages on npm are what your project depends on.
+Install the drop-in via <Term>npm</Term> (for example, `@dropins/storefront-cart`). Packages are published on npm, with source code in private repositories.
 
-Your Commerce blocks and the files under `scripts/initializers/` load each drop-in and pass settings such as the GraphQL endpoint and translated labels. You do not paste drop-in UI into a document by hand the way you might for a simple content block. For the usual pattern, see [Using drop-ins](/dropins/all/quick-start/).
+Commerce blocks and `scripts/initializers/` load each drop-in using your configured endpoint and labels.
 
-To see wiring in a real project, browse the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce"} text={"Commerce boilerplate repository"} />. When configuration is not enough, you can follow the [documented extension patterns](/dropins/all/extending/).
+For setup steps, see [Using drop-ins](/dropins/all/quick-start/).  
+For a reference implementation, see the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce"} text={"Commerce boilerplate repository"} />.  
+To go deeper, see [Extending drop-ins](/dropins/all/extending/).
 
 ## How much can you customize?
 
-More than you might expect. Each drop-in exposes several layers of customization so you can adjust it without touching the underlying package code.
+More than you might expect. Each drop-in exposes several customization layers so you can change behavior without editing the package source.
 
 - CSS variables and stylesheet overrides control colors, spacing, typography, and layout.
-- Label overrides let you change any text string in the UI — button labels, error messages, placeholders — without editing the package.
-- Slots let you inject custom content (such as a banner, a loyalty points display, or a promotional message) into specific regions of the drop-in's layout.
-- Extension hooks let you replace the logic for specific operations, such as what happens when a shopper clicks "Add to cart."
+- Label overrides change UI text (button labels, errors, placeholders) without opening the package code.
+- Slots add custom content (for example, a banner or promo message) in named regions of the drop-in layout.
+- Extension hooks replace logic for specific actions, such as what runs when a shopper clicks `Add to cart`.
 
-Most projects need only CSS and label changes. Slots and extension hooks exist for cases where configuration alone is not enough. See [Extending drop-ins](/dropins/all/extending/) for patterns and examples.
+Most projects stop at CSS and labels. Slots and hooks are there when configuration alone is not enough. See [Extending drop-ins](/dropins/all/extending/) for patterns and examples.
 
 ## B2C, B2B, and the package list
 
@@ -93,8 +94,8 @@ These names show the pattern for consumer-facing drop-ins. Treat the per-drop-in
 - `@dropins/storefront-recommendations`
 - `@dropins/storefront-wishlist`
 - `@dropins/storefront-personalization`
-- `@dropins/storefront-search-dropin`
+- `@dropins/storefront-product-discovery`
 
 ## What's next
 
-You now know what a single drop-in is and how it reaches Commerce. The next architecture topic covers what happens when multiple drop-ins are on the same page at once — how they communicate without depending directly on each other. Read [How drop-ins coordinate on a page](/get-started/architecture/drop-ins-on-a-page/).
+[How drop-ins coordinate on a page](/get-started/architecture/drop-ins-on-a-page/) explains how multiple drop-ins work together using a shared event bus.

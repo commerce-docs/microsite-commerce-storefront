@@ -13,35 +13,33 @@ import Option from '@components/Option.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 import Term from '@components/Term.astro';
 
-The Adobe Commerce Storefront supports three backend types. Prerequisites and setup differ, so use only the guidance that matches your environment. Now that you understand the storefront architecture, use this page to identify your backend and confirm prerequisites before you configure the storefront to talk to Commerce.
+The storefront supports three backend types. Each type has its own prerequisites, so follow only the path that matches your project. Choosing the wrong type can lead to misleading signals—GitHub and DA.live may look healthy while previews or drop-ins fail—and may result in installing packages your license does not require.
 
-What you install and configure depends on which backend type you have. For authoring storefront pages (Document Authoring, Universal Editor), see [Document Authoring Quick Start](/merchants/quick-start/document-authoring/). This topic focuses on the Commerce backend the storefront connects to.
+For authoring storefront pages (Document Authoring, Universal Editor), see [Document Authoring Quick Start](/merchants/quick-start/document-authoring/). This page covers the Commerce backend the storefront connects to.
 
-Drop-in components — B2C (business-to-consumer, meaning typical shopper experiences) and B2B (business-to-business, meaning company accounts, quotes, and purchase orders) — require an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. PaaS customers who add an Adobe Commerce Optimizer license are covered—that license includes drop-in usage. There is no separate “B2B backend” type.
+Drop-in components — B2C (business-to-consumer, meaning typical shopper experiences) and B2B (business-to-business, meaning company accounts, quotes, and purchase orders) — require an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. PaaS customers who add an Adobe Commerce Optimizer license are covered, and that license includes drop-in usage. There is no separate “B2B backend” type.
 
 Backends fall into three categories:
 
-- **Commerce PaaS** — Existing Adobe Commerce Cloud or on-premises deployment without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license
-- **Adobe Commerce as a Cloud Service** — Cloud Service deployment whose license includes Storefront
-- **Adobe Commerce Optimizer** — New Adobe Commerce Optimizer deployment, or an existing PaaS deployment that added Adobe Commerce Optimizer
+- Commerce PaaS — Existing Adobe Commerce on Cloud infrastructure or on-premises deployment without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license
+- Adobe Commerce as a Cloud Service — Cloud Service deployment whose license includes Storefront
+- Adobe Commerce Optimizer — New Adobe Commerce Optimizer deployment, or an existing PaaS deployment that added Adobe Commerce Optimizer
 
 <Aside type="tip" title="Related documentation">
-This page covers **Commerce backends** only. For Adobe Commerce **product** help (Admin, deployments, merchandising services, integrations), start from <Link href={"https://experienceleague.adobe.com/en/docs/commerce"} text={"Adobe Commerce documentation"} /> on Experience League.
+This page covers Commerce backends only. For Adobe Commerce product help (Admin, deployments, merchandising services, integrations), start from <Link href={"https://experienceleague.adobe.com/en/docs/commerce"} text={"Adobe Commerce documentation"} /> on Experience League.
 
-For **pages and blocks** on da.live, see <Link href={"https://docs.da.live/"} text={"Document Authoring documentation"} /> or [Document Authoring Quick Start](/merchants/quick-start/document-authoring/).
+For pages and blocks on da.live, see <Link href={"https://docs.da.live/"} text={"Document Authoring documentation"} /> or [Document Authoring Quick Start](/merchants/quick-start/document-authoring/).
 </Aside>
 
 ## Which backend do you have?
-
-This table summarizes the key differences between backend types.
 
 <TableWrapper nowrap={[0]}>
 
 | Feature | Commerce PaaS | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
 |---------|---------------|-----------------------------------|--------------------------|
-| **License includes Storefront** | No | Yes | Yes |
-| **Setup** | Manual install required | Fully automated | Fully automated |
-| **Version** | v2.4.7+ self-managed | Auto-managed | Fully managed SaaS |
+| License includes Storefront | No | Yes | Yes |
+| Setup | Manual install required | Fully automated | Fully automated |
+| Version | v2.4.7+ self-managed | Auto-managed | Fully managed SaaS |
 
 </TableWrapper>
 
@@ -53,7 +51,7 @@ The Adobe Commerce Optimizer Connector (PaaS-to-Adobe Commerce Optimizer) syncs 
 
 ## Backend topology
 
-This diagram zooms in on the backend layer, adding two optional pieces you may encounter during a phased migration: <Term>Luma Bridge</Term> and the Adobe Commerce Optimizer Connector. Luma is Adobe's classic server-side Commerce storefront theme. If you currently run a <Term>Luma</Term> storefront and are moving to Edge Delivery Services, Luma Bridge is a PHP module that lets Luma pages and EDS drop-ins share the same shopper cart and sign-in session during the transition. For the full system stack — including drop-in components, boilerplate layers, and the event system — see [Commerce services and backends](/get-started/architecture/commerce-services-and-backends/).
+This diagram focuses on the backend layer. It adds two optional pieces you might use during a phased move: <Term>Luma Bridge</Term> and the Adobe Commerce Optimizer Connector. Luma is Adobe's classic server-side Commerce storefront theme. If you run a <Term>Luma</Term> storefront today and are moving to Edge Delivery Services, Luma Bridge is a PHP module on Commerce so Luma pages and EDS drop-ins can share the same cart and sign-in session during the transition. For the full stack (drop-ins, boilerplate, and how services connect), see [Commerce services and backends](/get-started/architecture/commerce-services-and-backends/).
 
 <Diagram type="mermaid" code={`
 graph TB
@@ -90,7 +88,7 @@ graph TB
 
 ## Prerequisites by backend
 
-Select your backend to see the requirements before you start storefront setup.
+Open only the tab for your backend and read it end to end. Commerce PaaS includes a manual checklist that the two managed backends do not.
 
 <Options label="Backend" numbered={false}>
 <Option>
@@ -110,7 +108,7 @@ v2.4.7 or later
 Manual installation is required. See [PaaS: required packages and services](#paas-required-packages-and-services) below for step-by-step instructions.
 
 <Aside type="note" title="Luma Bridge and Adobe Commerce Optimizer">
-Luma Bridge is a PHP module on Commerce (PaaS) that reads the session cookies set by EDS drop-in components, allowing Luma pages to share cart and authentication sessions with EDS. It does not plug into drop-in components. It works with or without Adobe Commerce Optimizer. With the Adobe Commerce Optimizer Connector, Luma Bridge continues to share sessions during migration. See [Luma Bridge](/setup/discovery/luma-bridge/).
+Luma Bridge is a PHP module on Commerce (PaaS). It reads session cookies that EDS drop-ins set, so Luma pages can share cart and sign-in state with EDS. It does not connect directly inside drop-in code. It works with or without Adobe Commerce Optimizer. If you use the Adobe Commerce Optimizer Connector, Luma Bridge can still share sessions while you migrate. See [Luma Bridge](/setup/discovery/luma-bridge/).
 </Aside>
 
 </Option>
@@ -155,7 +153,7 @@ Install and configure the following on Commerce PaaS before you create your stor
 
 ### Minimum checklist before you create a storefront
 
-If you only need a short gate before storefront setup reads from Commerce APIs (<Term>Site Creator</Term>, manual configuration, or local preview), confirm these on Commerce PaaS:
+Before <Term>Site Creator</Term>, manual configuration, or local preview can rely on Commerce APIs, confirm these items on Commerce PaaS:
 
 1. You are on Adobe Commerce v2.4.7 or later (Magento Open Source is not supported for this storefront path).
 1. You installed the <Term>Storefront Compatibility package</Term> ([Install guide](/setup/configuration/storefront-compatibility/install/)) so cart, checkout, account, and order GraphQL match what drop-ins expect.
@@ -163,15 +161,15 @@ If you only need a short gate before storefront setup reads from Commerce APIs (
 
 ### Storefront Compatibility package
 
-The Storefront Compatibility package extends the GraphQL schema for cart, checkout, account, and order. For an overview, see the **Storefront Compatibility package** row in [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services). For installation, see [Install the Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (v2.4.7 or v2.4.8).
+Extends GraphQL for cart, checkout, account, and order flows that drop-ins expect. Overview: [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services). Install: [Install the Storefront Compatibility package](/setup/configuration/storefront-compatibility/install/) (v2.4.7 or v2.4.8).
 
 ### Storefront services
 
-Catalog Service and related APIs supply fast catalog data (including GraphQL) for drop-in components. Data Connection links Adobe Commerce to Adobe Experience Platform. Services Connector, Live Search, and Product Recommendations integrate as described in Experience League. See [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services) for how each fits the architecture.
+Catalog Service, Services Connector, Live Search, and Product Recommendations are covered on Experience League and in [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services). Data Connection is optional and separate (Adobe Experience Platform).
 
 Headless storefronts must send the required <Link href={"https://developer.adobe.com/commerce/services/shared-services/storefront-events/"} text={"storefront events"} /> for Live Search and Product Recommendations. Use the Experience League topics in the table for setup and headless data requirements. On Edge Delivery Services, implement storefront events with the Adobe Client Data Layer and <Link href="/setup/analytics/instrumentation/" text="Analytics" />.
 
-<TableWrapper>
+<TableWrapper nowrap={[0]}>
 
 | Service | Documentation |
 |---------|---------------|

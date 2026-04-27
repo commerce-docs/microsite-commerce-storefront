@@ -7,19 +7,19 @@ import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 import Term from '@components/Term.astro';
 
-By the end of this page, you will know where your Git repository sits between merchants authoring pages and shoppers using cart, checkout, or product detail flows. You will also know the difference between a content block and a Commerce block, and which folders in the Commerce boilerplate usually hold the wiring.
+This page shows where your Git repository sits between merchant-authored documents and shopper cart, checkout, or product flows. It also explains how content blocks differ from Commerce blocks and which boilerplate folders hold the wiring. `blocks/` and `scripts/initializers/` are not sample folders. They are the files you edit when a Commerce region on the page breaks or shows the wrong data.
 
-If you read [How a page loads](/get-started/architecture/how-a-page-loads/) first, that page walked the timeline from a document to a Commerce API call. This page answers a related question: who owns each part of that story? Authors work in documents. Edge Delivery Services (EDS) turns authored sections into blocks on the page. Your repository is the JavaScript, styles, and configuration that tell a Commerce block which drop-in to load and how to reach your Commerce endpoints. A block is simply one named region of the page (for example, a hero row or a cart), backed by a `div` in the HTML and a matching folder under `blocks/` in your repo.
+[How a page loads](/get-started/architecture/how-a-page-loads/) shows the timeline from document to API call.
+
+This page focuses on ownership: authors work in documents, EDS converts tables into block `div`s, and your repository provides decorators, initializers, styles, and configurations so Commerce blocks load the correct drop-ins.
 
 ## Comparing blocks and drop-in components
 
-Each table in a document becomes an HTML block. A block is a `div` with a class name that EDS and your JavaScript use to identify it. Your Git repository holds the code that connects Commerce blocks to drop-in components: block decorators, `scripts/initializers/`, styles, and storefront configuration. When you push to GitHub, EDS builds and deploys. Shoppers receive HTML, CSS, and JavaScript served from the edge.
+Each document table becomes a block `div` that EDS and your JavaScript identify. Your repo connects Commerce blocks to drop-ins through decorators, `scripts/initializers/`, styles, and storefront configuration, then pushes to GitHub to drive Edge Delivery builds.
 
-For more on authoring documents and blocks, see <Link href={"https://docs.da.live/"} text={"Document Authoring documentation"} />, this guide's [Document Authoring](/merchants/quick-start/document-authoring/) and [Universal Editor](/merchants/quick-start/universal-editor/) Quick Starts, and the <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" /> with the full <Link href="https://www.aem.live/docs/" text="AEM documentation" /> for Edge Delivery Services (build, publish, launch).
+Authoring references: <Link href={"https://docs.da.live/"} text={"Document Authoring documentation"} />, [Document Authoring](/merchants/quick-start/document-authoring/) and [Universal Editor](/merchants/quick-start/universal-editor/) Quick Starts, <Link href="https://www.aem.live/docs/authoring-guide" text="authoring guide" />, <Link href="https://www.aem.live/docs/" text="AEM documentation" />. For packages and shared vocabulary, see [Drop-ins at a glance](/get-started/architecture/drop-ins-at-a-glance/) and [Boilerplate getting started](/boilerplate/getting-started/).
 
-Use this table as a map. The [Drop-ins at a glance](/get-started/architecture/drop-ins-at-a-glance/) topic goes deeper on packages; [Boilerplate getting started](/boilerplate/getting-started/) has shared vocabulary.
-
-<TableWrapper>
+<TableWrapper nowrap={[0]}>
 
 | | Content blocks | Commerce blocks | Drop-in components |
 |---|----------------|-----------------|---------------------|
@@ -27,7 +27,7 @@ Use this table as a map. The [Drop-ins at a glance](/get-started/architecture/dr
 | Where it comes from | Block Collection and custom blocks in `blocks/` | Commerce blocks in `blocks/`, mapped in the boilerplate | <Term>npm</Term> packages such as `@dropins/storefront-cart` |
 | Authored as document tables | Yes | Yes | No — developers add packages and wire initializers in code |
 | Typical tie to Adobe Commerce | None — no Commerce GraphQL for most blocks | Yes — GraphQL, REST, and services through the boilerplate | Direct — Commerce API calls (GraphQL, REST, services) are built into each package |
-| Learn more | <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" /> | [Boilerplate and blocks](#boilerplate-and-blocks) · [Blocks reference](/boilerplate/blocks-reference/) | [Drop-ins introduction](/dropins/all/introduction/) |
+| Learn more | <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" /> | [Key files and folders](#key-files-and-folders) · [Blocks reference](/boilerplate/blocks-reference/) | [Drop-ins introduction](/dropins/all/introduction/) |
 
 </TableWrapper>
 
@@ -38,15 +38,9 @@ Drop-in components are built on shared Commerce Storefront <Term>SDK</Term> patt
 - [Commerce Storefront SDK](/sdk/) — Reference for APIs, design components, and utilities used across drop-in components  
 - [Drop-ins introduction](/dropins/all/introduction/) — Full map of B2C and B2B drop-in components and how they install into the boilerplate  
 
-Terminology for Commerce blocks, drop-in components, and content blocks also appears in the [Boilerplate getting started](/boilerplate/getting-started/) vocabulary.
-
 ### Content blocks and Commerce blocks
 
-Blocks are the fundamental building parts of a page on Edge Delivery Services. Each block encapsulates the styling and code for one logical section of the page. That might be a hero, a card row, or a cart. Both content and commerce blocks are authored as document tables that EDS converts to HTML. The difference is what happens after that conversion.
-
-Content blocks provide layout and marketing UI. Think cards, columns, headers, footers, and more from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />. Developers can enrich them with semantic HTML and accessibility attributes. They do not load drop-in components or call Adobe Commerce GraphQL.
-
-Commerce blocks deliver interactive Commerce experiences. Think cart, checkout, account, product detail pages (PDPs), and more. They use the same document-based authoring model as content blocks. The boilerplate maps them to initializers and `@dropins/*` packages that call Adobe Commerce GraphQL and related APIs. Prefer plain JavaScript when writing Commerce blocks. React is possible, but its bundle size makes a perfect Lighthouse score (Google's 0–100 web performance rating) difficult to achieve. See [Libraries](/troubleshooting/faq/#libraries) in the FAQ and the existing blocks in the Commerce boilerplate as a reference.
+Both kinds are document tables EDS turns into HTML. The split is what runs next. Content blocks are layout and marketing (cards, columns, headers, footers from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />). They contain no drop-ins or Commerce GraphQL. Commerce blocks load interactive cart, checkout, account, PDP, and similar flows via initializers and `@dropins/*` calling Commerce GraphQL and related APIs. Prefer plain JavaScript for Commerce blocks. React can make achieving a top Lighthouse score hard. See [Libraries](/troubleshooting/faq/#libraries) and the boilerplate blocks as patterns.
 
 ### Key files and folders
 
@@ -75,7 +69,7 @@ aem-boilerplate-commerce/
 
 The table below explains each key file or folder in detail. For the full <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts"} text={"Scripts folder in the boilerplate"} /> and `blocks/`:
 
-<TableWrapper>
+<TableWrapper nowrap={[0]}>
 
 | File/Folder | Role |
 |-------------|------|
@@ -86,8 +80,8 @@ The table below explains each key file or folder in detail. For the full <Link h
 
 </TableWrapper>
 
-For more on customizing blocks and connecting the storefront to Commerce, see [Blocks reference](/boilerplate/blocks-reference/), [Blocks configuration](/boilerplate/configuration/), and [Storefront configuration](/setup/configuration/commerce-configuration/).
+Customize and connect: [Blocks reference](/boilerplate/blocks-reference/), [Blocks configuration](/boilerplate/configuration/), [Storefront configuration](/setup/configuration/commerce-configuration/).
 
 ## What's next
 
-You saw how blocks and the repository connect authoring to Commerce UI. The next topic zooms in on those Commerce UI packages: what a drop-in is, that it runs in the browser, and how you install one with npm. Read [Drop-ins at a glance](/get-started/architecture/drop-ins-at-a-glance/).
+[Drop-ins at a glance](/get-started/architecture/drop-ins-at-a-glance/) explains packages, browser runtime, and npm install.
