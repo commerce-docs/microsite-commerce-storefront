@@ -14,35 +14,41 @@ The following sections provide high-level summaries of each release suite and de
 
 ## April 2026 suite
 
-This suite includes stored payment methods in My Account, order comments for B2B, Product Recommendations v4 with catalog view support, and improvements to User Account, Checkout, Payment Services, Requisition List, and Quick Order. For per-component version details, see the [changelog](/releases/changelog/).
+Shoppers can view and remove saved payment cards from their My Account page using the new `PaymentMethods` container in the User Account drop-in. Store administrators can add order comments in Commerce Admin marked as visible on the storefront, and shoppers now see those comments with timestamps in the order details view using the new `OrderComments` container. The Requisition List drop-in gains move and copy items between lists, and the Quick Order drop-in adds consistent configurable-product cart handling. See the [changelog](/releases/changelog/) for the full list of changes.
+
+### Breaking changes
 
 <Aside type="caution" title="Breaking changes">
-The Product Recommendations drop-in has been updated to a new major version (v4). The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query instead of the legacy `getRecommendations` query. If you call `getRecommendations` directly, update your integration to use the new API.
+- **Product Recommendations v4**: The drop-in switches to the `getRecommendationsUnitsByIds` GraphQL query. If you call the legacy `getRecommendations` function directly, update your integration to use the new API before upgrading to v4.
 </Aside>
 
 ### Highlights
 
 #### Stored payment methods in My Account
 
-Shoppers can now view and remove saved payment methods directly from their account page. The new [`PaymentMethods`](/dropins/user-account/) container in the User Account drop-in lists stored cards with brand name, masked card number, and expiry status. Removing a card opens a confirmation modal that shows a card preview and prevents accidental deletion ([#57](https://github.com/adobe-commerce/storefront-account/pull/57), [#58](https://github.com/adobe-commerce/storefront-account/pull/58)).
+Shoppers can view saved payment cards and remove any card they no longer need, all from their My Account page without contacting support. The new `PaymentMethods` container lists stored cards with brand name, masked number, and an EXPIRED badge when applicable. Removing a card requires confirmation in a modal that shows a card preview, preventing accidental deletion. The implementation uses the `customerPaymentTokens` query to list tokens and the `deletePaymentToken` mutation to remove them ([#51](https://github.com/adobe-commerce/storefront-account/pull/51), [#57](https://github.com/adobe-commerce/storefront-account/pull/57), [#58](https://github.com/adobe-commerce/storefront-account/pull/58)).
 
-#### Order Comments for B2B
+#### Order Comments visible to shoppers
 
-Store administrators can add order-level comments in Commerce Admin, and B2B shoppers now see those comments — timestamp and message — directly in the order details view. The new [`OrderComments`](/dropins/order/) container in the Order drop-in fetches comments for both guest and authenticated users. Add the new `commerce-order-comments` boilerplate block to any order details page to enable this view ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87), [#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210)).
+When a store administrator adds a comment to an order in Commerce Admin and marks it as "Visible on Storefront," shoppers now see that comment — with timestamp and message text — in the order details view. The new `OrderComments` container works for both guest orders (via token) and authenticated customer orders. Add the new `commerce-order-comments` boilerplate block to any order details page to render the view ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87), [#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210)).
 
 #### Product Recommendations v4 — catalog view support
 
-The [Product Recommendations](/dropins/recommendations/) drop-in has been updated to a new major version. It now uses the `getRecommendationsUnitsByIds` GraphQL query, which correctly respects catalog view scoping. This means recommendation units configured globally work as expected in multi-catalog and multi-store setups. See the [Recommendations API](/dropins/recommendations/functions/) for the updated function ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34), [#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
+The [Product Recommendations](/dropins/recommendations/) drop-in has been updated to a new major version that fixes recommendation units not appearing in multi-catalog setups. The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query, which correctly respects catalog view scoping so that globally configured recommendation units work across all store views. The previous `getRecommendations` query did not honor catalog view context, causing units to appear blank for stores that use non-default catalog views. Update your integration to use the new API when upgrading ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34), [#36](https://github.com/adobe-commerce/storefront-recommendations/pull/36), [#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
 
 #### Requisition List enhancements
 
-B2B users can now move or copy items between requisition lists without leaving the page, making it faster to reorganize products across procurement lists. The Add to List button on the product details page also shows an active state when the current product is already in the selected list ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116), [#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)).
+B2B users can now move or copy items between requisition lists without leaving the page, replacing a workflow that previously required adding to one list, navigating to another, and deleting from the first. The Add to List button on the product details page also shows an active state — including a customizable icon — when the current product is already saved in the selected list, so users can see at a glance which lists already contain the product ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116), [#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)).
 
 #### Checkout vault payment method support
 
-The [Checkout](/dropins/checkout/) drop-in now passes the full `additionalData` payload when a payment method is selected, enabling Payment Services vault and other payment methods that require extra mutation fields to work correctly during checkout ([#311](https://github.com/adobe-commerce/storefront-checkout/pull/311)).
+Developers integrating Payment Services vault can now pass the full `additionalData` payload through `setPaymentMethodOnCart` without custom wiring. The `PaymentMethods` container forwards the complete `additionalData` object from the selected payment slot to the GraphQL mutation, so vault tokens, nonces, and any other method-specific fields are included in the request automatically ([#311](https://github.com/adobe-commerce/storefront-checkout/pull/311)).
 
 ### Updated boilerplate
+
+#### Infrastructure
+
+No infrastructure changes in this suite.
 
 #### Document Authoring
 
@@ -50,13 +56,25 @@ The [Checkout](/dropins/checkout/) drop-in now passes the full `additionalData` 
 
 #### Fixes and improvements
 
-- **Product Recommendations block**: Block updated to use the Recommendations drop-in v4 ([#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
-- **B2B (Order Comments)**: New `commerce-order-comments` block for displaying order-level comments on B2B order details pages.
-- **B2B (Quick Order)**: Quick Order block updated with improved configurable product Add to Cart handling and standardized event payloads.
+- **Product Recommendations block**: Block updated to use the Recommendations drop-in v4, switching to `getRecommendationsUnitsByIds` for catalog view support ([#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
+- **B2B (Order Comments)**: New `commerce-order-comments` block renders order-level comments on order details pages using the `OrderComments` container ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
+- **B2B (Quick Order)**: Quick Order block updated with consistent configurable-product Add to Cart, extended callback payload with `parentSku` and `optionsUIDs`, and fixed duplicate event emissions on option changes ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
 
 ### Updated Drop-in SDK
 
-The Drop-in SDK (`@dropins/tools`) was upgraded to ~1.8.1 in this release. The upgrade adds reCAPTCHA Enterprise support for storefront forms and fixes incorrect `srcset` attribute generation on product images.
+<Aside type="note" title="Internal Links">
+Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+</Aside>
+
+The Drop-in SDK (`@dropins/tools`) has been updated to 1.8.1 with the following improvements and fixes:
+
+#### New features
+
+- **reCAPTCHA Enterprise support**: Storefront forms now support reCAPTCHA Enterprise, enabling merchants to use the Enterprise tier for bot protection without custom SDK-level integration ([#189](https://github.com/adobe-commerce/StorefrontSDK/pull/189)).
+
+#### Improvements and fixes
+
+- **Image srcset attribute**: The `srcset` attribute on product images is now generated correctly for all configured viewport breakpoints. An explicit `sizes` prop was added to the Image component to prevent malformed `srcset` output that could cause browsers to load incorrect image sizes ([#187](https://github.com/adobe-commerce/StorefrontSDK/pull/187), [#195](https://github.com/adobe-commerce/StorefrontSDK/pull/195)).
 
 ### Updated B2C drop-in components
 
@@ -67,8 +85,8 @@ The Drop-in SDK (`@dropins/tools`) was upgraded to ~1.8.1 in this release. The u
 | [**Cart**](/dropins/cart/) v3.2.0 | No user-facing changes in this release |
 | [**Checkout**](/dropins/checkout/) v3.2.1 | Full `additionalData` forwarded to `setPaymentMethodOnCart`, enabling vault and other payment methods that require extra fields ([#311](https://github.com/adobe-commerce/storefront-checkout/pull/311)). |
 | [**Order**](/dropins/order/) v3.3.0 | New `OrderComments` container displays order-level comments (timestamp and message) for guest and authenticated users ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87)). |
-| [**Product Details Page**](/dropins/product-details/) v3.0.3 | New `formatValue` prop on [`ProductAttributes`](/dropins/product-details/containers/product-attributes/) for custom numeric attribute formatting ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)). |
-| [**User Account**](/dropins/user-account/) v3.3.0 | New `PaymentMethods` container with stored card listing and delete-with-confirmation modal. New `PaymentCard` component. `fieldIdPrefix` on `Addresses` now correctly forwarded. Customer dropdown custom attributes prefill correctly from the API ([#51](https://github.com/adobe-commerce/storefront-account/pull/51), [#55](https://github.com/adobe-commerce/storefront-account/pull/55), [#56](https://github.com/adobe-commerce/storefront-account/pull/56), [#57](https://github.com/adobe-commerce/storefront-account/pull/57), [#58](https://github.com/adobe-commerce/storefront-account/pull/58)). |
+| [**Product Details Page**](/dropins/product-details/) v3.0.3 | New `formatValue` prop on [`ProductAttributes`](/dropins/product-details/containers/product-attributes/) for custom numeric attribute value formatting. Numeric attributes (weight, dimensions, custom fields) now render at the display precision configured in Commerce Admin instead of raw database values ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)). |
+| [**User Account**](/dropins/user-account/) v3.3.0 | New `PaymentMethods` container: lists stored cards (`customerPaymentTokens` query) with brand, masked number, and expiry badge; removes a card via `deletePaymentToken` mutation with confirmation modal. New `PaymentCard` reusable component. `fieldIdPrefix` on `Addresses` now correctly propagated to form field IDs, preventing duplicate HTML IDs when shipping and billing forms render on the same page. Customer dropdown custom attributes prefill correctly from the API ([#51](https://github.com/adobe-commerce/storefront-account/pull/51), [#55](https://github.com/adobe-commerce/storefront-account/pull/55), [#56](https://github.com/adobe-commerce/storefront-account/pull/56), [#57](https://github.com/adobe-commerce/storefront-account/pull/57), [#58](https://github.com/adobe-commerce/storefront-account/pull/58)). |
 | [**User Auth**](/dropins/user-auth/) v3.2.0 | No user-facing changes in this release |
 | [**Personalization**](/dropins/personalization/) v3.1.1 | No user-facing changes in this release |
 | [**Product Discovery**](/dropins/product-discovery/) v3.1.0 | No user-facing changes in this release |
@@ -89,7 +107,7 @@ The Drop-in SDK (`@dropins/tools`) was upgraded to ~1.8.1 in this release. The u
 | [**Purchase Order**](/dropins-b2b/purchase-order/) v1.1.1 | No user-facing changes in this release |
 | [**Quote Management**](/dropins-b2b/quote-management/) v1.1.2 | No user-facing changes in this release |
 | [**Requisition List**](/dropins-b2b/requisition-list/) v1.3.0 | Move and copy items between lists. Active button state on the PDP Add to List button when the product is already saved ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116), [#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)). |
-| [**Quick Order**](/dropins-b2b/quick-order/) v1.0.1 | Consistent Add to Cart for configurable products. Standardized event payloads across Quick Order and Grid Ordering ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)). |
+| [**Quick Order**](/dropins-b2b/quick-order/) v1.0.1 | Consistent Add to Cart for configurable products. `handleAddToCart` callback now includes `parentSku` and `optionsUIDs` in the payload, enabling downstream handlers to identify the exact variant added. Fixed duplicate event emissions on each option change so only the latest selection fires ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)). |
 </TableWrapper>
 
 ### Known issues

@@ -676,11 +676,11 @@ import Link from '@components/Link.astro';
 
           **v4.8.19**
           - **Bundle product availability**: Resolved an issue where bundle products with Manage Stock disabled were incorrectly reported as unavailable in the cart ([#271](https://github.com/magento-commerce/storefront-compatibility/pull/271)).
-          - **Wishlist count sync**: Fixed a sync issue between `items_v2` and `items_count` in the Wishlist GraphQL API ([#274](https://github.com/magento-commerce/storefront-compatibility/pull/274)).
+          - **Wishlist store-view scoping**: Fixed a store-view scoping inconsistency in the Wishlist GraphQL API where `items_v2` returned items from all store views while `items_count` and the `removeProductsFromWishlist` mutation were correctly scoped to the current store view. In multi-store setups, this caused the displayed item count and the actual item list to diverge, and remove operations to affect only items visible in the current store view ([#274](https://github.com/magento-commerce/storefront-compatibility/pull/274)).
           - **Login as Customer**: Added Login as Customer feature support ([#248](https://github.com/magento-commerce/storefront-compatibility/pull/248)).
 
           **v4.7.12**
-          - **Guest order cancel with comments**: Resolved an internal server error when calling `requestGuestOrderCancel` on orders that include comments ([#275](https://github.com/magento-commerce/storefront-compatibility/pull/275)).
+          - **Guest order cancel with comments**: Resolved an internal server error when calling `requestGuestOrderCancel` on orders that include order comments. The error was introduced when the Order drop-in added `OrderComments` support and the new `comments` field appeared in order responses; the SCP `requestGuestOrderCancel` mutation did not handle the presence of that field, causing a 500 error on cancel requests ([#275](https://github.com/magento-commerce/storefront-compatibility/pull/275)).
       </ChangelogEntry>
 
       <ChangelogEntry
@@ -1233,7 +1233,7 @@ import Link from '@components/Link.astro';
     >
       The Order drop-in has been updated with the following changes:
 
-      - **Order Comments container**: Merchants and administrators can add order-level comments in Commerce Admin, and shoppers now see those comments (timestamp and message) in the order details view. The new `OrderComments` container displays comments for both guest and authenticated users. Use the new `commerce-order-comments` boilerplate block to render comments on order details pages ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87)).
+      - **Order Comments container**: Merchants and administrators can add comments to orders in Commerce Admin and mark them as "Visible on Storefront." Comments marked visible now appear with timestamp and message in the order details view for both guest and authenticated shoppers. This also resolves a gap where comments marked visible in Commerce Admin were silently missing from the storefront. The new `OrderComments` container fetches comments for guest orders (via order token) and authenticated customer orders alike. Add the `commerce-order-comments` boilerplate block to any order details page to render the view ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87)).
       - **Unified date/time formatting**: A single `formatDateToLocale` export replaces the previous two separate formatters. Use the `FORMAT_DATETIME` constant for long date-and-time display (for example, comment timestamps). Date-only formatting is unchanged.
     </ChangelogEntry>
 
@@ -1462,7 +1462,7 @@ import Link from '@components/Link.astro';
     >
       The Product Details Page drop-in has been updated with the following changes:
 
-      - **Number attribute formatting**: The `ProductAttributes` container accepts a new `formatValue` prop for custom formatting of numeric attribute values, enabling store-specific number display logic ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)).
+      - **Number attribute formatting**: The `ProductAttributes` container accepts a new `formatValue` prop for custom formatting of numeric attribute values. This allows merchants to control the precision and display format of numeric custom attributes (for example, weight, dimensions, or product-specific measures) so that values match the display precision configured in Commerce Admin instead of rendering with raw database precision (for example, displaying `1.25` instead of `1.2500000000`). Implement the prop with a formatter function that receives the raw value and returns the formatted string ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)).
     </ChangelogEntry>
 
     <ChangelogEntry
@@ -1654,7 +1654,8 @@ import Link from '@components/Link.astro';
     >
       **Major version upgrade.** The Product Recommendations drop-in has been updated to the following changes:
 
-      - **Catalog view support**: The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query instead of the legacy `getRecommendations` query. This ensures recommendation units respect catalog view scoping, so globally scoped units work correctly in multi-catalog setups ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
+      - **Catalog view support**: The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query instead of the legacy `getRecommendations` query. This ensures recommendation units respect catalog view scoping, so globally scoped units work correctly in multi-catalog and multi-store setups. The previous `getRecommendations` query did not honor catalog view context, causing recommendation units to appear blank for stores using non-default catalog views ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
+      - **Corrupted view history recovery**: Resolved a reliability issue where a corrupted `userViewHistory` value in browser local storage could permanently prevent recommendations from loading on the product page. Because local storage is never automatically cleared, a single corrupted entry would break recommendations indefinitely for affected shoppers until they manually cleared their storage ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
       - **Title rendering fix**: Resolved an issue with recommendation unit title display ([#36](https://github.com/adobe-commerce/storefront-recommendations/pull/36)).
     </ChangelogEntry>
 
@@ -2285,8 +2286,9 @@ import Link from '@components/Link.astro';
     >
       The Quick Order drop-in has been updated with the following changes:
 
-      - **Configurable product Add to Cart**: Add to Cart behavior for configurable products is now consistent and reliable, with improved parentSku handling and variant data collection for cart operations ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
-      - **Standardized event payloads**: Event payload structures have been standardized across Quick Order and Grid Ordering for consistent event handling in integrations.
+      - **Configurable product Add to Cart**: Add to Cart behavior for configurable products is now consistent and reliable. The `handleAddToCart` callback payload now includes `parentSku` (parent product SKU) and `optionsUIDs` (array of selected variant option UIDs) so downstream handlers can identify the exact variant added to the cart, including for simple products where these fields are set to empty values for consistency ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
+      - **Deduplicated option-change events**: The `QuickOrderItems` container previously emitted an increasing number of events on each product option change — the first change was correct, but each subsequent change added duplicate emissions. Events are now deduplicated so only the latest selection fires, regardless of how many times an option is changed ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
+      - **Refactored Grid Ordering integration**: The Grid Ordering integration in the Quick Order block has been refactored for better alignment with the drop-in's event model and improved maintainability ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
     </ChangelogEntry>
 
     <ChangelogEntry
@@ -2296,8 +2298,8 @@ import Link from '@components/Link.astro';
     >
       The Requisition List drop-in has been updated with the following changes:
 
-      - **Move and copy items between lists**: B2B users can now move or copy items from one requisition list to another without leaving the page. Both move and copy operations are supported, so users can reorganize products across lists efficiently ([#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)).
-      - **Active state on PDP Add to List button**: The `RequisitionListSelector` button on the product details page now shows an active state (class `requisition-list-selector--active` and optional `activeIcon` prop) when the current product is already saved in the selected list ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116)).
+      - **Move and copy items between lists**: B2B users can now move or copy individual products or entire selections between requisition lists without leaving the page. Previously there was no built-in way to reorganize items across lists; users had to add to the target list, navigate, and delete from the source. Both move (removes from source) and copy (keeps in source) operations are available ([#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)).
+      - **Active state on PDP Add to List button**: The `RequisitionListSelector` button on the product details page now shows an active state when the current product is already saved in the selected list. The active state applies a `requisition-list-selector--active` CSS class and renders an optional `activeIcon` prop (configurable icon name from the Drop-in SDK icon set), giving users a clear visual indicator so they know at a glance which lists already contain the product ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116)).
     </ChangelogEntry>
 
     <ChangelogEntry
