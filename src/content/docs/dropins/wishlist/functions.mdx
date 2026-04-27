@@ -24,13 +24,19 @@ The Wishlist drop-in provides API functions that enable you to programmatically 
 | Function | Description |
 | --- | --- |
 | [`addProductsToWishlist`](#addproductstowishlist) | Add products to a user's wishlist. |
+| [`clearPersistedLocalStorage`](#clearpersistedlocalstorage) | Removes the persisted wishlist data from local storage. |
+| [`getDefaultWishlist`](#getdefaultwishlist) | Fetches the authenticated customer's default (first) wishlist. |
+| [`getGuestWishlist`](#getguestwishlist) | Returns the current guest wishlist from persisted storage. |
+| [`getPersistedWishlistData`](#getpersistedwishlistdata) | Returns wishlist data from browser storage. |
 | [`getStoreConfig`](#getstoreconfig) | Retrieves the store configuration, which includes various settings and preferences for the store. |
 | [`getWishlistById`](#getwishlistbyid) | Retrieves a wishlist by its ID. |
+| [`getWishlistItemFromStorage`](#getwishlistitemfromstorage) | Looks up a specific wishlist item in browser storage by SKU and option UIDs. |
 | [`getWishlists`](#getwishlists) | Retrieves all wishlists associated with a user. |
 | [`initializeWishlist`](#initializewishlist) | Initializes wishlist state for the drop-in. |
 | [`mergeWishlists`](#mergewishlists) | Merge a wishlist from local storage with one belonging to a registered user. |
 | [`removeProductsFromWishlist`](#removeproductsfromwishlist) | Remove products from a user's wishlist. |
 | [`resetWishlist`](#resetwishlist) | Resets the wishlist by clearing the current wishlist ID and marking the user as unauthenticated. |
+| [`setPersistedWishlistData`](#setpersistedwishlistdata) | Persists wishlist data to browser storage. |
 | [`updateProductsInWishlist`](#updateproductsinwishlist) | Update the quantity of products in a user's wishlist. |
 
 </TableWrapper>
@@ -220,6 +226,130 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`Wishlist`](#wishlist) or `null`.
+
+## clearPersistedLocalStorage
+
+The `clearPersistedLocalStorage` function removes the persisted wishlist data from local storage. Used during sign-out or wishlist reset flows to clean up guest session data.
+
+```ts
+const clearPersistedLocalStorage = (): void
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
+
+## getDefaultWishlist
+
+The `getDefaultWishlist` function fetches all wishlists for the authenticated customer and returns the first one as the default. Sets the retrieved wishlist ID in the drop-in state.
+
+```ts
+const getDefaultWishlist = async (): Promise<Wishlist | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `null` if the customer has no wishlists.
+
+## getGuestWishlist
+
+The `getGuestWishlist` function retrieves the current guest wishlist from persisted browser storage. Used internally by `initializeWishlist` when the user is not authenticated.
+
+```ts
+const getGuestWishlist = async (): Promise<Wishlist | {}>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or an empty object `{}` when no guest wishlist exists.
+
+## getPersistedWishlistData
+
+The `getPersistedWishlistData` function returns wishlist data from browser storage. Reads from `sessionStorage` for authenticated users and `localStorage` for guests. Returns an empty wishlist object when no data is stored.
+
+```ts
+const getPersistedWishlistData = (guest?: boolean): Wishlist | {}
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `guest` | `boolean` | No | When `true`, forces reading from `localStorage` regardless of authentication state. Defaults to `false`. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`Wishlist`](#wishlist) or `{}` when no data is found.
+
+## getWishlistItemFromStorage
+
+The `getWishlistItemFromStorage` function looks up a specific wishlist item in browser storage by its product SKU and option UIDs. Useful for checking whether a product (with specific configuration) is already in the wishlist.
+
+```ts
+const getWishlistItemFromStorage = (
+  productSku: string,
+  optionUIDs?: string[]
+): WishlistItem | undefined
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `productSku` | `string` | Yes | The SKU of the product to look up. |
+| `optionUIDs` | `string[]` | No | An array of selected option UIDs for configurable products. Defaults to an empty array. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the matching wishlist item or `undefined` when not found.
+
+## setPersistedWishlistData
+
+The `setPersistedWishlistData` function persists wishlist data to browser storage. Writes to `sessionStorage` for authenticated users and `localStorage` for guests. Passing `null` removes the stored wishlist.
+
+```ts
+const setPersistedWishlistData = (data: Wishlist | null): void
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `data` | `Wishlist \| null` | Yes | The wishlist data to persist. Pass `null` to remove the stored data. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `void`.
 
 ## Data Models
 
