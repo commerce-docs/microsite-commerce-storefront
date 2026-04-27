@@ -9,7 +9,7 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Payment Services initializer provides options for setting the backend endpoint and configuring language definitions.
+The Payment Services initializer provides configuration options for the backend endpoint and language definitions.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 3.1.1</strong>
@@ -22,10 +22,10 @@ The following table describes the configuration options available for the **Paym
 <TableWrapper nowrap={[0, 1, 2]}>
 | Option             | Type     | Req? | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
 |--------------------|----------|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `apiUrl`           | string   | Yes  | The Adobe Commerce GraphQL endpoint URL, such as "https://example.com/graphql".                                                                                                                                                                                                                                                                                                                                                      |
-| `getCustomerToken` | function | Yes  | The Payment Services drop-in can send GraphQL requests on behalf of the shopper. This requires GraphQL authorization, which can be performed using authorization tokens or session cookies. For token-based authorization, the `getCustomerToken` function should return a customer token as a string, or null for guest customers. For session-based authorization, the `getCustomerToken` property must explicitly be set to null. |
-| `storeViewCode`    | string   | No   | The Adobe Commerce store view code against which the Payment Services drop-in should send GraphQL requests. When not set, no 'Store' HTTP header will be sent in the GraphQL requests.                                                                                                                                                                                                                                               |
-| `langDefinitions`  | object   | No   | Provides language definitions for internationalization (i18n).                                                                                                                                                                                                                                                                                                                                                                       |
+| `apiUrl` | string | Yes | Adobe Commerce GraphQL endpoint URL (for example, `https://example.com/graphql`). |
+| `getCustomerToken` | function | Yes | Provides authorization for GraphQL requests made on behalf of the shopper. For token-based auth, it must return a customer token (string) or `null` for guests. For session-based auth, it must be set to `null`. |
+| `storeViewCode` | string | No | Adobe Commerce store view code used for GraphQL requests. If not set, the `Store` HTTP header is not included. |
+| `langDefinitions` | object | No | Language definitions used for internationalization (i18n). |
 </TableWrapper>
 
 ## Default configuration
@@ -81,7 +81,7 @@ No customizable models are available for this drop-in.
 
 ## Drop-in configuration
 
-The **Payment Services initializer** provides options for setting the backend endpoint and configuring language definitions.
+The **Payment Services initializer** provides options to configure the backend endpoint and language definitions.
 
 ```javascript title="scripts/initializers/payment-services.js"
 import { fetchPlaceholders } from '../commerce.js';
@@ -120,18 +120,18 @@ The Payment Services drop-in initializer is fully asynchronous. Even if mounted 
 
 ### Payment method availability
 
-During asynchronous initialization, the Payment Services drop-in emits a series of events to signal drop-in readiness in different locations. For each of these events, the event payload is an `{ availablePaymentMethods: string[] }` object containing the available payment method codes.
+During asynchronous initialization, the Payment Services drop-in emits a series of events to indicate readiness across different locations. Each event includes a payload of `{ availablePaymentMethods: string[] }`, listing the available payment method codes.
 
 The following table contains the available event names and their descriptions:
 
 <TableWrapper nowrap={[0]}>
 | Event name                                    | Description                                                                                                                                                |
 |-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `payment-services/initialized/checkout`       | Drop-in initialized for the `CHECKOUT` location, with `event.availablePaymentMethods` determining the payment methods available for the checkout page.     |
-| `payment-services/initialized/product-detail` | Drop-in initialized for the `PRODUCT_DETAIL` location, with `event.availablePaymentMethods` determining the payment methods available for the product details page. |
+| `payment-services/initialized/checkout` | Indicates the drop-in is initialized for the `CHECKOUT` location. The `event.availablePaymentMethods` property lists the payment methods available on the checkout page. |
+| `payment-services/initialized/product-detail` | Indicates the drop-in is initialized for the `PRODUCT_DETAIL` location. The `event.availablePaymentMethods` property lists the payment methods available on the product detail page. |
 </TableWrapper>
 
-The following code shows an example implementation of payment method availability event handlers for the checkout page.
+The following example demonstrates how to implement payment method availability event handlers for the checkout page.
 
 ```javascript
 import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
