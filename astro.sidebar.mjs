@@ -33,7 +33,7 @@ export function generateSidebar() {
         },
         {
           label: 'Storefront Architecture',
-          collapsed: true,
+          collapsed: false,
           items: [
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
             { label: 'Blocks and the repository', link: '/get-started/architecture/blocks-and-repo/' },
@@ -47,7 +47,7 @@ export function generateSidebar() {
         },
         {
           label: 'Commerce Boilerplate',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
             { label: 'Getting Started', link: '/boilerplate/getting-started/' },
@@ -214,7 +214,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/cart/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/cart/containers/' },
                     { label: 'CartSummaryGrid', link: '/dropins/cart/containers/cart-summary-grid/' },
@@ -250,7 +250,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/checkout/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/checkout/containers/' },
                     { label: 'AddressValidation', link: '/dropins/checkout/containers/address-validation/' },
@@ -284,7 +284,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/order/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/order/containers/' },
                     { label: 'CreateReturn', link: '/dropins/order/containers/create-return/' },
@@ -316,7 +316,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/payment-services/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
@@ -339,7 +339,7 @@ export function generateSidebar() {
                 { label: 'Styles', link: '/dropins/personalization/styles/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/personalization/containers/' },
                     { label: 'TargetedBlock', link: '/dropins/personalization/containers/targeted-block/' }
@@ -355,7 +355,7 @@ export function generateSidebar() {
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
                 {
                   label: 'How-Tos',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
                   ],
@@ -364,7 +364,7 @@ export function generateSidebar() {
                 { label: 'Styles', link: '/dropins/product-details/styles/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/product-details/containers/' },
                     { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
@@ -401,7 +401,7 @@ export function generateSidebar() {
                 { label: 'Styles', link: '/dropins/product-discovery/styles/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/product-discovery/containers/' },
                     { label: 'SearchResults', link: '/dropins/product-discovery/containers/search-results/' },
@@ -426,7 +426,7 @@ export function generateSidebar() {
                 { label: 'Styles', link: '/dropins/recommendations/styles/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/recommendations/containers/' },
                     { label: 'ProductList', link: '/dropins/recommendations/containers/product-list/' }
@@ -449,7 +449,7 @@ export function generateSidebar() {
                 { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/user-account/containers/' },
                     { label: 'Addresses', link: '/dropins/user-account/containers/addresses/' },
@@ -476,7 +476,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/user-auth/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/user-auth/containers/' },
                     { label: 'AuthCombine', link: '/dropins/user-auth/containers/auth-combine/' },
@@ -503,7 +503,7 @@ export function generateSidebar() {
                 { label: 'Dictionary', link: '/dropins/wishlist/dictionary/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins/wishlist/containers/' },
                     { label: 'Wishlist Container', link: '/dropins/wishlist/containers/wishlist/' },
@@ -534,7 +534,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/company-management/containers/' },
                     { label: 'AcceptInvitation', link: '/dropins-b2b/company-management/containers/accept-invitation/' },
@@ -563,7 +563,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/company-switcher/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/company-switcher/containers/' },
                     { label: 'CompanySwitcher', link: '/dropins-b2b/company-switcher/containers/company-switcher/' },
@@ -585,7 +585,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/purchase-order/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/purchase-order/containers/' },
                     { label: 'ApprovalRuleDetails', link: '/dropins-b2b/purchase-order/containers/approval-rule-details/' },
@@ -618,7 +618,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/quote-management/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/quote-management/containers/' },
                     { label: 'ItemsQuoted', link: '/dropins-b2b/quote-management/containers/items-quoted/' },
@@ -654,7 +654,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/requisition-list/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/requisition-list/containers/' },
                     { label: 'RequisitionListForm', link: '/dropins-b2b/requisition-list/containers/requisition-list-form/' },
@@ -680,7 +680,7 @@ export function generateSidebar() {
                 { label: 'Initialization', link: '/dropins-b2b/quick-order/initialization/' },
                 {
                   label: 'Containers',
-                  collapsed: false,
+                  collapsed: true,
                   items: [
                     { label: 'Overview', link: '/dropins-b2b/quick-order/containers/' },
                     { label: 'QuickOrderCsvUpload', link: '/dropins-b2b/quick-order/containers/quick-order-csv-upload/' },
