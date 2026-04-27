@@ -24,16 +24,16 @@ The Requisition List drop-in provides **16 API functions** for managing requisit
 | Function | Description |
 | --- | --- |
 | [`addProductsToRequisitionList`](#addproductstorequisitionlist) | Adds products to a requisition list. |
-| [`addRequisitionListItemsToCart`](#addrequisitionlistitemstocart) | Adds the chosen items from a requisition list to the logged-in user cart. |
-| [`createRequisitionList`](#createrequisitionlist) | Creates a new requisition list with the name and description provided for a logged-in user. |
-| [`deleteRequisitionList`](#deleterequisitionlist) | Deletes a requisition list identified by uid. |
+| [`addRequisitionListItemsToCart`](#addrequisitionlistitemstocart) | Adds the chosen items from a requisition list to the logged-in user's cart. |
+| [`createRequisitionList`](#createrequisitionlist) | Creates a new requisition list with the name and description provided for the logged-in user. |
+| [`deleteRequisitionList`](#deleterequisitionlist) | Deletes a requisition list identified by UID. |
 | [`deleteRequisitionListItems`](#deleterequisitionlistitems) | Deletes items from a requisition list. |
-| [`getProductData`](#getproductdata) | Returns details about a product. |
-| [`getRequisitionList`](#getrequisitionlist) | Returns information about the desired requisition list from a logged-in user. |
-| [`getRequisitionLists`](#getrequisitionlists) | Returns the requisition lists from a logged-in user. |
+| `getProductData` | Returns details about a product. |
+| [`getRequisitionList`](#getrequisitionlist) | Returns information about the requested requisition list for the logged-in user. |
+| [`getRequisitionLists`](#getrequisitionlists) | Returns the requisition lists for the logged-in user. |
 | [`getStoreConfig`](#getstoreconfig) | Returns details about the store configuration. |
-| [`updateRequisitionList`](#updaterequisitionlist) | Updates an existing requisition list with the name and description provided for a logged-in user. |
-| [`updateRequisitionListItems`](#updaterequisitionlistitems) | Updates the items of an existing requisition list with the quantity and options provided for a logged-in user. |
+| [`updateRequisitionList`](#updaterequisitionlist) | Updates an existing requisition list with the name and description provided for the logged-in user. |
+| [`updateRequisitionListItems`](#updaterequisitionlistitems) | Updates the items of an existing requisition list with the quantity and options provided for the logged-in user. |
 | [`getCompanyUsers`](#getcompanyusers) | Returns a list of active company users for the current company. |
 | [`getSharedRequisitionList`](#getsharedrequisitionlist) | Retrieves a shared requisition list by its share token. |
 | [`importSharedRequisitionList`](#importsharedrequisitionlist) | Imports a shared requisition list into the current customer's account using a share token. |
@@ -72,13 +72,13 @@ Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ## addRequisitionListItemsToCart
 
-Adds the chosen items from a requisition list to the logged-in user cart.
+Adds the chosen items from a requisition list to the logged-in user's cart.
 
 ```ts
 const addRequisitionListItemsToCart = async (
   requisitionListUid: string,
   requisitionListItemUids: Array<string>
-): Promise<Array<string> | null>
+): Promise<Array<AddToCartError> | null>
 ```
 
 <TableWrapper nowrap={[0,1]}>
@@ -96,11 +96,11 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `Array<string> | null`.
+Returns `Array<AddToCartError> | null`.
 
 ## createRequisitionList
 
-Creates a new requisition list with the name and description provided for a logged-in user.
+Creates a new requisition list with the name and description provided for the logged-in user.
 
 ```ts
 const createRequisitionList = async (
@@ -173,7 +173,8 @@ const deleteRequisitionListItems = async (
   requisitionListUid: string,
   items: Array<string>,
   pageSize: number,
-  currentPage: number
+  currentPage: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
 ): Promise<RequisitionList | null>
 ```
 
@@ -185,6 +186,7 @@ const deleteRequisitionListItems = async (
 | `items` | `Array<string>` | Yes | An array of requisition list item UIDs to remove. These are the unique identifiers returned in the list's items array, not product SKUs. |
 | `pageSize` | `number` | Yes | The number of items to return per page in the updated requisition list response. |
 | `currentPage` | `number` | Yes | The page number for pagination (1-indexed). Used to retrieve a specific page of items after deletion. |
+| `enrichConfigurableProducts` | `items: Item[]` | No | See function signature above |
 
 </TableWrapper>
 
@@ -196,33 +198,16 @@ Emits the `requisitionList/data` event.
 
 Returns [`RequisitionList`](#requisitionlist) or `null`.
 
-## getProductData
-
-Returns details about a product.
-
-```typescript
-function getProductData(skus: string[]): Promise<Product[] | null>
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `skus` | `string[]` | Yes | An array of product SKUs to retrieve product details for. Used to fetch product information including prices, stock status, and configuration options. |
-
-</TableWrapper>
-
----
-
 ## getRequisitionList
 
-Returns information about the desired requisition list from a logged-in user,
+Returns information about the requested requisition list for the logged-in user.
 
 ```ts
 const getRequisitionList = async (
   requisitionListID: string,
   currentPage?: number,
-  pageSize?: number
+  pageSize?: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
 ): Promise<RequisitionList | null>
 ```
 
@@ -233,6 +218,7 @@ const getRequisitionList = async (
 | `requisitionListID` | `string` | Yes | The unique identifier for the requisition list to retrieve. Returns the list metadata and all items. |
 | `currentPage` | `number` | No | The page number for pagination (1-indexed). Defaults to page 1 if not specified. |
 | `pageSize` | `number` | No | The number of items to return per page. Controls pagination of the requisition list items. |
+| `enrichConfigurableProducts` | `items: Item[]` | No | See function signature above |
 
 </TableWrapper>
 
@@ -246,7 +232,7 @@ Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ## getRequisitionLists
 
-Returns the requisition lists from a logged-in user.
+Returns the requisition lists for the logged-in user.
 
 ```ts
 const getRequisitionLists = async (
@@ -290,7 +276,7 @@ Returns `void`.
 
 ## updateRequisitionList
 
-Updates an existing requisition list with the name and description provided for a logged-in user.
+Updates an existing requisition list with the name and description provided for the logged-in user.
 
 ```ts
 const updateRequisitionList = async (
@@ -298,7 +284,8 @@ const updateRequisitionList = async (
   name: string,
   description?: string,
   pageSize?: number,
-  currentPage?: number
+  currentPage?: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
 ): Promise<RequisitionList | null>
 ```
 
@@ -311,6 +298,7 @@ const updateRequisitionList = async (
 | `description` | `string` | No | The new text description for the requisition list. Updates the list's purpose or context information. |
 | `pageSize` | `number` | No | The number of items to return per page in the updated requisition list response. |
 | `currentPage` | `number` | No | The page number for pagination (1-indexed) in the updated requisition list response. |
+| `enrichConfigurableProducts` | `items: Item[]` | No | See function signature above |
 
 </TableWrapper>
 
@@ -324,18 +312,19 @@ Returns [`RequisitionList`](#requisitionlist) or `null`.
 
 ## updateRequisitionListItems
 
-Updates the items of an existing requisition list with the quantity and options provided for a logged-in user.
+Updates the items of an existing requisition list with the quantity and options provided for the logged-in user.
 
 ```ts
 const updateRequisitionListItems = async (
   requisitionListUid: string,
   requisitionListItems: Array<UpdateRequisitionListItemsInput>,
   pageSize: number,
-  currentPage: number
+  currentPage: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
 ): Promise<RequisitionList | null>
 ```
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -343,6 +332,7 @@ const updateRequisitionListItems = async (
 | `requisitionListItems` | `Array<UpdateRequisitionListItemsInput>` | Yes | An array of requisition list items to update. Each object includes the item UID and the fields to modify (such as quantity, selected options, or entered options). |
 | `pageSize` | `number` | Yes | The number of items to return per page in the updated requisition list response. |
 | `currentPage` | `number` | Yes | The page number for pagination (1-indexed) in the updated requisition list response. |
+| `enrichConfigurableProducts` | `items: Item[]` | No | See function signature above |
 
 </TableWrapper>
 
@@ -543,7 +533,5 @@ interface RequisitionList {
   page_info?: PageInfo;
 }
 ```
-
-
 
 {/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

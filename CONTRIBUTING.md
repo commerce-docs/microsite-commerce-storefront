@@ -449,7 +449,7 @@ import Link from '@components/Link.astro';
 
 ### Available Components
 
-Import and use these components for enhanced documentation:
+Import and use these components for enhanced documentation. For the **Term** glossary tooltip (and when to add entries in `src/data/glossary.ts`), see [Glossary terms (Term component)](README.md#glossary-terms-term-component) in this repository’s main readme.
 
 #### LinkCard Component
 
@@ -1016,7 +1016,7 @@ A: Create a GitHub issue or submit a quick PR to fix it. Don't let broken docs p
 
 ```bash
 pnpm dev           # Start development server
-pnpm build         # Build for production
+pnpm build         # Build (same for build:prod and build:prod-fast)
 pnpm preview       # Preview production build
 pnpm lint          # Check for linting errors
 ```
