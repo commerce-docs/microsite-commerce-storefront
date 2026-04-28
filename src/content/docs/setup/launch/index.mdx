@@ -1,24 +1,32 @@
 ---
 title: Launch preparation and checklist
-description: Verify that you have completed all recommended steps before launching your Adobe Commerce on Edge Delivery Services storefront project.
+description: Launch steps for Adobe Commerce Storefront on Edge Delivery Services, plus Adobe Commerce Optimizer program checks when you use Cloud, Optimizer, and the storefront together.
 ---
 import Link from '@components/Link.astro';
 
-
 import TableWrapper from '@components/TableWrapper.astro';
-import { Card, CardGrid } from '@astrojs/starlight/components';
 import Checklist from '@components/Checklist.astro';
-import { Icon } from '@astrojs/starlight/components';
 
-These launch steps help you ship your Adobe Commerce Storefront on Edge Delivery Services (EDS) with fewer surprises.
+Run the sections below before production traffic hits your Adobe Commerce Storefront on Edge Delivery Services (EDS). Log what you change in staging, the exact sequence you will follow at go-live (for example DNS, CDN, commerce endpoints, and content publish order), and how you roll back so production matches what you already validated.
 
-Launching is more than pointing a content delivery network (CDN) at a new URL, so you need a clear plan for what happens on launch day. Prepare a rollback plan now so you can switch traffic or code back quickly if something breaks after you go live.
+## When your launch includes Adobe Commerce Optimizer
 
-## Launch checklist
+In that setup (Adobe Commerce on Cloud, Adobe Commerce Optimizer, and this storefront on EDS), complete the Optimizer program block below first, then the storefront blocks. Full program checkboxes, Admin paths, and compliance: <Link href={"https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist"} text={"Launch checklist (Adobe Commerce Optimizer) on Experience League"} />. The bullets in that block are a short parallel list you can track next to the storefront sections.
 
-Launching a storefront touches many teams and systems. Use this list to track work before you go live.
+<Checklist checklistKey="aco">
+### Optimizer program checklist
 
-While you build in development or staging, keep a record of what you change so you can repeat those same steps when you move to production.
+* [ ] Confirm your Adobe Commerce on Cloud production environment is provisioned, loaded with production data, cleared of test artifacts, and you know the GraphQL endpoint. Confirm it meets ready-for-launch expectations with your Adobe contact.
+* [ ] Confirm your Adobe Commerce Optimizer production instance is active in the correct region, set to Production, and you have recorded the organization ID, client ID, ingestion URL, and Optimizer URL. Confirm configured limits and boundaries with your Customer Technical Advisor (CTA).
+* [ ] Confirm your Edge Delivery Services storefront site exists, you know the site name, and only authorized people can publish or author content.
+* [ ] On Adobe Commerce on Cloud, install and configure the Commerce Optimizer connector. Run `aco:conf:show` and confirm it reports the production Optimizer instance. Match synchronization scopes in export configuration to your requirements and confirm data feed sync status shows export from Cloud.
+* [ ] In Optimizer, confirm the data sync dashboard shows received data (products, prices, and attributes for Catalog Service, Product Discovery, and Recommendations as applicable). Confirm price books, catalog views, policies, facets, synonyms, and merchandising rules exist with IDs you need in the storefront. Confirm recommendations in preview and that search and recommendations performance data appears where your operations team expects it.
+* [ ] On Cloud, install storefront compatibility packages. In the storefront configuration, set `commerce-core-endpoint` to your Cloud GraphQL endpoint, or to your API Mesh endpoint when API Mesh fronts Cloud GraphQL.
+* [ ] In the storefront configuration, confirm `adobe-commerce-optimizer` is `true`, `commerce-endpoint` targets the production Optimizer GraphQL endpoint (or API Mesh when Mesh fronts Optimizer), and `headers.cs.AC-view-ID` holds the production catalog view ID from Optimizer.
+* [ ] Confirm payment, shipping, tax, inventory, and transactional email integrations that run on the host commerce system (Cloud) are live and tested. Confirm API Mesh and Adobe Developer App Builder setups stay aligned between Cloud and Optimizer for how you route requests in production.
+* [ ] Confirm App Builder production workspaces, API Mesh sources, and Adobe I/O Events subscriptions are ready for production as described in the Optimizer launch documentation.
+* [ ] Complete Commerce Optimizer program security and compliance checks (for example Admin access controls, web application firewall, penetration testing scope for PCI, Adobe Security Scan Tool registration, CORS allowlists, and privacy or cookie requirements). Use the Optimizer launch checklist for the exact items your program must satisfy; they complement the storefront security list later on this page.
+</Checklist>
 
 <Checklist checklistKey="content">
 ### Content and authoring
