@@ -14,7 +14,7 @@ graph LR
     A["Author<br/><small>Creates document</small>"]
     B["Edge Delivery Services<br/><small>Publishes page</small>"]
     C["Browser<br/><small>Loads HTML</small>"]
-    D["Block decorator<br/><small>decorate(block) · initializer · provider.render()</small>"]
+    D["Block decorator<br/><small>initializer (top level) · decorate(block) · mount UI</small>"]
     E["Drop-in<br/><small>Renders UI</small>"]
     F["Commerce API<br/><small>Data</small>"]
     A -->|"Document"| B
@@ -39,7 +39,7 @@ graph LR
 
 1. The shopper's browser requests and loads that HTML.
 
-1. The <Term>block decorator</Term> runs for each block on the page. A block decorator is the JavaScript file in your repository for that block, for example, `blocks/commerce-cart/commerce-cart.js`. Edge Delivery Services finds each block's `div` in the HTML, loads the matching file from your repository, and runs its default export. Inside that function (`decorate(block)`), your code imports the drop-in's <Term>initializer</Term>. The initializer sets the Commerce API endpoint and loads translated labels. Your code then calls `provider.render()` to mount the drop-in UI in that region of the page.
+1. The <Term>block decorator</Term> runs for each block on the page. A block decorator is the JavaScript file in your repository for that block, for example, `blocks/commerce-cart/commerce-cart.js`. Edge Delivery Services finds each block's `div` in the HTML, loads the matching file from your repository, and runs its default export. That file imports the drop-in's <Term>initializer</Term> at the top level of the file, outside `decorate(block)`, so the Commerce API endpoint and translated labels are configured before `decorate(block)` runs. Inside `decorate(block)`, your code mounts the shopper-facing UI, such as `provider.render()` to render the cart block UI.
 
 1. The drop-in component renders the shopper-facing UI — the cart, checkout form, product detail page, or whichever Commerce experience that block delivers.
 
