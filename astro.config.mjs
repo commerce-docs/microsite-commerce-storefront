@@ -238,6 +238,7 @@ async function config() {
         logo: {
           src: './src/assets/sitelogo.svg',
           replacesTitle: false,
+          alt: 'Adobe Commerce Storefront Logo',
         },
 
         social: [

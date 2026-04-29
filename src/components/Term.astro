@@ -1,0 +1,150 @@
+---
+/**
+ * Renders a glossary term with a short definition tooltip. Definitions are plain
+ * text from getGlossaryEntry; Astro escapes them in output. Ids are stable for a
+ * given build: a per-page counter replaces Math.random() so re-runs and snapshots
+ * are reproducible, while the counter still keeps ids unique (including the same
+ * term twice on one page).
+ */
+import { getGlossaryEntry } from '../data/glossary';
+
+const termIdCounterByPath = new Map<string, number>();
+
+function nextTermTooltipSuffix(pathname: string): string {
+  const n = (termIdCounterByPath.get(pathname) ?? 0) + 1;
+  termIdCounterByPath.set(pathname, n);
+  return String(n);
+}
+
+interface Props {
+  term?: string;
+}
+
+const { term } = Astro.props as Props;
+const slotContent = await Astro.slots.render('default');
+const fallbackTerm = slotContent.replace(/<[^>]+>/g, '').trim();
+const lookupTerm = (term ?? fallbackTerm).trim();
+const glossaryEntry = lookupTerm ? getGlossaryEntry(lookupTerm) : undefined;
+const pagePath = Astro.url.pathname;
+let tooltipId = '';
+if (glossaryEntry) {
+  const termSlug = lookupTerm
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'term';
+  tooltipId = `term-${termSlug}-${nextTermTooltipSuffix(pagePath)}`;
+}
+
+if (import.meta.env.DEV && lookupTerm && !glossaryEntry) {
+  console.warn(`[Term] No glossary entry found for "${lookupTerm}".`);
+}
+---
+
+{
+  glossaryEntry ? (
+    <span class="term" tabindex="0" aria-describedby={tooltipId}>
+      <slot />
+      <span class="term__tooltip" role="tooltip" id={tooltipId}>
+        {glossaryEntry.definition}
+      </span>
+    </span>
+  ) : (
+    <slot />
+  )
+}
+
+<style>
+  .term {
+    border-bottom: 1.5px dotted var(--sl-color-text);
+    cursor: help;
+    /* Creating a positioned ancestor lets the tooltip sit above in-flow text that
+       follows the term in the same line or paragraph. */
+    position: relative;
+    text-decoration: none;
+  }
+
+  .term:hover,
+  .term:focus-within {
+    z-index: 2;
+  }
+
+  .term:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+
+  .term__tooltip {
+    background-color: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    color: var(--sl-color-text);
+    font-size: 0.875rem;
+    left: 50%;
+    line-height: 1.3;
+    max-width: 18rem;
+    min-width: 12rem;
+    opacity: 0;
+    padding: 0.5rem 0.625rem;
+    pointer-events: none;
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    transform: translateX(-50%);
+    transition: opacity 150ms ease;
+    visibility: hidden;
+    white-space: normal;
+    z-index: 20;
+  }
+
+  .term__tooltip::before {
+    border-color: transparent transparent var(--sl-color-gray-5) transparent;
+    border-style: solid;
+    border-width: 0 0.4rem 0.4rem 0.4rem;
+    bottom: 100%;
+    content: '';
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  .term__tooltip::after {
+    border-color: transparent transparent var(--sl-color-bg) transparent;
+    border-style: solid;
+    border-width: 0 0.35rem 0.35rem 0.35rem;
+    bottom: calc(100% - 1px);
+    content: '';
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  .term:hover .term__tooltip,
+  .term:focus-visible .term__tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (max-width: 40rem) {
+    .term__tooltip {
+      left: 0;
+      max-width: min(16rem, 70vw);
+      min-width: 10rem;
+      transform: none;
+    }
+
+    .term__tooltip::before,
+    .term__tooltip::after {
+      left: 1rem;
+      transform: none;
+    }
+  }
+</style>
+
+{/* Global: tooltips in Starlight <Steps> extend past the <li> and the next <li> paints
+    on top. Lift the list item that contains the active term. */}
+<style is:global>
+  .sl-steps > li:is(:has(.term:hover), :has(.term:focus-within)) {
+    z-index: 3;
+  }
+</style>
