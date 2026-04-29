@@ -88,6 +88,7 @@ export function generateSidebar() {
             { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Layouts', link: '/dropins/all/layouts/' },
             { label: 'Events', link: '/dropins/all/events/' },
+            { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
