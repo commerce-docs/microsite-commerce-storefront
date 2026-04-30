@@ -613,7 +613,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 ### Git commits and pushes
 
-Review every change in Source Control or with `git diff` before you commit. If you use Cursor or another assistant, commits and pushes are your decision: inspect the diff first, then commit and push yourself, or explicitly ask the assistant to commit or push only after that review.
+Review every change in source control or with `git diff` before you commit. If you use Cursor or another assistant, commits and pushes are your decision: inspect the diff first, then commit and push yourself, or explicitly ask the assistant to commit or push only after that review.
 
 ### Before Submitting
 
