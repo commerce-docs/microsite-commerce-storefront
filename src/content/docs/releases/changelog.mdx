@@ -19,6 +19,25 @@ import Link from '@components/Link.astro';
 ***************/}
 
     <ChangelogEntry
+      date="2026-04-30"
+      title="Boilerplate Updates"
+      components={['Boilerplate']}
+    >
+      The Commerce boilerplate has been updated with a Universal Editor image model fix, Drop-in SDK dependency upgrades, the Product Recommendations drop-in upgraded to v4, and B2B additions for Order Comments and Quick Order improvements:
+
+      **Document Authoring**
+      - **Image model definition**: Universal Editor image model definition and component models updated to fix image handling in the authoring interface ([#1159](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1159)).
+
+      **Infrastructure**
+      - **Drop-in SDK**: `@dropins/tools` upgraded from 1.8.0 to 1.8.1, which includes `@adobe-commerce/elsie` 1.8.1 and `@adobe-commerce/recaptcha` 1.1.0.
+
+      **Fixes and improvements**
+      - **Product Recommendations block**: Block updated to use the Recommendations drop-in v4, which switches to the `getRecommendationsUnitsByIds` GraphQL query for proper catalog view support ([#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
+      - **B2B (Order Comments)**: New `commerce-order-comments` block renders order-level comments on B2B order details pages using the `OrderComments` container from the Order drop-in ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
+      - **B2B (Quick Order)**: Quick Order block updated with consistent configurable-product Add to Cart handling, extended `handleAddToCart` callback payload with `parentSku` and `optionsUIDs`, and fixed duplicate event emissions on option changes ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2026-03-24"
       title="Boilerplate Updates"
       components={['Boilerplate']}
@@ -207,8 +226,24 @@ import Link from '@components/Link.astro';
     </ChangelogEntry>
 
 {/****************
-**Drop-in SDK** 
+**Drop-in SDK**
 *****************/}
+
+    <ChangelogEntry
+      date="2026-04-30"
+      title="Drop-in SDK (Elsie) v1.8.1"
+      components={['Drop-in SDK']}
+    >
+      <Aside type="note" title="Internal Links">
+        Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+      </Aside>
+
+      The Drop-in SDK has been updated to 1.8.1 with the following improvements and fixes:
+
+      **Improvements and fixes**
+      - **Image srcset fix**: The `srcset` attribute on product images is now generated correctly for all viewport breakpoints. An explicit `sizes` prop was added to the Image component to prevent incorrect attribute output ([#187](https://github.com/adobe-commerce/StorefrontSDK/pull/187), [#195](https://github.com/adobe-commerce/StorefrontSDK/pull/195)).
+      - **reCAPTCHA Enterprise support**: The SDK now supports reCAPTCHA Enterprise for improved bot protection on storefront forms ([#189](https://github.com/adobe-commerce/StorefrontSDK/pull/189)).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -354,8 +389,18 @@ import Link from '@components/Link.astro';
     </ChangelogEntry>
 
 {/**********
-**Checkout** 
+**Checkout**
 ************/}
+
+    <ChangelogEntry
+      date="2026-04-30"
+      title="Checkout v3.2.1"
+      components={['Checkout']}
+    >
+      The Checkout drop-in has been updated with the following changes:
+
+      - **Vault payment method support**: The `PaymentMethods` container now forwards the full `additionalData` payload to `setPaymentMethodOnCart`, enabling Payment Services vault and other payment methods that require extra fields to send the correct GraphQL mutation variables ([#311](https://github.com/adobe-commerce/storefront-checkout/pull/311)).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -612,6 +657,22 @@ import Link from '@components/Link.astro';
 {/********************************** 
 **Storefront Compatibility Package** 
 ************************************/}
+
+      <ChangelogEntry
+          date="2026-04-30"
+          title="Storefront Compatibility Package v4.8.19 and v4.7.12"
+          components={['Storefront Compatibility Package']}
+      >
+          The Storefront Compatibility Package has been updated with the following changes:
+
+          **v4.8.19**
+          - **Bundle product availability**: Resolved an issue where bundle products with Manage Stock disabled were incorrectly reported as unavailable in the cart ([#271](https://github.com/magento-commerce/storefront-compatibility/pull/271)).
+          - **Wishlist store-view scoping**: Fixed a store-view scoping inconsistency in the Wishlist GraphQL API where `items_v2` returned items from all store views while `items_count` and the `removeProductsFromWishlist` mutation were correctly scoped to the current store view. In multi-store setups, this caused the displayed item count and the actual item list to diverge, and remove operations to affect only items visible in the current store view ([#274](https://github.com/magento-commerce/storefront-compatibility/pull/274)).
+          - **Login as Customer**: Added Login as Customer feature support ([#248](https://github.com/magento-commerce/storefront-compatibility/pull/248)).
+
+          **v4.7.12**
+          - **Guest order cancel with comments**: Resolved an internal server error when calling `requestGuestOrderCancel` on orders that include order comments. The error was introduced when the Order drop-in added `OrderComments` support and the new `comments` field appeared in order responses; the SCP `requestGuestOrderCancel` mutation did not handle the presence of that field, causing a 500 error on cancel requests ([#275](https://github.com/magento-commerce/storefront-compatibility/pull/275)).
+      </ChangelogEntry>
 
       <ChangelogEntry
           date="2026-04-13"
@@ -1149,6 +1210,17 @@ import Link from '@components/Link.astro';
 *********/}
 
     <ChangelogEntry
+      date="2026-04-30"
+      title="Order v3.3.0"
+      components={['Order']}
+    >
+      The Order drop-in has been updated with the following changes:
+
+      - **Order Comments container**: Merchants and administrators can add comments to orders in Commerce Admin and mark them as "Visible on Storefront." Comments marked visible now appear with timestamp and message in the order details view for both guest and authenticated shoppers. This also resolves a gap where comments marked visible in Commerce Admin were silently missing from the storefront. The new `OrderComments` container fetches comments for guest orders (via order token) and authenticated customer orders alike. Add the `commerce-order-comments` boilerplate block to any order details page to render the view ([#68](https://github.com/adobe-commerce/storefront-order/pull/68), [#87](https://github.com/adobe-commerce/storefront-order/pull/87)).
+      - **Unified date/time formatting**: A single `formatDateToLocale` export replaces the previous two separate formatters. Use the `FORMAT_DATETIME` constant for long date-and-time display (for example, comment timestamps). Date-only formatting is unchanged.
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2026-02-17"
       title="Order v3.1.0"
       components={['Order']}
@@ -1216,6 +1288,17 @@ import Link from '@components/Link.astro';
 {/****************** 
 **Payment Services** 
 ********************/}
+
+    <ChangelogEntry
+      date="2026-04-30"
+      title="Payment Services v3.1.0"
+      components={['Payment Services']}
+    >
+      The Payment Services drop-in has been updated with the following changes:
+
+      - **Alternative Payment Methods (APM)**: APM is now included in the list of supported payment methods, giving shoppers more payment options at checkout ([#44](https://github.com/adobe-commerce/storefront-payment-services/pull/44)).
+      - **Reliable promise rejection**: Promises are now rejected correctly even when no error handler is provided, preventing silent failures in integrations that do not define an `onError` callback ([#38](https://github.com/adobe-commerce/storefront-payment-services/pull/38)).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-02-17"
@@ -1346,6 +1429,16 @@ import Link from '@components/Link.astro';
 {/**********************
 **Product details page** 
 ************************/}
+
+    <ChangelogEntry
+      date="2026-04-30"
+      title="Product Details Page v3.0.3"
+      components={['Product details page']}
+    >
+      The Product Details Page drop-in has been updated with the following changes:
+
+      - **Number attribute formatting**: The `ProductAttributes` container accepts a new `formatValue` prop for custom formatting of numeric attribute values. This allows merchants to control the precision and display format of numeric custom attributes (for example, weight, dimensions, or product-specific measures) so that values match the display precision configured in Commerce Admin instead of rendering with raw database precision (for example, displaying `1.25` instead of `1.2500000000`). Implement the prop with a formatter function that receives the raw value and returns the formatted string ([#65](https://github.com/adobe-commerce/storefront-pdp/pull/65)).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -1522,6 +1615,40 @@ import Link from '@components/Link.astro';
 ***************************/}
 
     <ChangelogEntry
+      date="2026-04-30"
+      title="Product Recommendations v4.0.1"
+      components={['Product Recommendations']}
+    >
+      **Major version upgrade.** The Product Recommendations drop-in has been updated to the following changes:
+
+      - **Catalog view support**: The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query instead of the legacy `getRecommendations` query. This ensures recommendation units respect catalog view scoping, so globally scoped units work correctly in multi-catalog and multi-store setups. The previous `getRecommendations` query did not honor catalog view context, causing recommendation units to appear blank for stores using non-default catalog views ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
+      - **Corrupted view history recovery**: Resolved a reliability issue where a corrupted `userViewHistory` value in browser local storage could permanently prevent recommendations from loading on the product page. Because local storage is never automatically cleared, a single corrupted entry would break recommendations indefinitely for affected shoppers until they manually cleared their storage ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
+      - **Title rendering fix**: Resolved an issue with recommendation unit title display ([#36](https://github.com/adobe-commerce/storefront-recommendations/pull/36)).
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-02-17"
+      title="Product Recommendations v3.0.0"
+      components={['Product Recommendations']}
+    >
+      The Product Recommendations drop-in has been updated with the following changes:
+
+      - **Drop-in SDK upgrade** - Updated to Drop-in SDK ~1.7.0. No user-facing changes in this release.
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-01-08"
+      title="Product Recommendations v3.0.0"
+      components={['Product Recommendations']}
+    >
+      **Major version upgrade** for suite alignment. The Product Recommendations drop-in has been updated to include the following changes:
+
+      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#33](https://github.com/adobe-commerce/storefront-recommendations/pull/33)).
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2025-10-14"
       title="Product Recommendations v1.1.1"
       components={['Product Recommendations']}
@@ -1563,6 +1690,58 @@ import Link from '@components/Link.astro';
 ****************/}
 
     <ChangelogEntry
+      date="2026-04-30"
+      title="User Account v3.3.0"
+      components={['User account']}
+    >
+      The User Account drop-in has been updated with the following changes:
+
+      **Stored payment methods**
+      - **PaymentMethods container**: Shoppers can view all saved payment methods from their account page. The new `PaymentMethods` container displays stored cards with brand, masked number, and expiry status. Cards can be filtered by payment method code and shown in full or minified layout ([#57](https://github.com/adobe-commerce/storefront-account/pull/57)).
+      - **Delete stored card with confirmation**: Removing a stored payment method now shows a confirmation modal with a card preview before deleting. The modal prevents accidental deletion and disables row actions during an active removal operation ([#58](https://github.com/adobe-commerce/storefront-account/pull/58)).
+      - **PaymentCard component**: New `PaymentCard` component renders a single payment method with card type, masked number, and an optional EXPIRED tag ([#51](https://github.com/adobe-commerce/storefront-account/pull/51)).
+
+      **Address and customer attributes**
+      - **fieldIdPrefix on Addresses container**: The `fieldIdPrefix` prop is now correctly forwarded to the internal address form. This prevents duplicate field IDs when shipping and billing address forms are rendered on the same page ([#55](https://github.com/adobe-commerce/storefront-account/pull/55)).
+      - **Customer dropdown attribute prefill**: Customer custom attributes implemented as select/dropdown fields now correctly prefill their saved values from the API. Date-only fields are formatted without timezone shift ([#56](https://github.com/adobe-commerce/storefront-account/pull/56)).
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-02-17"
+      title="User Account v3.1.0"
+      components={['User account']}
+    >
+      The User Account drop-in has been updated with the following changes:
+
+      - **Address UID in create response** - Added `addressUid` to create address response for proper address identification ([#42](https://github.com/adobe-commerce/storefront-account/pull/42)).
+      - **Dynamic form field translations** - Added dynamic i18n support for field labels and placeholders, enabling custom placeholders and floating labels in address forms ([#40](https://github.com/adobe-commerce/storefront-account/pull/40)).
+      - **Improved accessibility** - Enhanced screen reader support for address form edit and remove buttons with descriptive aria labels.
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-01-08"
+      title="User Account v3.0.0"
+      components={['User account']}
+    >
+      **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
+
+      **New features**
+
+      - **Company context switching** - Order history now automatically refreshes when B2B users switch companies via the `companyContext/changed` event. This ensures users only see orders relevant to their current company context without manual page refresh ([#25](https://github.com/adobe-commerce/storefront-account/pull/25)).
+      - **Translation override support** - The Provider component now supports merging custom language definitions with default translations. Developers can pass custom `langDefinitions` through the initialize configuration to override default UI text, enabling easier localization and brand-specific terminology ([#30](https://github.com/adobe-commerce/storefront-account/pull/30)).
+
+      **Improvements**
+
+      - **Fixed configurable product links** - Product URLs in order history now correctly link to configurable product detail pages. The GraphQL query now retrieves `product_sku` and `product_url_key` at the order item level instead of nested product fields, resolving 404 errors when clicking product links from order lists ([#34](https://github.com/adobe-commerce/storefront-account/pull/34)).
+      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes.
+      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
+      - **reCAPTCHA upgrade** - Updated to @adobe-commerce/recaptcha 1.0.3 for improved security and compatibility.
+      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. B2C drop-ins have been tested on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the license agreement restricts use to Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO) only. Use on Platform-as-a-Service (PaaS) or on-premise deployments is not permitted under the license agreement.
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2025-10-14"
       title="User account v1.2.0"
       components={['User account']}
@@ -1602,6 +1781,42 @@ import Link from '@components/Link.astro';
 {/********************* 
 **User authentication** 
 ***********************/}
+
+    <ChangelogEntry
+      date="2026-02-17"
+      title="User Authentication v3.1.0"
+      components={['User authentication']}
+    >
+      The User Auth drop-in has been updated with the following changes:
+
+      - **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging ([#53](https://github.com/adobe-commerce/storefront-auth/pull/53)).
+
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-01-08"
+      title="User Authentication v3.0.0"
+      components={['User authentication']}
+    >
+      **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
+
+      **New features**
+
+      - **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates ([#21](https://github.com/adobe-commerce/storefront-auth/pull/21), [#27](https://github.com/adobe-commerce/storefront-auth/pull/27), [#39](https://github.com/adobe-commerce/storefront-auth/pull/39)).
+      - **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` ([#44](https://github.com/adobe-commerce/storefront-auth/pull/44)).
+      - **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks ([#30](https://github.com/adobe-commerce/storefront-auth/pull/30), [#35](https://github.com/adobe-commerce/storefront-auth/pull/35)).
+
+      **Improvements**
+
+      - **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains ([#43](https://github.com/adobe-commerce/storefront-auth/pull/43)).
+      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes ([#41](https://github.com/adobe-commerce/storefront-auth/pull/41)).
+      - **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
+      - **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
+      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
+      - **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
+      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#46](https://github.com/adobe-commerce/storefront-auth/pull/46)).
+
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2025-10-14"
@@ -1710,111 +1925,6 @@ import Link from '@components/Link.astro';
       components={['Wishlist']}
     >
       Initial release of the Wishlist drop-in component, including accompanying [developer](/dropins/wishlist/) documentation.
-
-    </ChangelogEntry>
-
-{/*************** 
-**User Account** 
-****************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Account v3.1.0"
-      components={['User Account']}
-    >
-      The User Account drop-in has been updated with the following changes:
-
-      - **Address UID in create response** - Added `addressUid` to create address response for proper address identification ([#42](https://github.com/adobe-commerce/storefront-account/pull/42)).
-      - **Dynamic form field translations** - Added dynamic i18n support for field labels and placeholders, enabling custom placeholders and floating labels in address forms ([#40](https://github.com/adobe-commerce/storefront-account/pull/40)).
-      - **Improved accessibility** - Enhanced screen reader support for address form edit and remove buttons with descriptive aria labels.
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Account v3.0.0"
-      components={['User Account']}
-    >
-      **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Company context switching** - Order history now automatically refreshes when B2B users switch companies via the `companyContext/changed` event. This ensures users only see orders relevant to their current company context without manual page refresh ([#25](https://github.com/adobe-commerce/storefront-account/pull/25)).
-      - **Translation override support** - The Provider component now supports merging custom language definitions with default translations. Developers can pass custom `langDefinitions` through the initialize configuration to override default UI text, enabling easier localization and brand-specific terminology ([#30](https://github.com/adobe-commerce/storefront-account/pull/30)).
-
-      **Improvements**
-
-      - **Fixed configurable product links** - Product URLs in order history now correctly link to configurable product detail pages. The GraphQL query now retrieves `product_sku` and `product_url_key` at the order item level instead of nested product fields, resolving 404 errors when clicking product links from order lists ([#34](https://github.com/adobe-commerce/storefront-account/pull/34)).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **reCAPTCHA upgrade** - Updated to @adobe-commerce/recaptcha 1.0.3 for improved security and compatibility.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. B2C drop-ins have been tested on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the license agreement restricts use to Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO) only. Use on Platform-as-a-Service (PaaS) or on-premise deployments is not permitted under the license agreement.
-
-    </ChangelogEntry>
-
-{/************************* 
-**Product Recommendations** 
-**************************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="Product Recommendations v3.0.0"
-      components={['Product Recommendations']}
-    >
-      The Product Recommendations drop-in has been updated with the following changes:
-
-      - **Drop-in SDK upgrade** - Updated to Drop-in SDK ~1.7.0. No user-facing changes in this release.
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="Product Recommendations v3.0.0"
-      components={['Product Recommendations']}
-    >
-      **Major version upgrade** for suite alignment. The Product Recommendations drop-in has been updated to include the following changes:
-
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#33](https://github.com/adobe-commerce/storefront-recommendations/pull/33)).
-
-    </ChangelogEntry>
-
-{/************ 
-**User Auth** 
-*************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Auth v3.1.0"
-      components={['User Auth']}
-    >
-      The User Auth drop-in has been updated with the following changes:
-
-      - **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging ([#53](https://github.com/adobe-commerce/storefront-auth/pull/53)).
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Auth v3.0.0"
-      components={['User Auth']}
-    >
-      **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates ([#21](https://github.com/adobe-commerce/storefront-auth/pull/21), [#27](https://github.com/adobe-commerce/storefront-auth/pull/27), [#39](https://github.com/adobe-commerce/storefront-auth/pull/39)).
-      - **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` ([#44](https://github.com/adobe-commerce/storefront-auth/pull/44)).
-      - **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks ([#30](https://github.com/adobe-commerce/storefront-auth/pull/30), [#35](https://github.com/adobe-commerce/storefront-auth/pull/35)).
-
-      **Improvements**
-
-      - **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains ([#43](https://github.com/adobe-commerce/storefront-auth/pull/43)).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes ([#41](https://github.com/adobe-commerce/storefront-auth/pull/41)).
-      - **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
-      - **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#46](https://github.com/adobe-commerce/storefront-auth/pull/46)).
 
     </ChangelogEntry>
 
@@ -2002,7 +2112,7 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2026-03-24"
-      title="Quote Management v1.1.1"
+      title="Quote Management v1.1.2"
       components={['Quote Management']}
     >
       The Quote Management drop-in has been updated with the following changes:
@@ -2077,13 +2187,14 @@ import Link from '@components/Link.astro';
 *********************/}
 
     <ChangelogEntry
-      date="2026-03-24"
-      title="Quick Order v1.0.0"
-      components={['Quick Order']}
+      date="2026-04-30"
+      title="Requisition List v1.3.0"
+      components={['Requisition List']}
     >
-      **New Quick Order drop-in** for B2B bulk ordering. The [Quick Order](/dropins-b2b/quick-order/) drop-in has been integrated into the boilerplate, enabling B2B users to add products in bulk to the cart by SKU or product name. It has feature parity with Luma Quick Order and Grid Ordering for configurable products ([#1125](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1125), [#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)).
+      The Requisition List drop-in has been updated with the following changes:
 
-      - **Language definition merge fix** - User-provided `langDefinitions` passed to the initializer are now correctly merged with the drop-in's bundled defaults. Label and placeholder overrides take effect as expected ([#23](https://github.com/adobe-commerce/storefront-quick-order/pull/23)).
+      - **Move and copy items between lists**: B2B users can now move or copy individual products or entire selections between requisition lists without leaving the page. Previously there was no built-in way to reorganize items across lists; users had to add to the target list, navigate, and delete from the source. Both move (removes from source) and copy (keeps in source) operations are available ([#127](https://github.com/adobe-commerce/storefront-requisition-list/pull/127)).
+      - **Active state on PDP Add to List button**: The `RequisitionListSelector` button on the product details page now shows an active state when the current product is already saved in the selected list. The active state applies a `requisition-list-selector--active` CSS class and renders an optional `activeIcon` prop (configurable icon name from the Drop-in SDK icon set), giving users a clear visual indicator so they know at a glance which lists already contain the product ([#116](https://github.com/adobe-commerce/storefront-requisition-list/pull/116)).
     </ChangelogEntry>
 
     <ChangelogEntry
@@ -2144,6 +2255,32 @@ import Link from '@components/Link.astro';
 
       - **Beta progression** - Updated through multiple beta versions (0.6.0, 0.7.0, 0.8.0, 1.0.0-beta1 through beta4) incorporating improvements and bug fixes ([#851](https://github.com/hlxsites/aem-boilerplate-commerce/pull/851), [#886](https://github.com/hlxsites/aem-boilerplate-commerce/pull/886), [#911](https://github.com/hlxsites/aem-boilerplate-commerce/pull/911), [#954](https://github.com/hlxsites/aem-boilerplate-commerce/pull/954), [#967](https://github.com/hlxsites/aem-boilerplate-commerce/pull/967)).
 
+    </ChangelogEntry>
+
+{/*************
+**Quick Order**
+***************/}
+
+    <ChangelogEntry
+      date="2026-04-30"
+      title="Quick Order v1.0.1"
+      components={['Quick Order']}
+    >
+      The Quick Order drop-in has been updated with the following changes:
+
+      - **Configurable product Add to Cart**: Add to Cart behavior for configurable products is now consistent and reliable. The `handleAddToCart` callback payload now includes `parentSku` (parent product SKU) and `optionsUIDs` (array of selected variant option UIDs) so downstream handlers can identify the exact variant added to the cart, including for simple products where these fields are set to empty values for consistency ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
+      - **Deduplicated option-change events**: The `QuickOrderItems` container previously emitted an increasing number of events on each product option change — the first change was correct, but each subsequent change added duplicate emissions. Events are now deduplicated so only the latest selection fires, regardless of how many times an option is changed ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
+      - **Refactored Grid Ordering integration**: The Grid Ordering integration in the Quick Order block has been refactored for better alignment with the drop-in's event model and improved maintainability ([#25](https://github.com/adobe-commerce/storefront-quick-order/pull/25)).
+    </ChangelogEntry>
+
+    <ChangelogEntry
+      date="2026-03-24"
+      title="Quick Order v1.0.0"
+      components={['Quick Order']}
+    >
+      **New Quick Order drop-in** for B2B bulk ordering. The [Quick Order](/dropins-b2b/quick-order/) drop-in has been integrated into the boilerplate, enabling B2B users to add products in bulk to the cart by SKU or product name. It has feature parity with Luma Quick Order and Grid Ordering for configurable products ([#1125](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1125), [#1156](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1156)).
+
+      - **Language definition merge fix** - User-provided `langDefinitions` passed to the initializer are now correctly merged with the drop-in's bundled defaults. Label and placeholder overrides take effect as expected ([#23](https://github.com/adobe-commerce/storefront-quick-order/pull/23)).
     </ChangelogEntry>
 
   </div>
