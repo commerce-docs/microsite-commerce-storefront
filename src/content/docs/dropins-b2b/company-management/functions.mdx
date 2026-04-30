@@ -25,6 +25,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | --- | --- |
 | [`acceptCompanyInvitation`](#acceptcompanyinvitation) | Accepts a company invitation using the invitation code and user details from an email link. |
 | [`allowCompanyRegistration`](#allowcompanyregistration) | Returns whether the backend allows company self-registration per store configuration. |
+| [`buildPermissionTree`](#buildpermissiontree) | Filters a complete ACL resource tree down to only the resources matching the provided permission IDs. |
 | [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company. |
 | [`companyEnabled`](#companyenabled) | Returns whether the Company feature is enabled in store configuration. |
 | [`createCompany`](#createcompany) | Registers a new B2B company with complete business information including company details, legal address, and administrator account. |
@@ -35,6 +36,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`deleteCompanyTeam`](#deletecompanyteam) | Deletes a company team by entity ID. |
 | [`deleteCompanyUser`](#deletecompanyuser) | Unassigns the user from the company (the user is not removed from the Company Structure tree). |
 | [`fetchUserPermissions`](#fetchuserpermissions) | Retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
+| [`flattenPermissionIds`](#flattenpermissionids) | Flattens a nested ACL resource tree into a flat array of permission ID strings. |
 | [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
 | [`getCompanyAclResources`](#getcompanyaclresources) | Retrieves the available ACL (Access Control List) resources for company role permissions. |
 | [`getCompanyCredit`](#getcompanycredit) | Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. |
@@ -944,6 +946,64 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`ValidateCompanyEmailResponse`](#validatecompanyemailresponse).
+
+## Utility Functions
+
+The following utility functions are exported from the public API and support working with company ACL (Access Control List) data.
+
+## buildPermissionTree
+
+The `buildPermissionTree` function filters a complete ACL resource tree down to only the nodes that match a given set of permission IDs. Nodes without matching descendants are excluded. Used when displaying or saving role permissions.
+
+```ts
+const buildPermissionTree = (
+  allResources: CompanyAclResourceModel[],
+  selectedIds: string[]
+): CompanyAclResourceModel[]
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `allResources` | `CompanyAclResourceModel[]` | Yes | The full, unfiltered tree of ACL resources as returned by `getCompanyAclResources`. |
+| `selectedIds` | `string[]` | Yes | An array of permission ID strings to keep. Nodes whose ID is in this array, or that have a descendant in this array, are included in the result. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a filtered `CompanyAclResourceModel[]` containing only nodes that match the provided permission IDs (or have matching descendants).
+
+## flattenPermissionIds
+
+The `flattenPermissionIds` function traverses a nested ACL resource tree and returns a flat array of all permission ID strings. Useful for initializing checkboxes, validating permission sets, or building the `selectedIds` input for `buildPermissionTree`.
+
+```ts
+const flattenPermissionIds = (
+  resources: CompanyAclResourceModel[]
+): string[]
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `resources` | `CompanyAclResourceModel[]` | Yes | The nested ACL resource tree to flatten. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `string[]` containing every permission ID found in the tree (including nested children).
 
 ## Data Models
 
