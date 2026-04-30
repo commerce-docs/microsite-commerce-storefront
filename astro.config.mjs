@@ -80,6 +80,16 @@ async function config() {
           },
         },
       },
+      {
+        name: 'custom-analytics',
+        hooks: {
+          'astro:config:setup': ({ injectScript }) => {
+            // Tracks page views, clicks, scroll depth, and form interactions on every page.
+            // Dynamic import so analytics loads after the main page bundle without blocking render.
+            injectScript('page', `void import('/src/scripts/analytics.ts');`);
+          },
+        },
+      },
       starlight({
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/release/',
