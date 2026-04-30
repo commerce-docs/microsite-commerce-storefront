@@ -135,6 +135,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Customize Layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                { label: 'Stored Payment Methods', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
                 { label: 'Validate Address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
             },
