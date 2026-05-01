@@ -27,7 +27,7 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
             { label: 'Backend Options', link: '/get-started/backends/' },
-            { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Run it locally', link: '/boilerplate/getting-started/' },
             { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance Best Practices', link: '/get-started/performance/' },
