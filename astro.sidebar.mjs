@@ -104,6 +104,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Federated search', link: '/how-tos/federated-search/' },
+            { label: 'Dynamic category navigation', link: '/how-tos/category-navigation/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
             {

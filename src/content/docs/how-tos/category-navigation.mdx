@@ -1,0 +1,563 @@
+---
+title: Dynamic category navigation
+description: Learn how to automatically generate storefront navigation from your Commerce category tree and publish it to da.live, while keeping full merchant control over the result.
+sidebar:
+  label: Dynamic category navigation
+  order: 7
+prerequisites:
+  html: true
+  js: true
+  commerce: true
+time: "30 minutes"
+---
+
+import { Code } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+
+This approach uses Commerce as the source of category data, but stores the final navigation structure in a generated `nav.json` file that is published to da.live and rendered by the `header-dynamic` block at runtime. The generated file provides a working default navigation, while still allowing merchants to edit, extend, and customize the result directly in the CMS layer.
+
+This makes the navigation both **automated and flexible**: Commerce provides the category backbone, and the merchant can enrich it with additional content and rules.
+
+## Concept
+
+A synchronization workflow retrieves category data from the Commerce GraphQL API and converts it into an EDS-compatible `nav.json` file. The script:
+
+1. Fetches and flattens the category hierarchy into the expected navigation structure
+2. Generates a `nav.json` file for each store view
+3. Uploads and publishes the file to da.live via the DA Admin API
+4. Lets the header block fetch and render that file at runtime
+
+The workflow can run during onboarding, on demand, or on a schedule.
+
+<Aside type="note" title="Deployment-specific queries">
+The GraphQL query used depends on the Commerce deployment type:
+- **ACO / ACO Connector** deployments use ACO-specific queries such as `navigation`.
+- **ACCS / federated gateway** deployments use the `categories` query.
+
+The reference implementation in this tutorial targets ACO. ACCS support requires a separate script with different query logic.
+</Aside>
+
+## Merchant flexibility
+
+The generated navigation is only the starting point. Merchants can customize it in da.live or extend it through the `header-dynamic` block. This enables use cases such as:
+
+- Supporting multiple `nav.json` files for different customer groups
+- Filtering navigation entries based on the active customer segment
+- Adding images in arbitrary locations inside the menu structure
+- Including non-category or non-commerce links
+- Introducing custom navigation behavior without changing the sync workflow
+
+In practice, this means Commerce defines the base structure, but merchants are not limited to Commerce-only entries or a rigid hierarchy.
+
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- A `nav-sync` script that fetches the category tree and publishes it to da.live
+- A GitHub Actions workflow that keeps the navigation in sync on a schedule
+- A `header-dynamic` block that renders the dynamic navigation at runtime
+- Full merchant control to edit or override the published navigation in da.live
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
+- An Adobe Commerce instance with categories configured (ACO or ACCS)
+- Your [storefront configuration](/setup/configuration/commerce-configuration/) set up with Commerce endpoints and headers
+- A [da.live](https://da.live) account with write access to your site's content repository
+- Node.js 22 or later installed locally
+
+## How it works
+
+The solution has three parts:
+
+1. **nav-sync script** — A Node.js tool that queries the Commerce `navigation` GraphQL API, flattens the category hierarchy into a `path / title` sheet, and uploads it to da.live as a JSON file.
+2. **GitHub Actions workflow** — Runs the script on a schedule (daily) or on demand, so the published navigation stays current without manual intervention.
+3. **Header block update** — The `header-dynamic` block fetches the published JSON at runtime and builds the navigation menu from it, falling back to the static `/nav` document if the JSON is unavailable.
+
+<Tasks>
+
+<Task>
+
+### Step 1: Add the nav-sync script
+
+Create a `tools/nav-sync/` directory in your storefront repository with two files.
+
+**`tools/nav-sync/package.json`:**
+
+```json title="tools/nav-sync/package.json"
+{
+  "name": "nav-sync",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Fetch Commerce category tree and write nav-categories spreadsheet files",
+  "main": "nav-sync.js",
+  "scripts": {
+    "start": "node nav-sync.js"
+  }
+}
+```
+
+**`tools/nav-sync/nav-sync.js`:**
+
+The script performs four operations:
+
+1. Fetches `config.json` from the live EDS site URL (same way the browser SDK does)
+2. Calls the ACO Catalog Service `navigation` GraphQL query with the correct `AC-View-ID` header for the requested store
+3. Flattens the category tree into `path / title` rows
+4. When DA credentials are present, uploads the resulting JSON sheet to da.live and publishes it
+
+```javascript title="tools/nav-sync/nav-sync.js"
+/**
+ * nav-sync.js
+ *
+ * Fetches the Commerce category tree via the ACO Catalog Service
+ * `navigation` query, flattens it into an EDS-compatible sheet,
+ * and uploads it to da.live.
+ *
+ * Usage:
+ *   node nav-sync.js <site> <store> <family>
+ *
+ *   site   — EDS site hostname
+ *   store  — "default" or a store key from config.json
+ *   family — ACO product family (required)
+ */
+
+const NAV_SHEET_NAME = 'nav';
+
+// ─── GraphQL ─────────────────────────────────────
+
+const NAVIGATION_QUERY = `
+  query navigation($family: String!) {
+    navigation(family: $family) {
+      slug
+      name
+      children {
+        slug
+        name
+        children {
+          slug
+          name
+          children {
+            slug
+            name
+            children { slug, name }
+          }
+        }
+      }
+    }
+  }
+`;
+
+async function fetchNavigation(endpoint, headers, family) {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify({
+      query: NAVIGATION_QUERY,
+      variables: { family },
+    }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const json = await response.json();
+  if (json.errors?.length) throw new Error(JSON.stringify(json.errors));
+  return json.data?.navigation ?? [];
+}
+
+// ─── Tree flattening ─────────────────────────────
+
+function flattenTree(categories, rows = []) {
+  categories.forEach((cat) => {
+    rows.push({ path: `/${cat.slug}`, title: cat.name });
+    if (cat.children?.length) flattenTree(cat.children, rows);
+  });
+  return rows;
+}
+
+function toEdsJson(rows) {
+  return {
+    total: rows.length,
+    offset: 0,
+    limit: rows.length,
+    data: rows,
+    ':type': 'sheet',
+  };
+}
+```
+
+<Aside type="note" title="Full implementation">
+The snippet above shows the core concepts. For the complete script with config loading, DA upload, IMS token exchange, and error handling, see the [reference implementation](https://github.com/hlxsites/aem-boilerplate-commerce/blob/demos/tools/nav-sync/nav-sync.js).
+</Aside>
+
+**Key design decisions:**
+
+- **Config is fetched from the live site URL** (`https://<site>/config.json`), not from the local filesystem. This makes the script compatible with the <Link href="https://www.aem.live/docs/repoless" text="repoless" /> pattern where a single repo can serve multiple sites.
+- **Org and repo are derived from the site hostname** (`branch--repo--org.aem.live`), so no extra configuration is needed for the DA upload target.
+- **The GraphQL query is ACO-specific.** ACCS (classic Catalog Service) uses a different data model and would require a separate script.
+
+</Task>
+
+<Task>
+
+### Step 2: Configure authentication
+
+The script supports two authentication methods for uploading to da.live. Choose the one that fits your workflow.
+
+**Option A — `DA_TOKEN` (simplest for local runs):**
+
+Copy the Bearer token from an active da.live browser session:
+
+1. Open [da.live](https://da.live) and log in
+2. Open DevTools → Network tab → click any request
+3. Copy the value from the `Authorization` header (everything after `Bearer `)
+4. Pass it as an environment variable:
+
+```bash
+DA_TOKEN="eyJhbGci..." node tools/nav-sync/nav-sync.js \
+  main--my-repo--my-org.aem.live default my-family
+```
+
+**Option B — IMS server-to-server credentials (for CI / GitHub Actions):**
+
+Create an OAuth server-to-server credential in the <Link href="https://developer.adobe.com/developer-console/docs/guides/services/services-add-api-oauth-s2s/" text="Adobe Developer Console" /> and set:
+
+```bash
+export DA_CLIENT_ID="<client-id>"
+export DA_CLIENT_SECRET="<client-secret>"
+```
+
+<Aside type="caution" title="da.live permissions">
+The identity used to upload must be added to the `/**` path group in the da.live config sheet at `da.live/config#/{org}/{repo}/`. For IMS server-to-server credentials, use the technical account's profile email (not the JWT user_id).
+</Aside>
+
+**Without credentials**, the script still runs — it fetches and flattens the categories, writes local output files, but skips the DA upload. This is useful for testing the category tree locally.
+
+</Task>
+
+<Task>
+
+### Step 3: Run the script
+
+Run from the repository root:
+
+```bash
+node tools/nav-sync/nav-sync.js <site> <store> <family>
+```
+
+| Argument | Description |
+| --- | --- |
+| `site` | EDS site hostname (e.g. `main--my-repo--my-org.aem.live`) |
+| `store` | `default` or a store key from `config.json` (e.g. `spain`) |
+| `family` | ACO product family — required; must be created in ACO first |
+
+**Example — sync the default store:**
+
+```bash
+DA_TOKEN="..." node tools/nav-sync/nav-sync.js \
+  main--thunderbolts-aco--adobe-commerce.aem.live \
+  default \
+  default
+```
+
+**Example — sync a localized store:**
+
+```bash
+DA_TOKEN="..." node tools/nav-sync/nav-sync.js \
+  main--thunderbolts-aco--adobe-commerce.aem.live \
+  spain \
+  default
+```
+
+After a successful run, you'll see output like:
+
+```
+Site: main--thunderbolts-aco--adobe-commerce.aem.live
+[default] Starting sync...
+[default] Fetching navigation (family: default)...
+[default] Flattened 7 categories
+✅ [default] Written tools/nav-sync/default/nav.json
+✅ [default] DA: saved /adobe-commerce/thunderbolts-aco/nav.json
+✅ [default] DA: previewed
+✅ [default] DA: published
+Done.
+```
+
+The published sheet is now served by EDS at `/nav.json` (default store) or `/<store>/nav.json` (other stores).
+
+</Task>
+
+<Task>
+
+### Step 4: Add the header-dynamic block
+
+Create a `blocks/header-dynamic/` directory in your storefront repository. This block is a full fork of the default `header` block with dynamic navigation support added. The key addition is a `buildNavSectionsFromJson` function that fetches the published JSON and builds the nav menu from it.
+
+Add this function before the `decorate` export:
+
+```javascript title="blocks/header-dynamic/header-dynamic.js"
+async function buildNavSectionsFromJson(src) {
+  let rows;
+  try {
+    const resp = await fetch(src);
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    rows = json.data || [];
+  } catch {
+    return null;
+  }
+  if (!rows.length) return null;
+
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('default-content-wrapper');
+  const rootUl = document.createElement('ul');
+  wrapper.appendChild(rootUl);
+
+  const dropdownMap = new Map();
+  const groupMap = new Map();
+
+  rows.forEach(({ path: catPath, title }) => {
+    const segments = catPath.split('/').filter(Boolean);
+    const topSlug = segments[0];
+
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = rootLink(catPath);
+    a.textContent = title;
+    li.appendChild(a);
+
+    if (segments.length === 1) {
+      rootUl.appendChild(li);
+      const dropdownUl = document.createElement('ul');
+      li.appendChild(dropdownUl);
+      dropdownMap.set(topSlug, dropdownUl);
+    } else if (segments.length === 2) {
+      li.classList.add('nav-group');
+      const groupItemsUl = document.createElement('ul');
+      groupItemsUl.classList.add('nav-group-items');
+      li.appendChild(groupItemsUl);
+      const dropdownUl = dropdownMap.get(topSlug);
+      if (dropdownUl) {
+        dropdownUl.appendChild(li);
+        groupMap.set(`${topSlug}/${segments[1]}`, groupItemsUl);
+      }
+    } else {
+      const groupKey = segments.slice(0, 2).join('/');
+      const target = groupMap.get(groupKey) || dropdownMap.get(topSlug);
+      if (target) target.appendChild(li);
+    }
+  });
+
+  rootUl.querySelectorAll('.nav-group-items:empty').forEach((ul) => ul.remove());
+  rootUl.querySelectorAll(':scope > li > ul:empty').forEach((ul) => ul.remove());
+
+  return wrapper;
+}
+```
+
+Then, inside the `decorate` function, replace the static nav sections with the dynamic content:
+
+```javascript title="blocks/header-dynamic/header-dynamic.js (inside decorate)"
+const navSections = nav.querySelector('.nav-sections');
+
+const navCategoriesMeta = getMetadata('nav-categories');
+const navCategoriesPath = navCategoriesMeta
+  ? new URL(navCategoriesMeta, window.location).pathname
+  : rootLink('/nav.json');
+const dynamicSections = await buildNavSectionsFromJson(navCategoriesPath);
+if (navSections && dynamicSections) {
+  navSections.textContent = '';
+  navSections.appendChild(dynamicSections);
+}
+```
+
+**How it works:**
+
+- The `header-dynamic` block is a full fork of the boilerplate `header` block — copy `header.js`, `header.css`, `renderAuthCombine.js`, and `renderAuthDropdown.js` into `blocks/header-dynamic/` and rename the JS and CSS files accordingly
+- The function fetches the `nav.json` sheet published by the script
+- Depth-1 rows (e.g. `/women`) become top-level bar items
+- Depth-2 rows (e.g. `/women/clothing`) become group headings in the dropdown
+- Depth-3+ rows are nested under their depth-2 parent
+- If the fetch fails or returns no data, the static `/nav` document content is preserved as a fallback
+- The `nav-categories` metadata key lets merchants override the JSON source per page
+
+<Aside type="tip" title="Customization">
+Merchants can customize navigation beyond what the category tree provides — for example, adding promotional links, images, or non-commerce pages. They can either edit the published `nav.json` in da.live, or extend the `header-dynamic` block logic to merge additional data sources.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Step 5: Set up the GitHub Actions workflow
+
+Create a workflow that runs the sync script on a schedule and on demand.
+
+<Aside type="tip" title="When to disable the schedule">
+The example workflow runs daily at midnight UTC. This is appropriate during onboarding and while your category taxonomy is actively changing. Once the navigation is stable and merchants have customized `nav.json` in da.live, **disable the `schedule` trigger** to prevent automated runs from overwriting their edits. You can always re-enable it or trigger a run manually whenever taxonomy changes need to be picked up.
+</Aside>
+
+```yaml title=".github/workflows/sync-nav.yml"
+name: Sync Nav Categories
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'EDS site hostname (leave blank to use NAV_SITE)'
+        required: false
+        default: ''
+      store:
+        description: 'Store to sync. Leave blank to run all stores.'
+        required: false
+        default: ''
+      family:
+        description: 'ACO product family'
+        required: false
+        default: ''
+
+env:
+  NAV_SITE: main--my-repo--my-org.aem.live
+  NAV_FAMILY: my-family
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sync default store
+        if: >
+          github.event_name == 'schedule'
+          || github.event.inputs.store == ''
+          || github.event.inputs.store == 'default'
+        env:
+          DA_TOKEN: ${{ secrets.DA_TOKEN }}
+          DA_CLIENT_ID: ${{ secrets.DA_CLIENT_ID }}
+          DA_CLIENT_SECRET: ${{ secrets.DA_CLIENT_SECRET }}
+        run: |
+          node tools/nav-sync/nav-sync.js \
+            "${{ github.event.inputs.site || env.NAV_SITE }}" \
+            default \
+            "${{ github.event.inputs.family || env.NAV_FAMILY }}"
+
+      - name: Upload nav files as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nav-categories
+          path: tools/nav-sync/*/nav.txt
+```
+
+**To add more stores**, add a new step for each store. Each step runs independently so one store's failure doesn't block the others.
+
+**Required repository secrets** (at least one set):
+
+- `DA_TOKEN` — pre-generated Bearer token, or
+- `DA_CLIENT_ID` + `DA_CLIENT_SECRET` — IMS server-to-server credentials
+
+</Task>
+
+<Task>
+
+### Step 6: Verify the result
+
+After running the script (locally or via GitHub Actions):
+
+1. **Check the local output**: Open `tools/nav-sync/default/nav.json` to inspect the generated category sheet
+2. **Check da.live**: Navigate to [da.live](https://da.live) → your org/repo and verify the `nav.json` file exists
+3. **Check the live site**: Visit your storefront and verify the navigation reflects the category tree
+4. **Test the fallback**: Rename `nav.json` in da.live to confirm the header falls back to the static `/nav` document
+
+**Expected JSON output:**
+
+```json title="nav.json"
+{
+  "total": 7,
+  "offset": 0,
+  "limit": 7,
+  "data": [
+    { "path": "/women", "title": "Women" },
+    { "path": "/women/clothing", "title": "Women's Clothing" },
+    { "path": "/women/clothing/pants", "title": "Women's Pants" },
+    { "path": "/women/clothing/shirts", "title": "Women's Shirts" },
+    { "path": "/men", "title": "Men" },
+    { "path": "/men/clothing", "title": "Men's Clothing" },
+    { "path": "/men/clothing/pants", "title": "Men's Pants" }
+  ],
+  ":type": "sheet"
+}
+```
+
+</Task>
+
+</Tasks>
+
+## Multistore support
+
+For [multistore](/setup/configuration/multistore-setup/) setups, the script uses the store key from `config.json` to resolve the correct `AC-View-ID` header for each store view. Run the script once per store:
+
+```bash
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live default  my-family
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live spain    my-family
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live fr-ca    my-family
+```
+
+Each store's sheet is published to its own path (`/nav.json`, `/spain/nav.json`, `/fr-ca/nav.json`). The `header-dynamic` block uses `rootLink('/nav.json')` which automatically resolves to the correct store-scoped path.
+
+In the GitHub Actions workflow, add one step per store so they run independently.
+
+## Strengths
+
+- No manual authoring required to get a working navigation
+- Navigation is generated from Commerce and published automatically
+- Merchants can still edit the final file in da.live
+- Supports [multistore](/setup/configuration/multistore-setup/) setups with per-store navigation
+- Allows arbitrary customizations such as images, non-commerce links, and customer-group-specific navigation
+- Works as a hybrid model between automated sync and CMS-driven flexibility
+
+## Known limitations
+
+- **Sync can overwrite manual edits**: Generated content is replaced on each sync run unless the workflow is disabled. There is no automatic merge strategy for preserving manual edits.
+- **Deployment-aware logic required**: ACCS and ACO expose different category APIs. The reference implementation targets ACO; ACCS requires a separate script.
+- **Scheduled sync introduces latency**: Category changes in Commerce are not reflected on the storefront until the next script run. For immediate updates, trigger the workflow manually or run the script locally.
+- **Missing page strategy needed**: The script generates navigation links, but corresponding product listing pages must still exist in da.live. Categories that do not have a destination page will produce broken links. You can extend the script to check whether a page exists in da.live for each category and create it automatically if it does not.
+- **Depends on correct Commerce configuration**: Each store view must have the correct endpoint and headers configured in `config.json` for the script to retrieve the right category tree.
+
+## Troubleshooting
+
+### Common issues
+
+* **"No navigation items for family" warning**
+
+  > The family name passed to the script doesn't match any family configured in your ACO instance. Verify the family name in the ACO admin and ensure it matches the `<family>` argument.
+
+* **DA upload returns 401 or 403**
+
+  > Your token has expired or the identity lacks permissions. For `DA_TOKEN`, copy a fresh token from da.live DevTools. For IMS credentials, verify the technical account email is added to the da.live config sheet at `da.live/config#/{org}/{repo}/`.
+
+* **Navigation doesn't update on the live site**
+
+  > The script runs three steps: save → preview → publish. Check the script output for any skipped steps. If preview or publish failed, you can trigger them manually from the da.live UI.
+
+* **Header still shows old/static navigation**
+
+  > Verify that `nav.json` is accessible at `https://<site>/nav.json`. Check that the `header-dynamic` block code fetches this path and that there are no caching issues (clear CDN cache if needed).
+
+## Related resources
+
+- [Storefront configuration](/setup/configuration/commerce-configuration/) — `config.json` reference
+- [Multistore setup](/setup/configuration/multistore-setup/) — configuring multiple store views
+- [Blocks customization](/boilerplate/customizing-blocks/) — customizing EDS blocks
+- [Reference implementation](https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/tools/nav-sync) — complete nav-sync script and workflow
