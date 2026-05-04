@@ -1,9 +1,9 @@
 /**
  * Sidebar navigation configuration
- * 
+ *
  * This file maintains the sidebar structure for the Adobe Commerce Storefront documentation.
  * The sidebar is organized by audience (Developers, Merchants, etc.) and uses the Starlight Sidebar Topics plugin.
- * 
+ *
  * @returns {Array} Sidebar topics configuration array
  */
 
@@ -28,7 +28,6 @@ export function generateSidebar() {
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Lighthouse audits', link: '/get-started/run-lighthouse/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: "Launch checklist", link: "setup/launch/" },
           ],
@@ -801,8 +800,9 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/quick-start/' },
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
-            { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
+            { label: 'How block tables work', link: '/merchants/quick-start/block-tables/' },
             { label: 'Using the Document Authoring tool', link: '/merchants/quick-start/document-authoring/' },
+            { label: 'Your first page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using digital assets management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
@@ -818,8 +818,6 @@ export function generateSidebar() {
           label: 'B2C Commerce blocks',
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
-            { label: 'Personalization setup', link: '/merchants/blocks/personalization/' },
-            { label: 'Product Recommendations setup', link: '/merchants/blocks/product-recommendations/' },
             { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
             { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
             { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -904,6 +902,8 @@ export function generateSidebar() {
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
+            { label: 'Personalization setup', link: '/merchants/content-customizations/personalization/' },
+            { label: 'Product Recommendations setup', link: '/merchants/content-customizations/product-recommendations/' },
             { label: 'Prerendered product pages', link: '/merchants/content-customizations/prerendered-product-pages/' },
             { label: 'Terms and conditions', link: '/merchants/content-customizations/terms-and-conditions/' },
           ],
