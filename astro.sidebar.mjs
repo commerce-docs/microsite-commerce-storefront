@@ -27,8 +27,10 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
             { label: 'Backend Options', link: '/get-started/backends/' },
-            { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Run it locally', link: '/boilerplate/getting-started/' },
+            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance Best Practices', link: '/get-started/performance/' },
           ],
         },
         {
@@ -57,18 +59,6 @@ export function generateSidebar() {
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
             { label: 'AI Agent Skills', link: '/boilerplate/ai-agent-skills/' },
-            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance Best Practices', link: '/get-started/performance/' },
-            {
-              label: 'Compatibility Package',
-              collapsed: true,
-              items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -152,6 +142,16 @@ export function generateSidebar() {
             {
               label: 'Multistore',
               link: '/setup/configuration/multistore-setup/',
+            },
+            {
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
+                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
+              ],
             },
             {
               label: 'Configuration',
