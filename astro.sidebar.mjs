@@ -48,7 +48,7 @@ export function generateSidebar() {
         },
         {
           label: 'Commerce Boilerplate',
-          collapsed: true,
+          collapsed: false,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
             { label: 'Getting Started', link: '/boilerplate/getting-started/' },
@@ -62,8 +62,8 @@ export function generateSidebar() {
         },
         // ---------- DROP-INS Overview ----------
         {
-          label: 'Working with Drop-Ins',
-          collapsed: true,
+          label: 'Commerce Drop-Ins',
+          collapsed: false,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
@@ -460,7 +460,8 @@ export function generateSidebar() {
                     { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                     { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                     { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
-                    { label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
+                    {
+                      label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
                   ],
                 },
