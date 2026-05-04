@@ -97,3 +97,118 @@ quickOrderProvider.render(QuickOrderItems, {
 <Aside type="tip">
 For configurable products, providing the `ProductOptions` slot is required so users can select options before adding to cart; otherwise validation will show "Configuration required" for those items.
 </Aside>
+
+## QuickOrderMultipleSku slots
+
+The `QuickOrderMultipleSku` container exposes one slot for customizing the "Add to List" button.
+
+```typescript
+interface QuickOrderMultipleSkuProps {
+  slots?: {
+    AddToListButton?: SlotProps<{
+      handleAddToList: (values?: SubmitSkuValue) => void;
+      loading: boolean;
+      textAreaValue: string;
+    }>;
+  };
+}
+```
+
+### AddToListButton slot
+
+Context: `{ handleAddToList: (values?: SubmitSkuValue) => void; loading: boolean; textAreaValue: string }`. Use this to replace the default "Add to List" button with custom UI. Call `handleAddToList()` to trigger the add-items flow.
+
+#### Example
+
+```js
+import QuickOrderMultipleSku from '@dropins/storefront-quick-order/containers/QuickOrderMultipleSku.js';
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+
+quickOrderProvider.render(QuickOrderMultipleSku, {
+  slots: {
+    AddToListButton: (ctx) => {
+      const { handleAddToList, loading, textAreaValue } = ctx;
+      const button = document.createElement('button');
+      button.textContent = loading ? 'Adding...' : 'Custom Add to List';
+      button.disabled = loading;
+      button.addEventListener('click', () => handleAddToList());
+      ctx.replaceWith(button);
+    },
+  },
+})(quickOrderMultipleSkuContainer);
+```
+
+## QuickOrderVariantsGrid slots
+
+The `QuickOrderVariantsGrid` container exposes slots for customizing each cell type in the variants grid, as well as the action bar.
+
+```typescript
+interface QuickOrderVariantsGridProps {
+  slots?: {
+    Actions?: SlotProps<{ onClear: () => void; onSaveToCsv: () => void; onCollectData: () => VariantTableData[]; isDisabled: boolean; variantsCount: number }>;
+    ImageCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    SKUCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    AvailabilityCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    PriceCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    QuantityCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    SubtotalCell?: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }>;
+    [customColumnKey: string]: SlotProps<{ variant: ProductVariant; quantity: number; onQuantityChange: (sku: string, qty: number) => void }> | undefined;
+  };
+}
+```
+
+### Actions slot
+
+Context: `{ onClear, onSaveToCsv, onCollectData, isDisabled, variantsCount }`. Replace the entire action bar (Clear, Save to CSV, and Collect Data buttons) with custom UI.
+
+### ImageCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Customize image cell rendering for each variant row.
+
+### SKUCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Customize the SKU cell rendering.
+
+### AvailabilityCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Customize availability/stock status display.
+
+### PriceCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Customize price display for each variant.
+
+### QuantityCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Replace the quantity input with custom controls. Call `onQuantityChange(sku, qty)` to update state.
+
+### SubtotalCell slot
+
+Context: `{ variant, quantity, onQuantityChange }`. Customize subtotal calculation and display.
+
+### Custom column slots
+
+For any column defined in the `columns` prop with a custom `key`, provide a slot named `{key}Cell`. Context is the same as other cell slots.
+
+#### Example: Custom VariantOptionAttributesCell
+
+```js
+import QuickOrderVariantsGrid from '@dropins/storefront-quick-order/containers/QuickOrderVariantsGrid.js';
+import { render as quickOrderProvider } from '@dropins/storefront-quick-order/render.js';
+
+quickOrderProvider.render(QuickOrderVariantsGrid, {
+  columns: [{ key: 'variantOptionAttributes', label: 'Variant' }],
+  slots: {
+    VariantOptionAttributesCell: (ctx) => {
+      const { variant } = ctx;
+      const { variantOptionAttributes } = variant.product;
+      const cellWrapper = document.createElement('div');
+      variantOptionAttributes.forEach((attr) => {
+        const item = document.createElement('div');
+        item.textContent = `${attr.label}: ${attr.value}`;
+        cellWrapper.appendChild(item);
+      });
+      ctx.appendChild(cellWrapper);
+    },
+  },
+})(gridOrderingContainer);
+```
