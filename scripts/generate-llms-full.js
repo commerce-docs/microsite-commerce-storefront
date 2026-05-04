@@ -10,6 +10,67 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
 
+// --- Glossary ---
+
+function loadGlossary() {
+  const src = readFileSync(join(projectRoot, 'src/data/glossary.ts'), 'utf-8');
+
+  function normalizeTerm(value) {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  // Find the glossaryEntries array and walk it with a simple brace counter
+  const arrayStart = src.indexOf('const glossaryEntries');
+  const fromArray = src.slice(arrayStart);
+  const assignIdx = fromArray.indexOf('= [');
+  const bracketOpen = assignIdx >= 0 ? assignIdx + 2 : fromArray.indexOf('[');
+  let depth = 0;
+  let end = -1;
+  for (let i = bracketOpen; i < fromArray.length; i++) {
+    if (fromArray[i] === '[') depth++;
+    else if (fromArray[i] === ']') { depth--; if (depth === 0) { end = i; break; } }
+  }
+  const arrayContent = fromArray.slice(bracketOpen + 1, end);
+
+  // Extract individual entry blocks with a brace counter
+  const entries = [];
+  let entryDepth = 0;
+  let entryStart = -1;
+  for (let i = 0; i < arrayContent.length; i++) {
+    if (arrayContent[i] === '{') {
+      if (entryDepth === 0) entryStart = i;
+      entryDepth++;
+    } else if (arrayContent[i] === '}') {
+      entryDepth--;
+      if (entryDepth === 0 && entryStart >= 0) {
+        entries.push(arrayContent.slice(entryStart + 1, i));
+        entryStart = -1;
+      }
+    }
+  }
+
+  const index = new Map();
+  for (const entry of entries) {
+    const termMatch = entry.match(/term:\s*'([^']*)'/) ?? entry.match(/term:\s*"([^"]*)"/);
+    const defMatch = entry.match(/definition:\s*\n?\s*'([^']*)'/) ?? entry.match(/definition:\s*\n?\s*"([^"]*)"/);
+    if (!termMatch || !defMatch) continue;
+
+    const term = termMatch[1];
+    const definition = defMatch[1];
+
+    const aliasBlock = entry.match(/aliases:\s*\[([^\]]*)\]/)?.[1] ?? '';
+    const aliases = [...aliasBlock.matchAll(/['"]([^'"]+)['"]/g)].map(m => m[1]);
+
+    const obj = { term, definition };
+    index.set(normalizeTerm(term), obj);
+    for (const alias of aliases) index.set(normalizeTerm(alias), obj);
+  }
+
+  return index;
+}
+
+const GLOSSARY = loadGlossary();
+
 // Configuration
 const DOCS_DIR = join(projectRoot, 'src/content/docs');
 const DOCS_ROOT = DOCS_DIR;
@@ -145,18 +206,35 @@ function removeFrontmatter(content) {
   return content.replace(frontmatterRegex, '');
 }
 
+function extractFrontmatterBlock(content) {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  return match ? match[1] : null;
+}
+
 function extractTitle(content) {
-  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
-  const match = content.match(frontmatterRegex);
-
-  if (match) {
-    const frontmatter = match[1];
-    const titleMatch = frontmatter.match(/^title:\s*(.+)$/m);
-    if (titleMatch) {
-      return titleMatch[1].trim().replace(/['"]/g, '');
-    }
+  const fm = extractFrontmatterBlock(content);
+  if (fm) {
+    const m = fm.match(/^title:\s*(.+)$/m);
+    if (m) return m[1].trim().replace(/['"]/g, '');
   }
+  return null;
+}
 
+function extractDescription(content) {
+  const fm = extractFrontmatterBlock(content);
+  if (fm) {
+    const m = fm.match(/^description:\s*(.+)$/m);
+    if (m) return m[1].trim().replace(/^['"]|['"]$/g, '');
+  }
+  return null;
+}
+
+function extractIframeSrc(content) {
+  const fm = extractFrontmatterBlock(content);
+  if (fm) {
+    const m = fm.match(/^iframe:\s*\r?\n\s+src:\s*["']?([^"'\r\n]+)["']?/m);
+    if (m) return m[1].trim();
+  }
   return null;
 }
 
@@ -165,6 +243,14 @@ function removeImports(content) {
   result = result.replace(/^import\s+\{[^}]*\}\s+from\s+['"].*?['"];?\r?\n/gm, '');
   result = result.replace(/^import\s+.*?;?\r?\n/gm, '');
   return result;
+}
+
+function buildImportMap(content) {
+  const map = new Map();
+  const re = /^import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/gm;
+  let m;
+  while ((m = re.exec(content)) !== null) map.set(m[1], m[2]);
+  return map;
 }
 
 // --- Preserve human-visible content from MDX components (before generic stripping) ---
@@ -256,27 +342,16 @@ function expandOptionsTable(content) {
 }
 
 function expandBadgeEmbedChecklist(content) {
-  let result = content.replace(/<Badge\b([^/]*?)\/>/g, (full, attrs) => {
+  // Badge: inline text only (used in table cells — newlines would break the table)
+  let result = content.replace(/<Badge\b([\s\S]*?)\/>/g, (_, attrs) => {
     const text = (attrs.match(/\btext=["']([^"']*)["']/) || [])[1] || '';
     const tooltip = (attrs.match(/\btooltip=["']([^"']*)["']/) || [])[1] || '';
-    let s = '';
-    if (text) {
-      s += `\n\n*(Badge: ${text})*`;
-    }
-    if (tooltip) {
-      s += ` _(${tooltip})_`;
-    }
-    return s ? `${s}\n\n` : '\n\n';
+    return tooltip ? `${text} (${tooltip})` : text;
   });
 
-  result = result.replace(/<Embed\b([^/]*?)\/>/g, (full, attrs) => {
+  result = result.replace(/<Embed\b([^/]*?)\/>/g, (_, attrs) => {
     const src = (attrs.match(/\bsrc=["']([^"']*)["']/) || [])[1] || '';
     return src ? `\n\n**Embedded content:** ${src}\n\n` : '\n\n';
-  });
-
-  result = result.replace(/<Checklist\b([^/]*?)\/>/g, (full, attrs) => {
-    const key = (attrs.match(/\bchecklistKey=["']([^"']*)["']/) || [])[1] || '';
-    return key ? `\n\n*(Interactive checklist: ${key})*\n\n` : `\n\n*(Interactive checklist)*\n\n`;
   });
 
   return result;
@@ -289,12 +364,127 @@ function expandToolsAemLiveNote(content) {
   );
 }
 
-function expandVisualMdxContent(content) {
+/** <Term>word</Term> or <Term term="lookup">word</Term> → "word (definition)" */
+function expandTermComponents(content) {
+  function normalizeTerm(value) {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  return content.replace(/<Term(?:\s+term=["']([^"']*)["'])?\s*>([\s\S]*?)<\/Term>/g, (_, termProp, slot) => {
+    const displayText = slot.trim();
+    const lookupKey = normalizeTerm(termProp ?? displayText);
+    const entry = GLOSSARY.get(lookupKey);
+    return entry ? `${displayText} (${entry.definition})` : displayText;
+  });
+}
+
+/** <IFrame src={frontmatter.iframe.src} /> → Storybook link using the resolved src. */
+function expandIFrameComponents(content, iframeSrc) {
+  if (!iframeSrc) return content;
+  const url = `${PRODUCTION_BASE_URL}/storybook-static/iframe.html?id=${iframeSrc}&viewMode=docs`;
+  return content.replace(
+    /<IFrame\b[\s\S]*?\/>/g,
+    `\n\n[View interactive component in Storybook](${url})\n\n`
+  );
+}
+
+/** <Diagram type="mermaid" code={`...`} /> → fenced mermaid block; <Diagram caption>img</Diagram> → image + caption. */
+function expandDiagramComponents(content) {
+  let result = content;
+
+  // Self-closing mermaid variant: code={`...`}
+  const marker = 'code={`';
+  let pos = 0;
+  while (true) {
+    const tagStart = result.indexOf('<Diagram', pos);
+    if (tagStart === -1) break;
+    const codeIdx = result.indexOf(marker, tagStart);
+    if (codeIdx === -1 || codeIdx - tagStart > 600) { pos = tagStart + 8; continue; }
+    const innerStart = codeIdx + marker.length;
+    const innerEnd = result.indexOf('`}', innerStart);
+    if (innerEnd === -1) { pos = tagStart + 8; continue; }
+    const closeIdx = result.indexOf('/>', innerEnd);
+    if (closeIdx === -1) { pos = tagStart + 8; continue; }
+    const mermaidCode = result.slice(innerStart, innerEnd);
+    const attrRegion = result.slice(tagStart, innerStart);
+    const captionMatch = attrRegion.match(/\bcaption=["']([^"']*)["']/);
+    const caption = captionMatch ? `\n\n*${captionMatch[1]}*` : '';
+    const replacement = `\n\n\`\`\`mermaid\n${mermaidCode.trim()}\n\`\`\`${caption}\n\n`;
+    result = result.slice(0, tagStart) + replacement + result.slice(closeIdx + 2);
+    pos = tagStart + replacement.length;
+  }
+
+  // Paired image/content variant: <Diagram caption="...">content</Diagram>
+  result = result.replace(/<Diagram\b([^>]*)>([\s\S]*?)<\/Diagram>/g, (_, attrs, body) => {
+    const captionMatch = attrs.match(/\bcaption=["']([^"']*)["']/);
+    const inner = body.trim();
+    return captionMatch ? `\n\n${inner}\n\n*${captionMatch[1]}*\n\n` : `\n\n${inner}\n\n`;
+  });
+
+  return result;
+}
+
+/** <Tabs> / <TabItem label="..."> → ### heading per tab, strip wrappers. */
+function expandTabsComponents(content) {
+  let result = content.replace(
+    /<TabItem\b[^>]*\blabel=["']([^"']*)["'][^>]*>([\s\S]*?)<\/TabItem>/g,
+    (_, label, body) => `\n\n### ${label}\n\n${body.trim()}\n\n`
+  );
+  result = result.replace(/<\/?Tabs\b[^>]*>/g, '');
+  return result;
+}
+
+/** <Screenshot src={Var} alt="..." /> → markdown image using the import map. */
+function expandScreenshotComponents(content, importMap, filePath) {
+  return content.replace(/<Screenshot\b([\s\S]*?)\/>/g, (_, attrs) => {
+    const alt = (attrs.match(/\balt=["']([^"']*)["']/) || [])[1] || 'Screenshot';
+    const strSrc = (attrs.match(/\bsrc=["']([^"']*)["']/) || [])[1];
+    if (strSrc) return `![${alt}](${resolveMarkdownLinkTarget(strSrc, filePath)})`;
+    const varName = (attrs.match(/\bsrc=\{(\w+)\}/) || [])[1];
+    if (varName && importMap.has(varName)) {
+      return `![${alt}](${resolveMarkdownLinkTarget(importMap.get(varName), filePath)})`;
+    }
+    return `![${alt}]`;
+  });
+}
+
+/** <ExternalLink href="...">text</ExternalLink> → [text](href) */
+function expandExternalLinkComponents(content) {
+  return content.replace(
+    /<ExternalLink\b[^>]*\bhref=["']([^"']*)["'][^>]*>([\s\S]*?)<\/ExternalLink>/g,
+    (_, href, text) => `[${text.trim()}](${href})`
+  );
+}
+
+/** <CodeInclude code={varName} lang="ts" /> → fenced block from the ?raw import. */
+function expandCodeIncludeComponents(content, importMap, filePath) {
+  return content.replace(/<CodeInclude\b([\s\S]*?)\/>/g, (_, attrs) => {
+    const varName = (attrs.match(/\bcode=\{(\w+)\}/) || [])[1];
+    const lang = (attrs.match(/\blang=["']([^"']*)["']/) || [])[1] || 'ts';
+    if (varName && importMap.has(varName)) {
+      const importPath = importMap.get(varName).replace(/\?raw$/, '');
+      const resolvedPath = resolve(dirname(filePath), importPath);
+      try {
+        const code = readFileSync(resolvedPath, 'utf-8');
+        return `\n\n\`\`\`${lang}\n${code.trim()}\n\`\`\`\n\n`;
+      } catch {
+        return `\n\n*[Code: ${importPath}]*\n\n`;
+      }
+    }
+    return '';
+  });
+}
+
+function expandVisualMdxContent(content, iframeSrc) {
   let result = expandCodeComponents(content);
   result = expandLinkCards(result);
   result = expandOptionsTable(result);
   result = expandBadgeEmbedChecklist(result);
   result = expandToolsAemLiveNote(result);
+  result = expandTermComponents(result);
+  result = expandDiagramComponents(result);
+  result = expandTabsComponents(result);
+  result = expandExternalLinkComponents(result);
+  result = expandIFrameComponents(result, iframeSrc);
   return result;
 }
 
@@ -352,17 +542,15 @@ function convertLinks(content, filePath) {
   });
 }
 
-function convertLinkComponentsToMarkdown(content) {
-  let result = content;
-  let prev;
-  do {
-    prev = result;
-    result = result.replace(
-      /<Link\s+href=["']([^"']*)["']\s+text=["']([^"']*)["'][^/]*\/>/g,
-      '[$2]($1)'
-    );
-  } while (result !== prev);
-  return result;
+function unwrapLinkComponents(content) {
+  return content.replace(/<Link\b[\s\S]*?\/>/g, (match) => {
+    const jsxHref = match.match(/\bhref=\{["']([^"']+)["']\}/);
+    if (jsxHref) return jsxHref[1];
+    const strHref = match.match(/\bhref=["']([^"']+)["']/);
+    if (strHref) return strHref[1];
+    return '';
+  });
+
 }
 
 // --- MDX / HTML cleanup ---
@@ -377,55 +565,6 @@ function unwrapAsideBlocks(content) {
     }
     return `\n\n> ${inner}\n\n`;
   });
-}
-
-/** Inner tags first (typical nesting). Aside handled separately. */
-const PAIRED_TAG_ORDER = [
-  'Option',
-  'Options',
-  'TabItem',
-  'Step',
-  'Task',
-  'Tabs',
-  'Steps',
-  'Tasks',
-  'CardGrid',
-  'Diagram',
-  'Callouts',
-  'TableWrapper',
-  'StarlightPage',
-  'Card',
-  'Note',
-  'LinkCard',
-];
-
-function stripPairedCustomTags(content) {
-  let result = content;
-  for (let round = 0; round < 30; round++) {
-    let changed = false;
-    for (const tag of PAIRED_TAG_ORDER) {
-      const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'g');
-      const next = result.replace(re, '$1');
-      if (next !== result) {
-        changed = true;
-      }
-      result = next;
-    }
-    if (!changed) {
-      break;
-    }
-  }
-  return result;
-}
-
-function removeSelfClosingCustomJsx(content) {
-  let result = content;
-  let prev;
-  do {
-    prev = result;
-    result = result.replace(/<[A-Z][A-Za-z0-9.]*[\s\S]*?\/>/g, '');
-  } while (result !== prev);
-  return result;
 }
 
 function convertIframesToText(content) {
@@ -450,21 +589,42 @@ function unwrapCommonHtml(content) {
   return result;
 }
 
-/** MDX/HTML stripping after links are normalized (Link components must be converted before convertLinks). */
+function unwrapTableBlocks(content) {
+  return content.replace(/<TableWrapper\b[^>]*>([\s\S]*?)<\/TableWrapper>/g, '$1');
+}
+
+function unwrapTaskBlocks(content) {
+  return content.replace(/<Tasks>([\s\S]*?)<\/Tasks>/g, (_, inner) => {
+    let step = 0;
+    return inner.replace(/<Task>([\s\S]*?)<\/Task>/g, (_, body) => {
+      step++;
+      return body.replace(/(#{1,6} )/, `$1${step}. `);
+    });
+  });
+}
+
+/** Strip wrapper tags whose content is already readable markdown (Steps, Callouts, etc.). */
+function unwrapSimpleBlockWrappers(content) {
+  return content
+    .replace(/<Steps>([\s\S]*?)<\/Steps>/g, '$1')
+    .replace(/<Callouts>([\s\S]*?)<\/Callouts>/g, '$1')
+    .replace(/<FileTree>([\s\S]*?)<\/FileTree>/g, '$1')
+    .replace(/<Checklist\b[^>]*>([\s\S]*?)<\/Checklist>/g, '$1')
+    .replace(/<CardGrid\b[^>]*>([\s\S]*?)<\/CardGrid>/g, '$1')
+    .replace(/<Options\b[^>]*>([\s\S]*?)<\/Options>/g, '$1')
+    .replace(/<Option>([\s\S]*?)<\/Option>/g, '$1')
+    .replace(/<ColorTokenList\b[\s\S]*?\/>/g, '');
+}
+
+/** MDX/HTML cleanup after links are normalized (Link components must be converted before convertLinks). */
 function stripMdxArtifacts(content) {
   let result = content;
   result = unwrapAsideBlocks(result);
-  result = stripPairedCustomTags(result);
+  result = unwrapTableBlocks(result);
+  result = unwrapTaskBlocks(result);
+  result = unwrapSimpleBlockWrappers(result);
   result = convertIframesToText(result);
   result = unwrapCommonHtml(result);
-  result = removeSelfClosingCustomJsx(result);
-  result = result.replace(/<(\w+)[^>]*>([\s\S]*?)<\/\1>/g, (match, tag, inner) => {
-    if (tag === 'Aside' || tag === 'Note') {
-      return `> **Note:** ${inner.trim()}`;
-    }
-    return inner;
-  });
-  result = result.replace(/<\/?(?:Task|Tasks|Option|Options)>/g, '');
   return result;
 }
 
@@ -473,13 +633,25 @@ function processFile(filePath, relativePath) {
     const content = readFileSync(filePath, 'utf-8');
 
     const title = extractTitle(content) || relativePath;
+    const description = extractDescription(content);
+    const iframeSrc = extractIframeSrc(content);
+    const importMap = buildImportMap(content);
 
     let processed = removeFrontmatter(content);
     processed = removeImports(processed);
-    processed = expandVisualMdxContent(processed);
-    processed = convertLinkComponentsToMarkdown(processed);
+    processed = expandVisualMdxContent(processed, iframeSrc);
+    processed = expandScreenshotComponents(processed, importMap, filePath);
+    processed = expandCodeIncludeComponents(processed, importMap, filePath);
+    processed = unwrapLinkComponents(processed);
     processed = convertLinks(processed, filePath);
     processed = stripMdxArtifacts(processed);
+    processed = processed.replace(/\n{3,}/g, '\n\n');
+
+    // For pages whose only content is a Storybook iframe, the description
+    // frontmatter field is the only prose — include it explicitly.
+    if (iframeSrc && description) {
+      processed = description + '\n\n' + processed.trim();
+    }
 
     const sectionHeader = `\n\n---\n\n# ${title}\n\n`;
 
