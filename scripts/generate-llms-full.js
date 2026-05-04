@@ -3,6 +3,8 @@
 import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync } from 'fs';
 import { join, dirname, relative, resolve, normalize } from 'path';
 import { fileURLToPath } from 'url';
+import { generateSidebar } from '../astro.sidebar.mjs';
+import { PRODUCTION_BASE_URL } from '../site.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,7 +17,6 @@ const OUTPUT_FULL = join(projectRoot, 'public/llms-full.txt');
 const OUTPUT_SMALL = join(projectRoot, 'public/llms-small.txt');
 const OUTPUT_LLMSTXT = join(projectRoot, 'public/llms.txt');
 const OUTPUT_LLMS_TXT_DIR = join(projectRoot, 'public/_llms-txt');
-const PRODUCTION_BASE_URL = 'https://experienceleague.adobe.com/developer/commerce/storefront';
 
 /**
  * Thematic bundles (paths relative to src/content/docs, no extension).
@@ -510,30 +511,34 @@ function getAllDocsFiles(dir, baseDir = dir, fileList = []) {
 }
 
 function getSidebarOrder() {
-  return [
-    'get-started',
-    'setup',
-    'dropins/all',
-    'dropins/cart',
-    'dropins/checkout',
-    'dropins/order',
-    'dropins/payment-services',
-    'dropins/personalization',
-    'dropins/product-details',
-    'dropins/product-discovery',
-    'dropins/recommendations',
-    'dropins/user-account',
-    'dropins/user-auth',
-    'dropins/wishlist',
-    'dropins-b2b',
-    'sdk',
-    'merchants',
-    'videos',
-    'playgrounds',
-    'releases',
-    'troubleshooting',
-    'resources'
-  ];
+  const seen = new Set();
+  const prefixes = [];
+
+  function visit(items) {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      if (item.link) {
+        const path = item.link.replace(/^\//, '').replace(/\/$/, '');
+        const top = path.split('/')[0];
+        if (top && !seen.has(top)) {
+          seen.add(top);
+          prefixes.push(top);
+        }
+      }
+      if (item.autogenerate?.directory) {
+        const dir = item.autogenerate.directory.replace(/^\//, '').replace(/\/$/, '');
+        const top = dir.split('/')[0];
+        if (top && !seen.has(top)) {
+          seen.add(top);
+          prefixes.push(top);
+        }
+      }
+      if (item.items) visit(item.items);
+    }
+  }
+
+  visit(generateSidebar());
+  return prefixes;
 }
 
 function sortFiles(files) {
