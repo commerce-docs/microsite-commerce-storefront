@@ -48,7 +48,7 @@ export function generateSidebar() {
         },
         {
           label: 'Commerce Boilerplate',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
             { label: 'Getting Started', link: '/boilerplate/getting-started/' },
@@ -63,7 +63,7 @@ export function generateSidebar() {
         // ---------- DROP-INS Overview ----------
         {
           label: 'Commerce Drop-Ins',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
@@ -84,7 +84,7 @@ export function generateSidebar() {
         },
         // ---------- HOW-TOS ----------
         {
-          label: 'How-To Guides',
+          label: 'Tutorials',
           collapsed: true,
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
