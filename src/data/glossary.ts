@@ -11,6 +11,65 @@ const glossaryEntries: GlossaryEntry[] = [
     aliases: ['Commerce boilerplate', 'boilerplate'],
   },
   {
+    term: 'Edge Delivery Services',
+    definition:
+      "Adobe's hosting and delivery infrastructure that turns authored documents into fast HTML pages served from servers close to the shopper. You push code to GitHub; Edge Delivery Services builds and publishes automatically.",
+    aliases: ['EDS'],
+  },
+  {
+    term: 'Document Authoring',
+    definition:
+      'The tooling for creating storefront pages as documents in Google Docs, SharePoint, or DA.live without writing code. Tables in documents define the blocks that appear on each page.',
+    aliases: ['DA.live', 'Document Author'],
+  },
+  {
+    term: 'GraphQL',
+    definition:
+      'A query language that drop-in components use to request and update data from Adobe Commerce APIs. Catalog Service, Live Search, and the core Commerce API all expose GraphQL endpoints.',
+  },
+  {
+    term: 'npm',
+    definition:
+      "Node's package manager. You use it to install drop-in packages — for example, `npm install @dropins/storefront-cart` — in your storefront repository.",
+  },
+  {
+    term: 'event bus',
+    definition:
+      'A shared in-memory channel that lets drop-in components on the same page publish and subscribe to events without depending directly on each other.',
+    aliases: ['Event Bus'],
+  },
+  {
+    term: 'Luma',
+    definition:
+      "Adobe Commerce's classic server-side storefront theme, built with PHP. If you run a Luma storefront today, Luma Bridge can help share cart and sign-in sessions with EDS drop-ins while you migrate.",
+  },
+  {
+    term: 'Luma Bridge',
+    definition:
+      'A PHP module on your Commerce instance that reads session cookies from EDS drop-ins, letting Luma pages share the same shopper cart and sign-in session during a phased migration to Edge Delivery Services.',
+  },
+  {
+    term: 'Catalog Service',
+    definition:
+      "Adobe's fast, read-only GraphQL API for product data. Drop-ins call it instead of core Commerce GraphQL for product pages, search results, and category listings — up to ten times faster.",
+  },
+  {
+    term: 'Live Search',
+    definition:
+      "Adobe's AI-powered search service. It returns results instantly as shoppers type and adjusts rankings and facets based on browsing and click signals in the current session.",
+  },
+  {
+    term: 'Data Connection',
+    definition:
+      'An optional Commerce extension that sends storefront and order event data to Adobe Experience Platform for use in personalization, segmentation, and cross-channel campaigns.',
+  },
+  {
+    term: 'Storefront Compatibility package',
+    definition:
+      'A PHP package you install on Commerce PaaS that extends the GraphQL schema so cart, checkout, account, and order drop-ins can communicate with your backend as expected.',
+    aliases: ['Compatibility package', 'Storefront Compatibility Package'],
+  },
+  {
     term: 'Code Sync app',
     definition:
       "Syncs your repository with the Edge Delivery code bus and purges CDN caches when you push. Installing it on a repository also configures your site's content pointer in helix configuration.",
@@ -94,7 +153,8 @@ const glossaryEntries: GlossaryEntry[] = [
   {
     term: 'Decorate function',
     definition:
-      'The standard block entry point (`decorate`) where a storefront block initializes and renders drop-in containers.',
+      'The JavaScript module that runs for a block after the page loads. It imports the initializer, then calls provider.render() to mount the drop-in UI into the block region of the page.',
+    aliases: ['block decorator', 'block decorators', 'decorate'],
   },
   {
     term: 'Slot',
