@@ -90,6 +90,8 @@ export function generateRedirects(basePath) {
         '/get-started/release': `${basePath}/releases/`,
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/seo': `${basePath}/setup/seo/`,
+        '/get-started/seo/': `${basePath}/setup/seo/`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
