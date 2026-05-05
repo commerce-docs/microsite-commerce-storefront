@@ -2,7 +2,8 @@
  * Custom Analytics Tracking Script
  *
  * Captures page views, time on page, bounce rate, clicks, scroll depth,
- * and form interactions, then writes them to Supabase via the REST API.
+ * form interactions, and high-value outbound (outcome) clicks, then writes
+ * them to Supabase via the REST API.
  *
  * Injected on every page via the Astro integration in astro.config.mjs.
  * No cookies are set. Visitor IDs are random UUIDs stored in localStorage.
@@ -76,6 +77,47 @@ async function dbInsert(
   }
 }
 
+/** High-value outbound destinations for management reporting (first match wins). */
+function classifyOutcomeLink(url: URL): { name: string; category: string } | null {
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname.toLowerCase();
+
+  if (host.endsWith('github.com')) {
+    if (path.includes('hlxsites/aem-boilerplate-commerce')) {
+      return { name: 'commerce_boilerplate_repo', category: 'repository' };
+    }
+    if (path.includes('adobe-commerce')) {
+      return { name: 'adobe_commerce_github', category: 'repository' };
+    }
+    if (path.includes('commerce-docs')) {
+      return { name: 'commerce_docs_github', category: 'repository' };
+    }
+    return null;
+  }
+
+  if (host === 'da.live' || host.endsWith('.da.live')) {
+    return { name: 'da_live', category: 'authoring_tools' };
+  }
+
+  if (host === 'developer.adobe.com') {
+    return { name: 'developer_adobe', category: 'adobe_docs' };
+  }
+
+  if (host === 'experienceleague.adobe.com') {
+    return { name: 'experience_league', category: 'adobe_docs' };
+  }
+
+  if (host === 'www.aem.live' || host === 'aem.live') {
+    return { name: 'aem_live', category: 'edge_docs' };
+  }
+
+  return null;
+}
+
+function isExternalUrl(url: URL): boolean {
+  return url.origin !== location.origin;
+}
+
 async function dbPatch(
   table: string,
   filter: string,
@@ -124,6 +166,7 @@ async function dbPatch(
     const duration = Math.round((Date.now() - pageLoadTime) / 1000);
     dbPatch('page_views', `id=eq.${pageViewId}`, {
       duration_seconds: duration,
+      // Per-page "no internal click before leave" — dashboards use session-level bounce in SQL
       is_bounce: !navigated,
     });
   });
@@ -143,13 +186,39 @@ async function dbPatch(
     { capture: true }
   );
 
-  // ---- Click events ----
+  // ---- Click events (generic + tagged outcome links for management reporting) ----
   document.addEventListener('click', (e) => {
     const target = e.target as Element;
     const link = target.closest('a');
     const button = target.closest('button');
     const el = link ?? button;
     if (!el) return;
+
+    if (link?.href) {
+      try {
+        const dest = new URL(link.href, location.href);
+        if (isExternalUrl(dest)) {
+          const outcome = classifyOutcomeLink(dest);
+          if (outcome) {
+            dbInsert('events', {
+              session_id: sessionId,
+              visitor_id: visitorId,
+              url: location.href,
+              event_type: 'outcome',
+              event_name: outcome.name,
+              event_data: {
+                category: outcome.category,
+                href: dest.href.slice(0, 500),
+                link_text: el.textContent?.trim().slice(0, 100) ?? null,
+              },
+            });
+            return;
+          }
+        }
+      } catch {
+        // ignore bad href
+      }
+    }
 
     dbInsert('events', {
       session_id: sessionId,

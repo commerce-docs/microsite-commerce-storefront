@@ -86,7 +86,8 @@ async function config() {
           'astro:config:setup': ({ injectScript }) => {
             // Tracks page views, clicks, scroll depth, and form interactions on every page.
             // Dynamic import so analytics loads after the main page bundle without blocking render.
-            injectScript('page', `void import('/src/scripts/analytics.ts');`);
+            // Source: src/analytics/tracker.ts (see src/analytics/README.md).
+            injectScript('page', `void import('/src/analytics/tracker.ts');`);
           },
         },
       },

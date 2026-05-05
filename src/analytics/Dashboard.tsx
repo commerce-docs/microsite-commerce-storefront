@@ -45,6 +45,20 @@ interface EventRow {
   event_count: number;
 }
 
+interface EngagementRow {
+  avg_pages_per_session: number;
+  sessions_with_2plus_pages: number;
+  sessions_total: number;
+  returning_visitors: number;
+  unique_visitors_30d: number;
+}
+
+interface OutcomeRow {
+  outcome_key: string;
+  category: string | null;
+  clicks: number;
+}
+
 // ---------------------------------------------------------------------------
 // Supabase client — env vars are replaced at build time by Vite
 // ---------------------------------------------------------------------------
@@ -78,6 +92,19 @@ function truncateUrl(url: string, max = 60): string {
   } catch {
     return url.length > max ? url.slice(0, max) + '…' : url;
   }
+}
+
+function outcomeLabel(key: string): string {
+  const labels: Record<string, string> = {
+    commerce_boilerplate_repo: 'Commerce boilerplate (GitHub)',
+    adobe_commerce_github: 'Adobe Commerce org (GitHub)',
+    commerce_docs_github: 'Commerce docs (GitHub)',
+    da_live: 'DA.live',
+    developer_adobe: 'developer.adobe.com',
+    experience_league: 'Experience League',
+    aem_live: 'AEM.live docs',
+  };
+  return labels[key] ?? key.replace(/_/g, ' ');
 }
 
 // ---------------------------------------------------------------------------
@@ -129,13 +156,22 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<DailySummary[]>([]);
   const [topPages, setTopPages] = useState<TopPage[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [engagement, setEngagement] = useState<EngagementRow | null>(null);
+  const [outcomes, setOutcomes] = useState<OutcomeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [totalsRes, chartRes, pagesRes, eventsRes] = await Promise.all([
+        const [
+          totalsRes,
+          chartRes,
+          pagesRes,
+          eventsRes,
+          engagementRes,
+          outcomesRes,
+        ] = await Promise.all([
           supabase.from('analytics_totals_30d').select('*').single(),
           supabase
             .from('analytics_summary')
@@ -144,17 +180,23 @@ export default function Dashboard() {
             .limit(30),
           supabase.from('top_pages').select('*').limit(20),
           supabase.from('events_summary').select('*').limit(30),
+          supabase.from('management_engagement_30d').select('*').single(),
+          supabase.from('outcome_clicks_30d').select('*').limit(25),
         ]);
 
         if (totalsRes.error) throw totalsRes.error;
         if (chartRes.error) throw chartRes.error;
         if (pagesRes.error) throw pagesRes.error;
         if (eventsRes.error) throw eventsRes.error;
+        if (engagementRes.error) throw engagementRes.error;
+        if (outcomesRes.error) throw outcomesRes.error;
 
         setTotals(totalsRes.data as Totals);
         setChartData((chartRes.data ?? []) as DailySummary[]);
         setTopPages((pagesRes.data ?? []) as TopPage[]);
         setEvents((eventsRes.data ?? []) as EventRow[]);
+        setEngagement(engagementRes.data as EngagementRow);
+        setOutcomes((outcomesRes.data ?? []) as OutcomeRow[]);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to load analytics data.'
@@ -216,6 +258,87 @@ export default function Dashboard() {
             label="Bounce rate"
             value={`${totals.bounce_rate_pct}%`}
             sub="single-page sessions"
+          />
+        </div>
+      ) : null}
+
+      {/* ---- Management: outcome clicks ---- */}
+      <SectionHeader title="Outbound clicks (last 30 days)" />
+      <p className="section-intro">
+        Clicks on high-value outbound links (GitHub boilerplate, DA.live, Adobe
+        docs). Use this with top pages to show docs driving the next step.
+      </p>
+
+      {loading ? (
+        <LoadingPlaceholder rows={3} />
+      ) : outcomes.length === 0 ? (
+        <p className="empty-state">
+          No outcome clicks yet. Follow a few outbound links from the docs.
+        </p>
+      ) : (
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Destination</th>
+                <th>Category</th>
+                <th className="num-col">Clicks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {outcomes.map((row) => (
+                <tr key={row.outcome_key}>
+                  <td>{outcomeLabel(row.outcome_key)}</td>
+                  <td>
+                    <span className="muted">{row.category ?? '—'}</span>
+                  </td>
+                  <td className="num-col">{Number(row.clicks).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ---- Management: engagement depth ---- */}
+      <SectionHeader title="Engagement depth (last 30 days)" />
+      <p className="section-intro">
+        Avg pages per visit, multi-page sessions, and visitors who came back in
+        more than one session.
+      </p>
+
+      {loading ? (
+        <div className="cards-grid cards-grid--engagement">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="stat-card loading-card" />
+          ))}
+        </div>
+      ) : engagement ? (
+        <div className="cards-grid cards-grid--engagement">
+          <StatCard
+            label="Avg pages / session"
+            value={Number(engagement.avg_pages_per_session ?? 0).toFixed(2)}
+          />
+          <StatCard
+            label="Sessions with 2+ pages"
+            value={Number(engagement.sessions_with_2plus_pages ?? 0).toLocaleString()}
+            sub={`of ${Number(engagement.sessions_total ?? 0).toLocaleString()} sessions`}
+          />
+          <StatCard
+            label="Returning visitors"
+            value={Number(engagement.returning_visitors ?? 0).toLocaleString()}
+            sub={
+              Number(engagement.unique_visitors_30d ?? 0) > 0
+                ? `${Math.round(
+                    (100 * Number(engagement.returning_visitors ?? 0)) /
+                      Number(engagement.unique_visitors_30d)
+                  )}% of unique visitors`
+                : undefined
+            }
+          />
+          <StatCard
+            label="Unique visitors"
+            value={Number(engagement.unique_visitors_30d ?? 0).toLocaleString()}
           />
         </div>
       ) : null}
