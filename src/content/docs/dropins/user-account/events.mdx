@@ -22,6 +22,7 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
+| [`error`](#error-emits) | Emits | Emitted when a network request fails (excluding aborted requests). |
 | [account/customerPaymentTokens](#accountcustomerpaymenttokens-listens) | Listens | Optional **display list** of stored payment tokens for the PaymentMethods UI (injection only); consumed eagerly when present. Does not participate in removal. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
@@ -31,6 +32,40 @@ The **User Account** drop-in uses the [event bus](/sdk/reference/events) to emit
 ## Event details
 
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `error` (emits)
+
+Emitted when any GraphQL or network request made by the drop-in fails. Aborted requests (`AbortError`) are excluded — they are re-thrown but do not trigger this event. The event fires on the shared event bus before the error is re-thrown, so listeners receive it even when the calling code also handles the rejection.
+
+Every API function in the drop-in (`getCustomer`, `updateCustomer`, `getOrderHistoryList`, `createCustomerAddress`, `deletePaymentToken`, `getCustomerPaymentTokens`, and others) is wired to emit this event on failure.
+
+<Aside type="note">
+This event uses the bare channel name `error` (not `account/error`). The `source` field in the payload is set to `'auth'`.
+</Aside>
+
+#### Event payload
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `source` | `string` | Always `'auth'`. |
+| `type` | `string` | Always `'network'`. |
+| `error` | `Error` | The original caught `Error` object. |
+
+</TableWrapper>
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('error', (payload) => {
+  if (payload.source === 'auth' && payload.type === 'network') {
+    console.error('User Account network error:', payload.error.message);
+  }
+});
+```
 
 ### `account/customerPaymentTokens` (listens)
 
