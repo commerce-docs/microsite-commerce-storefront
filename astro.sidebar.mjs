@@ -23,13 +23,13 @@ export function generateSidebar() {
           label: 'Start Here',
           collapsed: false,
           items: [
-            { label: 'Storefront Developer Guide', link: '/get-started/' },
+            { label: 'Storefront developer guide', link: '/get-started/' },
             { label: 'Before you start', link: '/get-started/before-you-start/' },
-            { label: 'Storefront Architecture', link: '/get-started/architecture/' },
-            { label: 'Backend Options', link: '/get-started/backends/' },
+            { label: 'Storefront architecture', link: '/get-started/architecture/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance Best Practices', link: '/get-started/performance/' },
+            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance best practices', link: '/get-started/performance/' },
           ],
         },
         {
