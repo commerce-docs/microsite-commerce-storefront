@@ -8,6 +8,7 @@ sidebar:
 import { Aside, Steps } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 import Diagram from '@components/Diagram.astro';
+import Link from '@components/Link.astro';
 
 Drop-in components implement an event-driven architecture that uses the `@dropins/tools/event-bus.js` module to facilitate communication between components. This event system enables drop-ins to respond to application state changes, maintain loose coupling between components, and keep their state synchronized across your storefront.
 
@@ -28,6 +29,12 @@ The system uses a publish-subscribe pattern where components can:
 </Steps>
 
 This pattern allows drop-ins to communicate without having direct dependencies on each other, making your storefront more modular and maintainable.
+
+### Multiple storefront routes
+
+<Aside type="note">
+The bus coordinates drop-ins on the same loaded document. It does not send events from one full page navigation to the next. When the shopper moves from a cart route to a checkout route, the checkout document loads a new bus instance; cart continuity comes from Commerce (server-side cart) and from your storefront wiring that rehydrates the cart on the new page. The Commerce boilerplate persists the cart id when `cart/data` fires (`persistCartDataInSession` in the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/index.js" text="global initializers module" />) and imports the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/cart.js" text="cart initializer" /> on startup. The checkout block listens on that new page's bus; see <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js" text="blocks/commerce-checkout/commerce-checkout.js" /> for `cart/initialized` and related handlers. For a shorter introduction, read [How drop-ins coordinate on a page](/get-started/architecture/drop-ins-on-a-page/). For synchronous reads from code, see [Using drop-ins](/dropins/all/quick-start/) (`getCartDataFromCache`).
+</Aside>
 
 <Diagram type="mermaid" code={`
 %%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
@@ -196,21 +203,166 @@ function updateCartQuantity(itemId, quantity) {
 
 ## Common events reference
 
-Drop-ins use common events for cross-component communication, authentication management, localization, and error handling.
+These three events are shared across multiple drop-ins. Your storefront code emits `authenticated` and `locale`; drop-ins emit `error` for your code to handle.
 
 <TableWrapper nowrap={[0]}>
 
 | Event | Category | Used By | Description |
 |-------|----------|---------|-------------|
-| [authenticated](/dropins/all/common-events/#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
-| [error](/dropins/all/common-events/#error) | Error Handling | Most drop-ins | Error notifications |
-| [locale](/dropins/all/common-events/#locale) | Localization | All drop-ins | Language/locale changes |
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
 
 </TableWrapper>
 
-<Aside type="tip">
-For detailed information about these events including payloads and usage examples, see the [Common events reference](/dropins/all/common-events/). For drop-in-specific events, refer to each drop-in's individual Events page.
-</Aside>
+### authenticated
+
+Category: Authentication
+Direction: Emitted by an external source, listened to by drop-ins
+Used By: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fires when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- An authentication token is refreshed
+- The authentication state is restored (for example, page refresh with active session)
+- A session expires
+- A user logs out
+- A user successfully logs in
+
+#### Data payload
+
+```typescript
+boolean
+```
+
+`true` = user is authenticated. `false` = user is not authenticated or has logged out.
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User logged in
+events.emit('authenticated', true);
+
+// User logged out
+events.emit('authenticated', false);
+```
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    // Update UI, load user-specific data, etc.
+  } else {
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Stop listening when no longer needed
+authListener.off();
+```
+
+---
+
+### error
+
+Category: Error Handling
+Direction: Emitted by drop-ins, external code listens
+Used By: Most drop-ins for error reporting
+
+Fires when a drop-in encounters an error (API failure, validation error, network timeout). Listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+#### When emitted
+
+Drop-ins emit this event when:
+
+- API requests fail
+- Critical operations fail
+- Network errors occur
+- Validation fails
+
+#### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  showErrorNotification(error.message);
+
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+errorListener.off();
+```
+
+---
+
+### locale
+
+Category: Localization
+Direction: Emitted by external source, listened to by drop-ins
+Used By: All drop-ins with internationalization support
+
+Fires when the application's language or locale changes. Drop-ins listen to update their text content, date formatting, currency display, and other locale-specific elements.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+#### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard format (for example, `en-US`, `fr-FR`, `de-DE`).
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (newLocale) => {
+  updateTranslations(newLocale);
+});
+
+localeListener.off();
+```
 
 ---
 
@@ -422,7 +574,6 @@ This pattern allows TypeScript to provide autocomplete and type checking for bot
 
 ## Next steps
 
-- Review the [Common events reference](/dropins/all/common-events/) for detailed documentation on shared events
 - Review the [Event Bus API Reference](/sdk/reference/events/) for detailed API methods and code examples
 - Check individual drop-in event pages for component-specific events
 - Try drop-in tutorials for practical event usage examples

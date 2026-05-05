@@ -27,8 +27,9 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Storefront Architecture', link: '/get-started/architecture/' },
             { label: 'Backend Options', link: '/get-started/backends/' },
-            { label: 'Create a Storefront', link: '/get-started/create-storefront/' },
-            { label: 'Run it locally', link: '/boilerplate/getting-started/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance Best Practices', link: '/get-started/performance/' },
           ],
         },
         {
@@ -57,23 +58,11 @@ export function generateSidebar() {
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
             { label: 'AI Agent Skills', link: '/boilerplate/ai-agent-skills/' },
-            { label: 'Browser Compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance Best Practices', link: '/get-started/performance/' },
-            {
-              label: 'Compatibility Package',
-              collapsed: true,
-              items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            },
           ],
         },
         // ---------- DROP-INS Overview ----------
         {
-          label: 'Working with Drop-Ins',
+          label: 'Commerce Drop-Ins',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
@@ -95,7 +84,7 @@ export function generateSidebar() {
         },
         // ---------- HOW-TOS ----------
         {
-          label: 'How-To Guides',
+          label: 'Tutorials',
           collapsed: true,
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
@@ -152,6 +141,16 @@ export function generateSidebar() {
             {
               label: 'Multistore',
               link: '/setup/configuration/multistore-setup/',
+            },
+            {
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
+                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
+              ],
             },
             {
               label: 'Configuration',
@@ -461,7 +460,8 @@ export function generateSidebar() {
                     { label: 'AddressValidation', link: '/dropins/user-account/containers/address-validation/' },
                     { label: 'CustomerInformation', link: '/dropins/user-account/containers/customer-information/' },
                     { label: 'OrdersList', link: '/dropins/user-account/containers/orders-list/' },
-                    { label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
+                    {
+                      label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
                   ],
                 },
