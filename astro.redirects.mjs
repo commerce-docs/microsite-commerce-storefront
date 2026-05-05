@@ -124,6 +124,8 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)
@@ -167,6 +169,9 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/experiments': `${basePath}/merchants/content-customizations/experiments`,
         '/merchants/get-started/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
+        // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
+        '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
+        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -180,6 +185,9 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
 
         // ========= MISC REDIRECTS =========
+        // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
+        '/create': `${basePath}/get-started/create-storefront`,
+        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
