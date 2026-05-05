@@ -37,7 +37,7 @@ const DROPINS_WITH_CONTAINERS = {
     'product-details': { name: 'Product Details', containers: 10 },
     'product-discovery': { name: 'Product Discovery', containers: 4 },
     'recommendations': { name: 'Recommendations', containers: 4 },
-    'user-account': { name: 'User Account', containers: 5 },
+    'user-account': { name: 'User Account', containers: 6 },
     'user-auth': { name: 'User Auth', containers: 3 },
     'wishlist': { name: 'Wishlist', containers: 1 }
 };
