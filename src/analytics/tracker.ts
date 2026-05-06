@@ -96,7 +96,7 @@ function classifyOutcomeLink(url: URL): { name: string; category: string } | nul
   const host = url.hostname.toLowerCase();
   const path = url.pathname.toLowerCase();
 
-  if (host.endsWith('github.com')) {
+  if (host === 'github.com' || host.endsWith('.github.com')) {
     if (path.includes('hlxsites/aem-boilerplate-commerce')) {
       return { name: 'commerce_boilerplate_repo', category: 'repository' };
     }
