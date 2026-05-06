@@ -27,7 +27,7 @@ A synchronization workflow retrieves category data from the Commerce GraphQL API
 
 1. Fetches and flattens the category hierarchy into the expected navigation structure
 2. Generates a `nav.json` file for each store view
-3. Uploads and publishes the file to da.live via the DA Admin API
+3. Optionally uploads the file to da.live and previews or publishes it, depending on the `--mode` flag
 4. Lets the header block fetch and render that file at runtime
 
 The workflow can run during onboarding, on demand, or on a schedule.
@@ -235,7 +235,7 @@ export DA_CLIENT_SECRET="<client-secret>"
 The identity used to upload must be added to the `/**` path group in the da.live config sheet at `da.live/config#/{org}/{repo}/`. For IMS server-to-server credentials, use the technical account's profile email (not the JWT user_id).
 </Aside>
 
-**Without credentials**, the script still runs — it fetches and flattens the categories, writes local output files, but skips the DA upload. This is useful for testing the category tree locally.
+**Without credentials**, the script still runs — it fetches and flattens the categories and writes local output files, but skips the DA upload. This is equivalent to running with `--mode local` and is useful for inspecting the category tree before committing to a publish.
 
 </Task>
 
@@ -246,7 +246,7 @@ The identity used to upload must be added to the `/**` path group in the da.live
 Run from the repository root:
 
 ```bash
-node tools/nav-sync/nav-sync.js <site> <store> <family>
+node tools/nav-sync/nav-sync.js <site> <store> <family> [--mode <mode>]
 ```
 
 | Argument | Description |
@@ -254,34 +254,55 @@ node tools/nav-sync/nav-sync.js <site> <store> <family>
 | `site` | EDS site hostname (e.g. `main--my-repo--my-org.aem.live`) |
 | `store` | `default` or a store key from `config.json` (e.g. `spain`) |
 | `family` | ACO product family — required; must be created in ACO first |
+| `--mode` | `local`, `preview`, or `publish` (default: `publish`) |
 
-**Example — sync the default store:**
+The `--mode` flag controls what happens after the category tree is fetched:
+
+| Mode | Local files | DA upload | Preview | Publish live |
+| --- | --- | --- | --- | --- |
+| `local` | Yes | No | No | No |
+| `preview` | Yes | Yes | Yes | No |
+| `publish` | Yes | Yes | Yes | Yes |
+
+**Example — generate local files only (no credentials needed):**
+
+```bash
+node tools/nav-sync/nav-sync.js \
+  main--thunderbolts-aco--adobe-commerce.aem.live \
+  default \
+  my-family \
+  --mode local
+```
+
+**Example — upload and preview for review before going live:**
 
 ```bash
 DA_TOKEN="..." node tools/nav-sync/nav-sync.js \
   main--thunderbolts-aco--adobe-commerce.aem.live \
   default \
-  default
+  my-family \
+  --mode preview
 ```
 
-**Example — sync a localized store:**
+**Example — full sync (default):**
 
 ```bash
 DA_TOKEN="..." node tools/nav-sync/nav-sync.js \
   main--thunderbolts-aco--adobe-commerce.aem.live \
-  spain \
-  default
+  default \
+  my-family
 ```
 
 After a successful run, you'll see output like:
 
 ```
 Site: main--thunderbolts-aco--adobe-commerce.aem.live
+Mode: publish
 [default] Starting sync...
-[default] Fetching navigation (family: default)...
+[default] Fetching navigation (family: my-family)...
 [default] Flattened 7 categories
-✅ [default] Written tools/nav-sync/default/nav.json
-✅ [default] DA: saved /adobe-commerce/thunderbolts-aco/nav.json
+✅ [default] Written tools/nav-sync/default/nav-dynamic.json
+✅ [default] DA: saved /adobe-commerce/thunderbolts-aco/nav-dynamic.json
 ✅ [default] DA: previewed
 ✅ [default] DA: published
 Done.
@@ -421,6 +442,15 @@ on:
         description: 'ACO product family'
         required: false
         default: ''
+      mode:
+        description: 'Sync mode: local (files only), preview (upload + preview), publish (full)'
+        required: false
+        default: 'publish'
+        type: choice
+        options:
+          - publish
+          - preview
+          - local
 
 env:
   NAV_SITE: main--my-repo--my-org.aem.live
@@ -450,7 +480,8 @@ jobs:
           node tools/nav-sync/nav-sync.js \
             "${{ github.event.inputs.site || env.NAV_SITE }}" \
             default \
-            "${{ github.event.inputs.family || env.NAV_FAMILY }}"
+            "${{ github.event.inputs.family || env.NAV_FAMILY }}" \
+            --mode "${{ github.event.inputs.mode || 'publish' }}"
 
       - name: Upload nav files as artifact
         if: always()
@@ -509,9 +540,9 @@ After running the script (locally or via GitHub Actions):
 For [multistore](/setup/configuration/multistore-setup/) setups, the script uses the store key from `config.json` to resolve the correct `AC-View-ID` header for each store view. Run the script once per store:
 
 ```bash
-node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live default  my-family
-node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live spain    my-family
-node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live fr-ca    my-family
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live default my-family
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live spain   my-family
+node tools/nav-sync/nav-sync.js main--my-repo--my-org.aem.live fr-ca   my-family
 ```
 
 Each store's sheet is published to its own path (`/nav.json`, `/spain/nav.json`, `/fr-ca/nav.json`). The `header-dynamic` block uses `rootLink('/nav.json')` which automatically resolves to the correct store-scoped path.
