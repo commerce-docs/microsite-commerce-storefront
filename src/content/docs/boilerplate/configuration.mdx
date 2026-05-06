@@ -96,15 +96,17 @@ For local development, you can use the demo configuration for the boilerplate as
 
    #### If `config.json` is already on `main`
 
-   If you previously committed `config.json` to your `main` branch, Edge Delivery keeps serving that file until you remove it from the branch. To move your settings into the Configuration Service so production uses those values, complete the following steps.
+   If you previously committed `config.json` to your `main` branch, you must complete these steps before the Configuration Service takes effect. Edge Delivery serves a `config.json` file from the repository before it falls back to the Configuration Service, so copying settings into the service alone is not enough until the repository file is gone.
 
    <Steps>
 
-   1. Copy the `public` object from your repository `config.json`. That JSON matches what the Configuration Service stores at `public.json`.
+   1. Copy all values from the `public` section of your repository `config.json`. That object is what you publish as `public.json` in the Configuration Service.
 
-   1. Publish it to `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` with the Configuration Service API (for example, POST with your admin token). See the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> and the <Link href="https://www.aem.live/docs/admin.html" text="Admin API reference" /> for authentication and request format.
+   1. POST that JSON to `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` using the Configuration Service API. Send the `x-auth-token` header and body format described in the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> and the <Link href="https://www.aem.live/docs/admin.html" text="Admin API reference" />.
 
-   1. Delete `config.json` from the repository and merge that change into `main`. After the file no longer exists on `main`, the CDN can use the Configuration Service instead of the repository copy.
+   1. Delete `config.json` from the repository and merge that change into `main`. After the file no longer exists on `main`, the CDN can resolve configuration from the Configuration Service instead of the repository copy.
+
+   1. When you verify in a browser, clear session storage for your site in Developer Tools (Application → Session storage), then reload. The storefront caches configuration in session storage, so clearing it avoids stale values after you switch sources. For caching behavior and timing, see [Storefront configuration](/setup/configuration/commerce-configuration/).
 
    </Steps>
 
