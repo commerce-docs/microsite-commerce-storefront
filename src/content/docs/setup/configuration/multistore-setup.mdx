@@ -166,21 +166,54 @@ The store view codes in Adobe Commerce Admin must exactly match the folder names
 <Task>
 ### Update folder mapping
 
-Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you'll need to add a corresponding folder mapping for the new URLs.
+Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you must add a corresponding folder mapping for the new URLs using the **Config Service API**.
 
-Update your site configuration (using the Configuration Service or `default-site.json`) to add the new store view mapping under the `folders:` section:
+:::note
+**fstab.yaml is bootstrap-only.** After the AEM Code Sync bot initially provisions your site, changes to `fstab.yaml` in the code repository have no effect. Folder mapping must be managed through the Config Service API described below.
+:::
+
+#### Step 1: Authenticate
+
+Go to `https://admin.hlx.page/auth/adobe` and sign in with your Adobe ID. Retrieve the auth token from your browser's cookie storage (available in DevTools → Application → Cookies).
+
+#### Step 2: Get the current folder configuration
+
+```http
+GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+Authorization: token {YOUR_AUTH_TOKEN}
+```
+
+The response is a JSON object mapping URL path prefixes to template document paths, for example:
 
 ```json
 {
-  "folders": {
-    "/en/products/": "/en/products/default",
-    "/en-ca/products/": "/en-ca/products/default",
-    "/fr-ca/products/": "/fr-ca/products/default"
-  }
+  "/products/": "/products/default"
 }
 ```
 
-To learn more about the Config Service, see <Link href={"https://www.aem.live/docs/config-service-setup"} text={"aem.live's documentation"} /> or read the <Link href={"https://www.aem.live/docs/admin.html#tag/siteConfig/operation/updateConfigSite"} text={"API documentation"} /> to learn how to publish your updates.
+#### Step 3: Modify and POST the updated configuration
+
+Add your new store view mappings and POST the complete object back to the same endpoint:
+
+```http
+POST https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+Authorization: token {YOUR_AUTH_TOKEN}
+Content-Type: application/json
+```
+
+```json
+{
+  "/en/products/": "/en/products/default",
+  "/en-ca/products/": "/en-ca/products/default",
+  "/fr-ca/products/": "/fr-ca/products/default"
+}
+```
+
+:::caution
+The POST **replaces** the entire `folders.json` object. Always start from the current GET response and include all existing mappings alongside your new ones.
+:::
+
+For full details, see the <Link href={"https://www.aem.live/docs/config-service-setup"} text={"Config Service setup guide"} /> and the <Link href={"https://www.aem.live/docs/admin.html"} text={"Admin API reference"} />.
 
 </Task>
 
@@ -384,7 +417,7 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 ### Common Issues
 
 #### Store View Not Loading
-- **Check the folder mapping**: Verify that the folder mapping in your site configuration (Configuration Service or `default-site.json`) matches your folder structure
+- **Check the folder mapping**: Verify that the folder mapping is correct by querying the Config Service: `GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json`. Note that editing `fstab.yaml` has no effect after initial site setup — all folder mapping changes must go through the Config Service API.
 - **Verify the headers**: Ensure that the headers in `config.json` or Configuration Service match the store view codes in Adobe Commerce Admin
 - **Check the session storage**: Use browser developer tools to verify that the correct headers are being sent
 
