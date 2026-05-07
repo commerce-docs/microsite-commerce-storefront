@@ -53,15 +53,10 @@ interface EngagementRow {
   unique_visitors_30d: number;
 }
 
-interface OutcomeRow {
-  outcome_key: string;
-  category: string | null;
+interface ExternalLinkRow {
+  href: string;
   clicks: number;
 }
-
-// ---------------------------------------------------------------------------
-// Supabase client — env vars are replaced at build time by Vite
-// ---------------------------------------------------------------------------
 
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL as string,
@@ -94,17 +89,19 @@ function truncateUrl(url: string, max = 60): string {
   }
 }
 
-function outcomeLabel(key: string): string {
-  const labels: Record<string, string> = {
-    commerce_boilerplate_repo: 'Commerce boilerplate (GitHub)',
-    adobe_commerce_github: 'Adobe Commerce org (GitHub)',
-    commerce_docs_github: 'Commerce docs (GitHub)',
-    da_live: 'DA.live',
-    developer_adobe: 'developer.adobe.com',
-    experience_league: 'Experience League',
-    aem_live: 'AEM.live docs',
-  };
-  return labels[key] ?? key.replace(/_/g, ' ');
+function truncateHref(url: string, max = 72): string {
+  if (url.length <= max) return url;
+  return url.slice(0, max) + '…';
+}
+
+/** Same route rule as tracker.ts — exclude standalone `/analytics` dashboard URLs. */
+function isAnalyticsDashboardUrl(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.replace(/\/+$/, '') || '/';
+    return path.endsWith('/analytics');
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -157,7 +154,7 @@ export default function Dashboard() {
   const [topPages, setTopPages] = useState<TopPage[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [engagement, setEngagement] = useState<EngagementRow | null>(null);
-  const [outcomes, setOutcomes] = useState<OutcomeRow[]>([]);
+  const [externalLinks, setExternalLinks] = useState<ExternalLinkRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -170,18 +167,18 @@ export default function Dashboard() {
           pagesRes,
           eventsRes,
           engagementRes,
-          outcomesRes,
+          externalLinksRes,
         ] = await Promise.all([
           supabase.from('analytics_totals_30d').select('*').single(),
           supabase
             .from('analytics_summary')
             .select('*')
-            .order('day', { ascending: true })
+            .order('day', { ascending: false })
             .limit(30),
-          supabase.from('top_pages').select('*').limit(20),
+          supabase.from('top_pages').select('*').limit(40),
           supabase.from('events_summary').select('*').limit(30),
           supabase.from('management_engagement_30d').select('*').single(),
-          supabase.from('outcome_clicks_30d').select('*').limit(25),
+          supabase.from('external_link_clicks_30d').select('*').limit(100),
         ]);
 
         if (totalsRes.error) throw totalsRes.error;
@@ -189,14 +186,19 @@ export default function Dashboard() {
         if (pagesRes.error) throw pagesRes.error;
         if (eventsRes.error) throw eventsRes.error;
         if (engagementRes.error) throw engagementRes.error;
-        if (outcomesRes.error) throw outcomesRes.error;
+        if (externalLinksRes.error) throw externalLinksRes.error;
 
         setTotals(totalsRes.data as Totals);
-        setChartData((chartRes.data ?? []) as DailySummary[]);
-        setTopPages((pagesRes.data ?? []) as TopPage[]);
+        setChartData(
+          ([...(chartRes.data ?? [])] as DailySummary[]).reverse()
+        );
+        const pages = (pagesRes.data ?? []) as TopPage[];
+        setTopPages(
+          pages.filter((p) => !isAnalyticsDashboardUrl(p.url)).slice(0, 20)
+        );
         setEvents((eventsRes.data ?? []) as EventRow[]);
         setEngagement(engagementRes.data as EngagementRow);
-        setOutcomes((outcomesRes.data ?? []) as OutcomeRow[]);
+        setExternalLinks((externalLinksRes.data ?? []) as ExternalLinkRow[]);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to load analytics data.'
@@ -228,7 +230,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* ---- Summary Cards ---- */}
       <SectionHeader title="Last 30 days" />
 
       {loading ? (
@@ -262,37 +263,45 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      {/* ---- Management: outcome clicks ---- */}
-      <SectionHeader title="Outbound clicks (last 30 days)" />
+      <SectionHeader title="External links (last 30 days)" />
       <p className="section-intro">
-        Clicks on high-value outbound links (GitHub boilerplate, DA.live, Adobe
-        docs). Use this with top pages to show docs driving the next step.
+        Every click that leaves this site to another origin. Compare with top
+        pages to see which topics send traffic outward.
       </p>
 
       {loading ? (
         <LoadingPlaceholder rows={3} />
-      ) : outcomes.length === 0 ? (
+      ) : externalLinks.length === 0 ? (
         <p className="empty-state">
-          No outcome clicks yet. Follow a few outbound links from the docs.
+          No external link clicks yet. Open a few outbound links from the docs,
+          then refresh this page.
         </p>
       ) : (
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Destination</th>
-                <th>Category</th>
+                <th>Link</th>
                 <th className="num-col">Clicks</th>
               </tr>
             </thead>
             <tbody>
-              {outcomes.map((row) => (
-                <tr key={row.outcome_key}>
-                  <td>{outcomeLabel(row.outcome_key)}</td>
+              {externalLinks.map((row) => (
+                <tr key={row.href}>
                   <td>
-                    <span className="muted">{row.category ?? '—'}</span>
+                    <a
+                      href={row.href}
+                      className="page-link"
+                      title={row.href}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {truncateHref(row.href)}
+                    </a>
                   </td>
-                  <td className="num-col">{Number(row.clicks).toLocaleString()}</td>
+                  <td className="num-col">
+                    {Number(row.clicks).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -300,7 +309,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ---- Management: engagement depth ---- */}
       <SectionHeader title="Engagement depth (last 30 days)" />
       <p className="section-intro">
         Avg pages per visit, multi-page sessions, and visitors who came back in
@@ -321,7 +329,9 @@ export default function Dashboard() {
           />
           <StatCard
             label="Sessions with 2+ pages"
-            value={Number(engagement.sessions_with_2plus_pages ?? 0).toLocaleString()}
+            value={Number(
+              engagement.sessions_with_2plus_pages ?? 0
+            ).toLocaleString()}
             sub={`of ${Number(engagement.sessions_total ?? 0).toLocaleString()} sessions`}
           />
           <StatCard
@@ -343,13 +353,14 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      {/* ---- Daily Trend Chart ---- */}
-      <SectionHeader title="Daily trend" />
+      <SectionHeader title="Daily trend (last 30 days)" />
 
       {loading ? (
         <div className="chart-placeholder" />
       ) : chartData.length === 0 ? (
-        <p className="empty-state">No data yet. Visit a few pages to see the trend.</p>
+        <p className="empty-state">
+          No data yet. Visit a few pages to see the trend.
+        </p>
       ) : (
         <div className="chart-wrapper">
           <ResponsiveContainer width="100%" height={280}>
@@ -412,7 +423,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ---- Top Pages ---- */}
       <SectionHeader title="Top pages" />
 
       {loading ? (
@@ -452,7 +462,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ---- Events Breakdown ---- */}
       <SectionHeader title="Events" />
 
       {loading ? (

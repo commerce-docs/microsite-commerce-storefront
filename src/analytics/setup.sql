@@ -1,86 +1,3 @@
--- =============================================================================
--- Custom Analytics — Supabase Setup
--- =============================================================================
--- Run this entire file in the Supabase SQL Editor once, after creating your
--- free project at https://supabase.com. Copy the Project URL and anon key
--- from Project Settings > API and add them to your .env file.
---
--- Upgrades: if you already ran this script earlier, re-run the views and
--- grants section from "Event breakdown" (events_summary) through the end
--- so management_engagement_30d and outcome_clicks_30d exist and
--- events_summary excludes outcome (and legacy web_vital rows).
--- =============================================================================
-
-
--- ---------------------------------------------------------------------------
--- 1. Tables
--- ---------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS page_views (
-  id               UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  session_id       TEXT        NOT NULL,
-  visitor_id       TEXT        NOT NULL,
-  url              TEXT        NOT NULL,
-  referrer         TEXT,
-  title            TEXT,
-  timestamp        TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-  duration_seconds INTEGER,
-  is_bounce        BOOLEAN     DEFAULT FALSE
-);
-
-CREATE INDEX IF NOT EXISTS idx_pv_timestamp  ON page_views (timestamp DESC);
-CREATE INDEX IF NOT EXISTS idx_pv_url        ON page_views (url);
-CREATE INDEX IF NOT EXISTS idx_pv_session    ON page_views (session_id);
-CREATE INDEX IF NOT EXISTS idx_pv_visitor    ON page_views (visitor_id);
-
-
-CREATE TABLE IF NOT EXISTS events (
-  id           UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  session_id   TEXT        NOT NULL,
-  visitor_id   TEXT        NOT NULL,
-  url          TEXT        NOT NULL,
-  event_type   TEXT        NOT NULL,   -- click | scroll | form | custom
-  event_name   TEXT,
-  event_data   JSONB,
-  timestamp    TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_ev_timestamp ON events (timestamp DESC);
-CREATE INDEX IF NOT EXISTS idx_ev_type      ON events (event_type);
-
-
--- ---------------------------------------------------------------------------
--- 2. Row Level Security
--- ---------------------------------------------------------------------------
-
-ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
-ALTER TABLE events     ENABLE ROW LEVEL SECURITY;
-
--- page_views policies
-DROP POLICY IF EXISTS "anon_insert_page_views"  ON page_views;
-DROP POLICY IF EXISTS "anon_update_page_views"  ON page_views;
-DROP POLICY IF EXISTS "anon_select_page_views"  ON page_views;
-
-CREATE POLICY "anon_insert_page_views" ON page_views
-  FOR INSERT TO anon WITH CHECK (true);
-
-CREATE POLICY "anon_update_page_views" ON page_views
-  FOR UPDATE TO anon USING (true) WITH CHECK (true);
-
-CREATE POLICY "anon_select_page_views" ON page_views
-  FOR SELECT TO anon USING (true);
-
--- events policies
-DROP POLICY IF EXISTS "anon_insert_events" ON events;
-DROP POLICY IF EXISTS "anon_select_events" ON events;
-
-CREATE POLICY "anon_insert_events" ON events
-  FOR INSERT TO anon WITH CHECK (true);
-
-CREATE POLICY "anon_select_events" ON events
-  FOR SELECT TO anon USING (true);
-
-
 -- ---------------------------------------------------------------------------
 -- 3. Aggregation Views
 -- ---------------------------------------------------------------------------
@@ -89,7 +6,8 @@ CREATE POLICY "anon_select_events" ON events
 -- Bounce rate = share of sessions that had exactly one page view that day
 -- (not per-page is_bounce flags, which would exceed 100% for multi-page sessions)
 -- Use BIGINT for counts so CREATE OR REPLACE VIEW matches prior column types (SUM() is numeric by default).
-CREATE OR REPLACE VIEW analytics_summary AS
+CREATE OR REPLACE VIEW analytics_summary
+WITH (security_invoker = true) AS
 WITH session_day AS (
   SELECT
     session_id,
@@ -145,7 +63,8 @@ ORDER BY ds.day DESC;
 
 
 -- Top pages by view count
-CREATE OR REPLACE VIEW top_pages AS
+CREATE OR REPLACE VIEW top_pages
+WITH (security_invoker = true) AS
 SELECT
   url,
   COUNT(*)                                                       AS page_views,
@@ -161,7 +80,8 @@ LIMIT 50;
 
 -- 30-day totals for summary cards — accurate unique counts across the window
 -- Bounce rate = sessions with exactly one page view in the window / all sessions
-CREATE OR REPLACE VIEW analytics_totals_30d AS
+CREATE OR REPLACE VIEW analytics_totals_30d
+WITH (security_invoker = true) AS
 WITH windowed AS (
   SELECT *
   FROM page_views
@@ -195,20 +115,22 @@ SELECT
   ) AS bounce_rate_pct;
 
 
--- Event breakdown by type and name (excludes outcome and legacy web_vital rows)
-CREATE OR REPLACE VIEW events_summary AS
+-- Event breakdown by type and name (excludes outcome, external_link, and legacy web_vital rows)
+CREATE OR REPLACE VIEW events_summary
+WITH (security_invoker = true) AS
 SELECT
   event_type,
   event_name,
   COUNT(*) AS event_count
 FROM events
-WHERE event_type NOT IN ('web_vital', 'outcome')
+WHERE event_type NOT IN ('web_vital', 'outcome', 'external_link')
 GROUP BY event_type, event_name
 ORDER BY event_count DESC;
 
 
 -- Engagement depth (last 30 days): pages per session and returning visitors
-CREATE OR REPLACE VIEW management_engagement_30d AS
+CREATE OR REPLACE VIEW management_engagement_30d
+WITH (security_invoker = true) AS
 SELECT
   COALESCE(
     (
@@ -266,8 +188,9 @@ SELECT
   ) AS unique_visitors_30d;
 
 
--- High-value outbound clicks (outcome events), last 30 days
-CREATE OR REPLACE VIEW outcome_clicks_30d AS
+-- High-value outbound clicks (legacy outcome events), last 30 days
+CREATE OR REPLACE VIEW outcome_clicks_30d
+WITH (security_invoker = true) AS
 SELECT
   event_name AS outcome_key,
   MAX(event_data->>'category') AS category,
@@ -279,17 +202,16 @@ GROUP BY event_name
 ORDER BY clicks DESC;
 
 
--- Drop Web Vitals aggregate view if it exists (tracker no longer sends web_vital events)
-DROP VIEW IF EXISTS web_vitals_avg_30d;
-
-
--- ---------------------------------------------------------------------------
--- 4. Grant SELECT on views to the anon role
--- ---------------------------------------------------------------------------
-
-GRANT SELECT ON analytics_summary         TO anon;
-GRANT SELECT ON analytics_totals_30d     TO anon;
-GRANT SELECT ON top_pages                TO anon;
-GRANT SELECT ON events_summary           TO anon;
-GRANT SELECT ON management_engagement_30d TO anon;
-GRANT SELECT ON outcome_clicks_30d       TO anon;
+-- External link clicks by destination URL, last 30 days (one row per href)
+CREATE OR REPLACE VIEW public.external_link_clicks_30d
+WITH (security_invoker = true) AS
+SELECT
+  event_data->>'href' AS href,
+  COUNT(*)::bigint AS clicks
+FROM events
+WHERE event_type = 'external_link'
+  AND timestamp >= NOW() - INTERVAL '30 days'
+  AND COALESCE(NULLIF(TRIM(event_data->>'href'), ''), '') <> ''
+GROUP BY event_data->>'href'
+ORDER BY clicks DESC
+LIMIT 100;
