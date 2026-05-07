@@ -2,7 +2,7 @@
  * Custom Analytics Tracking Script
  *
  * Captures page views, time on page, bounce rate, clicks, scroll depth,
- * form interactions, and high-value outbound (outcome) clicks, then writes
+ * form interactions, and external link clicks, then writes
  * them to Supabase via the REST API.
  *
  * Injected on every page via the Astro integration in astro.config.mjs.
@@ -22,6 +22,12 @@ function isBot(): boolean {
   return /bot|crawl|slurp|spider|mediapartners|prerender|headlesschrome/i.test(
     navigator.userAgent
   );
+}
+
+/** Standalone analytics dashboard (`/analytics`); not doc topics under `/setup/analytics/`. */
+function isAnalyticsDashboardPage(): boolean {
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  return path.endsWith('/analytics');
 }
 
 function uuid(): string {
@@ -76,78 +82,36 @@ const supabaseHeaders = (): Record<string, string> => ({
   Prefer: 'return=minimal',
 });
 
-async function dbInsert(
-  table: string,
-  data: Record<string, unknown>
-): Promise<void> {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: supabaseHeaders(),
-      body: JSON.stringify(data),
-    });
-  } catch {
+function dbInsert(table: string, data: Record<string, unknown>): void {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  void fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: supabaseHeaders(),
+    body: JSON.stringify(data),
+    keepalive: true,
+    mode: 'cors',
+  }).catch(() => {
     // Analytics must never break the page
-  }
-}
-
-/** High-value outbound destinations for management reporting (first match wins). */
-function classifyOutcomeLink(url: URL): { name: string; category: string } | null {
-  const host = url.hostname.toLowerCase();
-  const path = url.pathname.toLowerCase();
-
-  if (host === 'github.com' || host.endsWith('.github.com')) {
-    if (path.includes('hlxsites/aem-boilerplate-commerce')) {
-      return { name: 'commerce_boilerplate_repo', category: 'repository' };
-    }
-    if (path.includes('adobe-commerce')) {
-      return { name: 'adobe_commerce_github', category: 'repository' };
-    }
-    if (path.includes('commerce-docs')) {
-      return { name: 'commerce_docs_github', category: 'repository' };
-    }
-    return null;
-  }
-
-  if (host === 'da.live' || host.endsWith('.da.live')) {
-    return { name: 'da_live', category: 'authoring_tools' };
-  }
-
-  if (host === 'developer.adobe.com') {
-    return { name: 'developer_adobe', category: 'adobe_docs' };
-  }
-
-  if (host === 'experienceleague.adobe.com') {
-    return { name: 'experience_league', category: 'adobe_docs' };
-  }
-
-  if (host === 'www.aem.live' || host === 'aem.live') {
-    return { name: 'aem_live', category: 'edge_docs' };
-  }
-
-  return null;
+  });
 }
 
 function isExternalUrl(url: URL): boolean {
   return url.origin !== location.origin;
 }
 
-async function dbPatch(
+function dbPatch(
   table: string,
   filter: string,
   data: Record<string, unknown>
-): Promise<void> {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
-      method: 'PATCH',
-      headers: supabaseHeaders(),
-      body: JSON.stringify(data),
-      // keepalive ensures the request completes even after page navigation
-      keepalive: true,
-    });
-  } catch {
-    // Analytics must never break the page
-  }
+): void {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  void fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: 'PATCH',
+    headers: supabaseHeaders(),
+    body: JSON.stringify(data),
+    keepalive: true,
+    mode: 'cors',
+  }).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------
@@ -157,6 +121,7 @@ async function dbPatch(
 (function init() {
   if (!SUPABASE_URL || !SUPABASE_KEY) return;
   if (isBot()) return;
+  if (isAnalyticsDashboardPage()) return;
 
   const { sessionId, visitorId } = getIds();
   const pageViewId = uuid();
@@ -200,7 +165,35 @@ async function dbPatch(
     { capture: true }
   );
 
-  // ---- Click events (generic + tagged outcome links for management reporting) ----
+  // ---- External links: capture phase + sync dbInsert so the request starts before navigation ----
+  document.addEventListener(
+    'click',
+    (e) => {
+      const link = (e.target as Element | null)?.closest('a');
+      if (!link?.href) return;
+      let dest: URL;
+      try {
+        dest = new URL(link.href, location.href);
+      } catch {
+        return;
+      }
+      if (!isExternalUrl(dest)) return;
+      dbInsert('events', {
+        session_id: sessionId,
+        visitor_id: visitorId,
+        url: location.href,
+        event_type: 'external_link',
+        event_name: 'click',
+        event_data: {
+          href: dest.href.slice(0, 2000),
+          link_text: link.textContent?.trim().slice(0, 200) ?? null,
+        },
+      });
+    },
+    true
+  );
+
+  // ---- Click events (generic; external links are skipped — recorded above) ----
   document.addEventListener('click', (e) => {
     const target = e.target as Element;
     const link = target.closest('a');
@@ -211,24 +204,7 @@ async function dbPatch(
     if (link?.href) {
       try {
         const dest = new URL(link.href, location.href);
-        if (isExternalUrl(dest)) {
-          const outcome = classifyOutcomeLink(dest);
-          if (outcome) {
-            dbInsert('events', {
-              session_id: sessionId,
-              visitor_id: visitorId,
-              url: location.href,
-              event_type: 'outcome',
-              event_name: outcome.name,
-              event_data: {
-                category: outcome.category,
-                href: dest.href.slice(0, 500),
-                link_text: el.textContent?.trim().slice(0, 100) ?? null,
-              },
-            });
-            return;
-          }
-        }
+        if (isExternalUrl(dest)) return;
       } catch {
         // ignore bad href
       }
