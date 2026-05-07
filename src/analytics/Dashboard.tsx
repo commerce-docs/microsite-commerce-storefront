@@ -252,8 +252,9 @@ export default function Dashboard() {
             value={totals.unique_visitors.toLocaleString()}
           />
           <StatCard
-            label="Avg. time on page"
+            label="Avg. active time"
             value={fmtDuration(totals.avg_duration_seconds)}
+            sub="foreground tab only"
           />
           <StatCard
             label="Bounce rate"
@@ -437,7 +438,7 @@ export default function Dashboard() {
                 <th>Page</th>
                 <th className="num-col">Views</th>
                 <th className="num-col">Unique visitors</th>
-                <th className="num-col">Avg. time</th>
+                <th className="num-col">Avg. active time</th>
               </tr>
             </thead>
             <tbody>

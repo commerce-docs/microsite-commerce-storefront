@@ -1,8 +1,8 @@
 /**
  * Custom Analytics Tracking Script
  *
- * Captures page views, time on page, bounce rate, clicks, scroll depth,
- * form interactions, and external link clicks, then writes
+ * Captures page views, active time on page (foreground tab only via Page Visibility),
+ * bounce rate, clicks, scroll depth, form interactions, and external link clicks, then writes
  * them to Supabase via the REST API.
  *
  * Injected on every page via the Astro integration in astro.config.mjs.
@@ -125,10 +125,33 @@ function dbPatch(
 
   const { sessionId, visitorId } = getIds();
   const pageViewId = uuid();
-  const pageLoadTime = Date.now();
 
   // Track whether the visitor navigates to another page (not a bounce)
   let navigated = false;
+
+  // ---- Visible dwell time only (ignore background tabs / minimized windows) ----
+  let visibleMs = 0;
+  let visibleStartedAt: number | null = null;
+
+  function pauseVisibleClock() {
+    if (visibleStartedAt !== null) {
+      visibleMs += Date.now() - visibleStartedAt;
+      visibleStartedAt = null;
+    }
+  }
+
+  function syncVisibleClock() {
+    if (document.visibilityState === 'visible') {
+      if (visibleStartedAt === null) {
+        visibleStartedAt = Date.now();
+      }
+    } else {
+      pauseVisibleClock();
+    }
+  }
+
+  document.addEventListener('visibilitychange', syncVisibleClock);
+  syncVisibleClock();
 
   // ---- Page view ----
   dbInsert('page_views', {
@@ -140,9 +163,10 @@ function dbPatch(
     title: document.title,
   });
 
-  // ---- Duration + bounce on unload ----
+  // ---- Active duration + bounce on unload ----
   window.addEventListener('pagehide', () => {
-    const duration = Math.round((Date.now() - pageLoadTime) / 1000);
+    pauseVisibleClock();
+    const duration = Math.round(visibleMs / 1000);
     dbPatch('page_views', `id=eq.${pageViewId}`, {
       duration_seconds: duration,
       // Per-page "no internal click before leave" — dashboards use session-level bounce in SQL
