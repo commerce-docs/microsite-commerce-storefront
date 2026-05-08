@@ -2,11 +2,14 @@
 title: SEO metadata
 description: Learn how to optimize metadata for Adobe Commerce storefronts on Edge Delivery Services.
 ---
+import Link from '@components/Link.astro';
 
-import Aside from '@components/Aside.astro';
-import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside, Steps } from '@astrojs/starlight/components';
 
 Adobe recommends uploading product metadata into Edge Delivery Services so that it can be rendered server-side on product detail pages. This is important so that Google Merchant Center can reliably verify entries from your product sheet. Also, social media sites, which don't usually parse JavaScript, can leverage this metadata to display rich previews of your product page links.
+
+For how metadata fits with Edge Delivery Services crawling behavior and URLs, read [SEO overview](/setup/seo/) and [SEO indexing](/setup/seo/indexing/).
 
 <Aside type="caution" title="Breaking Change">
 For consistency and canonicalization, mixed-case URLs are not supported. The boilerplate automatically lowercases SKUs in product URLs to comply with Edge Delivery Services, which requires lowercase paths.
@@ -16,40 +19,44 @@ Extra attention should be given to sites that use uppercase SKUs. See below for 
 
 Verify that all pages, especially catalog pages (PDP and PLP), contain the following metadata:
 
+<TableWrapper nowrap={[0]}>
+
 | Type                      | Properties                                                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Document title            | `title`                                                                                                                                                                 |
 | Meta tags                 | `description`, `keywords`, `og:type`, `og:title`, `og:description`, `og:url`, `og:image`, `og:image:secure_url`, `og:product:price:amount`, `og:product:price:currency` |
 | Schema.org data (JSON-LD) | `WebSite`, `Product`, `AggregateRating`, `Rating`, `BreadcrumbList`                                                                                                     |
 
-:::note
-Metadata should contain a `SKU` field for each product.
-:::
+</TableWrapper>
 
-:::note
+<Aside type="note" title="SKU in metadata">
+Metadata should contain a `SKU` field for each product.
+</Aside>
+
+<Aside type="note" title="Non-empty metadata fields">
 When importing pages, ensure that when a metadata block is present on a page, it does not contain any empty fields. This might lead to pages with missing titles, which Google penalizes.
-:::
+</Aside>
 
 ## Schema.org data (JSON-LD)
 
 JavaScript Object Notation for Linked Data (JSON-LD) is a structured data format that helps search engines understand the content of your web pages more explicitly. It is typically added as a script tag in the `<head>` of your HTML document.
 
-Adobe Commerce storefronts on Edge Delivery Services should include [schema.org](https://schema.org/) annotations to expose product data to search engines. This data should be included on all Commerce pages, especially PDPs and PLPs.
+Adobe Commerce storefronts on Edge Delivery Services should include <Link href={"https://schema.org/"} text={"schema.org"} /> annotations to expose product data to search engines. This data should be included on all Commerce pages, especially PDPs and PLPs.
 
-You should compare the data available on the site before migrating to Edge Delivery Services to ensure that SKUs for all product variants are included. Use the [Rich Results Test](https://search.google.com/test/rich-results) to validate the schema.org annotations. The PDP drop-in component in the boilerplate contains an example for JSON-LD data.
+You should compare the data available on the site before migrating to Edge Delivery Services to ensure that SKUs for all product variants are included. Use the <Link href={"https://search.google.com/test/rich-results"} text={"Rich Results Test"} /> to validate the schema.org annotations. The PDP drop-in component in the boilerplate contains an example for JSON-LD data.
 
-:::note
+<Aside type="note" title="Google Shopping and JSON-LD">
 If you are using Google Shopping features (for example, products available on `shopping.google.com`), consider schema.org annotations with critical priority. If a single JSON-LD annotation on the page is invalid, Google considers all annotations invalid.
-:::
+</Aside>
 
 ## Generate metadata
 
-You can use the [PDP Metadata Generator](https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/pdp-metadata) tool to automate the process of generating all recommended metadata. The tool fetches product data from the Catalog Service, processes it, and generates a metadata spreadsheet in `.xlsx` format. The spreadsheet can be used for the [bulk metadata](https://www.aem.live/docs/bulk-metadata) feature in Edge Delivery Services.
+You can use the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/pdp-metadata"} text={"PDP Metadata Generator"} /> tool to automate the process of generating all recommended metadata. The tool fetches product data from the Catalog Service, processes it, and generates a metadata spreadsheet in `.xlsx` format. The spreadsheet can be used for the <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"bulk metadata"} /> feature in Edge Delivery Services.
 
-<Aside type="cool" title="Prerequisites">
-  * Node.js installed on your machine
-  * Access to the Catalog Service with the necessary API keys and configuration
-  * Commerce boilerplate repository cloned to your local machine
+<Aside type="tip" title="Prerequisites">
+  - Node.js installed on your machine
+  - Access to the Catalog Service with the necessary API keys and configuration
+  - Commerce boilerplate repository cloned to your local machine
 </Aside>
 
 To generate metadata using the PDP Metadata Generator tool:
@@ -63,9 +70,9 @@ To generate metadata using the PDP Metadata Generator tool:
    npm install
    ```
 
-   :::note
+   <Aside type="note" title="Configure Catalog Service access">
    Before running the tool, you must ensure that the `configFile` variable in the `pdp-metadata.js` file points to the correct configuration JSON file URL. This file contains the required parameters to access the Catalog Service API and should have been set up as part of your [project onboarding](/setup/configuration/commerce-configuration/).
-   :::
+   </Aside>
 
 1. Run the tool and generate metadata files in the project directory.
 
@@ -77,25 +84,31 @@ To generate metadata using the PDP Metadata Generator tool:
 
 The resulting `metadata.xlsx` and `metadata.json` files contain all recommended metadata for all of your products based on your site's [commerce configuration](/setup/configuration/commerce-configuration/).
 
-See the [bulk metadata](https://www.aem.live/docs/bulk-metadata) documentation for instructions on how to upload the generated metadata file to Edge Delivery Services.
+See the <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"bulk metadata"} /> documentation for instructions on how to upload the generated metadata file to Edge Delivery Services.
 
 ## SKU Casing
 
 Due to a requirement in Edge Delivery Services, all product URLs must use lowercase SKUs. The boilerplate will enforce this by default.
 
-**Product Link Generation**: A centralized `getProductLink(urlKey, sku)` function has been implemented to ensure consistent URL generation across all commerce components. This function is used to generate product page links at runtime in the correct casing.
+#### Product link generation
 
-**Metadata Generation**: Metadata applied through [bulk metadata](https://www.aem.live/docs/bulk-metadata) only applies metadata for lowercase URLs. The PDP Metadata Generation tool has been updated to produce output in the correct format.
+A centralized `getProductLink(urlKey, sku)` function has been implemented to ensure consistent URL generation across all commerce components. This function is used to generate product page links at runtime in the correct casing.
+
+#### Metadata generation
+
+Metadata applied through <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"bulk metadata"} /> only applies metadata for lowercase URLs. The PDP Metadata Generation tool has been updated to produce output in the correct format.
 
 ### Implementation Requirements
 
 For sites with SKUs containing uppercase letters, you have two options:
 
-**Option A: Publish Metadata (Recommended)**
-Upload a `metadata.json` file to Edge Delivery Services that maps your product paths to the correct metadata. This approach ensures optimal SEO performance. See [the tool's README](https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/tools/pdp-metadata/README.md) for more information.
+#### Option A: Publish Metadata (Recommended)
 
-**Option B: Remove Lowercase Enforcement**
-If you prefer to maintain uppercase SKUs in URLs, you can modify the `getProductLink` function in your boilerplate to remove the `.toLowerCase()` call, but **metadata will not be applied**.
+Upload a `metadata.json` file to Edge Delivery Services that maps your product paths to the correct metadata. This approach ensures optimal SEO performance. See <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/tools/pdp-metadata/README.md"} text={"the tool's README"} /> for more information.
+
+#### Option B: Remove Lowercase Enforcement
+
+If you prefer to maintain uppercase SKUs in URLs, you can modify the `getProductLink` function in your boilerplate to remove the `.toLowerCase()` call, but metadata will not be applied.
 
 ```javascript
 // In scripts/commerce.js
@@ -111,12 +124,15 @@ Removing lowercase enforcement may impact SEO performance. Adobe recommends usin
 ### Migration Guide
 
 If you're upgrading from a previous version of the boilerplate:
+
 <Steps>
-1. **Review Your SKUs**: Identify any products with uppercase SKUs
-2. **Choose Implementation Strategy**: Decide between metadata publishing or removing lowercase enforcement
-3. **Update Product Links**: Ensure all commerce components use the centralized `getProductLink` function
-4. **Test Thoroughly**: Validate metadata generation and URL consistency
-5. **Monitor Performance**: Track SEO metrics and page load times
+
+1. Review your SKUs and identify any products with uppercase SKUs.
+1. Choose an implementation strategy between metadata publishing or removing lowercase enforcement.
+1. Update product links so all commerce components use the centralized `getProductLink` function.
+1. Test thoroughly: validate metadata generation and URL consistency.
+1. Monitor performance: track SEO metrics and page load times.
+
 </Steps>
 
 <Aside type="tip" title="Best Practice">

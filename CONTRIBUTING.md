@@ -326,7 +326,7 @@ After introducing "Adobe Commerce" in a section, subsequent mentions within that
 
 - ✅ "The **Adobe Commerce boilerplate** applies to building Commerce storefronts..." (second mention shortened)
 - ✅ "Adobe Commerce provides... Commerce also supports..." (subsequent mentions shortened)
-- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce storefronts..." (repetitive, should shorten second mention)
+- ❌ "The Adobe Commerce boilerplate applies to Adobe Commerce Storefronts..." (repetitive, should shorten second mention)
 
 This rule applies within the scope of a section (between H2/H3 headings) to avoid repetition and improve readability.
 
@@ -370,9 +370,17 @@ prerequisites: # List of prerequisites
   css: false
   js: true
   commerce: true
-time: '15 minutes' # Estimated reading/completion time
+# time: optional — see note below
 ---
 ```
+
+### `time` frontmatter (optional)
+
+Starlight renders `time` next to the page title (`PageTitle.astro`). Some readers use it to plan; others skip a page when the value looks long.
+
+- Treat `time` as optional. Prefer it only when a short, credible estimate helps (for example a true quick start under about fifteen minutes).
+- For long tutorials or dense guides, omit `time` so the title does not advertise a large number that can discourage reading.
+- If you use `time`, use a string such as `~10 minutes` for consistency with existing topics.
 
 ## Markdown & Components
 
@@ -449,7 +457,7 @@ import Link from '@components/Link.astro';
 
 ### Available Components
 
-Import and use these components for enhanced documentation:
+Import and use these components for enhanced documentation. For the **Term** glossary tooltip (and when to add entries in `src/data/glossary.ts`), see [Glossary terms (Term component)](README.md#glossary-terms-term-component) in this repository’s main readme.
 
 #### LinkCard Component
 
@@ -602,6 +610,10 @@ import TableWrapper from '@components/TableWrapper.astro';
 - Break long lines for readability (especially function calls with multiple parameters)
 
 ## Review Process
+
+### Git commits and pushes
+
+Review every change in source control or with `git diff` before you commit. If you use Cursor or another assistant, commits and pushes are your decision: inspect the diff first, then commit and push yourself, or explicitly ask the assistant to commit or push only after that review.
 
 ### Before Submitting
 

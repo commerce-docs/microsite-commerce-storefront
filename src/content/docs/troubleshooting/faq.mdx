@@ -19,7 +19,7 @@ import ToolsAemLiveNote from 'src/content/fragments/aem-live-tools-note.mdx';
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce/live-search/overview" text="Live Search" />.
 - <Link href="https://experienceleaguecommunities.adobe.com/t5/adobe-experience-manager/aem-gems-building-storefronts-on-edge-delivery-services-with/m-p/652692" text="[AEM Gems] Building Storefronts on Edge Delivery Services with Adobe Commerce" />.
 - <Link href="https://adapt.to/2023/schedule/build-super-fast-storefront-experiences-with-edge-delivery-services-and-adobe-commerce" text="[AdaptTo] Build Super Fast Storefront Experiences with Edge Delivery Services and Adobe Commerce" />.
-- <Link href="https://bit.ly/L445-workbook" text="[Summit 2024] Commerce Lab Workbook" />.
+- <Link href="https://github.com/adobe/wknd-summit2024" text="Adobe Summit 2024 Commerce lab materials (GitHub repository)" />.
 
 ## What should I do if my Catalog Service/Live Search data is missing or corrupted?
 
@@ -164,6 +164,48 @@ When the storefront configuration is loaded in the browser, it is stored in <Lin
 1. Refresh the page.
 
 **For end users:** Clear the browser session by closing and reopening the browser, or clear the browsing data to see configuration changes.
+
+## My page isn't showing up
+
+If a route returns an error or empty response, verify that Edge Delivery Services can successfully retrieve the corresponding document from the content pipeline.
+
+<Steps>
+1. Open your browser's developer tools and go to the **Network** tab.
+1. Reload the page, then click the main document request (usually the first HTML request).
+In the request details, open **Headers** and look for the `x-error` field. The value can help identify missing content or other issues.
+</Steps>
+
+If the `x-error` header shows a failure when loading an `.md` file from content-bus (for example, a `404` error under `/products/...`), it means the page is not available in the Edge Delivery content system. This usually happens because the document is missing, not published, the path is incorrect, or the content has not been synced yet.
+
+![x-error header on the document response showing a content-bus 404 for a .md path](@images/troubleshoot/eds-x-error-header.png)
+
+**What to do:** Add or publish the document in your content system (for example, da.live). If needed, you can also use an overlay so EDS can serve HTML for that route. For more details, see <Link href={"https://www.aem.live/developer/byom"} text={"BYOM"} />.
+
+## My product pages return 404
+
+Product detail pages (PDPs) may return a 404 when the requested URL cannot be resolved to a document in the Edge Delivery content pipeline. In most cases, this indicates that no corresponding content resource exists or is accessible for that path. Verify the following:
+
+**Overlay / BYOM not set up:** If your project depends on prerendering or BYOM (bring your own markup) to serve PDPs, make sure it is fully configured. See [AEM Commerce prerender](/setup/configuration/aem-prerender/).
+- **Folder mapping (deprecated) and uppercase SKUs:** Folder mapping is deprecated and is no longer the recommended approach. In addition, `fstab.yaml` is only read once during initial site creation — changes to it after the AEM Code Sync bot provisions your site have no effect. If you need to add or update folder mappings, use the Config Service API instead:
+
+  ```http
+  GET  https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+  {/* Modify the JSON object and POST it back to the same endpoint */}
+  POST https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+  ```
+
+  Use GET to read the current mapping, edit the JSON object, then POST it back to the same URL.
+
+  See the <Link href={"https://www.aem.live/docs/admin.html"} text={"Admin API reference"} /> and the <Link href={"https://www.aem.live/developer/folder-mapping"} text={"folder mapping deprecation notice"} /> for details.
+
+  If you are still using folder mapping, note that URLs must be lowercase. If your SKUs contain uppercase letters, you need to provide metadata (for example, using bulk metadata) so the correct content is matched to each URL. See:
+
+  - <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"Bulk metadata"} />
+  - [SEO metadata](/setup/seo/metadata/#generate-metadata)
+
+![Example storefront URL path for a product detail page](@images/troubleshoot/eds-pdp-url-path.png)
+
+![productView JSON excerpt with an uppercase SKU](@images/troubleshoot/product-view-uppercase-sku.png)
 
 ## I can't preview, publish, or make content changes
 

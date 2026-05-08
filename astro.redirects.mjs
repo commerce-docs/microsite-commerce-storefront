@@ -1,9 +1,9 @@
 /**
  * Site-wide redirects configuration
- * 
+ *
  * This file maintains all URL redirects for the Adobe Commerce Storefront documentation.
  * Redirects are organized by category for easier maintenance.
- * 
+ *
  * @returns {Object} Redirects object keyed by old path, valued by new path
  */
 
@@ -88,7 +88,10 @@ export function generateRedirects(basePath) {
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
+        '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/seo': `${basePath}/setup/seo/`,
+        '/get-started/seo/': `${basePath}/setup/seo/`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
@@ -123,6 +126,8 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)
@@ -132,23 +137,31 @@ export function generateRedirects(basePath) {
         '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
+        '/merchants/storefront-builder/page-metadata/': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
+        '/merchants/storefront-builder/section-metadata/': `${basePath}/merchants/quick-start/section-metadata`,
         '/merchants/storefront-builder/your-first-page': `${basePath}/merchants/quick-start/your-first-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
 
         // Commerce blocks redirects (storefront-builder → blocks)
         '/merchants/storefront-builder/': `${basePath}/merchants/blocks`,
-        '/merchants/storefront-builder/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/storefront-builder/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
-        '/merchants/get-started/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/get-started/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
+        '/merchants/storefront-builder/personalization': `${basePath}/merchants/content-customizations/personalization`,
+        '/merchants/storefront-builder/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
+        '/merchants/get-started/personalization': `${basePath}/merchants/content-customizations/personalization`,
+        '/merchants/get-started/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
 
         // Commerce blocks folder consolidation redirects (commerce-blocks → blocks)
         '/merchants/commerce-blocks': `${basePath}/merchants/blocks`,
-        '/merchants/commerce-blocks/personalization': `${basePath}/merchants/blocks/personalization`,
-        '/merchants/commerce-blocks/product-recommendations': `${basePath}/merchants/blocks/product-recommendations`,
-        
+        '/merchants/commerce-blocks/personalization': `${basePath}/merchants/content-customizations/personalization`,
+        '/merchants/commerce-blocks/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
+
+        // Personalization and Product Recommendations setup guides (blocks → content-customizations)
+        '/merchants/blocks/personalization': `${basePath}/merchants/content-customizations/personalization`,
+        '/merchants/blocks/personalization/': `${basePath}/merchants/content-customizations/personalization`,
+        '/merchants/blocks/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
+        '/merchants/blocks/product-recommendations/': `${basePath}/merchants/content-customizations/product-recommendations`,
+
         // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
         // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
 
@@ -158,6 +171,9 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/experiments': `${basePath}/merchants/content-customizations/experiments`,
         '/merchants/get-started/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
+        // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
+        '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
+        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -171,6 +187,9 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
 
         // ========= MISC REDIRECTS =========
+        // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
+        '/create': `${basePath}/get-started/create-storefront`,
+        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
