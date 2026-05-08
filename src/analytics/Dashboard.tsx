@@ -833,7 +833,7 @@ export default function Dashboard({ docsHome }: DashboardProps) {
         </div>
       ) : null}
 
-      <SectionHeader title={`External links clicked (last ${trendRange} days)`} />
+      <SectionHeader title={`External links (last ${trendRange} days)`} />
 
       {loading ? (
         <LoadingPlaceholder rows={3} />
@@ -844,7 +844,7 @@ export default function Dashboard({ docsHome }: DashboardProps) {
         </p>
       ) : (
         <div className="table-wrapper">
-          <table className="data-table">
+          <table className="data-table data-table--align-left">
             <thead>
               <tr>
                 <th>Link</th>
@@ -883,7 +883,7 @@ export default function Dashboard({ docsHome }: DashboardProps) {
         <p className="empty-state">No events recorded yet.</p>
       ) : (
         <div className="table-wrapper">
-          <table className="data-table">
+          <table className="data-table data-table--align-left">
             <thead>
               <tr>
                 <th>Type</th>
