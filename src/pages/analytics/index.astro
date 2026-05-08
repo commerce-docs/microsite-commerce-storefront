@@ -1,13 +1,53 @@
 ---
 import Dashboard from '@analytics/Dashboard';
+import { pathWithBase } from '@utils/base';
+
+const docsHome = pathWithBase('');
 ---
 
 <!doctype html>
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <script is:inline>
+      (function () {
+        function resolveDocsTheme() {
+          try {
+            var stored = localStorage.getItem('starlight-theme');
+            if (stored === 'light') return 'light';
+            if (stored === 'dark') return 'dark';
+          } catch (e) {}
+          return window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
+        }
+        function applyDocsTheme() {
+          document.documentElement.setAttribute(
+            'data-theme',
+            resolveDocsTheme()
+          );
+        }
+        applyDocsTheme();
+        window.addEventListener('storage', function (e) {
+          if (e.key === 'starlight-theme') applyDocsTheme();
+        });
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        function onOsThemeChange() {
+          try {
+            var s = localStorage.getItem('starlight-theme');
+            if (s === 'light' || s === 'dark') return;
+          } catch (err) {}
+          applyDocsTheme();
+        }
+        if (mq.addEventListener) mq.addEventListener('change', onOsThemeChange);
+        else mq.addListener(onOsThemeChange);
+        window.addEventListener('pageshow', function (e) {
+          if (e.persisted) applyDocsTheme();
+        });
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analytics — Commerce Storefront Docs</title>
+    <title>Storefront Analytics — Commerce Storefront Docs</title>
     <meta name="robots" content="noindex, nofollow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,31 +58,7 @@ import Dashboard from '@analytics/Dashboard';
   </head>
 
   <body>
-    <!-- Nav bar -->
-    <header class="site-header">
-      <div class="header-inner">
-        <a href="/" class="home-link">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          Commerce Storefront Docs
-        </a>
-        <span class="header-title">Analytics</span>
-      </div>
-    </header>
-
-    <!-- Dashboard (React island, fully client-side) -->
-    <main class="main-content">
-      <Dashboard client:only="react" />
-    </main>
+    <Dashboard client:only="react" docsHome={docsHome} />
 
     <!-- Footer -->
     <footer class="site-footer">
@@ -65,6 +81,7 @@ import Dashboard from '@analytics/Dashboard';
   }
 
   :root {
+    color-scheme: light;
     --bg: #f8f9fa;
     --bg-surface: #ffffff;
     --border: #e5e7eb;
@@ -82,6 +99,12 @@ import Dashboard from '@analytics/Dashboard';
     --badge-custom-color: #6b21a8;
     --badge-outcome-bg: #e0f2fe;
     --badge-outcome-color: #0369a1;
+    --analytics-header-height: 56px;
+    /* Section titles use the same token as body text (light mode: dark type; dark mode: near-white). */
+    --section-header-color: var(--text);
+    /* Amber text/links: ≥4.5:1 on --bg (#f8f9fa) and on white cards (WCAG AA). */
+    --analytics-link: #9a3412;
+    --analytics-link-hover: #7c2d12;
     --chart-grid: #e5e7eb;
     --chart-label: #9ca3af;
     --chart-tooltip-bg: #ffffff;
@@ -90,32 +113,34 @@ import Dashboard from '@analytics/Dashboard';
     --chart-line-3: #9333ea;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f172a;
-      --bg-surface: #1e293b;
-      --border: #334155;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --accent: #60a5fa;
-      --accent-hover: #93c5fd;
-      --badge-click-bg: #1e3a5f;
-      --badge-click-color: #93c5fd;
-      --badge-scroll-bg: #14532d;
-      --badge-scroll-color: #86efac;
-      --badge-form-bg: #451a03;
-      --badge-form-color: #fde047;
-      --badge-custom-bg: #2e1065;
-      --badge-custom-color: #d8b4fe;
-      --badge-outcome-bg: #0c4a6e;
-      --badge-outcome-color: #7dd3fc;
-      --chart-grid: #334155;
-      --chart-label: #64748b;
-      --chart-tooltip-bg: #1e293b;
-      --chart-line-1: #60a5fa;
-      --chart-line-2: #4ade80;
-      --chart-line-3: #c084fc;
-    }
+  html[data-theme='dark'] {
+    color-scheme: dark;
+    --bg: #0f172a;
+    --bg-surface: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #60a5fa;
+    --accent-hover: #93c5fd;
+    --badge-click-bg: #1e3a5f;
+    --badge-click-color: #93c5fd;
+    --badge-scroll-bg: #14532d;
+    --badge-scroll-color: #86efac;
+    --badge-form-bg: #451a03;
+    --badge-form-color: #fde047;
+    --badge-custom-bg: #2e1065;
+    --badge-custom-color: #d8b4fe;
+    --badge-outcome-bg: #0c4a6e;
+    --badge-outcome-color: #7dd3fc;
+    /* Amber on dark slate: ≥4.5:1 on --bg (#0f172a) (WCAG AA). */
+    --analytics-link: #fbbf24;
+    --analytics-link-hover: #fcd34d;
+    --chart-grid: #334155;
+    --chart-label: #64748b;
+    --chart-tooltip-bg: #1e293b;
+    --chart-line-1: #60a5fa;
+    --chart-line-2: #4ade80;
+    --chart-line-3: #c084fc;
   }
 
   html,
@@ -134,11 +159,11 @@ import Dashboard from '@analytics/Dashboard';
   }
 
   a {
-    color: var(--accent);
+    color: var(--analytics-link);
     text-decoration: none;
   }
   a:hover {
-    color: var(--accent-hover);
+    color: var(--analytics-link-hover);
     text-decoration: underline;
   }
 
@@ -151,34 +176,54 @@ import Dashboard from '@analytics/Dashboard';
     z-index: 10;
   }
 
-  .header-inner {
+  .analytics-header-inner {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 1.5rem;
-    height: 56px;
+    padding: 0.65rem 1.5rem;
+    min-height: var(--analytics-header-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .analytics-header-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    min-width: 0;
+  }
+
+  .analytics-header-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .analytics-header-group .range-control {
+    margin-bottom: 0;
   }
 
   .home-link {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    color: var(--text-muted);
+    color: var(--analytics-link);
     font-size: 0.875rem;
     white-space: nowrap;
   }
   .home-link:hover {
-    color: var(--text);
+    color: var(--analytics-link-hover);
     text-decoration: none;
   }
 
-  .header-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text);
+  .home-link--docs {
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   /* ---- Main layout ---- */
@@ -197,6 +242,55 @@ import Dashboard from '@analytics/Dashboard';
     border-top: 1px solid var(--border);
   }
 
+  /* ---- Date range (summary + chart) ---- */
+  .range-control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .range-control__btn {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .range-control__btn:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .range-control__btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .range-control__btn--active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+  }
+
+  html[data-theme='dark'] .range-control__btn--active {
+    color: #0f172a;
+  }
+
+  .range-control__btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   /* ---- Dashboard container ---- */
   .dashboard-container {
     display: flex;
@@ -208,10 +302,13 @@ import Dashboard from '@analytics/Dashboard';
   .section-header {
     font-size: 0.875rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text);
+    letter-spacing: normal;
+    color: var(--section-header-color);
     margin-top: 1rem;
+  }
+
+  .dashboard-container > .section-header {
+    margin-top: 0;
   }
 
   .section-intro {
@@ -233,9 +330,21 @@ import Dashboard from '@analytics/Dashboard';
     gap: 1rem;
   }
 
-  /* Engagement row: slightly wider second column for the long label */
-  .cards-grid--engagement {
-    grid-template-columns: minmax(0, 1fr) minmax(10rem, 1.22fr) minmax(0, 1fr) minmax(0, 1fr);
+  .data-table__cell-sub {
+    display: block;
+    margin-top: 0.1875rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .summary-loading-bar {
+    height: 1.25rem;
+    max-width: 5.5rem;
+    margin-left: auto;
+    border-radius: 6px;
+    background: var(--border);
+    animation: pulse 1.5s ease-in-out infinite;
   }
 
   .stat-card {
@@ -281,8 +390,58 @@ import Dashboard from '@analytics/Dashboard';
     padding: 1.25rem 0.5rem 0.75rem;
   }
 
+  .chart-wrapper.chart-wrapper--daily {
+    /* Light surface: cyan / amber / pink series */
+    --chart-daily-primary: #0891b2;
+    --chart-daily-area-top: #22d3ee;
+    --chart-daily-area-bottom: #cffafe;
+    --chart-daily-mean-line: rgba(71, 85, 105, 0.55);
+    --chart-daily-now-line: rgba(217, 119, 6, 0.75);
+    --chart-daily-visits-line: #d97706;
+    --chart-daily-unique-line: #db2777;
+    --chart-daily-grid: rgba(100, 116, 139, 0.18);
+    --chart-daily-label: #64748b;
+    --chart-daily-axis-line: rgba(100, 116, 139, 0.35);
+    --chart-daily-legend: #334155;
+    --chart-daily-tooltip-bg: #ffffff;
+    --chart-daily-tooltip-border: #e2e8f0;
+    --chart-daily-tooltip-fg: #0f172a;
+    --chart-daily-tooltip-muted: #64748b;
+    --chart-daily-peak-dot: #65a30d;
+    --chart-daily-peak-ring: rgba(255, 255, 255, 0.95);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 0.375rem 0.5rem;
+  }
+
+  html[data-theme='dark'] .chart-wrapper.chart-wrapper--daily {
+    /* Hue-separated series on near-black panel */
+    --chart-daily-primary: #22d3ee;
+    --chart-daily-area-top: #22d3ee;
+    --chart-daily-area-bottom: #155e75;
+    --chart-daily-mean-line: rgba(226, 232, 240, 0.75);
+    --chart-daily-now-line: rgba(251, 191, 36, 0.55);
+    --chart-daily-visits-line: #fbbf24;
+    --chart-daily-unique-line: #f472b6;
+    --chart-daily-grid: rgba(148, 163, 184, 0.12);
+    --chart-daily-label: #94a3b8;
+    --chart-daily-axis-line: rgba(148, 163, 184, 0.25);
+    --chart-daily-legend: #e2e8f0;
+    --chart-daily-tooltip-bg: #0f172a;
+    --chart-daily-tooltip-border: #334155;
+    --chart-daily-tooltip-fg: #e2e8f0;
+    --chart-daily-tooltip-muted: #94a3b8;
+    --chart-daily-peak-dot: #a3e635;
+    --chart-daily-peak-ring: rgba(15, 23, 42, 0.85);
+    background: #070b14;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 0.75rem 0.375rem 0.5rem;
+  }
+
   .chart-placeholder {
-    height: 280px;
+    height: 300px;
     border-radius: 10px;
     background: var(--border);
     animation: pulse 1.5s ease-in-out infinite;
@@ -310,13 +469,13 @@ import Dashboard from '@analytics/Dashboard';
     text-transform: uppercase;
     letter-spacing: 0.04em;
     padding: 0.625rem 1rem;
-    text-align: left;
+    text-align: center;
     vertical-align: middle;
     border-bottom: 1px solid var(--border);
   }
 
   .data-table th.num-col {
-    text-align: right;
+    text-align: center;
   }
 
   .data-table td {
@@ -336,6 +495,40 @@ import Dashboard from '@analytics/Dashboard';
   .num-col {
     text-align: right;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Top pages: Page column left; Views, Unique visitors, Avg. active time centered */
+  .data-table--top-pages th:nth-child(1),
+  .data-table--top-pages td:nth-child(1) {
+    text-align: left;
+  }
+
+  .data-table--top-pages th:nth-child(n + 2),
+  .data-table--top-pages td:nth-child(n + 2) {
+    text-align: center;
+  }
+
+  /* Single-row metric tables (Summary, engagement row): centered values */
+  .data-table--metrics-row td {
+    text-align: center;
+  }
+
+  .data-table--metrics-row tbody td {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text);
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+
+  .data-table--metrics-row .data-table__cell-sub {
+    text-align: center;
+    font-weight: 400;
+  }
+
+  .data-table--metrics-row .summary-loading-bar {
+    margin-inline: auto;
   }
 
   .page-link {
@@ -426,6 +619,23 @@ import Dashboard from '@analytics/Dashboard';
     font-size: 0.8125rem;
   }
 
+  html[data-theme='dark'] .error-banner {
+    background: rgba(127, 29, 29, 0.35);
+    border-color: #b91c1c;
+    color: #fecaca;
+  }
+
+  html[data-theme='dark'] .setup-notice {
+    background: rgba(120, 53, 15, 0.45);
+    border-color: #b45309;
+    color: #fde68a;
+  }
+
+  html[data-theme='dark'] .setup-notice code {
+    background: rgba(0, 0, 0, 0.25);
+    color: #fef3c7;
+  }
+
   @keyframes pulse {
     0%,
     100% {
@@ -441,18 +651,14 @@ import Dashboard from '@analytics/Dashboard';
       grid-template-columns: 1fr 1fr;
     }
 
-    .cards-grid--engagement {
-      grid-template-columns: 1fr 1fr;
-    }
-
     .stat-value {
       font-size: 1.375rem;
     }
 
-    .data-table th:nth-child(3),
-    .data-table td:nth-child(3),
-    .data-table th:nth-child(4),
-    .data-table td:nth-child(4) {
+    .data-table:not(.data-table--metrics-row) th:nth-child(3),
+    .data-table:not(.data-table--metrics-row) td:nth-child(3),
+    .data-table:not(.data-table--metrics-row) th:nth-child(4),
+    .data-table:not(.data-table--metrics-row) td:nth-child(4) {
       display: none;
     }
   }

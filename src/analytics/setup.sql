@@ -78,6 +78,42 @@ ORDER BY page_views DESC
 LIMIT 50;
 
 
+-- 7-day totals (same logic as analytics_totals_30d; used when the dashboard range is 7 days)
+CREATE OR REPLACE VIEW analytics_totals_7d
+WITH (security_invoker = true) AS
+WITH windowed AS (
+  SELECT *
+  FROM page_views
+  WHERE timestamp >= NOW() - INTERVAL '7 days'
+),
+session_pv AS (
+  SELECT session_id, COUNT(*) AS pv_count
+  FROM windowed
+  GROUP BY session_id
+)
+SELECT
+  (SELECT COUNT(DISTINCT session_id) FROM windowed) AS visits,
+  (SELECT COUNT(*) FROM windowed) AS page_views,
+  (SELECT COUNT(DISTINCT visitor_id) FROM windowed) AS unique_visitors,
+  COALESCE(
+    (
+      SELECT ROUND(AVG(duration_seconds)::NUMERIC, 0)
+      FROM windowed
+      WHERE duration_seconds IS NOT NULL
+    ),
+    0
+  )::INTEGER AS avg_duration_seconds,
+  COALESCE(
+    ROUND(
+      100.0
+        * (SELECT COUNT(*) FROM session_pv WHERE pv_count = 1)::NUMERIC
+        / NULLIF((SELECT COUNT(*) FROM session_pv), 0),
+      1
+    ),
+    0
+  ) AS bounce_rate_pct;
+
+
 -- 30-day totals for summary cards — accurate unique counts across the window
 -- Bounce rate = sessions with exactly one page view in the window / all sessions
 CREATE OR REPLACE VIEW analytics_totals_30d
@@ -86,6 +122,78 @@ WITH windowed AS (
   SELECT *
   FROM page_views
   WHERE timestamp >= NOW() - INTERVAL '30 days'
+),
+session_pv AS (
+  SELECT session_id, COUNT(*) AS pv_count
+  FROM windowed
+  GROUP BY session_id
+)
+SELECT
+  (SELECT COUNT(DISTINCT session_id) FROM windowed) AS visits,
+  (SELECT COUNT(*) FROM windowed) AS page_views,
+  (SELECT COUNT(DISTINCT visitor_id) FROM windowed) AS unique_visitors,
+  COALESCE(
+    (
+      SELECT ROUND(AVG(duration_seconds)::NUMERIC, 0)
+      FROM windowed
+      WHERE duration_seconds IS NOT NULL
+    ),
+    0
+  )::INTEGER AS avg_duration_seconds,
+  COALESCE(
+    ROUND(
+      100.0
+        * (SELECT COUNT(*) FROM session_pv WHERE pv_count = 1)::NUMERIC
+        / NULLIF((SELECT COUNT(*) FROM session_pv), 0),
+      1
+    ),
+    0
+  ) AS bounce_rate_pct;
+
+
+-- 90-day totals (same logic as analytics_totals_30d; used when the dashboard range is 90 days)
+CREATE OR REPLACE VIEW analytics_totals_90d
+WITH (security_invoker = true) AS
+WITH windowed AS (
+  SELECT *
+  FROM page_views
+  WHERE timestamp >= NOW() - INTERVAL '90 days'
+),
+session_pv AS (
+  SELECT session_id, COUNT(*) AS pv_count
+  FROM windowed
+  GROUP BY session_id
+)
+SELECT
+  (SELECT COUNT(DISTINCT session_id) FROM windowed) AS visits,
+  (SELECT COUNT(*) FROM windowed) AS page_views,
+  (SELECT COUNT(DISTINCT visitor_id) FROM windowed) AS unique_visitors,
+  COALESCE(
+    (
+      SELECT ROUND(AVG(duration_seconds)::NUMERIC, 0)
+      FROM windowed
+      WHERE duration_seconds IS NOT NULL
+    ),
+    0
+  )::INTEGER AS avg_duration_seconds,
+  COALESCE(
+    ROUND(
+      100.0
+        * (SELECT COUNT(*) FROM session_pv WHERE pv_count = 1)::NUMERIC
+        / NULLIF((SELECT COUNT(*) FROM session_pv), 0),
+      1
+    ),
+    0
+  ) AS bounce_rate_pct;
+
+
+-- 365-day totals (same logic; used when the dashboard range is one year)
+CREATE OR REPLACE VIEW analytics_totals_365d
+WITH (security_invoker = true) AS
+WITH windowed AS (
+  SELECT *
+  FROM page_views
+  WHERE timestamp >= NOW() - INTERVAL '365 days'
 ),
 session_pv AS (
   SELECT session_id, COUNT(*) AS pv_count
@@ -126,6 +234,66 @@ FROM events
 WHERE event_type NOT IN ('web_vital', 'outcome', 'external_link')
 GROUP BY event_type, event_name
 ORDER BY event_count DESC;
+
+
+-- Engagement depth (last 7 days) — same shape as management_engagement_30d
+CREATE OR REPLACE VIEW management_engagement_7d
+WITH (security_invoker = true) AS
+SELECT
+  COALESCE(
+    (
+      SELECT ROUND(AVG(cnt)::numeric, 2)
+      FROM (
+        SELECT session_id, COUNT(*)::bigint AS cnt
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '7 days'
+        GROUP BY session_id
+      ) q
+    ),
+    0
+  ) AS avg_pages_per_session,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT session_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '7 days'
+        GROUP BY session_id
+        HAVING COUNT(*) >= 2
+      ) m
+    ),
+    0
+  ) AS sessions_with_2plus_pages,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT session_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '7 days'
+    ),
+    0
+  ) AS sessions_total,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT visitor_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '7 days'
+        GROUP BY visitor_id
+        HAVING COUNT(DISTINCT session_id) > 1
+      ) r
+    ),
+    0
+  ) AS returning_visitors,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT visitor_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '7 days'
+    ),
+    0
+  ) AS unique_visitors_30d;
 
 
 -- Engagement depth (last 30 days): pages per session and returning visitors
@@ -188,6 +356,126 @@ SELECT
   ) AS unique_visitors_30d;
 
 
+-- Engagement depth (last 90 days) — same shape as management_engagement_30d
+CREATE OR REPLACE VIEW management_engagement_90d
+WITH (security_invoker = true) AS
+SELECT
+  COALESCE(
+    (
+      SELECT ROUND(AVG(cnt)::numeric, 2)
+      FROM (
+        SELECT session_id, COUNT(*)::bigint AS cnt
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '90 days'
+        GROUP BY session_id
+      ) q
+    ),
+    0
+  ) AS avg_pages_per_session,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT session_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '90 days'
+        GROUP BY session_id
+        HAVING COUNT(*) >= 2
+      ) m
+    ),
+    0
+  ) AS sessions_with_2plus_pages,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT session_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '90 days'
+    ),
+    0
+  ) AS sessions_total,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT visitor_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '90 days'
+        GROUP BY visitor_id
+        HAVING COUNT(DISTINCT session_id) > 1
+      ) r
+    ),
+    0
+  ) AS returning_visitors,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT visitor_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '90 days'
+    ),
+    0
+  ) AS unique_visitors_30d;
+
+
+-- Engagement depth (last 365 days) — same shape as management_engagement_30d
+CREATE OR REPLACE VIEW management_engagement_365d
+WITH (security_invoker = true) AS
+SELECT
+  COALESCE(
+    (
+      SELECT ROUND(AVG(cnt)::numeric, 2)
+      FROM (
+        SELECT session_id, COUNT(*)::bigint AS cnt
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '365 days'
+        GROUP BY session_id
+      ) q
+    ),
+    0
+  ) AS avg_pages_per_session,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT session_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '365 days'
+        GROUP BY session_id
+        HAVING COUNT(*) >= 2
+      ) m
+    ),
+    0
+  ) AS sessions_with_2plus_pages,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT session_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '365 days'
+    ),
+    0
+  ) AS sessions_total,
+  COALESCE(
+    (
+      SELECT COUNT(*)::bigint
+      FROM (
+        SELECT visitor_id
+        FROM page_views
+        WHERE timestamp >= NOW() - INTERVAL '365 days'
+        GROUP BY visitor_id
+        HAVING COUNT(DISTINCT session_id) > 1
+      ) r
+    ),
+    0
+  ) AS returning_visitors,
+  COALESCE(
+    (
+      SELECT COUNT(DISTINCT visitor_id)::bigint
+      FROM page_views
+      WHERE timestamp >= NOW() - INTERVAL '365 days'
+    ),
+    0
+  ) AS unique_visitors_30d;
+
+
 -- High-value outbound clicks (legacy outcome events), last 30 days
 CREATE OR REPLACE VIEW outcome_clicks_30d
 WITH (security_invoker = true) AS
@@ -202,6 +490,21 @@ GROUP BY event_name
 ORDER BY clicks DESC;
 
 
+-- External link clicks by destination URL, last 7 days
+CREATE OR REPLACE VIEW public.external_link_clicks_7d
+WITH (security_invoker = true) AS
+SELECT
+  event_data->>'href' AS href,
+  COUNT(*)::bigint AS clicks
+FROM events
+WHERE event_type = 'external_link'
+  AND timestamp >= NOW() - INTERVAL '7 days'
+  AND COALESCE(NULLIF(TRIM(event_data->>'href'), ''), '') <> ''
+GROUP BY event_data->>'href'
+ORDER BY clicks DESC
+LIMIT 100;
+
+
 -- External link clicks by destination URL, last 30 days (one row per href)
 CREATE OR REPLACE VIEW public.external_link_clicks_30d
 WITH (security_invoker = true) AS
@@ -211,6 +514,36 @@ SELECT
 FROM events
 WHERE event_type = 'external_link'
   AND timestamp >= NOW() - INTERVAL '30 days'
+  AND COALESCE(NULLIF(TRIM(event_data->>'href'), ''), '') <> ''
+GROUP BY event_data->>'href'
+ORDER BY clicks DESC
+LIMIT 100;
+
+
+-- External link clicks by destination URL, last 90 days
+CREATE OR REPLACE VIEW public.external_link_clicks_90d
+WITH (security_invoker = true) AS
+SELECT
+  event_data->>'href' AS href,
+  COUNT(*)::bigint AS clicks
+FROM events
+WHERE event_type = 'external_link'
+  AND timestamp >= NOW() - INTERVAL '90 days'
+  AND COALESCE(NULLIF(TRIM(event_data->>'href'), ''), '') <> ''
+GROUP BY event_data->>'href'
+ORDER BY clicks DESC
+LIMIT 100;
+
+
+-- External link clicks by destination URL, last 365 days
+CREATE OR REPLACE VIEW public.external_link_clicks_365d
+WITH (security_invoker = true) AS
+SELECT
+  event_data->>'href' AS href,
+  COUNT(*)::bigint AS clicks
+FROM events
+WHERE event_type = 'external_link'
+  AND timestamp >= NOW() - INTERVAL '365 days'
   AND COALESCE(NULLIF(TRIM(event_data->>'href'), ''), '') <> ''
 GROUP BY event_data->>'href'
 ORDER BY clicks DESC
