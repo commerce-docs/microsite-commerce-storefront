@@ -22,10 +22,10 @@ The Checkout drop-in exposes slots for customizing specific UI sections. Use slo
 
 | Container | Slots |
 |-----------|-------|
-| [`LoginForm`](#loginform-slots) | `Heading`, `Preferences` |
-| [`PaymentMethods`](#paymentmethods-slots) | None |
+| [`LoginForm`](#loginform-slots) | `Heading`, `Preferences`, `Title` |
+| [`PaymentMethods`](#paymentmethods-slots) | `Methods`, `Title` |
 | [`PlaceOrder`](#placeorder-slots) | `Content` |
-| [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem` |
+| [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem`, `Title` |
 | [`TermsAndConditions`](#termsandconditions-slots) | `Agreements` |
 
 </TableWrapper>
@@ -45,6 +45,7 @@ interface LoginFormProps {
       isEmailValid: boolean;
       isAuthenticated: boolean;
     }>;
+    Title?: SlotProps<Record<string, never>>;
   };
 }
 ```
@@ -105,6 +106,27 @@ await provider.render(LoginForm, {
 })(block);
 ```
 
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `LoginForm` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import { LoginForm } from '@dropins/storefront-checkout/containers/LoginForm.js';
+
+await provider.render(LoginForm, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h2');
+      heading.textContent = 'Sign in to continue';
+      ctx.replaceWith(heading);
+    }
+  }
+})(block);
+```
+
 ## PaymentMethods slots
 
 The slots for the `PaymentMethods` container allow you to customize its appearance and behavior.
@@ -113,8 +135,34 @@ The slots for the `PaymentMethods` container allow you to customize its appearan
 interface PaymentMethodsProps {
   slots?: {
     Methods?: PaymentMethodHandlers;
+    Title?: SlotProps<Record<string, never>>;
   };
 }
+```
+
+### Methods slot
+
+The Methods slot allows you to register custom payment method handlers, replacing or augmenting the built-in payment method UI. Pass an object whose keys are payment method codes and values are handler functions.
+
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `PaymentMethods` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import { PaymentMethods } from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+
+await provider.render(PaymentMethods, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h2');
+      heading.textContent = 'How would you like to pay?';
+      ctx.replaceWith(heading);
+    }
+  }
+})(block);
 ```
 
 ## PlaceOrder slots
@@ -163,6 +211,7 @@ interface ShippingMethodsProps {
       isSelected: boolean;
       onSelect: () => void;
     }>;
+    Title?: SlotProps<Record<string, never>>;
   };
 }
 ```
@@ -222,6 +271,27 @@ await provider.render(ShippingMethods, {
       });
     },
   },
+})(block);
+```
+
+### Title slot
+
+The Title slot allows you to replace the default section heading rendered by the `ShippingMethods` container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-checkout/render.js';
+import ShippingMethods from '@dropins/storefront-checkout/containers/ShippingMethods.js';
+
+await provider.render(ShippingMethods, {
+  slots: {
+    Title: (ctx) => {
+      const heading = document.createElement('h3');
+      heading.textContent = 'Choose a delivery option';
+      ctx.replaceWith(heading);
+    }
+  }
 })(block);
 ```
 
