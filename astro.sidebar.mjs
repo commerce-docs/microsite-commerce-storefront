@@ -177,6 +177,7 @@ export function generateSidebar() {
             { label: 'Launch Checklist', link: '/setup/launch/' },
             { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+            { label: 'SEO Overview', link: '/setup/seo/' },
             { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
           ],
