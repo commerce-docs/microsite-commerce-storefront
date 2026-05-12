@@ -5,6 +5,7 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 - [Prerequisites](#prerequisites)
 - [Set up your local environment](#set-up-your-local-environment)
 - [Development commands](#development-commands)
+- [LLM context file generation](#llm-context-file-generation)
 - [Content structure](#content-structure)
 - [How to add a page](#how-to-add-a-page)
 - [How to add images](#how-to-add-images)
@@ -54,6 +55,31 @@ The following steps copy the project to your machine and start the local preview
 - `pnpm build:stage` — Build for a staging environment. Set the site URL in an environment variable named `STAGE_URL`. For example: `STAGE_URL=https://my-stage.example.com pnpm build:stage`.
 - `pnpm clean` — Reinstall dependencies (removes `node_modules`, `dist`, `.astro`).
 - `pnpm scrub` — Same as `pnpm clean`, but also deletes `pnpm-lock.yaml`. Use only if you intend to regenerate the lockfile.
+
+## LLM context file generation
+
+`generate:llms` converts every documentation source file into LLM-friendly plain-text bundles served as static assets. These files let AI assistants consume the full documentation set without crawling the site.
+
+**When it runs:** automatically before every `build`, `build:prod`, and `build:prod-fast`. Run it on its own with:
+
+```bash
+pnpm generate:llms
+```
+
+`generate:llms-full` is an alias for the same script.
+
+**Output files** (written to `public/`):
+
+| File | Contents |
+|---|---|
+| `llms.txt` | Index listing all bundles with their URLs |
+| `llms-full.txt` | All docs concatenated in sidebar order |
+| `llms-small.txt` | Same as `llms-full.txt`, minus `releases/changelog` |
+| `_llms-txt/<slug>.txt` | One file per thematic bundle |
+
+**Thematic bundles:** The script partitions docs into topic-scoped files (get-started, boilerplate, dropins-reference, tutorials, releases, and so on) using the `LLMS_TXT_BUNDLES` array in `scripts/generate-llms-full.js`. If you add a new top-level section to `src/content/docs/`, add a matching entry to that array — the script logs a warning for any pages not covered by a bundle filter.
+
+**MDX processing:** The script strips frontmatter and imports, then replaces MDX component syntax with readable equivalents: fenced code blocks for `<Code>` and `<Diagram type="mermaid">`, blockquotes for `<Aside>`, a heading per tab for `<Tabs>`, and inline definitions for `<Term>` drawn from `src/data/glossary.ts`. Relative links are resolved to absolute production URLs.
 
 ## Content structure
 
