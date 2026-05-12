@@ -78,31 +78,35 @@ const FILES = [
 
 const SPECIAL = {
   'dropins/all/labeling.mdx':
-    'Learn how to localize and relabel Adobe Commerce drop-in components using placeholder files, dictionary overrides, and merchant-friendly workflows on your storefront.',
+    'Relabel and translate Adobe Commerce drop-in UI text with placeholder JSON files and dictionary overrides your team ships alongside the storefront.',
   'dropins/all/layouts.mdx':
-    'Learn how to configure HTML layouts for Commerce drop-in blocks on Edge Delivery Services so containers appear in the right order on product and category pages.',
+    'Arrange Commerce drop-in containers on Edge Delivery Services by editing the HTML layout fragment so gallery, details, and recommendations sit where shoppers expect.',
   'sdk/design/index.mdx':
-    'Explore the Adobe Base design system for storefront SDK work, including tokens for color, typography, spacing, shapes, and grids that keep drop-in UIs consistent.',
+    'Learn Base design tokens for color, typography, spacing, shapes, and grids so custom storefront skinning still matches SDK components.',
   'sdk/reference/index.mdx':
-    'Browse core Storefront SDK reference topics for Adobe Commerce drop-ins, including events, initialization, rendering, GraphQL helpers, links, and reCAPTCHA integration.',
+    'Jump into events, renderers, GraphQL helpers, initializer hooks, reCAPTCHA, and slots that power every Commerce drop-in package.',
   'sdk/utilities/index.mdx':
-    'Browse helper utilities for the Adobe Commerce Storefront SDK, including DOM helpers, debounce, cookies, form values, deep merge, and other common integration tasks.',
+    'Import debounce helpers, cookie readers, form parsers, deep merges, and other small SDK utilities used across drop-in bundles.',
   'merchants/content-customizations/enrichment.mdx':
-    'Learn how to enrich Adobe Commerce storefront pages on Edge Delivery Services with targeted blocks, promotions, and contextual content using enrichment metadata and authoring patterns.',
+    'Author contextual Edge Delivery Services blocks around commerce fragments by configuring query.yaml so enrichment.json maps blocks to SKUs and placements.',
   'sdk/get-started/cli.mdx':
-    'Learn how to install and use the Elsie CLI to scaffold, build, and maintain Adobe Commerce drop-in components and storefront packages from your terminal.',
+    'Run the Elsie CLI from npx to scaffold drop-ins, generate GraphQL types, and automate storefront package maintenance tasks.',
   'sdk/design/grid.mdx':
-    'Use the Base design system grid for Adobe Commerce storefront layouts, including breakpoints, columns, and spacing tokens that align SDK components with your page structure.',
+    'Apply the Base grid breakpoints, gutters, and column counts from Storybook so SDK layouts align to responsive page shells.',
   'sdk/reference/events.mdx':
-    'Use the Storefront SDK event bus to communicate between Adobe Commerce drop-in packages, subscribe to lifecycle events, and keep cart, checkout, and PDP flows in sync.',
+    'Publish and subscribe on the SDK event bus so cart, checkout, PDP, and auth drop-ins react to shared lifecycle messages.',
   'sdk/reference/render.mdx':
-    'Render Adobe Commerce Storefront SDK components to the DOM or as HTML strings, including patterns for mounting drop-ins and integrating with your host application.',
+    'Instantiate the Render class with your Provider to mount Preact drop-ins in the DOM or serialize authenticated HTML fragments.',
   'sdk/reference/vcomponent.mdx':
-    'Understand the VComponent wrapper for dynamic rendering in the Adobe Commerce Storefront SDK when you need flexible VNode trees inside drop-in containers.',
+    'Pass arbitrary VNode props such as headers or footers into containers without forking drop-in source using the VComponent helper.',
   'sdk/utilities/getCookie.mdx':
-    'Read browser cookie values by name in the Adobe Commerce Storefront SDK so cart, auth, and session helpers can share lightweight client-side state.',
+    'Read a document cookie by name for lightweight session, segmentation, or consent checks inside Storefront SDK integrations that share shopper state across drop-ins.',
   'sdk/utilities/getPathValue.mdx':
-    'Read nested values from plain objects and form state using dot-path strings in the Adobe Commerce Storefront SDK for configuration and form payloads.',
+    'Safely read nested form or configuration values with dot-path keys such as address.street without writing manual null guards in SDK integrations.',
+  'sdk/utilities/getFormErrors.mdx':
+    'Scan an HTMLFormElement for validation errors after browser constraint checks so you can mirror each invalid field with inline messaging in checkout, account, and B2B forms.',
+  'sdk/utilities/debounce.mdx':
+    'Wrap a callback so it fires only after input stops for a chosen delay, ideal for Adobe Commerce search boxes, filters, and quantity edits that would otherwise thrash the network or UI thread.',
 };
 
 function dropinName(rel) {
@@ -143,7 +147,7 @@ function expand(rel, desc) {
     return 'Collect every validation error from an HTML form element in the Adobe Commerce Storefront SDK so you can show inline messages during checkout and account registration.';
   }
   if (desc.includes('Overview of the shared')) {
-    return 'Overview of shared Adobe Commerce Storefront SDK components, including inputs, layout primitives, and patterns used across Cart, Checkout, and PDP drop-ins.';
+    return 'Browse interactive inputs, navigation, layout, and cart primitives shipped with the Storefront SDK to stitch Cart, Checkout, PDP, and account experiences.';
   }
   if (desc.startsWith('Event Bus')) {
     return SPECIAL['sdk/reference/events.mdx'];
