@@ -63,6 +63,9 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
+      // Emit /path/page.html instead of /path/page/index.html so deploy pipelines
+      // do not generate hundreds of index.html → trailing-slash 301 rules for every doc page.
+      format: 'file',
       inlineStylesheets: 'always',
     },
 
@@ -186,7 +189,7 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**', '/dropins/all/common-events/**'],
             }
           ),
           starlightHeadingBadges(),
