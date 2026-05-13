@@ -101,6 +101,7 @@ export interface Item {
   visibility: string;
   queryType: string;
   itemType: string;
+  inStock?: boolean;
 }
 
 interface ItemImage {
@@ -197,15 +198,18 @@ provider.render(ProductList, {
         addToCart.className = 'footer__button--add-to-cart';
         wrapper.appendChild(addToCart);
 
-        if (ctx.product.itemType === 'SimpleProductView') {
+        if (ctx.item.itemType === 'SimpleProductView') {
           // Add to Cart Button
           UI.render(Button, {
             children: 'Add to Cart',
-            onClick: () => {
-              // Call add to cart function from cart/api
-              console.log('Add to Cart');
-            },
+            onClick: ctx.item.inStock
+              ? () => {
+                // Call add to cart function from cart/api
+                console.log('Add to Cart');
+              }
+              : undefined,
             variant: 'primary',
+            disabled: !ctx.item.inStock,
           })(addToCart);
         } else {
           // View Product Button
@@ -213,7 +217,7 @@ provider.render(ProductList, {
             children: 'Select Options',
             onClick: () => {
               console.log('Select Options');
-              window.location.href = ctx.product.urlKey;
+              window.location.href = ctx.item.urlKey;
             },
             variant: 'tertiary',
           })(addToCart);
