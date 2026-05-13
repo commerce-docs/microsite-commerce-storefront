@@ -63,9 +63,6 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
-      // Emit /path/page.html instead of /path/page/index.html so deploy pipelines
-      // do not generate hundreds of index.html → trailing-slash 301 rules for every doc page.
-      format: 'file',
       inlineStylesheets: 'always',
     },
 
