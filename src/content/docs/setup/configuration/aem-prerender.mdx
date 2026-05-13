@@ -40,35 +40,35 @@ Adobe Commerce on Edge Delivery Services historically used client-side JavaScrip
 
 This guide walks you through implementing the prerender solution in both required repositories. Follow these steps in order:
 
-<Diagram 
-  type="mermaid" 
+<Diagram
+  type="mermaid"
   caption="Complete implementation workflow showing the step-by-step process for setting up prerendered product pages in your storefront."
   code={`%%{init: {'theme':'base', 'themeVariables': {'fontSize':'16px'}}}%%
 flowchart LR
     Start([<strong>Start Implementation</strong>]):::start
-    
+
     Step1["<strong>1. Check Prerequisites</strong><br/>Verify access, tools, and storefront requirements"]:::step
     Step2["<strong>2. Understand the Architecture</strong><br/>Learn how the two repositories work together"]:::step
     Step3["<strong>3. Install & Deploy App Builder App</strong><br/>Repository: aem-commerce-prerender<br/>Clone, configure, and deploy to App Builder"]:::repo1
     Step4["<strong>4. Integrate with Your Storefront</strong><br/>Repository: Your Commerce Boilerplate<br/>Modify the product-details block to use prerendered markup"]:::repo2
     Step5["<strong>5. Customize (Optional)</strong><br/>Adjust templates, schemas, and queries"]:::optional
-    
+
     End([<strong>✓ Implementation Complete</strong>]):::complete
-    
+
     Start --> Step1
     Step1 --> Step2
     Step2 --> Step3
     Step3 --> Step4
     Step4 --> Step5
     Step5 --> End
-    
+
     classDef start fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
     classDef step fill:#f5f5f5,stroke:#666,stroke-width:2px,color:#000
     classDef repo1 fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
     classDef repo2 fill:#e8f5e9,stroke:#388e3c,stroke-width:3px,color:#000
     classDef optional fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000,stroke-dasharray: 5 5
     classDef complete fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
-    
+
     linkStyle default stroke-width:3px,stroke:#666
 `}
 />
@@ -116,20 +116,20 @@ The prerender system operates as a continuous background process:
 
 </Steps>
 
-<Diagram 
-  type="mermaid" 
+<Diagram
+  type="mermaid"
   caption="High-level workflow showing how product data flows from Store Admin through the Prerender Stack to deliver Product Details Pages to Store Customers."
   code={`flowchart LR
     A["<span style='font-size:80px'>👨‍💼</span><br/><span style='font-size:18px'>Store Admin</span>"]:::actor
     B["Product"]:::product
-    
+
     subgraph subGraph0["<strong>Prerender Stack</strong>"]
         direction TB
         C["Product changed"]:::prerender
         D["Render page"]:::prerender
         C <--> D
     end
-    
+
     E["Store HTML in<br/>App Builder blob store"]:::action
     F["AEM Admin API configures<br/>overlay & updates sitemap"]:::action
     G["Product Details Page<br/>With embedded JSON-LD<br/>Metadata and Semantic Markup"]:::output
@@ -161,8 +161,8 @@ The solution consists of these components:
 - **Storage Layer**: Maintains product state and generated markup in App Builder storage
 - **Management UI**: Web interface for monitoring, configuration, and troubleshooting
 
-<Diagram 
-  type="mermaid" 
+<Diagram
+  type="mermaid"
   caption="Complete architecture showing App Builder actions, content management, and how prerendered and dynamic content are delivered to consumers."
   code={`flowchart TB
     subgraph subGraph0["<strong>App Builder Workspace</strong>"]
@@ -178,7 +178,7 @@ The solution consists of these components:
 
     E["AEM Admin API<br/>configures overlay link<br/>to App Builder blob store"]:::api
     F["Edge Delivery Services<br/>serves HTML from overlay<br/>at product URLs"]:::helix
-    
+
     subgraph subGraph1["<strong>Product Page</strong>"]
         direction TB
         G["Embedded markup with product data<br/>and attributes, injected ahead of time"]:::embedded
@@ -187,7 +187,7 @@ The solution consists of these components:
         J["Price<br/>Stock qty"]:::dynamic
         K["More<br/>Customer-defined fields"]:::dynamic
     end
-    
+
     subgraph subGraph2["<strong>Consumers</strong>"]
         direction TB
         L["SEO / GEO"]
@@ -247,7 +247,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 3. **Configure environment variables** in the generated `.env` file with your storefront-specific values:
 
    <TableWrapper nowrap={[0]}>
- 
+
    | Variable | Description | Example |
    |----------|-------------|---------|
    | `ORG` | Your GitHub organization or username | `adobe` |
@@ -267,7 +267,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 
 4. **Obtain required credentials**:
    - **AEM Admin API token**: To obtain your token:
-     1. Log in to the <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM Admin API" /> (select the link from your preferred Identity Provider; the ones suffixed by "_sa" allow you to select a specific account rather than the one currently logged in)
+     1. Log in to the <Link href="https://admin.hlx.page/login" text="AEM Admin API" /> (select the link from your preferred Identity Provider; the ones suffixed by "_sa" allow you to select a specific account rather than the one currently logged in)
      2. Once redirected to the JSON response, open your browser's Developer Tools (F12)
      3. Go to the Application tab (Chrome) or Storage tab (Firefox)
      4. Under Cookies, find and copy the value of the `auth_token` cookie
@@ -279,7 +279,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
      4. Run `aio app use <file_name>` in the root directory of your prerender project to activate the credentials
    - **Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> for environment and API configuration
    - **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details on configuring Optimizer headers and endpoints.
-   
+
    **Note**: Commerce configuration (endpoints and headers) is read from your storefront's `config.json` file, not from environment variables. Ensure your storefront has a properly configured `config.json` file before deploying the prerender app.
 
 5. **Deploy to App Builder**:
@@ -292,13 +292,13 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    - Manually invoke actions using the Management UI or via CLI commands:
      ```bash
      # Fetch all products from Catalog Service and store them
-     `aio rt action invoke aem-commerce-ssg/fetch-all-products`
-     
+     aio rt action invoke aem-commerce-ssg/fetch-all-products
+
      # Check for product changes and generate markup
-     `aio rt action invoke aem-commerce-ssg/check-product-changes`
-     
+     aio rt action invoke aem-commerce-ssg/check-product-changes
+
      # Clean up and unpublish deleted products
-     `aio rt action invoke aem-commerce-ssg/mark-up-clean-up`
+     aio rt action invoke aem-commerce-ssg/mark-up-clean-up
      ```
    - Verify product markup generation for sample SKUs
    - Check that pages publish successfully to your AEM project
@@ -351,8 +351,8 @@ The prerender solution involves two separate codebases that work together:
 
 **How they connect:** The App Builder app publishes prerendered HTML to its own blob store. The AEM Admin API configures the link to that blob store in your Edge Delivery Services configuration file as an overlay. The prerendered HTML is then served at URLs matching your product pages (for example, `/products/acme-widget/sku123` - note that SKUs must be lowercase in URLs). When a visitor (or crawler) requests a product page, Edge Delivery Services serves this prerendered HTML from the overlay. Your storefront JavaScript then enhances the page by replacing the static HTML with the interactive PDP drop-in.
 
-<Diagram 
-  type="mermaid" 
+<Diagram
+  type="mermaid"
   caption="Two-repository architecture showing how the App Builder prerender app publishes HTML that your storefront code consumes and enhances for visitors."
   code={`flowchart LR
  subgraph repo1[" "]
@@ -448,12 +448,12 @@ The prerender solution involves two separate codebases that work together:
     style eds fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     style delivery fill:#fce4ec,stroke:#c2185b,stroke-width:2px
     style repos fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    L_B0_B1_0@{ animation: slow } 
-    L_B1_B2_0@{ animation: slow } 
-    L_B2_B3_0@{ animation: slow } 
-    L_B3_B4_0@{ animation: slow } 
-    L_repo1_appbuilder_0@{ animation: slow } 
-    L_B4_eds_0@{ animation: slow } 
+    L_B0_B1_0@{ animation: slow }
+    L_B1_B2_0@{ animation: slow }
+    L_B2_B3_0@{ animation: slow }
+    L_B3_B4_0@{ animation: slow }
+    L_repo1_appbuilder_0@{ animation: slow }
+    L_B4_eds_0@{ animation: slow }
     L_eds_delivery_0@{ animation: slow }
 `}
 />
@@ -534,12 +534,12 @@ export default async function decorate(block) {
   // The block already contains prerendered HTML from the App Builder app.
   // Crawlers see this content before JavaScript executes, ensuring SEO visibility.
   // No action needed here; the HTML is already present in the DOM.
-  
+
   // Step 2: Retrieve the SKU from the meta tag (with URL fallback)
   // getProductSku() checks for <meta name="sku"> first, then falls back to URL parsing
   // This ensures correct SKU retrieval even if URLs are lowercase-sanitized
   const sku = getProductSku();
-  
+
   // Step 3: Replace prerendered HTML with interactive PDP drop-in
   block.innerHTML = ''; // Clear the prerendered static content
   await productRenderer.render(ProductDetails, { sku })(block); // Render interactive UI
@@ -595,17 +595,17 @@ Common issues include:
 - **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year). To check the token expiration, decode the token using <Link href="https://www.jwt.io/" text="jwt.io" /> or check your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" />
   - Generate a new token if expired (see <Link href="https://www.aem.live/docs/admin.html#tag/orgConfig/operation/createOrgApiKey" text="how to generate a new token" />) and update `AEM_ADMIN_API_KEY` in your `.env` file
   - Redeploy with `npm run deploy` after updating credentials
-  
+
 - **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches
   - Query the Catalog Service directly using its <Link href="https://developer.adobe.com/commerce/services/graphql/catalog-service/products/" text="GraphQL Product API" /> to verify product data
   - Use the Management UI to view the product index and confirm that the SKU is listed
   - Run `aio rt activation list` to check action logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
-  
+
 - **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
   - Run `aio rt activation list` to check activation logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
   - Manually trigger the change detector from the Management UI to test functionality
-  
+
 - **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property
   - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
   - **Solution**: Ensure each entry in the `productDependencies` array includes `maxVersion`. Example:
@@ -616,6 +616,8 @@ Common issues include:
         maxVersion: <MAX_VERSION>  # Required field
     ```
   - Update your `app.config.yaml` file and redeploy with `npm run deploy`
+
+- **Deployment errors**: If you encounter 403 errors when running `npm run deploy`, your aio cli may be authenticated to the wrong organization. Run `aio login --force` to re-authenticate and choose the correct organization.
 
 ## Additional resources
 
@@ -633,4 +635,3 @@ For technical issues or questions during implementation, consult the <Link href=
   description="Explain prerendering benefits to store administrators"
   link="/merchants/content-customizations/prerendered-product-pages/"
 />
-
