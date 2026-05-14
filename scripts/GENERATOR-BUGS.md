@@ -27,7 +27,7 @@ This file tracks bugs found in documentation generators, their fixes, and any ma
   - Fix container sidebar entries:
     - Cart Containers → MiniCart (fix typo: `minicart` → `mini-cart`)
     - Order Containers → OrderHeader, OrderStatus
-    - Product Details Containers → ProductDetails, ProductGiftCardOptions (fix typo: `product-giftcard-options` → `product-gift-card-options`)
+    - Product Details Containers → deprecated monolithic container label, ProductGiftCardOptions (fix typo: `product-giftcard-options` → `product-gift-card-options`)
 - **Prevention**: 
   - ✅ Added sidebar validation script (`scripts/validate-sidebar-updates.js`)
   - ✅ Integrated validation into test suite

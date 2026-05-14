@@ -89,6 +89,8 @@ export function generateRedirects(basePath) {
         '/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
         '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
         '/dropins/product-details/installation': `${basePath}/dropins/product-details/quick-start`,
+        '/dropins/product-details/containers/product-details': `${basePath}/dropins/product-details/containers`,
+        '/dropins/product-details/containers/product-details/': `${basePath}/dropins/product-details/containers`,
 
         // Product Discovery drop-in
         '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,

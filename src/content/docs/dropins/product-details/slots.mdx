@@ -1,6 +1,6 @@
 ---
 title: Product Details Slots
-description: Customize UI sections in the Product Details drop-in using slots.
+description: Customize Product Details UI with slots on composed containers, and learn how Add to Cart and wishlist buttons use block composition instead of those slots.
 sidebar:
   label: Slots
   order: 5
@@ -12,7 +12,9 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Product Details drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The Product Details drop-in exposes slots on each composed container so you can customize specific UI sections. Use slots to replace or extend those container components. A legacy monolithic single-container API from older releases is deprecated. Its slot list is not documented here. 
+
+See the [containers overview](/dropins/product-details/containers/) for the official deprecation wording. Use the sections below for [ProductAttributes](#productattributes-slots), [ProductGallery](#productgallery-slots), and [ProductOptions](#productoptions-slots). For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/). For Add to Cart, Add to Wishlist, and similar buttons, read [Add to Cart and Add to Wishlist](#add-to-cart-and-add-to-wishlist) first, because that pattern is not covered by the slots in the table below.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 3.0.2</strong>
@@ -23,13 +25,23 @@ The Product Details drop-in exposes slots for customizing specific UI sections. 
 | Container | Slots |
 |-----------|-------|
 | [`ProductAttributes`](#productattributes-slots) | `Attributes` |
-| [`ProductDetails`](#productdetails-slots) | `Title`, `SKU`, `RegularPrice`, `SpecialPrice`, `Options`, `Quantity`, `Actions`, `ShortDescription`, `Description`, `Attributes`, `Breadcrumbs`, `GalleryContent`, `InfoContent`, `Content` |
 | [`ProductGallery`](#productgallery-slots) | `CarouselThumbnail`, `CarouselMainImage` |
 | [`ProductOptions`](#productoptions-slots) | `Swatches`, `SwatchImage` |
 
 </TableWrapper>
 
+## Add to Cart and Add to Wishlist
 
+The slots documented on this page apply to `ProductAttributes`, `ProductGallery`, and `ProductOptions` only. None of them is the extension point for placing a secondary button directly under Add to Cart, and you do not need to fork `@dropins/storefront-pdp` to get that layout.
+
+In the Commerce boilerplate, those controls live in your product-details block: you define empty mount elements in the HTML fragment (next to or below the quantity area), then your block script renders into them. The [Commerce storefront layouts](/dropins/all/layouts/) topic shows a `product-details__buttons` row with separate targets for Add to Cart and Add to Wishlist so you can stack or arrange them with ordinary CSS.
+
+Use that composition pattern together with the Product Details event bus:
+
+- Add to Cart — Your block owns the button and wires it to cart logic and `pdp/data` / `pdp/valid` (see [Notify Me CTA](/dropins/product-details/tutorials/notify-me-cta/) for the same mount pattern when stock changes the label).
+- Add to Wishlist — Initialize the Wishlist drop-in, then render [`WishlistToggle`](/dropins/wishlist/containers/wishlist-toggle/) into a second mount point (for example, the wishlist `div` next to the cart `div` in the layout). Subscribe to `pdp/data` so the `product` you pass into `WishlistToggle` updates when the shopper changes configurable options.
+
+For wishlist setup and imports, start at [Wishlist quick start](/dropins/wishlist/quick-start/).
 
 ## ProductAttributes slots
 
@@ -65,333 +77,9 @@ await provider.render(ProductAttributes, {
 })(block);
 ```
 
-## ProductDetails slots
+## Deprecated monolithic container
 
-The slots for the `ProductDetails` container allow you to customize its appearance and behavior.
-
-```typescript
-interface ProductDetailsProps {
-  slots?: {
-    Title?: SlotProps<DefaultSlotContext>;
-    SKU?: SlotProps<DefaultSlotContext>;
-    RegularPrice?: SlotProps<DefaultSlotContext>;
-    SpecialPrice?: SlotProps<DefaultSlotContext>;
-    Options?: SlotProps<DefaultSlotContext>;
-    Quantity?: SlotProps<DefaultSlotContext>;
-    Actions?: SlotProps<
-    DefaultSlotContext & {
-    appendButton: SlotMethod<
-    Omit<ButtonProps, 'icon'> & {
-    text?: string;
-    icon?: IconType;
-    }
-    >;
-    }
-    >;
-    ShortDescription?: SlotProps<DefaultSlotContext>;
-    Description?: SlotProps<DefaultSlotContext>;
-    Attributes?: SlotProps<DefaultSlotContext>;
-    Breadcrumbs?: SlotProps<
-    DefaultSlotContext & {
-    setSeparator: SlotMethod<IconType>;
-    appendLink: SlotMethod<
-    HTMLAttributes<HTMLAnchorElement> & { text?: string }
-    >;
-    appendHTMLElement: SlotMethod<HTMLElement>;
-    }
-    >;
-    GalleryContent?: SlotProps<DefaultSlotContext>;
-    InfoContent?: SlotProps<DefaultSlotContext>;
-    Content?: SlotProps<DefaultSlotContext>;
-  };
-}
-```
-
-### Title slot
-
-The Title slot allows you to customize the title section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Title: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Title';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### SKU slot
-
-The SKU slot allows you to customize the SKU section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    SKU: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom SKU';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### RegularPrice slot
-
-The `RegularPrice` slot allows you to customize the regular price section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    RegularPrice: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom RegularPrice';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### SpecialPrice slot
-
-The `SpecialPrice` slot allows you to customize the special price section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    SpecialPrice: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom SpecialPrice';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Options slot
-
-The Options slot allows you to customize the options section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Options: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Options';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Quantity slot
-
-The Quantity slot allows you to customize the quantity section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Quantity: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Quantity';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### ShortDescription slot
-
-The `ShortDescription` slot allows you to customize the short description section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    ShortDescription: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom ShortDescription';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Description slot
-
-The Description slot allows you to customize the description section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Description: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Description';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Attributes slot
-
-The Attributes slot allows you to customize the attributes section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Attributes: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Attributes';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Breadcrumbs slot
-
-The Breadcrumbs slot allows you to customize the breadcrumbs section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Breadcrumbs: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Breadcrumbs';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### GalleryContent slot
-
-The `GalleryContent` slot allows you to customize the gallery content section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    GalleryContent: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom GalleryContent';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### InfoContent slot
-
-The `InfoContent` slot allows you to customize the info content section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    InfoContent: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom InfoContent';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
-
-### Content slot
-
-The Content slot allows you to customize the content section of the `ProductDetails` container.
-
-#### Example
-
-```js
-import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-await provider.render(ProductDetails, {
-  slots: {
-    Content: (ctx) => {
-      // Your custom implementation
-      const element = document.createElement('div');
-      element.innerText = 'Custom Content';
-      ctx.appendChild(element);
-    }
-  }
-})(block);
-```
+Slots for the deprecated monolithic single-container API are not documented on this page, and that pattern is not used in the Commerce boilerplate. For the full container list, links to each topic, and the canonical deprecation notice, use the [containers overview](/dropins/product-details/containers/). For migration context, see [Product details page architectural evolution](/boilerplate/updates/#product-details-page-architectural-evolution).
 
 ## ProductGallery slots
 

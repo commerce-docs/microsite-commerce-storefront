@@ -329,12 +329,12 @@ While early-adopter projects require more comprehensive selective updates, align
 
 ### Previous architecture (slot-based customization)
 
-Early versions of `@dropins/storefront-pdp` used a single `ProductDetails` container with predefined slots. You could customize by:
+Older `@dropins/storefront-pdp` releases used a single monolithic container with predefined slots. That pattern is deprecated, is not part of the Commerce boilerplate, and should not be used for new work. The official name and deprecation notice for that entry point are on the [Product Details containers overview](/dropins/product-details/containers/). In that legacy model, teams could only:
 
-- Creating custom slot implementations for different sections of the page
-- Working within the constraints of the single-container structure
-- Limited ability to rearrange or completely replace sections of the PDP
-- Complex styling workarounds to achieve desired layouts
+- Create custom slot implementations for different sections of the page
+- Work within the constraints of a single-container structure
+- Rearrange or replace PDP sections with limited flexibility
+- Rely on complex styling workarounds to reach custom layouts
 
 ### New architecture (container-based composition)
 
@@ -368,10 +368,8 @@ When updating your PDP block from slot-based to container-based:
 1. Update dependencies
 
    ```javascript
-   // Old: Single container with slots
-   import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
-
-   // New: Multiple independent containers  
+   // Before: one deprecated monolithic entry point (not shown; do not reuse)
+   // After: multiple independent containers
    import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
    import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
    import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
@@ -387,18 +385,10 @@ When updating your PDP block from slot-based to container-based:
    Replace the single container render with multiple container renders:
 
    ```javascript
-   // Old: Single render with slot configuration
-   await productRenderer.render(ProductDetails, {
-   slots: {
-      Title: (ctx) => Title(ctx, block),
-      Options: (ctx) => Options(ctx, block),
-      // ... other slots
-   }
-   })(block);
-
-   // New: Multiple container renders
+   // Before: one deprecated render with a large slots map (not shown; do not reuse)
+   // After: multiple container renders to layout regions
    await pdpRendered.render(ProductHeader, {})($header);
-   await pdpRendered.render(ProductPrice, {})($price);  
+   await pdpRendered.render(ProductPrice, {})($price);
    await pdpRendered.render(ProductGallery, { controls: 'thumbnailsColumn' })($gallery);
    // ... other containers
    ```
