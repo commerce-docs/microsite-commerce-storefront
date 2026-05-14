@@ -203,6 +203,13 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
+            // Generated static bundles and base-prefixed URLs (GitHub Pages) are not Starlight routes.
+            exclude: [
+              '**/llms.txt',
+              '**/llms-full.txt',
+              '**/llms-small.txt',
+              '**/_llms-txt/**',
+            ],
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
