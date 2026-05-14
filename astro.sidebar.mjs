@@ -80,6 +80,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
                 { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                 { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
