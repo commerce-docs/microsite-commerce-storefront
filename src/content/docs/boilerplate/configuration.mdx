@@ -6,8 +6,10 @@ sidebar:
   order: 4
 ---
 
-import { Aside, Code } from '@astrojs/starlight/components';
+import { Aside, Code, Steps } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
 
 The AEM Commerce boilerplate requires configuration to connect to your Adobe Commerce instance and customize the storefront behavior.
 
@@ -78,17 +80,37 @@ For local development, you can use the demo configuration for the boilerplate as
 
 ### Local vs Production Configuration
 
-**For local development:**
+#### For local development
 - Save a copy of the demo configuration (from <Link href="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" text="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" />) as `config.json` in your project root.
 - The AEM CLI will automatically serve `config.json` at runtime.
 - Alternatively, use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> to generate a configuration with your backend values (may contain placeholders to fill in).
 - Update the values to connect to your own Commerce backend as needed.
 
-**For production deployment, choose one of these options:**
+#### For production deployment
 
-1. **Configuration Service (Recommended)** - Use the Configuration Service, which stores configuration at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`. This approach stores configuration in the same format as the `public` section in `default-site.json` and allows configuration updates without code deployments. Note that a local `config.json` in your repository will override the Configuration Service.
+- **Configuration Service (Recommended)** - Use the Configuration Service, which stores configuration at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`. This approach allows configuration updates without code deployments and is the preferred method for all production sites. See the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> for details.
 
-2. **Repository-based config (Simple)** - Create a `config.json` file in your repository root with your production Commerce backend details and commit the file. Edge Delivery Services will serve this file at `/config.json` in production. Start with either the demo config or use the config generator tool, then update all values to match your backend.
+   :::caution
+   Do **not** commit `config.json` to the `main` branch if you are using the Configuration Service. A `config.json` present on a code branch takes precedence over the Configuration Service, which means your production config service values will be silently ignored. Reserve `config.json` for local development and branch-based testing only.
+   :::
+
+   #### If `config.json` is already on `main`
+
+   If you previously committed `config.json` to your `main` branch, you must complete these steps before the Configuration Service takes effect. Edge Delivery serves a `config.json` file from the repository before it falls back to the Configuration Service, so copying settings into the service alone is not enough until the repository file is gone.
+
+   <Steps>
+
+   1. Copy all values from the `public` section of your repository `config.json`. That object is what you publish as `public.json` in the Configuration Service.
+
+   1. POST that JSON to `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` using the Configuration Service API. Authenticate the request and set the body as described in the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> and the <Link href="https://www.aem.live/docs/admin.html" text="Admin API reference" />.
+
+   1. Delete `config.json` from the repository and merge that change into `main`. After the file no longer exists on `main`, the CDN can resolve configuration from the Configuration Service instead of the repository copy.
+
+   1. When you verify in a browser, clear session storage for your site in Developer Tools (Application → Session storage), then reload. The storefront caches configuration in session storage, so clearing it avoids stale values after you switch sources. For caching behavior and timing, see [Storefront configuration](/setup/configuration/commerce-configuration/).
+
+   </Steps>
+
+- **Repository-based config (local dev and branch testing only)** - A `config.json` file in your repository root is useful for local development and testing on feature branches. Edge Delivery Services will serve this file at `/config.json` and it will override the Configuration Service. Do not use this approach for production — remove or exclude `config.json` from your `main` branch.
 
 ## Production Configuration Templates
 

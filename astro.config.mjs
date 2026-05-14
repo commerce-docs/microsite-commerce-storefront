@@ -14,6 +14,7 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
+import { PRODUCTION_SITE, PRODUCTION_BASE_PATH } from './site.config.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
@@ -21,7 +22,7 @@ const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
 // Determine the base path based on the environment
 const basePath = isProduction
-  ? '/developer/commerce/storefront'
+  ? PRODUCTION_BASE_PATH
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
     : '';
@@ -52,7 +53,7 @@ async function config() {
     image: {
       service: passthroughImageService(),
     },
-    site: 'https://experienceleague.adobe.com',
+    site: PRODUCTION_SITE,
     base: basePath,
     markdown: {
       remarkPlugins: [remarkBasePathLinks],

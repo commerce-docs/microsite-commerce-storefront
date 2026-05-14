@@ -30,6 +30,7 @@ export function generateSidebar() {
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
+            { label: 'Documentation bundles for AI tools', link: '/get-started/build-with-ai/' },
           ],
         },
         {
@@ -388,7 +389,6 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins/product-details/slots/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
                 { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
-                { label: 'Troubleshooting', link: '/dropins/product-details/troubleshooting/' },
               ],
             },
             {
