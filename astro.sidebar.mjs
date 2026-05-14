@@ -30,6 +30,7 @@ export function generateSidebar() {
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
+            { label: 'Build with AI tools', link: '/get-started/build-with-ai/' },
           ],
         },
         {
