@@ -192,6 +192,12 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
+            exclude: [
+              '/llms.txt',
+              '/llms-full.txt',
+              '/llms-small.txt',
+              '/_llms-txt/**',
+            ],
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
