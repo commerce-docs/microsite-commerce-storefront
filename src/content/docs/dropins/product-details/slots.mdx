@@ -1,6 +1,6 @@
 ---
 title: Product Details Slots
-description: Customize UI sections in the Product Details drop-in using slots.
+description: Customize Product Details UI with slots on composed containers, and learn how Add to Cart and wishlist buttons use block composition instead of those slots.
 sidebar:
   label: Slots
   order: 5
@@ -12,24 +12,37 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Product Details drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+The Product Details drop-in exposes slots on each composed container so you can customize specific UI sections. Use slots to replace or extend those container components.
+
+See the [containers overview](/dropins/product-details/containers/) for the official deprecation wording. The summary table includes a deprecated `ProductDetails` row so you can map legacy slot names during migration. Use the sections below for [ProductAttributes](#productattributes-slots), [ProductGallery](#productgallery-slots), [ProductOptions](#productoptions-slots), and [ProductDetails slots (deprecated)](#productdetails-slots-deprecated). For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/). For Add to Cart, Add to Wishlist, and similar buttons, read [Add to Cart and Add to Wishlist](#add-to-cart-and-add-to-wishlist) first, because that pattern is not covered by the slots in the table below.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 3.0.2</strong>
 </div>
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0, 2]}>
 
-| Container | Slots |
-|-----------|-------|
-| [`ProductAttributes`](#productattributes-slots) | `Attributes` |
-| [`ProductDetails`](#productdetails-slots) | `Title`, `SKU`, `RegularPrice`, `SpecialPrice`, `Options`, `Quantity`, `Actions`, `ShortDescription`, `Description`, `Attributes`, `Breadcrumbs`, `GalleryContent`, `InfoContent`, `Content` |
-| [`ProductGallery`](#productgallery-slots) | `CarouselThumbnail`, `CarouselMainImage` |
-| [`ProductOptions`](#productoptions-slots) | `Swatches`, `SwatchImage` |
+| Container | Slots | Deprecated |
+|-----------|-------|------------|
+| [`ProductAttributes`](#productattributes-slots) | `Attributes` | No |
+| [`ProductGallery`](#productgallery-slots) | `CarouselThumbnail`, `CarouselMainImage` | No |
+| [`ProductOptions`](#productoptions-slots) | `Swatches`, `SwatchImage` | No |
+| [ProductDetails (deprecated)](#productdetails-slots-deprecated) | `Title`, `SKU`, `RegularPrice`, `SpecialPrice`, `Options`, `Quantity`, `Actions`, `ShortDescription`, `Description`, `Attributes`, `Breadcrumbs`, `GalleryContent`, `InfoContent`, `Content` | Yes |
 
 </TableWrapper>
 
+## Add to Cart and Add to Wishlist
 
+The slot topics for `ProductAttributes`, `ProductGallery`, and `ProductOptions` describe the supported Commerce boilerplate pattern. The [ProductDetails slots (deprecated)](#productdetails-slots-deprecated) section documents the legacy monolithic container only. None of these slot topics is the extension point for placing a secondary button directly under Add to Cart in the Commerce boilerplate, and you do not need to fork `@dropins/storefront-pdp` to get that layout. For the supported pattern, see [Commerce storefront layouts](/dropins/all/layouts/#add-an-element-to-the-layout-and-reference-it) (the `product-details__buttons` markup) and the bullets below for wiring Add to Cart and Add to Wishlist.
+
+In the Commerce boilerplate, those controls live in your product-details block: you define empty mount elements in the HTML fragment (next to or below the quantity area), then your block script renders into them. The [Commerce storefront layouts](/dropins/all/layouts/) topic shows a `product-details__buttons` row with separate targets for Add to Cart and Add to Wishlist so you can stack or arrange them with ordinary CSS.
+
+Use that composition pattern together with the Product Details event bus:
+
+- Add to Cart — Your block owns the button and wires it to cart logic and `pdp/data` / `pdp/valid` (see [Notify Me CTA](/dropins/product-details/tutorials/notify-me-cta/) for the same mount pattern when stock changes the label).
+- Add to Wishlist — Initialize the Wishlist drop-in, then render [`WishlistToggle`](/dropins/wishlist/containers/wishlist-toggle/) into a second mount point (for example, the wishlist `div` next to the cart `div` in the layout). Subscribe to `pdp/data` so the `product` you pass into `WishlistToggle` updates when the shopper changes configurable options.
+
+For wishlist setup and imports, start at [Wishlist quick start](/dropins/wishlist/quick-start/).
 
 ## ProductAttributes slots
 
@@ -65,9 +78,13 @@ await provider.render(ProductAttributes, {
 })(block);
 ```
 
-## ProductDetails slots
+## ProductDetails slots (deprecated)
 
-The slots for the `ProductDetails` container allow you to customize its appearance and behavior.
+<Aside type="caution" title="Deprecated">
+  The monolithic `ProductDetails` container is deprecated. It is not used in the Commerce boilerplate. Do not use it for new work. Compose the smaller containers from the [containers overview](/dropins/product-details/containers/) instead. This section is for legacy code only. For migration context, see [Product details page architectural evolution](/boilerplate/updates/#product-details-page-architectural-evolution).
+</Aside>
+
+The slots for the `ProductDetails` (deprecated) container allow you to customize its appearance and behavior.
 
 ```typescript
 interface ProductDetailsProps {
@@ -79,26 +96,26 @@ interface ProductDetailsProps {
     Options?: SlotProps<DefaultSlotContext>;
     Quantity?: SlotProps<DefaultSlotContext>;
     Actions?: SlotProps<
-    DefaultSlotContext & {
-    appendButton: SlotMethod<
-    Omit<ButtonProps, 'icon'> & {
-    text?: string;
-    icon?: IconType;
-    }
-    >;
-    }
+      DefaultSlotContext & {
+        appendButton: SlotMethod<
+          Omit<ButtonProps, 'icon'> & {
+            text?: string;
+            icon?: IconType;
+          }
+        >;
+      }
     >;
     ShortDescription?: SlotProps<DefaultSlotContext>;
     Description?: SlotProps<DefaultSlotContext>;
     Attributes?: SlotProps<DefaultSlotContext>;
     Breadcrumbs?: SlotProps<
-    DefaultSlotContext & {
-    setSeparator: SlotMethod<IconType>;
-    appendLink: SlotMethod<
-    HTMLAttributes<HTMLAnchorElement> & { text?: string }
-    >;
-    appendHTMLElement: SlotMethod<HTMLElement>;
-    }
+      DefaultSlotContext & {
+        setSeparator: SlotMethod<IconType>;
+        appendLink: SlotMethod<
+          HTMLAttributes<HTMLAnchorElement> & { text?: string }
+        >;
+        appendHTMLElement: SlotMethod<HTMLElement>;
+      }
     >;
     GalleryContent?: SlotProps<DefaultSlotContext>;
     InfoContent?: SlotProps<DefaultSlotContext>;
@@ -109,13 +126,13 @@ interface ProductDetailsProps {
 
 ### Title slot
 
-The Title slot allows you to customize the title section of the `ProductDetails` container.
+The Title slot allows you to customize the title section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -131,13 +148,13 @@ await provider.render(ProductDetails, {
 
 ### SKU slot
 
-The SKU slot allows you to customize the SKU section of the `ProductDetails` container.
+The SKU slot allows you to customize the SKU section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -153,13 +170,13 @@ await provider.render(ProductDetails, {
 
 ### RegularPrice slot
 
-The `RegularPrice` slot allows you to customize the regular price section of the `ProductDetails` container.
+The `RegularPrice` slot allows you to customize the regular price section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -175,13 +192,13 @@ await provider.render(ProductDetails, {
 
 ### SpecialPrice slot
 
-The `SpecialPrice` slot allows you to customize the special price section of the `ProductDetails` container.
+The `SpecialPrice` slot allows you to customize the special price section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -197,13 +214,13 @@ await provider.render(ProductDetails, {
 
 ### Options slot
 
-The Options slot allows you to customize the options section of the `ProductDetails` container.
+The Options slot allows you to customize the options section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -219,13 +236,13 @@ await provider.render(ProductDetails, {
 
 ### Quantity slot
 
-The Quantity slot allows you to customize the quantity section of the `ProductDetails` container.
+The Quantity slot allows you to customize the quantity section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -239,15 +256,37 @@ await provider.render(ProductDetails, {
 })(block);
 ```
 
-### ShortDescription slot
+### Actions slot
 
-The `ShortDescription` slot allows you to customize the short description section of the `ProductDetails` container.
+The Actions slot allows you to customize the actions section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
+
+await provider.render(ProductDetails, {
+  slots: {
+    Actions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('div');
+      element.innerText = 'Custom Actions';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ShortDescription slot
+
+The `ShortDescription` slot allows you to customize the short description section of the `ProductDetails` (deprecated) container.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -263,13 +302,13 @@ await provider.render(ProductDetails, {
 
 ### Description slot
 
-The Description slot allows you to customize the description section of the `ProductDetails` container.
+The Description slot allows you to customize the description section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -285,13 +324,13 @@ await provider.render(ProductDetails, {
 
 ### Attributes slot
 
-The Attributes slot allows you to customize the attributes section of the `ProductDetails` container.
+The Attributes slot allows you to customize the attributes section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -307,13 +346,13 @@ await provider.render(ProductDetails, {
 
 ### Breadcrumbs slot
 
-The Breadcrumbs slot allows you to customize the breadcrumbs section of the `ProductDetails` container.
+The Breadcrumbs slot allows you to customize the breadcrumbs section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -329,13 +368,13 @@ await provider.render(ProductDetails, {
 
 ### GalleryContent slot
 
-The `GalleryContent` slot allows you to customize the gallery content section of the `ProductDetails` container.
+The `GalleryContent` slot allows you to customize the gallery content section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -351,13 +390,13 @@ await provider.render(ProductDetails, {
 
 ### InfoContent slot
 
-The `InfoContent` slot allows you to customize the info content section of the `ProductDetails` container.
+The `InfoContent` slot allows you to customize the info content section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
@@ -373,13 +412,13 @@ await provider.render(ProductDetails, {
 
 ### Content slot
 
-The Content slot allows you to customize the content section of the `ProductDetails` container.
+The Content slot allows you to customize the content section of the `ProductDetails` (deprecated) container.
 
 #### Example
 
 ```js
 import { render as provider } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
 await provider.render(ProductDetails, {
   slots: {
