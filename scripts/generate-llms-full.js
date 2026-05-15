@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { generateSidebar } from '../astro.sidebar.mjs';
 import { PRODUCTION_BASE_URL } from '../site.config.js';
 
-// STOREFRONT-LLMS-DEPLOY-BASE — optional preview URL for generated bundle links. Revert guide: scripts/REVERT-LLMS-DEPLOY-BASE.md
+// STOREFRONT-LLMS-DEPLOY-BASE — optional preview URL for generated bundle links (grep repo to revert).
 
 /**
  * Base URL for absolute links inside generated llms bundles.
