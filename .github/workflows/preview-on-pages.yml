@@ -32,12 +32,16 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install dependencies
         run: pnpm install
+      # STOREFRONT-LLMS-DEPLOY-BASE — env for scripts/generate-llms-full.js public doc URL (grep repo to revert).
       - name: Build with Astro
         id: build
         env:
+          NODE_ENV: github
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-        run: pnpm run generate:llms && NODE_ENV=github VITE_GITHUB_BASE_PATH=${{ steps.pages.outputs.base_path }} pnpm astro build \
+          VITE_GITHUB_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          GITHUB_PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+        run: pnpm run generate:llms && pnpm astro build \
             --site "${{ steps.pages.outputs.origin }}"
       - name: Upload static files as artifact
         id: deployment
