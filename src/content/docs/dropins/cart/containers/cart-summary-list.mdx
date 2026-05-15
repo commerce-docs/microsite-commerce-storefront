@@ -51,6 +51,7 @@ The `CartSummaryList` container provides the following configuration options:
 | `dropdownOptions` | `string[]` | No | An array of items to display in a dropdown menu. |
 | `undo` | `boolean` | No | Enables the undo banner to restore recently removed items to the cart. |
 | `includeOutOfStockItems` | `boolean` | No | Display out-of-stock and insufficient-quantity items in the main cart item list alongside in-stock items. Default: `false`. |
+| `confirmBeforeDelete` | `boolean` | No | When `true`, reducing an item's quantity to 0 or clicking the remove button shows an inline confirmation banner instead of immediately deleting the item. Confirming triggers the delete; cancelling restores the original quantity. Defaults to `false`. |
 
 </TableWrapper>
 
@@ -70,12 +71,34 @@ The `CartSummaryList` container supports the following slots:
 * CartSummaryFooter
 * CartItem
 * UndoBanner
+* ConfirmDeleteBanner
 * ItemTitle
 * ItemPrice
 * ItemQuantity
 * ItemTotal
 * ItemSku
 * ItemRemoveAction
+
+## QuantityIncrementer
+
+`CartSummaryList` uses `QuantityIncrementer` as its built-in quantity stepper. It wraps the SDK `Incrementer` component and adds an empty-input error state: when a shopper clears the quantity field to blank, the `+` and `−` buttons are disabled and an error style is applied so no cart update is sent until a valid number is entered.
+
+The component is also available as a named export for use in custom `ItemQuantity` slots:
+
+```js
+import { QuantityIncrementer } from '@dropins/storefront-cart/components/QuantityIncrementer.js';
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `item` | `CartModel['items'][0]` | Yes | The cart item whose `quantity` seeds the stepper. |
+| `disabled` | `boolean` | Yes | Disables the entire stepper (passed through to `Incrementer`). |
+| `ariaLabel` | `string` | Yes | Accessible label for the stepper input. |
+| `onValue` | `(value: number) => void` | Yes | Called with the new quantity after the user commits a valid value. |
+
+</TableWrapper>
 
 ## Example configuration
 
@@ -86,6 +109,7 @@ provider.render(CartSummaryList, {
   enableRemoveItem: true,
   enableUpdateItemQuantity: true,
   showDiscount: true,
+  // confirmBeforeDelete: true,
   // accordion: true,
   // includeOutOfStockItems: true,
   // showMaxItems: false,
