@@ -6,6 +6,42 @@ import { fileURLToPath } from 'url';
 import { generateSidebar } from '../astro.sidebar.mjs';
 import { PRODUCTION_BASE_URL } from '../site.config.js';
 
+// STOREFRONT-LLMS-DEPLOY-BASE — optional preview URL for generated bundle links. Revert guide: scripts/REVERT-LLMS-DEPLOY-BASE.md
+
+/**
+ * Base URL for absolute links inside generated llms bundles.
+ *
+ * Precedence:
+ * 1. LLMS_PUBLIC_BASE_URL — manual override (any host).
+ * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN and VITE_GITHUB_BASE_PATH — GitHub Pages preview (same as Astro `site` + `base`).
+ * 3. site.config.js PRODUCTION_BASE_URL — Experience League production.
+ */
+function resolvePublicDocBase() {
+  const explicit = process.env.LLMS_PUBLIC_BASE_URL?.trim();
+  if (explicit) {
+    return explicit.replace(/\/+$/, '');
+  }
+
+  if (process.env.NODE_ENV === 'github') {
+    const origin = process.env.GITHUB_PAGES_ORIGIN?.trim();
+    const basePathRaw = process.env.VITE_GITHUB_BASE_PATH?.trim();
+    if (origin && basePathRaw) {
+      const originClean = origin.replace(/\/+$/, '');
+      const basePath = basePathRaw.startsWith('/') ? basePathRaw : `/${basePathRaw}`;
+      return `${originClean}${basePath}`.replace(/\/+$/, '');
+    }
+  }
+
+  return PRODUCTION_BASE_URL.replace(/\/+$/, '');
+}
+
+const PUBLIC_DOC_BASE = resolvePublicDocBase();
+
+const browseDocsLabel =
+  PUBLIC_DOC_BASE === PRODUCTION_BASE_URL.replace(/\/+$/, '')
+    ? 'on Experience League'
+    : 'on this documentation site';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
@@ -380,7 +416,7 @@ function expandTermComponents(content) {
 /** <IFrame src={frontmatter.iframe.src} /> → Storybook link using the resolved src. */
 function expandIFrameComponents(content, iframeSrc) {
   if (!iframeSrc) return content;
-  const url = `${PRODUCTION_BASE_URL}/storybook-static/iframe.html?id=${iframeSrc}&viewMode=docs`;
+  const url = `${PUBLIC_DOC_BASE}/storybook-static/iframe.html?id=${iframeSrc}&viewMode=docs`;
   return content.replace(
     /<IFrame\b[\s\S]*?\/>/g,
     `\n\n[View interactive component in Storybook](${url})\n\n`
@@ -508,7 +544,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
     const rest = p.slice('@images/'.length);
     const urlPath = `/images/${rest}`;
     const slash = shouldAddTrailingSlash(urlPath) ? '/' : '';
-    return `${PRODUCTION_BASE_URL}${urlPath}${slash}${hash}`;
+    return `${PUBLIC_DOC_BASE}${urlPath}${slash}${hash}`;
   }
 
   if (p.startsWith('/')) {
@@ -516,7 +552,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
     if (shouldAddTrailingSlash(abs)) {
       abs += '/';
     }
-    return `${PRODUCTION_BASE_URL}${abs}${hash}`;
+    return `${PUBLIC_DOC_BASE}${abs}${hash}`;
   }
 
   const resolved = normalize(resolve(dirname(sourceFilePath), p));
@@ -529,7 +565,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
   if (shouldAddTrailingSlash(urlPath)) {
     urlPath += '/';
   }
-  return `${PRODUCTION_BASE_URL}${urlPath}${hash}`;
+  return `${PUBLIC_DOC_BASE}${urlPath}${hash}`;
 }
 
 function convertLinks(content, filePath) {
@@ -738,7 +774,7 @@ function buildBundleHeader({ label, description, timestamp }) {
 
 > ${description}
 > Generated: ${timestamp}
-> Source: ${PRODUCTION_BASE_URL}
+> Source: ${PUBLIC_DOC_BASE}
 `;
 }
 
@@ -749,14 +785,14 @@ function buildTopicBundleHeader({ title, blurb, timestamp }) {
 
 > ${blurb}
 > Generated: ${timestamp}
-> Source: ${PRODUCTION_BASE_URL}
+> Source: ${PUBLIC_DOC_BASE}
 `;
 }
 
 function writeLlmsTxt() {
   const thematic = LLMS_TXT_BUNDLES.map(
     b =>
-      `- [${b.label}](${PRODUCTION_BASE_URL}/_llms-txt/${b.slug}.txt): ${b.blurb}`
+      `- [${b.label}](${PUBLIC_DOC_BASE}/_llms-txt/${b.slug}.txt): ${b.blurb}`
   ).join('\n');
 
   const body = `# Adobe Commerce Storefront
@@ -769,8 +805,8 @@ function writeLlmsTxt() {
 
 ## Documentation Sets
 
-- [Abridged documentation](${PRODUCTION_BASE_URL}/llms-small.txt): a compact bundle with non-essential long-form changelog content removed
-- [Complete documentation](${PRODUCTION_BASE_URL}/llms-full.txt): the full documentation for Adobe Commerce Storefront
+- [Abridged documentation](${PUBLIC_DOC_BASE}/llms-small.txt): a compact bundle with non-essential long-form changelog content removed
+- [Complete documentation](${PUBLIC_DOC_BASE}/llms-full.txt): the full documentation for Adobe Commerce Storefront
 
 ${thematic}
 
@@ -781,7 +817,7 @@ ${thematic}
 
 ## Optional
 
-- [Browse the documentation](${PRODUCTION_BASE_URL}/) on Experience League
+- [Browse the documentation](${PUBLIC_DOC_BASE}/) ${browseDocsLabel}
 `;
 
   writeFileSync(OUTPUT_LLMSTXT, body, 'utf-8');
@@ -801,6 +837,9 @@ function validateCoverage(allFiles) {
 
 function generate() {
   console.log('Generating llms.txt, llms-full.txt, llms-small.txt, and _llms-txt bundles...\n');
+  if (PUBLIC_DOC_BASE !== PRODUCTION_BASE_URL.replace(/\/+$/, '')) {
+    console.log(`   Bundle link base: ${PUBLIC_DOC_BASE}\n`);
+  }
 
   mkdirSync(OUTPUT_LLMS_TXT_DIR, { recursive: true });
 
@@ -840,7 +879,7 @@ function generate() {
     const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
     const relUrl = outputPath.replace(join(projectRoot, 'public') + '/', '');
     console.log(`   Done: ${processedCount} pages, ${fileSizeInMB} MB`);
-    console.log(`   URL: ${PRODUCTION_BASE_URL}/${relUrl}\n`);
+    console.log(`   URL: ${PUBLIC_DOC_BASE}/${relUrl}\n`);
   }
 
   writeBundle(
