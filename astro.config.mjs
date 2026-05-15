@@ -203,7 +203,7 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
-            // Generated static bundles and base-prefixed URLs (GitHub Pages) are not Starlight routes.
+            // LLMS bundles are static files, not Starlight routes. `**/` matches base-prefixed URLs (for example, GitHub Pages).
             exclude: [
               '**/llms.txt',
               '**/llms-full.txt',
