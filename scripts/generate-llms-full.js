@@ -13,8 +13,8 @@ import { PRODUCTION_BASE_URL } from '../site.config.js';
  *
  * Precedence:
  * 1. LLMS_PUBLIC_BASE_URL — manual override (any host).
- * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN and VITE_GITHUB_BASE_PATH — GitHub Pages preview (same as Astro `site` + `base`).
- * 3. site.config.js PRODUCTION_BASE_URL — Experience League production.
+ * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN — GitHub Pages preview (same origin and base path as the Astro build). VITE_GITHUB_BASE_PATH may be empty for a site at the domain root.
+ * 3. NODE_ENV=production or default — site.config.js PRODUCTION_BASE_URL (Experience League production).
  */
 function resolvePublicDocBase() {
   const explicit = process.env.LLMS_PUBLIC_BASE_URL?.trim();
@@ -24,10 +24,15 @@ function resolvePublicDocBase() {
 
   if (process.env.NODE_ENV === 'github') {
     const origin = process.env.GITHUB_PAGES_ORIGIN?.trim();
-    const basePathRaw = process.env.VITE_GITHUB_BASE_PATH?.trim();
-    if (origin && basePathRaw) {
+    if (origin) {
       const originClean = origin.replace(/\/+$/, '');
-      const basePath = basePathRaw.startsWith('/') ? basePathRaw : `/${basePathRaw}`;
+      const basePathRaw = (process.env.VITE_GITHUB_BASE_PATH ?? '').trim();
+      const basePath =
+        !basePathRaw || basePathRaw === '/'
+          ? ''
+          : basePathRaw.startsWith('/')
+            ? basePathRaw
+            : `/${basePathRaw}`;
       return `${originClean}${basePath}`.replace(/\/+$/, '');
     }
   }
@@ -36,11 +41,24 @@ function resolvePublicDocBase() {
 }
 
 const PUBLIC_DOC_BASE = resolvePublicDocBase();
+const PRODUCTION_DOC_BASE = PRODUCTION_BASE_URL.replace(/\/+$/, '');
+
+/**
+ * Turn any absolute Experience League storefront doc URLs into PUBLIC_DOC_BASE
+ * when this run targets a non-production host (for example GitHub Pages). Source
+ * pages may use full ExL URLs in markdown or after HTML unwrap; relative links
+ * already go through resolveMarkdownLinkTarget.
+ */
+function rewriteStorefrontProductionUrls(content) {
+  if (PUBLIC_DOC_BASE === PRODUCTION_DOC_BASE) {
+    return content;
+  }
+  const escaped = PRODUCTION_DOC_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return content.replace(new RegExp(escaped, 'g'), PUBLIC_DOC_BASE);
+}
 
 const browseDocsLabel =
-  PUBLIC_DOC_BASE === PRODUCTION_BASE_URL.replace(/\/+$/, '')
-    ? 'on Experience League'
-    : 'on this documentation site';
+  PUBLIC_DOC_BASE === PRODUCTION_DOC_BASE ? 'on Experience League' : 'on this documentation site';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -689,6 +707,8 @@ function processFile(filePath, relativePath) {
       processed = description + '\n\n' + processed.trim();
     }
 
+    processed = rewriteStorefrontProductionUrls(processed);
+
     const sectionHeader = `\n\n---\n\n# ${title}\n\n`;
 
     return sectionHeader + processed.trim();
@@ -837,7 +857,7 @@ function validateCoverage(allFiles) {
 
 function generate() {
   console.log('Generating llms.txt, llms-full.txt, llms-small.txt, and _llms-txt bundles...\n');
-  if (PUBLIC_DOC_BASE !== PRODUCTION_BASE_URL.replace(/\/+$/, '')) {
+  if (PUBLIC_DOC_BASE !== PRODUCTION_DOC_BASE) {
     console.log(`   Bundle link base: ${PUBLIC_DOC_BASE}\n`);
   }
 
