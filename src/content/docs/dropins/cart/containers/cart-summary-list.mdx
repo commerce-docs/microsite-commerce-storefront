@@ -51,7 +51,7 @@ The `CartSummaryList` container provides the following configuration options:
 | `dropdownOptions` | `string[]` | No | An array of items to display in a dropdown menu. |
 | `undo` | `boolean` | No | Enables the undo banner to restore recently removed items to the cart. |
 | `includeOutOfStockItems` | `boolean` | No | Display out-of-stock and insufficient-quantity items in the main cart item list alongside in-stock items. Default: `false`. |
-| `confirmBeforeDelete` | `boolean` | No | When `true`, reducing an item's quantity to 0 or clicking the remove button shows an inline confirmation banner instead of immediately deleting the item. Confirming triggers the delete; cancelling restores the original quantity. Defaults to `false`. |
+| `confirmBeforeDelete` | `boolean` | No | Enables the confirmation banner when an item is removed from the cart. When set to true, clicking the remove button shows an inline confirmation banner instead of immediately deleting the item. |
 
 </TableWrapper>
 
@@ -79,70 +79,3 @@ The `CartSummaryList` container supports the following slots:
 * ItemSku
 * ItemRemoveAction
 
-## QuantityIncrementer
-
-`CartSummaryList` uses `QuantityIncrementer` as its built-in quantity stepper. It wraps the SDK `Incrementer` component and adds an empty-input error state: when a shopper clears the quantity field to blank, the `+` and `−` buttons are disabled and an error style is applied so no cart update is sent until a valid number is entered.
-
-The component is also available as a named export for use in custom `ItemQuantity` slots:
-
-```js
-import { QuantityIncrementer } from '@dropins/storefront-cart/components/QuantityIncrementer.js';
-```
-
-<TableWrapper nowrap={[0]}>
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `item` | `CartModel['items'][0]` | Yes | The cart item whose `quantity` seeds the stepper. |
-| `disabled` | `boolean` | Yes | Disables the entire stepper (passed through to `Incrementer`). |
-| `ariaLabel` | `string` | Yes | Accessible label for the stepper input. |
-| `onValue` | `(value: number) => void` | Yes | Called with the new quantity after the user commits a valid value. |
-
-</TableWrapper>
-
-## Example configuration
-
-The following example demonstrates how to render the `CartSummaryList` container with the `routeProduct` and `routeEmptyCartCTA` callbacks:
-
-```js
-provider.render(CartSummaryList, {
-  enableRemoveItem: true,
-  enableUpdateItemQuantity: true,
-  showDiscount: true,
-  // confirmBeforeDelete: true,
-  // accordion: true,
-  // includeOutOfStockItems: true,
-  // showMaxItems: false,
-  // maxItems: 6,
-  // routeCart: () => '#cart',
-  // showSavings: true,
-  // quantityType: 'dropdown',
-  // dropdownOptions: [
-  //   { value: '1', text: '1' },
-  //   { value: '2', text: '2' },
-  //   { value: '3', text: '3' },
-  // ],
-  routeProduct: (item) => {
-    return `${item.url.categories.join('/')}/${item.url.urlKey}`;
-  },
-  routeEmptyCartCTA: () => '#empty-cart',
-  slots: {
-    Footer: (ctx) => {
-      // Runs on mount
-      const wrapper = document.createElement('div');
-      ctx.appendChild(wrapper);
-
-      // Append Product Promotions on every update
-      ctx.onChange((next) => {
-        wrapper.innerHTML = '';
-
-        next.item?.discount?.label?.forEach((label) => {
-          const discount = document.createElement('div');
-          discount.style.color = '#3d3d3d';
-          discount.innerText = label;
-          wrapper.appendChild(discount);
-        });
-      });
-    },
-  },
-})($cartSummaryList);
