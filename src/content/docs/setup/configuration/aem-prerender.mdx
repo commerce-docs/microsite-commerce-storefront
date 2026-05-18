@@ -519,15 +519,17 @@ Your block `decorate()` function should:
 </Steps>
 
 <Aside type="note" title="Simplified code example">
-The following code example shows a simplified integration pattern for clarity. The actual boilerplate implementation uses event-based data loading and more complex rendering logic. For the complete implementation, refer to the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details" text="product-details block" /> in the Commerce boilerplate.
+This snippet is a minimal teaching version: it reads the SKU, runs `mountImmediately(initialize, { sku })`, clears the block, and mounts `ProductHeader` only. In the Commerce boilerplate, PDP is wired from `scripts/initializers/pdp.js`, which calls `mountImmediately` with `langDefinitions`, `models`, fetched placeholders, and the other options documented on [Product Details initialization](/dropins/product-details/initialization/). The real `product-details` block builds a layout fragment and renders every region (for example, `ProductGallery`, `ProductHeader`, `ProductPrice`, and `ProductOptions`). For production patterns, see the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details" text="product-details block" /> in the Commerce boilerplate and the [containers overview](/dropins/product-details/containers/).
 </Aside>
 
 ```js
 // File location: blocks/product-details/product-details.js
 // Import paths are relative to blocks/product-details/product-details.js
 import { getProductSku } from '../../scripts/commerce.js';
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-pdp';
 import { render as productRenderer } from '@dropins/storefront-pdp/render.js';
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
 
 export default async function decorate(block) {
   // Step 1: Preserve prerendered markup
@@ -535,14 +537,16 @@ export default async function decorate(block) {
   // Crawlers see this content before JavaScript executes, ensuring SEO visibility.
   // No action needed here; the HTML is already present in the DOM.
 
-  // Step 2: Retrieve the SKU from the meta tag (with URL fallback)
+  // Step 2: Retrieve the SKU from the meta tag (with URL fallback), then initialize PDP
   // getProductSku() checks for <meta name="sku"> first, then falls back to URL parsing
-  // This ensures correct SKU retrieval even if URLs are lowercase-sanitized
   const sku = getProductSku();
+  await initializers.mountImmediately(initialize, { sku });
 
-  // Step 3: Replace prerendered HTML with interactive PDP drop-in
-  block.innerHTML = ''; // Clear the prerendered static content
-  await productRenderer.render(ProductDetails, { sku })(block); // Render interactive UI
+  // Step 3: Replace prerendered HTML with interactive composed containers
+  // Production code builds a layout fragment and renders every region. This sample mounts ProductHeader only.
+  block.innerHTML = '';
+  await productRenderer.render(ProductHeader, {})(block);
+  // ... other rendering code
 }
 ```
 
