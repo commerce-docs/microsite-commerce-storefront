@@ -53,8 +53,8 @@ function rewriteStorefrontProductionUrls(content) {
   if (PUBLIC_DOC_BASE === PRODUCTION_DOC_BASE) {
     return content;
   }
-  const escaped = PRODUCTION_DOC_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return content.replace(new RegExp(escaped, 'g'), PUBLIC_DOC_BASE);
+  // Literal string replace (not a RegExp) so hostnames in site.config.js are not treated as regex patterns.
+  return content.replaceAll(PRODUCTION_DOC_BASE, PUBLIC_DOC_BASE);
 }
 
 const browseDocsLabel =
