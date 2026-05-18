@@ -372,7 +372,7 @@ export function generateSidebar() {
                     { label: 'Overview', link: '/dropins/product-details/containers/' },
                     { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
                     { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
-                    { label: 'ProductDetails', link: '/dropins/product-details/containers/product-details/' },
+                    { label: 'ProductDetails container (deprecated)', link: '/dropins/product-details/containers/product-details/' },
                     { label: 'ProductDownloadableOptions', link: '/dropins/product-details/containers/product-downloadable-options/' },
                     { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
                     { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
@@ -388,7 +388,6 @@ export function generateSidebar() {
                 { label: 'Slots', link: '/dropins/product-details/slots/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
                 { label: 'Dictionary', link: '/dropins/product-details/dictionary/' },
-                { label: 'Troubleshooting', link: '/dropins/product-details/troubleshooting/' },
               ],
             },
             {

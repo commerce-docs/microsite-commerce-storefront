@@ -21,6 +21,16 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 Upgrade your Adobe Commerce Storefront to get the latest features, security updates, and performance improvements from the Commerce Boilerplate.
 
+<Aside type="note" title="Two distinct update paths">
+You can keep your storefront current in two ways:
+
+- **Updating drop-in npm packages** (`@dropins/*`, `@adobe/*`) — This is the primary update path for every Commerce boilerplate storefront. Drop-in packages follow semantic versioning: minor and patch releases stay non-breaking by contract. Run `npm outdated` to see available updates, or enable the `update-dropins.yml` GitHub Actions workflow included in the boilerplate to receive automatic weekly pull requests when newer stable versions are available.
+
+- **Merging the upstream Commerce boilerplate into your repository** — This path is optional and advanced. Most teams start from a new GitHub repository generated from the Commerce boilerplate template, then clone that repository locally. You are under no obligation to pull upstream boilerplate changes into your project. Merging upstream can bring in new integration patterns or bug fixes, but expect manual conflict resolution and a careful review of your customizations. Reserve this path when a specific upstream improvement is worth the effort.
+
+Suite releases are tagged snapshots that validate a specific combination of drop-in versions and boilerplate code. They work best as starting points for new implementations, not as recurring upgrade targets for existing storefronts.
+</Aside>
+
 ## Overview
 
 When you initially scaffold your Commerce storefront from the Commerce Boilerplate, you create a snapshot of the boilerplate at that point in time. As Adobe continues to improve the boilerplate with new features, bug fixes, and performance optimizations, your existing project won't automatically receive these updates.
@@ -189,6 +199,8 @@ When you need integration layer improvements or new features that require change
 
    For detailed instructions on reviewing upstream changes, see <Link href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork" text="GitHub page on syncing a fork" /> and <Link href="https://docs.github.com/en/pull-requests/committing-changes-to-your-project/viewing-and-comparing-commits/comparing-commits" text="comparing commits" />.
 
+   A storefront repo created from the Commerce boilerplate template is not a GitHub fork of the boilerplate, but you can still add an `upstream` remote and merge or cherry-pick using the same Git operations.
+
    Focus your review on key files like `scripts/commerce.js` and the `scripts/initializers/` directory where most Commerce-specific updates occur.
 
 1. **Identify changes to include**
@@ -317,12 +329,12 @@ While early-adopter projects require more comprehensive selective updates, align
 
 ### Previous architecture (slot-based customization)
 
-Early versions of `@dropins/storefront-pdp` used a single `ProductDetails` container with predefined slots. You could customize by:
+Older `@dropins/storefront-pdp` releases used the monolithic `ProductDetails` container (deprecated) with predefined slots. That pattern is deprecated and not a part of the Commerce boilerplate. It should not be used for new work. In that legacy model, teams could only:
 
-- Creating custom slot implementations for different sections of the page
-- Working within the constraints of the single-container structure
-- Limited ability to rearrange or completely replace sections of the PDP
-- Complex styling workarounds to achieve desired layouts
+- Create custom slot implementations for different sections of the page
+- Work within the constraints of a single-container structure
+- Rearrange or replace PDP sections with limited flexibility
+- Rely on complex styling workarounds to reach custom layouts
 
 ### New architecture (container-based composition)
 
@@ -356,10 +368,12 @@ When updating your PDP block from slot-based to container-based:
 1. Update dependencies
 
    ```javascript
-   // Old: Single container with slots
-   import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+   import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
 
-   // New: Multiple independent containers  
+   // Before: Single container with slots
+   import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
+
+   // After: multiple independent containers
    import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
    import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
    import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
@@ -375,18 +389,19 @@ When updating your PDP block from slot-based to container-based:
    Replace the single container render with multiple container renders:
 
    ```javascript
-   // Old: Single render with slot configuration
-   await productRenderer.render(ProductDetails, {
-   slots: {
-      Title: (ctx) => Title(ctx, block),
-      Options: (ctx) => Options(ctx, block),
-      // ... other slots
-   }
-   })(block);
+   // Before: Single render with slot configuration
+   await pdpRendered.render(
+     ProductDetails, // (deprecated)
+     {
+       slots: {
+         /* custom slot implementations */
+       },
+     },
+   )($pdpRoot);
 
-   // New: Multiple container renders
+   // After: multiple container renders to layout regions
    await pdpRendered.render(ProductHeader, {})($header);
-   await pdpRendered.render(ProductPrice, {})($price);  
+   await pdpRendered.render(ProductPrice, {})($price);
    await pdpRendered.render(ProductGallery, { controls: 'thumbnailsColumn' })($gallery);
    // ... other containers
    ```
