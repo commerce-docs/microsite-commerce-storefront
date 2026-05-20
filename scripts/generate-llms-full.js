@@ -647,6 +647,61 @@ function unwrapTableBlocks(content) {
   return content.replace(/<TableWrapper\b[^>]*>([\s\S]*?)<\/TableWrapper>/g, '$1');
 }
 
+/** Extract plain text from an HTML cell, stripping all tags and decoding common entities. */
+function cellText(html) {
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+}
+
+/** Convert HTML tables to Markdown pipe tables. */
+function convertHtmlTablesToMarkdown(content) {
+  return content.replace(/<table[\s\S]*?<\/table>/gi, (tableHtml) => {
+    const rows = [];
+    const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    while ((rowMatch = rowPattern.exec(tableHtml)) !== null) {
+      const cells = [];
+      const cellPattern = /<t[dh]([^>]*)>([\s\S]*?)<\/t[dh]>/gi;
+      let cellMatch;
+      while ((cellMatch = cellPattern.exec(rowMatch[1])) !== null) {
+        const attrs = cellMatch[1];
+        const colspanMatch = attrs.match(/colspan=["']?(\d+)["']?/i);
+        const colspan = colspanMatch ? parseInt(colspanMatch[1], 10) : 1;
+        cells.push({ text: cellText(cellMatch[2]), colspan });
+      }
+      if (cells.length > 0) rows.push(cells);
+    }
+
+    if (rows.length === 0) return tableHtml;
+
+    // Determine column count from the widest row
+    const colCount = Math.max(2, ...rows.map(r => r.reduce((s, c) => s + c.colspan, 0)));
+
+    const lines = [];
+    for (let i = 0; i < rows.length; i++) {
+      // Expand colspan cells into empty sibling columns
+      const expanded = [];
+      for (const cell of rows[i]) {
+        expanded.push(cell.text);
+        for (let j = 1; j < cell.colspan; j++) expanded.push('');
+      }
+      while (expanded.length < colCount) expanded.push('');
+      lines.push('| ' + expanded.join(' | ') + ' |');
+      // Separator after header row
+      if (i === 0) lines.push('| ' + Array(colCount).fill('---').join(' | ') + ' |');
+    }
+
+    return '\n\n' + lines.join('\n') + '\n\n';
+  });
+}
+
 function unwrapTaskBlocks(content) {
   return content.replace(/<Tasks>([\s\S]*?)<\/Tasks>/g, (_, inner) => {
     let step = 0;
@@ -675,6 +730,7 @@ function stripMdxArtifacts(content) {
   let result = content;
   result = unwrapAsideBlocks(result);
   result = unwrapTableBlocks(result);
+  result = convertHtmlTablesToMarkdown(result);
   result = unwrapTaskBlocks(result);
   result = unwrapSimpleBlockWrappers(result);
   result = convertIframesToText(result);
