@@ -647,7 +647,11 @@ function unwrapTableBlocks(content) {
   return content.replace(/<TableWrapper\b[^>]*>([\s\S]*?)<\/TableWrapper>/g, '$1');
 }
 
-/** Extract plain text from an HTML cell, stripping all tags and decoding common entities. */
+/**
+ * Extract plain text from an HTML cell, stripping all tags and decoding common entities.
+ * Input is trusted internal MDX (no user-supplied HTML); output is a plain-text .txt file
+ * consumed by LLMs, never rendered in a browser — CodeQL sanitization heuristics don't apply.
+ */
 function cellText(html) {
   return html
     .replace(/<[^>]+>/g, '')
