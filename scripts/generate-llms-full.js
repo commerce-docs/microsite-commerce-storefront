@@ -287,12 +287,14 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
     filter: p => p.startsWith('sdk/')
   },
-  {
-    slug: 'videos',
-    label: 'Videos',
-    blurb: 'Training videos and related notes',
-    filter: p => p.startsWith('videos/')
-  },
+  // Excluded: videos/ pages are descriptions of video content with no actionable text for AI tools;
+  // the corresponding step-by-step content lives in tutorials-reference.
+  // {
+  //   slug: 'videos',
+  //   label: 'Videos',
+  //   blurb: 'Training videos and related notes',
+  //   filter: p => p.startsWith('videos/')
+  // },
   {
     slug: 'releases',
     label: 'Releases',
@@ -305,18 +307,20 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'FAQ and operational troubleshooting',
     filter: p => p.startsWith('troubleshooting/')
   },
-  {
-    slug: 'resources',
-    label: 'Resources',
-    blurb: 'Placeholder files (storefront labels for drop-in components) and supplementary resources',
-    filter: p => p.startsWith('resources/')
-  },
-  {
-    slug: 'playgrounds',
-    label: 'Playgrounds',
-    blurb: 'Interactive playground documentation',
-    filter: p => p.startsWith('playgrounds/')
-  }
+  // Excluded: resources/ contains only a list of external JSON URLs; no actionable content for AI tools.
+  // {
+  //   slug: 'resources',
+  //   label: 'Resources',
+  //   blurb: 'Placeholder files (storefront labels for drop-in components) and supplementary resources',
+  //   filter: p => p.startsWith('resources/')
+  // },
+  // Excluded: playgrounds/ pages wrap an interactive GraphiQL UI that renders nothing meaningful as text.
+  // {
+  //   slug: 'playgrounds',
+  //   label: 'Playgrounds',
+  //   blurb: 'Interactive playground documentation',
+  //   filter: p => p.startsWith('playgrounds/')
+  // }
 ];
 
 function shouldAddTrailingSlash(urlPath) {
@@ -985,9 +989,14 @@ ${thematic}
   writeFileSync(OUTPUT_LLMSTXT, body, 'utf-8');
 }
 
+// Paths intentionally excluded from all bundles (content not useful for AI tools).
+const COVERAGE_EXCLUSIONS = ['videos/', 'resources/', 'playgrounds/'];
+
 function validateCoverage(allFiles) {
   const paths = allFiles.map(f => f.relativePath);
-  const uncovered = paths.filter(p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)));
+  const uncovered = paths.filter(
+    p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)) && !COVERAGE_EXCLUSIONS.some(e => p.startsWith(e))
+  );
   if (uncovered.length > 0) {
     console.warn(
       'Warning: some docs are not covered by any _llms-txt bundle filter:',
