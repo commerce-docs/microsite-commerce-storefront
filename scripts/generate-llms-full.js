@@ -141,8 +141,8 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'documentation-home',
     label: 'Documentation home',
-    blurb: 'Top-level documentation landing content',
-    filter: p => p === 'index'
+    blurb: 'Top-level documentation landing content and reference hub',
+    filter: p => p === 'index' || p.startsWith('reference/')
   },
   {
     slug: 'get-started',
@@ -169,17 +169,99 @@ const LLMS_TXT_BUNDLES = [
     filter: p => p.startsWith('licensing/')
   },
   {
-    slug: 'setup-reference',
-    label: 'Setup and configuration',
-    blurb: 'Discovery, configuration, SEO, launch, analytics, and compatibility',
-    filter: p => p.startsWith('setup/')
+    slug: 'setup-configuration',
+    label: 'Setup — configuration',
+    blurb: 'Configuration: endpoints, headers, CORS, gated content, multistore, prerender, CDN, AEM Assets, Storefront Compatibility Package',
+    filter: p => p.startsWith('setup/configuration/')
   },
   {
-    slug: 'dropins-reference',
-    label: 'Drop-ins reference',
-    blurb: 'Drop-in components, containers, APIs, and guides (excludes step-by-step tutorials)',
+    slug: 'setup-go-live',
+    label: 'Setup — go live',
+    blurb: 'Discovery, analytics, AEP, SEO, launch checklist, and data export validation',
+    filter: p => p.startsWith('setup/') && !p.startsWith('setup/configuration/')
+  },
+  {
+    slug: 'dropins-intro',
+    label: 'Drop-ins overview',
+    blurb: 'Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins',
     filter: p =>
-      (p.startsWith('dropins/') || p.startsWith('dropins-b2b/')) && !p.includes('/tutorials/')
+      (p.startsWith('dropins/all/') || p === 'dropins/index' || p === 'dropins-b2b/index') &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-cart',
+    label: 'Cart drop-in',
+    blurb: 'Cart drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/cart/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-checkout',
+    label: 'Checkout drop-in',
+    blurb: 'Checkout drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/checkout/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-order',
+    label: 'Order drop-in',
+    blurb: 'Order confirmation and order management drop-in reference',
+    filter: p => p.startsWith('dropins/order/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-pdp',
+    label: 'Product details drop-in',
+    blurb: 'Product details page drop-in containers, slots, and APIs',
+    filter: p => p.startsWith('dropins/product-details/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-account-auth',
+    label: 'Account and auth drop-ins',
+    blurb: 'User account and user authentication drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/user-account/') || p.startsWith('dropins/user-auth/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-catalog',
+    label: 'Catalog drop-ins',
+    blurb: 'Product discovery (Live Search), recommendations, and personalization drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/product-discovery/') ||
+        p.startsWith('dropins/recommendations/') ||
+        p.startsWith('dropins/personalization/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-wishlist-payments',
+    label: 'Wishlist and payments drop-ins',
+    blurb: 'Wishlist and payment services drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/wishlist/') || p.startsWith('dropins/payment-services/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-quote',
+    label: 'B2B quote management drop-in',
+    blurb: 'Quote management drop-in containers, slots, events, and APIs for B2B',
+    filter: p => p.startsWith('dropins-b2b/quote-management/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-company',
+    label: 'B2B company management drop-ins',
+    blurb: 'Company management and company switcher drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/company-management/') ||
+        p.startsWith('dropins-b2b/company-switcher/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-purchasing',
+    label: 'B2B purchasing drop-ins',
+    blurb: 'Purchase order, quick order, and requisition list drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/purchase-order/') ||
+        p.startsWith('dropins-b2b/quick-order/') ||
+        p.startsWith('dropins-b2b/requisition-list/')) &&
+      !p.includes('/tutorials/')
   },
   {
     slug: 'tutorials-reference',
@@ -912,6 +994,11 @@ function validateCoverage(allFiles) {
       uncovered.slice(0, 20),
       uncovered.length > 20 ? `... (+${uncovered.length - 20} more)` : ''
     );
+  }
+  for (const bundle of LLMS_TXT_BUNDLES) {
+    if (!paths.some(p => bundle.filter(p))) {
+      console.warn(`Warning: bundle "${bundle.slug}" matches zero documentation files`);
+    }
   }
 }
 
