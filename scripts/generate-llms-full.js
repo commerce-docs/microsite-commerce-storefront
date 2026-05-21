@@ -147,13 +147,13 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'get-started',
     label: 'Get started',
-    blurb: 'Onboarding, architecture, performance, and Lighthouse for Commerce storefront projects',
+    blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, browser compatibility, and AI documentation bundles',
     filter: p => p.startsWith('get-started/')
   },
   {
     slug: 'boilerplate',
     label: 'Boilerplate',
-    blurb: 'Boilerplate template, blocks reference, configuration, and Universal Editor',
+    blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, AI agent skills, and updates',
     filter: p => p.startsWith('boilerplate/')
   },
   {
@@ -177,7 +177,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'setup-go-live',
     label: 'Setup — go live',
-    blurb: 'Discovery, analytics, AEP, SEO, launch checklist, and data export validation',
+    blurb: 'Discovery, Luma Bridge, analytics, AEP, SEO, launch checklist, and data export validation',
     filter: p => p.startsWith('setup/') && !p.startsWith('setup/configuration/')
   },
   {
@@ -203,7 +203,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'dropins-order',
     label: 'Order drop-in',
-    blurb: 'Order confirmation and order management drop-in reference',
+    blurb: 'Order management, order confirmation, and returns drop-in reference',
     filter: p => p.startsWith('dropins/order/') && !p.includes('/tutorials/')
   },
   {
@@ -272,7 +272,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'blocks-reference',
     label: 'Commerce blocks reference',
-    blurb: 'Edge Delivery blocks for commerce (placeholders, slots, and block-level documentation)',
+    blurb: 'EDS block configurations for B2C and B2B commerce (cart, checkout, account, order, quotes, and purchasing)',
     filter: p => p.startsWith('merchants/blocks/')
   },
   {
@@ -284,7 +284,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'sdk-reference',
     label: 'Storefront SDK',
-    blurb: 'SDK components, patterns, and integration',
+    blurb: 'UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
     filter: p => p.startsWith('sdk/')
   },
   {
@@ -308,7 +308,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'resources',
     label: 'Resources',
-    blurb: 'Placeholders, building with AI (context files), and supplementary resources',
+    blurb: 'Placeholder files (storefront labels for drop-in components) and supplementary resources',
     filter: p => p.startsWith('resources/')
   },
   {
