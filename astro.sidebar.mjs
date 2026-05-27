@@ -831,6 +831,7 @@ export function generateSidebar() {
             { label: 'How block tables work', link: '/merchants/quick-start/block-tables/' },
             { label: 'Page Metadata', link: '/merchants/quick-start/page-metadata/' },
             { label: 'Section Metadata', link: '/merchants/quick-start/section-metadata/' },
+            { label: 'Labels and Placeholders', link: '/merchants/quick-start/labels-and-placeholders/' },
           ],
         },
         {
