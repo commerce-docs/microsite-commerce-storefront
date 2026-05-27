@@ -1,55 +1,54 @@
 ---
-title: Labels and Placeholders
-description: Change the words shoppers see in Commerce blocks (button text, headings, messages) by editing a placeholders sheet in Document Authoring, with the preview-and-publish step that often gets skipped.
+title: Labels and placeholders
+description: Change the words shoppers see in Commerce blocks by editing a placeholders sheet in Document Authoring, including the publish step that is easy to miss.
 sidebar:
   order: 5
+time: 5 minutes
 ---
 
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
-import { Aside } from '@astrojs/starlight/components';
-import Link from '@components/Link.astro';
 import Term from '@components/Term.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
 
-This page explains how to change the words shoppers see on Commerce blocks (for example, "Add to Cart", price labels, or empty-cart messages) by editing a placeholders sheet in <Term>Document Authoring</Term>. The hardest part is not the edit itself; it is remembering to publish the sheet so the change actually reaches the page. The procedure below walks through the edit, the publish, and how to verify the result.
+This page explains how to change the words shoppers see on Commerce blocks (for example, "Add to Cart", price labels, or empty-cart messages) by editing a placeholders sheet in <Term>Document Authoring</Term>. The hardest part is not the edit itself. It's remembering to publish the sheet so the change reaches the page.
 
-## What a placeholder is
+Here's what you'll do:
 
-A placeholder is a label key that the storefront looks up at page load and renders as text. The default text for every Commerce block lives in a placeholders sheet stored in your content folder. Each <Term>drop-in</Term> has its own sheet — for example, `pdp` for the product detail page, `cart` for the shopping cart, and `checkout` for checkout.
+<Steps>
 
-Two columns matter: Key and Value. Keys use a dotted path such as `Cart.MiniCart.heading` that the drop-in knows how to look up. Values are the text shoppers see. Authors change values; developers (and the drop-ins themselves) own the keys.
+1. Find the placeholders sheet for your block.
 
-The Adobe Commerce boilerplate ships with placeholders sheets already wired up, so you do not add the sheet or change code to start using it.
+1. Edit the value of the label you want to change.
 
-## Find the right sheet for your block
+1. Preview the sheet to push your change to the preview site.
 
-Each Commerce block reads exactly one placeholders sheet — the sheet that belongs to the drop-in the block uses. Use the table below to pick the sheet:
+1. Publish the sheet to push your change to the live site.
 
-| Block (or area)                                                                  | Sheet to edit               |
-| -------------------------------------------------------------------------------- | --------------------------- |
-| `product-details`                                                                | `placeholders/pdp`          |
-| `commerce-cart`, `commerce-mini-cart`                                            | `placeholders/cart`         |
-| `commerce-checkout`, `commerce-checkout-success`                                 | `placeholders/checkout`     |
-| `commerce-login`, `commerce-create-account`, `commerce-create-password`, `commerce-forgot-password`, `commerce-confirm-account` | `placeholders/auth`         |
-| `commerce-account-*`, `commerce-customer-*`, `commerce-addresses`                | `placeholders/account`      |
-| `commerce-orders-list`, `commerce-order-*`, `commerce-create-return`, `commerce-return-*`, `commerce-returns-list` | `placeholders/order`        |
-| `commerce-wishlist`                                                              | `placeholders/wishlist`     |
-| `product-list-page`, `commerce-search-order`                                     | `placeholders/search`       |
-| Product recommendations                                                          | `placeholders/recommendations` |
-| Labels reused across blocks (header buttons, generic actions)                    | `placeholders/global`       |
+1. Hard-refresh the storefront page (press Cmd+Shift+R or Ctrl+Shift+R) to see the new label.
 
-To see every default key and value the boilerplate ships with, open the [Placeholder files reference](/resources/placeholders/). It links the live JSON for each sheet so you can search the keys before you open the editor.
+</Steps>
 
-## Edit and publish a placeholder value
+## How labels work in Commerce blocks
+
+A placeholder is a named text value that the storefront looks up at page load and displays on the page. The text for every button, heading, and message in a Commerce block comes from a placeholders sheet stored in your content folder. Each <Term>drop-in</Term> has its own sheet.
+
+Each sheet has two columns: Key and Value. The Key is a fixed label name such as `Cart.MiniCart.heading` that the drop-in uses to find the right text. The Value is the text shoppers see. You change the values, but the keys are defined by the drop-in code. Do not rename them.
+
+Most sheets are named after the block they serve, so `cart`, `checkout`, and `wishlist` hold the labels for their matching blocks. A few sheets group related blocks: `auth` covers login and account-creation blocks, `account` covers signed-in customer pages, `order` covers orders and returns, and `search` covers product listing and search. `pdp` is the one name that doesn't match its block (`product-details`). `global` holds labels reused across blocks, such as header buttons. If your storefront uses B2B drop-ins, you'll also see B2B-specific sheets such as `company`, `purchase-order`, and `quick-order`. For the full list and what each sheet controls, see [Placeholder sheets](/merchants/quick-start/placeholder-sheets/).
+
+The Adobe Commerce boilerplate ships with placeholders sheets already set up and connected, so you do not add the sheet or change any code to start using it.
+
+## Change a label step by step
 
 <Tasks>
 
 <Task>
 ### Open the right placeholders sheet
 
-In Document Authoring, navigate to the `placeholders` folder. Open the sheet whose drop-in owns the label you want to change (see the table above).
+In Document Authoring (da.live), navigate to the `placeholders` folder. Open the sheet for the drop-in that owns the label you want to change. If you're not sure which sheet to pick, [Placeholder sheets](/merchants/quick-start/placeholder-sheets/) lists every sheet and what it controls.
 
-The sheet opens in a spreadsheet view with two columns: Key and Value. If your site is multilingual and your project keeps locale-specific placeholders, edit the sheet under the locale folder that matches the storefront URL you preview (for example, `/fr/placeholders/cart`).
+The sheet opens in a spreadsheet view. If your site supports multiple languages, edit the sheet in the locale folder that matches the storefront URL you preview — for example, `/fr/placeholders/cart` for a French storefront.
 </Task>
 
 <Task>
@@ -57,67 +56,82 @@ The sheet opens in a spreadsheet view with two columns: Key and Value. If your s
 
 Find the row whose key matches the label you want to change. Edit only the Value cell. Keep the Key spelled exactly as it is, because the drop-in uses the key to look the value up. Renaming a key disconnects the value from the drop-in and the label disappears.
 
+{/* SCREENSHOT: A placeholders sheet open in Document Authoring, with the Key and Value columns clearly visible and one row about to be edited. Anchors steps 2 and 3 of the procedure. Ideally also shows the data and dnt tabs at the top so the next paragraph is actionable. */}
+
 If the sheet shows more than one tab at the top (for example, `data` and `dnt`), edit the `data` tab. The `dnt` tab is for do-not-translate values and does not control the shopper-visible label.
 </Task>
 
 <Task>
 ### Preview and publish the sheet
 
-Open the sidekick on the sheet itself, then choose Preview, then Publish.
+With the sheet open in Document Authoring, select **Preview** to save your changes and push them to the preview site. Confirm the new label looks right. When you're satisfied, select **Publish** to push the change to the live site.
 
-Until the sheet is published, the storefront page keeps serving the previous version of the JSON, and your change does not appear on the page. This is the most common reason a label change appears not to work: the storefront page got previewed, but the placeholders sheet did not.
+{/* SCREENSHOT: Close-up of the Preview and Publish buttons in the Document Authoring toolbar for a sheet. This is the most-skipped step, so a screenshot makes the buttons concrete. */}
+
+<Aside type="caution" title="Preview is not enough">
+Until you publish the sheet, the live storefront keeps serving the previous version of the labels, and your change does not appear for shoppers. This is the most common reason a label change looks like it did nothing: you previewed the storefront page but did not publish the placeholders sheet.
+</Aside>
 </Task>
 
 <Task>
-### Verify the JSON updated
-
-Open the published JSON in a new browser tab to confirm the new value is there. The URL pattern is:
-
-```
-https://<your-site>/placeholders/<sheet>.json
-```
-
-For example, `https://example.com/placeholders/cart.json`. Search the JSON for your key and confirm the value matches what you typed. If it still shows the old value, the sheet was not published — go back and Publish it.
-</Task>
-
-<Task>
-### Reload the storefront page without cache
+### See your change on the storefront
 
 Open the storefront page that uses the block (for example, your product detail page or cart page). Press Cmd+Shift+R on macOS, or Ctrl+Shift+R on Windows or Linux, to bypass the browser cache. The new label appears on the next load.
 
-The drop-in reads the placeholders sheet once when the page loads, so there is no live update. You must reload the page after publishing the sheet for the new value to take effect.
+The drop-in reads the placeholders sheet once when the page loads, so there is no live update when you edit the sheet. A regular reload may not clear the browser's cached copy of the sheet, so use a hard-refresh (Cmd+Shift+R on macOS, or Ctrl+Shift+R on Windows or Linux) to be sure.
 </Task>
 
 </Tasks>
 
-## Common failure modes
+## Troubleshooting
 
-### I changed it and nothing happened
+If your label change isn't showing up, start with the first item below. It covers most cases.
 
-This is almost always the publish step. Open `https://<your-site>/placeholders/<sheet>.json` and search for your key:
+### My change doesn't appear on the storefront
 
-- If you see the old value: the sheet was not published. Open the sidekick on the sheet and run Publish again.
+This is almost always a missing publish step on the sheet. To find out, [check what the sheet actually saved](#how-to-check-what-the-sheet-actually-saved) and look for your key:
+
+- If you see the old value: the sheet was not previewed or published. Return to the sheet in Document Authoring and select **Preview** or **Publish**.
 - If you see the new value but the storefront page still shows the old one: hard-refresh the page, and confirm the page URL is in the same locale folder as the sheet you edited.
 
-### The key isn't in the sheet yet
+### My change shows in preview but not on the live site
 
-Some keys fall back to a built-in default in the drop-in when the sheet does not override them. To customize one, add a new row with the exact key path and the value you want. Use the [Placeholder files reference](/resources/placeholders/) to find the full list of keys per drop-in.
+**Preview** and **Publish** are separate actions. **Preview** updates the preview site only. After you confirm the label looks right in preview, select **Publish** to push the change to the live site.
 
-### The label is partly translated, partly not
+### One language is right, another is wrong
 
 You may be editing one locale sheet while previewing a different locale page. Edit the sheet whose folder matches the URL you preview. For the multi-locale workflow, see [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/).
 
-### My edit shows up in preview but not on the live site
+### The key I need isn't in the sheet
 
-Preview and Publish are separate actions in the sidekick. After Preview, run Publish too, then verify the published JSON URL above.
+If a key isn't in the sheet, the drop-in uses its built-in default text. To change that text, add a new row with the exact key (for example, `Cart.MiniCart.heading`) and the value you want. [Placeholder sheets](/merchants/quick-start/placeholder-sheets/) links to each sheet's live JSON so you can find the keys each drop-in supports.
 
-## Where this fits
+### How to check what the sheet actually saved
 
-Labels and placeholders live alongside two other authoring tools that change a block's behavior on a page:
+Each placeholders sheet is available as a JSON file (a text file your browser can open). Opening this file shows the saved value directly, without going through the storefront page. If the URL was already cached in your browser from an earlier check, hard-refresh the tab (Cmd+Shift+R or Ctrl+Shift+R) to fetch the latest version.
+
+{/* SCREENSHOT: A placeholders JSON file open in a browser tab, showing one key and value highlighted. Helps the reader recognize success when they see it. */}
+
+The URL pattern is:
+
+```text
+https://<branch>--<repo>--<org>.aem.page/placeholders/<sheet>.json
+https://<your-site>/placeholders/<sheet>.json
+```
+
+A real preview URL looks like `https://main--my-storefront--acme.aem.page/placeholders/cart.json`, where `main` is your branch, `my-storefront` is your repository, `acme` is your organization, and `cart` is the sheet name from the table above. The live URL replaces the `aem.page` host with your storefront's domain.
+
+Use the preview URL right after **Preview**, or the live URL after **Publish**. Search the JSON for your key and check that the value matches what you typed.
+
+If the URL returns nothing or a 404, the sheet has not been previewed or published yet. Go back to the sheet and run **Preview** or **Publish** first.
+
+## Related authoring tools
+
+Labels and placeholders work alongside two other authoring tools that control how a Commerce block appears on a page:
 
 - [Page metadata](/merchants/quick-start/page-metadata/) — page-level settings (title, description, caching, social sharing).
 - [Section metadata](/merchants/quick-start/section-metadata/) — visual styling for the section around a block.
 
-Page metadata and section metadata change how the page renders around a block. Labels and placeholders change the words inside the block. The three together cover the most common day-to-day authoring tasks for Commerce blocks.
+Page metadata and section metadata change how the page looks around a block. Labels and placeholders change the words inside the block. The three together cover the most common day-to-day authoring tasks for Commerce blocks.
 
-For multi-locale translation, see [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/). For developer-side details on how drop-ins consume placeholders, see [Labeling and localizing drop-in components](/dropins/all/labeling/).
+For multi-locale translation, see [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/). For developer-side details on how drop-ins use placeholders, see [Labeling and localizing drop-in components](/dropins/all/labeling/).
