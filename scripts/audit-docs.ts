@@ -211,6 +211,21 @@ interface SdkEventGaps {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Returns true if the event is SDK-level: fired by the host/boilerplate layer
+ * (no registry-tracked emitter) and consumed by 2+ distinct storefront-* drop-ins.
+ * These events have no single owning drop-in and must be documented in common-events.mdx.
+ */
+function isSdkEvent(e: EventEntry): boolean {
+  if (e.emittedBy.length > 0) return false;
+  const uniqueConsumers = new Set(
+    e.consumedBy
+      .filter((b) => b.dropin.startsWith("storefront-"))
+      .map((b) => b.dropin),
+  );
+  return uniqueConsumers.size >= 2;
+}
+
 /** PascalCase → kebab-case */
 function toKebab(name: string): string {
   return name
@@ -490,20 +505,8 @@ function auditSdkEvents(
     "common-events.mdx",
   );
 
-  // SDK-level events: no registry-tracked emitter (host/boilerplate-fired),
-  // consumed by 2+ distinct storefront-* drop-ins.
   const sdkRegistryEvents = new Set(
-    allEvents
-      .filter((e) => {
-        if (e.emittedBy.length > 0) return false;
-        const uniqueConsumers = new Set(
-          e.consumedBy
-            .filter((b) => b.dropin.startsWith("storefront-"))
-            .map((b) => b.dropin),
-        );
-        return uniqueConsumers.size >= 2;
-      })
-      .map((e) => e.name),
+    allEvents.filter(isSdkEvent).map((e) => e.name),
   );
 
   // All event names that exist anywhere in the registry — used for phantom detection.
@@ -1166,26 +1169,8 @@ function main(): void {
 
   const allEvents = eventsRegistry.events ?? [];
 
-  // Derive SDK-level events at runtime.
-  // Criteria: no registry-tracked emitter AND consumed by 2+ distinct storefront-* drop-ins.
-  // "No registry-tracked emitter" means the event is fired by the host/boilerplate layer,
-  // which is not itself a registered drop-in. `locale` is the canonical example.
-  // Events that DO have a registry emitter (e.g. `authenticated` from storefront-auth,
-  // `cart/data` from storefront-cart) are owned by that drop-in's events.mdx and are
-  // not required in common-events.mdx.
-  const sdkEvents = new Set(
-    allEvents
-      .filter((e) => {
-        if (e.emittedBy.length > 0) return false;
-        const uniqueConsumers = new Set(
-          e.consumedBy
-            .filter((b) => b.dropin.startsWith("storefront-"))
-            .map((b) => b.dropin),
-        );
-        return uniqueConsumers.size >= 2;
-      })
-      .map((e) => e.name),
-  );
+  // Derive SDK-level events at runtime (see isSdkEvent for the full criteria).
+  const sdkEvents = new Set(allEvents.filter(isSdkEvent).map((e) => e.name));
 
   log(
     `SDK-level events (no storefront-* emitter): ${[...sdkEvents].join(", ") || "none"}`,
