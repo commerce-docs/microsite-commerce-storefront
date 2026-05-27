@@ -1,18 +1,167 @@
 ---
 title: Product Details
-description: Customers view product information, select options, and add items to cart through this block. Place it on product detail pages.
+description: Use the product-details block to show product pages in your storefront. This page covers where the block lives by default, what shoppers see, the authoring tasks you can do without code, and where to hand off to a developer.
 sidebar:
   label: Product Details
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Term from '@components/Term.astro';
 
+The `product-details` block renders the product detail page (PDP) for your storefront: the image gallery, name, price, options, quantity, add-to-cart button, attributes, and long description. It is one of the most important commerce blocks because most shopper sessions go through a PDP before a purchase.
 
-Customers view product information, select options, and add items to cart through this block. Place it on product detail pages.
+This page is written for authors who use <Term>Document Authoring</Term> to build storefront pages. It explains how the block is wired in your default boilerplate, what shoppers see, the authoring tasks you can do without code, and where to ask a developer for help.
+
+## Where this block lives in your default boilerplate
+
+You do not need to add the `product-details` block from scratch. The Adobe Commerce boilerplate ships with PDP wiring already in place:
+
+- A template page at `/products/default` uses the `product-details` block so you can preview and style a PDP in Document Authoring without a real product URL.
+- Real shopper URLs follow the pattern `/products/<url-key>/<sku>` (for example, `/products/cool-hoodie/HOODIE-001`). The boilerplate reads the SKU from the URL and renders the same `product-details` block for every product.
+
+You will mostly edit the template page at `/products/default` to control the layout and styling that every PDP inherits. You rarely add the block to a brand-new page unless you are building a custom landing page that highlights a specific product.
+
+<Aside type="tip" title="Confirm the template page exists">
+Open `/products/default` in your content folder in Document Authoring. If the page is missing or empty, the PDP cannot render in preview. Copy the template from a fresh clone of the boilerplate content if you need to restore it.
+</Aside>
+
+## What shoppers see
+
+When the `product-details` block renders, shoppers see these regions on the page, top to bottom on mobile and side-by-side on desktop:
+
+- An image gallery with thumbnails or a carousel. See [`ProductGallery`](/dropins/product-details/containers/product-gallery/) for what a developer can change here.
+- The product name and SKU in the header. See [`ProductHeader`](/dropins/product-details/containers/product-header/).
+- The price (with a sale price when applicable). See [`ProductPrice`](/dropins/product-details/containers/product-price/).
+- A short description under the price. See [`ProductShortDescription`](/dropins/product-details/containers/product-short-description/).
+- Options such as size, color, or bundle items for configurable and bundle products. See [`ProductOptions`](/dropins/product-details/containers/product-options/).
+- A quantity selector. See [`ProductQuantity`](/dropins/product-details/containers/product-quantity/).
+- Buttons for Add to Cart and Add to Wishlist. These buttons are rendered by the block itself, not by the underlying <Term>drop-in</Term>, so a developer can rearrange or restyle them in the block code.
+- The full product description. See [`ProductDescription`](/dropins/product-details/containers/product-description/).
+- Additional product attributes. See [`ProductAttributes`](/dropins/product-details/containers/product-attributes/).
+
+## When to use this block
+
+Use the `product-details` block when:
+
+- You need a standard PDP that works for simple, configurable, bundle, and gift card products. The boilerplate template at `/products/default` already covers this case.
+- You want to highlight one specific product on a marketing page. Add the `product-details` block to that page and set `default-sku` to the SKU you want to feature.
+- You want to show more than one product on the same page (for example, a comparison or quick view). The block can render more than once on a page without the instances interfering with each other, so a developer can mount several PDPs side by side. See [Product details overview](/dropins/product-details/) for the developer details.
+
+For B2B-only experiences such as negotiable quotes, requisition lists, or purchase orders, use the matching B2B blocks listed in [B2B Commerce blocks](/merchants/blocks/b2b/). The `product-details` block itself is shared between B2C and B2B storefronts.
+
+## Common authoring tasks
+
+The most common things you do without writing code.
+
+### Preview the PDP on the template page
+
+Use the template page at `/products/default` to design and preview the PDP layout. The block looks for a `default-sku` row when the page is being edited in Universal Editor or previewed in Document Authoring, so you can render real product data even though no SKU is in the URL.
+
+<Steps>
+
+1. In Document Authoring, open `/products/default`.
+
+1. Add or update the `product-details` table with a `default-sku` row that points to a SKU in your catalog:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Save the page and open it in preview. The PDP renders using the SKU you set.
+
+</Steps>
+
+The `default-sku` value is only used on the template page and only in editor or preview mode. On a real product URL like `/products/cool-hoodie/HOODIE-001`, the SKU comes from the URL instead. You do not need to keep the template SKU up to date with real catalog changes.
+
+### Feature a specific product on a marketing page
+
+To highlight one product on a custom page (for example, a landing page for a campaign):
+
+<Steps>
+
+1. Create your marketing page in Document Authoring at the path you want, for example `/campaigns/new-arrivals`.
+
+1. Add the `product-details` block to the page and set `default-sku` to the SKU you want to feature:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Save and preview the page to confirm the product renders.
+
+</Steps>
+
+<Aside type="caution">
+Use this pattern sparingly. Every product in your catalog already has a working PDP at `/products/<url-key>/<sku>`. Adding a second hand-built PDP makes the campaign page harder to maintain when the catalog changes. Prefer linking from the campaign page to the canonical PDP whenever you can.
+</Aside>
+
+### Set the SKU through page metadata
+
+Some pages render a PDP without a SKU in the URL (for example, a saved short URL). For those pages, add a `sku` row to the page metadata table at the top of the document. The boilerplate reads `getMetadata('sku')` before it falls back to the URL.
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">sku</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+</tr>
+</tbody>
+</table>
+
+See [Page metadata](/merchants/quick-start/page-metadata/) for the rest of the metadata fields available to every page.
+
+### Change button and label text
+
+Text such as "Add to Cart", "Update", price labels, and quantity labels comes from a <Term>Placeholder files</Term> sheet, not from the block table. The PDP reads `placeholders/pdp.json` at the root of your content folder.
+
+<Steps>
+
+1. Open or create `placeholders/pdp.json` in your content folder.
+
+1. Edit the key whose value you want to change (for example, the label for the add-to-cart button).
+
+1. Save and preview the PDP. Shoppers see the new label on the next page load.
+
+</Steps>
+
+If a translation is missing, the storefront falls back to the default text shipped in the drop-in.
+
+### Adjust the section styling around the PDP
+
+The block itself does not take styling options. To change padding, background color, or column widths around the PDP, add a `section-metadata` table after the block. See the [Section metadata](#section-metadata) section below.
+
+### Add related blocks on the same page
+
+A typical PDP includes more than just the `product-details` block. Add these companions to the same page, in this order, when you need them:
+
+- A breadcrumb at the top of the page (boilerplate `breadcrumb` block).
+- The `product-details` block.
+- [Product Recommendations](/merchants/content-customizations/product-recommendations/) under the PDP to surface "You may also like" and similar carousels.
+
+Each related block is a separate table in the same document. The `product-details` block does not need to know about the others; it just lives alongside them.
 
 ## Configuration
 
-Add this table to your document to configure the block:
+The `product-details` block reads a single property from its block table. Add this table to your document to set it:
 
 <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
 <tbody>
@@ -20,21 +169,32 @@ Add this table to your document to configure the block:
 <td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
 </tr>
 <tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">defaultSku</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">SKU-001 <span style="font-size: 0.85em;">(optional)</span></em></td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">HOODIE-001 <span style="font-size: 0.85em;">(optional)</span></em></td>
 </tr>
 </tbody>
 </table>
 
 ### Property descriptions
 
-#### defaultSku
+#### default-sku
 
-Specifies a default product SKU for the product details block. Use this when creating a template page that displays a specific product by default. The block loads the product matching this SKU when the URL omits a product SKU.
+A product SKU the block uses when the page does not already supply one. The boilerplate reads `default-sku` only when the current page is the PDP template (the `/products/default` path) and the page is being edited in Universal Editor or previewed through Document Authoring. On any other page, or on the live storefront, the block uses the `sku` page metadata first and then falls back to the SKU at the end of the URL path.
+
+In practice, set `default-sku` on `/products/default` so authors and reviewers can see a real product in preview. Setting it on other pages only has an effect on marketing pages that intentionally render the PDP outside the `/products/...` URL pattern.
+
+### URL parameters the block reads
+
+The `product-details` block also reacts to two URL search parameters. You do not set these in the block table; the boilerplate adds them when a shopper acts on the page:
+
+- `itemUid` — switches the block into update mode for the cart line item with that ID. The add-to-cart button changes to an update button. This is set when a shopper clicks Edit on a cart line item.
+- `optionsUIDs` — restores selected product options (for example, "size: large, color: blue") when shoppers return from the wishlist or share a link.
+
+Most authors do not need to think about these parameters. Mentioning them here helps you understand why the PDP sometimes shows an Update button instead of Add to Cart.
 
 ## Section metadata
 
-Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
+Control the section styling, spacing, and layout that wraps the `product-details` block. All properties are optional:
 
 <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
 <tbody>
@@ -70,3 +230,44 @@ See the [Section Metadata guide](/merchants/quick-start/section-metadata/) for a
 
 </Aside>
 
+## Customize beyond authoring
+
+When you reach the limit of what the block table and section metadata can do, the rest is a developer task. Share these pages with the developer on your team:
+
+- [Product details overview](/dropins/product-details/) — what the PDP drop-in is and how it composes the smaller containers above.
+- [Containers](/dropins/product-details/containers/) — the building blocks a developer can rearrange, replace, or remove.
+- [Slots](/dropins/product-details/slots/) — how a developer customizes parts of a container (for example, swapping the swatch UI inside `ProductOptions`).
+- [Events](/dropins/product-details/events/) — the <Term>event bus</Term> signals the PDP emits and listens for, used to wire features such as analytics or custom CTAs.
+- [Notify Me CTA tutorial](/dropins/product-details/tutorials/notify-me-cta/) — a worked example that changes the primary button to "Notify Me" when a product is out of stock.
+
+The block also supports Adobe Experience Manager (AEM) Assets image delivery for the gallery. For the developer setup, see [AEM Assets configuration](/setup/configuration/aem-assets-configuration/).
+
+## Verify and publish
+
+After you change anything on a PDP, confirm it renders the way you expect.
+
+<Steps>
+
+1. Preview the page in Document Authoring. The PDP should show the gallery, header, price, options, quantity, add-to-cart button, and description for the SKU you set.
+
+1. Open the browser developer tools and check the console for warnings. Two common warnings point to setup problems:
+
+   - `No defaultSku found in product-details block` means you opened `/products/default` in editor or preview mode but the `default-sku` row is missing. Add the row to the `product-details` table.
+   - `Unable to infer main image from JSON-LD or meta tags` means the page is missing the prerendered product metadata. Run the [metadata generation script](/setup/seo/metadata/#generate-metadata) or confirm the page metadata table includes a valid `sku`.
+
+1. Publish the page from Document Authoring or your sidekick when the preview looks right.
+
+</Steps>
+
+### Common failure modes
+
+- The PDP renders, but the gallery is empty. The product image URL is missing from JSON-LD and from the `og:image` meta tag. Run the metadata generation script for the catalog, or confirm the product has at least one image in your catalog.
+- The add-to-cart button is disabled and never enables. The product has required options (such as size) that the shopper has not selected yet, or the block is in update mode because `itemUid` is in the URL.
+- The button label says "Add to Cart" in English but should be localized. The PDP placeholder sheet at `placeholders/pdp.json` is missing the localized key, or the sheet has not been published. Edit the sheet, publish it, then reload the PDP.
+
+## Related resources
+
+- [How block tables work](/merchants/quick-start/block-tables/) — the table shape used in every block on this page.
+- [Your first page](/merchants/quick-start/your-first-page/) — a hands-on walkthrough that builds a cart page with the same authoring patterns.
+- [B2C Commerce blocks](/merchants/blocks/b2c/) — the full reference for other B2C blocks you can pair with `product-details`.
+- [Product details overview](/dropins/product-details/) — start here if you want to understand what a developer can change.
