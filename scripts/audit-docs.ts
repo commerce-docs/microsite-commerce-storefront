@@ -328,21 +328,21 @@ function parseMdxFunctions(content: string): Set<string> {
 /**
  * Parse event names from an events.mdx file.
  *
- * Anchors on the Direction column (Emits / Listens) to distinguish event rows
- * from payload-field rows or other tables in the same file. This handles
- * single-word event names (e.g. `error`, `authenticated`) as well as
- * slash-separated names (e.g. `auth/error`).
+ * Anchors on the Direction column to distinguish event rows from payload-field
+ * rows or other tables in the same file. Accepted direction values:
+ *   - "Emits"
+ *   - "Listens"
+ *   - "Emits and listens"
  *
  * Matches table rows in the form:
  *   | [`event/name`](#anchor) | Emits | description |
  *   | [event/name](#anchor)   | Listens | description |
- *   | `event/name`            | Emits | description |
+ *   | `event/name`            | Emits and listens | description |
  */
 function parseMdxEvents(content: string): Set<string> {
   const events = new Set<string>();
-  // Capture: first column (event name), second column must be Emits or Listens.
   const rowRe =
-    /^\|\s*\[?\`?([a-z][a-z0-9/_-]*)`?\]?(?:\([^)]*\))?\s*\|\s*(?:Emits|Listens)/gim;
+    /^\|\s*\[?\`?([a-z][a-zA-Z0-9/_-]*)`?\]?(?:\([^)]*\))?\s*\|\s*(?:Emits and listens|Emits|Listens)/gim;
   let match: RegExpExecArray | null;
   while ((match = rowRe.exec(content)) !== null) {
     events.add(match[1].trim());
@@ -469,8 +469,8 @@ function micrositeDocPath(dropinKey: string, ...segments: string[]): string {
  */
 function parseSdkEventNames(content: string): Set<string> {
   const events = new Set<string>();
-  // Match level-2 headings that look like event names (lowercase, may contain / or -)
-  const re = /^##\s+[`]?([a-z][a-z0-9/_-]*)[`]?\s*$/gm;
+  // Match level-2 headings that look like event names (may contain camelCase segments, / or -)
+  const re = /^##\s+[`]?([a-z][a-zA-Z0-9/_-]*)[`]?\s*$/gm;
   let match: RegExpExecArray | null;
   while ((match = re.exec(content)) !== null) {
     events.add(match[1]);
