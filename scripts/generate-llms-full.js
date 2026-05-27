@@ -141,19 +141,19 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'documentation-home',
     label: 'Documentation home',
-    blurb: 'Top-level documentation landing content',
-    filter: p => p === 'index'
+    blurb: 'Top-level documentation landing content and reference hub',
+    filter: p => p === 'index' || p.startsWith('reference/')
   },
   {
     slug: 'get-started',
     label: 'Get started',
-    blurb: 'Onboarding, architecture, performance, and Lighthouse for Commerce storefront projects',
+    blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, browser compatibility, and AI documentation bundles',
     filter: p => p.startsWith('get-started/')
   },
   {
     slug: 'boilerplate',
     label: 'Boilerplate',
-    blurb: 'Boilerplate template, blocks reference, configuration, and Universal Editor',
+    blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, AI agent skills, and updates',
     filter: p => p.startsWith('boilerplate/')
   },
   {
@@ -169,17 +169,99 @@ const LLMS_TXT_BUNDLES = [
     filter: p => p.startsWith('licensing/')
   },
   {
-    slug: 'setup-reference',
-    label: 'Setup and configuration',
-    blurb: 'Discovery, configuration, SEO, launch, analytics, and compatibility',
-    filter: p => p.startsWith('setup/')
+    slug: 'setup-configuration',
+    label: 'Setup — configuration',
+    blurb: 'Configuration: endpoints, headers, CORS, gated content, multistore, prerender, CDN, AEM Assets, Storefront Compatibility Package',
+    filter: p => p.startsWith('setup/configuration/')
   },
   {
-    slug: 'dropins-reference',
-    label: 'Drop-ins reference',
-    blurb: 'Drop-in components, containers, APIs, and guides (excludes step-by-step tutorials)',
+    slug: 'setup-go-live',
+    label: 'Setup — go live',
+    blurb: 'Discovery, Luma Bridge, analytics, AEP, SEO, launch checklist, and data export validation',
+    filter: p => p.startsWith('setup/') && !p.startsWith('setup/configuration/')
+  },
+  {
+    slug: 'dropins-intro',
+    label: 'Drop-ins overview',
+    blurb: 'Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins',
     filter: p =>
-      (p.startsWith('dropins/') || p.startsWith('dropins-b2b/')) && !p.includes('/tutorials/')
+      (p.startsWith('dropins/all/') || p === 'dropins/index' || p === 'dropins-b2b/index') &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-cart',
+    label: 'Cart drop-in',
+    blurb: 'Cart drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/cart/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-checkout',
+    label: 'Checkout drop-in',
+    blurb: 'Checkout drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/checkout/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-order',
+    label: 'Order drop-in',
+    blurb: 'Order management, order confirmation, and returns drop-in reference',
+    filter: p => p.startsWith('dropins/order/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-pdp',
+    label: 'Product details drop-in',
+    blurb: 'Product details page drop-in containers, slots, and APIs',
+    filter: p => p.startsWith('dropins/product-details/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-account-auth',
+    label: 'Account and auth drop-ins',
+    blurb: 'User account and user authentication drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/user-account/') || p.startsWith('dropins/user-auth/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-catalog',
+    label: 'Catalog drop-ins',
+    blurb: 'Product discovery (Live Search), recommendations, and personalization drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/product-discovery/') ||
+        p.startsWith('dropins/recommendations/') ||
+        p.startsWith('dropins/personalization/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-wishlist-payments',
+    label: 'Wishlist and payments drop-ins',
+    blurb: 'Wishlist and payment services drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/wishlist/') || p.startsWith('dropins/payment-services/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-quote',
+    label: 'B2B quote management drop-in',
+    blurb: 'Quote management drop-in containers, slots, events, and APIs for B2B',
+    filter: p => p.startsWith('dropins-b2b/quote-management/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-company',
+    label: 'B2B company management drop-ins',
+    blurb: 'Company management and company switcher drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/company-management/') ||
+        p.startsWith('dropins-b2b/company-switcher/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-purchasing',
+    label: 'B2B purchasing drop-ins',
+    blurb: 'Purchase order, quick order, and requisition list drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/purchase-order/') ||
+        p.startsWith('dropins-b2b/quick-order/') ||
+        p.startsWith('dropins-b2b/requisition-list/')) &&
+      !p.includes('/tutorials/')
   },
   {
     slug: 'tutorials-reference',
@@ -190,7 +272,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'blocks-reference',
     label: 'Commerce blocks reference',
-    blurb: 'Edge Delivery blocks for commerce (placeholders, slots, and block-level documentation)',
+    blurb: 'EDS block configurations for B2C and B2B commerce (cart, checkout, account, order, quotes, and purchasing)',
     filter: p => p.startsWith('merchants/blocks/')
   },
   {
@@ -202,15 +284,17 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'sdk-reference',
     label: 'Storefront SDK',
-    blurb: 'SDK components, patterns, and integration',
+    blurb: 'UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
     filter: p => p.startsWith('sdk/')
   },
-  {
-    slug: 'videos',
-    label: 'Videos',
-    blurb: 'Training videos and related notes',
-    filter: p => p.startsWith('videos/')
-  },
+  // Excluded: videos/ pages are descriptions of video content with no actionable text for AI tools;
+  // the corresponding step-by-step content lives in tutorials-reference.
+  // {
+  //   slug: 'videos',
+  //   label: 'Videos',
+  //   blurb: 'Training videos and related notes',
+  //   filter: p => p.startsWith('videos/')
+  // },
   {
     slug: 'releases',
     label: 'Releases',
@@ -223,18 +307,20 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'FAQ and operational troubleshooting',
     filter: p => p.startsWith('troubleshooting/')
   },
-  {
-    slug: 'resources',
-    label: 'Resources',
-    blurb: 'Placeholders, building with AI (context files), and supplementary resources',
-    filter: p => p.startsWith('resources/')
-  },
-  {
-    slug: 'playgrounds',
-    label: 'Playgrounds',
-    blurb: 'Interactive playground documentation',
-    filter: p => p.startsWith('playgrounds/')
-  }
+  // Excluded: resources/ contains only a list of external JSON URLs; no actionable content for AI tools.
+  // {
+  //   slug: 'resources',
+  //   label: 'Resources',
+  //   blurb: 'Placeholder files (storefront labels for drop-in components) and supplementary resources',
+  //   filter: p => p.startsWith('resources/')
+  // },
+  // Excluded: playgrounds/ pages wrap an interactive GraphiQL UI that renders nothing meaningful as text.
+  // {
+  //   slug: 'playgrounds',
+  //   label: 'Playgrounds',
+  //   blurb: 'Interactive playground documentation',
+  //   filter: p => p.startsWith('playgrounds/')
+  // }
 ];
 
 function shouldAddTrailingSlash(urlPath) {
@@ -647,6 +733,65 @@ function unwrapTableBlocks(content) {
   return content.replace(/<TableWrapper\b[^>]*>([\s\S]*?)<\/TableWrapper>/g, '$1');
 }
 
+/**
+ * Extract plain text from an HTML cell, stripping all tags and decoding common entities.
+ * Input is trusted internal MDX (no user-supplied HTML); output is a plain-text .txt file
+ * consumed by LLMs, never rendered in a browser — CodeQL sanitization heuristics don't apply.
+ */
+function cellText(html) {
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+}
+
+/** Convert HTML tables to Markdown pipe tables. */
+function convertHtmlTablesToMarkdown(content) {
+  return content.replace(/<table[\s\S]*?<\/table>/gi, (tableHtml) => {
+    const rows = [];
+    const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    while ((rowMatch = rowPattern.exec(tableHtml)) !== null) {
+      const cells = [];
+      const cellPattern = /<t[dh]([^>]*)>([\s\S]*?)<\/t[dh]>/gi;
+      let cellMatch;
+      while ((cellMatch = cellPattern.exec(rowMatch[1])) !== null) {
+        const attrs = cellMatch[1];
+        const colspanMatch = attrs.match(/colspan=["']?(\d+)["']?/i);
+        const colspan = colspanMatch ? parseInt(colspanMatch[1], 10) : 1;
+        cells.push({ text: cellText(cellMatch[2]), colspan });
+      }
+      if (cells.length > 0) rows.push(cells);
+    }
+
+    if (rows.length === 0) return tableHtml;
+
+    // Determine column count from the widest row
+    const colCount = Math.max(2, ...rows.map(r => r.reduce((s, c) => s + c.colspan, 0)));
+
+    const lines = [];
+    for (let i = 0; i < rows.length; i++) {
+      // Expand colspan cells into empty sibling columns
+      const expanded = [];
+      for (const cell of rows[i]) {
+        expanded.push(cell.text);
+        for (let j = 1; j < cell.colspan; j++) expanded.push('');
+      }
+      while (expanded.length < colCount) expanded.push('');
+      lines.push('| ' + expanded.join(' | ') + ' |');
+      // Separator after header row
+      if (i === 0) lines.push('| ' + Array(colCount).fill('---').join(' | ') + ' |');
+    }
+
+    return '\n\n' + lines.join('\n') + '\n\n';
+  });
+}
+
 function unwrapTaskBlocks(content) {
   return content.replace(/<Tasks>([\s\S]*?)<\/Tasks>/g, (_, inner) => {
     let step = 0;
@@ -675,6 +820,7 @@ function stripMdxArtifacts(content) {
   let result = content;
   result = unwrapAsideBlocks(result);
   result = unwrapTableBlocks(result);
+  result = convertHtmlTablesToMarkdown(result);
   result = unwrapTaskBlocks(result);
   result = unwrapSimpleBlockWrappers(result);
   result = convertIframesToText(result);
@@ -843,15 +989,25 @@ ${thematic}
   writeFileSync(OUTPUT_LLMSTXT, body, 'utf-8');
 }
 
+// Paths intentionally excluded from all bundles (content not useful for AI tools).
+const COVERAGE_EXCLUSIONS = ['videos/', 'resources/', 'playgrounds/'];
+
 function validateCoverage(allFiles) {
   const paths = allFiles.map(f => f.relativePath);
-  const uncovered = paths.filter(p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)));
+  const uncovered = paths.filter(
+    p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)) && !COVERAGE_EXCLUSIONS.some(e => p.startsWith(e))
+  );
   if (uncovered.length > 0) {
     console.warn(
       'Warning: some docs are not covered by any _llms-txt bundle filter:',
       uncovered.slice(0, 20),
       uncovered.length > 20 ? `... (+${uncovered.length - 20} more)` : ''
     );
+  }
+  for (const bundle of LLMS_TXT_BUNDLES) {
+    if (!paths.some(p => bundle.filter(p))) {
+      console.warn(`Warning: bundle "${bundle.slug}" matches zero documentation files`);
+    }
   }
 }
 
