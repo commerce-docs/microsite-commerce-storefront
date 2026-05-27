@@ -827,6 +827,7 @@ export function generateSidebar() {
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
             { label: 'Using Content and Commerce Blocks', link: '/merchants/quick-start/content-commerce-blocks/' },
+            { label: 'Authoring Commerce blocks', link: '/merchants/quick-start/authoring-commerce-blocks/' },
             { label: 'How block tables work', link: '/merchants/quick-start/block-tables/' },
             { label: 'Page Metadata', link: '/merchants/quick-start/page-metadata/' },
             { label: 'Section Metadata', link: '/merchants/quick-start/section-metadata/' },
