@@ -832,6 +832,7 @@ export function generateSidebar() {
             { label: 'Page Metadata', link: '/merchants/quick-start/page-metadata/' },
             { label: 'Section Metadata', link: '/merchants/quick-start/section-metadata/' },
             { label: 'Labels and Placeholders', link: '/merchants/quick-start/labels-and-placeholders/' },
+            { label: 'Placeholder sheets', link: '/merchants/quick-start/placeholder-sheets/' },
           ],
         },
         {
