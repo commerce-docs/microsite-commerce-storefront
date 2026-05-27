@@ -716,21 +716,22 @@ function auditDropin(
 
   // --- Events ---
   const eventsFile = micrositeDocPath(dropinKey, "events.mdx");
+
+  // Events that this drop-in emits — must be documented (excluding SDK-level events
+  // which have their own central documentation page).
+  const emittedEvents = new Set(
+    events
+      .filter(
+        (e) =>
+          !sdkEvents.has(e.name) &&
+          e.emittedBy.some((b) => b.dropin === dropinKey),
+      )
+      .map((e) => e.name),
+  );
+
   if (existsSync(eventsFile)) {
     const mdxContent = readFileSync(eventsFile, "utf8");
     const docEvents = parseMdxEvents(mdxContent);
-
-    // Events that this drop-in emits — must be documented (excluding SDK-level events
-    // which have their own central documentation page).
-    const emittedEvents = new Set(
-      events
-        .filter(
-          (e) =>
-            !sdkEvents.has(e.name) &&
-            e.emittedBy.some((b) => b.dropin === dropinKey),
-        )
-        .map((e) => e.name),
-    );
 
     // All events related to this drop-in (emitted or consumed) — valid to document.
     const relatedEvents = new Set(
@@ -759,6 +760,10 @@ function auditDropin(
       ) {
         gaps.phantomEvents.push({ event: ev, reason: "phantom" });
       }
+    }
+  } else if (emittedEvents.size > 0) {
+    for (const ev of emittedEvents) {
+      gaps.missingEvents.push({ event: ev, reason: "missing" });
     }
   }
 
