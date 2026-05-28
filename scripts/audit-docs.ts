@@ -33,73 +33,67 @@
  * Exits 1 when gaps are found, 0 when documentation is in sync.
  */
 
-import { readFileSync, existsSync, writeFileSync, unlinkSync } from "fs";
-import { join, resolve } from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { readFileSync, existsSync, writeFileSync, unlinkSync } from 'fs';
+import { join, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = resolve(SCRIPT_DIR, "..");
+const PROJECT_ROOT = resolve(SCRIPT_DIR, '..');
 
 // ---------------------------------------------------------------------------
 // CLI args
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
-const micrositeArgIdx = args.indexOf("--microsite-path");
+const micrositeArgIdx = args.indexOf('--microsite-path');
 if (micrositeArgIdx !== -1 && args[micrositeArgIdx + 1] === undefined) {
-  console.error("[audit-docs] Error: --microsite-path requires a value.");
+  console.error('[audit-docs] Error: --microsite-path requires a value.');
   process.exit(1);
 }
-const MICROSITE_PATH = resolve(
-  micrositeArgIdx !== -1
-    ? args[micrositeArgIdx + 1]
-    : PROJECT_ROOT,
-);
+const MICROSITE_PATH = resolve(micrositeArgIdx !== -1 ? args[micrositeArgIdx + 1] : PROJECT_ROOT);
 
-const registryArgIdx = args.indexOf("--registry-path");
+const registryArgIdx = args.indexOf('--registry-path');
 if (registryArgIdx !== -1 && args[registryArgIdx + 1] === undefined) {
-  console.error("[audit-docs] Error: --registry-path requires a value.");
+  console.error('[audit-docs] Error: --registry-path requires a value.');
   process.exit(1);
 }
 const REGISTRY_PATH = resolve(
   registryArgIdx !== -1
     ? args[registryArgIdx + 1]
-    : join(PROJECT_ROOT, "node_modules", "@dropins", "mcp", "dist", "registry"),
+    : join(PROJECT_ROOT, 'node_modules', '@dropins', 'mcp', 'dist', 'registry')
 );
 
-const outputArgIdx = args.indexOf("--output-path");
+const outputArgIdx = args.indexOf('--output-path');
 if (outputArgIdx !== -1 && args[outputArgIdx + 1] === undefined) {
-  console.error("[audit-docs] Error: --output-path requires a value.");
+  console.error('[audit-docs] Error: --output-path requires a value.');
   process.exit(1);
 }
 const OUTPUT_PATH =
-  outputArgIdx !== -1
-    ? resolve(args[outputArgIdx + 1])
-    : join(MICROSITE_PATH, "DOCS-GAPS.md");
+  outputArgIdx !== -1 ? resolve(args[outputArgIdx + 1]) : join(MICROSITE_PATH, 'DOCS-GAPS.md');
 
 // ---------------------------------------------------------------------------
 // Drop-in name → microsite path mapping
 // ---------------------------------------------------------------------------
 
 const DROPIN_PATH_MAP: Record<string, string> = {
-  "storefront-account": "dropins/user-account",
-  "storefront-auth": "dropins/user-auth",
-  "storefront-cart": "dropins/cart",
-  "storefront-checkout": "dropins/checkout",
-  "storefront-order": "dropins/order",
-  "storefront-payment-services": "dropins/payment-services",
-  "storefront-pdp": "dropins/product-details",
-  "storefront-personalization": "dropins/personalization",
-  "storefront-recommendations": "dropins/recommendations",
-  "storefront-product-discovery": "dropins/product-discovery",
-  "storefront-wishlist": "dropins/wishlist",
-  "storefront-company-management": "dropins-b2b/company-management",
-  "storefront-company-switcher": "dropins-b2b/company-switcher",
-  "storefront-purchase-order": "dropins-b2b/purchase-order",
-  "storefront-quick-order": "dropins-b2b/quick-order",
-  "storefront-quote-management": "dropins-b2b/quote-management",
-  "storefront-requisition-list": "dropins-b2b/requisition-list",
+  'storefront-account': 'dropins/user-account',
+  'storefront-auth': 'dropins/user-auth',
+  'storefront-cart': 'dropins/cart',
+  'storefront-checkout': 'dropins/checkout',
+  'storefront-order': 'dropins/order',
+  'storefront-payment-services': 'dropins/payment-services',
+  'storefront-pdp': 'dropins/product-details',
+  'storefront-personalization': 'dropins/personalization',
+  'storefront-recommendations': 'dropins/recommendations',
+  'storefront-product-discovery': 'dropins/product-discovery',
+  'storefront-wishlist': 'dropins/wishlist',
+  'storefront-company-management': 'dropins-b2b/company-management',
+  'storefront-company-switcher': 'dropins-b2b/company-switcher',
+  'storefront-purchase-order': 'dropins-b2b/purchase-order',
+  'storefront-quick-order': 'dropins-b2b/quick-order',
+  'storefront-quote-management': 'dropins-b2b/quote-management',
+  'storefront-requisition-list': 'dropins-b2b/requisition-list',
 };
 
 // ---------------------------------------------------------------------------
@@ -163,29 +157,29 @@ interface PropGap {
   container: string;
   prop: string;
   type?: string;
-  reason: "missing" | "phantom";
+  reason: 'missing' | 'phantom';
 }
 
 interface FunctionGap {
   fn: string;
-  reason: "missing" | "phantom";
+  reason: 'missing' | 'phantom';
 }
 
 interface EventGap {
   event: string;
-  reason: "missing" | "phantom";
+  reason: 'missing' | 'phantom';
 }
 
 interface I18nGap {
   key: string;
   value?: string;
-  reason: "missing" | "phantom";
+  reason: 'missing' | 'phantom';
 }
 
 interface SlotGap {
   container: string;
   slot: string;
-  reason: "missing" | "phantom";
+  reason: 'missing' | 'phantom';
 }
 
 interface DropinGaps {
@@ -219,18 +213,14 @@ interface SdkEventGaps {
 function isSdkEvent(e: EventEntry): boolean {
   if (e.emittedBy.length > 0) return false;
   const uniqueConsumers = new Set(
-    e.consumedBy
-      .filter((b) => b.dropin.startsWith("storefront-"))
-      .map((b) => b.dropin),
+    e.consumedBy.filter((b) => b.dropin.startsWith('storefront-')).map((b) => b.dropin)
   );
   return uniqueConsumers.size >= 2;
 }
 
 /** PascalCase → kebab-case */
 function toKebab(name: string): string {
-  return name
-    .replace(/([A-Z])/g, (m, c, idx) => (idx === 0 ? c : "-" + c))
-    .toLowerCase();
+  return name.replace(/([A-Z])/g, (m, c, idx) => (idx === 0 ? c : '-' + c)).toLowerCase();
 }
 
 /**
@@ -281,7 +271,7 @@ function parseMdxProps(content: string): Set<string> {
         continue;
       }
       // Skip slot entries (contain brackets like slots[AddressFormInput_...])
-      if (name.includes("[") || name.includes("]")) continue;
+      if (name.includes('[') || name.includes(']')) continue;
       // Only capture valid identifier-like names
       if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
         props.add(name);
@@ -306,13 +296,11 @@ function parseMdxFunctions(content: string): Set<string> {
   // Isolate the overview section: everything before the first `## ` heading
   // that follows a blank line (i.e. a top-level section break for function details).
   const firstSectionBreak = content.search(/\n## [a-z]/);
-  const overviewSection =
-    firstSectionBreak > 0 ? content.slice(0, firstSectionBreak) : content;
+  const overviewSection = firstSectionBreak > 0 ? content.slice(0, firstSectionBreak) : content;
 
   // Match rows like: | [`functionName`](#anchor) | description |
   // Only within the overview table block that starts with a `| Function |` header.
-  const tableRe =
-    /\|\s*Function\s*\|[^\n]*\n\|[-| ]+\|([\s\S]*?)(?=\n##|\n<\/TableWrapper>|$)/i;
+  const tableRe = /\|\s*Function\s*\|[^\n]*\n\|[-| ]+\|([\s\S]*?)(?=\n##|\n<\/TableWrapper>|$)/i;
   const tableMatch = tableRe.exec(overviewSection);
   if (!tableMatch) return fns;
 
@@ -351,24 +339,14 @@ function parseMdxEvents(content: string): Set<string> {
 }
 
 /** Recursively flattens a nested JSON object into dot-notation key-value pairs. */
-function flattenKeys(
-  obj: Record<string, unknown>,
-  prefix = "",
-): Record<string, string> {
+function flattenKeys(obj: Record<string, unknown>, prefix = ''): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       result[fullKey] = value;
-    } else if (
-      value !== null &&
-      typeof value === "object" &&
-      !Array.isArray(value)
-    ) {
-      Object.assign(
-        result,
-        flattenKeys(value as Record<string, unknown>, fullKey),
-      );
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(result, flattenKeys(value as Record<string, unknown>, fullKey));
     }
   }
   return result;
@@ -432,7 +410,7 @@ function parseMdxSlots(content: string): Map<string, Set<string>> {
     const slotsStr = rowMatch[2].trim();
     const slots = new Set<string>();
 
-    if (slotsStr.toLowerCase() !== "none" && slotsStr !== "") {
+    if (slotsStr.toLowerCase() !== 'none' && slotsStr !== '') {
       // Slot names are backtick-quoted and comma-separated.
       const slotRe = /`([^`]+)`/g;
       let slotMatch: RegExpExecArray | null;
@@ -447,20 +425,13 @@ function parseMdxSlots(content: string): Map<string, Set<string>> {
 }
 
 function readJson<T>(path: string): T {
-  return JSON.parse(readFileSync(path, "utf8")) as T;
+  return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
 function micrositeDocPath(dropinKey: string, ...segments: string[]): string {
   const micrositePath = DROPIN_PATH_MAP[dropinKey];
-  if (!micrositePath) return "";
-  return join(
-    MICROSITE_PATH,
-    "src",
-    "content",
-    "docs",
-    micrositePath,
-    ...segments,
-  );
+  if (!micrositePath) return '';
+  return join(MICROSITE_PATH, 'src', 'content', 'docs', micrositePath, ...segments);
 }
 
 /**
@@ -489,25 +460,20 @@ function parseSdkEventNames(content: string): Set<string> {
  *    registry (any emitter or consumer). This catches stale references even if the
  *    event is not strictly "SDK-level".
  */
-function auditSdkEvents(
-  allEvents: EventEntry[],
-  micrositePath: string,
-): SdkEventGaps {
+function auditSdkEvents(allEvents: EventEntry[], micrositePath: string): SdkEventGaps {
   const gaps: SdkEventGaps = { missingFromDocs: [], phantomInDocs: [] };
 
   const commonEventsFile = join(
     micrositePath,
-    "src",
-    "content",
-    "docs",
-    "dropins",
-    "all",
-    "common-events.mdx",
+    'src',
+    'content',
+    'docs',
+    'dropins',
+    'all',
+    'common-events.mdx'
   );
 
-  const sdkRegistryEvents = new Set(
-    allEvents.filter(isSdkEvent).map((e) => e.name),
-  );
+  const sdkRegistryEvents = new Set(allEvents.filter(isSdkEvent).map((e) => e.name));
 
   // All event names that exist anywhere in the registry — used for phantom detection.
   const allRegistryEventNames = new Set(allEvents.map((e) => e.name));
@@ -519,7 +485,7 @@ function auditSdkEvents(
     return gaps;
   }
 
-  const content = readFileSync(commonEventsFile, "utf8");
+  const content = readFileSync(commonEventsFile, 'utf8');
   const docEvents = parseSdkEventNames(content);
 
   // Missing: SDK-level events not documented in common-events.mdx.
@@ -549,8 +515,8 @@ function auditSdkEvents(
  * Key format: "dropin-key/ContainerName/propName"
  */
 const KNOWN_PROP_OMISSIONS = new Set([
-  "storefront-order/CustomerDetails/withHeader",
-  "storefront-account/AddressForm/handleRenderForm",
+  'storefront-order/CustomerDetails/withHeader',
+  'storefront-account/AddressForm/handleRenderForm',
 ]);
 
 /**
@@ -561,7 +527,7 @@ const KNOWN_PROP_OMISSIONS = new Set([
  * Key format: "dropin-key/functionName"
  */
 const KNOWN_FUNCTION_ALIASES = new Set([
-  "storefront-checkout/setShippingMethodsOnCart", // alias of setShippingMethods
+  'storefront-checkout/setShippingMethodsOnCart', // alias of setShippingMethods
 ]);
 
 /**
@@ -570,9 +536,7 @@ const KNOWN_FUNCTION_ALIASES = new Set([
  * should not be flagged as phantom until the extractor is fixed.
  * Key format: "dropin-key/name"
  */
-const KNOWN_EXTRACTOR_GAPS_FUNCTIONS = new Set([
-  "storefront-company-management/initialize",
-]);
+const KNOWN_EXTRACTOR_GAPS_FUNCTIONS = new Set(['storefront-company-management/initialize']);
 
 const KNOWN_EXTRACTOR_GAPS_EVENTS = new Set<string>();
 
@@ -594,7 +558,7 @@ function auditDropin(
   functions: FunctionEntry[],
   events: EventEntry[],
   sdkEvents: Set<string>,
-  i18nKeys: Record<string, string>,
+  i18nKeys: Record<string, string>
 ): DropinGaps {
   const gaps: DropinGaps = {
     missingContainerPages: [],
@@ -613,10 +577,10 @@ function auditDropin(
   // Props that are framework-injected by Container<T> or are HTML/styling
   // conventions that do not belong in the registry-vs-docs diff.
   const FRAMEWORK_PROPS = new Set([
-    "initialData",
-    "children",
-    "scope",
-    "className", // HTML attribute documented by convention, not in registry
+    'initialData',
+    'children',
+    'scope',
+    'className', // HTML attribute documented by convention, not in registry
   ]);
 
   // --- Props per container ---
@@ -625,29 +589,25 @@ function auditDropin(
     container.props = Object.fromEntries(
       Object.entries(container.props).filter(
         ([prop]) =>
-          !prop.startsWith("__test") &&
-          !prop.startsWith("_test") &&
-          !FRAMEWORK_PROPS.has(prop),
-      ),
+          !prop.startsWith('__test') && !prop.startsWith('_test') && !FRAMEWORK_PROPS.has(prop)
+      )
     );
     const containerFile = micrositeDocPath(
       dropinKey,
-      "containers",
-      `${toKebab(container.name)}.mdx`,
+      'containers',
+      `${toKebab(container.name)}.mdx`
     );
 
     if (!existsSync(containerFile)) {
       // Entire container page is missing — record once instead of flooding props.
-      const hasContent =
-        Object.keys(container.props).length > 0 ||
-        container.slotNames.length > 0;
+      const hasContent = Object.keys(container.props).length > 0 || container.slotNames.length > 0;
       if (hasContent) {
         gaps.missingContainerPages.push(container.name);
       }
       continue;
     }
 
-    const mdxContent = readFileSync(containerFile, "utf8");
+    const mdxContent = readFileSync(containerFile, 'utf8');
     const docProps = parseMdxProps(mdxContent);
     const registryProps = new Set(Object.keys(container.props));
 
@@ -661,20 +621,20 @@ function auditDropin(
           container: container.name,
           prop,
           type: container.props[prop],
-          reason: "missing",
+          reason: 'missing',
         });
       }
     }
 
     // Props in docs but not in registry (phantom).
     // Skip framework-injected and slot props — they may appear in docs by convention.
-    const PHANTOM_SKIP = new Set([...FRAMEWORK_PROPS, "slots", "className"]);
+    const PHANTOM_SKIP = new Set([...FRAMEWORK_PROPS, 'slots', 'className']);
     for (const prop of docProps) {
       if (!registryProps.has(prop) && !PHANTOM_SKIP.has(prop)) {
         gaps.phantomProps.push({
           container: container.name,
           prop,
-          reason: "phantom",
+          reason: 'phantom',
         });
       }
     }
@@ -686,54 +646,47 @@ function auditDropin(
   // canonical function name.
   const publicFunctions = functions.filter(
     (f) =>
-      !f.name.startsWith("_") &&
+      !f.name.startsWith('_') &&
       !isEnumEntry(f) &&
-      !KNOWN_FUNCTION_ALIASES.has(`${dropinKey}/${f.name}`),
+      !KNOWN_FUNCTION_ALIASES.has(`${dropinKey}/${f.name}`)
   );
 
-  const functionsFile = micrositeDocPath(dropinKey, "functions.mdx");
+  const functionsFile = micrositeDocPath(dropinKey, 'functions.mdx');
   if (existsSync(functionsFile)) {
-    const mdxContent = readFileSync(functionsFile, "utf8");
+    const mdxContent = readFileSync(functionsFile, 'utf8');
     const docFunctions = parseMdxFunctions(mdxContent);
     const registryFunctions = new Set(publicFunctions.map((f) => f.name));
 
     for (const fn of registryFunctions) {
       if (!docFunctions.has(fn)) {
-        gaps.missingFunctions.push({ fn, reason: "missing" });
+        gaps.missingFunctions.push({ fn, reason: 'missing' });
       }
     }
 
     for (const fn of docFunctions) {
-      if (
-        !registryFunctions.has(fn) &&
-        !KNOWN_EXTRACTOR_GAPS_FUNCTIONS.has(`${dropinKey}/${fn}`)
-      ) {
-        gaps.phantomFunctions.push({ fn, reason: "phantom" });
+      if (!registryFunctions.has(fn) && !KNOWN_EXTRACTOR_GAPS_FUNCTIONS.has(`${dropinKey}/${fn}`)) {
+        gaps.phantomFunctions.push({ fn, reason: 'phantom' });
       }
     }
   } else if (publicFunctions.length > 0) {
     for (const fn of publicFunctions) {
-      gaps.missingFunctions.push({ fn: fn.name, reason: "missing" });
+      gaps.missingFunctions.push({ fn: fn.name, reason: 'missing' });
     }
   }
 
   // --- Events ---
-  const eventsFile = micrositeDocPath(dropinKey, "events.mdx");
+  const eventsFile = micrositeDocPath(dropinKey, 'events.mdx');
 
   // Events that this drop-in emits — must be documented (excluding SDK-level events
   // which have their own central documentation page).
   const emittedEvents = new Set(
     events
-      .filter(
-        (e) =>
-          !sdkEvents.has(e.name) &&
-          e.emittedBy.some((b) => b.dropin === dropinKey),
-      )
-      .map((e) => e.name),
+      .filter((e) => !sdkEvents.has(e.name) && e.emittedBy.some((b) => b.dropin === dropinKey))
+      .map((e) => e.name)
   );
 
   if (existsSync(eventsFile)) {
-    const mdxContent = readFileSync(eventsFile, "utf8");
+    const mdxContent = readFileSync(eventsFile, 'utf8');
     const docEvents = parseMdxEvents(mdxContent);
 
     // All events related to this drop-in (emitted or consumed) — valid to document.
@@ -743,67 +696,61 @@ function auditDropin(
           (e) =>
             !sdkEvents.has(e.name) &&
             (e.emittedBy.some((b) => b.dropin === dropinKey) ||
-              e.consumedBy.some((b) => b.dropin === dropinKey)),
+              e.consumedBy.some((b) => b.dropin === dropinKey))
         )
-        .map((e) => e.name),
+        .map((e) => e.name)
     );
 
     // Missing: emitted by this dropin but not documented.
     for (const ev of emittedEvents) {
       if (!docEvents.has(ev)) {
-        gaps.missingEvents.push({ event: ev, reason: "missing" });
+        gaps.missingEvents.push({ event: ev, reason: 'missing' });
       }
     }
 
     // Phantom: documented but completely unrelated to this dropin in the registry.
     for (const ev of docEvents) {
-      if (
-        !relatedEvents.has(ev) &&
-        !KNOWN_EXTRACTOR_GAPS_EVENTS.has(`${dropinKey}/${ev}`)
-      ) {
-        gaps.phantomEvents.push({ event: ev, reason: "phantom" });
+      if (!relatedEvents.has(ev) && !KNOWN_EXTRACTOR_GAPS_EVENTS.has(`${dropinKey}/${ev}`)) {
+        gaps.phantomEvents.push({ event: ev, reason: 'phantom' });
       }
     }
   } else if (emittedEvents.size > 0) {
     for (const ev of emittedEvents) {
-      gaps.missingEvents.push({ event: ev, reason: "missing" });
+      gaps.missingEvents.push({ event: ev, reason: 'missing' });
     }
   }
 
   // --- Slots ---
-  const slotsFile = micrositeDocPath(dropinKey, "slots.mdx");
+  const slotsFile = micrositeDocPath(dropinKey, 'slots.mdx');
 
   // Containers already recorded as missing their whole page — skip their slots
   // to avoid double-reporting. The single missingContainerPages entry is enough.
   const missingPageSet = new Set(gaps.missingContainerPages);
 
   const containersWithSlots = containers.filter(
-    (c) => c.slotNames.length > 0 && !missingPageSet.has(c.name),
+    (c) => c.slotNames.length > 0 && !missingPageSet.has(c.name)
   );
 
   // Full registry lookup: containerName → Set<slotName> (covers ALL containers,
   // including those with 0 slots, so phantom detection is complete).
-  const registrySlotMap = new Map(
-    containers.map((c) => [c.name, new Set(c.slotNames)]),
-  );
+  const registrySlotMap = new Map(containers.map((c) => [c.name, new Set(c.slotNames)]));
 
   if (existsSync(slotsFile)) {
-    const mdxContent = readFileSync(slotsFile, "utf8");
+    const mdxContent = readFileSync(slotsFile, 'utf8');
     const docSlots = parseMdxSlots(mdxContent);
 
     // Missing: slots in registry but absent from docs.
     // Containers already in missingContainerPages are excluded above.
     for (const container of containersWithSlots) {
       const registrySlots = registrySlotMap.get(container.name)!;
-      const docContainerSlots =
-        docSlots.get(container.name) ?? new Set<string>();
+      const docContainerSlots = docSlots.get(container.name) ?? new Set<string>();
 
       for (const slot of registrySlots) {
         if (!docContainerSlots.has(slot)) {
           gaps.missingSlots.push({
             container: container.name,
             slot,
-            reason: "missing",
+            reason: 'missing',
           });
         }
       }
@@ -814,20 +761,17 @@ function auditDropin(
     //   1. Stale container rows (container renamed/removed from registry)
     //   2. Containers in registry with 0 slots but still listed in docs
     for (const [containerName, docContainerSlots] of docSlots) {
-      const registrySlots =
-        registrySlotMap.get(containerName) ?? new Set<string>();
+      const registrySlots = registrySlotMap.get(containerName) ?? new Set<string>();
 
       for (const slot of docContainerSlots) {
         if (
           !registrySlots.has(slot) &&
-          !KNOWN_EXTRACTOR_GAPS_SLOTS.has(
-            `${dropinKey}/${containerName}/${slot}`,
-          )
+          !KNOWN_EXTRACTOR_GAPS_SLOTS.has(`${dropinKey}/${containerName}/${slot}`)
         ) {
           gaps.phantomSlots.push({
             container: containerName,
             slot,
-            reason: "phantom",
+            reason: 'phantom',
           });
         }
       }
@@ -838,14 +782,14 @@ function auditDropin(
         gaps.missingSlots.push({
           container: container.name,
           slot,
-          reason: "missing",
+          reason: 'missing',
         });
       }
     }
   }
 
   // --- Dictionary / i18n keys ---
-  const dictionaryFile = micrositeDocPath(dropinKey, "dictionary.mdx");
+  const dictionaryFile = micrositeDocPath(dropinKey, 'dictionary.mdx');
   const registryI18nKeys = new Set(Object.keys(i18nKeys));
 
   if (registryI18nKeys.size > 0) {
@@ -854,11 +798,11 @@ function auditDropin(
         gaps.missingI18nKeys.push({
           key,
           value: i18nKeys[key],
-          reason: "missing",
+          reason: 'missing',
         });
       }
     } else {
-      const mdxContent = readFileSync(dictionaryFile, "utf8");
+      const mdxContent = readFileSync(dictionaryFile, 'utf8');
       const docKeys = parseMdxDictionaryKeys(mdxContent);
 
       for (const key of registryI18nKeys) {
@@ -866,14 +810,14 @@ function auditDropin(
           gaps.missingI18nKeys.push({
             key,
             value: i18nKeys[key],
-            reason: "missing",
+            reason: 'missing',
           });
         }
       }
 
       for (const key of docKeys) {
         if (!registryI18nKeys.has(key)) {
-          gaps.phantomI18nKeys.push({ key, reason: "phantom" });
+          gaps.phantomI18nKeys.push({ key, reason: 'phantom' });
         }
       }
     }
@@ -902,52 +846,46 @@ function hasGaps(gaps: DropinGaps): boolean {
   );
 }
 
-function renderGapsReport(
-  allGaps: Record<string, DropinGaps>,
-  sdkGaps: SdkEventGaps,
-): string {
-  const date = new Date().toISOString().split("T")[0];
+function renderGapsReport(allGaps: Record<string, DropinGaps>, sdkGaps: SdkEventGaps): string {
+  const date = new Date().toISOString().split('T')[0];
   const lines: string[] = [
     `# Documentation Gaps — Storefront Drop-ins`,
     `> Generated: ${date}`,
     `> Source: dropins-mcp registry vs microsite MDX files`,
-    "",
+    '',
   ];
 
   let totalGaps = 0;
 
   // --- SDK / common events section ---
-  const sdkTotal =
-    sdkGaps.missingFromDocs.length + sdkGaps.phantomInDocs.length;
+  const sdkTotal = sdkGaps.missingFromDocs.length + sdkGaps.phantomInDocs.length;
   if (sdkTotal > 0) {
     totalGaps += sdkTotal;
     lines.push(`## common-events.mdx (${sdkTotal} gaps)`);
-    lines.push("");
+    lines.push('');
     if (sdkGaps.missingFromDocs.length > 0) {
-      lines.push("### Missing SDK Events");
+      lines.push('### Missing SDK Events');
       lines.push(
-        "Events present in the registry (no storefront-* emitter) but absent from `dropins/all/common-events.mdx`.",
+        'Events present in the registry (no storefront-* emitter) but absent from `dropins/all/common-events.mdx`.'
       );
-      lines.push("");
-      lines.push("| Event |");
-      lines.push("|---|");
+      lines.push('');
+      lines.push('| Event |');
+      lines.push('|---|');
       for (const ev of sdkGaps.missingFromDocs) {
         lines.push(`| \`${ev}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
     if (sdkGaps.phantomInDocs.length > 0) {
-      lines.push("### Phantom SDK Events");
-      lines.push(
-        "Events documented in `common-events.mdx` but absent from the registry.",
-      );
-      lines.push("");
-      lines.push("| Event |");
-      lines.push("|---|");
+      lines.push('### Phantom SDK Events');
+      lines.push('Events documented in `common-events.mdx` but absent from the registry.');
+      lines.push('');
+      lines.push('| Event |');
+      lines.push('|---|');
       for (const ev of sdkGaps.phantomInDocs) {
         lines.push(`| \`${ev}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
   }
 
@@ -969,165 +907,155 @@ function renderGapsReport(
 
     totalGaps += dropinTotal;
     lines.push(`## ${dropin} (${dropinTotal} gaps)`);
-    lines.push("");
+    lines.push('');
 
     if (gaps.missingContainerPages.length > 0) {
-      lines.push("### Missing Container Pages");
+      lines.push('### Missing Container Pages');
       lines.push(
-        "Containers present in the registry but with no corresponding MDX documentation page.",
+        'Containers present in the registry but with no corresponding MDX documentation page.'
       );
-      lines.push("");
-      lines.push("| Container |");
-      lines.push("|---|");
+      lines.push('');
+      lines.push('| Container |');
+      lines.push('|---|');
       for (const name of gaps.missingContainerPages) {
         lines.push(`| \`${name}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.missingSlots.length > 0) {
-      lines.push("### Missing Slots");
-      lines.push("Slots present in the registry but absent from slots.mdx.");
-      lines.push("");
-      lines.push("| Container | Slot |");
-      lines.push("|---|---|");
+      lines.push('### Missing Slots');
+      lines.push('Slots present in the registry but absent from slots.mdx.');
+      lines.push('');
+      lines.push('| Container | Slot |');
+      lines.push('|---|---|');
       for (const { container, slot } of gaps.missingSlots) {
         lines.push(`| \`${container}\` | \`${slot}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.phantomSlots.length > 0) {
-      lines.push("### Phantom Slots");
-      lines.push(
-        "Slots documented in slots.mdx but not found in the registry.",
-      );
-      lines.push("");
-      lines.push("| Container | Slot |");
-      lines.push("|---|---|");
+      lines.push('### Phantom Slots');
+      lines.push('Slots documented in slots.mdx but not found in the registry.');
+      lines.push('');
+      lines.push('| Container | Slot |');
+      lines.push('|---|---|');
       for (const { container, slot } of gaps.phantomSlots) {
         lines.push(`| \`${container}\` | \`${slot}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.missingProps.length > 0) {
-      lines.push("### Missing Props");
-      lines.push(
-        "Props present in the registry but absent from the container MDX file.",
-      );
-      lines.push("");
-      lines.push("| Container | Prop | Type |");
-      lines.push("|---|---|---|");
+      lines.push('### Missing Props');
+      lines.push('Props present in the registry but absent from the container MDX file.');
+      lines.push('');
+      lines.push('| Container | Prop | Type |');
+      lines.push('|---|---|---|');
       for (const { container, prop, type } of gaps.missingProps) {
-        lines.push(`| \`${container}\` | \`${prop}\` | \`${type ?? ""}\` |`);
+        lines.push(`| \`${container}\` | \`${prop}\` | \`${type ?? ''}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.phantomProps.length > 0) {
-      lines.push("### Phantom Props");
+      lines.push('### Phantom Props');
       lines.push(
-        "Props documented in MDX but not found in the registry. Verify whether these are valid props or should be removed.",
+        'Props documented in MDX but not found in the registry. Verify whether these are valid props or should be removed.'
       );
-      lines.push("");
-      lines.push("| Container | Prop |");
-      lines.push("|---|---|");
+      lines.push('');
+      lines.push('| Container | Prop |');
+      lines.push('|---|---|');
       for (const { container, prop } of gaps.phantomProps) {
         lines.push(`| \`${container}\` | \`${prop}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.missingFunctions.length > 0) {
-      lines.push("### Missing Functions");
-      lines.push(
-        "Functions present in the registry but absent from functions.mdx.",
-      );
-      lines.push("");
-      lines.push("| Function |");
-      lines.push("|---|");
+      lines.push('### Missing Functions');
+      lines.push('Functions present in the registry but absent from functions.mdx.');
+      lines.push('');
+      lines.push('| Function |');
+      lines.push('|---|');
       for (const { fn } of gaps.missingFunctions) {
         lines.push(`| \`${fn}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.phantomFunctions.length > 0) {
-      lines.push("### Phantom Functions");
-      lines.push("Functions documented in MDX but not found in the registry.");
-      lines.push("");
-      lines.push("| Function |");
-      lines.push("|---|");
+      lines.push('### Phantom Functions');
+      lines.push('Functions documented in MDX but not found in the registry.');
+      lines.push('');
+      lines.push('| Function |');
+      lines.push('|---|');
       for (const { fn } of gaps.phantomFunctions) {
         lines.push(`| \`${fn}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.missingEvents.length > 0) {
-      lines.push("### Missing Events");
-      lines.push("Events present in the registry but absent from events.mdx.");
-      lines.push("");
-      lines.push("| Event |");
-      lines.push("|---|");
+      lines.push('### Missing Events');
+      lines.push('Events present in the registry but absent from events.mdx.');
+      lines.push('');
+      lines.push('| Event |');
+      lines.push('|---|');
       for (const { event } of gaps.missingEvents) {
         lines.push(`| \`${event}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.phantomEvents.length > 0) {
-      lines.push("### Phantom Events");
-      lines.push("Events documented in MDX but not found in the registry.");
-      lines.push("");
-      lines.push("| Event |");
-      lines.push("|---|");
+      lines.push('### Phantom Events');
+      lines.push('Events documented in MDX but not found in the registry.');
+      lines.push('');
+      lines.push('| Event |');
+      lines.push('|---|');
       for (const { event } of gaps.phantomEvents) {
         lines.push(`| \`${event}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.missingI18nKeys.length > 0) {
-      lines.push("### Missing Dictionary Keys");
-      lines.push(
-        "i18n keys present in the registry but absent from dictionary.mdx.",
-      );
-      lines.push("");
-      lines.push("| Key | Default Value |");
-      lines.push("|---|---|");
+      lines.push('### Missing Dictionary Keys');
+      lines.push('i18n keys present in the registry but absent from dictionary.mdx.');
+      lines.push('');
+      lines.push('| Key | Default Value |');
+      lines.push('|---|---|');
       for (const { key, value } of gaps.missingI18nKeys) {
-        const escaped = (value ?? "").replace(/\|/g, "\\|");
+        const escaped = (value ?? '').replace(/\|/g, '\\|');
         lines.push(`| \`${key}\` | ${escaped} |`);
       }
-      lines.push("");
+      lines.push('');
     }
 
     if (gaps.phantomI18nKeys.length > 0) {
-      lines.push("### Phantom Dictionary Keys");
-      lines.push(
-        "i18n keys documented in dictionary.mdx but not found in the registry.",
-      );
-      lines.push("");
-      lines.push("| Key |");
-      lines.push("|---|");
+      lines.push('### Phantom Dictionary Keys');
+      lines.push('i18n keys documented in dictionary.mdx but not found in the registry.');
+      lines.push('');
+      lines.push('| Key |');
+      lines.push('|---|');
       for (const { key } of gaps.phantomI18nKeys) {
         lines.push(`| \`${key}\` |`);
       }
-      lines.push("");
+      lines.push('');
     }
   }
 
   if (totalGaps === 0) {
     lines.push(
-      "No documentation gaps found. All registry entries are reflected in the microsite docs.",
+      'No documentation gaps found. All registry entries are reflected in the microsite docs.'
     );
   } else {
-    lines.unshift(`> **Total gaps: ${totalGaps}**`, "");
+    lines.unshift(`> **Total gaps: ${totalGaps}**`, '');
   }
 
-  return lines.join("\n");
+  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -1143,7 +1071,7 @@ function main(): void {
   if (!existsSync(MICROSITE_PATH)) {
     process.stderr.write(
       `[audit-docs] ERROR: Microsite not found at ${MICROSITE_PATH}\n` +
-        `Pass --microsite-path <path> to override.\n`,
+        `Pass --microsite-path <path> to override.\n`
     );
     process.exit(2);
   }
@@ -1151,35 +1079,29 @@ function main(): void {
   if (!existsSync(REGISTRY_PATH)) {
     process.stderr.write(
       `[audit-docs] ERROR: Registry not found at ${REGISTRY_PATH}\n` +
-        `Pass --registry-path <path> to override, or install @dropins/mcp as a devDependency.\n`,
+        `Pass --registry-path <path> to override, or install @dropins/mcp as a devDependency.\n`
     );
     process.exit(2);
   }
 
-  const containersRegistry = readJson<ContainersRegistry>(
-    join(REGISTRY_PATH, "containers.json"),
-  );
+  const containersRegistry = readJson<ContainersRegistry>(join(REGISTRY_PATH, 'containers.json'));
   const apiFunctionsRegistry = readJson<ApiFunctionsRegistry>(
-    join(REGISTRY_PATH, "api-functions.json"),
+    join(REGISTRY_PATH, 'api-functions.json')
   );
-  const eventsRegistry = readJson<EventsRegistry>(
-    join(REGISTRY_PATH, "events.json"),
-  );
-  const i18nRegistry = readJson<I18nRegistry>(join(REGISTRY_PATH, "i18n.json"));
+  const eventsRegistry = readJson<EventsRegistry>(join(REGISTRY_PATH, 'events.json'));
+  const i18nRegistry = readJson<I18nRegistry>(join(REGISTRY_PATH, 'i18n.json'));
 
   const allEvents = eventsRegistry.events ?? [];
 
   // Derive SDK-level events at runtime (see isSdkEvent for the full criteria).
   const sdkEvents = new Set(allEvents.filter(isSdkEvent).map((e) => e.name));
 
-  log(
-    `SDK-level events (no storefront-* emitter): ${[...sdkEvents].join(", ") || "none"}`,
-  );
+  log(`SDK-level events (no storefront-* emitter): ${[...sdkEvents].join(', ') || 'none'}`);
 
   // Audit common-events.mdx against the derived SDK event set.
   const sdkGaps = auditSdkEvents(allEvents, MICROSITE_PATH);
   log(
-    `common-events.mdx: ${sdkGaps.missingFromDocs.length} missing, ${sdkGaps.phantomInDocs.length} phantom`,
+    `common-events.mdx: ${sdkGaps.missingFromDocs.length} missing, ${sdkGaps.phantomInDocs.length} phantom`
   );
 
   const allGaps: Record<string, DropinGaps> = {};
@@ -1194,7 +1116,7 @@ function main(): void {
     const i18nKeyCount = Object.keys(i18nKeys).length;
 
     log(
-      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${i18nKeyCount} i18n keys)`,
+      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${i18nKeyCount} i18n keys)`
     );
 
     allGaps[dropinKey] = auditDropin(
@@ -1203,7 +1125,7 @@ function main(): void {
       functions,
       allEvents,
       sdkEvents,
-      i18nKeys,
+      i18nKeys
     );
     totalDropinsAudited++;
   }
@@ -1212,12 +1134,11 @@ function main(): void {
 
   const report = renderGapsReport(allGaps, sdkGaps);
   const outputPath = OUTPUT_PATH;
-  const sdkHasGaps =
-    sdkGaps.missingFromDocs.length > 0 || sdkGaps.phantomInDocs.length > 0;
+  const sdkHasGaps = sdkGaps.missingFromDocs.length > 0 || sdkGaps.phantomInDocs.length > 0;
   const anyGaps = sdkHasGaps || Object.values(allGaps).some(hasGaps);
 
   if (anyGaps) {
-    writeFileSync(outputPath, report, "utf8");
+    writeFileSync(outputPath, report, 'utf8');
     log(`Gaps found — report written to ${outputPath}`);
     process.stdout.write(report);
     process.exit(1);
@@ -1226,7 +1147,7 @@ function main(): void {
     if (existsSync(outputPath)) {
       unlinkSync(outputPath);
     }
-    log("No documentation gaps found.");
+    log('No documentation gaps found.');
     process.exit(0);
   }
 }
