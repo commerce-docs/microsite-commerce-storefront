@@ -1028,7 +1028,7 @@ function renderGapsReport(allGaps: Record<string, DropinGaps>, sdkGaps: SdkEvent
       lines.push('| Key | Default Value |');
       lines.push('|---|---|');
       for (const { key, value } of gaps.missingI18nKeys) {
-        const escaped = (value ?? '').replace(/\|/g, '\\|');
+        const escaped = (value ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
         lines.push(`| \`${key}\` | ${escaped} |`);
       }
       lines.push('');
