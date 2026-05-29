@@ -1,0 +1,286 @@
+---
+title: Search redirects
+description: Learn how to configure search redirects so that specific query terms send shoppers directly to a target page instead of the standard search results.
+sidebar:
+  label: Search Redirects
+  order: 7
+prerequisites:
+  html: false
+  css: false
+  js: true
+  commerce: true
+time: "30 minutes"
+---
+
+import { Aside, Code, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Link from '@components/Link.astro';
+
+Search redirects let you map specific search terms to destination URLs. When a shopper types an exact match for a configured term, the storefront sends them directly to that URL instead of displaying search results. Business users manage the mapping in a spreadsheet — no developer involvement is needed.
+
+<Aside type="caution" title="Why not EDS's redirect sheet?">
+The [EDS redirect system](https://www.aem.live/docs/redirects) (<code>/redirects</code> spreadsheet) is path-only. It strips query strings before matching, so every URL that starts with `/search` collapses to the same path regardless of the `?q=` value — making it impossible to target individual search terms. Search term redirects must be handled client-side, in the browser, where the typed query is available.
+</Aside>
+
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- A content spreadsheet (`/search-redirects`) that maps search terms to destination URLs, managed by business users
+- A JavaScript utility module (`scripts/search-redirects.js`) that loads and caches the redirect map
+- An integration in your search results page block that intercepts matching queries before any search API calls are made
+- An optional integration in your header search input that redirects without navigating to `/search` first
+
+## Prerequisites
+
+Before starting this tutorial, make sure you have:
+
+- A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
+- A search results page powered by the [Product Discovery drop-in](/dropins/product-discovery/)
+- Access to author and publish content (DA.live, Google Docs, or SharePoint)
+- Familiarity with [customizing blocks](/boilerplate/customizing-blocks/) in your code repository
+
+## Overview
+
+The implementation has two layers:
+
+1. **Content layer** — A spreadsheet at the root of your site defines the redirect rules. Business users add, edit, or remove rows without touching code.
+2. **Code layer** — JavaScript in your search block fetches the spreadsheet, then checks the active query against it on every search page load.
+
+Two entry paths can bring a shopper to a search URL, and both need to be handled:
+
+- **Case A** — Shopper types a term in the header search box and submits. The browser navigates to `/search?q=<term>`.
+- **Case B** — Shopper opens a bookmarked or shared URL such as `/search?q=running`.
+
+Hook 1 (required, in your search page block) covers both cases. Hook 2 (optional, in your header block) improves the UX for Case A by redirecting before the browser ever navigates to `/search`.
+
+<Tasks>
+
+<Task>
+
+### Step 1: Create the search-redirects spreadsheet
+
+Create a new document named `search-redirects` at the root of your content folder (the same level as your homepage). Add a table with exactly two columns: **Search Term** and **Destination URL**.
+
+| Search Term | Destination URL |
+|---|---|
+| login | /customer/login |
+| clothes | /apparel |
+| inexpensive clothes | /apparel?page=1&sort=position_DESC&filter=price%3A0-10 |
+| adobe | https://adobe.com |
+
+**Rules for the spreadsheet:**
+
+- **Search Term** — The exact term to match. Matching is case-insensitive and trims surrounding whitespace, so `"Running Shoes"`, `"running shoes"`, and `"  running shoes  "` all match the same row.
+- **Destination URL** — The full destination path, URL with query parameters, or external URL. Stored verbatim; no transformation is applied. Use root-relative paths (`/page`) for internal pages, paths with query parameters for pre-filtered pages, or full URLs (`https://…`) for external destinations.
+
+Publish the document. After publishing, it becomes available at `/search-redirects.json`.
+
+<Aside type="tip">
+Verify the published output by opening `/search-redirects.json` in your browser. You should see your rows in the `data` array with `"Search Term"` and `"Destination URL"` keys.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Step 2: Create the redirect utility module
+
+Create `scripts/search-redirects.js` in your repository. This module fetches the spreadsheet once, caches the result, and exposes two functions to the rest of your code.
+
+```javascript title="scripts/search-redirects.js"
+let redirectsPromise = null;
+
+function normalize(term) {
+  return term.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/**
+ * Fetches and caches the redirect map from /search-redirects.json.
+ * Safe to call multiple times — only one network request is made.
+ * Returns an empty Map (and does not throw) if the file is missing or malformed.
+ */
+export function preloadSearchRedirects() {
+  if (!redirectsPromise) {
+    redirectsPromise = fetch('/search-redirects.json')
+      .then((res) => {
+        if (!res.ok) return new Map();
+        return res.json();
+      })
+      .then((json) => {
+        if (!Array.isArray(json?.data)) return new Map();
+        return new Map(
+          json.data
+            .filter((row) => row['Search Term'] && row['Destination URL'])
+            .map((row) => [normalize(row['Search Term']), row['Destination URL']]),
+        );
+      })
+      .catch(() => new Map());
+  }
+  return redirectsPromise;
+}
+
+/**
+ * Returns the configured destination for a search term, or null if no match.
+ * @param {string} term
+ * @returns {Promise<string|null>}
+ */
+export async function getSearchRedirectDestination(term) {
+  if (!term) return null;
+  const map = await preloadSearchRedirects();
+  return map.get(normalize(term)) ?? null;
+}
+```
+
+**Key design decisions:**
+
+- **Single fetch, cached promise** — `preloadSearchRedirects()` is idempotent. Call it from multiple places and only one network request is made for the lifetime of the page.
+- **Graceful failure** — If `/search-redirects.json` returns a non-200 status or is malformed, the module returns an empty `Map`. Search continues working normally with no JavaScript errors.
+- **Normalization** — Both the stored terms and the incoming query are lowercased and whitespace-collapsed before comparison, so casing and extra spaces never cause a miss.
+
+</Task>
+
+<Task>
+
+### Step 3: Integrate into the search results page block (required)
+
+Add the redirect check at the top of your search page block's `decorate()` function. This covers both Case A (navigation from the header) and Case B (direct URL access).
+
+The check must happen **before** Live Search is initialized so that matching queries never trigger a search API call.
+
+```javascript title="blocks/product-list-page/product-list-page.js"
+import { preloadSearchRedirects, getSearchRedirectDestination } from '../../scripts/search-redirects.js';
+
+export default async function decorate(block) {
+  // Only apply redirects on the search page (not category pages that share this block).
+  // config.urlpath is set on category pages; its absence signals the /search page.
+  if (!config.urlpath) {
+    preloadSearchRedirects(); // warm the cache immediately
+
+    if (searchState.phrase) {
+      const destination = await getSearchRedirectDestination(searchState.phrase);
+      if (destination) {
+        window.location.replace(destination);
+        return; // stop — Live Search is never called
+      }
+    }
+  }
+
+  // ... rest of your existing decorate() logic unchanged ...
+}
+```
+
+<Aside type="note" title="Category pages">
+If your category pages use the same block as your search page, the `if (!config.urlpath)` guard prevents the redirect logic from running on them. Without this guard, opening the search panel on a category page would trigger a fetch of `search-redirects.json` on every block initialization. If your shared block does not have this guard, you should add one that makes sense for your specific block implementation.
+</Aside>
+
+<Aside type="tip" title="Zero-results variant">
+If you only want to redirect when Live Search returns zero results (rather than always redirecting on a term match), call `getSearchRedirectDestination` inside your results handler instead, and only redirect when `totalCount === 0`. The same utility function works for both modes.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Step 4: Integrate into the header search input (optional)
+
+This step is a UX enhancement for Case A. When the shopper submits a redirectable term from the header search box, they go directly to the destination without an intermediate visit to `/search`.
+
+Without this step, Case A still works correctly via Hook 1 — the shopper briefly visits `/search` before being redirected. This step eliminates that extra navigation.
+
+```javascript title="blocks/header/header.js"
+import { preloadSearchRedirects, getSearchRedirectDestination } from '../../scripts/search-redirects.js';
+
+// Warm the cache when the search panel opens so the redirect data
+// is ready by the time the shopper submits the form.
+searchButton.addEventListener('click', () => {
+  preloadSearchRedirects();
+  toggleSearch(!searchPanel.classList.contains('nav-tools-panel--show'));
+});
+
+// Intercept form submit. If the typed term matches a redirect rule,
+// navigate directly to the destination. Otherwise, proceed to /search.
+searchForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const query = e.target.search.value.trim();
+  if (!query.length) return;
+
+  const destination = await getSearchRedirectDestination(query);
+  window.location.href = destination ?? `/search?q=${encodeURIComponent(query)}`;
+});
+```
+
+**Why pass the query explicitly?**
+
+At the time the `submit` event fires, `window.location.search` still reflects the page the shopper is currently on — not the term they typed. Pass the term from the input value directly to `getSearchRedirectDestination()`.
+
+</Task>
+
+<Task>
+
+### Step 5: Test your implementation
+
+Use the following scenarios to verify the implementation. The test plan mirrors the checks from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1252" text="reference implementation PR" />.
+
+<Steps>
+
+1. **Direct URL — matching term:** Navigate to `/search?q=login` (assuming "login" is in your spreadsheet). Confirm you are immediately redirected to the configured destination without search results loading.
+
+2. **Case-insensitive match:** Navigate to `/search?q=Login` (capitalized). Confirm you reach the same destination as lowercase.
+
+3. **Direct URL — non-matching term:** Navigate to `/search?q=running+shoes`. Confirm search results load normally with no redirect.
+
+4. **Header search — matching term:** Open the search panel, type a redirectable term, and press Enter. Confirm you go directly to the destination without a `/search` URL appearing in the address bar (only applies if you completed Step 4).
+
+5. **Header search — non-matching term:** Type a term not in the spreadsheet and press Enter. Confirm the browser navigates to `/search?q=<term>` normally.
+
+6. **Prefetch:** Open browser DevTools → Network, then open the search panel. Confirm that `search-redirects.json` is fetched at that point rather than waiting for a form submit.
+
+7. **Graceful failure:** Temporarily rename or 404 your `/search-redirects.json`. Confirm that search still works without JavaScript errors.
+
+</Steps>
+
+</Task>
+
+</Tasks>
+
+## Complete example
+
+The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1252" text="reference implementation PR" /> demonstrates the full integration against the boilerplate. Use it as a working reference when adapting this pattern to your storefront's specific block structure.
+
+**User journey with redirects enabled:**
+
+1. Shopper opens the search panel and types "inexpensive clothes"
+2. On submit, `getSearchRedirectDestination("inexpensive clothes")` returns `/apparel?page=1&sort=position_DESC&filter=price%3A0-10`
+3. Browser navigates directly to the pre-filtered apparel page — Live Search is never called
+4. Shopper types "running shoes" — no match found; browser navigates to `/search?q=running+shoes` as normal
+
+## Troubleshooting
+
+**Redirect not firing**
+
+> Open `/search-redirects.json` and confirm your row is present with the exact column names `Search Term` and `Destination URL`. Check for trailing spaces in the spreadsheet — the normalization handles leading/trailing whitespace in queries, but the column headers themselves must match exactly.
+
+**All searches redirect to the same page**
+
+> This is the classic EDS CDN redirect symptom (query strings stripped → all `/search` paths collapse to one rule). Confirm you are using the client-side implementation from this tutorial and **not** the EDS redirects spreadsheet for search-term routing.
+
+**Redirect fires on category pages**
+
+> Ensure the `if (!config.urlpath)` guard is in place in your search block. Category pages populate `config.urlpath`; the search page does not. If your shared block does not have this guard, you should add one that makes sense for your specific block implementation.
+
+**`search-redirects.json` returns 404**
+
+> The file is only generated after you publish the spreadsheet. Confirm the document is published (not just previewed) and located at the root of your content tree. If you want to test the redirect functionality without publishing, you can create a local copy of the spreadsheet and place it in the root of your code repository.
+
+## Summary
+
+In this tutorial, you learned how to:
+
+- ✅ Author a redirect map as a content spreadsheet that business users can manage without developer involvement
+- ✅ Build a cached, fault-tolerant JavaScript utility that loads the redirect map once per page
+- ✅ Integrate the redirect check into your search results block to intercept queries before Live Search fires
+- ✅ Optionally integrate into the header search input to skip the intermediate `/search` navigation
+
+The pattern is intentionally simple: a spreadsheet as the data source, a module as the lookup layer, and two touch points in existing blocks. Scaling to hundreds of redirect rules requires no code changes — only spreadsheet rows.
