@@ -1,72 +1,265 @@
 ---
 title: Product Details
-description: Customers view product information, select options, and add items to cart through this block. Place it on product detail pages.
+description: What the product-details block renders, the authoring tasks you can do with it, and a reference for its setting, the concept behind product pages, and common fixes.
 sidebar:
   label: Product Details
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Term from '@components/Term.astro';
+import Diagram from '@components/Diagram.astro';
+import TaskSection from '@components/TaskSection.astro';
+import Callouts from '@components/Callouts.astro';
 
+The `product-details` block renders the page that shoppers see when they view a single product: the image gallery, price, options, and add-to-cart button. Most shopper sessions go through a product detail page (PDP) before a purchase, so it is one of the most important Commerce blocks on your site.
 
-Customers view product information, select options, and add items to cart through this block. Place it on product detail pages.
-
-## Configuration
-
-Add this table to your document to configure the block:
-
-<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
-<tbody>
-<tr>
-<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">defaultSku</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">SKU-001 <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-</tbody>
-</table>
-
-### Property descriptions
-
-#### defaultSku
-
-Specifies a default product SKU for the product details block. Use this when creating a template page that displays a specific product by default. The block loads the product matching this SKU when the URL omits a product SKU.
-
-## Section metadata
-
-Control the section styling, spacing, and layout that wraps your commerce block. All properties are optional:
-
-<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
-<tbody>
-<tr>
-<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">section-metadata</td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Style</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">light <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Padding</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">medium <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Margin</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">small <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Column Width</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">30% <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Gap</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">small <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-</tbody>
-</table>
-
-<Aside type="tip" title="Learn more">
-
-See the [Section Metadata guide](/merchants/quick-start/section-metadata/) for all available values and the [Page Metadata guide](/merchants/quick-start/page-metadata/) for SEO and caching options.
-
+<Aside type="tip" title="The short version">
+Your storefront already has this block set up, so there is nothing to add from scratch. Product names, prices, and images come from your Commerce catalog automatically, and every product gets its own page. In Document Authoring, you work on the `/products/default` document to set a `default-sku` for preview, add companion blocks such as carousels, and edit the text shoppers see (see [Labels and placeholders](/merchants/quick-start/labels-and-placeholders/)). You'll return to this document whenever you want to add promotions, swap blocks, or update surrounding content.
 </Aside>
 
+If you are new to Commerce blocks, read [Authoring Commerce blocks](/merchants/quick-start/authoring-commerce-blocks/) first. It explains what you can change without code and what to hand to a developer. When you need a developer to customize this block, point them to the [Product details overview](/dropins/product-details/).
+
+## What shoppers see
+
+The block renders the full product page, top to bottom on mobile and side-by-side on desktop.
+
+<Diagram caption="The regions a shopper sees on a typical product page.">
+  ![A product detail page with numbered labels for the gallery, header, price, short description, options, quantity, action buttons, full description, and attributes.](@images/merchants/blocks/product-details-anatomy.png)
+</Diagram>
+
+<Callouts>
+
+1. Image gallery
+1. Product name and SKU
+1. Price
+1. Short description
+1. Options (size, color, and so on)
+1. Quantity selector
+1. Add to Cart and Add to Wishlist buttons
+1. Full description
+1. Additional attributes
+
+</Callouts>
+
+The `product-details` block is shared between B2C and B2B storefronts. For B2B-only experiences such as negotiable quotes, requisition lists, or purchase orders, use the matching B2B blocks listed in [B2B Commerce blocks](/merchants/blocks/b2b/).
+
+<TaskSection>
+
+## Preview a product
+
+This is the task you'll use most often. At `/products/default`, the block renders real product data when you set a `default-sku` and view the page in the inline live-preview pane.
+
+<Aside type="tip" title="Confirm the document at /products/default exists">
+Open `/products/default` in your content folder in Document Authoring. If the document is missing or empty, the PDP cannot render in preview.
+</Aside>
+
+<Steps>
+
+1. In <Term>Document Authoring</Term>, open the document at `/products/default`.
+
+1. Add or update the `product-details` table with a `default-sku` row that points to a SKU in your catalog. To find a SKU, open Commerce Admin under **Catalog → Products**, or ask your integrator.
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Click the split-screen icon on the right sidebar to open the inline live-preview pane. The PDP renders using the SKU you set.
+
+</Steps>
+
+<Aside type="caution" title="Use the inline preview, not the paper-plane button">
+The paper-plane (Publish to Preview) button does not work at `/products/default`. It opens the page without the information the block needs to find a product, so the block redirects to `/notfound`. This is expected, because the document at `/products/default` is a template, not a real product page. Use the inline live-preview pane instead, which passes the `default-sku` value you set in the block table.
+</Aside>
+
+The `default-sku` setting applies only at `/products/default` in the inline live-preview pane. On real product URLs, the SKU comes from the URL, so you do not need to keep `default-sku` in sync with catalog changes. See [default-sku](#default-sku) for the full behavior.
+
+</TaskSection>
+
+<TaskSection>
+
+## View a real product page
+
+To confirm a real product renders (not just the preview at `/products/default`):
+
+<Steps>
+
+1. Find a product's URL key and SKU in Commerce Admin under **Catalog → Products**, or open a category or search results page on your storefront and click any product. The link already points to its product page.
+
+1. Open the product URL, which follows the pattern `/products/<url-key>/<sku>` (for example, `/products/cool-hoodie/HOODIE-001`).
+
+1. The PDP renders with that product's live catalog data. This is the page your shoppers see.
+
+</Steps>
+
+<Aside type="note">
+A real product URL works in a normal browser tab and through the paper-plane preview, because the SKU comes from the URL. The `/products/default` document is the exception: it needs the inline live-preview pane instead, as described in [Preview a product](/merchants/blocks/product-details/#preview-a-product).
+</Aside>
+
+</TaskSection>
+
+<TaskSection>
+
+## Feature a product on a marketing page
+
+To highlight one product on a custom page (for example, a landing page for a campaign):
+
+<Steps>
+
+1. Create your marketing page in Document Authoring at the path you want, for example, `/campaigns/new-arrivals`.
+
+1. Add the `product-details` block to the page. The block renders the product UI (gallery, price, options, and so on). You do not need any rows inside the block table. A header-only table is enough:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Add a metadata table at the top of your document with a `sku` row set to the SKU you want to feature. A freshly created page has no metadata table yet, so you need to build one: insert a two-column table, merge both cells in the first row, and type `metadata` in that merged cell. Then add a `sku` row below it, as shown here:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">sku</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
+
+   If your page already has a metadata table, just add a new `sku` row to it. You do not need a second table. For more on page metadata and its other properties, see [Page metadata](/merchants/quick-start/page-metadata/).
+
+1. Click the paper-plane button to preview the page. The block reads the `sku` from page metadata and renders that product in a new tab.
+
+</Steps>
+
+<Aside type="note" title="Use the sku metadata row, not the block's default-sku">
+Use the `sku` metadata row shown above on any page where the SKU is not in the URL. The `default-sku` block setting only applies at `/products/default` in the inline preview and has no effect on marketing pages or any other page. See [default-sku](#default-sku) for details.
+</Aside>
+
+<Aside type="caution">
+Use this pattern sparingly. Every product already has its own page at `/products/<url-key>/<sku>`. Adding a second hand-built page for the same product means you have to keep both in sync when the catalog changes. Prefer linking from your campaign page to the product's existing URL whenever you can.
+</Aside>
+
+</TaskSection>
+
+<TaskSection>
+
+## Add companion blocks to a product page
+
+Your storefront comes with several blocks already set up at `/products/default`. Each block is a separate table in the document, and the page renders them in the order they appear. That means you can add a banner, a carousel, or a recommendations section simply by inserting a new table at the right spot.
+
+A good example is adding a `carousel` above the product details to give the page a featured image at the top. Shoppers see the carousel first, then scroll down to the product details.
+
+<Steps>
+
+1. In Document Authoring, open the document at `/products/default`.
+
+1. Click above the `product-details` table and insert a new table for the carousel. Each row below the header is one slide. Add your campaign image in the left cell and a caption in the right:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">carousel</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 1</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 2</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Open the inline live-preview pane to confirm the carousel appears above the product details.
+
+</Steps>
+
+Your document will look like this, with the carousel table sitting above the `product-details` table:
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 0.75rem;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">carousel</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 1</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 2</td>
+</tr>
+</tbody>
+</table>
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+</tr>
+</tbody>
+</table>
+
+The same principle applies to any other companion block. Add it where you want it to appear and the page renders it there.
+
+</TaskSection>
+
+## Troubleshooting
+
+### The Add to Cart button stays disabled
+
+The product has required options — such as size or color — that have not been selected yet. The block enables the button once all required options are selected.
+
+
+<TaskSection label="Reference">
+
+## How the product page works
+
+### How products become pages
+
+Unlike a traditional CMS, you do not build a page for each product. Every product in your catalog gets a page automatically at `/products/<url-key>/<sku>`. Your authoring work is a one-time setup at `/products/default`: set a `default-sku` so you can preview, add companion blocks such as product recommendations, and edit any labels shoppers see. After that, you manage products in Commerce Admin and the storefront reflects those changes automatically.
+
+### Configuration
+
+The `product-details` block reads a single property from its block table. Add this table to your document to configure the block:
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+</tr>
+</tbody>
+</table>
+
+To set `default-sku` in practice, follow [Preview a product](#preview-a-product).
+
+#### default-sku
+
+The `default-sku` is a product SKU the block uses when the page does not supply a SKU in the URL or page metadata. The storefront reads `default-sku` only when the current page is the document at `/products/default` and you view it in the Document Authoring inline live-preview pane (the split-screen view inside the editor) or in Universal Editor. The paper-plane Publish to Preview button does not trigger this path. On any other page, or on the live storefront, the block uses the `sku` page metadata first and then falls back to the SKU in the URL.
+
+In practice, set `default-sku` on the document at `/products/default` so authors and reviewers can see a real product in preview. Setting `default-sku` on any other page has no effect because the block reads it only on the `/products/default` template. To show a product on a marketing page or any page where the SKU is not in the URL, set a `sku` row in that page's metadata table instead. See [Feature a product on a marketing page](#feature-a-product-on-a-marketing-page).
+
+</TaskSection>
