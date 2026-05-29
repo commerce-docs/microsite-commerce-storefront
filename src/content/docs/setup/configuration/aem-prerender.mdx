@@ -225,6 +225,33 @@ The solution consists of these components:
 For catalogs exceeding 50,000 products, consult the <Link href="https://www.aem.live/docs/limits" text="AEM indexing limits" /> documentation for sitemap splitting strategies and scaling considerations.
 </Aside>
 
+## Product lifecycle management
+
+The prerender solution reflects whatever Catalog Service returns. The system itself applies no filtering based on product status, visibility, or stock level — a product is prerendered if and only if Catalog Service includes it in search results and it has a valid URL key.
+
+### Draft product preview
+
+The prerender system has no concept of "draft" status. It renders every product that Catalog Service returns, regardless of whether that product is enabled, visible, or in stock. Whether a draft or inactive product appears in the prerendered site therefore depends entirely on your Commerce and Catalog Service configuration — not on any filtering in the prerender system.
+
+What you can preview independently of product status is the **product template** itself: the BYOM template document that provides the page structure for all product pages. Open it in your authoring environment (DA, UE, or another supported editor) with a `defaultSku` configured to review the layout and content before any products go live.
+
+### Scheduled publishing
+
+Products become live on your storefront only when they have been prerendered and published to Edge Delivery Services. The prerender system runs two coordinated polling actions:
+
+- **`fetch-all-products`** — runs every 60 minutes to discover new products in the catalog
+- **`check-product-changes`** — runs every 5 minutes to detect changes and render and publish updated pages
+
+To schedule when a product goes live, control when it becomes visible in Catalog Service. When the product appears in Catalog Service search results, the `fetch-all-products` action discovers it within 60 minutes and the `check-product-changes` action publishes it within 5 minutes of discovery.
+
+See the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="aem-commerce-prerender repository" /> for details on configuring polling intervals in `app.config.yaml`.
+
+### Offline product removal
+
+When a product is removed from Catalog Service — because it was disabled, deleted, or its visibility changed — the `mark-up-clean-up` action removes it from the published storefront. This action runs every 60 minutes and works by comparing the list of currently published product pages against current Catalog Service results: any product in the published index that is no longer returned by Catalog Service is unpublished and deleted.
+
+For faster, event-driven removal, you can build custom instrumentation that observes product changes in Commerce and calls the EDS unpublish API directly. The <Link href="https://www.aem.live/docs/admin.html#tag/publish/operation/unpublishResource" text="AEM Admin API unpublish endpoint" /> accepts a resource path and immediately removes it from your live site.
+
 ## Installation and configuration
 
 The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" /> provides complete installation instructions. The following overview highlights the key configuration steps and values you'll need.
