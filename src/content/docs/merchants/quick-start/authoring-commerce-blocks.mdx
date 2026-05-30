@@ -1,0 +1,101 @@
+---
+title: Authoring Commerce blocks
+description: Learn how a Commerce page is built from drop-ins, Commerce blocks, and pages, what you can change without code, and what to hand to a developer when code is required.
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Term from '@components/Term.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+This page explains how a Commerce storefront page is built from three layers, what an author can change on each layer without writing code, and what to hand to a developer when a request needs code. Read this once before you open the individual Commerce block pages, so you can tell at a glance whether a change is yours to make or your developer's.
+
+The audience is two roles working together:
+
+- **Author** — edits pages and content in <Term>Document Authoring</Term> (or the Universal Editor).
+- **Integrator** — configures the storefront's connection to Adobe Commerce, store views, and shared site settings, often by editing configuration files alongside a developer.
+
+Most pages in this section are written for authors. This page also names the integrator and developer roles so you know who to ask when a request is outside your author tools.
+
+## Three things you'll work with
+
+A Commerce page is built from three layers:
+
+- <Term>**Drop-in components**</Term> are the code components Adobe ships, such as the Product Details, Cart, Checkout, and Account drop-ins. A drop-in displays most of what shoppers see on a Commerce screen — the gallery, the price, the cart line items, the checkout form. It also pulls live data from Commerce, so the price, stock, and cart state stay current.
+- **A Commerce block** is how a drop-in appears in your document. You create a Commerce block by adding a small table with the block name (for example, `product-details` or `commerce-cart`) and any settings the Commerce block needs. See [How block tables work](/merchants/quick-start/block-tables/) for the table shape.
+- **A page** is the document the Commerce block lives on. A page can include more than one Commerce block, plus other content blocks like marketing copy, images, breadcrumbs, and recommendations.
+
+A useful way to picture the layers: the drop-in is the engine, the Commerce block is the steering wheel, and the page is the car around them. You build the car and add the steering wheel. Adobe ships the engine.
+
+Most Commerce blocks live on a page you author yourself — your cart on a Cart page, your sign-in on a Login page, and so on. The product detail page (PDP) is the exception: a single document at `/products/default` styles every product on your storefront. See [Product Details](/merchants/blocks/product-details/) for how this template-driven model works.
+
+## What you can change without code
+
+For every Commerce block, you can make these changes in Document Authoring using tables and sheets, not code:
+
+| Task | Where to do it | Reference |
+| --- | --- | --- |
+| Choose which Commerce block appears on a page | The block table on the page | [How block tables work](/merchants/quick-start/block-tables/) |
+| Set the few settings a Commerce block accepts | The block table on the page | The Commerce block's reference page in [B2C Commerce blocks](/merchants/blocks/b2c/) or [B2B Commerce blocks](/merchants/blocks/b2b/) |
+| Change the words shoppers see (button labels, headings, messages) | The placeholders sheet for the matching drop-in | [Labels and placeholders](/merchants/quick-start/labels-and-placeholders/) |
+| Set the page title, description, and indexing | The metadata table at the top of the page | [Page metadata](/merchants/quick-start/page-metadata/) |
+| Adjust spacing, background, and column widths around a Commerce block | A section-metadata table after the Commerce block | [Section metadata](/merchants/quick-start/section-metadata/) |
+| Translate labels into other locales | The locale-specific placeholders sheets | [Commerce localization tasks](/merchants/quick-start/content-localization-commerce-tasks/) |
+| Add related blocks on the same page (for example, breadcrumbs or product recommendations) | Add another block table on the page | [Using Content and Commerce blocks](/merchants/quick-start/content-commerce-blocks/) |
+| Schedule when a page goes live | Snapshot scheduling in Document Authoring | [Scheduling options](/merchants/edge-delivery-services/scheduling/) |
+
+If the change you want is in the list above, you do not need a developer. Open the right tool, make the edit, preview, publish, and verify.
+
+## What needs a developer
+
+These changes require code or configuration outside the author tools. Open a ticket with your developer when you need any of them:
+
+| Task | Why it is not an author task |
+| --- | --- |
+| Add or remove an element inside a drop-in (for example, a wishlist button on the product details page) | That element is rendered by the drop-in's container, not by your block table. A developer adds it using a drop-in slot or by customizing a container. |
+| Change the visual design of a drop-in (colors, fonts, button shapes beyond section metadata) | Visual design lives in the project's CSS and design tokens. A developer edits those files. |
+| Track a new event in analytics or A/B testing | The drop-in publishes events on a shared event bus. A developer subscribes to the event and forwards it to whichever tool the site uses (for example, Google Analytics or Adobe Target). |
+| Connect or change the Commerce backend (endpoints, store view headers, services) | These settings live in your [storefront configuration](/setup/configuration/commerce-configuration/). The integrator owns this work, often paired with a developer. |
+| Add a new drop-in that isn't in the boilerplate yet | A developer installs the package and writes the Commerce block that mounts it. |
+| Change how a Commerce block behaves, not just how it looks (for example, how Add to Cart works) | The behavior comes from the drop-in code, not from the block table. A developer customizes the drop-in. |
+
+See [Introduction to drop-in components](/dropins/all/introduction/) for the developer-facing overview of containers, slots, and events. Sharing the same vocabulary makes the handoff faster.
+
+## Roles at a glance
+
+A small Commerce team usually splits the work like this:
+
+- **Author** — owns content and the words shoppers see. Edits pages, sets block settings, edits placeholders sheets, manages section and page metadata, publishes content, schedules releases. Lives in Document Authoring.
+- **Integrator** — owns the storefront's connection to Adobe Commerce and to shared site settings. Edits the [storefront configuration](/setup/configuration/commerce-configuration/), store view headers, and similar settings. Works with the developer when a setting requires a code change.
+- **Developer** — owns the code in the boilerplate repository. Customizes drop-ins (slots, events, containers), changes design tokens and CSS, adds new drop-ins, and connects analytics and integrations.
+
+On a small team, one person may do two of these jobs. The split still helps when you write a ticket — name the role you need help from, and your request reaches the right person faster.
+
+<Aside type="tip" title="Tip for tickets">
+When you raise a request that needs a developer, include three things: the page URL, the block name (for example, `product-details`), and a one-sentence description of what you want shoppers to see that you cannot do from the author tools. That is usually enough for the developer to start.
+</Aside>
+
+## How a typical task flows
+
+A typical request looks like this:
+
+<Steps>
+1. You receive a request to change something on a Commerce page — wording, layout, a new SKU on a marketing page, a different button color, an analytics event.
+
+1. Check the [What you can change without code](#what-you-can-change-without-code) table. If the change is there, follow the linked authoring page.
+
+1. If the change is not there, check [What needs a developer](#what-needs-a-developer). Pick the matching row, then file a ticket using the tip above.
+
+1. After the developer ships the change, you'll still own the publish step in Document Authoring. Preview the page, publish it, and verify the change on the live site.
+</Steps>
+
+This flow keeps small requests fast and keeps developer time on the changes that need code.
+
+## Where to go next
+
+- [How block tables work](/merchants/quick-start/block-tables/) — the table shape used in every block on this page.
+- [Your first page](/merchants/quick-start/your-first-page/) — a hands-on walkthrough that ties block tables, page metadata, and section metadata together.
+- [B2C Commerce blocks](/merchants/blocks/b2c/) — the full reference for every B2C Commerce block.
+- [B2B Commerce blocks](/merchants/blocks/b2b/) — the full reference for every B2B Commerce block.
+- [Labels and placeholders](/merchants/quick-start/labels-and-placeholders/) — change the words shoppers see, end to end.
