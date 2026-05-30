@@ -1,6 +1,6 @@
 ---
 title: Product Details
-description: Reference for the product-details block — what it renders, how the boilerplate wires it to product URLs, the settings it accepts, and where to hand off to a developer.
+description: What the product-details block renders, the authoring tasks you can do with it, and a reference for its setting, the concept behind product pages, and common fixes.
 sidebar:
   label: Product Details
 ---
@@ -8,67 +8,90 @@ sidebar:
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Term from '@components/Term.astro';
 import Diagram from '@components/Diagram.astro';
+import TaskSection from '@components/TaskSection.astro';
 import Callouts from '@components/Callouts.astro';
 
-The `product-details` block renders the product detail page (PDP) for your storefront. Most shopper sessions go through a PDP before a purchase, so it is one of the most important Commerce blocks on your site.
+The `product-details` block renders the page that shoppers see when they view a single product: the image gallery, price, options, and add-to-cart button. Most shopper sessions go through a product detail page (PDP) before a purchase, so it is one of the most important Commerce blocks on your site.
 
-If you are new to Commerce blocks, read [Authoring Commerce blocks](/merchants/quick-start/authoring-commerce-blocks/) first. It explains what you can change without code and what to hand to a developer. The rest of this page covers what is specific to the PDP.
-
-## Where this block lives in your boilerplate
-
-You do not add the `product-details` block from scratch. The Adobe Commerce boilerplate ships with PDP wiring already in place:
-
-- The `product-details` block is authored on a single document at `/products/default` — sometimes called the PDP template — so you can preview and style a PDP in <Term>Document Authoring</Term> without a real product URL.
-- Real shopper URLs follow the pattern `/products/<url-key>/<sku>` (for example, `/products/cool-hoodie/HOODIE-001`). The boilerplate reads the SKU from the URL and renders the same `product-details` block for every product.
-
-<Aside type="note" title="Product content comes from Commerce, not from this document">
-Product names, prices, images, and descriptions all come from your Adobe Commerce catalog. You do not create or edit individual product pages in Document Authoring — the boilerplate generates product URLs automatically from the catalog.
-
-Your authoring work on a PDP is limited to three things: setting a `default-sku` on the document at `/products/default` so you can preview with real product data, adding companion blocks (such as product recommendations) to its layout, and changing the words shoppers see via [Labels and placeholders](/merchants/quick-start/labels-and-placeholders/). After the initial setup, you rarely need to return to this page.
+<Aside type="tip" title="The short version">
+Your storefront already has this block set up, so there is nothing to add from scratch. Product names, prices, and images come from your Commerce catalog automatically, and every product gets its own page. In Document Authoring, you work on the `/products/default` document to set a `default-sku` for preview, add companion blocks such as carousels, and edit the text shoppers see (see [Labels and placeholders](/merchants/quick-start/labels-and-placeholders/)). You'll return to this document whenever you want to add promotions, swap blocks, or update surrounding content.
 </Aside>
 
-You add the block to a different page only when you are building a custom landing page that highlights a specific product. See [Feature a product on a marketing page](#feature-a-product-on-a-marketing-page).
+If you are new to Commerce blocks, read [Authoring Commerce blocks](/merchants/quick-start/authoring-commerce-blocks/) first. It explains what you can change without code and what to hand to a developer. When you need a developer to customize this block, point them to the [Product details overview](/dropins/product-details/).
+
+## What shoppers see
+
+The block renders the full product page, top to bottom on mobile and side-by-side on desktop.
+
+<Diagram caption="The regions a shopper sees on a typical product page.">
+  ![A product detail page with numbered labels for the gallery, header, price, short description, options, quantity, action buttons, full description, and attributes.](@images/merchants/blocks/product-details-anatomy.png)
+</Diagram>
+
+<Callouts>
+
+1. Image gallery
+1. Product name and SKU
+1. Price
+1. Short description
+1. Options (size, color, and so on)
+1. Quantity selector
+1. Add to Cart and Add to Wishlist buttons
+1. Full description
+1. Additional attributes
+
+</Callouts>
+
+The `product-details` block is shared between B2C and B2B storefronts. For B2B-only experiences such as negotiable quotes, requisition lists, or purchase orders, use the matching B2B blocks listed in [B2B Commerce blocks](/merchants/blocks/b2b/).
+
+<TaskSection>
+
+## Preview a product
+
+This is the task you'll use most often. At `/products/default`, the block renders real product data when you set a `default-sku` and view the page in the inline live-preview pane.
 
 <Aside type="tip" title="Confirm the document at /products/default exists">
 Open `/products/default` in your content folder in Document Authoring. If the document is missing or empty, the PDP cannot render in preview.
 </Aside>
 
-## How products become pages
+<Steps>
 
-If you have used a traditional content management system, you might expect to build a page for each product. You do not. On a Commerce storefront, products and product pages work differently:
+1. In <Term>Document Authoring</Term>, open the document at `/products/default`.
 
-- **You manage products in Commerce Admin, not in Document Authoring.** Add, edit, and remove products in the Adobe Commerce catalog. Their names, prices, images, descriptions, and options all live there.
-- **Every product gets a page automatically.** As soon as a product is in your catalog, the boilerplate serves a live PDP for it at `/products/<url-key>/<sku>`, rendered by the same `product-details` block. You do not author these pages one by one.
-- **You set up the `product-details` block once at `/products/default`.** Your work in Document Authoring on the PDP is a one-time setup: style the block, add companion blocks (such as product recommendations), and set the words shoppers see. After that, your ongoing product work happens in Commerce Admin, and the storefront reflects it without further authoring.
+1. Add or update the `product-details` table with a `default-sku` row that points to a SKU in your catalog. To find a SKU, open Commerce Admin under **Catalog → Products**, or ask your integrator.
 
-<Diagram type="mermaid" code={`
-graph TD
-    CAT["Commerce catalog<br/><small>products, prices, images, descriptions</small>"]
-    URL["Real product URL<br/><small>/products/url-key/sku · one per product</small>"]
-    subgraph PDB ["product-details block · one block, two parts"]
-        AUTH["Merchant side<br/><small>your block table at /products/default · sets default-sku</small>"]
-        CODE["Code side<br/><small>Adobe's drop-in · renders the PDP</small>"]
-    end
-    PDP["Product detail page<br/><small>what shoppers see</small>"]
-    CAT -->|"every product gets a URL automatically"| URL
-    URL -->|"shopper visit · SKU from URL"| CODE
-    AUTH -->|"author preview · default-sku"| CODE
-    CODE --> PDP
-    CAT -.->|"live data at render time"| PDP
-    style CAT fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
-    style URL fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
-    style AUTH fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
-    style CODE fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
-    style PDP fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
-`} caption="How a product becomes a page: the product-details block has two parts that work together. You own the merchant side — the block table at /products/default, where you set default-sku. Adobe owns the code side — the drop-in that renders every PDP. Real product URLs feed the code side a SKU at runtime; the merchant side feeds it default-sku when you preview in Document Authoring." />
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
 
-### View a real product page
+1. Click the split-screen icon on the right sidebar to open the inline live-preview pane. The PDP renders using the SKU you set.
+
+</Steps>
+
+<Aside type="caution" title="Use the inline preview, not the paper-plane button">
+The paper-plane (Publish to Preview) button does not work at `/products/default`. It opens the page without the information the block needs to find a product, so the block redirects to `/notfound`. This is expected, because the document at `/products/default` is a template, not a real product page. Use the inline live-preview pane instead, which passes the `default-sku` value you set in the block table.
+</Aside>
+
+The `default-sku` setting applies only at `/products/default` in the inline live-preview pane. On real product URLs, the SKU comes from the URL, so you do not need to keep `default-sku` in sync with catalog changes. See [default-sku](#default-sku) for the full behavior.
+
+</TaskSection>
+
+<TaskSection>
+
+## View a real product page
 
 To confirm a real product renders (not just the preview at `/products/default`):
 
 <Steps>
 
-1. Find a product's URL key and SKU in Commerce Admin under **Catalog → Products**, or simply open a category or search results page on your storefront and click any product — the link already points to its PDP.
+1. Find a product's URL key and SKU in Commerce Admin under **Catalog → Products**, or open a category or search results page on your storefront and click any product. The link already points to its product page.
 
 1. Open the product URL, which follows the pattern `/products/<url-key>/<sku>` (for example, `/products/cool-hoodie/HOODIE-001`).
 
@@ -77,186 +100,166 @@ To confirm a real product renders (not just the preview at `/products/default`):
 </Steps>
 
 <Aside type="note">
-Unlike the document at `/products/default`, a real product URL works in a normal browser tab and through the paper-plane preview, because the SKU comes from the URL. The `/products/default` document needs the inline live-preview pane instead — see [Preview the PDP using default-sku](#preview-the-pdp-using-default-sku).
+A real product URL works in a normal browser tab and through the paper-plane preview, because the SKU comes from the URL. The `/products/default` document is the exception: it needs the inline live-preview pane instead, as described in [Preview a product](/merchants/blocks/product-details/#preview-a-product).
 </Aside>
 
-## What shoppers see
+</TaskSection>
 
-The PDP renders these regions, top to bottom on mobile and side-by-side on desktop. The numbers on the screenshot match the legend below.
+<TaskSection>
 
-<Diagram caption="The product detail page (PDP) anatomy: the regions a shopper sees on a typical product page.">
-  ![A product detail page with numbered labels for the gallery, header, price, short description, options, quantity, action buttons, full description, and attributes.](@images/merchants/blocks/product-details-anatomy.png)
-</Diagram>
-
-<Callouts>
-
-1. **Image gallery**: thumbnails or a carousel. See [`ProductGallery`](/dropins/product-details/containers/product-gallery/).
-1. **Product header**: name and SKU. See [`ProductHeader`](/dropins/product-details/containers/product-header/).
-1. **Price**: list price, plus a sale price when one applies. See [`ProductPrice`](/dropins/product-details/containers/product-price/).
-1. **Short description**: a one- or two-line summary under the price. See [`ProductShortDescription`](/dropins/product-details/containers/product-short-description/).
-1. **Options**: size, color, or bundle items for configurable and bundle products. See [`ProductOptions`](/dropins/product-details/containers/product-options/).
-1. **Quantity selector**. See [`ProductQuantity`](/dropins/product-details/containers/product-quantity/).
-1. **Action buttons**: Add to Cart and Add to Wishlist. The block renders these, not the underlying <Term>drop-in</Term>, so a developer can rearrange or restyle them in the block code.
-1. **Full description**: the long product description. See [`ProductDescription`](/dropins/product-details/containers/product-description/).
-1. **Additional attributes**: extra product attributes the catalog provides. See [`ProductAttributes`](/dropins/product-details/containers/product-attributes/).
-
-</Callouts>
-
-The `product-details` block is shared between B2C and B2B storefronts. For B2B-only experiences such as negotiable quotes, requisition lists, or purchase orders, use the matching B2B blocks listed in [B2B Commerce blocks](/merchants/blocks/b2b/).
-
-## Configuration
-
-The `product-details` block reads a single property from its block table. Add this table to your document to set it:
-
-<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
-<tbody>
-<tr>
-<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
-</tr>
-<tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"><em style="color: var(--sl-color-gray-3); font-style: italic;">HOODIE-001 <span style="font-size: 0.85em;">(optional)</span></em></td>
-</tr>
-</tbody>
-</table>
-
-### Property descriptions
-
-#### default-sku
-
-A product SKU the block uses when the page does not already supply one. The boilerplate reads `default-sku` only when the current page is the document at `/products/default` and the page is shown in the Document Authoring inline live-preview pane (the split-screen view inside the editor) or edited in Universal Editor. These are the preview modes that add the URL parameter the block looks for. The paper-plane Publish to Preview button does not trigger this path. On any other page, or on the live storefront, the block uses the `sku` page metadata first and then falls back to the SKU at the end of the URL path.
-
-In practice, set `default-sku` on the document at `/products/default` so authors and reviewers can see a real product in preview. Setting it on other pages only has an effect on marketing pages that intentionally render the PDP outside the `/products/...` URL pattern.
-
-### URL parameters the block reads
-
-The `product-details` block also reacts to two URL search parameters. You do not set these in the block table. The boilerplate adds them when a shopper acts on the page:
-
-- `itemUid` — switches the block into update mode for the cart line item with that ID. The add-to-cart button changes to an update button. This is set when a shopper clicks Edit on a cart line item.
-- `optionsUIDs` — restores selected product options (for example, `size: large, color: blue`) when shoppers return from the wishlist or share a link.
-
-Most authors do not need to think about these parameters. They explain why the PDP sometimes shows an Update button instead of Add to Cart.
-
-## PDP-specific authoring tasks
-
-These tasks are unique to the `product-details` block. For tasks that apply to every Commerce block — changing label text, restyling a section, adding companion blocks — see [Authoring Commerce blocks](/merchants/quick-start/authoring-commerce-blocks/).
-
-### Preview the PDP using default-sku
-
-At `/products/default`, the block reads a `default-sku` row only when the page is shown in the Document Authoring inline live-preview pane (the split-screen view inside the editor) or edited in Universal Editor — those are the two preview modes that add the parameter the block needs. With one of those methods, you can render real product data even though no SKU is in the URL. The paper-plane (Publish to Preview) button is a third kind of preview but does not work here; see the warning at the end of this procedure for why.
-
-<Steps>
-
-1. In Document Authoring, open the document at `/products/default`.
-
-1. Add or update the `product-details` table with a `default-sku` row that points to a SKU in your catalog. To find a SKU, open Commerce Admin under **Catalog → Products**, or ask your integrator.
-
-   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
-   <tbody>
-   <tr>
-   <td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
-   </tr>
-   <tr>
-   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
-   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
-   </tr>
-   </tbody>
-   </table>
-
-1. Use the **live-preview pane** inside the Document Authoring editor to see the PDP render. In the editor, click the split-screen icon on the right sidebar to open the inline preview. The PDP renders using the SKU you set.
-
-</Steps>
-
-<Aside type="caution" title="The paper-plane button does not work here">
-The paper-plane (Publish to Preview) button at the top of the editor opens `https://main--{repo}--{org}.aem.page/products/default` in a new browser tab **without** the `?dapreview` parameter. Without that parameter, the PDP code cannot find a SKU — it ignores `default-sku` and redirects the tab to `/notfound`, which looks like a 404.
-
-This is expected behavior, not a broken site. Use the **inline live-preview pane** in the editor instead. That pane loads the page with `?dapreview=...`, which tells the block to use `default-sku`.
-</Aside>
-
-The `default-sku` value is only used at `/products/default` and only in editor or preview mode. On a real product URL like `/products/cool-hoodie/HOODIE-001`, the SKU comes from the URL instead. You do not need to keep `default-sku` up to date with real catalog changes.
-
-### Feature a product on a marketing page
+## Feature a product on a marketing page
 
 To highlight one product on a custom page (for example, a landing page for a campaign):
 
 <Steps>
 
-1. Create your marketing page in Document Authoring at the path you want, for example `/campaigns/new-arrivals`.
+1. Create your marketing page in Document Authoring at the path you want, for example, `/campaigns/new-arrivals`.
 
-1. Add the `product-details` block to the page and set `default-sku` to the SKU you want to feature:
+1. Add the `product-details` block to the page. The block renders the product UI (gallery, price, options, and so on). You do not need any rows inside the block table. A header-only table is enough:
 
    <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
    <tbody>
    <tr>
-   <td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
-   </tr>
-   <tr>
-   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
-   <td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   <td style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
    </tr>
    </tbody>
    </table>
 
-1. Click the paper-plane button to preview the page and confirm the product renders. Unlike `/products/default`, marketing pages are not product templates, so the paper-plane opens correctly in a new tab with the product loaded.
+1. Add a metadata table at the top of your document with a `sku` row set to the SKU you want to feature. A freshly created page has no metadata table yet, so you need to build one: insert a two-column table, merge both cells in the first row, and type `metadata` in that merged cell. Then add a `sku` row below it, as shown here:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">sku</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+   </tr>
+   </tbody>
+   </table>
+
+   If your page already has a metadata table, just add a new `sku` row to it. You do not need a second table. For more on page metadata and its other properties, see [Page metadata](/merchants/quick-start/page-metadata/).
+
+1. Click the paper-plane button to preview the page. The block reads the `sku` from page metadata and renders that product in a new tab.
 
 </Steps>
 
-<Aside type="caution">
-Use this pattern sparingly. Every product in your catalog already has a working PDP at `/products/<url-key>/<sku>`. Adding a second hand-built PDP makes the campaign page harder to maintain when the catalog changes. Prefer linking from the campaign page to the canonical PDP whenever you can.
+<Aside type="note" title="Use the sku metadata row, not the block's default-sku">
+Use the `sku` metadata row shown above on any page where the SKU is not in the URL. The `default-sku` block setting only applies at `/products/default` in the inline preview and has no effect on marketing pages or any other page. See [default-sku](#default-sku) for details.
 </Aside>
 
-### Set the SKU through page metadata
+<Aside type="caution">
+Use this pattern sparingly. Every product already has its own page at `/products/<url-key>/<sku>`. Adding a second hand-built page for the same product means you have to keep both in sync when the catalog changes. Prefer linking from your campaign page to the product's existing URL whenever you can.
+</Aside>
 
-Some pages render a PDP without a SKU in the URL (for example, a saved short URL). For those pages, add a `sku` row to the page metadata table at the top of the document. The boilerplate reads `getMetadata('sku')` before it falls back to the URL.
+</TaskSection>
 
-<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<TaskSection>
+
+## Add companion blocks to a product page
+
+Your storefront comes with several blocks already set up at `/products/default`. Each block is a separate table in the document, and the page renders them in the order they appear. That means you can add a banner, a carousel, or a recommendations section simply by inserting a new table at the right spot.
+
+A good example is adding a `carousel` above the product details to give the page a featured image at the top. Shoppers see the carousel first, then scroll down to the product details.
+
+<Steps>
+
+1. In Document Authoring, open the document at `/products/default`.
+
+1. Click above the `product-details` table and insert a new table for the carousel. Each row below the header is one slide. Add your campaign image in the left cell and a caption in the right:
+
+   <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+   <tbody>
+   <tr>
+   <td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">carousel</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 1</td>
+   </tr>
+   <tr>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+   <td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 2</td>
+   </tr>
+   </tbody>
+   </table>
+
+1. Open the inline live-preview pane to confirm the carousel appears above the product details.
+
+</Steps>
+
+Your document will look like this, with the carousel table sitting above the `product-details` table:
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 0.75rem;">
 <tbody>
 <tr>
-<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">carousel</td>
 </tr>
 <tr>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">sku</td>
-<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 1</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); color: var(--sl-color-gray-3); font-style: italic;">image</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">Slide 2</td>
 </tr>
 </tbody>
 </table>
 
-See [Page metadata](/merchants/quick-start/page-metadata/) for the rest of the metadata fields available to every page.
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+</tr>
+</tbody>
+</table>
 
-### Companion blocks for a PDP
+The same principle applies to any other companion block. Add it where you want it to appear and the page renders it there.
 
-A typical PDP includes more than just the `product-details` block. The most common companion authors add at `/products/default` is [Product Recommendations](/merchants/content-customizations/product-recommendations/), placed under the `product-details` block to surface "You may also like" and similar carousels. You can also add generic content blocks the boilerplate ships (for example, an `accordion` for an FAQ, or a `hero` banner) when your storefront design calls for them.
-
-Each companion is a separate table in the same document. The `product-details` block does not need to know about the others; it just lives alongside them.
-
-## Customize beyond authoring
-
-When you reach the limit of what the block table can do, the rest is a developer task. Share these pages with the developer on your team:
-
-- [Product details overview](/dropins/product-details/) — what the PDP drop-in is and how it composes the smaller containers above.
-- [Containers](/dropins/product-details/containers/) — the building blocks a developer can rearrange, replace, or remove.
-- [Slots](/dropins/product-details/slots/) — how a developer customizes parts of a container (for example, swapping the swatch UI inside `ProductOptions`).
-- [Events](/dropins/product-details/events/) — the <Term>event bus</Term> signals the PDP emits and listens for, used to wire features such as analytics or custom CTAs.
-- [Notify Me CTA tutorial](/dropins/product-details/tutorials/notify-me-cta/) — a worked example that changes the primary button to "Notify Me" when a product is out of stock.
-
-The block also supports Adobe Experience Manager (AEM) Assets image delivery for the gallery. For the developer setup, see [AEM Assets configuration](/setup/configuration/aem-assets-configuration/).
+</TaskSection>
 
 ## Troubleshooting
 
-In the browser developer tools console, two warnings point to common setup problems:
+### The Add to Cart button stays disabled
 
-- `No defaultSku found in product-details block` — you opened `/products/default` in Universal Editor or Document Authoring preview but the `default-sku` row is missing from the `product-details` table. Add the row.
-- `Unable to infer main image from JSON-LD or meta tags` — the page is missing the prerendered product metadata that the boilerplate uses to preload the hero image. Run the [metadata generation script](/setup/seo/metadata/#generate-metadata) for the catalog, or confirm the page metadata table includes a valid `sku`. The gallery still renders from the API; you only lose the preload.
+The product has required options — such as size or color — that have not been selected yet. The block enables the button once all required options are selected.
 
-### Clicking the paper-plane button at /products/default redirects to a 404
 
-The paper-plane (Publish to Preview) button in the Document Authoring editor opens `https://main--{repo}--{org}.aem.page/products/default` in a new browser tab. That tab does not carry the `?dapreview` parameter that tells the PDP block to use the `default-sku` value from the document. Without a SKU — from the URL, from page metadata, or from `?dapreview` — the block redirects the browser to `/notfound`.
+<TaskSection label="Reference">
 
-This is expected behavior. The document at `/products/default` is not meant to be opened directly in a browser. Use the **inline live-preview pane** inside the Document Authoring editor to preview it (click the split-screen icon on the right sidebar). That pane adds `?dapreview=...` to the URL, the block reads `default-sku`, and the PDP renders normally.
+## How the product page works
 
-If the Add to Cart button stays disabled, the product has required options (such as size or color) that the shopper has not selected yet. The block enables the button when the option selection becomes valid.
+### How products become pages
 
-## Related resources
+Unlike a traditional CMS, you do not build a page for each product. Every product in your catalog gets a page automatically at `/products/<url-key>/<sku>`. Your authoring work is a one-time setup at `/products/default`: set a `default-sku` so you can preview, add companion blocks such as product recommendations, and edit any labels shoppers see. After that, you manage products in Commerce Admin and the storefront reflects those changes automatically.
 
-- [Product details overview](/dropins/product-details/) — start here if you want to understand what a developer can change.
-- [B2C Commerce blocks](/merchants/blocks/b2c/) — other B2C blocks you can pair with `product-details`.
+### Configuration
+
+The `product-details` block reads a single property from its block table. Add this table to your document to configure the block:
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">product-details</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">default-sku</td>
+<td style="width: 50%; padding: 0.4rem 0.75rem; border: 1px solid var(--sl-color-gray-5);">HOODIE-001</td>
+</tr>
+</tbody>
+</table>
+
+To set `default-sku` in practice, follow [Preview a product](#preview-a-product).
+
+#### default-sku
+
+The `default-sku` is a product SKU the block uses when the page does not supply a SKU in the URL or page metadata. The storefront reads `default-sku` only when the current page is the document at `/products/default` and you view it in the Document Authoring inline live-preview pane (the split-screen view inside the editor) or in Universal Editor. The paper-plane Publish to Preview button does not trigger this path. On any other page, or on the live storefront, the block uses the `sku` page metadata first and then falls back to the SKU in the URL.
+
+In practice, set `default-sku` on the document at `/products/default` so authors and reviewers can see a real product in preview. Setting `default-sku` on any other page has no effect because the block reads it only on the `/products/default` template. To show a product on a marketing page or any page where the SKU is not in the URL, set a `sku` row in that page's metadata table instead. See [Feature a product on a marketing page](#feature-a-product-on-a-marketing-page).
+
+</TaskSection>
