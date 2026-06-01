@@ -227,6 +227,6 @@ export function generateRedirects(basePath) {
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
         '/build-with-ai': `${basePath}/get-started/build-with-ai`,
-        '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`
+        '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,
     };
 }

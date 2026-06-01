@@ -98,6 +98,18 @@ async function config() {
         },
 
         head: [
+          // Real User Monitoring (RUM) — non-AEM EDS standalone script.
+          // data-rate="high" → weight 10 → ~1-in-10 pageviews sampled.
+          // CSP requirement: allow https://rum.hlx.page as script-src and connect-src.
+          {
+            tag: 'script',
+            attrs: {
+              defer: true,
+              'data-rate': 'high',
+              type: 'text/javascript',
+              src: 'https://rum.hlx.page/.rum/@adobe/helix-rum-js@^2/dist/rum-standalone.js',
+            },
+          },
           // DNS prefetch for the site's own domain
           {
             tag: 'link',
