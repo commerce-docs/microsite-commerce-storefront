@@ -89,6 +89,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
+            { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             {
               label: 'Cart',
