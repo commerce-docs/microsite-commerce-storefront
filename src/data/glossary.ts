@@ -95,7 +95,7 @@ const glossaryEntries: GlossaryEntry[] = [
     term: 'Drop-in components',
     definition:
       'NPM packages that provide core Commerce storefront features such as cart, checkout, product details, and account flows.',
-    aliases: ['Commerce drop-in components', 'drop-ins'],
+    aliases: ['Commerce drop-in components', 'drop-ins', 'drop-in'],
   },
   {
     term: 'Commerce blocks',
@@ -352,6 +352,29 @@ const glossaryEntries: GlossaryEntry[] = [
     definition:
       'A grouping key for `TargetedBlock` entries. When multiple blocks share this value, only the first matching block of that type renders, which enables fallback-chain behavior.',
     aliases: ['Type', 'type'],
+  },
+  {
+    term: 'progressive enhancement',
+    definition:
+      'An approach where a page starts as complete, readable HTML and JavaScript upgrades it to an interactive experience when it runs. Shoppers with JavaScript get live prices, stock, and add-to-cart. Crawlers and shoppers without JavaScript still see all the product information from the prerendered HTML.',
+  },
+  {
+    term: 'App Builder',
+    definition:
+      "Adobe's serverless platform for building and deploying cloud-native apps. The AEM Commerce Prerender app runs on App Builder — it polls your catalog on a schedule, generates product page HTML, and publishes it to Edge Delivery Services.",
+    aliases: ['Adobe App Builder'],
+  },
+  {
+    term: 'blob store',
+    definition:
+      'A file storage area that Adobe App Builder provides so serverless actions can save and retrieve files between runs. The prerender app saves generated HTML files here so Edge Delivery Services can serve them at product page URLs.',
+    aliases: ['blob storage', 'App Builder blob store'],
+  },
+  {
+    term: 'overlay',
+    definition:
+      'A complete HTML file that Edge Delivery Services serves at a specific page URL before any JavaScript runs. The prerender app generates one HTML file per product and registers it with Edge Delivery Services, so crawlers and shoppers receive full page content instantly.',
+    aliases: ['overlay content', 'overlay link'],
   },
   {
     term: 'Block table',
