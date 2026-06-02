@@ -1,15 +1,14 @@
 ---
 title: SEO indexing
-description: Boost your Adobe Commerce SEO on Edge Delivery Services! Follow our guidelines on data layers, canonical URLs, redirects, and sitemaps.
+description: Guidelines for canonical URLs, folder mapping, redirects, sitemaps, and multi-store crawling on Adobe Commerce storefronts with Edge Delivery Services.
 ---
 import Link from '@components/Link.astro';
 
+import { Aside } from '@astrojs/starlight/components';
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+This page covers URL and crawling concerns so search engines index the right Adobe Commerce storefront pages on Edge Delivery Services. For how indexing fits with platform SEO and metadata on first-load HTML, start with [SEO overview](/setup/seo/).
 
-Optimizing Adobe Commerce storefronts on Edge Delivery Services for search engines requires guidance. The general recommendations provided here are inspired by customers and partners who have built storefront projects on Edge Delivery Services.
-
-The following best practices are designed to help you ensure that your site is indexed correctly by search engines.
+These recommendations come from customer and partner storefront projects on Edge Delivery Services. Use them to keep URLs, canonical signals, and crawlers aligned.
 
 ### Canonical URLs
 
@@ -38,14 +37,14 @@ The URL format for folder-mapped PDPs looks like this:
 
 This is to include the SEO relevant `urlKey` parameter and the `SKU` which is needed to perform Catalog Service queries. Feel free to customize the format as needed. You might need to do advanced customization on the CDN.
 
-:::note
+<Aside type="note" title="Lowercase SKUs in URLs">
 The Commerce boilerplate enforces lowercase SKUs in all product URLs to ensure canonical consistency and comply with Edge Delivery Services <Link href={"https://www.aem.live/docs/limits#document-naming-restrictions"} text={"document naming restrictions"} />; SKUs must contain only `a-z`, `0-9`, `-`, and `.` (whitespace and other characters are not supported).
 
 - All product URLs now use lowercase SKUs by default
 - A centralized `getProductLink(urlKey, sku)` function ensures consistent URL generation
 - Sites with uppercase SKUs must either publish metadata or modify the URL generation function
-- See the [metadata documentation](/setup/seo/metadata/) for implementation details
-:::
+- See the [SEO metadata](/setup/seo/metadata/) documentation for implementation details
+</Aside>
 
 ### Multi-store setups
 
@@ -55,9 +54,9 @@ For [multi-store setups](/setup/configuration/multistore-setup/) or stores suppo
 
 - Verify that the `Magento-Store-Code` header value defined in your [storefront configuration](/setup/configuration/commerce-configuration/) is part of the URL for every Catalog Service or Live Search request.
 
-  :::note
+  <Aside type="note" title="Store code in URLs">
   This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
-  :::
+  </Aside>
 
 ### Cache-busting Query Parameter
 
@@ -65,7 +64,7 @@ The <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main"
 
 When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
 
-Here’s how the boilerplate handles it:
+Here's how the boilerplate handles it:
 
 1. It collects headers from your [storefront configuration](/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
 1. It creates a short hash (5 characters by default) based on those headers.
@@ -74,7 +73,7 @@ Here’s how the boilerplate handles it:
 
 This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
 
-You don’t need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
+You don't need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
 
 - The PDP drop-in component initializes.
 - Any component sends a request to the Catalog Service.
@@ -93,11 +92,11 @@ Ensure proper redirects are set up using the redirects sheet or through your [CD
 
 - Submit new sitemaps through Google Search Console (Google takes a while to detect new sitemaps).
 - If your site is using more than one sitemap, reference all sitemaps in your site's `robots.txt` file.
-- Ensure that all sitemaps are valid using the <Link href={"https://technicalseo.com/tools/hreflang/"} text={"hreflang Tags Testing Tool"} />.
+- Validate sitemap XML (structure and URLs) with a dedicated sitemap or XML validator before you rely on it for discovery—not the hreflang tester, which checks language alternates only.
 
-:::note
+<Aside type="note" title="Generate sitemaps on Edge Delivery Services">
 See <Link href={"https://www.aem.live/developer/sitemap"} text={"sitemaps"} /> in the Edge Delivery Services documentation for more information on how to generate sitemaps.
-:::
+</Aside>
 
 ### Other
 
