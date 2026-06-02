@@ -1,0 +1,65 @@
+---
+/**
+ * Wraps an author task so it stands out to people who only scan the page.
+ * Adds a left accent bar, an uppercase "Task" eyebrow above the heading, and a
+ * lead paragraph treatment.
+ *
+ * Author the heading and steps as normal Markdown inside the component so the
+ * heading keeps its auto-generated anchor and its place in "On this page". State
+ * the outcome in the final step or closing sentence rather than a separate label:
+ *
+ *   <TaskSection>
+ *
+ *   ## <TaskIcon /> Preview a product
+ *
+ *   Lead sentence that states the outcome.
+ *
+ *   <Steps>
+ *   1. ...
+ *   </Steps>
+ *
+ *   </TaskSection>
+ *
+ * The first paragraph after the heading is styled as the lead automatically.
+ * Pass `label` to rename the eyebrow.
+ */
+interface Props {
+  label?: string;
+}
+
+const { label = 'How To' } = Astro.props as Props;
+---
+
+<section class="task-section">
+  <p class="task-eyebrow">{label}</p>
+  <slot />
+</section>
+
+<style is:global>
+  .sl-markdown-content .task-section {
+    margin-block: 2.5rem;
+    /* padding: 0.5rem 0 0.25rem 1.5rem; */
+    /* border-inline-start: 2px solid var(--sl-color-accent); */
+  }
+
+  .sl-markdown-content .task-section .task-eyebrow {
+    margin: 0 0 0.25rem;
+    /* font-size: 1rem; */
+    font-weight: 600;
+    /* letter-spacing: 0.09em; */
+    text-transform: uppercase;
+    color: var(--sl-color-accent);
+  }
+
+  /* Headings are wrapped in `.sl-heading-wrapper`, so pull that wrapper (or a
+     bare heading) up tight under the eyebrow. */
+  .sl-markdown-content .task-section .task-eyebrow + :is(.sl-heading-wrapper, h2, h3) {
+    margin-top: 0.25rem;
+  }
+
+  .sl-markdown-content .task-section :is(.sl-heading-wrapper, h2, h3) + p {
+    margin-top: 0.5rem;
+    /* font-size: var(--sl-text-lg); */
+    color: var(--sl-color-white);
+  }
+</style>
