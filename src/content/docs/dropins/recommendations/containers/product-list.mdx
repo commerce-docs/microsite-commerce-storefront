@@ -28,6 +28,7 @@ The `ProductList` container provides the following configuration options:
     ['routeProduct', 'function', 'No', 'Callback function that returns a product URL.'],
     ['hideHeading', 'boolean', 'No', 'Hide recommendations heading text.'],
     ['initialData', 'object', 'No', 'Pre-loaded recommendation data to avoid initial fetch.'],
+    ['pagePlacement', 'string', 'No', 'Identifies the placement of the recommendations unit on the page (for example, `product-list`). Used for ACDL analytics event tracking.'],
     ['slots', 'object', 'No', 'Slots for customizing heading, thumbnail, price, title, SKU, and footer.'],
   ]}
 />
@@ -100,6 +101,7 @@ export interface Item {
   visibility: string;
   queryType: string;
   itemType: string;
+  inStock?: boolean;
 }
 
 interface ItemImage {
@@ -196,15 +198,18 @@ provider.render(ProductList, {
         addToCart.className = 'footer__button--add-to-cart';
         wrapper.appendChild(addToCart);
 
-        if (ctx.product.itemType === 'SimpleProductView') {
+        if (ctx.item.itemType === 'SimpleProductView') {
           // Add to Cart Button
           UI.render(Button, {
             children: 'Add to Cart',
-            onClick: () => {
-              // Call add to cart function from cart/api
-              console.log('Add to Cart');
-            },
+            onClick: ctx.item.inStock
+              ? () => {
+                // Call add to cart function from cart/api
+                console.log('Add to Cart');
+              }
+              : undefined,
             variant: 'primary',
+            disabled: !ctx.item.inStock,
           })(addToCart);
         } else {
           // View Product Button
@@ -212,7 +217,7 @@ provider.render(ProductList, {
             children: 'Select Options',
             onClick: () => {
               console.log('Select Options');
-              window.location.href = ctx.product.urlKey;
+              window.location.href = ctx.item.urlKey;
             },
             variant: 'tertiary',
           })(addToCart);
