@@ -14,6 +14,7 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
+import { PRODUCTION_SITE, PRODUCTION_BASE_PATH } from './site.config.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isGitHub = process.env.NODE_ENV === 'github';
@@ -21,7 +22,7 @@ const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
 // Determine the base path based on the environment
 const basePath = isProduction
-  ? '/developer/commerce/storefront'
+  ? PRODUCTION_BASE_PATH
   : isGitHub
     ? process.env.VITE_GITHUB_BASE_PATH
     : '';
@@ -52,7 +53,7 @@ async function config() {
     image: {
       service: passthroughImageService(),
     },
-    site: 'https://experienceleague.adobe.com',
+    site: PRODUCTION_SITE,
     base: basePath,
     markdown: {
       remarkPlugins: [remarkBasePathLinks],
@@ -86,6 +87,18 @@ async function config() {
         },
 
         head: [
+          // Real User Monitoring (RUM) — non-AEM EDS standalone script.
+          // data-rate="high" → weight 10 → ~1-in-10 pageviews sampled.
+          // CSP requirement: allow https://rum.hlx.page as script-src and connect-src.
+          {
+            tag: 'script',
+            attrs: {
+              defer: true,
+              'data-rate': 'high',
+              type: 'text/javascript',
+              src: 'https://rum.hlx.page/.rum/@adobe/helix-rum-js@^2/dist/rum-standalone.js',
+            },
+          },
           // DNS prefetch for the site's own domain
           {
             tag: 'link',
@@ -185,12 +198,19 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**', '/dropins/all/common-events/**'],
             }
           ),
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
+            // Generated static bundles; `**/` matches base-prefixed URLs (for example, GitHub Pages).
+            exclude: [
+              '**/llms.txt',
+              '**/llms-full.txt',
+              '**/llms-small.txt',
+              '**/_llms-txt/**',
+            ],
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
