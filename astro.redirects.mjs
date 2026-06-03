@@ -22,6 +22,34 @@ export function generateRedirects(basePath) {
         '/customize/style': `${basePath}/dropins/all/styling`,
         '/customize': `${basePath}/dropins/all/introduction`,
 
+        // Legacy /dropins/customize/* URLs (same targets as /customize/*; crawlers still hit the old paths)
+        '/dropins/customize/design-tokens': `${basePath}/dropins/all/branding`,
+        '/dropins/customize/enrich': `${basePath}/dropins/all/enriching`,
+        '/dropins/customize/localize': `${basePath}/dropins/all/localizing`,
+        '/dropins/customize/slots': `${basePath}/dropins/all/extending`,
+        '/dropins/customize/style': `${basePath}/dropins/all/styling`,
+        '/dropins/customize': `${basePath}/dropins/all/introduction`,
+
+        // Cart container slug alias
+        '/dropins/cart/containers/minicart': `${basePath}/dropins/cart/containers/mini-cart`,
+
+        // Legacy PDP paths under /dropins/product-details/pdp-* (older site map and bookmarks)
+        '/dropins/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
+        '/dropins/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
+        '/dropins/product-details/pdp-initialization': `${basePath}/dropins/product-details/initialization`,
+        '/dropins/product-details/pdp-installation': `${basePath}/dropins/product-details/quick-start`,
+        '/dropins/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
+        '/dropins/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
+
+        // Other legacy doc paths from crawlers and old bookmarks
+        '/dropins/user-account/tutorials': `${basePath}/dropins/user-account/`,
+        '/dropins/user-auth/auth-functions': `${basePath}/dropins/user-auth/functions`,
+        '/dropins/b2b/overview': `${basePath}/dropins-b2b/`,
+        '/dropins/checkout/containers/order-confirmation-header': `${basePath}/dropins/checkout/`,
+        '/dropins/checkout/containers/overview': `${basePath}/dropins/checkout/containers/`,
+        '/merchant/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
+        '/superstar': `${basePath}/`,
+
         // ========= DROP-INS REDIRECTS =========
         '/dropins/all/installing': `${basePath}/dropins/all/quick-start`,
         '/dropins/all/anatomy': `${basePath}/dropins/all/introduction`,
@@ -55,8 +83,10 @@ export function generateRedirects(basePath) {
         // Product Details drop-in
         '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
         '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
+        '/product-details/pdp-initialization': `${basePath}/dropins/product-details/initialization`,
         '/product-details/pdp-installation': `${basePath}/dropins/product-details/quick-start`,
         '/product-details/pdp-introduction': `${basePath}/dropins/product-details/`,
+        '/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
         '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
         '/dropins/product-details/installation': `${basePath}/dropins/product-details/quick-start`,
 
@@ -90,6 +120,8 @@ export function generateRedirects(basePath) {
         '/get-started/release': `${basePath}/releases/`,
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/seo': `${basePath}/setup/seo/`,
+        '/get-started/seo/': `${basePath}/setup/seo/`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
@@ -124,6 +156,8 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
+        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)
@@ -167,6 +201,9 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/experiments': `${basePath}/merchants/content-customizations/experiments`,
         '/merchants/get-started/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
+        // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
+        '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
+        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -180,11 +217,16 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
 
         // ========= MISC REDIRECTS =========
+        // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
+        '/create': `${basePath}/get-started/create-storefront`,
+        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
+        '/build-with-ai': `${basePath}/get-started/build-with-ai`,
+        '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,
     };
 }
