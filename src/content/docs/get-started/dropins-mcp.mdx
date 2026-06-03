@@ -1,0 +1,126 @@
+---
+title: Dropins MCP
+description: Install and configure the Dropins MCP server to give your AI editor live knowledge of Adobe Commerce drop-in APIs, slots, events, and design tokens.
+---
+
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+The Dropins MCP is a [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI editors and agents live, accurate knowledge of Adobe Commerce drop-in components. Instead of relying on training data that may not reflect the latest APIs, the MCP queries a registry generated directly from drop-in source code so slots, events, containers, and API functions are always current.
+
+Once configured, your AI editor can answer questions like _"What slots does CartSummaryList have?"_, scaffold a new block with the right imports, check whether your project references any renamed or removed APIs, and generate working event handler and slot code without guessing.
+
+## Prerequisites
+
+- Node.js 18 or later (`node -v` to confirm)
+- An AI editor that supports MCP servers: [Cursor](https://cursor.sh), [VS Code with GitHub Copilot](https://code.visualstudio.com), or [Claude Desktop](https://claude.ai/download)
+
+## Installation
+
+<Steps>
+
+1. **Install the MCP package globally.**
+
+   ```bash
+   npm install -g @dropins/mcp
+   ```
+
+2. **Add the server to your editor configuration.** Choose your editor below and paste the snippet into the correct config file. The editor spawns the MCP process automatically no separate server to keep running.
+
+   <Tabs>
+     <TabItem label="Cursor">
+       Add to `~/.cursor/mcp.json` for all projects, or `.cursor/mcp.json` inside a specific project:
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="VS Code">
+       Add to `.vscode/mcp.json` inside your project:
+
+       ```json
+       {
+         "servers": {
+           "dropins": {
+             "type": "stdio",
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Claude Desktop">
+       Add to `claude_desktop_config.json`:
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+     </TabItem>
+   </Tabs>
+
+3. **Restart your editor.** The Dropins MCP appears in the tool list with 20 tools available.
+
+4. **Verify the connection.** Ask your AI assistant:
+
+   > _"Use the dropins MCP what slots does the CartSummaryList container have?"_
+
+   If it returns a list of slot names with context types, the MCP is connected and working.
+
+</Steps>
+
+## Optional: enable AI-powered documentation search
+
+The `search_commerce_docs` tool provides semantic search across the full Adobe Commerce documentation using the Adobe I/O CLI. Without it, the MCP still works fully local documentation snapshots are always available through `search_docs`.
+
+To enable it:
+
+```bash
+npm install -g @adobe/aio-cli
+aio auth login
+```
+
+## What you can ask
+
+The MCP works best with concrete, task-oriented prompts. A few examples:
+
+- _"What events does the checkout dropin emit when a payment method is selected?"_
+- _"Scaffold a block that combines CartSummaryList and OrderConfirmation"_
+- _"Are there any stale containers or removed APIs in my commerce-cart block?"_
+- _"What GraphQL mutation does checkout use to place an order?"_
+- _"Generate a slot implementation that adds a loyalty points badge next to the cart line item price"_
+- _"Am I using the latest drop-in versions?"_
+- _"What CSS design tokens control button colors?"_
+
+<Aside type="tip">
+  If your editor does not automatically route questions to the MCP, add _"Use the dropins MCP"_ at the start of your prompt. In Cursor, you can also create a rule in `.cursor/rules/` that instructs the agent to always consult the MCP for drop-in questions.
+</Aside>
+
+## Drop-in coverage
+
+The MCP covers the full drop-in suite and SDK packages.
+
+**B2C drop-ins:** Cart, Checkout, Order, User Auth, User Account, Product Details, Product Discovery, Wishlist, Recommendations, Payment Services, Personalization.
+
+**B2B drop-ins:** Quote Management, Requisition List, Company Management, Company Switcher, Purchase Order, Quick Order.
+
+**SDK packages:** Elsie UI components, Event Bus, Fetch GraphQL, Build Tools, reCAPTCHA, Storefront Design tokens.
+
+For the full tools reference all 20 tools with parameters and usage examples see [Dropins MCP reference](/reference/dropins-mcp/).
+
+For troubleshooting connection and configuration issues, see [FAQ](/troubleshooting/faq/#dropins-mcp).
