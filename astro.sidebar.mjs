@@ -947,6 +947,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
             { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
           ],
         },
       ],
