@@ -1,0 +1,62 @@
+---
+title: ShareRequisitionListContent Container
+description: Learn about the ShareRequisitionListContent container in the Requisition List drop-in.
+sidebar:
+  label: ShareRequisitionListContent
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+import Term from '@components/Term.astro';
+
+The `ShareRequisitionListContent` container renders the share UI for a requisition list. You can share by email (select company colleagues as recipients) or by copy link (generate a URL recipients use to import the list).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 1.4.0</strong>
+</div>
+
+## Configuration
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | UID of the requisition list to share. The container calls [`shareRequisitionListByToken`](/dropins-b2b/requisition-list/functions/#sharerequisitionlistbytoken) to build the copy-link URL and passes this UID to `onSubmit` for the email flow. |
+| `isSubmitting` | `boolean` | Yes | Controls the submitting state of the form. Set to `true` while the share-by-email request is in progress to disable the submit button and prevent duplicate submissions. |
+| `onSubmit` | `(customerUids: string[]) => Promise<Array<{ message: string; code: string }> \| null>` | Yes | Called when the user clicks **Submit** with the selected recipient UIDs. Return `null` on success or an array of error objects on failure. Typically wraps [`shareRequisitionListByEmail`](/dropins-b2b/requisition-list/functions/#sharerequisitionlistbyemail). |
+| `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. When provided, the container excludes this address from the selectable company recipients so the sender cannot share with themselves. |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Receives the relative share URL (for example, `/customer/requisition-list-sharing?requisition_id=<token>` from `requisition_list_share_storefront_path`) and returns the final URL to display. Use this to convert the relative URL to an absolute URL. If you omit this prop, the container uses the relative URL as-is. Example: `(relativeUrl) => window.location.origin + relativeUrl` |
+
+</TableWrapper>
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+[`RequisitionListHeader`](/dropins-b2b/requisition-list/containers/requisition-list-header/) embeds this container in a share modal. When `requisition_list_sharing_enabled` is `true` in store configuration, the header shows a **Share** action button that opens the modal.
+
+The following example renders the container on its own (outside the header modal):
+
+```js
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import { ShareRequisitionListContent } from '@dropins/storefront-requisition-list/containers/ShareRequisitionListContent.js';
+import { shareRequisitionListByEmail } from '@dropins/storefront-requisition-list/api.js';
+
+await provider.render(ShareRequisitionListContent, {
+  requisitionListUid: 'YOUR_LIST_UID',
+  isSubmitting: false,
+  onSubmit: async (customerUids) => {
+    return shareRequisitionListByEmail('YOUR_LIST_UID', customerUids);
+  },
+  currentCustomerEmail: 'current.user@example.com',
+  routeSharedRequisitionList: (relativeUrl) => window.location.origin + relativeUrl,
+})(block);
+```
+
+Replace `YOUR_LIST_UID` with the UID of the list you want to share.
+
+<Aside type="tip">
+The container reads `requisition_list_sharing_enabled`, `requisition_list_share_max_recipients`, and `requisition_list_share_storefront_path` from the store configuration (loaded when the drop-in initializes). It also calls [`getCompanyUsers`](/dropins-b2b/requisition-list/functions/#getcompanyusers) to populate the email recipient list. If your Commerce instance does not yet expose these GraphQL fields, sharing is disabled.
+</Aside>

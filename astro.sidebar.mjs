@@ -681,6 +681,8 @@ export function generateSidebar() {
                     { label: 'RequisitionListHeader', link: '/dropins-b2b/requisition-list/containers/requisition-list-header/' },
                     { label: 'RequisitionListSelector', link: '/dropins-b2b/requisition-list/containers/requisition-list-selector/' },
                     { label: 'RequisitionListView', link: '/dropins-b2b/requisition-list/containers/requisition-list-view/' },
+                    { label: 'ShareRequisitionListContent', link: '/dropins-b2b/requisition-list/containers/share-requisition-list-content/' },
+                    { label: 'SharedRequisitionList', link: '/dropins-b2b/requisition-list/containers/shared-requisition-list/' },
                   ],
                 },
                 { label: 'Slots', link: '/dropins-b2b/requisition-list/slots/' },
