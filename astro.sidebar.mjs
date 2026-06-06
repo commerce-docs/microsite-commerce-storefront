@@ -83,6 +83,15 @@ export function generateSidebar() {
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
+        // ---------- STOREFRONT FEATURES ----------
+        {
+          label: 'Storefront Features',
+          collapsed: true,
+          items: [
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+            { label: 'Seller-assisted buying', link: '/storefront-features/seller-assisted-buying/' },
+          ],
+        },
         // ---------- HOW-TOS ----------
         {
           label: 'Tutorials',
@@ -167,7 +176,6 @@ export function generateSidebar() {
                 { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
                 { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
                 { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-                { label: 'Gated Content', link: '/setup/configuration/gated-content/' },
                 { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
               ],
             },
@@ -466,6 +474,8 @@ export function generateSidebar() {
                     {
                       label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
+                    { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
+                    { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
                   ],
                 },
               ],
