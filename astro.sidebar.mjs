@@ -83,12 +83,22 @@ export function generateSidebar() {
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
+        // ---------- STOREFRONT FEATURES ----------
+        {
+          label: 'Storefront Features',
+          collapsed: true,
+          items: [
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+            { label: 'Seller-assisted buying', link: '/storefront-features/seller-assisted-buying/' },
+          ],
+        },
         // ---------- HOW-TOS ----------
         {
           label: 'Tutorials',
           collapsed: true,
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
+            { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             {
               label: 'Cart',
@@ -148,6 +158,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
                 { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
                 { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
@@ -165,7 +176,6 @@ export function generateSidebar() {
                 { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
                 { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
                 { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-                { label: 'Gated Content', link: '/setup/configuration/gated-content/' },
                 { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
               ],
             },
@@ -464,6 +474,8 @@ export function generateSidebar() {
                     {
                       label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
+                    { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
+                    { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
                   ],
                 },
               ],
@@ -944,6 +956,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
             { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
           ],
         },
       ],
