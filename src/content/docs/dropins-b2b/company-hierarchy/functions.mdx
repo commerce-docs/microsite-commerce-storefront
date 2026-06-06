@@ -1,0 +1,122 @@
+---
+title: Company Hierarchy Functions
+description: API functions used by the CompanyHierarchy container to load and update parent-child company relationships.
+sidebar:
+  label: Functions
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The `CompanyHierarchy` container uses four API functions from `@dropins/storefront-company-management`. You can also call these functions directly when building custom hierarchy workflows.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-company-management</strong>
+</div>
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`isCompanyAdmin`](#iscompanyadmin) | Checks whether the signed-in customer has the Company Administrator role. |
+| [`getCompanyHierarchy`](#getcompanyhierarchy) | Returns the company hierarchy with parent-child relationships. |
+| [`assignChildCompany`](#assignchildcompany) | Assigns a child company to a parent company. |
+| [`unassignChildCompany`](#unassignchildcompany) | Removes a child company from its parent, making it root-level. |
+
+</TableWrapper>
+
+## isCompanyAdmin
+
+Checks whether the signed-in customer has the Company Administrator role (`role.id === '0'` or `role.name === 'Company Administrator'`).
+
+```ts
+const isCompanyAdmin = async (): Promise<boolean>
+```
+
+The `CompanyHierarchy` container calls this function on mount. Non-admin users see the `NO_ACCESS` view mode.
+
+#### Example
+
+```js
+import { isCompanyAdmin } from '@dropins/storefront-company-management/api.js';
+
+const isAdmin = await isCompanyAdmin();
+```
+
+## getCompanyHierarchy
+
+Retrieves the complete company hierarchy, including parent-child relationships from `customer.company_hierarchy`.
+
+```ts
+const getCompanyHierarchy = async (): Promise<Company[]>
+```
+
+#### Example
+
+```js
+import { getCompanyHierarchy } from '@dropins/storefront-company-management/api.js';
+
+const companies = await getCompanyHierarchy();
+```
+
+## assignChildCompany
+
+Assigns a child company to a parent company within the hierarchy.
+
+```ts
+const assignChildCompany = async (
+  parentCompanyId: string,
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `parentCompanyId` | `string` | Yes | Unique ID of the parent company. |
+| `childCompanyId` | `string` | Yes | Unique ID of the child company to assign. |
+
+</TableWrapper>
+
+#### Example
+
+```js
+import { assignChildCompany } from '@dropins/storefront-company-management/api.js';
+
+await assignChildCompany(parentId, childId);
+```
+
+## unassignChildCompany
+
+Removes a child company from its parent, making it a root-level company.
+
+```ts
+const unassignChildCompany = async (
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `childCompanyId` | `string` | Yes | Unique ID of the child company to unassign. |
+
+</TableWrapper>
+
+#### Example
+
+```js
+import { unassignChildCompany } from '@dropins/storefront-company-management/api.js';
+
+await unassignChildCompany(childId);
+```
+
+<Aside type="note">
+For the full Company Management API surface, see [Company Management functions](/dropins-b2b/company-management/functions/).
+</Aside>

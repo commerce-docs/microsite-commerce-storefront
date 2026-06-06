@@ -1,0 +1,31 @@
+---
+title: Company Hierarchy Events and Data
+description: Learn how the CompanyHierarchy container handles data and related Company Management events.
+sidebar:
+  label: Events
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `CompanyHierarchy` container fetches hierarchy data through internal API calls. It does not emit or listen to dedicated event-bus events for hierarchy changes.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-company-management</strong>
+</div>
+
+## Data flow
+
+The container orchestrates data retrieval automatically:
+
+1. `isCompanyAdmin()` checks whether the signed-in customer has the Company Administrator role.
+2. `getCompanyHierarchy()` loads parent-child relationships from `customer.company_hierarchy`.
+3. After a successful drag-and-drop move, the container calls `assignChildCompany()` or `unassignChildCompany()` and reloads hierarchy data.
+
+## Related Company Management events
+
+Other containers in the same package use the [event bus](/sdk/reference/events). If you integrate custom code alongside Company Hierarchy, you may want to listen for shared events documented on [Company Management events](/dropins-b2b/company-management/events/), such as `error` for network failures during API calls.
+
+<Aside type="note">
+To react to hierarchy changes in custom code, call the API functions in [Company Hierarchy functions](/dropins-b2b/company-hierarchy/functions/) directly or listen for DOM updates in your own block after the container reloads data.
+</Aside>

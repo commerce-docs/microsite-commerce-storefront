@@ -562,6 +562,28 @@ export function generateSidebar() {
               ],
             },
             {
+              label: 'Company Hierarchy',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/dropins-b2b/company-hierarchy/' },
+                { label: 'Quick Start', link: '/dropins-b2b/company-hierarchy/quick-start/' },
+                { label: 'Functions', link: '/dropins-b2b/company-hierarchy/functions/' },
+                { label: 'Events', link: '/dropins-b2b/company-hierarchy/events/' },
+                { label: 'Initialization', link: '/dropins-b2b/company-hierarchy/initialization/' },
+                {
+                  label: 'Containers',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/dropins-b2b/company-hierarchy/containers/' },
+                    { label: 'CompanyHierarchy', link: '/dropins-b2b/company-hierarchy/containers/company-hierarchy/' },
+                  ],
+                },
+                { label: 'Slots', link: '/dropins-b2b/company-hierarchy/slots/' },
+                { label: 'Styles', link: '/dropins-b2b/company-hierarchy/styles/' },
+                { label: 'Dictionary', link: '/dropins-b2b/company-hierarchy/dictionary/' },
+              ],
+            },
+            {
               label: 'Company Switcher',
               collapsed: true,
               items: [

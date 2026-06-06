@@ -1,0 +1,172 @@
+---
+title: CompanyHierarchy Container
+description: Learn about the CompanyHierarchy container for viewing and managing parent-child company relationships.
+sidebar:
+  label: CompanyHierarchy
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Diagram from '@components/Diagram.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `CompanyHierarchy` container displays and manages the company organizational hierarchy. Company administrators can visualize parent-child relationships and reorganize companies through an interactive tree view with drag-and-drop support.
+
+<Diagram caption="CompanyHierarchy container">
+  ![CompanyHierarchy container](@images/dropins-b2b/company-hierarchy/company-hierarchy.png)
+</Diagram>
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-company-management</strong>
+</div>
+
+<Aside type="caution">
+Company Hierarchy supports only a single level of nesting. Child companies cannot have their own child companies.
+</Aside>
+
+## View modes
+
+The container switches among view modes based on data state and user permissions:
+
+<TableWrapper nowrap={[0,1]}>
+
+| View mode | Description |
+| --- | --- |
+| `IS_LOADING` | Shows a loading spinner during the admin check and initial data fetch. |
+| `NO_ACCESS` | Shows an access denied message when the user is not a Company Administrator. |
+| `IS_EMPTY` | Shows an empty state when no companies exist in the hierarchy. |
+| `IS_ERROR` | Shows an error message when API calls fail or a network error occurs. |
+| `SHOW_STRUCTURE` | Renders the full interactive hierarchy tree. |
+
+</TableWrapper>
+
+## Configuration
+
+The `CompanyHierarchy` container provides the following configuration options:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `withHeader` | `boolean` | No | When `true`, renders the "Company Hierarchy" header above the tree. Default is `false`. |
+| `className` | `string` | No | Custom CSS class merged with the default `account-company-hierarchy` root class. |
+| `defaultExpanded` | `boolean` | No | When `true`, expands all tree nodes on mount. When `false`, collapses all nodes except the virtual root. Default is `true`. |
+| `showAdminBadge` | `boolean` | No | When `true`, shows an "Admin" tag next to companies where `is_admin` is `true`. Default is `false`. |
+| `slots` | `object` | No | Optional slot overrides. See [Slots](/dropins-b2b/company-hierarchy/slots/). |
+
+</TableWrapper>
+
+### withHeader
+
+Set `withHeader` to `true` when displaying the hierarchy as a standalone page section that needs a title. Set it to `false` (the default) when embedding the container inside another container that already has a title. Use `true` for full-page views in company management dashboards and `false` for sidebar widgets or embedded views in multi-section pages.
+
+### className
+
+Use `className` to apply custom brand styling that matches an existing design system, add responsive layout classes for mobile or tablet optimization, integrate with utility CSS frameworks such as Tailwind or Bootstrap, or override default spacing, colors, or typography for a specific implementation.
+
+### defaultExpanded
+
+Set `defaultExpanded` to `true` for small hierarchies (fewer than 10 companies) where users need immediate visibility of the full structure. Set it to `false` for large hierarchies (20 or more companies) to prevent visual overload. Use `false` for progressive disclosure in compact layouts or mobile views.
+
+### showAdminBadge
+
+Set `showAdminBadge` to `true` in multi-company environments where users manage multiple organizations, or when users need quick visual identification of which companies they have administrative access to. Use it in company selection interfaces where permissions context matters. Disable it for single-company users or when permissions are not relevant to the task.
+
+### slots
+
+Use the `slots` prop to replace the default Expand All and Collapse All toolbar buttons with custom-styled controls, add additional toolbar actions such as "Export to PDF", "Print Structure", or "Share Hierarchy", implement custom filtering or search above the tree, display company count badges or hierarchy statistics, or integrate analytics tracking for expand and collapse events. See [Company Hierarchy slots](/dropins-b2b/company-hierarchy/slots/) for the full context API.
+
+## Displayed information
+
+The tree view shows:
+
+- Company names in a hierarchical layout
+- Visual distinction between root companies and child companies
+- Optional admin badges when `showAdminBadge` is `true`
+- Drag handles on child companies for reassignment
+- Expand and collapse controls for companies with children
+- Company icons with stronger styling for root-level companies
+- Selection highlighting on the active company row
+- Toolbar actions for **Expand All** and **Collapse All**
+
+## Available actions
+
+- Expand or collapse individual nodes using chevron controls
+- **Expand All** and **Collapse All** from the toolbar
+- Select a company row to highlight it
+- Drag child companies to reorganize the hierarchy
+- Drop companies on root-level companies or the virtual root to reassign relationships
+- Automatic data reload after successful assign or unassign operations
+
+## Permissions
+
+The container requires the Company Administrator role. It validates access through `isCompanyAdmin()` before loading hierarchy data. Non-admin users see the `NO_ACCESS` view mode.
+
+## Admin configuration
+
+No Admin settings control the `CompanyHierarchy` container directly. The feature depends on these foundational settings:
+
+### Store-level configuration
+
+**Admin** > **Stores** > **Settings** > **Configuration** > **General** > **B2B Features** > **Company**
+
+- Enable Company Registration from the Storefront — set to Yes to allow company creation
+- Enable Company — set to Yes to enable company features, including hierarchy management
+
+### Company-level configuration
+
+**Admin** > **Customers** > **Companies** > **Edit Company** > **Advanced Settings**
+
+- The parent company must exist and be in Active status
+- Child companies must have valid company records before assignment
+
+## Slots
+
+This container exposes the `Actions` slot for toolbar customization. See [Company Hierarchy slots](/dropins-b2b/company-hierarchy/slots/).
+
+## Usage
+
+The following examples demonstrate how to render the `CompanyHierarchy` container:
+
+```js
+import { CompanyHierarchy } from '@dropins/storefront-company-management/containers/CompanyHierarchy.js';
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+
+// Basic usage without header
+await provider.render(CompanyHierarchy, {})(element);
+
+// With header title
+await provider.render(CompanyHierarchy, {
+  withHeader: true,
+})(element);
+
+// Collapsed by default with admin badges
+await provider.render(CompanyHierarchy, {
+  defaultExpanded: false,
+  showAdminBadge: true,
+  withHeader: true,
+})(element);
+```
+
+### Custom toolbar actions
+
+```js
+import { CompanyHierarchy } from '@dropins/storefront-company-management/containers/CompanyHierarchy.js';
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { Button } from '@adobe-commerce/elsie/components';
+
+await provider.render(CompanyHierarchy, {
+  className: 'custom-hierarchy-styling',
+  withHeader: true,
+  defaultExpanded: true,
+  showAdminBadge: true,
+  slots: {
+    Actions: ({ expandAll, collapseAll, treeItemsCount }) => (
+      <div className="custom-actions">
+        <Button onClick={expandAll}>Open All ({treeItemsCount})</Button>
+        <Button onClick={collapseAll}>Close All</Button>
+        <Button>Export Structure</Button>
+      </div>
+    ),
+  },
+})(element);
+```

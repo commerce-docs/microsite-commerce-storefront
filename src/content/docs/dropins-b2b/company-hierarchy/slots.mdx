@@ -1,0 +1,84 @@
+---
+title: Company Hierarchy Slots
+description: Customize toolbar actions in the CompanyHierarchy container using slots.
+sidebar:
+  label: Slots
+  order: 7
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+The `CompanyHierarchy` container exposes an `Actions` slot for replacing or extending the default toolbar. For default slot properties shared across drop-ins, see [Extending drop-in components](/dropins/all/extending/).
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Package: @dropins/storefront-company-management</strong>
+</div>
+
+<TableWrapper nowrap={[0]}>
+
+| Container | Slots |
+|-----------|-------|
+| [`CompanyHierarchy`](#companyhierarchy-slots) | `Actions` |
+
+</TableWrapper>
+
+## CompanyHierarchy slots
+
+The slots for the `CompanyHierarchy` container allow you to customize toolbar actions.
+
+```typescript
+interface CompanyHierarchyProps {
+  slots?: {
+    Actions?: SlotProps<HierarchyActionsContext>;
+  };
+}
+```
+
+### HierarchyActionsContext
+
+The `Actions` slot receives the following context properties:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `expandAll` | `() => void` | Expands all tree nodes. |
+| `collapseAll` | `() => void` | Collapses all nodes except the virtual root. |
+| `expandedIds` | `Set<string>` | Current set of expanded node IDs. |
+| `setExpandedIds` | `(ids: Set<string>) => void` | Programmatically controls expansion state. |
+| `treeItemsCount` | `number` | Total number of companies in the hierarchy. |
+
+</TableWrapper>
+
+### Actions slot
+
+The `Actions` slot replaces the default **Expand All** and **Collapse All** buttons. Use it to add custom-styled controls, export actions such as "Export to PDF" or "Print Structure", custom filtering or search above the tree, company count badges or hierarchy statistics, or analytics tracking for expand and collapse events.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-company-management/render.js';
+import { CompanyHierarchy } from '@dropins/storefront-company-management/containers/CompanyHierarchy.js';
+import { Button } from '@adobe-commerce/elsie/components';
+
+await provider.render(CompanyHierarchy, {
+  withHeader: true,
+  slots: {
+    Actions: ({ expandAll, collapseAll, treeItemsCount }) => (
+      <div className="custom-actions">
+        <Button onClick={expandAll}>Open All ({treeItemsCount})</Button>
+        <Button onClick={collapseAll}>Close All</Button>
+        <Button>Export Structure</Button>
+      </div>
+    ),
+  },
+})(block);
+```
+
+<Aside type="tip">
+When you omit the `Actions` slot, the container renders the default expand and collapse toolbar buttons.
+</Aside>
