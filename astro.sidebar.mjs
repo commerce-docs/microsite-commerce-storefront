@@ -83,15 +83,6 @@ export function generateSidebar() {
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
-        // ---------- STOREFRONT FEATURES ----------
-        {
-          label: 'Storefront Features',
-          collapsed: true,
-          items: [
-            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-            { label: 'Seller-assisted buying', link: '/storefront-features/seller-assisted-buying/' },
-          ],
-        },
         // ---------- HOW-TOS ----------
         {
           label: 'Tutorials',
@@ -174,6 +165,7 @@ export function generateSidebar() {
                 { label: 'AEM Assets Integration', link: '/setup/configuration/aem-assets-configuration/' },
                 { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
                 { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
+                { label: 'Gated content', link: '/setup/configuration/gated-content/' },
                 { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
                 { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
                 { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
@@ -474,6 +466,7 @@ export function generateSidebar() {
                     {
                       label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
+                    { label: 'Seller-Assisted Buying', link: '/storefront-features/seller-assisted-buying/' },
                     { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
                     { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
                   ],
