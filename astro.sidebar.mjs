@@ -31,6 +31,7 @@ export function generateSidebar() {
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: 'Documentation bundles for AI tools', link: '/get-started/build-with-ai/' },
+            { label: 'Dropins MCP', link: '/get-started/dropins-mcp/' },
           ],
         },
         {
