@@ -548,6 +548,7 @@ export function generateSidebar() {
                     { label: 'Overview', link: '/dropins-b2b/company-management/containers/' },
                     { label: 'AcceptInvitation', link: '/dropins-b2b/company-management/containers/accept-invitation/' },
                     { label: 'CompanyCredit', link: '/dropins-b2b/company-management/containers/company-credit/' },
+                    { label: 'CompanyHierarchy', link: '/dropins-b2b/company-management/containers/company-hierarchy/' },
                     { label: 'CompanyProfile', link: '/dropins-b2b/company-management/containers/company-profile/' },
                     { label: 'CompanyRegistration', link: '/dropins-b2b/company-management/containers/company-registration/' },
                     { label: 'CompanyStructure', link: '/dropins-b2b/company-management/containers/company-structure/' },
