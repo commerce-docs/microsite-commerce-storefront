@@ -39,15 +39,34 @@ Add this table to your document to configure the block:
 
 - **recId**: Recommendation unit ID from the Admin. Required for all pages.
 
-- **currentsku**: Current product SKU. Required on non-PDP pages when the recommendation unit needs product context. On PDP pages, the boilerplate reads this automatically from the product context (Adobe Client Data Layer).
+- **currentsku**: Seed product SKU. Required on non-PDP pages for **anchor-based** recommendation unit types (for example, more-like-this, visual similarity, viewed-viewed, viewed-bought, bought-bought). On PDP pages, the boilerplate reads the seed SKU automatically from the Adobe Client Data Layer (ACDL).
 
-- **currentprice**: Current product price (numeric). Required on non-PDP pages when using dynamic price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only). On PDP pages, the boilerplate reads this automatically from the product context.
+- **currentprice**: Anchor product price (numeric). Required on non-PDP pages when the unit uses **dynamic or relative** price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only). Not required for static price filters—a fixed price range in the filter rule does not remove the need for a seed SKU on anchor-based types. On PDP pages, the boilerplate reads anchor price automatically from ACDL when needed.
+
+### When product context is required
+
+Whether a seed SKU or anchor price is required depends on the **recommendation unit type** and the **price filter operator**, not on each other:
+
+| Unit type | Seed SKU | Anchor price |
+| --- | --- | --- |
+| **Anchor-based** (more-like-this, visual similarity, viewed-viewed, viewed-bought, bought-bought) | Required | Only for dynamic or relative price filter operators |
+| **Context-free** (most-viewed, most-purchased, and similar popularity or behavioral types) | Not required | Not applicable |
+
+A **static** price filter defines a fixed price range in the filter rule. It does not mean the unit can run without an anchor product. For example, a more-like-this unit with a static price filter returns no products when the seed SKU is missing, but returns results with the seed SKU alone—`currentprice` is not required.
+
+### Storefront block configuration
+
+How you configure the block depends on the page type and unit type:
+
+- **PDP pages**: Set only `recId`. The boilerplate supplies the seed SKU from ACDL product context. Anchor price is included automatically when a dynamic or relative price filter operator requires it.
+- **Non-PDP pages (PLP, cart, home, and so on)**: There is no product context on these pages. For **anchor-based** unit types, you must set `currentsku` in block config. Add `currentprice` only when the unit uses dynamic or relative price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only).
+- **Context-free unit types on any page**: Set only `recId`. These popularity and behavioral units do not use a seed product.
 
 <Aside type="caution" title="Important">
 
-  - **PDP pages** require only `recId`. Product context is read automatically from the Adobe Client Data Layer.
-  - **Other pages** require `recId` and `currentsku` when the recommendation unit needs product context. Add `currentprice` on non-PDP pages when the unit uses dynamic price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only).
-  - **Context-free units** need only `recId`. The block still renders when no product context is available.
+  - Do not assume `recId` alone is enough on non-PDP pages. That applies to **context-free** unit types only. **Anchor-based** units on non-PDP pages require `currentsku` or they return no products.
+  - Do not omit `currentprice` on non-PDP pages just because the unit uses a static price filter. Static filters still need a seed SKU for anchor-based types; they do not need anchor price.
+  - Add `currentprice` on non-PDP pages only when the unit's price filter uses dynamic or relative operators.
 
 </Aside>
 
@@ -130,9 +149,9 @@ You can configure each page to display a specific recommendation unit by setting
    </table>
 
    :::note
-   PDP pages require only `recId`, as shown above.
+   **PDP pages** — set only `recId` for all unit types. The boilerplate reads seed SKU (and anchor price when needed) from ACDL.
 
-   Other pages that need product context require `recId` and `currentsku`. For example:
+   **Non-PDP pages — anchor-based unit types** — set `recId` and `currentsku`. For example, a more-like-this unit on a category page:
 
    <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
    <tbody>
@@ -150,7 +169,9 @@ You can configure each page to display a specific recommendation unit by setting
    </tbody>
    </table>
 
-   When using dynamic price filter operators on Adobe Commerce Optimizer or Adobe Commerce as a Cloud Service, set `currentprice` on non-PDP pages:
+   This applies even when the unit uses a **static** price filter. The seed SKU is required; anchor price is not.
+
+   **Non-PDP pages — dynamic or relative price filters** — also set `currentprice` on Adobe Commerce Optimizer or Adobe Commerce as a Cloud Service:
 
    <table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
    <tbody>
@@ -171,6 +192,8 @@ You can configure each page to display a specific recommendation unit by setting
    </tr>
    </tbody>
    </table>
+
+   **Non-PDP pages — context-free unit types** (most-viewed, most-purchased, and similar) — set only `recId`, same as on PDP.
 
    :::
 
