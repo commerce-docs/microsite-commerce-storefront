@@ -198,7 +198,6 @@ export function generateSidebar() {
 
         // ---------- REFERENCE ----------
         { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
-        { label: 'Dropins MCP', link: '/reference/dropins-mcp/' },
 
         // ---------- B2C DROP-INS ----------
         {
