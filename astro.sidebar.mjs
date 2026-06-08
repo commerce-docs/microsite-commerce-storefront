@@ -886,6 +886,7 @@ export function generateSidebar() {
                 { label: 'Return Header', link: '/merchants/blocks/commerce-return-header/' },
                 { label: 'Returns List', link: '/merchants/blocks/commerce-returns-list/' },
                 { label: 'Search Order', link: '/merchants/blocks/commerce-search-order/' },
+                { label: 'Seller-Assisted Buying', link: '/merchants/blocks/seller-assisted-buying/' },
                 { label: 'Shipping Status', link: '/merchants/blocks/commerce-shipping-status/' },
                 { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
                 { label: 'Product Details', link: '/merchants/blocks/product-details/' },
