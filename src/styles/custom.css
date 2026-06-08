@@ -76,6 +76,36 @@ ul li details ul:last-child {
 }
 */
 
+/* Sidebar section heading label — used for the "Reference" separator */
+#starlight__sidebar a.sidebar-section-label {
+  display: block !important;
+  margin-block-start: 1.25rem !important;
+  padding-block-start: 1rem !important;
+  padding-block-end: 0.25rem !important;
+  padding-inline-start: 0.4rem !important;
+  border-block-start: 1px solid var(--sl-color-gray-5) !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.09em !important;
+  text-transform: uppercase !important;
+  color: var(--sl-color-gray-1) !important;
+  text-decoration: none !important;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#starlight__sidebar a.sidebar-section-label:hover {
+  color: var(--sl-color-text-accent) !important;
+  background: none !important;
+  opacity: 0.85;
+}
+
+#starlight__sidebar a.sidebar-section-label[aria-current='page'] {
+  color: var(--sl-color-gray-3) !important;
+  background: none !important;
+  font-weight: 700 !important;
+}
+
 /**************************/
 /* markdown.css overrides */
 /**************************/
@@ -87,24 +117,25 @@ ul li details ul:last-child {
 
 .sl-markdown-content :is(p) {
   font-size: 17px;
-  margin-bottom: 0.95rem;
+  margin-bottom: 1rem;
   line-height: 1.5rem;
   margin-top: .5rem;
 }
 
+/* An intro paragraph sits close to the list it introduces (one group) */
 .sl-markdown-content p:has(+ ul):not(:where(.not-content *)) {
-  margin-top: 0rem;
-  margin-bottom: 0.5rem; /* Tighter spacing between intro paragraph and list */
-  
+  margin-top: 0;
+  margin-bottom: 0.4rem;
 }
 
 .sl-markdown-content p + ul:not(:where(.not-content *)) {
+  margin-top: 0.4rem;
   padding-bottom: 0;
 }
 
-/* List followed by a paragraph: control spacing after the list */
-.sl-markdown-content ul:has(+ p):not(:where(.not-content *)) {
-  padding-bottom: 1.2rem; /* Tighter spacing between list and following paragraph */
+/* Consistent space below every list before the next block */
+.sl-markdown-content ul:not(:where(.not-content *)) {
+  margin-bottom: 1rem;
 }
 
 .sl-markdown-content ul li:not(:where(.not-content *)) {
@@ -112,7 +143,7 @@ ul li details ul:last-child {
   margin-left: 1.25rem;
   font-size: 17px;
   line-height: 1.25rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .sl-markdown-content .sl-heading-wrapper.level-h2 {
@@ -124,19 +155,28 @@ ul li details ul:last-child {
 }
 
 .sl-markdown-content :is(div.sl-heading-wrapper.level-h2) + :is(p) {
-  margin-top: 0.25rem
+  margin-top: 0.6rem;
 }
 
 .sl-markdown-content :is(div.sl-heading-wrapper.level-h3) + :is(p) {
-  margin-top: 0.15rem
+  margin-top: 0.6rem;
 }
 
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
   color: var(--sl-color-white);
   line-height: var(--sl-line-height-headings);
   font-weight: 600;
-  letter-spacing: -0.02rem;
+  letter-spacing: -0.01rem;
   /* margin-bottom: 0.5rem; */
+}
+
+/* Keep subsection headings clearly distinct from body text through weight,
+   but lighten the feel by using the body text color instead of near-black.
+   Adobe Clean ships only 400/700/900 on desktop, so there is no medium
+   weight to lean on — hierarchy comes from weight, lightness from color. */
+.sl-markdown-content :is(h3, h4):not(:where(.not-content *)) {
+  font-weight: 700;
+  color: var(--sl-color-text);
 }
 
 .sl-markdown-content :not(h1, h2, h3, h4, h5, h6)+ :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
@@ -149,14 +189,15 @@ ul li details ul:last-child {
 }
 
 .sl-markdown-content h2:not(:where(.not-content *)) {
-  font-size: 1.6rem;
-  /* 25.6px */
+  font-size: 1.3rem;
+  /* 20.8px */
+  color: var(--sl-color-text);
   padding-top: 0.5rem;
 }
 
 .sl-markdown-content h3:not(:where(.not-content *)) {
-  font-size: 1.3rem;
-  /* 20.8px */
+  font-size: 1.1rem;
+  /* 17.6px */
   padding-top: 0.5rem;
 }
 
@@ -177,6 +218,46 @@ ul li details ul:last-child {
 
 .sl-markdown-content :is(h4):not(:where(.not-content *))+p {
   margin-top: 0.25rem;
+}
+
+/* ----------------------------------------------------------------
+   Standardized section rhythm.
+   The heading wrapper owns the spacing, so the gap above a heading
+   and below it stays identical no matter whether a paragraph or a
+   list comes next. Larger gaps above sections make pages feel lighter.
+   ---------------------------------------------------------------- */
+
+/* Generous, consistent space above each section heading.
+   Uses the :is(div…) form to outrank Starlight's generic flow rule
+   (.sl-markdown-content :not(inline) + :not(inline)) in markdown.css. */
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h2):not(:where(.not-content *)) {
+  margin-top: 2.75rem;
+  margin-bottom: 0;
+}
+
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h3):not(:where(.not-content *)),
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h4):not(:where(.not-content *)) {
+  margin-top: 2rem;
+  margin-bottom: 0;
+}
+
+/* Reduce the H3 top margin when it follows an H2 with no paragraph between them. */
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h2):not(:where(.not-content *)) + :is(div.sl-heading-wrapper.level-h3):not(:where(.not-content *)) {
+  margin-top: 0.75rem;
+}
+
+/* Let the wrapper control spacing; zero the inner heading offsets */
+.sl-markdown-content .sl-heading-wrapper :is(h2, h3, h4):not(:where(.not-content *)) {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Identical gap below every heading when a list or ordered list follows
+   (the paragraph case is handled by the div.sl-heading-wrapper + p rules above). */
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h2):not(:where(.not-content *)) + :is(ul, ol),
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h3):not(:where(.not-content *)) + :is(ul, ol),
+.sl-markdown-content :is(div.sl-heading-wrapper.level-h4):not(:where(.not-content *)) + :is(ul, ol) {
+  margin-top: 0.6rem;
 }
 
 .sl-markdown-content :is(img, picture, video, canvas, svg, iframe):not(:where(.not-content *)) {
@@ -201,7 +282,7 @@ ul li details ul:last-child {
 /* Tables */
 .sl-markdown-content table:not(:where(.not-content *)) {
   display: table;
-  overflow: auto;
+  overflow-x: auto;
   border-spacing: 0;
   margin-bottom: 1.5rem;
 }
@@ -211,7 +292,6 @@ ul li details ul:last-child {
   padding: 0.5rem 1rem;
   vertical-align: baseline;
   max-width: 100%;
-  overflow-x: auto;
 }
 
 .content-panel {
@@ -628,6 +708,11 @@ ol.sl-steps li {
 
 .sl-markdown-content .large {
   font-size: var(--sl-text-base);
+}
+
+.large {
+  font-size: var(--sl-text-base);
+  font-weight: 500;
 }
 
 ul {
