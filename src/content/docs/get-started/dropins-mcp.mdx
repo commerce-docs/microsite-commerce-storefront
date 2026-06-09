@@ -1,5 +1,5 @@
 ---
-title: Dropins MCP
+title: Drop-ins MCP
 description: Install and configure the Dropins MCP server so your AI editor can look up current Adobe Commerce drop-in APIs, slots, events, and design tokens.
 ---
 
@@ -7,7 +7,7 @@ import Link from '@components/Link.astro';
 import Term from '@components/Term.astro';
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 
-If you use Cursor, Copilot, or Claude on a Commerce storefront project, you can connect the Dropins MCP server so your assistant looks up current drop-in details instead of guessing from old training data.
+If you use Cursor, VS Code, or Claude on a Commerce storefront project, you can connect the Dropins MCP server so your assistant looks up current drop-in details instead of guessing from old training data.
 
 The Dropins MCP is a <Link href="https://modelcontextprotocol.io" text="Model Context Protocol" /> (MCP) server. Your editor calls it when it needs current facts about Adobe Commerce drop-in components. The server reads an index built from drop-in source code so slots, events, containers, and API functions stay aligned with the versions in your project.
 
@@ -16,7 +16,7 @@ Once you connect it, your assistant can answer questions like _"What slots does 
 ## Prerequisites
 
 - Node.js 18 or later (`node -v` to confirm)
-- An AI editor that supports MCP servers: <Link href="https://cursor.sh" text="Cursor" />, <Link href="https://code.visualstudio.com" text="VS Code with GitHub Copilot" />, or <Link href="https://claude.ai/download" text="Claude Desktop" />
+- An AI editor that supports MCP servers: <Link href="https://cursor.sh" text="Cursor" />, <Link href="https://code.visualstudio.com" text="VS Code" /> with <Link href="https://github.com/features/copilot" text="GitHub Copilot" />, or <Link href="https://claude.ai/download" text="Claude Desktop" />
 
 ## Installation
 
@@ -24,7 +24,7 @@ You'll add the Dropins MCP server to your editor and confirm the connection work
 
 <Steps>
 
-1. **Add the server to your editor configuration.** Open the tab for your editor and paste the snippet into the config file it shows.
+1. **Add the server to your editor configuration.** Open the tab for your editor and paste the snippet into the config file shown.
 
    <Tabs>
      <TabItem label="Cursor">
@@ -56,6 +56,32 @@ You'll add the Dropins MCP server to your editor and confirm the connection work
        }
        ```
      </TabItem>
+     <TabItem label="Claude Code">
+       Add to `.mcp.json` at your project root (this applies to both the Claude Code VS Code extension and the Claude Code CLI):
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "type": "stdio",
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+
+       Claude Code uses your terminal's PATH, so `npx` works without a global install.
+
+       To auto-approve the server without a prompt each session, add the following to `.claude/settings.json` in your project:
+
+       ```json
+       {
+         "enableAllProjectMcpServers": true
+       }
+       ```
+
+     </TabItem>
      <TabItem label="Claude Desktop">
        The config file lives outside your project:
 
@@ -76,54 +102,33 @@ You'll add the Dropins MCP server to your editor and confirm the connection work
        }
        ```
 
-       Claude Desktop spawns processes without the shell's PATH, so `npx` may not resolve. Using the installed binary directly (`dropins-mcp`) is more reliable. First install the package globally:
+       Claude Desktop is a desktop app, not a terminal, so it doesn't read your shell's PATH. Commands like `npx` may not be found when Claude Desktop tries to start the server. A global install puts the binary in a system location Claude Desktop can reach:
 
        ```bash
        npm install -g @dropins/mcp
        ```
 
-       If you use `nvm`, replace `dropins-mcp` with the full path to the binary:
+       If you use `nvm`, the binary lands in a version-specific folder that isn't on the system PATH. Run this in your terminal to find the full path:
 
-       ```
-       ~/.nvm/versions/node/<version>/bin/dropins-mcp
-       ```
-     </TabItem>
-     <TabItem label="Claude Code">
-       Add to `.mcp.json` at your project root (this applies to both the Claude Code VS Code extension and the Claude Code CLI):
-
-       ```json
-       {
-         "mcpServers": {
-           "dropins": {
-             "type": "stdio",
-             "command": "npx",
-             "args": ["@dropins/mcp"]
-           }
-         }
-       }
+       ```bash
+       which dropins-mcp
        ```
 
-       Claude Code inherits your terminal PATH, so `npx` works without a global install.
+       Then replace `dropins-mcp` in the config with that absolute path. For example:
 
-       To auto-approve the server without a prompt each session, add the following to `.claude/settings.json` in your project:
-
-       ```json
-       {
-         "enableAllProjectMcpServers": true
-       }
+       ```text
+       /Users/yourname/.nvm/versions/node/v20.11.0/bin/dropins-mcp
        ```
-
-       After saving, run `/mcp` in the Claude Code chat panel to reload the server list without restarting the editor.
      </TabItem>
    </Tabs>
 
-2. **Restart your editor.** When the server loads, you should see `dropins` in your editor's MCP server list.
+2. **Restart your editor.** When the server loads, `dropins` appears in your editor's MCP server list.
 
 3. **Verify the connection.** Ask your AI assistant:
 
    > _"Use the dropins MCP — what slots does the CartSummaryList container have?"_
 
-   If it returns a list of slot names with context types, the MCP is connected and working.
+   If your assistant returns a list of slot names with context types, the MCP server is connected and working.
 
    If the server does not appear, open your editor's MCP logs and confirm that `npx @dropins/mcp` runs without errors in a terminal outside the editor.
 
@@ -131,7 +136,7 @@ You'll add the Dropins MCP server to your editor and confirm the connection work
 
 ## Optional: enable AI-powered documentation search
 
-The `search_commerce_docs` tool searches Adobe Commerce documentation on Adobe's servers through the Adobe I/O command-line interface (CLI). Without it, the MCP still answers drop-in questions. Local documentation copies remain available through `search_docs`.
+The `search_commerce_docs` tool searches Adobe Commerce documentation on Adobe's servers using the Adobe I/O command-line interface (CLI). Without it, the MCP still answers drop-in questions using `search_docs`, which searches a local copy of the documentation included with the server.
 
 To sign in and enable remote documentation search, install the Adobe I/O CLI and log in once:
 
