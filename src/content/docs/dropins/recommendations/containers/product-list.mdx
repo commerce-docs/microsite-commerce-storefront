@@ -22,7 +22,7 @@ The `ProductList` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['recId', 'string', 'Yes', 'Unique identifier for the recommendation unit.'],
-    ['currentProduct', 'object', 'No', 'Current product context (`{ sku: string; price?: number }`). See [Product context](#product-context).'],
+    ['currentProduct', 'object', 'No', 'Anchor product context (`{ sku: string; price?: number }`). Required fields depend on unit type and price filter operator. See [Product context](#product-context).'],
     ['currentSku', 'string', 'No', 'Deprecated as of v4.0.3. Use `currentProduct` instead.'],
     ['cartSkus', 'string[]', 'No', 'Cart SKUs for recommendation context.'],
     ['userPurchaseHistory', 'any[]', 'No', 'User Purchase History for recommendation context.'],
@@ -49,18 +49,38 @@ Pass product context with the optional `currentProduct` prop:
 currentProduct?: { sku: string; price?: number };
 ```
 
-How context is supplied depends on where the unit is rendered:
+- **`currentProduct.sku`** — seed product SKU for anchor-based recommendation unit types.
+- **`currentProduct.price`** — anchor product price. Required only when the unit uses dynamic or relative price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only).
+
+Whether each value is required depends on the **recommendation unit type** and the **price filter operator**:
+
+| Unit type | Seed SKU (`currentProduct.sku`) | Anchor price (`currentProduct.price`) |
+| --- | --- | --- |
+| **Anchor-based** (more-like-this, visual similarity, viewed-viewed, viewed-bought, bought-bought) | Required | Only for dynamic or relative price filter operators |
+| **Context-free** (most-viewed, most-purchased, and similar popularity or behavioral types) | Not required | Not applicable |
+
+A static price filter defines a fixed price range in the filter rule. It does not remove the need for a seed SKU on anchor-based types. Anchor-based units with static price filters work with the seed SKU alone—`currentProduct.price` is not sent.
+
+### How context is supplied
 
 - **PDP pages**: The Commerce boilerplate block reads `currentProduct` from the Adobe Client Data Layer (ACDL) product context. You do not need to pass `currentProduct` in block configuration.
-- **Non-PDP pages**: Set `currentsku` and/or `currentprice` in the [product-recommendations block configuration](/merchants/content-customizations/product-recommendations/#configuration) table to provide product context explicitly.
-- **Context-free units**: If neither `currentsku` nor ACDL product context is available, `currentProduct` is `undefined`. The dropin still renders as long as `recId` is provided.
+- **Non-PDP pages**: There is no product context on PLP, cart, home, and similar pages. For **anchor-based** unit types, set `currentsku` in the [product-recommendations block configuration](/merchants/content-customizations/product-recommendations/#configuration). Add `currentprice` only when the unit uses dynamic or relative price filter operators.
+- **Context-free unit types**: Omit `currentProduct`. The dropin renders with `recId` alone on any page type.
+
+<Aside type="caution" title="Do not omit seed SKU on anchor-based units">
+
+On non-PDP pages, anchor-based unit types return no products when the seed SKU is missing—even if the unit uses a static price filter. Only **context-free** unit types can run with `recId` alone.
+
+</Aside>
 
 ## Query routing
 
-The container selects a GraphQL query based on the `currentProduct` shape:
+The container selects a GraphQL query based on whether anchor price is present:
 
-- When `currentProduct.price` is present (**Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only**), the container uses `GetRecommendationsByUnitIdsWithCurrentProduct`, which supports dynamic price filter operators.
+- When `currentProduct.price` is present (**Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only**), the container uses `GetRecommendationsByUnitIdsWithCurrentProduct`, which supports dynamic and relative price filter operators.
 - When only `currentProduct.sku` is present, or `currentProduct` is absent, the container uses `GetRecommendationsByUnitIds`, which is compatible with all backend types, including PaaS.
+
+On Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service, the dropin sends `currentProduct.price` whenever it is available from the product context — it does not inspect the unit's configured filter operator. The extended query is selected whenever price is present; the backend applies the anchor only when the unit's filter uses a dynamic or relative operator, and ignores it for static or non-price filters.
 
 The `ProductListProps` interface has the following shape:
 
