@@ -31,6 +31,7 @@ export function generateSidebar() {
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: 'Documentation bundles for AI tools', link: '/get-started/build-with-ai/' },
+            { label: 'Drop-ins MCP', link: '/get-started/dropins-mcp/' },
           ],
         },
         {
@@ -197,6 +198,7 @@ export function generateSidebar() {
 
         // ---------- REFERENCE ----------
         { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
+        { label: 'Drop-ins MCP', link: '/reference/dropins-mcp/' },
 
         // ---------- B2C DROP-INS ----------
         {
