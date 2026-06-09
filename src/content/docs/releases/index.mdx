@@ -2,9 +2,8 @@
 title: Release information
 description: Learn about the compatibility, code changes, and public APIs for Commerce Storefront releases.
 ---
+
 import Link from '@components/Link.astro';
-
-
 import Aside from '@components/Aside.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
@@ -17,6 +16,173 @@ A suite release marks a point in time at which we have tested the boilerplate an
 Adobe organizes storefront application releases into logical suite versions and follows a regular release schedule (about twice a month). Adobe may release updates more frequently to address critical issues.
 
 The following sections provide high-level summaries of each release suite and details about the compatibility between storefront components. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
+
+## June 2026 suite
+
+The Product Recommendations drop-in now accepts a live `currentProduct` context from the ACDL data layer, so recommendation units on a PDP update reactively when shoppers change variants without requiring a page reload. A new `confirmBeforeDelete` prop on `CartSummaryList` and `MiniCart` adds an inline confirmation step before an item is removed, preventing accidental cart deletions. B2B storefronts gain three major capabilities in this release: Seller Assisted Buying (sales representatives can act on behalf of customers), Company Hierarchy (nested team structure browsing), and Requisition List Sharing (share lists with colleagues by email or token). See the [changelog](/releases/changelog/) for the full list of changes.
+
+### Breaking changes
+
+<Aside type="caution" title="Breaking changes">
+- **User Auth v4.0.0 — enhanced cookie security**: `@dropins/storefront-auth` v4.0.0 introduces strict `SameSite` protection and proper encoding on all authentication cookies as part of the Remote Shopping Assistance feature. If your implementation relies on specific cookie attributes or cross-domain authentication cookie behavior, review and test your auth flows after upgrading.
+- **User Account v4.0.0 — major version bump**: `@dropins/storefront-account` was bumped to v4.0.0 for the Seller Assisted Buying feature. The new containers (`SellerAssistedBuyingActivity`, `SellerAssistedBuyingSettings`) and the `getAdminAssistanceActions` API are additive; no existing APIs were removed or changed.
+- **Order v4.0.0 — major version bump**: `@dropins/storefront-order` was bumped to v4.0.0 for the Seller Assisted Buying feature. Orders placed by administrators now display a visible label on the order details page. No existing order APIs were removed or changed.
+</Aside>
+
+### Highlights
+
+#### Reactive product context for recommendations on PDP
+
+When a shopper selects a variant on a product detail page, recommendation units now respond immediately to that selection. The `ProductList` container accepts a new `currentProduct` prop (`{ sku, price }`) that the boilerplate sources from the ACDL `productContext.pricing` event; the drop-in then uses the extended `GetRecommendationsByUnitIdsWithCurrentProduct` query when the prop is present, falling back to the base query for backward compatibility. The standalone `currentSku` prop is deprecated in favor of `currentProduct.sku` ([#37](https://github.com/adobe-commerce/storefront-recommendations/pull/37), [#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
+
+#### Cart item deletion with confirmation
+
+Shoppers can now be required to confirm before a cart item is removed, preventing accidental deletions in busy checkout flows. Pass `confirmBeforeDelete={true}` to `CartSummaryList` or `MiniCart`: clicking the remove button replaces the item row with an inline confirmation banner with **Remove** and **Cancel** actions. A `ConfirmDeleteBanner` slot is available on both containers for full customization of the confirmation UI ([#138](https://github.com/adobe-commerce/storefront-cart/pull/138)).
+
+#### Company Hierarchy (B2B)
+
+B2B account administrators can now browse and manage the hierarchical structure of their company from the storefront. The new `commerce-b2b-company-hierarchy` boilerplate block renders the nested team structure using the Company Management drop-in, letting users navigate parent–child company relationships, view member assignments, and understand organizational reporting lines without leaving the storefront ([#1240](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1240), B2B).
+
+#### Requisition List Sharing (B2B)
+
+B2B users can now share requisition lists with colleagues directly from the storefront. The new `commerce-b2b-requisition-list-sharing` block lets users share a list by email or via a shareable token link; recipients can view and import shared lists using the new `SharedRequisitionList` container. New APIs exposed from the Requisition List drop-in — `shareRequisitionListByEmail`, `shareRequisitionListByToken`, `getSharedRequisitionList`, `getCompanyUsers`, and `importSharedRequisitionList` — support the full sharing lifecycle ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268), B2B).
+
+#### Seller Assisted Buying
+
+Sales representatives can now place and manage orders on behalf of customers directly from a B2B storefront. The User Account drop-in v4.0.0 ships two new containers — `SellerAssistedBuyingActivity` (shows a log of assisted-buying sessions for the customer) and `SellerAssistedBuyingSettings` (lets customers enable or revoke administrator assistance) — backed by the new `getAdminAssistanceActions` GraphQL API. The boilerplate adds `commerce-seller-assisted-buying-activity` and `commerce-seller-assisted-buying-settings` blocks, and a banner in the header identifies when a representative is acting on a customer's behalf ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+
+### Updated boilerplate
+
+#### Infrastructure
+
+- **Drop-in SDK**: `@dropins/tools` upgraded to 1.9.0, including `@dropins/build-tools` 1.2.0, `@adobe-commerce/elsie` 1.9.0, `@adobe-commerce/event-bus` 1.1.0, `@adobe-commerce/fetch-graphql` 1.3.0, `@adobe-commerce/recaptcha` 1.2.0, and `@adobe-commerce/storefront-design` 1.1.0. Lazy icon loading and code consolidation reduce HTTP requests by 29–85% per drop-in; drop-ins must be rebuilt against this SDK release to benefit ([#200](https://github.com/adobe-commerce/StorefrontSDK/pull/200)).
+- **AEM library**: `scripts/aem.js` updated to 3.1.2 ([#1250](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1250)).
+
+#### Document Authoring
+
+No Document Authoring changes in this suite.
+
+#### Fixes and improvements
+
+- **PDP and PLP blocks**: The Add to Cart button is now disabled for out-of-stock products on the PDP and PLP using the `inStock` property exposed by the drop-ins ([#1223](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1223)).
+- **Recommendations block**: Add to Cart is disabled for out-of-stock recommended products ([#1235](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1235)). The block also forwards `currentProduct` context from the ACDL data layer to the Recommendations drop-in ([#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
+- **Analytics**: Locale is mapped from `demo-config-aco.json` in the delayed script for correct event processing in ACO storefronts ([#1238](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1238)).
+- **Performance**: `fetchPlaceholders` uses `force-cache` to skip revalidation round-trips after the 2-hour `max-age` expires ([#1273](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1273)).
+- **Seller Assisted Buying**: New `commerce-seller-assisted-buying-activity` and `commerce-seller-assisted-buying-settings` blocks, plus a header banner for active rep sessions ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+- **B2B (Company Hierarchy)**: New `commerce-b2b-company-hierarchy` block renders the nested company team structure using the Company Management drop-in ([#1240](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1240), B2B).
+- **B2B (Requisition List Sharing)**: New `commerce-b2b-requisition-list-sharing` block for sharing requisition lists by email or token ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268), B2B).
+- **B2B (Authentication)**: Fixed `X-Adobe-Company` header being sent on guest GraphQL requests ([#1248](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1248), B2B).
+
+### Updated Drop-in SDK
+
+<Aside type="note" title="Internal Links">
+Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+</Aside>
+
+The Drop-in SDK (`@dropins/tools`) was upgraded to 1.9.0 in this release. The following sub-packages were also updated:
+
+| Package | Version |
+|---------|---------|
+| `@dropins/build-tools` | 1.2.0 |
+| `@adobe-commerce/elsie` | 1.9.0 |
+| `@adobe-commerce/event-bus` | 1.1.0 |
+| `@adobe-commerce/fetch-graphql` | 1.3.0 |
+| `@adobe-commerce/recaptcha` | 1.2.0 |
+| `@adobe-commerce/storefront-design` | 1.1.0 |
+
+#### Improvements and fixes
+
+- **Bundle optimizations**: Lazy icon loading and code consolidation reduce HTTP requests on page load by 29–85% depending on the drop-in (Drop-in tools: 34→24 requests, Auth: 24→6, Cart: 13→2). The Preact runtime is now isolated in its own vendor chunk; API functions, icons, and components are consolidated into `chunks/api.js`, `chunks/icons.js`, and `chunks/components.js`. TTI improved 22% and TBT halved in testing. **Drop-ins must be rebuilt against this SDK release to benefit from the optimizations** ([#200](https://github.com/adobe-commerce/StorefrontSDK/pull/200)).
+- **Node.js 22 LTS**: The SDK now requires Node.js 22 LTS as the minimum build runtime. All drop-ins have been updated accordingly ([#201](https://github.com/adobe-commerce/StorefrontSDK/pull/201)).
+- **GraphQL fragment bundling fix**: GraphQL fragment files are no longer swept into `chunks/api.js`, restoring the boilerplate's ability to override individual GraphQL fragments via the standalone `fragments.js` output ([#210](https://github.com/adobe-commerce/StorefrontSDK/pull/210)).
+
+### Updated B2C drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Cart**](/dropins/cart/) v3.3.0 | New `confirmBeforeDelete` prop on `CartSummaryList` and `MiniCart`: clicking remove shows an inline confirmation banner before deleting the item. `ConfirmDeleteBanner` slot available for UI customization ([#138](https://github.com/adobe-commerce/storefront-cart/pull/138)). |
+| [**Checkout**](/dropins/checkout/) v3.3.0 | New `checkout/layout` extension hook: customize the checkout page structure (reorder, hide, move, group, or inject sections) without modifying the base block code. Includes a `custom-layout` example extension ([#318](https://github.com/adobe-commerce/storefront-checkout/pull/318)). |
+| [**Order**](/dropins/order/) v4.0.0 | **Seller Assisted Buying**: orders placed by a store administrator on behalf of a customer are now marked with a visible "Order placed by an administrator" label on the order details page. The feature integrates with order comments to provide a history of administrative actions throughout the order lifecycle ([#91](https://github.com/adobe-commerce/storefront-order/pull/91)). |
+| [**Product Details Page**](/dropins/product-details/) v3.2.0 | `ProductGallery` now crossfades to new variant images (~180 ms) after preloading them off-DOM, eliminating flicker on swatch selection ([#66](https://github.com/adobe-commerce/storefront-pdp/pull/66)). |
+| [**User Account**](/dropins/user-account/) v4.0.0 | **Seller Assisted Buying**: new `SellerAssistedBuyingActivity` container displays a log of assisted-buying sessions for the customer; new `SellerAssistedBuyingSettings` container lets customers enable or revoke administrator assistance. Orders placed by administrators are marked with an "Order placed by an administrator" label on the order details page. Backed by the new `getAdminAssistanceActions` API ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)). |
+| [**User Auth**](/dropins/user-auth/) v4.0.0 | **Remote Shopping Assistance**: admin session management via JWT token validation and a new customer-facing consent UI component for approving or revoking administrator assistance. Enhanced cookie security — proper encoding and `SameSite` protection on all authentication cookies (see Breaking changes). B2C fix: `getCustomerRolePermissions` now always emits `auth/permissions` with `Magento_Sales::place_order` set for standard customers, preventing B2C checkout from incorrectly treating users as denied ([#62](https://github.com/adobe-commerce/storefront-auth/pull/62), [#74](https://github.com/adobe-commerce/storefront-auth/pull/74)). |
+| [**Personalization**](/dropins/personalization/) v3.2.0 | No user-facing changes in this release. |
+| [**Product Discovery**](/dropins/product-discovery/) v3.1.1 | SortBy sort option labels (including Position and Relevance) are now overridable via AEM placeholders, enabling consistent localization across all store view languages ([#94](https://github.com/adobe-commerce/storefront-search-dropin/pull/94)). |
+| [**Product Recommendations**](/dropins/recommendations/) v4.0.4 | New `currentProduct` prop on `ProductList` for reactive PDP recommendations (deprecates `currentSku`). New `inStock` field in item slot context for OOS button handling ([#37](https://github.com/adobe-commerce/storefront-recommendations/pull/37), [#38](https://github.com/adobe-commerce/storefront-recommendations/pull/38)). |
+| [**Payment Services**](/dropins/payment-services/) v3.1.2 | No user-facing changes in this release. |
+| [**Wishlist**](/dropins/wishlist/) v3.3.0 | No user-facing changes in this release. |
+
+</TableWrapper>
+
+### Updated B2B drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Company Management**](/dropins-b2b/company-management/) v1.3.0 | **Company Hierarchy**: new tree view with drag-and-drop support for managing parent–child company relationships. New GraphQL APIs: `getCompanyHierarchy`, `assignChildCompany`, and `unassignChildCompany`. Includes permission checks, visual distinction between root and child companies, and expand/collapse node support ([#79](https://github.com/adobe-commerce/storefront-company-management/pull/79)). |
+| [**Company Switcher**](/dropins-b2b/company-switcher/) v1.2.0 | New optional `size` prop on `CompanySwitcher` controls the GraphQL `pageSize` for `customer.companies`, defaulting to 100 instead of the API's typical cap of 20. `CustomerFragment` restored for extensibility ([#33](https://github.com/adobe-commerce/storefront-company-switcher/pull/33)). |
+| [**Purchase Order**](/dropins-b2b/purchase-order/) v1.2.0 | No user-facing changes in this release. |
+| [**Quote Management**](/dropins-b2b/quote-management/) v1.2.0 | No user-facing changes in this release. |
+| [**Requisition List**](/dropins-b2b/requisition-list/) v1.4.0 | New requisition list sharing: `ShareRequisitionListContent` and `SharedRequisitionList` containers support sharing by email and by token. New APIs: `shareRequisitionListByEmail`, `shareRequisitionListByToken`, `getSharedRequisitionList`, `importSharedRequisitionList`, `getCompanyUsers` ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268)). |
+| [**Quick Order**](/dropins-b2b/quick-order/) v1.1.0 | No user-facing changes in this release. |
+
+</TableWrapper>
+
+### Known issues
+
+There are no known issues for this release suite.
+
+### Component compatibility
+
+Adobe has tested and verified the following component versions for this release suite.
+
+**Commerce Foundation**
+
+| Adobe Commerce | Storefront Compatibility Package |
+|----------------|----------------------------------|
+| `2.4.7` | `4.7.13` |
+| `2.4.8` | `4.8.25` |
+| `2.4.9` | `4.9.0` |
+
+| Adobe Commerce B2B | Storefront Compatibility B2B Package |
+|--------------------|--------------------------------------|
+| `1.5.2` | `1.0.22` |
+
+**Drop-in SDK**
+
+- `@dropins/tools@~1.9.0`
+- `@dropins/build-tools@~1.2.0`
+- `@adobe-commerce/elsie@~1.9.0`
+- `@adobe-commerce/event-bus@~1.1.0`
+- `@adobe-commerce/fetch-graphql@~1.3.0`
+- `@adobe-commerce/recaptcha@~1.2.0`
+- `@adobe-commerce/storefront-design@~1.1.0`
+
+**B2C drop-ins**
+
+- `@dropins/storefront-account@~4.0.0`
+- `@dropins/storefront-auth@~4.0.0`
+- `@dropins/storefront-cart@~3.3.0`
+- `@dropins/storefront-checkout@~3.3.0`
+- `@dropins/storefront-order@~4.0.0`
+- `@dropins/storefront-payment-services@~3.1.2`
+- `@dropins/storefront-pdp@~3.2.0`
+- `@dropins/storefront-personalization@~3.2.0`
+- `@dropins/storefront-product-discovery@~3.1.1`
+- `@dropins/storefront-recommendations@~4.0.4`
+- `@dropins/storefront-wishlist@~3.3.0`
+
+**B2B drop-ins**
+
+- `@dropins/storefront-company-management@~1.3.0`
+- `@dropins/storefront-company-switcher@~1.2.0`
+- `@dropins/storefront-purchase-order@~1.2.0`
+- `@dropins/storefront-quote-management@~1.2.0`
+- `@dropins/storefront-requisition-list@~1.4.0`
+- `@dropins/storefront-quick-order@~1.1.0`
 
 ## April 2026 suite
 
