@@ -32,12 +32,12 @@ import Link from '@components/Link.astro';
       **Fixes and improvements**
       - **PDP and PLP blocks**: The Add to Cart button is now disabled for out-of-stock products on the PDP and PLP using the `inStock` property exposed by the drop-ins ([#1223](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1223)).
       - **Recommendations block**: Add to Cart is disabled for out-of-stock recommended products ([#1235](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1235)). The block also forwards `currentProduct` context from the ACDL data layer to the Recommendations drop-in, so recommendation results respond reactively to variant selection on the PDP ([#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
-      - **Analytics**: Locale is now mapped from `demo-config-aco.json` in the delayed script for correct event processing in ACO storefronts ([#1238](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1238)).
+      - **Analytics**: Locale is now mapped from `demo-config-aco.json` in the delayed script for correct event processing in Adobe Commerce Optimizer storefronts ([#1238](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1238)).
       - **Performance**: `fetchPlaceholders` uses `force-cache` to skip revalidation round-trips after the 2-hour `max-age` expires, eliminating redundant CDN traffic during navigation ([#1273](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1273)).
       - **Cart block**: Removed an unused `routeProduct` prop from the `OrderSummary` render call ([#1230](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1230)).
-      - **Seller Assisted Buying**: New `commerce-seller-assisted-buying-activity` and `commerce-seller-assisted-buying-settings` blocks enable B2B sales representatives to act on behalf of customers, with an activity log and customer consent settings. A header banner identifies the active assisted-buying session ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
-      - **B2B (Company Hierarchy)**: New `commerce-b2b-company-hierarchy` block renders the nested company team structure using the Company Management drop-in ([#1240](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1240), B2B).
-      - **B2B (Requisition List Sharing)**: New `commerce-b2b-requisition-list-sharing` block lets B2B users share requisition lists with colleagues by email or token link ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268), B2B).
+      - **Seller Assisted Buying**: New [`commerce-seller-assisted-buying-activity` and `commerce-seller-assisted-buying-settings`](/merchants/blocks/seller-assisted-buying/) blocks let store administrators place and manage orders on behalf of customers, with an activity log and customer consent settings. A header banner identifies the active assisted-buying session ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+      - **B2B (Company Hierarchy)**: New `commerce-b2b-company-hierarchy` block renders the nested team structure using the [`CompanyHierarchy`](/dropins-b2b/company-management/containers/company-hierarchy/) container from the Company Management drop-in ([#1240](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1240), B2B).
+      - **B2B (Requisition List Sharing)**: New `commerce-b2b-requisition-list-sharing` block lets B2B users share requisition lists with colleagues by email or by copying a shareable link ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268), B2B).
       - **B2B (Authentication)**: Fixed a bug where the `X-Adobe-Company` header was sent on guest GraphQL requests due to session storage being restored from local storage on page load ([#1248](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1248), B2B).
     </ChangelogEntry>
 
@@ -448,7 +448,7 @@ import Link from '@components/Link.astro';
       components={['Checkout']}
     >
       **New features**
-      - **`checkout/layout` extension hook**: Customize the checkout page structure — reorder, hide, move, group, or inject sections — without modifying the base block code. A `custom-layout` example extension is included ([#318](https://github.com/adobe-commerce/storefront-checkout/pull/318)).
+      - **`checkout/layout` extension hook**: Customize the checkout page structure — reorder, hide, move, group, or inject sections — without modifying the base block code. See [Extending the checkout drop-in](/dropins/checkout/extending/) for usage details and the `custom-layout` example extension ([#318](https://github.com/adobe-commerce/storefront-checkout/pull/318)).
 
       **Infrastructure**
       - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
@@ -1895,7 +1895,7 @@ import Link from '@components/Link.astro';
       components={['Product Recommendations']}
     >
       **New features**
-      - **Reactive `currentProduct` prop on `ProductList`**: The container now accepts a `currentProduct` prop (`{ sku, price }`) sourced from the ACDL `productContext.pricing` event. When provided, the drop-in uses the extended `GetRecommendationsByUnitIdsWithCurrentProduct` GraphQL query so recommendation units respond to variant selection on the PDP without a page reload. Falls back to the base query when the prop is absent for full backward compatibility. The standalone `currentSku` prop is deprecated in favor of `currentProduct.sku` ([#37](https://github.com/adobe-commerce/storefront-recommendations/pull/37), [#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
+      - **`currentProduct` prop on `ProductList`**: The [`ProductList`](/dropins/recommendations/containers/product-list/) container now accepts a `currentProduct` prop (`{ sku, price }`) that the storefront reads from the ACDL `productContext.pricing` event. When provided, the drop-in uses the `GetRecommendationsByUnitIdsWithCurrentProduct` GraphQL query so recommendation units update automatically on variant selection without a page reload. Falls back to the base query when the prop is absent for full backward compatibility. The standalone `currentSku` prop is deprecated — use `currentProduct.sku` instead ([#37](https://github.com/adobe-commerce/storefront-recommendations/pull/37), [#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
       - **`inStock` flag in item context**: The `inStock` field is now included in `PRODUCTS_VIEW_FRAGMENT` and the `Item` interface, letting integrators read `ctx.item.inStock` from slot context to disable or hide Add to Cart for out-of-stock recommended products ([#38](https://github.com/adobe-commerce/storefront-recommendations/pull/38)).
 
       **Infrastructure**
@@ -1983,7 +1983,7 @@ import Link from '@components/Link.astro';
       components={['User Account']}
     >
       **New features**
-      - **Seller Assisted Buying containers**: Two new containers support the Seller Assisted Buying capability: `SellerAssistedBuyingActivity` renders a log of assisted-buying sessions for the customer, and `SellerAssistedBuyingSettings` lets customers enable or revoke administrator assistance. Orders placed by a store administrator on behalf of a customer are marked with an "Order placed by an administrator" label on the order details page. Backed by the new `getAdminAssistanceActions` GraphQL API ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+      - **Seller Assisted Buying containers**: Two new containers support the Seller Assisted Buying capability: [`SellerAssistedBuyingActivity`](/dropins/user-account/containers/seller-assisted-buying-activity/) renders a log of assisted-buying sessions for the customer, and [`SellerAssistedBuyingSettings`](/dropins/user-account/containers/seller-assisted-buying-settings/) lets customers enable or revoke administrator assistance. Orders placed by a store administrator on behalf of a customer are marked with an "Order placed by an administrator" label on the order details page. Backed by the new `getAdminAssistanceActions` GraphQL API. See [Seller-assisted buying](/dropins/user-account/containers/seller-assisted-buying/) for setup details ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
 
       **Infrastructure**
       - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
@@ -2088,7 +2088,7 @@ import Link from '@components/Link.astro';
       components={['User Authentication']}
     >
       **New features**
-      - **Remote Shopping Assistance**: Adds admin session management via JWT token validation and a new customer-facing consent UI component for approving or revoking administrator assistance. This enables store administrators to assist customers with purchases directly from the storefront ([#62](https://github.com/adobe-commerce/storefront-auth/pull/62)).
+      - **Remote Shopping Assistance**: Admin session management using JSON Web Token (JWT) validation and a new customer-facing consent UI for approving or revoking administrator assistance. This enables store administrators to assist customers with purchases directly from the storefront ([#62](https://github.com/adobe-commerce/storefront-auth/pull/62)).
 
       **Improvements and fixes**
       - **Enhanced cookie security**: All authentication cookies now use proper encoding and strict `SameSite` protection. This is a potentially breaking change for implementations relying on specific cookie attributes or cross-domain authentication behavior.
@@ -2263,7 +2263,7 @@ import Link from '@components/Link.astro';
       components={['Company Management']}
     >
       **New features**
-      - **Company Hierarchy**: New tree view with drag-and-drop support for managing parent–child company relationships. New GraphQL APIs: `getCompanyHierarchy` (retrieve full structure), `assignChildCompany` (add a child), and `unassignChildCompany` (remove a child). Includes permission checks, visual distinction between root and child companies, expand/collapse node support, and loading/error state handling ([#79](https://github.com/adobe-commerce/storefront-company-management/pull/79)).
+      - **Company Hierarchy**: New tree view with drag-and-drop for managing parent-child company relationships. New GraphQL APIs: `getCompanyHierarchy` (retrieve full structure), `assignChildCompany` (add a child), and `unassignChildCompany` (remove a child). Includes permission checks, visual styling to distinguish root from child companies, expand/collapse node support, and loading/error state handling ([#79](https://github.com/adobe-commerce/storefront-company-management/pull/79)).
 
       **Infrastructure**
       - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
@@ -2559,7 +2559,7 @@ import Link from '@components/Link.astro';
       components={['Requisition List']}
     >
       **New features**
-      - **Requisition list sharing**: B2B users can now share requisition lists with colleagues directly from the storefront. New containers `ShareRequisitionListContent` and `SharedRequisitionList` support sharing by email and by shareable token link. Recipients can view and import shared lists. New APIs: `shareRequisitionListByEmail`, `shareRequisitionListByToken`, `getSharedRequisitionList`, `importSharedRequisitionList`, and `getCompanyUsers` ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268)).
+      - **Requisition list sharing**: B2B users can now share requisition lists with colleagues directly from the storefront. New [`ShareRequisitionListContent`](/dropins-b2b/requisition-list/containers/share-requisition-list-content/) and [`SharedRequisitionList`](/dropins-b2b/requisition-list/containers/shared-requisition-list/) containers let users share lists by email or by copying a shareable link. Recipients can view and import shared lists. New APIs: `shareRequisitionListByEmail`, `shareRequisitionListByToken`, `getSharedRequisitionList`, `importSharedRequisitionList`, and `getCompanyUsers` ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268)).
 
       **Infrastructure**
       - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
