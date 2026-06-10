@@ -24,6 +24,7 @@ The User Account drop-in provides API functions that enable you to programmatica
 | Function | Description |
 | --- | --- |
 | [`createCustomerAddress`](#createcustomeraddress) | Creates an address for an existing customer using the `CustomerAddressesModel` object as an argument. |
+| [`getAdminAssistanceActions`](#getadminassistanceactions) | Fetches a paginated list of administrator actions recorded during seller-assisted buying sessions. |
 | [`getAttributesForm`](#getattributesform) | Calls the `attributesForm` query to retrieve EAV attributes associated with customer and customer address frontend forms. |
 | [`getCountries`](#getcountries) | Calls the countries query to retrieve a list of countries. |
 | [`getCustomer`](#getcustomer) | Retrieves the customer information for the logged-in customer. |
@@ -32,7 +33,7 @@ The User Account drop-in provides API functions that enable you to programmatica
 | [`deletePaymentToken`](#deletepaymenttoken) | Removes a stored payment token using the `deletePaymentToken mutation`. |
 | [`getOrderHistoryList`](#getorderhistorylist) | Retrieves a list of customer orders asynchronously using the customer query. |
 | [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country. |
-| [`getStoreConfig`](#getstoreconfig) | Calls the `storeConfig` query to retrieve details about password requirements. |
+| [`getStoreConfig`](#getstoreconfig) | Calls the `storeConfig` query to retrieve password requirements and the seller-assisted buying feature flag and consent checkbox settings. |
 | [`removeCustomerAddress`](#removecustomeraddress) | Removes an address associated with the current customer. |
 | [`updateCustomer`](#updatecustomer) | Updates the logged-in customer. |
 | [`updateCustomerAddress`](#updatecustomeraddress) | Updates an address associated with the current customer. |
@@ -66,6 +67,51 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `string`.
+
+## getAdminAssistanceActions
+
+The `getAdminAssistanceActions` function fetches a paginated list of administrator actions recorded during seller-assisted buying sessions. The [`SellerAssistedBuyingActivity`](/dropins/user-account/containers/seller-assisted-buying-activity/) container uses this function internally to populate its activity grid.
+
+```ts
+const getAdminAssistanceActions = async (
+  pageSize: number,
+  currentPage: number
+): Promise<AdminAssistanceActions | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `pageSize` | `number` | Yes | Number of items to fetch per page. |
+| `currentPage` | `number` | Yes | Page to fetch, starting at `1`. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`AdminAssistanceActions`](#adminassistanceactions) or `null` when the request fails or returns no data.
+
+### Example
+
+```js
+import { getAdminAssistanceActions } from '@dropins/storefront-account/api.js';
+
+const actions = await getAdminAssistanceActions(10, 1);
+
+if (actions) {
+  console.log('Total actions:', actions.totalCount);
+  console.log('Total pages:', actions.pageInfo.totalPages);
+
+  actions.items.forEach((item) => {
+    console.log(`${item.date}: ${item.action} — ${item.details}`);
+  });
+}
+```
 
 ## getAttributesForm
 
@@ -271,7 +317,7 @@ Returns `RegionTransform[] | []`. See [`RegionTransform`](#regiontransform).
 
 ## getStoreConfig
 
-The `getStoreConfig` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/" text="storeConfig" /> query to retrieve details about password requirements.
+The `getStoreConfig` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config/" text="storeConfig" /> query to retrieve details about password requirements. The response also includes the seller-assisted buying fields that control whether the feature is active and customize the consent checkbox shown to customers.
 
 ```ts
 const getStoreConfig = async (): Promise<StoreConfigModel>
@@ -520,6 +566,55 @@ interface StoreConfigModel {
   minLength: number;
   requiredCharacterClasses: number;
   storeCode: string;
+  shoppingAssistanceEnabled: boolean;
+  shoppingAssistanceCheckboxTitle: string;
+  shoppingAssistanceCheckboxTooltip: string;
+}
+```
+
+The seller-assisted buying fields:
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `shoppingAssistanceEnabled` | `boolean` | `true` when seller-assisted buying is enabled at the store level. Controlled by the **Enable Extension** setting in the Admin. The seller-assisted buying containers use this value to show or hide feature content. |
+| `shoppingAssistanceCheckboxTitle` | `string` | Label for the consent checkbox. Set by the **Title for Login as Customer opt-in checkbox** field in the Admin. Falls back to the dictionary value when not configured. |
+| `shoppingAssistanceCheckboxTooltip` | `string` | Tooltip text for the consent checkbox. Set by the **Login as Customer checkbox tooltip** field in the Admin. Falls back to the dictionary value when not configured. |
+
+</TableWrapper>
+
+### AdminAssistanceActions
+
+The `AdminAssistanceActions` object is returned by the following functions: [`getAdminAssistanceActions`](#getadminassistanceactions).
+
+```ts
+interface AdminAssistanceActions {
+  totalCount: number;
+  items: AdminAssistanceAction[];
+  pageInfo: AdminAssistanceActionsPageInfo;
+}
+```
+
+### AdminAssistanceAction
+
+Each item in the `items` array. The `action` field contains one of the action type keys defined for seller-assisted buying. See the [User Account dictionary](/dropins/user-account/dictionary/) for the full list of action type keys and their default labels.
+
+```ts
+interface AdminAssistanceAction {
+  action: string;
+  date: string;
+  details: string;
+}
+```
+
+### AdminAssistanceActionsPageInfo
+
+```ts
+interface AdminAssistanceActionsPageInfo {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
 }
 ```
 

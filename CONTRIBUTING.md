@@ -698,6 +698,7 @@ docs: Fix broken links in SDK guide
 The B2B merchant block documentation follows a specialized workflow to ensure clean, reviewable PRs for each B2B dropin team.
 
 **Branch Structure:**
+
 - **`releases/b2b-nov-release`**: Base branch for infrastructure changes
 - **Feature branches**: One per B2B dropin for generated files
   - `feature/merchant-blocks-company-management`
@@ -710,6 +711,7 @@ The B2B merchant block documentation follows a specialized workflow to ensure cl
 **Three-Step Workflow:**
 
 **Step 1: Infrastructure → `releases/b2b-nov-release`**
+
 1. Commit infrastructure changes directly to `releases/b2b-nov-release`
 2. Infrastructure includes:
    - Generator scripts (`scripts/@generate-*.js`)
@@ -721,6 +723,7 @@ The B2B merchant block documentation follows a specialized workflow to ensure cl
 **Important:** Feature branches do NOT receive infrastructure updates via merge. They remain independent with only their generated files.
 
 **Step 2: Generated Files → Feature Branches**
+
 1. Generate or update merchant block MDX files
 2. Commit files to their appropriate feature branch (one branch per dropin)
 3. Each feature branch includes:
@@ -729,6 +732,7 @@ The B2B merchant block documentation follows a specialized workflow to ensure cl
 4. Push each feature branch to GitHub
 
 **Step 3: Everything → `b2b-documentation`**
+
 1. Merge all feature branches into `b2b-documentation`
 2. This creates a complete preview with:
    - All infrastructure from `releases/b2b-nov-release`
@@ -736,6 +740,7 @@ The B2B merchant block documentation follows a specialized workflow to ensure cl
 3. Purpose: Test the complete B2B documentation before creating PRs
 
 **Example Commands:**
+
 ```bash
 # Step 1: Infrastructure
 git checkout releases/b2b-nov-release
@@ -759,6 +764,7 @@ git push origin b2b-documentation
 ```
 
 **Why This Workflow?**
+
 - **Clean PRs**: Each B2B dropin team reviews only their specific files
 - **Independent Development**: Teams can work on their blocks without merge conflicts
 - **Infrastructure Separation**: Generator updates don't clutter feature branch PRs
@@ -832,10 +838,12 @@ Documentation Sources:
 When making changes to generated documentation, follow this systematic workflow:
 
 **1. Find and fix the existing files** (manual edits)
+
 - Edit the MDX files in `src/content/docs/`
 - Test your changes locally
 
 **2. Identify which generator produces those files**
+
 - Check the file type to determine the generator:
   - `styles.mdx` → `@generate-styles-docs.js`
   - `index.mdx` (overview) → `@generate-overview-docs.js`
@@ -848,21 +856,25 @@ When making changes to generated documentation, follow this systematic workflow:
   - `quick-start.mdx` → `@generate-quick-start-docs.js`
 
 **3. Update the generator to prevent regression**
+
 - Open the corresponding generator script
 - Update the code generation logic
 - Test the generator locally
 
 **4. Update templates if they exist**
+
 - Check `_dropin-templates/` for relevant templates
 - Update template structure or placeholders
 - Ensure consistency across all generated files
 
 **5. Update enrichment files if needed**
+
 - Check `_dropin-enrichments/[dropin-name]/`
 - Add or update human-written descriptions
 - Enrichment files are the source of truth for editorial content
 
 **6. Document both manual and generator changes**
+
 - Explain what was changed in both places
 - Provide context for why both were updated
 - Include testing notes for regeneration
@@ -870,12 +882,14 @@ When making changes to generated documentation, follow this systematic workflow:
 ### Example: Updating External Links
 
 **Incorrect approach** (only fixes files):
+
 ```bash
 # ❌ Only fixes existing files
 # Changes will be lost when generator runs again
 ```
 
 **Correct approach** (fixes files AND generator):
+
 ```bash
 # ✅ Fix existing files manually
 # ✅ Update generator script
@@ -900,6 +914,7 @@ npm run generate-all-docs
 ```
 
 **Verify:**
+
 - Generated files include your changes
 - No manual edits were lost
 - Templates are applied correctly
@@ -908,12 +923,14 @@ npm run generate-all-docs
 ### Common Generator Patterns
 
 **Adding imports to generated files:**
+
 ```javascript
 // In generator script
 content = `import Component from '@components/Component.astro';\n` + content;
 ```
 
 **Using Link component for external links:**
+
 ```javascript
 // ✅ Correct - use Link component
 output += `<Link href="${url}" text="${linkText}" />`;
@@ -923,6 +940,7 @@ output += `[${linkText}](${url})`;
 ```
 
 **Respecting enrichment data:**
+
 ```javascript
 // Always prefer enrichment over generated content
 const description = enrichmentData?.description || generatedDescription;
@@ -930,31 +948,34 @@ const description = enrichmentData?.description || generatedDescription;
 
 ### Generator File Mapping
 
-| File Type | Generator Script | Template | Enrichment |
-|-----------|-----------------|----------|------------|
-| `styles.mdx` | `@generate-styles-docs.js` | `dropin-styles.mdx` | None |
-| `index.mdx` | `@generate-overview-docs.js` | `dropin-overview-minimal.mdx` | `overview.json` |
-| `functions.mdx` | `@generate-function-docs.js` | `dropin-functions.mdx` | `functions.json` |
-| `events.mdx` | `@generate-event-docs.js` | `dropin-events.mdx` | `events.json` |
-| `containers/*.mdx` | `@generate-container-docs.js` | `dropin-container.mdx` | `containers.json` |
-| `slots.mdx` | `@generate-slot-docs.js` | `dropin-slots.mdx` | None |
-| `dictionary.mdx` | `@generate-dictionary-docs.js` | `dropin-dictionary.mdx` | None |
+| File Type          | Generator Script               | Template                      | Enrichment        |
+| ------------------ | ------------------------------ | ----------------------------- | ----------------- |
+| `styles.mdx`       | `@generate-styles-docs.js`     | `dropin-styles.mdx`           | None              |
+| `index.mdx`        | `@generate-overview-docs.js`   | `dropin-overview-minimal.mdx` | `overview.json`   |
+| `functions.mdx`    | `@generate-function-docs.js`   | `dropin-functions.mdx`        | `functions.json`  |
+| `events.mdx`       | `@generate-event-docs.js`      | `dropin-events.mdx`           | `events.json`     |
+| `containers/*.mdx` | `@generate-container-docs.js`  | `dropin-container.mdx`        | `containers.json` |
+| `slots.mdx`        | `@generate-slot-docs.js`       | `dropin-slots.mdx`            | None              |
+| `dictionary.mdx`   | `@generate-dictionary-docs.js` | `dropin-dictionary.mdx`       | None              |
 
 ### When to Update Generators vs Files
 
 **Update generators when:**
+
 - The change applies to all drop-ins (structural, formatting)
 - Adding new components (imports, TableWrapper, Link, etc.)
 - Changing code generation patterns
 - Fixing bugs in generation logic
 
 **Update enrichment files when:**
+
 - Adding human-written descriptions
 - Providing usage examples
 - Adding contextual information
 - Documenting parameters or configuration
 
 **Update both when:**
+
 - Fixing existing files AND preventing future issues
 - Changing external link patterns
 - Updating table formats
@@ -973,12 +994,14 @@ Watch for these signs you might need to update a generator:
 ### Regeneration Safety
 
 **Before regenerating:**
+
 - ✅ Commit all manual changes to git
 - ✅ Verify generator updates are complete
 - ✅ Test generator on a single file first
 - ✅ Review diffs before committing
 
 **After regenerating:**
+
 - ✅ Check that manual edits are preserved (if in enrichment files)
 - ✅ Verify new patterns are applied consistently
 - ✅ Test the site builds successfully
