@@ -14,9 +14,32 @@ import Link from '@components/Link.astro';
 
   <div class="changelog-entries">
 
-{/************* 
-**Boilerplate** 
+{/*************
+**Boilerplate**
 ***************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Boilerplate Updates"
+      components={['Boilerplate']}
+    >
+      The Commerce boilerplate has been updated with Drop-in SDK bundle optimizations, seller-assisted buying blocks, Company Hierarchy (B2B), Requisition List Sharing (B2B), out-of-stock Add to Cart gating, and analytics and performance fixes:
+
+      **Infrastructure**
+      - **Drop-in SDK**: `@dropins/tools` upgraded to 1.9.0, including `@dropins/build-tools` 1.2.0, `@adobe-commerce/elsie` 1.9.0, `@adobe-commerce/event-bus` 1.1.0, `@adobe-commerce/fetch-graphql` 1.3.0, `@adobe-commerce/recaptcha` 1.2.0, and `@adobe-commerce/storefront-design` 1.1.0. Lazy icon loading and code consolidation reduce HTTP requests by 29–85% per drop-in. Drop-ins must be rebuilt against this SDK release to benefit from the optimizations ([#200](https://github.com/adobe-commerce/StorefrontSDK/pull/200)).
+      - **AEM library**: `scripts/aem.js` updated to 3.1.2 ([#1250](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1250)).
+
+      **Fixes and improvements**
+      - **PDP and PLP blocks**: The Add to Cart button is now disabled for out-of-stock products on the PDP and PLP using the `inStock` property exposed by the drop-ins ([#1223](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1223)).
+      - **Recommendations block**: Add to Cart is disabled for out-of-stock recommended products ([#1235](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1235)). The block also forwards `currentProduct` context from the ACDL data layer to the Recommendations drop-in, so recommendation results respond reactively to variant selection on the PDP ([#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
+      - **Analytics**: Locale is now mapped from `demo-config-aco.json` in the delayed script for correct event processing in Adobe Commerce Optimizer storefronts ([#1238](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1238)).
+      - **Performance**: `fetchPlaceholders` uses `force-cache` to skip revalidation round-trips after the 2-hour `max-age` expires, eliminating redundant CDN traffic during navigation ([#1273](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1273)).
+      - **Cart block**: Removed an unused `routeProduct` prop from the `OrderSummary` render call ([#1230](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1230)).
+      - **Seller Assisted Buying**: New [`commerce-seller-assisted-buying-activity` and `commerce-seller-assisted-buying-settings`](/merchants/blocks/seller-assisted-buying/) blocks let store administrators place and manage orders on behalf of customers, with an activity log and customer consent settings. A header banner identifies the active assisted-buying session ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+      - **B2B (Company Hierarchy)**: New `commerce-b2b-company-hierarchy` block renders the nested team structure using the [`CompanyHierarchy`](/dropins-b2b/company-management/containers/company-hierarchy/) container from the Company Management drop-in ([#1240](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1240), B2B).
+      - **B2B (Requisition List Sharing)**: New `commerce-b2b-requisition-list-sharing` block lets B2B users share requisition lists with colleagues by email or by copying a shareable link ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268), B2B).
+      - **B2B (Authentication)**: Fixed a bug where the `X-Adobe-Company` header was sent on guest GraphQL requests due to session storage being restored from local storage on page load ([#1248](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1248), B2B).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -215,7 +238,7 @@ import Link from '@components/Link.astro';
       // Before
       import { rootLink } from '../../scripts/scripts.js';
       import { fetchPlaceholders } from '../../scripts/scripts.js';
-      
+
       // After
       import { rootLink } from '../../scripts/commerce.js';
       import { fetchPlaceholders } from '../../scripts/commerce.js';
@@ -225,9 +248,24 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/****************
+{/*************
 **Drop-in SDK**
-*****************/}
+***************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Drop-in SDK (Elsie) v1.9.0"
+      components={['Drop-in SDK']}
+    >
+      <Aside type="note" title="Internal Links">
+        Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+      </Aside>
+
+      **Improvements and fixes**
+      - **Bundle optimizations**: Lazy icon loading and code consolidation significantly reduce the number of HTTP requests on page load across all drop-ins. The Preact runtime is now isolated into its own vendor chunk. API functions, icons, and internal components are consolidated into `chunks/api.js`, `chunks/icons.js`, and `chunks/components.js` respectively. Measured reductions: Drop-in tools −29% (34→24 requests), Auth drop-in −75% (24→6), Cart drop-in −85% (13→2). TTI improved 22% on average. Drop-ins must be rebuilt against this SDK release to benefit ([#200](https://github.com/adobe-commerce/StorefrontSDK/pull/200)).
+      - **Node.js 22 LTS**: The SDK and all drop-ins have been updated to require Node.js 22 LTS as the minimum build runtime ([#201](https://github.com/adobe-commerce/StorefrontSDK/pull/201)).
+      - **GraphQL fragment bundling fix**: GraphQL fragment files are no longer incorrectly swept into `chunks/api.js`, which would break the boilerplate's GraphQL override mechanism that depends on fragment strings being present in the standalone `fragments.js` output ([#210](https://github.com/adobe-commerce/StorefrontSDK/pull/210)).
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -297,9 +335,21 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/****** 
-**Cart** 
+{/******
+**Cart**
 ********/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Cart v3.3.0"
+      components={['Cart']}
+    >
+      **New features**
+      - **`confirmBeforeDelete` prop**: When `confirmBeforeDelete={true}` is passed to `CartSummaryList` or `MiniCart`, clicking the remove button replaces the item row with an inline confirmation banner instead of immediately deleting the item. The banner prompts "Remove '[product name]' from your cart?" with **Remove** and **Cancel** actions. A `ConfirmDeleteBanner` slot is available on both containers for full UI customization. All new props default to the previous behavior, so no changes are required for existing implementations ([#138](https://github.com/adobe-commerce/storefront-cart/pull/138)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -391,6 +441,18 @@ import Link from '@components/Link.astro';
 {/**********
 **Checkout**
 ************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Checkout v3.3.0"
+      components={['Checkout']}
+    >
+      **New features**
+      - **`checkout/layout` extension hook**: Customize the checkout page structure — reorder, hide, move, group, or inject sections — without modifying the base block code. See [Extending the checkout drop-in](/dropins/checkout/extending/) for usage details and the `custom-layout` example extension ([#318](https://github.com/adobe-commerce/storefront-checkout/pull/318)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -490,7 +552,7 @@ import Link from '@components/Link.astro';
       - Miscellaneous bug fixes and enhancements.
 
       The **[`Multi-step checkout`](/dropins/checkout/tutorials/multi-step/) tutorial has been updated**, providing a customizable example to implement a comprehensive multi-step checkout based on a modular architecture (event-driven step coordination) that supports the following scenarios:
-      
+
       - Guest users
       - Logged-in customers
       - Virtual products
@@ -654,8 +716,8 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/********************************** 
-**Storefront Compatibility Package** 
+{/**********************************
+**Storefront Compatibility Package**
 ************************************/}
 
       <ChangelogEntry
@@ -1365,8 +1427,20 @@ import Link from '@components/Link.astro';
       </ChangelogEntry>
 
 {/*******
-**Order** 
+**Order**
 *********/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Order v4.0.0"
+      components={['Order']}
+    >
+      **New features**
+      - **Seller Assisted Buying label on orders**: Orders placed by a store administrator on behalf of a customer now display a visible "Order placed by an administrator" label on the order details page. The feature integrates with order comments to provide a history of administrative actions throughout the order lifecycle ([#91](https://github.com/adobe-commerce/storefront-order/pull/91)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -1444,9 +1518,18 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/****************** 
-**Payment Services** 
+{/******************
+**Payment Services**
 ********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Payment Services v3.1.2"
+      components={['Payment Services']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -1529,6 +1612,15 @@ import Link from '@components/Link.astro';
 *******************/}
 
     <ChangelogEntry
+      date="2026-06-10"
+      title="Personalization v3.2.0"
+      components={['Personalization']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
+
+    <ChangelogEntry
       date="2026-03-24"
       title="Personalization v3.1.1"
       components={['Personalization']}
@@ -1586,13 +1678,25 @@ import Link from '@components/Link.astro';
     </ChangelogEntry>
 
 {/**********************
-**Product details page** 
+**Product Details Page**
 ************************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Product Details Page v3.2.0"
+      components={['Product Details Page']}
+    >
+      **Improvements and fixes**
+      - **Gallery crossfade on option change**: When a configurable option is selected, the `ProductGallery` preloads variant images off-DOM via `Image.decode()` and crossfades the carousel to the new images (~180 ms) once they are paint-ready, eliminating the visible flicker that occurred when variant image URLs were remounted on every swatch click. If the URL set is unchanged, the listener short-circuits to the existing fast path with no delay ([#66](https://github.com/adobe-commerce/storefront-pdp/pull/66)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
       title="Product Details Page v3.0.3"
-      components={['Product details page']}
+      components={['Product Details Page']}
     >
       The Product Details Page drop-in has been updated with the following changes:
 
@@ -1601,8 +1705,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2026-03-24"
-      title="Product details page v3.0.2"
-      components={['Product details page']}
+      title="Product Details Page v3.0.2"
+      components={['Product Details Page']}
     >
       The Product Details Page drop-in has been updated with the following changes:
 
@@ -1613,8 +1717,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2026-02-17"
-      title="Product details page v3.0.1"
-      components={['Product details page']}
+      title="Product Details Page v3.0.1"
+      components={['Product Details Page']}
     >
       The Product Details Page drop-in has been updated with the following changes:
 
@@ -1628,8 +1732,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2026-01-08"
-      title="Product details page v3.0.0"
-      components={['Product details page']}
+      title="Product Details Page v3.0.0"
+      components={['Product Details Page']}
     >
       **Major version upgrade** with tier pricing support and improved rendering. The Product Details Page drop-in has been updated to include the following changes:
 
@@ -1641,8 +1745,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-10-14"
-      title="Product details page v1.3.5"
-      components={['Product details page']}
+      title="Product Details Page v1.3.5"
+      components={['Product Details Page']}
     >
       The Product Details Page drop-in has been updated to include the following changes:
 
@@ -1659,8 +1763,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-06-25"
-      title="Product details page v1.2.0"
-      components={['Product details page']}
+      title="Product Details Page v1.2.0"
+      components={['Product Details Page']}
     >
       - You can now fully replace rendered images in the PDP drop-in component, enabling integration with custom asset sources like AEM Assets.{/* USF-2126 */}
       - Added support for updating product options and quantities directly from the cart, streamlining the editing process for configurable products.{/* USF-2008 */}
@@ -1670,9 +1774,21 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/******************* 
-**Product discovery** 
+{/*******************
+**Product Discovery**
 *********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Product Discovery v3.1.1"
+      components={['Product Discovery']}
+    >
+      **Improvements and fixes**
+      - **Localizable SortBy labels**: All sort option labels in the SortBy dropdown — including Position and Relevance — are now overridable via AEM placeholders. This allows consistent localization across all store view languages without custom code ([#94](https://github.com/adobe-commerce/storefront-search-dropin/pull/94)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -1769,9 +1885,22 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/************************* 
-**Product recommendations** 
+{/*************************
+**Product Recommendations**
 ***************************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Product Recommendations v4.0.4"
+      components={['Product Recommendations']}
+    >
+      **New features**
+      - **`currentProduct` prop on `ProductList`**: The [`ProductList`](/dropins/recommendations/containers/product-list/) container now accepts a `currentProduct` prop (`{ sku, price }`) that the storefront reads from the ACDL `productContext.pricing` event. When provided, the drop-in uses the `GetRecommendationsByUnitIdsWithCurrentProduct` GraphQL query so recommendation units update automatically on variant selection without a page reload. Falls back to the base query when the prop is absent for full backward compatibility. The standalone `currentSku` prop is deprecated — use `currentProduct.sku` instead ([#37](https://github.com/adobe-commerce/storefront-recommendations/pull/37), [#1244](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1244)).
+      - **`inStock` flag in item context**: The `inStock` field is now included in `PRODUCTS_VIEW_FRAGMENT` and the `Item` interface, letting integrators read `ctx.item.inStock` from slot context to disable or hide Add to Cart for out-of-stock recommended products ([#38](https://github.com/adobe-commerce/storefront-recommendations/pull/38)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -1844,14 +1973,26 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/************** 
-**User account** 
+{/**************
+**User Account**
 ****************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="User Account v4.0.0"
+      components={['User Account']}
+    >
+      **New features**
+      - **Seller Assisted Buying containers**: Two new containers support the seller-assisted buying capability: [`SellerAssistedBuyingActivity`](/dropins/user-account/containers/seller-assisted-buying-activity/) renders a log of assisted-buying sessions for the customer, and [`SellerAssistedBuyingSettings`](/dropins/user-account/containers/seller-assisted-buying-settings/) lets customers enable or revoke administrator assistance. Orders placed by a store administrator on behalf of a customer are marked with an "Order placed by an administrator" label on the order details page. Backed by the new `getAdminAssistanceActions` GraphQL API. See [Seller-assisted buying](/dropins/user-account/containers/seller-assisted-buying/) for setup details ([#1283](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1283)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
       title="User Account v3.3.0"
-      components={['User account']}
+      components={['User Account']}
     >
       The User Account drop-in has been updated with the following changes:
 
@@ -1868,7 +2009,7 @@ import Link from '@components/Link.astro';
     <ChangelogEntry
       date="2026-02-17"
       title="User Account v3.1.0"
-      components={['User account']}
+      components={['User Account']}
     >
       The User Account drop-in has been updated with the following changes:
 
@@ -1881,7 +2022,7 @@ import Link from '@components/Link.astro';
     <ChangelogEntry
       date="2026-01-08"
       title="User Account v3.0.0"
-      components={['User account']}
+      components={['User Account']}
     >
       **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
 
@@ -1902,8 +2043,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-10-14"
-      title="User account v1.2.0"
-      components={['User account']}
+      title="User Account v1.2.0"
+      components={['User Account']}
     >
       The User Account drop-in has been updated to include the following changes:
 
@@ -1913,8 +2054,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-08-12"
-      title="User account v1.0.9"
-      components={['User account']}
+      title="User Account v1.0.9"
+      components={['User Account']}
     >
       The User Account drop-in has been updated to include the following changes:
 
@@ -1925,8 +2066,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-06-25"
-      title="User account v1.0.7"
-      components={['User account']}
+      title="User Account v1.0.7"
+      components={['User Account']}
     >
 
       **Fix for empty radio button**
@@ -1937,14 +2078,30 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/********************* 
-**User authentication** 
+{/*********************
+**User Authentication**
 ***********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="User Authentication v4.0.0"
+      components={['User Authentication']}
+    >
+      **New features**
+      - **Remote Shopping Assistance**: Admin session management using JSON Web Token (JWT) validation and a new customer-facing consent UI for approving or revoking administrator assistance. This enables store administrators to assist customers with purchases directly from the storefront ([#62](https://github.com/adobe-commerce/storefront-auth/pull/62)).
+
+      **Improvements and fixes**
+      - **Enhanced cookie security**: All authentication cookies now use proper encoding and strict `SameSite` protection. This is a potentially breaking change for implementations relying on specific cookie attributes or cross-domain authentication behavior.
+      - **B2C permissions fix**: `getCustomerRolePermissions` now always emits `auth/permissions` with `Magento_Sales::place_order` set for standard customers, preventing the checkout drop-in from incorrectly treating B2C users as permission-denied.
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-02-17"
       title="User Authentication v3.1.0"
-      components={['User authentication']}
+      components={['User Authentication']}
     >
       The User Auth drop-in has been updated with the following changes:
 
@@ -1955,7 +2112,7 @@ import Link from '@components/Link.astro';
     <ChangelogEntry
       date="2026-01-08"
       title="User Authentication v3.0.0"
-      components={['User authentication']}
+      components={['User Authentication']}
     >
       **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
 
@@ -1979,8 +2136,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-10-14"
-      title="User authentication v2.1.1"
-      components={['User authentication']}
+      title="User Authentication v2.1.1"
+      components={['User Authentication']}
     >
       The User Authentication drop-in has been updated to include the following changes:
 
@@ -1990,8 +2147,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-08-12"
-      title="User authentication v2.1.0"
-      components={['User authentication']}
+      title="User Authentication v2.1.0"
+      components={['User Authentication']}
     >
       The User Authentication drop-in has been updated to include the following changes:
 
@@ -2002,8 +2159,8 @@ import Link from '@components/Link.astro';
 
     <ChangelogEntry
       date="2025-06-25"
-      title="User authentication v2.0.3"
-      components={['User authentication']}
+      title="User Authentication v2.0.3"
+      components={['User Authentication']}
     >
       **Callback for successful password reset**
 
@@ -2013,9 +2170,18 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/********** 
-**Wishlist** 
+{/**********
+**Wishlist**
 ************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Wishlist v3.3.0"
+      components={['Wishlist']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -2087,114 +2253,21 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/*************** 
-**User Account** 
-****************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Account v3.1.0"
-      components={['User Account']}
-    >
-      The User Account drop-in has been updated with the following changes:
-
-      - **Address UID in create response** - Added `addressUid` to create address response for proper address identification (<Link href={"https://github.com/adobe-commerce/storefront-account/pull/42"} text={"#42"} />).
-      - **Dynamic form field translations** - Added dynamic i18n support for field labels and placeholders, enabling custom placeholders and floating labels in address forms (<Link href={"https://github.com/adobe-commerce/storefront-account/pull/40"} text={"#40"} />).
-      - **Improved accessibility** - Enhanced screen reader support for address form edit and remove buttons with descriptive aria labels.
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Account v3.0.0"
-      components={['User Account']}
-    >
-      **Major version upgrade** with B2B company context support and translation improvements. The User Account drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Company context switching** - Order history now automatically refreshes when B2B users switch companies via the `companyContext/changed` event. This ensures users only see orders relevant to their current company context without manual page refresh (<Link href={"https://github.com/adobe-commerce/storefront-account/pull/25"} text={"#25"} />).
-      - **Translation override support** - The Provider component now supports merging custom language definitions with default translations. Developers can pass custom `langDefinitions` through the initialize configuration to override default UI text, enabling easier localization and brand-specific terminology (<Link href={"https://github.com/adobe-commerce/storefront-account/pull/30"} text={"#30"} />).
-
-      **Improvements**
-
-      - **Fixed configurable product links** - Product URLs in order history now correctly link to configurable product detail pages. The GraphQL query now retrieves `product_sku` and `product_url_key` at the order item level instead of nested product fields, resolving 404 errors when clicking product links from order lists (<Link href={"https://github.com/adobe-commerce/storefront-account/pull/34"} text={"#34"} />).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **reCAPTCHA upgrade** - Updated to @adobe-commerce/recaptcha 1.0.3 for improved security and compatibility.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. B2C drop-ins have been tested on Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce 2.4.7+ for Platform-as-a-Service (PaaS) deployments. However, the license agreement restricts use to Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO) only. Use on Platform-as-a-Service (PaaS) or on-premise deployments is not permitted under the license agreement.
-
-    </ChangelogEntry>
-
-{/************************* 
-**Product Recommendations** 
-**************************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="Product Recommendations v3.0.0"
-      components={['Product Recommendations']}
-    >
-      The Product Recommendations drop-in has been updated with the following changes:
-
-      - **Drop-in SDK upgrade** - Updated to Drop-in SDK ~1.7.0. No user-facing changes in this release.
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="Product Recommendations v3.0.0"
-      components={['Product Recommendations']}
-    >
-      **Major version upgrade** for suite alignment. The Product Recommendations drop-in has been updated to include the following changes:
-
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement (<Link href={"https://github.com/adobe-commerce/storefront-recommendations/pull/33"} text={"#33"} />).
-
-    </ChangelogEntry>
-
-{/************ 
-**User Auth** 
-*************/}
-
-    <ChangelogEntry
-      date="2026-02-17"
-      title="User Auth v3.1.0"
-      components={['User Auth']}
-    >
-      The User Auth drop-in has been updated with the following changes:
-
-      - **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/53"} text={"#53"} />).
-
-    </ChangelogEntry>
-
-    <ChangelogEntry
-      date="2026-01-08"
-      title="User Auth v3.0.0"
-      components={['User Auth']}
-    >
-      **Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
-
-      **New features**
-
-      - **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/21"} text={"#21"} />, <Link href={"https://github.com/adobe-commerce/storefront-auth/pull/27"} text={"#27"} />, <Link href={"https://github.com/adobe-commerce/storefront-auth/pull/39"} text={"#39"} />).
-      - **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/44"} text={"#44"} />).
-      - **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/30"} text={"#30"} />, <Link href={"https://github.com/adobe-commerce/storefront-auth/pull/35"} text={"#35"} />).
-
-      **Improvements**
-
-      - **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/43"} text={"#43"} />).
-      - **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/41"} text={"#41"} />).
-      - **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
-      - **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
-      - **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
-      - **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
-      - **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/46"} text={"#46"} />).
-
-    </ChangelogEntry>
-
-{/*********************
+{/********************
 **Company Management**
 **********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Company Management v1.3.0"
+      components={['Company Management']}
+    >
+      **New features**
+      - **Company Hierarchy**: New tree view with drag-and-drop for managing parent-child company relationships. New GraphQL APIs: `getCompanyHierarchy` (retrieve full structure), `assignChildCompany` (add a child), and `unassignChildCompany` (remove a child). Includes permission checks, visual styling to distinguish root from child companies, expand/collapse node support, and loading/error state handling ([#79](https://github.com/adobe-commerce/storefront-company-management/pull/79)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -2258,9 +2331,21 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/*******************
+{/******************
 **Company Switcher**
 ********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Company Switcher v1.2.0"
+      components={['Company Switcher']}
+    >
+      **New features**
+      - **Configurable company list page size**: New optional `size` prop on `CompanySwitcher` controls the GraphQL `pageSize` for `customer.companies`, defaulting to 100 instead of the API's typical cap of 20. `getCustomerCompanyInfo` accepts `{ size }` and caches results per page size. `CustomerFragment` restored for GraphQL extensibility ([#33](https://github.com/adobe-commerce/storefront-company-switcher/pull/33)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -2312,9 +2397,18 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/*****************
+{/****************
 **Purchase Order**
 ******************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Purchase Order v1.2.0"
+      components={['Purchase Order']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -2370,9 +2464,18 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/*******************
+{/******************
 **Quote Management**
 ********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Quote Management v1.2.0"
+      components={['Quote Management']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-03-24"
@@ -2446,9 +2549,21 @@ import Link from '@components/Link.astro';
 
     </ChangelogEntry>
 
-{/******************** 
-**Requisition List** 
-*********************/}
+{/******************
+**Requisition List**
+********************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Requisition List v1.4.0"
+      components={['Requisition List']}
+    >
+      **New features**
+      - **Requisition list sharing**: B2B users can now share requisition lists with colleagues directly from the storefront. New [`ShareRequisitionListContent`](/dropins-b2b/requisition-list/containers/share-requisition-list-content/) and [`SharedRequisitionList`](/dropins-b2b/requisition-list/containers/shared-requisition-list/) containers let users share lists by email or by copying a shareable link. Recipients can view and import shared lists. New APIs: `shareRequisitionListByEmail`, `shareRequisitionListByToken`, `getSharedRequisitionList`, `importSharedRequisitionList`, and `getCompanyUsers` ([#1268](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1268)).
+
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
@@ -2524,6 +2639,15 @@ import Link from '@components/Link.astro';
 {/*************
 **Quick Order**
 ***************/}
+
+    <ChangelogEntry
+      date="2026-06-10"
+      title="Quick Order v1.1.0"
+      components={['Quick Order']}
+    >
+      **Infrastructure**
+      - **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+    </ChangelogEntry>
 
     <ChangelogEntry
       date="2026-04-30"
