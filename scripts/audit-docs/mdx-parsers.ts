@@ -168,8 +168,12 @@ export function parseMdxDictionaryKeys(content: string): Set<string> {
  *
  * The summary table at the top of every slots.mdx associates containers with
  * their slot names. Format:
- *   | [`ContainerName`](#anchor) | `Slot1`, `Slot2`, `Slot3` |
- *   | [`ContainerName`](#anchor) | None |
+ *   | [`ContainerName`](#anchor)                    | `Slot1`, `Slot2`, `Slot3` |
+ *   | [`ContainerName` container (deprecated)](#anchor) | `Slot1`, `Slot2`      |
+ *   | [`ContainerName`](#anchor)                    | None                      |
+ *
+ * The container name is the first \w+ token inside the link brackets, so extra
+ * trailing text such as " container (deprecated)" is intentionally ignored.
  *
  * Returns a Map of containerName → Set of slot names.
  * Containers documented as "None" map to an empty Set.
@@ -183,7 +187,7 @@ export function parseMdxSlots(content: string): Map<string, Set<string>> {
   if (!tableMatch) return result;
 
   const tableBody = tableMatch[1];
-  const rowRe = /^\|\s*\[`?(\w+)`?\]\([^)]+\)[^|]*\|\s*(.*?)\s*\|/gm;
+  const rowRe = /^\|\s*\[`?(\w+)`?[^\]]*\]\([^)]+\)[^|]*\|\s*(.*?)\s*\|/gm;
   let rowMatch: RegExpExecArray | null;
 
   while ((rowMatch = rowRe.exec(tableBody)) !== null) {
