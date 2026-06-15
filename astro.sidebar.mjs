@@ -36,7 +36,8 @@ export function generateSidebar() {
           label: 'Build with AI',
           collapsed: false,
           items: [
-            { label: 'Documentation bundles for AI tools', link: '/ai/build-with-ai/' },
+            { label: 'Overview', link: '/ai/' },
+            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
             { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
             { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
           ],
