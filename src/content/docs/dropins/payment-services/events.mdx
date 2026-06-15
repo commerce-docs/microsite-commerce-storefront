@@ -8,16 +8,162 @@ sidebar:
 
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit and listen for events, enabling communication between drop-ins and external integrations.
+The **Payment Services** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.1</strong>
+<strong>Version: 4.0.0</strong>
 </div>
 
 ## Events reference
 
+{/* EVENTS_TABLE_START */}
 <TableWrapper nowrap={[0, 1]}>
-| Event         | Direction | Description                                                |
-|---------------|-----------|------------------------------------------------------------|
-| authenticated | Listens   | Used to determine whether the shopper is a guest customer. |
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| [authenticated](#authenticated-listens) | Listens | Fired by User Auth (`user-auth`) when the user's authentication state changes. Used to determine whether the shopper is a guest customer. |
+| [cart/data](#cartdata-listens) | Listens | Fired by Cart (`cart`) when cart data is available or changes. Read by the `GooglePay` container at click time to supply cart items and totals to the Google Pay payment sheet. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the checkout state is updated. Read by the `GooglePay` container at click time to supply billing address and shipping method to the Google Pay payment sheet. |
+| [payment-services/initialized/checkout](#payment-servicesinitialized-emits) | Emits | Emitted when the drop-in finishes initializing for the `CHECKOUT` location. |
+| [payment-services/initialized/product-detail](#payment-servicesinitialized-emits) | Emits | Emitted when the drop-in finishes initializing for the `PRODUCT_DETAIL` location. |
+
 </TableWrapper>
+{/* EVENTS_TABLE_END */}
+
+## Event details
+
+The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
+
+### `authenticated` (listens)
+
+Fired by the [User Auth drop-in](/dropins/user-auth/events/#authenticated-emits) when the user's authentication state changes. Used to determine whether the shopper is a guest customer.
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+`true` when the shopper is authenticated, `false` when signed out.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('authenticated', (isAuthenticated) => {
+  console.log('authenticated event received:', isAuthenticated);
+});
+```
+
+---
+
+### `cart/data` (listens)
+
+Fired by the [Cart drop-in](/dropins/cart/events/#cartdata-emits-and-listens) when cart data is available or changes. The `GooglePay` container reads this event using `events.lastPayload('cart/data')` at the moment the shopper clicks the Google Pay button — not at render time — to populate cart items and price totals in the Google Pay payment sheet.
+
+The `cart/data` payload must therefore be present on the event bus before the shopper clicks the button. For the full `CartModel` type definition, see the [Cart events reference](/dropins/cart/events/#cartmodel).
+
+#### Event payload
+
+```typescript
+CartModel | null
+```
+
+See [`CartModel`](/dropins/cart/events/#cartmodel) for the full type definition.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('cart/data', (payload) => {
+  console.log('cart/data event received:', payload);
+});
+```
+
+---
+
+### `checkout/updated` (listens)
+
+Fired by the [Checkout drop-in](/dropins/checkout/events/#checkoutupdated-emits-and-listens) when the checkout state is updated. The `GooglePay` container reads this event using `events.lastPayload('checkout/updated')` at the moment the shopper clicks the Google Pay button to populate billing address and shipping method in the Google Pay payment sheet.
+
+Like `cart/data`, this payload must be present on the event bus before the shopper clicks the button. For the full `Cart` and `NegotiableQuote` type definitions, see the [Checkout events reference](/dropins/checkout/events/#cart).
+
+#### Event payload
+
+```typescript
+Cart | NegotiableQuote | null
+```
+
+See [`Cart`](/dropins/checkout/events/#cart) and [`NegotiableQuote`](/dropins/checkout/events/#negotiablequote) for the full type definitions.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/updated', (payload) => {
+  console.log('checkout/updated event received:', payload);
+});
+```
+
+---
+
+### `payment-services/initialized/*` (emits)
+
+Emitted once for each payment location after the drop-in finishes asynchronous SDK initialization. Two separate events are emitted, one per location:
+
+- `payment-services/initialized/checkout` — for the `CHECKOUT` location
+- `payment-services/initialized/product-detail` — for the `PRODUCT_DETAIL` location
+
+Each event includes the list of payment methods available at that location. Use these events to conditionally render payment containers or show/hide UI elements.
+
+#### Event payload
+
+```typescript
+{
+  availablePaymentMethods: PaymentMethodCode[];
+}
+```
+
+See [`PaymentMethodCode`](#paymentmethodcode) for the full type definition.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+
+events.on('payment-services/initialized/checkout', ({ availablePaymentMethods }) => {
+  if (availablePaymentMethods.includes(PaymentMethodCode.APPLE_PAY)) {
+    console.log('Apple Pay available for checkout page.');
+  }
+  if (availablePaymentMethods.includes(PaymentMethodCode.CREDIT_CARD)) {
+    console.log('Credit Card available for checkout page.');
+  }
+  if (availablePaymentMethods.includes(PaymentMethodCode.GOOGLE_PAY)) {
+    console.log('Google Pay available for checkout page.');
+  }
+});
+```
+
+---
+
+## Data models
+
+The following data model is used in event payloads emitted by this drop-in.
+
+### `PaymentMethodCode`
+
+String enum of payment method identifiers included in the `payment-services/initialized/*` event payload.
+
+Used in: [`payment-services/initialized/*`](#payment-servicesinitialized-emits).
+
+```ts
+enum PaymentMethodCode {
+  APPLE_PAY   = 'APPLE_PAY',
+  CREDIT_CARD = 'CREDIT_CARD',
+  GOOGLE_PAY  = 'GOOGLE_PAY',
+}
+```
