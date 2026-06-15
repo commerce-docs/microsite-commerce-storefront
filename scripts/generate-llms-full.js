@@ -147,13 +147,19 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'get-started',
     label: 'Get started',
-    blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, browser compatibility, and AI documentation bundles',
+    blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, and browser compatibility',
     filter: p => p.startsWith('get-started/')
+  },
+  {
+    slug: 'ai',
+    label: 'Build with AI',
+    blurb: 'Overview, documentation context files, Dropins MCP server, and AI agent skills for storefront development',
+    filter: p => p.startsWith('ai/')
   },
   {
     slug: 'boilerplate',
     label: 'Boilerplate',
-    blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, AI agent skills, and updates',
+    blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, and updates',
     filter: p => p.startsWith('boilerplate/')
   },
   {
