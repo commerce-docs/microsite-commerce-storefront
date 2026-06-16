@@ -19,17 +19,15 @@ The **User Auth initializer** configures authentication and authorization featur
 
 ## Configuration options
 
-The following table describes the configuration options available for the **User Auth** initializer:
-
 <TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Language definitions for internationalization (i18n). Override dictionary keys for localization or branding. |
-| `models` | [`Record<string, any>`](#models) | No | Custom data models for type transformations. Extend or modify default models with custom fields and transformers. |
-| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token'). |
-| `customerPermissionRoles` | `boolean` | No | When `true`, fetches and emits customer B2B role permissions via the `auth/permissions` event after authentication. |
-| `adobeCommerceOptimizer` | `boolean` | No | When `true`, enables Adobe Commerce Optimizer support. The token validation query will also fetch `customer.group.uid` to emit the `auth/group-uid` event for ACO price book resolution, and `getAdobeCommerceOptimizerData` will be called after authentication. |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Overrides built-in text strings for localization or custom branding. Maps locale keys to replacement dictionary values. |
+| `models` | [`Record<string, any>`](#models) | No | Extends or replaces default data models. Provide custom fields and transformer functions to modify data returned from the backend. |
+| `authHeaderConfig` | [`authHeaderConfig`](#authheaderconfig) | No | Sets the HTTP header name and token prefix (for example, `Bearer` or `Token`) used in authentication requests. |
+| `customerPermissionRoles` | `boolean` | No | When `true`, fetches customer B2B role permissions after sign-in and emits them via the `auth/permissions` event. |
+| `adobeCommerceOptimizer` | `boolean` | No | When `true`, enables Adobe Commerce Optimizer support. Token validation also fetches `customer.group.uid` and emits it via the `auth/group-uid` event for price book resolution. Calls `getAdobeCommerceOptimizerData` after sign-in. |
 
 </TableWrapper>
 
@@ -83,8 +81,6 @@ Extend or transform data models by providing custom transformer functions. Use t
 
 ### Available models
 
-The following models can be customized through the `models` configuration option:
-
 <TableWrapper nowrap={[0]}>
 
 | Model | Description |
@@ -93,7 +89,7 @@ The following models can be customized through the `models` configuration option
 
 </TableWrapper>
 
-The following example shows how to customize the `CustomerModel` model for the **User Auth** drop-in:
+To customize `CustomerModel`, provide a transformer function that receives the raw GraphQL response and returns the shape your storefront needs:
 
 ```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -116,7 +112,7 @@ await initializers.mountImmediately(initialize, { models });
 
 ## Drop-in configuration
 
-The **User Auth initializer** configures authentication and authorization features including login, registration, password management, and session handling. Use initialization to customize authentication flows and user data models.
+The following example shows all drop-in-specific options enabled together. Use it as a starting point when you need B2B role permissions and Adobe Commerce Optimizer support in the same storefront.
 
 ```javascript title="scripts/initializers/user-auth.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -139,11 +135,9 @@ Refer to the [Configuration options](#configuration-options) table for detailed 
 
 ## Configuration types
 
-The following TypeScript definitions show the structure of each configuration object:
-
 ### authHeaderConfig
 
-Configures authentication header format for API requests including custom header names and token prefix format (e.g., 'Bearer', 'Token').
+Configures the authentication header format for API requests, including custom header names and token prefix format (for example, `Bearer` or `Token`).
 
 ```typescript
 authHeaderConfig?: {
@@ -176,8 +170,6 @@ models?: {
 
 
 ## Model definitions
-
-The following TypeScript definitions show the structure of each customizable model:
 
 ### CustomerModel
 
