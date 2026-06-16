@@ -1,0 +1,112 @@
+---
+title: Use docs in AI tools
+description: Published llms.txt and topic bundles help AI editors and agents use current Adobe Commerce Storefront documentation.
+tableOfContents:
+  maxHeadingLevel: 2
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Link from '@components/Link.astro';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Use this page to connect an AI editor or coding agent to current Adobe Commerce Storefront documentation. With this context, the tool can answer questions about storefront APIs, drop-in versions, and Edge Delivery Services without relying only on general model training.
+
+## What you get
+
+Use docs context when you want your AI tool to generate answers based on the storefront documentation you are reading. It helps you:
+
+- Get answers that reflect current storefront documentation instead of older model training.
+- Point different AI tools at one shared documentation source.
+- Scope a chat to a full export or a single topic export.
+
+## Context files
+
+Context files are plain-text exports of this documentation, regenerated each time the site publishes so AI tools always have the latest content.
+
+- Start with `llms.txt`, the index that links to every export file.
+- Full exports contain the entire documentation site in one file.
+- Topic exports under `_llms-txt/` each cover one subject area. Use them when a tool should not load the entire site.
+
+<TableWrapper nowrap={[0]}>
+
+| File | Purpose |
+|------|---------|
+| [`llms.txt`](/llms.txt) | Index with an overview and links to every export file. |
+| [`llms-full.txt`](/llms-full.txt) | Complete documentation in one file. |
+| [`llms-small.txt`](/llms-small.txt) | Same as the full export but without the release changelog, which is very long. Use this when your AI  tool has a context size limit. |
+| `_llms-txt/*.txt` | Topic exports, such as [drop-ins reference](/_llms-txt/dropins-reference.txt), [tutorials](/_llms-txt/tutorials-reference.txt), and [blocks](/_llms-txt/blocks-reference.txt). [`llms.txt`](/llms.txt) lists every topic export URL. |
+
+</TableWrapper>
+
+Some of these files are large. Loading a whole file sends a lot of text into the model at once. When possible, paste a specific page URL from this site into your AI tool so it fetches the live page directly. Live pages include the latest edits, navigation, and diagrams that export files may not have yet. Use export files as a fallback when your tool cannot fetch a URL.
+
+<Aside type="note" title="Publish timing">
+Context files update each time the site publishes. If a page is edited after the last publish, those changes won't appear in context files until the site publishes again. Because the URLs in your `AGENTS.md` or `CLAUDE.md` always point to the same files, your AI tool fetches the latest published version automatically each time it reads the file.
+</Aside>
+
+## Prerequisites
+
+- Use an AI editor or coding agent that supports project context files, documentation web addresses, or pasted context, such as Cursor, Claude Code, or GitHub Copilot Chat.
+- Open a storefront project in that editor. You might have started from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" /> or added Commerce blocks and drop-ins to your own site.
+- For agent-based tools, use `AGENTS.md`, `CLAUDE.md`, or an equivalent context file at the project root where you can add the `llms.txt` web address.
+
+## Add context files
+
+For agent-based tools, add the `llms.txt` URL to a project context file, such as `AGENTS.md` or `CLAUDE.md`. The agent can then fetch the index when storefront documentation is relevant. For other tools, paste a bundle web address or file content directly.
+
+<Tabs>
+<TabItem label="Cursor">
+
+Create or update `AGENTS.md` at your project root and add a section that points to the documentation index:
+
+```markdown wrap
+## Adobe Commerce Storefront Documentation
+
+See https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt for Adobe Commerce Storefront documentation.
+```
+
+Cursor agent mode reads `AGENTS.md` and fetches the index when needed. You can also add this reference to a file under `.cursor/rules/` if you prefer a Cursor-specific location.
+
+</TabItem>
+<TabItem label="Claude Code">
+
+Create or update `CLAUDE.md` at your project root and add a line pointing to the documentation index:
+
+```markdown wrap
+See https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt for Adobe Commerce Storefront documentation.
+```
+
+Claude Code fetches the index and linked bundles when the documentation is relevant. To confirm the setup, start a new chat and ask a question this storefront documentation answers, such as a question about a drop-in. If the reply cites or matches those topics, the tool can read the documentation.
+
+</TabItem>
+<TabItem label="Other AI tools">
+
+Other AI editors and agents often accept a documentation URL in settings or system prompts. Tools that implement the <Link href="https://llmstxt.org" text="llms.txt spec" /> can follow the index to the relevant bundles automatically.
+
+For tools that support custom context URLs or documentation sources, such as GitHub Copilot Chat or Windsurf, provide the following URL:
+
+```text
+https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt
+```
+
+For tools that do not support URL-based context, paste the content of `llms-small.txt` or a relevant `_llms-txt/*.txt` topic bundle directly into the chat or system prompt.
+
+</TabItem>
+</Tabs>
+
+## Example prompt
+
+After you add the documentation context, validate it by asking a specific question in chat. You can use or adapt the example below.
+
+```bash wrap
+Use the Storefront docs. I'm building a product detail page and I want to add a custom 'Add to Wishlist' button in the product details drop-in, below the existing Add to Cart button. How do I use slots to do this?
+```
+
+## Check the result
+
+A successful setup returns responses that reference storefront topics, drop-in APIs, or paths aligned with this documentation. Adapt drop-in names or UI labels as needed for your project, then validate the response against the live documentation.
+
+## Keep context focused
+
+- Many paths, blocks, and drop-in examples in this documentation follow the folder layout of the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" /> on GitHub. Keep your storefront project open so suggested paths match your workspace. If your repository layout differs, tell the agent in chat. For example, say when you have merged boilerplate code into an existing site so the agent does not assume default boilerplate folders.
+- To scope one reply to a single page, paste the page web address into the same chat. Your persistent context file connection stays in place, and the pasted web address narrows only that exchange.
