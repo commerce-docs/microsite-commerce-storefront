@@ -30,8 +30,16 @@ export function generateSidebar() {
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
-            { label: 'Documentation bundles for AI tools', link: '/get-started/build-with-ai/' },
-            { label: 'Drop-ins MCP', link: '/get-started/dropins-mcp/' },
+          ],
+        },
+        {
+          label: 'Build with AI',
+          collapsed: false,
+          items: [
+            { label: 'Overview', link: '/ai/' },
+            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
+            { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
+            { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
           ],
         },
         {
@@ -59,7 +67,6 @@ export function generateSidebar() {
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
             { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
-            { label: 'AI Agent Skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         // ---------- DROP-INS Overview ----------

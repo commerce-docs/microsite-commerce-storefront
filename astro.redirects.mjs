@@ -226,6 +226,7 @@ export function generateRedirects(basePath) {
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
+        '/boilerplate/ai-agent-skills': `${basePath}/ai/ai-agent-skills`,
         '/build-with-ai': `${basePath}/get-started/build-with-ai`,
         '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,
     };
