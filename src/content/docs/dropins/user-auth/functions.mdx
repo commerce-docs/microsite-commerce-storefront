@@ -368,31 +368,37 @@ Returns [`RevokeCustomerTokenModel`](#revokecustomertokenmodel).
 
 ## verifyToken
 
-The `verifyToken` function checks the validity of the provided authentication token. It verifies the token by making a `GraphQL` request to validate the customer. If valid, it emits an `authenticated` event with `true` and the customer's group ID. If invalid or missing, it emits an `authenticated` event with `false`, removes the token cookie, and clears the authentication header.
+The `verifyToken` function checks the validity of the stored customer token. It makes a GraphQL request to validate the token and, if valid, sets the authentication header and emits the `authenticated` event with `true`. If the token is invalid or missing, it removes the token cookie, clears the authentication header, and emits the `authenticated` event with `false`.
+
+By default, the validation query is compatible with all backends. When `adobeCommerceOptimizer` is set to `true`, the query additionally fetches `customer.group.uid` to emit the `auth/group-uid` event required for ACO price book resolution.
 
 ```ts
 const verifyToken = async (
   authType = 'Authorization',
-  type = 'Bearer'
-): Promise<any>
+  type = 'Bearer',
+  adobeCommerceOptimizer = false
+): Promise<boolean>
 ```
 
 <TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `authType` | `string` | No | The HTTP header name to use for authentication. Defaults to \`Authorization\`. This allows customization of the authentication header if your backend uses a different header name. |
-| `type` | `string` | No | The authentication scheme type to use. Defaults to \`Bearer\`. This is prepended to the token value in the authentication header (e.g., \`Bearer &lt;token&gt;\`). |
+| `authType` | `string` | No | The HTTP header name to use for authentication. Defaults to `Authorization`. |
+| `type` | `string` | No | The authentication scheme prefix prepended to the token value in the header (e.g., `Bearer <token>`). Defaults to `Bearer`. |
+| `adobeCommerceOptimizer` | `boolean` | No | When `true`, the validation query also fetches `customer.group.uid` and emits the `auth/group-uid` event for ACO price book resolution. Only enable this when using Adobe Commerce Optimizer. Defaults to `false`. |
 
 </TableWrapper>
 
 ### Events
 
-Does not emit any drop-in events.
+Emits the [`authenticated`](/dropins/user-auth/events/#authenticated-emits) event.
+
+When `adobeCommerceOptimizer` is `true`, also emits the [`auth/group-uid`](/dropins/user-auth/events/#authgroup-uid-emits) event.
 
 ### Returns
 
-Returns `void`.
+Returns `Promise<boolean>`. Returns `true` if the token is valid, `false` otherwise.
 
 ## Data Models
 
