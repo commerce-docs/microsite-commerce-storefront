@@ -23,6 +23,7 @@ The **Payment Services** drop-in uses the [event bus](/sdk/reference/events) to 
 |-------|-----------|-------------|
 | [authenticated](#authenticated-listens) | Listens | Fired by User Auth (`user-auth`) when the user's authentication state changes. Used to determine whether the shopper is a guest customer. |
 | [cart/data](#cartdata-listens) | Listens | Fired by Cart (`cart`) when cart data is available or changes. Read by the `GooglePay` container at click time to supply cart items and totals to the Google Pay payment sheet. |
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by Checkout (`checkout`) when the checkout state is first loaded. Used as a fallback by the `GooglePay` container when `checkout/updated` has not yet been received. |
 | [checkout/updated](#checkoutupdated-listens) | Listens | Fired by Checkout (`checkout`) when the checkout state is updated. Read by the `GooglePay` container at click time to supply billing address and shipping method to the Google Pay payment sheet. |
 | [payment-services/initialized/checkout](#payment-servicesinitialized-emits) | Emits | Emitted when the drop-in finishes initializing for the `CHECKOUT` location. |
 | [payment-services/initialized/product-detail](#payment-servicesinitialized-emits) | Emits | Emitted when the drop-in finishes initializing for the `PRODUCT_DETAIL` location. |
@@ -84,11 +85,33 @@ events.on('cart/data', (payload) => {
 
 ---
 
+### `checkout/initialized` (listens)
+
+Fired by the [Checkout drop-in](/dropins/checkout/events/) when the checkout state is first loaded. The `GooglePay` container uses this event as a fallback when `checkout/updated` has not yet been received — for example, when the shopper opens the Google Pay payment sheet without having interacted with the checkout form.
+
+#### Event payload
+
+```typescript
+CheckoutData | null
+```
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('checkout/initialized', (payload) => {
+  console.log('checkout/initialized event received:', payload);
+});
+```
+
+---
+
 ### `checkout/updated` (listens)
 
-Fired by the [Checkout drop-in](/dropins/checkout/events/#checkoutupdated-emits-and-listens) when the checkout state is updated. The `GooglePay` container reads this event using `events.lastPayload('checkout/updated')` at the moment the shopper clicks the Google Pay button to populate billing address and shipping method in the Google Pay payment sheet.
+Fired by the [Checkout drop-in](/dropins/checkout/events/#checkoutupdated-emits-and-listens) when the checkout state is updated. The `GooglePay` container reads this event using `events.lastPayload('checkout/updated')` at the moment the shopper clicks the Google Pay button to populate billing address and shipping method in the Google Pay payment sheet. If `checkout/updated` has not yet been received, the container falls back to `checkout/initialized`.
 
-Like `cart/data`, this payload must be present on the event bus before the shopper clicks the button. For the full `Cart` and `NegotiableQuote` type definitions, see the [Checkout events reference](/dropins/checkout/events/#cart).
+Like `cart/data`, one of these payloads must be present on the event bus before the shopper clicks the button. For the full `Cart` and `NegotiableQuote` type definitions, see the [Checkout events reference](/dropins/checkout/events/#cart).
 
 #### Event payload
 
