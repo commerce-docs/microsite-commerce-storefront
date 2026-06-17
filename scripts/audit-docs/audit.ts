@@ -6,6 +6,7 @@ import type {
   EventEntry,
   FunctionEntry,
   SdkEventGaps,
+  VersionGap,
 } from './types.js';
 import {
   isSdkEvent,
@@ -16,6 +17,7 @@ import {
   parseMdxDictionaryKeys,
   parseMdxSlots,
   parseSdkEventNames,
+  parseMdxVersion,
 } from './mdx-parsers.js';
 import {
   KNOWN_PROP_OMISSIONS,
@@ -72,7 +74,8 @@ export function auditDropin(
   functions: FunctionEntry[],
   events: EventEntry[],
   sdkEvents: Set<string>,
-  i18nKeys: Record<string, string>
+  i18nKeys: Record<string, string>,
+  registryVersion?: string
 ): DropinGaps {
   const gaps: DropinGaps = {
     missingContainerPages: [],
@@ -86,6 +89,7 @@ export function auditDropin(
     phantomI18nKeys: [],
     missingSlots: [],
     phantomSlots: [],
+    versionMismatch: null,
   };
 
   const FRAMEWORK_PROPS = new Set(['initialData', 'children', 'scope', 'className']);
@@ -238,6 +242,23 @@ export function auditDropin(
     for (const container of containersWithSlots) {
       for (const slot of container.slotNames) {
         gaps.missingSlots.push({ container: container.name, slot, reason: 'missing' });
+      }
+    }
+  }
+
+  // --- Version check ---
+  if (registryVersion) {
+    const initFile = micrositeDocPath(micrositePath, dropinKey, 'initialization.mdx');
+    if (existsSync(initFile)) {
+      const initContent = readFileSync(initFile, 'utf8');
+      const docVersion = parseMdxVersion(initContent);
+      if (docVersion !== registryVersion) {
+        const versionGap: VersionGap = {
+          registryVersion,
+          docVersion,
+          reason: docVersion === null ? 'missing' : 'mismatch',
+        };
+        gaps.versionMismatch = versionGap;
       }
     }
   }
