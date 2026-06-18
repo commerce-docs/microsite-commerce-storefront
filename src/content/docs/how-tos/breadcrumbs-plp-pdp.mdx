@@ -64,8 +64,9 @@ The leaf is determined by position, not by the absence of a link. The last `<li>
 
 Create a new directory `blocks/commerce-breadcrumbs/` in your repository, and add the two files below.
 
-```javascript title="blocks/commerce-breadcrumbs/commerce-breadcrumbs.js"
+```js title="blocks/commerce-breadcrumbs/commerce-breadcrumbs.js" {17} {58} {30} {35} {7}
 import { Breadcrumbs, provider as UI } from '@dropins/tools/components.js';
+import { events } from '@dropins/tools/event-bus.js';
 import { h } from '@dropins/tools/preact.js';
 
 import { rootLink } from '../../scripts/commerce.js';
@@ -114,12 +115,19 @@ export default function decorate(block) {
     }
   }
 
+  // Resolve display trail (ancestors may come from session; leaf may come from catalog)
+  let leafLabel = leaf.label;
+  if (document.querySelector('main .product-details')) {
+    const product = events.lastPayload('pdp/data');
+    if (product?.name) leafLabel = product.name;
+  }
+
   UI.render(Breadcrumbs, {
     categories: [
-      ...ancestors.map((item) =>
+      ...ancestors.map((item) => (
         item.url ? h('a', { href: rootLink(item.url) }, item.label) : h('span', null, item.label)
-      ),
-      h('span', null, leaf.label),
+      )),
+      h('span', null, leafLabel),
     ],
   })(block);
 
@@ -133,10 +141,11 @@ export default function decorate(block) {
     const targetPath = new URL(anchor.href).pathname;
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ path: targetPath, trail: propagatedTrail })
+      JSON.stringify({ path: targetPath, trail: propagatedTrail }),
     );
   });
 }
+
 ```
 
 ```css title="blocks/commerce-breadcrumbs/commerce-breadcrumbs.css"
@@ -152,6 +161,16 @@ export default function decorate(block) {
 - **SDK component for rendering** — `UI.render(Breadcrumbs, …)` keeps the breadcrumb visually consistent with the rest of the storefront and lets you re-theme it through the SDK.
 - **Single, well-known session key** — `commerce.breadcrumbs` is overwritten on each PLP link click, so there is no stale data accumulating.
 
+**TODO**: Add a README.md file to the blocks/commerce-breadcrumbs directory with the following content:
+
+```md wrap title="blocks/commerce-breadcrumbs/README.md"
+# Commerce Breadcrumbs Block
+
+This block is used to render breadcrumbs on product listing and product detail pages. It is a simple block that renders the breadcrumbs from the page HTML. It does not use any external data and is not dependent on any other blocks.
+
+## Usage
+
+```
 </Task>
 
 <Task>
