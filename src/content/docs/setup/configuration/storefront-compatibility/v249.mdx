@@ -8,6 +8,7 @@ sidebar:
 import Link from '@components/Link.astro';
 
 
+import Badge from '@components/overrides/Badge.astro';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Callouts from '@components/Callouts.astro';
@@ -19,50 +20,30 @@ The Storefront Compatibility Package contains changes to the Adobe Commerce 2.4.
 Most of these changes enhance the Adobe Commerce GraphQL schema. However, miscellaneous bugfixes are also included. The drop-in components require this package.
 
 <Aside type="note" title="Version and compatibility requirements">
-This Storefront Compatibility Package applies to Adobe Commerce 2.4.9 when you have an Adobe Commerce Optimizer license. Use it on Commerce PaaS or on-premises instances with Composer as described on the [Installation](/setup/configuration/storefront-compatibility/install/) page. If you are on Commerce PaaS without an Optimizer license, stay on Adobe Commerce 2.4.8 and the [SCP for Adobe Commerce 2.4.8](/resources/v248/) package (`4.8.25`) instead. On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer SaaS offerings, Adobe installs and updates the package automatically — you do not run the manual install steps on this site. Lower versions of Adobe Commerce are not supported. Magento Open Source is not supported. For platform-level fixes that Adobe documents for the [2.4.8 package](/resources/v248/), see that page. The `4.9.0` Composer package adds the modules listed below. It is not a copy of the `4.8.25` package.
+This Storefront Compatibility Package can be installed on Adobe Commerce 2.4.9 with a Commerce Optimizer license only. Lower versions of Adobe Commerce are not supported. Magento Open Source is not supported.
 </Aside>
 
 ## Major features
 
-The `4.9.0` package line adds GraphQL schema extensions and REST endpoints for storefront drop-ins. Compared with the `4.8.25` package for Adobe Commerce 2.4.8, the `4.9.0` package includes fewer GraphQL schema modules because Adobe Commerce 2.4.9 absorbs many earlier SCP changes at the platform level.
+The Storefront Compatibility Package defines the following queries, mutations, and schema extensions:
 
-### Login as Customer and seller-assisted buying
+- <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-otp-customer-token/"} text={"exchangeOtpForCustomerToken"} /> mutation — Authenticates admins as customers for seller-assisted buying by exchanging a one-time password (OTP) and email for a customer token.
 
-- `admin_assistance_actions` on the `Customer` type — paginated log of administrator actions performed during seller-assisted buying sessions.
+- **admin_assistance_actions** on the Customer type — Paginated log of administrator actions performed during seller-assisted buying sessions.
 
-- `admin_assisted_order` on the `CustomerOrder` type — identifies orders placed while an administrator was signed in as the customer.
+- **admin_assisted_order** on the CustomerOrder type — Identifies orders placed while an administrator was signed in as the customer.
 
-- <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/exchange-otp-customer-token/"} text={"exchangeOtpForCustomerToken"} /> mutation — exchanges a one-time password (OTP) and email for a customer token. The standard sign-in form can also pass the OTP as the password through `generateCustomerToken`.
+- **shopping_assistance_enabled**, **shopping_assistance_checkbox_title**, and **shopping_assistance_checkbox_tooltip** on StoreConfig — Expose Login as Customer configuration to the storefront.
 
-- `shopping_assistance_enabled`, `shopping_assistance_checkbox_title`, and `shopping_assistance_checkbox_tooltip` on `StoreConfig` — expose Login as Customer configuration to the storefront.
+- **quantity** on ProductInterface — Quantity of available stock.
 
-### Cart, product availability, and inventory
+- **is_salable**, **backorder_message**, and **not_available_message** on cart line items — Salability checks and customer-facing availability messages at checkout.
 
-- `quantity` on `ProductInterface` — quantity of available stock.
+- **items_v2** on Wishlist — Paginated wishlist items.
 
-- `is_salable`, `backorder_message`, and `not_available_message` on cart line items — salability checks and customer-facing availability messages at checkout.
+- **returns** on CustomerOrder — Customer return requests on an order.
 
-- `is_available` on cart line items is deprecated in favor of `is_salable`.
-
-### Wishlist, orders, and returns
-
-- `items_v2` on `Wishlist` — paginated wishlist items.
-
-- `returns` on `CustomerOrder` — customer return requests on an order.
-
-- `product` on `OrderItemInterface` — product data on order line items.
-
-### REST APIs
-
-The `4.9.0` package also adds or extends these REST endpoints and attributes:
-
-- `GET /V1/customerSegments/search` — search customer segments with an integration or IMS token.
-
-- `assistance_allowed` — extension attribute on customer REST responses that indicates whether the customer enabled admin shopping assistance.
-
-- `uid` — extension attribute on customer group REST search results.
-
-GraphQL operations such as `customerGroup`, `customerSegments`, `clearWishlist`, and `deleteCustomerAddressV2` are documented on [SCP for Adobe Commerce 2.4.8](/resources/v248/) for the `4.8.25` package line. The `4.9.0` package does not ship separate GraphQL modules for those operations. If you need that package scope, use Adobe Commerce 2.4.8 with `4.8.25`.
+- **product** on OrderItemInterface — Product data on order line items.
 
 ## Release information
 
