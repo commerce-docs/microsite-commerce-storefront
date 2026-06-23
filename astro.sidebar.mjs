@@ -156,8 +156,9 @@ export function generateSidebar() {
               label: 'Compatibility Package',
               collapsed: true,
               items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
                 { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
+                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
               ],
             },
@@ -814,6 +815,16 @@ export function generateSidebar() {
                 { label: 'getPathValue', link: '/sdk/utilities/getpathvalue/' },
               ],
             },
+          ],
+        },
+
+        {
+          label: 'Compatibility Packages (legacy)',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/reference/storefront-compatibility/' },
+            { label: 'Adobe Commerce 2.4.8', link: '/reference/storefront-compatibility/v248/' },
+            { label: 'Adobe Commerce 2.4.7', link: '/reference/storefront-compatibility/v247/' },
           ],
         },
 
