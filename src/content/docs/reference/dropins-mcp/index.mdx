@@ -325,19 +325,29 @@ Validates drop-in usage in one or all blocks against the registry. Detects inval
 
 **CLI usage**
 
-`check_block_health` is also available as a standalone CLI subcommand for use in CI pipelines and terminals, without an AI assistant:
+`check_block_health` is also available as a standalone CLI subcommand for use in CI pipelines, terminals, and remote storefront audits, without an AI assistant:
 
 ```bash
+# Check a local project
 npx @dropins/mcp@latest check-health --fix --fail-on error
+
+# Audit a live public storefront by URL
+npx @dropins/mcp@latest check-health --url https://www.aemshop.net/products/adobe-pattern-hoodie/adb127
+
+# Audit a specific block on a live storefront
+npx @dropins/mcp@latest check-health --url https://store.example.com/checkout --block commerce-checkout --fix
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--project-dir <path>` | `cwd` | Path to the AEM project root |
+| `--url <url>` | — | Fetch blocks from a live public EDS storefront instead of local files |
 | `--block <name>` | _(all blocks)_ | Check a single block instead of all |
 | `--fix` | `false` | Include fix suggestions in findings |
 | `--fail-on <level>` | `error` | Exit 1 threshold: `error` or `warning` |
 | `--json` | `false` | Output raw JSON to stdout |
+
+`--url` and `--project-dir` are mutually exclusive. When using `--url`, the CLI fetches page HTML to discover blocks (preferring `data-block-name` attributes), downloads each block's JS, recursively resolves relative imports, and fetches initializer files — all without needing access to the source repository. Only public storefronts are supported.
 
 Exits with code `0` when all blocks are healthy and `1` when errors (or warnings, if `--fail-on warning`) are found. Always use `@latest` in CI to ensure the registry data matches the most recently published drop-in versions.
 
