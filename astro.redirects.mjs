@@ -135,6 +135,8 @@ export function generateRedirects(basePath) {
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
         '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
+        '/setup/configuration/storefront-compatibility/v247': `${basePath}/resources/v247`,
+        '/setup/configuration/storefront-compatibility/v247/': `${basePath}/resources/v247`,
         '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
