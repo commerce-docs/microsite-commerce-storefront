@@ -16,7 +16,7 @@ The Storefront Compatibility B2B Package adds backend GraphQL that [B2B drop-ins
 
 | Item | Requirement |
 |---|---|
-| Commerce backend | Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer only. Adobe installs this package on Commerce automatically (no Composer). Not available on Commerce PaaS or on-premises. See [Backend options](/get-started/backends/). |
+| Commerce backend | Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer managed backends only. Adobe installs this package on Commerce automatically (no Composer). On Commerce PaaS or on-premises, you can install the B2C Storefront Compatibility Package with Composer when you hold an Adobe Commerce Optimizer license. However, the B2B package is not available for Composer install on Commerce PaaS or on-premises. See [Backend options](/get-started/backends/). |
 | B2C compatibility package | Required on the same Commerce instance. See [Storefront Compatibility Package](/setup/configuration/storefront-compatibility/). |
 | Adobe Commerce B2B | Separate extension and license on Commerce. Required on your instance before Adobe provisions this compatibility package. Contact your Adobe account representative to add it to your contract. |
 | B2B drop-ins in your repo | You install with npm after the backend is ready. See [Licensing requirements](/licensing/). |
@@ -27,7 +27,9 @@ Tested with Adobe Commerce `2.4.8` and `2.4.9` and Adobe Commerce B2B `1.5.2`. M
 
 ## Major features
 
-The `1.0.22` package line adds the following GraphQL queries, mutations, and schema extensions. [Quick Order](/dropins-b2b/quick-order/) uses core Commerce GraphQL and is not listed here.
+Adobe releases new GraphQL queries and mutations across minor versions in each package line. The list below summarizes the full `1.0.22` line; not every item was introduced in `1.0.22`, even though it is the latest release in the Storefront Compatibility B2B Package series. For version-specific changes, see the [changelog](/releases/changelog/) and filter for the Storefront Compatibility B2B Package.
+
+The `1.0.22` package line adds the following GraphQL queries and mutations. [Quick Order](/dropins-b2b/quick-order/) uses core Commerce GraphQL and is not listed here.
 
 #### Company hierarchy
 
@@ -37,37 +39,9 @@ Supports [Company Management](/dropins-b2b/company-management/) and [Company Swi
 
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/company/mutations/unassign-child-company/"} text={"unassignChildCompany"} /> mutation — Company administrators can unassign a child company from its parent company within the company hierarchy.
 
-- `company_hierarchy` on the `Customer` type — Company relation hierarchies for companies the customer administers.
-
-- `is_admin` on `CompanyBasicInfo` — Indicates whether the company is the admin company in a returned hierarchy.
-
-#### Company configuration and roles
-
-Supports [Company Management](/dropins-b2b/company-management/).
-
-- `company_enabled`, `allow_company_registration`, and `company_credit_enabled` on `StoreConfig` — B2B company, registration, and credit settings exposed to the storefront.
-
-- `status` on `Company` and `CompanyBasicInfo` — Current company approval status (`PENDING`, `APPROVED`, `REJECTED`, `BLOCKED`).
-
-- `roles` on `Company` — Paginated list of company roles.
-
-- `available_payment_methods` on `Company` — Payment methods available to the company with B2B-specific filtering.
-
-- `available_shipping_methods` on `Company` — Shipping carriers available to the company with B2B-specific filtering.
-
-- `credit` on `Company` — Company credit data, including `exceed_limit` on the `CompanyCredit` type to indicate whether orders can exceed the credit limit.
-
-- `id` on the `Customer` type — Customer ID for B2B company management GraphQL operations.
-
 #### Requisition lists
 
 Supports the [Requisition List](/dropins-b2b/requisition-list/) drop-in.
-
-- `requisition_lists` on the `Customer` type — Paginated, filterable, and sortable requisition lists for the signed-in customer.
-
-- `items` on `RequisitionList` — Paginated line items on a requisition list.
-
-- `sku` on `RequisitionListItemInterface` — Product SKU on a requisition list line item.
 
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/queries/shared-requisition-list/"} text={"sharedRequisitionList"} /> query — Retrieves a read-only shared requisition list for B2B customers, including sender details and associated items, based on the provided token.
 
@@ -77,37 +51,21 @@ Supports the [Requisition List](/dropins-b2b/requisition-list/) drop-in.
 
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/requisition-list/mutations/import-shared-requisition-list/"} text={"importSharedRequisitionList"} /> mutation — Imports a shared requisition list into the current customer account based on the provided token.
 
-- `requisition_list_sharing_enabled`, `requisition_list_share_link_validity_days`, `requisition_list_share_max_recipients`, and `requisition_list_share_storefront_path` on `StoreConfig` — Requisition list sharing settings for the storefront.
-
 #### Negotiable quotes
 
 Supports [Quote Management](/dropins-b2b/quote-management/).
 
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/queries/templates/"} text={"negotiableQuoteTemplates"} /> query — Retrieves negotiable quote templates with sales rep, order, and pricing details.
 
-- `historyV2` on `NegotiableQuoteTemplate` — Template change history, including expiration date updates.
-
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/mutations/set-quote-template-expiration-date/"} text={"setQuoteTemplateExpirationDate"} /> mutation — Sets an expiration date on negotiable quote templates.
 
 - <Link href={"https://developer.adobe.com/commerce/webapi/graphql/schema/b2b/negotiable-quote/mutations/place-order-v2/"} text={"placeNegotiableQuoteOrderV2"} /> mutation — Transforms a negotiable quote into an order and returns full order details, including an errors array for standardized response handling.
-
-- `expiration_date`, `sales_rep_name`, `template_id`, `template_name`, and `history` on `NegotiableQuote` — Template linkage and quote history on negotiable quotes.
-
-- `quote_enabled` on the `Customer` type — Indicates whether negotiable quote functionality is enabled for the customer.
-
-- `quote_minimum_amount` and `quote_minimum_amount_message` on `StoreConfig` — Minimum order amount required to request a quote.
 
 #### Purchase orders
 
 Supports the [Purchase Order](/dropins-b2b/purchase-order/) drop-in.
 
-- `purchase_orders_enabled` on the `Customer` type — Indicates whether purchase order functionality is enabled for the customer.
-
 - `approvePurchaseOrders` mutation — Approves one or more purchase orders pending the customer's action.
-
-- `approval_flow` on `PurchaseOrder` — Approval steps for a purchase order.
-
-- `my_approvals` on `PurchaseOrdersFilterInput` — Filters purchase orders pending the customer's approval or already handled by the customer.
 
 ## Release information
 
