@@ -84,6 +84,12 @@ export interface SlotGap {
   reason: 'missing' | 'phantom';
 }
 
+export interface VersionGap {
+  registryVersion: string;
+  docVersion: string | null;
+  reason: 'mismatch' | 'missing';
+}
+
 export interface DropinGaps {
   missingContainerPages: string[];
   missingProps: PropGap[];
@@ -96,6 +102,7 @@ export interface DropinGaps {
   phantomI18nKeys: I18nGap[];
   missingSlots: SlotGap[];
   phantomSlots: SlotGap[];
+  versionMismatch: VersionGap | null;
 }
 
 export interface SdkEventGaps {
