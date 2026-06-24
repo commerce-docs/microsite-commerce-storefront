@@ -136,6 +136,8 @@ export function generateRedirects(basePath) {
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
         '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
+        '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
+        '/setup/configuration/storefront-compatibility/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/resources/v247': `${basePath}/reference/storefront-compatibility/v247`,
         '/resources/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/resources/v248': `${basePath}/reference/storefront-compatibility/v248`,
