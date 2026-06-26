@@ -503,9 +503,23 @@ if (req.backend == F_edge) {
 
 In the domains configuration, you must use a wildcard. Since the Commerce Admin doesn't let you do this, you must do it using the Fastly CLI (which also shows the wildcard URL in the Admin).
 
-### Maintenance page workaround
+### Maintenance mode
 
-The maintenance page can block requests to API Mesh/GraphQL. The solution is to create a VCL snippet with low priority that comes before the maintenance check in VCL and allows GraphQL requests through.
+The Commerce Storefront has no built-in maintenance mode. To redirect all storefront traffic to a maintenance page, add a VCL snippet with the following logic. It redirects every request that is not already going to the maintenance path, so the maintenance page itself remains accessible.
+
+```js
+if (req.url !~ "^/maintenance") {
+  error 302 "https://yoursite.com/maintenance";
+}
+```
+
+Replace `https://yoursite.com/maintenance` with the URL of your maintenance page. Work with your Fastly administrator to confirm the correct snippet type and priority before applying it.
+
+To end maintenance mode, remove or disable the snippet in your Fastly configuration.
+
+:::note
+This redirect applies to all incoming requests, including GraphQL and API Mesh requests.
+:::
 
 ### Multiple set-cookie headers workaround
 
