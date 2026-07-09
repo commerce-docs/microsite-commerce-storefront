@@ -104,12 +104,14 @@ function main(): void {
   let totalDropinsAudited = 0;
 
   for (const [dropinKey] of Object.entries(DROPIN_PATH_MAP)) {
-    const containers = containersRegistry.dropins[dropinKey]?.containers ?? [];
+    const dropinContainers = containersRegistry.dropins[dropinKey];
+    const containers = dropinContainers?.containers ?? [];
+    const registryVersion = dropinContainers?.version;
     const functions = apiFunctionsRegistry.dropins[dropinKey]?.functions ?? [];
     const i18nKeys = i18nRegistry.dropins[dropinKey]?.keys ?? {};
 
     log(
-      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${Object.keys(i18nKeys).length} i18n keys)`
+      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${Object.keys(i18nKeys).length} i18n keys, registry v${registryVersion ?? 'unknown'})`
     );
 
     allGaps[dropinKey] = auditDropin(
@@ -119,7 +121,8 @@ function main(): void {
       functions,
       allEvents,
       sdkEvents,
-      i18nKeys
+      i18nKeys,
+      registryVersion
     );
     totalDropinsAudited++;
   }
