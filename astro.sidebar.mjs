@@ -335,7 +335,8 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
-                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
+                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' }
                   ],
                 },
               ],
