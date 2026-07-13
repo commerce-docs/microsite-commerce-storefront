@@ -169,7 +169,7 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/setup/configuration/' },
                 { label: 'Storefront Configuration', link: '/setup/configuration/commerce-configuration/' },
-                { label: 'Config Validator (Beta)', link: '/setup/configuration/config-validator/' },
+                { label: 'Config Validator', link: '/setup/configuration/config-validator/' },
                 { label: 'Price Book ID Setup', link: '/setup/configuration/price-book-setup/' },
                 { label: 'AEM Assets Integration', link: '/setup/configuration/aem-assets-configuration/' },
                 { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
