@@ -1,0 +1,43 @@
+---
+title: Config.json Validator (Beta)
+description: Paste a config.json to check it against known ACO/ACCS misconfiguration patterns.
+---
+
+import ConfigValidator from '@components/ConfigValidator/ConfigValidator.jsx';
+import Link from '@components/Link.astro';
+
+This is a prototype spike (<Link href="https://jira.corp.adobe.com/browse/USF-4134" text="USF-4134" />) that checks a `config.json` against the misconfiguration patterns that repeatedly show up in ACO/ACCS support escalations — see the [Storefront Configuration](/setup/configuration/commerce-configuration/) page for the full field/header reference this tool validates against.
+
+Paste your `config.json` below and select **Validate**. Nothing is sent anywhere — validation runs entirely in your browser.
+
+<ConfigValidator client:only="react" />
+
+## Rules checked
+
+| Pattern | Why it breaks things | Source |
+| --- | --- | --- |
+| Unresolved `{{PLACEHOLDER}}` values anywhere in the file | Requests are sent with the literal placeholder string instead of a real header/URL value, so the backend rejects or silently misroutes them | COMOPT-1882 |
+| Missing required `analytics` fields (`locale`, `store-view-currency-code`, `view-id` for ACO) | Product Recommendations and Live Search need these to resolve locale/currency/catalog view correctly; when absent, the pipeline silently falls back to defaults (e.g. `en-US`) | COMOPT-1882, COMOPT-1649 |
+| Both `Magento-*` and `AC-*` headers present in the same `cs` section | Usually a leftover from a PaaS/ACCS-to-ACO migration; mixing header families is a known source of inconsistent behavior between endpoints | COMOPT-1669 |
+| Header casing (for example `Magento-store-code` instead of `Magento-Store-Code`) | Header matching for store/website context is case-sensitive on the backend; a casing mismatch causes broken faceting/caching even though the header "looks" correct | COMOPT-1657 |
+
+This is a starting rule set scoped to what showed up most often in escalations — additional patterns from the wiki (for example `Magento-Customer-Group` vs `Magento-Customer-Group-Code`, deprecated `ac-*`/`magento-*` mixed recommendation headers) are good candidates to add if this gets promoted past spike stage.
+
+## Recommendation: how to surface this
+
+Three options were considered:
+
+- **Embedded docs-site tool (this prototype)** — no install, sits directly next to the reference documentation troubleshooters already use, and doubles as a self-service check for customers/partners, not just internal Adobe staff. Runs entirely client-side, so there's no backend to maintain.
+- **CLI script** — better for automating checks in CI or scripting bulk validation across many configs, but requires distribution/install and doesn't help non-technical support staff triaging a single escalation.
+- **Slack bot** — convenient for support workflows already in Slack, but adds a new service to operate and doesn't give a durable, linkable reference the way a docs page does.
+
+**Recommendation:** keep the validator here, embedded in the docs site, as the primary surface. A CLI wrapper around the same `validateConfig` rules module would be a cheap follow-up if bulk/CI validation is needed later.
+
+## Epic-promotion assessment
+
+Worth promoting to a full epic if:
+- Rule coverage needs to grow meaningfully beyond the patterns above (e.g. covering more escalation classes as they're triaged).
+- The tool should integrate with the [Config Generator](https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator) or Site Creator tools to validate output before it reaches a customer's repo.
+- Support wants automated/CI validation (e.g. a GitHub Action that runs this on every `config.json` commit) rather than a manual paste-and-check tool.
+
+For now, the spike scope (documented rules + working prototype) is sufficient to unblock escalation triage without further investment.
