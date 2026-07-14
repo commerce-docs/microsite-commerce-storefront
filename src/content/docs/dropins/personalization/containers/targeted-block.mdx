@@ -30,20 +30,28 @@ compact
 The following example demonstrates how to integrate the `TargetedBlock` container:
 
 ```javascript
+function prepareIds(providedIds) {
+  return providedIds.split(',').map((num) => btoa(num.trim()));
+}
+
 export default async function decorate(block) {
   const blockConfig = readBlockConfig(block);
 
   const {
     fragment,
     type,
-    segments,
-    groups,
-    cartRules,
+    'customer-segments': customerSegments,
+    'customer-groups': customerGroups,
+    'cart-rules': rules,
   } = blockConfig;
 
   const content = (blockConfig.fragment !== undefined)
     ? await loadFragment(fragment)
     : block.children[block.children.length - 1];
+
+  const segments = customerSegments !== undefined ? prepareIds(customerSegments) : [];
+  const groups = customerGroups !== undefined ? prepareIds(customerGroups) : [];
+  const cartRules = rules !== undefined ? prepareIds(rules) : [];
 
   render.render(TargetedBlock, {
     type,
