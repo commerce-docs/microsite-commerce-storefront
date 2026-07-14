@@ -1,7 +1,3 @@
-// Rules engine for the config.json validator prototype (USF-4134).
-// Validates a parsed config.json object against known ACO/ACCS misconfiguration
-// patterns documented in /setup/configuration/commerce-configuration/.
-
 const KNOWN_HEADERS = [
   'Magento-Store-Code',
   'Magento-Store-View-Code',
@@ -106,7 +102,6 @@ function checkAnalyticsFields(section, backendType, path, findings) {
   });
 }
 
-// Returns a list of findings: { rule, severity: 'error' | 'warning', path, message }.
 export function validateConfig(rawConfig) {
   if (!rawConfig || typeof rawConfig !== 'object') {
     return [
