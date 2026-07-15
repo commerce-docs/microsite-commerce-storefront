@@ -21,7 +21,7 @@ Drop-in components — B2C (business-to-consumer, meaning typical shopper experi
 
 Backends fall into three categories:
 
-- Commerce PaaS — Existing Adobe Commerce on Cloud infrastructure or on-premises deployment without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license
+- Commerce on Cloud or on-premises — Existing Adobe Commerce on Cloud infrastructure or on-premises deployment without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license
 - Adobe Commerce as a Cloud Service — Cloud Service deployment whose license includes Storefront
 - Adobe Commerce Optimizer — New Adobe Commerce Optimizer deployment, or an existing PaaS deployment that added Adobe Commerce Optimizer
 
@@ -35,11 +35,11 @@ For pages and blocks on da.live, see <Link href={"https://docs.da.live/"} text={
 
 <TableWrapper nowrap={[0]}>
 
-| Feature | Commerce PaaS | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
+| Feature | Adobe Commerce<br/>(on cloud, on premises) | Adobe Commerce as a Cloud Service | Adobe Commerce Optimizer |
 |---------|---------------|-----------------------------------|--------------------------|
 | License includes Storefront | No | Yes | Yes |
 | Setup | Manual install required | Fully automated | Fully automated |
-| Version | v2.4.8+ (self-managed Commerce) | Commerce managed by Adobe (SaaS) | Optimizer managed by Adobe (SaaS) |
+| Version | v2.4.8+ (self-managed Commerce) | Continuous release (Adobe-managed) | Continuous release (Adobe-managed) |
 
 </TableWrapper>
 
@@ -51,7 +51,7 @@ The Adobe Commerce Optimizer Connector (PaaS-to-Adobe Commerce Optimizer) syncs 
 
 ## Backend topology
 
-This diagram focuses on the backend layer. It adds two optional pieces you might use during a phased move: <Term>Luma Bridge</Term> and the Adobe Commerce Optimizer Connector. Luma is Adobe's classic server-side Commerce storefront theme. If you run a <Term>Luma</Term> storefront today and are moving to Edge Delivery Services, Luma Bridge is a PHP module on Commerce that enables Luma pages and EDS drop-ins to share the same cart and sign-in session during the transition. For the full stack (drop-ins, boilerplate, and how services connect), see [Commerce services and backends](/get-started/architecture/commerce-services-and-backends/).
+This diagram focuses on the backend layer. It adds two optional pieces you might use during a phased migration to Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer: <Term>Luma Bridge</Term> and the Adobe Commerce Optimizer Connector. Luma is Adobe's classic server-side Commerce storefront theme. If you run a <Term>Luma</Term> storefront today and are moving to Edge Delivery Services, Luma Bridge is a PHP module on Commerce that enables Luma pages and EDS drop-ins to share the same cart and sign-in session during the transition. For the full stack (drop-ins, boilerplate, and how services connect), see [Commerce services and backends](/get-started/architecture/commerce-services-and-backends/).
 
 <Diagram type="mermaid" code={`
 graph TB
@@ -63,7 +63,7 @@ graph TB
         LB["<b>Luma Bridge</b><br/>PHP on Commerce · session only<br/>Same domain"]
     end
     subgraph Backends["Backends"]
-        PaaS["<b>Commerce PaaS</b><br/>Catalog, pricing, orders"]
+        PaaS["<b>Commerce on Cloud or on-premises</b><br/>Catalog, pricing, orders"]
         ACCS["<b>Adobe Commerce as a Cloud Service</b><br/>Fully managed, license includes Storefront"]
         ACO["<b>Adobe Commerce Optimizer</b><br/>Catalog Service, merchandising"]
     end
@@ -88,7 +88,7 @@ graph TB
 
 ## Prerequisites by backend
 
-Open only the tab for your backend and read it end to end. Commerce PaaS includes a manual checklist that the two managed backends do not.
+Open only the tab for your backend and read it end to end. Commerce on Cloud or on-premises includes a manual checklist that the two managed backends do not.
 
 <Options label="Backend" numbered={false}>
 <Option>
@@ -140,7 +140,7 @@ Adobe Commerce Optimizer (license includes Storefront)
 Adobe manages all requirements in a fully managed SaaS model. No manual installation is required.
 
 <Aside type="note" title="Adobe Commerce Optimizer + PaaS">
-If you are on Commerce PaaS with an existing Luma storefront and add Adobe Commerce Optimizer, you can use [Luma Bridge](/setup/discovery/luma-bridge/) to share sessions between EDS and Luma's cart, checkout, and account pages while content and marketing move to Edge Delivery first.
+If you are on Commerce on Cloud or on-premises with an existing Luma storefront and add Adobe Commerce Optimizer, you can use [Luma Bridge](/setup/discovery/luma-bridge/) to share sessions between EDS and Luma's cart, checkout, and account pages while content and marketing move to Edge Delivery first.
 </Aside>
 
 </Option>
@@ -149,20 +149,20 @@ If you are on Commerce PaaS with an existing Luma storefront and add Adobe Comme
 
 ## PaaS: required packages and services
 
-Install and configure the following on Commerce PaaS before you create your storefront. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer manage these automatically. Skip this section if you are not on Commerce PaaS.
+Install and configure the following on Commerce on Cloud or on-premises before you create your storefront. Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer manage these automatically. Skip this section if you are not on Commerce on Cloud or on-premises.
 
 ### Minimum checklist before you create a storefront
 
-Before <Term>Site Creator</Term>, manual configuration, or local preview can rely on Commerce APIs, confirm these items on Commerce PaaS:
+Before <Term>Site Creator</Term>, manual configuration, or local preview can rely on Commerce APIs, confirm these items on Commerce on Cloud and on-premises:
 
 1. You are on Adobe Commerce v2.4.8 or later (Magento Open Source is not supported for this storefront path).
-1. You installed the <Term>Storefront Compatibility package</Term> ([Storefront Compatibility Package](/setup/configuration/storefront-compatibility/) — [Manual installation](/setup/configuration/storefront-compatibility/install/) on Commerce PaaS or on-premises with Adobe Commerce Optimizer), which fills gaps in the core Commerce GraphQL schema that drop-ins require.
-1. If you build a B2B storefront, you installed the Storefront Compatibility B2B Package (SCP-B2B) on the same Commerce instance ([B2B Compatibility Package](/setup/configuration/storefront-compatibility/b2b/) — [Manual installation](/setup/configuration/storefront-compatibility/install/#install-the-b2b-package) on Commerce PaaS or on-premises with Adobe Commerce Optimizer). Adobe Commerce B2B must be on the instance before you install SCP-B2B.
+1. You installed the <Term>Storefront Compatibility package</Term> ([Storefront Compatibility Package](/setup/configuration/storefront-compatibility/) — [Manual installation](/setup/configuration/storefront-compatibility/install/) on Commerce on Cloud or on-premises with Adobe Commerce Optimizer), which fills gaps in the core Commerce GraphQL schema that drop-ins require.
+1. If you build a B2B storefront, you installed the Storefront Compatibility B2B Package (SCP-B2B) on the same Commerce instance ([B2B Compatibility Package](/setup/configuration/storefront-compatibility/b2b/) — [Manual installation](/setup/configuration/storefront-compatibility/install/#install-the-b2b-package) on Commerce on Cloud or on-premises with Adobe Commerce Optimizer). Adobe Commerce B2B must be on the instance before you install SCP-B2B.
 1. You connected the storefront services your project needs (at minimum, plan for Services Connector and Catalog Service, then add Live Search, Product Recommendations, and Data Connection per your rollout). Use the [service documentation table](#storefront-services) below for links.
 
 ### Storefront Compatibility package
 
-See [Storefront Compatibility Package](/setup/configuration/storefront-compatibility/) for who installs the package on each backend. On Commerce PaaS or on-premises with Adobe Commerce Optimizer, install it with Composer on your Commerce server. Your storefront repo still uses npm for JavaScript drop-ins, but these modules run as PHP on the Commerce server. See [Manual installation](/setup/configuration/storefront-compatibility/install/) to pick the version that matches your Adobe Commerce version, and read [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services) for how Commerce services fit together.
+See [Storefront Compatibility Package](/setup/configuration/storefront-compatibility/) for who installs the package on each backend, and [Manual installation](/setup/configuration/storefront-compatibility/install/) to pick the version that matches your Adobe Commerce version. Your storefront repo still uses npm for JavaScript drop-ins, but these modules run as PHP on the Commerce server. Read [Commerce services](/get-started/architecture/commerce-services-and-backends/#commerce-services) for how Commerce services fit together.
 
 ### Storefront services
 
