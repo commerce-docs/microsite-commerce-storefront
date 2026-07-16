@@ -192,6 +192,8 @@ export function generateSidebar() {
             { label: 'SEO Overview', link: '/setup/seo/' },
             { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+            { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
+            { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
           ],
         },
         {
@@ -336,7 +338,8 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
-                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
+                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' }
                   ],
                 },
               ],
@@ -847,7 +850,20 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Edge Delivery Services',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
+            { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
+            { label: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
+            { label: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
+            { label: 'File and content limits', link: '/merchants/edge-delivery-services/file-limits/' },
+          ],
+        },
+        {
           label: 'Commerce Blocks',
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/' },
             { label: 'Content and Commerce blocks', link: '/merchants/blocks/content-commerce-blocks/' },
@@ -862,8 +878,6 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/merchants/blocks/b2c/' },
-                { label: 'Personalization Setup', link: '/merchants/blocks/personalization/' },
-                { label: 'Product Recommendations Setup', link: '/merchants/blocks/product-recommendations/' },
                 { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
                 { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
                 { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -937,16 +951,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Localization',
-          collapsed: true,
-          items: [
-            { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
-            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
-            { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
-          ],
-        },
-        {
-          label: 'Content Customizations',
+          label: 'Storefront Features',
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
@@ -958,12 +963,12 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Edge Delivery Services',
+          label: 'Localization',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
-            { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
+            { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
+            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
+            { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },
       ],

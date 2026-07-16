@@ -394,6 +394,18 @@ const glossaryEntries: GlossaryEntry[] = [
     aliases: ['key-value rows'],
   },
   {
+    term: 'BYOM',
+    definition:
+      "Bring Your Own Markup. Edge Delivery Services protocol for supplying page HTML from an external source instead of a document.",
+    aliases: ['Bring Your Own Markup'],
+  },
+  {
+    term: 'overlay content',
+    definition:
+      'A secondary BYOM content source layered over the primary one; EDS serves overlay HTML for a URL when available, falling back to the primary source otherwise.',
+    aliases: ['overlay', 'BYOM overlay'],
+  },
+  {
     term: 'Merged full-width row',
     definition:
       "A table row where one cell spans the full table width, so you can add rich page content in one large cell. Some blocks (like `targeted-block`) use this for inline content or layout when a separate fragment document is not used.",
