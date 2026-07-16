@@ -99,6 +99,7 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Custom Commerce Events', link: '/how-tos/instrument-commerce-events/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             {
               label: 'Cart',
