@@ -20,6 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
 const configPath = join(projectRoot, 'astro.config.mjs');
+const sidebarConfigPath = join(projectRoot, 'astro.sidebar.mjs');
 
 /**
  * Escape a string for use in a regular expression
@@ -54,7 +55,21 @@ function hasSidebarEntry(pagePath) {
         'i'
     );
 
-    return pattern.test(config);
+    if (pattern.test(config)) {
+        return true;
+    }
+
+    // This repo keeps most sidebar `link:` values in `astro.sidebar.mjs` and passes
+    // `generateSidebar()` into `starlight-sidebar-topics` from `astro.config.mjs`.
+    // Validate there too, otherwise new manual pages will look "missing" to this script.
+    if (existsSync(sidebarConfigPath)) {
+        const sidebarConfig = readFileSync(sidebarConfigPath, 'utf8');
+        if (pattern.test(sidebarConfig)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**

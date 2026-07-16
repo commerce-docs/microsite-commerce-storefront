@@ -13,10 +13,10 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Company Management drop-in provides **26 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
+The Company Management drop-in provides **29 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.3.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -25,6 +25,8 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | --- | --- |
 | [`acceptCompanyInvitation`](#acceptcompanyinvitation) | Accepts a company invitation using the invitation code and user details from an email link. |
 | [`allowCompanyRegistration`](#allowcompanyregistration) | Returns whether the backend allows company self-registration per store configuration. |
+| [`assignChildCompany`](#assignchildcompany) | Assigns a child company to a parent company in the company hierarchy. |
+| [`buildPermissionTree`](#buildpermissiontree) | Filters a complete ACL resource tree down to only the resources matching the provided permission IDs. |
 | [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company. |
 | [`companyEnabled`](#companyenabled) | Returns whether the Company feature is enabled in store configuration. |
 | [`createCompany`](#createcompany) | Registers a new B2B company with complete business information including company details, legal address, and administrator account. |
@@ -33,10 +35,12 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`createCompanyUser`](#createcompanyuser) | Creates a new company user and optionally places them under a target structure node. |
 | [`deleteCompanyRole`](#deletecompanyrole) | Deletes a company role by ID and unassigns users from the deleted role. |
 | [`deleteCompanyTeam`](#deletecompanyteam) | Deletes a company team by entity ID. |
-| [`deleteCompanyUser`](#deletecompanyuser) | Unassigns the user from the company (does not remove from Company Structure tree). |
-| [`fetchUserPermissions`](#fetchuserpermissions) | API function retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
+| [`deleteCompanyUser`](#deletecompanyuser) | Unassigns the user from the company (the user is not removed from the Company Structure tree). |
+| [`fetchUserPermissions`](#fetchuserpermissions) | Retrieves the current user's role permissions and returns both the flattened permission IDs and the raw role response. |
+| [`flattenPermissionIds`](#flattenpermissionids) | Flattens a nested ACL resource tree into a flat array of permission ID strings. |
 | [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
 | [`getCompanyAclResources`](#getcompanyaclresources) | Retrieves the available ACL (Access Control List) resources for company role permissions. |
+| [`getCompanyHierarchy`](#getcompanyhierarchy) | Retrieves the hierarchy of companies related to the current company. |
 | [`getCompanyCredit`](#getcompanycredit) | Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. |
 | [`getCompanyCreditHistory`](#getcompanycredithistory) | Retrieves the company's credit transaction history with pagination support. |
 | [`getCompanyRole`](#getcompanyrole) | Retrieves details for a single company role including permissions and assigned users. |
@@ -48,11 +52,12 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`getCountries`](#getcountries) | Retrieves available countries and regions for address forms. |
 | [`getCustomerCompany`](#getcustomercompany) | Fetches simplified customer company information for display on the customer account information page. |
 | [`getStoreConfig`](#getstoreconfig) | Retrieves store configuration settings relevant to company management. |
-| [`initialize`](#initialize) | Initializes the Company drop-in with optional language definitions and data model metadata. |
+| `initialize` | Initializes the Company drop-in with optional language definitions and data model metadata. |
 | [`isCompanyAdmin`](#iscompanyadmin) | Checks if the current authenticated customer is a company administrator in any company. |
 | [`isCompanyRoleNameAvailable`](#iscompanyrolenameavailable) | Checks if a role name is available for use in the company. |
 | [`isCompanyUser`](#iscompanyuser) | Checks if the current authenticated customer belongs to any company. |
 | [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | Checks if an email address is available for a new company user. |
+| [`unassignChildCompany`](#unassignchildcompany) | Removes a child company from its parent in the company hierarchy. |
 | [`updateCompany`](#updatecompany) | Updates company profile information with permission-aware field filtering based on user's edit permissions. |
 | [`updateCompanyRole`](#updatecompanyrole) | Updates an existing company role's name, permissions, or assigned users. |
 | [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree. |
@@ -105,6 +110,34 @@ Does not emit any drop-in events.
 
 Returns `boolean`.
 
+## assignChildCompany
+
+Assigns a child company to a parent company in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const assignChildCompany = async (
+  parentCompanyId: string,
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `parentCompanyId` | `string` | Yes | The unique ID of the parent company. |
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to assign. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the assignment.
+
 ## checkCompanyCreditEnabled
 
 Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company.
@@ -143,13 +176,13 @@ Registers a new B2B company with complete business information.
 
 This function handles the entire company registration workflow including:
 - Company details validation (name, email, legal name, tax IDs)
-- Legal address validation with country/region support
+- Legal address validation with `country/region` support
 - Company administrator account creation
 - Email uniqueness validation
 
 ```ts
 const createCompany = async (
-  formData: CompanyCreateInput
+  formData: any
 ): Promise<{ success: boolean; company?: CompanyRegistrationModel; errors?: string[] }>
 ```
 
@@ -157,7 +190,7 @@ const createCompany = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `formData` | `CompanyCreateInput` | Yes | Company registration form data containing company info, legal address, and admin details. Includes: `company_name`, `company_email`, `legal_name`, `vat_tax_id`, `reseller_id`, `legal_address` (with street, city, region, postcode, country_id, telephone), and `company_admin` (with email, firstname, lastname, job_title, telephone, gender, custom_attributes). |
+| `formData` | `any` | Yes | Company registration form data containing company info, legal address, and admin details. Includes: `company_name`, `company_email`, `legal_name`, `vat_tax_id`, `reseller_id`, `legal_address` (with street, city, region, postcode, country_id, telephone), and `company_admin` (with email, firstname, lastname, job_title, telephone, gender, custom_attributes). |
 
 </TableWrapper>
 
@@ -171,40 +204,7 @@ Does not emit any drop-in events.
 { success: boolean; company?: CompanyRegistrationModel; errors?: string[] }
 ```
 
-Returns a promise resolving to registration result with success status, company data on success, or error messages on failure.
-
 See [`CompanyRegistrationModel`](#companyregistrationmodel).
-
-### Example
-
-```typescript
-const result = await createCompany({
-  company_name: 'Example Corp',
-  company_email: 'contact@example.com',
-  legal_name: 'Example Corporation Inc.',
-  vat_tax_id: 'VAT123456789',
-  legal_address: {
-    street: ['123 Main St', 'Suite 100'],
-    city: 'San Francisco',
-    region: { region_code: 'CA', region: 'California', region_id: 12 },
-    postcode: '94105',
-    country_id: 'US',
-    telephone: '+1-555-123-4567'
-  },
-  company_admin: {
-    email: 'admin@example.com',
-    firstname: 'John',
-    lastname: 'Doe',
-    job_title: 'CEO'
-  }
-});
-
-if (result.success) {
-  console.log('Company registered:', result.company);
-} else {
-  console.error('Registration failed:', result.errors);
-}
-```
 
 ## createCompanyRole
 
@@ -215,8 +215,10 @@ The role name must be unique within the company. Use `isCompanyRoleNameAvailable
 **Permissions Required:**
 - `Magento_Company::roles_edit` - User must have role management permission
 
-```typescript
-function createCompanyRole(input: CompanyRoleCreateInputModel): Promise<CompanyRoleModel>
+```ts
+const createCompanyRole = async (
+  input: CompanyRoleCreateInputModel
+): Promise<CompanyRoleModel>
 ```
 
 <TableWrapper nowrap={[0]}>
@@ -233,25 +235,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `CompanyRoleModel` - The newly created role with complete details.
-
-### Example
-
-```typescript
-const newRole = await createCompanyRole({
-  name: 'Sales Manager',
-  permissions: [
-    'Magento_Company::index',
-    'Magento_Company::view',
-    'Magento_Sales::all',
-    'Magento_Sales::place_order'
-  ]
-});
-
-console.log(`Created role: ${newRole.name} (ID: ${newRole.id})`);
-```
-
----
+Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ## createCompanyTeam
 
@@ -322,8 +306,10 @@ Restrictions:
 **Permissions Required:**
 - `Magento_Company::roles_edit` - User must have role management permission
 
-```typescript
-function deleteCompanyRole(variables: DeleteCompanyRoleVariables): Promise<boolean>
+```ts
+const deleteCompanyRole = async (
+  variables: DeleteCompanyRoleVariables
+): Promise<boolean>
 ```
 
 <TableWrapper nowrap={[0]}>
@@ -340,24 +326,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `boolean` - `true` if deletion succeeded, `false` if it failed (for example, the role has users).
-
-### Example
-
-```typescript
-try {
-  const success = await deleteCompanyRole({ id: 'cm9sZS8xMjM=' });
-  if (success) {
-    console.log('Role deleted successfully');
-  } else {
-    console.error('Cannot delete: role has assigned users');
-  }
-} catch (error) {
-  console.error('Delete failed:', error.message);
-}
-```
-
----
+Returns `boolean`.
 
 ## deleteCompanyTeam
 
@@ -401,7 +370,7 @@ const deleteCompanyUser = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `DeleteCompanyUserParams` | Yes | An object of type \`DeleteCompanyUserParams\` containing the user ID to delete and any additional parameters required for user deletion. |
+| `params` | `DeleteCompanyUserParams` | Yes | An object of type `DeleteCompanyUserParams` containing the user ID to delete and any additional parameters required for user deletion. |
 
 </TableWrapper>
 
@@ -443,7 +412,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns a Promise that resolves to a `CompanyModel` object containing comprehensive company details.
+Returns `void`.
 
 ## getCompanyAclResources
 
@@ -460,6 +429,22 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns an array of [`CompanyAclResourceModel`](#companyaclresourcemodel) objects.
+
+## getCompanyHierarchy
+
+Retrieves the hierarchy of companies related to the current company, including parent and child company relationships. Returns the full hierarchy as a flat array of `Company` objects.
+
+```ts
+const getCompanyHierarchy = async (): Promise<Company[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the full company hierarchy for the authenticated user's company context.
 
 ## getCompanyCredit
 
@@ -491,7 +476,7 @@ const getCompanyCreditHistory = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `GetCompanyCreditHistoryParams` | No | An optional object of type \`GetCompanyCreditHistoryParams\` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
+| `params` | `GetCompanyCreditHistoryParams` | No | An optional object of type `GetCompanyCreditHistoryParams` containing pagination parameters (currentPage, pageSize) and optional filters. Omit to retrieve history with default pagination. |
 
 </TableWrapper>
 
@@ -513,8 +498,10 @@ Returns role name, assigned user count, and the complete permission tree structu
 - `Magento_Company::roles_view` (minimum) - To view role details
 - `Magento_Company::roles_edit` - To modify the role (additional permission)
 
-```typescript
-function getCompanyRole(variables: GetCompanyRoleVariables): Promise<CompanyRoleModel>
+```ts
+const getCompanyRole = async (
+  variables: GetCompanyRoleVariables
+): Promise<CompanyRoleModel>
 ```
 
 <TableWrapper nowrap={[0]}>
@@ -531,18 +518,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `CompanyRoleModel` - Complete role details including permissions.
-
-### Example
-
-```typescript
-const role = await getCompanyRole({ id: 'cm9sZS8xMjM=' });
-console.log(`Role: ${role.name}`);
-console.log(`Users: ${role.usersCount}`);
-console.log(`Permissions: ${role.permissions.length} categories`);
-```
-
----
+Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ## getCompanyRoles
 
@@ -553,8 +529,10 @@ Returns roles with their names, assigned user counts, and IDs. Supports server-s
 **Permissions Required:**
 - `Magento_Company::roles_view` - User must have permission to view company roles
 
-```typescript
-function getCompanyRoles(variables: GetCompanyRolesVariables = {}): Promise<CompanyRolesResponseModel>
+```ts
+const getCompanyRoles = async (
+  variables: GetCompanyRolesVariables = {}
+): Promise<CompanyRolesResponseModel>
 ```
 
 <TableWrapper nowrap={[0]}>
@@ -571,24 +549,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `CompanyRolesResponseModel` - Paginated roles list with metadata.
-
-### Example
-
-```typescript
-const response = await getCompanyRoles({
-  pageSize: 20,
-  currentPage: 1,
-  filter: { name: 'Manager' }
-});
-
-console.log(`Total roles: ${response.totalCount}`);
-response.items.forEach(role => {
-  console.log(`${role.name}: ${role.usersCount} users`);
-});
-```
-
----
+Returns [`CompanyRolesResponseModel`](#companyrolesresponsemodel).
 
 ## getCompanyStructure
 
@@ -604,7 +565,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns a Promise that resolves to a `CompanyStructureModel` object representing the organizational hierarchy.
+Returns `void`.
 
 ## getCompanyTeam
 
@@ -672,7 +633,7 @@ const getCompanyUsers = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `params` | `CompanyUsersParams` | No | An optional object of type \`CompanyUsersParams\` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
+| `params` | `CompanyUsersParams` | No | An optional object of type `CompanyUsersParams` containing pagination and filter criteria (currentPage, pageSize, filter). Omit to retrieve all users with default pagination. |
 
 </TableWrapper>
 
@@ -744,32 +705,6 @@ Does not emit any drop-in events.
 
 Returns [`StoreConfigModel`](#storeconfigmodel).
 
-## initialize
-
-Initializes the Company drop-in with optional language definitions and data model metadata.
-
-```ts
-const initialize = async (
-  config: CompanyDropinConfig = {}
-): Promise<any>
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `config` | `CompanyDropinConfig` | No | An optional configuration object of type `CompanyDropinConfig` containing initialization settings such as `langDefinitions` for internationalization. If omitted, the default configuration is used. |
-
-</TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns `void`.
-
 ## isCompanyAdmin
 
 Checks if the current authenticated customer is a company administrator in any company.
@@ -796,11 +731,13 @@ Used for real-time validation during role creation and editing to prevent duplic
 Role names must be unique within a company. Different companies can have roles with the same name.
 </Aside>
 
-```typescript
-function isCompanyRoleNameAvailable(variables: IsCompanyRoleNameAvailableVariables): Promise<boolean>
+```ts
+const isCompanyRoleNameAvailable = async (
+  variables: IsCompanyRoleNameAvailableVariables
+): Promise<boolean>
 ```
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -814,23 +751,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `boolean` - `true` if name is available, `false` if already in use.
-
-### Example
-
-```typescript
-const isAvailable = await isCompanyRoleNameAvailable({ 
-  name: 'Sales Manager' 
-});
-
-if (isAvailable) {
-  console.log('Name is available - can proceed with creation');
-} else {
-  console.error('Name already exists - choose a different name');
-}
-```
-
----
+Returns `boolean`.
 
 ## isCompanyUser
 
@@ -858,7 +779,7 @@ const isCompanyUserEmailAvailable = async (
 ): Promise<any>
 ```
 
-<TableWrapper nowrap={[0,1]}>
+<TableWrapper nowrap={[0]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -874,11 +795,37 @@ Does not emit any drop-in events.
 
 Returns `void`.
 
+## unassignChildCompany
+
+Removes a child company from its parent in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const unassignChildCompany = async (
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to unassign from its parent. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the child company is removed.
+
 ## updateCompany
 
 Updates company profile information with permission-aware field filtering.
 
-This function dynamically builds the GraphQL mutation based on user permissions:
+This function dynamically builds the `GraphQL` mutation based on user permissions:
 - Only requests fields the user can view in the response
 - Only sends fields the user can edit in the mutation
 
@@ -887,7 +834,7 @@ This function dynamically builds the GraphQL mutation based on user permissions:
 - `Magento_Company::edit_address` - To update legal address fields
 
 <Aside type="tip">
-The dropin UI gates which fields are editable. If neither permission is granted, the submit button is disabled and this function should not be called.
+The drop-in UI gates which fields are editable. If neither permission is granted, the submit button is disabled and this function should not be called.
 </Aside>
 
 ```ts
@@ -906,42 +853,28 @@ const updateCompany = async (
 
 ### Events
 
-Emits [`company/updated`](/dropins-b2b/company-management/events/#companyupdated-emits) after successful update with new company data.
+Does not emit any drop-in events.
 
 ### Returns
 
-Returns `CompanyModel` - Complete updated company object with all current data.
-
-### Example
-
-```typescript
-const updated = await updateCompany({
-  name: 'New Company Name',
-  legalAddress: {
-    street: ['456 New St'],
-    city: 'Los Angeles',
-    region: { region: 'California', regionCode: 'CA' },
-    countryCode: 'US',
-    postcode: '90001'
-  }
-});
-// Event 'company/updated' is emitted with { company: updated }
-```
+Returns `CompanyModel`.
 
 ## updateCompanyRole
 
-Updates an existing company role's name and/or permissions.
+Updates an existing company role's name `and/or` permissions.
 
 The role name must be unique within the company (excluding the current role). Use `isCompanyRoleNameAvailable` to validate name uniqueness if changing the name.
 
 **Permissions Required:**
 - `Magento_Company::roles_edit` - User must have role management permission
 
-```typescript
-function updateCompanyRole(input: CompanyRoleUpdateInputModel): Promise<CompanyRoleModel>
+```ts
+const updateCompanyRole = async (
+  input: CompanyRoleUpdateInputModel
+): Promise<CompanyRoleModel>
 ```
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -955,28 +888,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `CompanyRoleModel` - The updated role with complete details.
-
-### Example
-
-```typescript
-const updatedRole = await updateCompanyRole({
-  id: 'cm9sZS8xMjM=',
-  name: 'Senior Sales Manager',
-  permissions: [
-    'Magento_Company::index',
-    'Magento_Company::view',
-    'Magento_Company::edit_account',
-    'Magento_Sales::all',
-    'Magento_Sales::place_order',
-    'Magento_Sales::view_orders'
-  ]
-});
-
-console.log(`Updated role: ${updatedRole.name}`);
-```
-
----
+Returns [`CompanyRoleModel`](#companyrolemodel).
 
 ## updateCompanyStructure
 
@@ -1092,7 +1004,7 @@ const validateCompanyEmail = async (
 ): Promise<ValidateCompanyEmailResponse>
 ```
 
-<TableWrapper nowrap={[0,1]}>
+<TableWrapper nowrap={[0]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -1107,6 +1019,78 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns [`ValidateCompanyEmailResponse`](#validatecompanyemailresponse).
+
+## Utility Functions
+
+The following utility functions are exported from the public API and support working with company ACL (Access Control List) data.
+
+## buildPermissionTree
+
+The `buildPermissionTree` function filters a complete ACL resource tree down to only the nodes that match a given set of permission IDs. Nodes without matching descendants are excluded. Used when displaying or saving role permissions.
+
+```ts
+const buildPermissionTree = (
+  allResources: CompanyAclResourceModel[],
+  selectedIds: string[]
+): CompanyAclResourceModel[]
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `allResources` | `CompanyAclResourceModel[]` | Yes | The full, unfiltered tree of ACL resources as returned by `getCompanyAclResources`. |
+| `selectedIds` | `string[]` | Yes | An array of permission ID strings to keep. Nodes whose ID is in this array, or that have a descendant in this array, are included in the result. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a filtered `CompanyAclResourceModel[]` containing only nodes that match the provided permission IDs (or have matching descendants).
+
+## flattenPermissionIds
+
+The `flattenPermissionIds` function traverses a nested ACL resource tree and returns a flat array of all permission ID strings. Useful for initializing checkboxes, validating permission sets, or building the `selectedIds` input for `buildPermissionTree`.
+
+```ts
+const flattenPermissionIds = (
+  resources: CompanyAclResourceModel[]
+): string[]
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `resources` | `CompanyAclResourceModel[]` | Yes | The nested ACL resource tree to flatten. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `string[]` containing every permission ID found in the tree (including nested children).
+
+### Company
+
+The `Company` object is returned by the following functions: [`assignChildCompany`](#assignchildcompany), [`getCompanyHierarchy`](#getcompanyhierarchy), [`unassignChildCompany`](#unassignchildcompany).
+
+```ts
+interface Company {
+  id: string;
+  name: string;
+  is_admin: boolean;
+  parent_company: { id: string; name: string } | null;
+  child_companies: Company[];
+}
+```
 
 ## Data Models
 
@@ -1305,7 +1289,5 @@ interface ValidateCompanyEmailResponse {
   error?: string;
 }
 ```
-
-
 
 {/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

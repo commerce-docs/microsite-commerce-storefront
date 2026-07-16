@@ -1,6 +1,6 @@
 ---
 title: User Auth Data & Events
-description: Learn about the events used by the User Auth and the data available within the events.
+description: Learn about the events used by the User Auth drop-in and the data available within those events.
 sidebar:
   label: Events
   order: 5
@@ -12,7 +12,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The **User Auth** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
+<strong>Version: 4.0.0</strong>
 </div>
 
 ## Events reference
@@ -22,9 +22,10 @@ The **User Auth** drop-in uses the [event bus](/sdk/reference/events) to emit an
 
 | Event | Direction | Description |
 |-------|-----------|-------------|
-| [auth/adobe-commerce-optimizer](#authadobe-commerce-optimizer-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [authenticated](#authenticated-emits) | Emits | Emitted when the user's authentication state changes. |
+| [auth/adobe-commerce-optimizer](#authadobe-commerce-optimizer-emits) | Emits | Emitted when Adobe Commerce Optimizer data is loaded or updated. |
 | [auth/error](#autherror-emits) | Emits | Emitted when an error occurs. |
-| [auth/group-uid](#authgroup-uid-emits) | Emits | Emitted when a specific condition or state change occurs. |
+| [auth/group-uid](#authgroup-uid-emits) | Emits | Emitted when the customer group UID is set or changes. |
 | [auth/permissions](#authpermissions-emits) | Emits | Emitted when permissions are updated. |
 
 </TableWrapper>
@@ -35,9 +36,36 @@ The **User Auth** drop-in uses the [event bus](/sdk/reference/events) to emit an
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
 
+### `authenticated` (emits)
+
+Emitted when the user's authentication state changes — on login, logout, token verification, and session expiration.
+
+#### Event payload
+
+```typescript
+boolean
+```
+
+The payload is `true` when the user is authenticated and `false` when they are not.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    // User is logged in — load personalised content, redirect, etc.
+  } else {
+    // User is logged out — clear state, redirect to login, etc.
+  }
+});
+```
+
+
 ### `auth/adobe-commerce-optimizer` (emits)
 
-Emitted when a specific condition or state change occurs.
+Emitted when Adobe Commerce Optimizer data is loaded or updated.
 
 #### Event payload
 
@@ -99,7 +127,7 @@ events.on('auth/error', (payload) => {
 
 ### `auth/group-uid` (emits)
 
-Emitted when a specific condition or state change occurs.
+Emitted when the customer group UID is set or changes.
 
 #### Event payload
 

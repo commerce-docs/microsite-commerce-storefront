@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The `ManageNegotiableQuoteTemplate` container provides the interface for managing quote templates with template-specific actions and details.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.2.0</strong>
 </div>
 
 ## Configuration
@@ -22,11 +22,12 @@ The `ManageNegotiableQuoteTemplate` container provides the following configurati
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `onActionsButtonClick` | `function` | No | Callback function triggered when actions button click |
-| `onSendForReview` | `function` | No | Callback function triggered when send for review |
+| `onActionsButtonClick` | `function` | No | Callback when an action button is clicked. Use for custom action handling, analytics, or to add additional behavior when users trigger template actions. |
+| `onSendForReview` | `function` | No | Callback when the quote template is sent for review. Use to implement custom notifications, trigger follow-up workflows, or integrate with external systems. |
 | `maxFiles` | `number` | No | Sets the maximum number of files that can be attached when sending a quote template for review. Use to enforce attachment limits and prevent excessive uploads. |
 | `maxFileSize` | `number` | No | Sets the maximum file size in bytes for quote template attachments. Use to prevent large uploads and provide consistent UX for file validation. |
-| `acceptedFileTypes` | `string[]` | No | Specifies an array of MIME types allowed for quote template attachments (for example `['application/pdf', 'image/jpeg', 'image/png']`). Use to restrict uploads to supported document types. |
+| `acceptedFileTypes` | `string[]` | No | Specifies an array of MIME types allowed for quote template attachments (for example `\['application/pdf', 'image/jpeg', 'image/png'\]`). Use to restrict uploads to supported document types. |
+| `initialData` | `object` | No | Preloaded data for the model before backend data is fetched. Use for testing, SSR, or improving initial load. |
 
 </TableWrapper>
 
@@ -69,15 +70,8 @@ import { render as provider } from '@dropins/storefront-quote-management/render.
 import { ManageNegotiableQuoteTemplate } from '@dropins/storefront-quote-management/containers/ManageNegotiableQuoteTemplate.js';
 
 await provider.render(ManageNegotiableQuoteTemplate, {
-  onActionsButtonClick: onActionsButtonClick,
-  onSendForReview: onSendForReview,
-  maxFiles: 0,
-  slots: {
-    // Add custom slot implementations here
-  }
+  acceptedFileTypes: ACCEPTED_FILE_TYPES,
+  slots: { ShippingInformation: (ctx) => { // Append the address error container to the shipping information container ctx.appendChild(addressErrorContainer); const shippingInformation = document.createElement('div'); shippingInformation.classList.add('negotiable-quote-template__select-shipping-information'); ctx.appendChild(shippingInformation); const progressSpinner = document.createElement('div'); progressSpinner.classList.add('negotiable-quote-template__progress-spinner-container'); progressSpinner.setAttribute('hidden', true); ctx.appendChild(progressSpinner); UI.render(ProgressSpinner, { className: 'negotiable-quote-template__progress-spinner', size: 'large', })(progressSpinner); ctx.onChange((next) => { // Remove existing content from the shipping information container shippingInformation.innerHTML = ''; const { templateData } = next; if (!templateData) return; if (!templateData.canSendForReview) return; if (templateData.canSendForReview) { accountRenderer.render(Addresses, { minifiedView: false, withActionsInMinifiedView: false, selectable: true, className: 'negotiable-quote-template__shipping-information-addresses', selectShipping: true, defaultSelectAddressId: 0, showShippingCheckBox: false, showBillingCheckBox: false, onAddressData: (params) => { const { data, isDataValid: isValid } = params; const addressUid = data?.uid; if (!isValid) return; if (!addressUid) return; progressSpinner.removeAttribute('hidden'); shippingInformation.setAttribute('hidden', true); addQuoteTemplateShippingAddress({ templateId: quoteTemplateId, shippingAddress: { customerAddressUid: addressUid, }, }).finally(() => { progressSpinner.setAttribute('hidden', true); shippingInformation.removeAttribute('hidden'); }); }, onSubmit: (event, formValid) => { if (!formValid) return; const formValues = getFormValues(event.target); const [regionCode, _regionId] = formValues.region?.split(', ') || []; // iterate through the object entries and combine the values of keys that have // a prefix of 'street' into an array const streetInputValues = Object.entries(formValues) .filter(([key]) => key.startsWith('street')) .map(([_, value]) => value); const addressInput = { firstname: formValues.firstName, lastname: formValues.lastName, company: formValues.company, street: streetInputValues, city: formValues.city, region: regionCode, postcode: formValues.postcode, countryCode: formValues.countryCode, telephone: formValues.telephone, }; // These values are not part of the standard address input const additionalAddressInput = { vat_id: formValues.vatId, }; progressSpinner.removeAttribute('hidden'); shippingInformation.setAttribute('hidden', true); addQuoteTemplateShippingAddress({ templateId: quoteTemplateId, shippingAddress: { address: { ...addressInput, additionalInput: additionalAddressInput, }, customerNotes: formValues.customerNotes, }, }) .catch((error) => { addressErrorContainer.removeAttribute('hidden'); UI.render(InLineAlert, { type: 'error', description: `${error}`, })(addressErrorContainer); }) .finally(() => { progressSpinner.setAttribute('hidden', true); shippingInformation.removeAttribute('hidden'); }); }, })(shippingInformation); } }); }, }
 })(block);
 ```
 
-
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-quote-management */}

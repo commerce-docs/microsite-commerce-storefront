@@ -12,10 +12,8 @@ import { Aside } from '@astrojs/starlight/components';
 The **Company Switcher initializer** configures the drop-in for managing multi-company contexts in B2B storefronts. Use initialization to customize company context management, header injection, session persistence, and GraphQL module integration.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.2.0</strong>
 </div>
-
-
 
 ## Configuration options
 
@@ -30,8 +28,8 @@ The following table describes the configuration options available for the **Comp
 | `customerGroupHeader` | `string` | No | HTTP header name for customer group identification. Defaults to `Magento-Customer-Group`. |
 | `companySessionStorageKey` | `string` | No | Session storage key for persisting company context. Defaults to `DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT`. |
 | `groupSessionStorageKey` | `string` | No | Session storage key for persisting group context. Defaults to `DROPIN__COMPANYSWITCHER__GROUP__CONTEXT`. |
-| `fetchGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have company headers applied. Defaults to `[]`. |
-| `groupGraphQlModules` | `FetchGraphQL[]` | No | GraphQL modules that will have group headers applied. Defaults to `[]`. |
+| `fetchGraphQlModules` | `FetchGraphQL[]` | No | `GraphQL` modules that will have company headers applied. Defaults to `\[\]`. |
+| `groupGraphQlModules` | `FetchGraphQL[]` | No | `GraphQL` modules that will have group headers applied. Defaults to `\[\]`. |
 
 </TableWrapper>
 
@@ -90,7 +88,6 @@ Extend or transform data models by providing custom transformer functions. Use t
 
 The following models can be customized through the `models` configuration option:
 
-
 <Aside type="note">
 No customizable models are available for this drop-in.
 </Aside>
@@ -101,15 +98,19 @@ The following example shows how to customize the `CustomModel` model for the **C
 import { initializers } from '@dropins/tools/initializer.js';
 import { initialize } from '@dropins/storefront-company-switcher';
 
-// Configure GraphQL modules to receive company headers
-await initializers.mountImmediately(initialize, {
-  // Add company headers to specific GraphQL modules
-  fetchGraphQlModules: ['commerce-cart', 'commerce-checkout'],
-  groupGraphQlModules: ['commerce-pricing'],
-  // Custom header names for backend integration
-  companyHeader: 'X-Company-Context',
-  customerGroupHeader: 'X-Customer-Group',
-});
+const models = {
+  CustomModel: {
+    transformer: (data) => ({
+      // Add custom fields from backend data
+      customField: data?.custom_field,
+      promotionBadge: data?.promotion?.label,
+      // Transform existing fields
+      displayPrice: data?.price?.value ? `${data.price.value}` : 'N/A',
+    }),
+  },
+};
+
+await initializers.mountImmediately(initialize, { models });
 ```
 
 ## Drop-in configuration
@@ -135,8 +136,6 @@ await initializers.mountImmediately(initialize, {
 Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
 </Aside>
 
-
-
 ## Configuration types
 
 The following TypeScript definitions show the structure of each configuration object:
@@ -153,6 +152,3 @@ langDefinitions?: {
 };
 ```
 
-
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-company-switcher */}

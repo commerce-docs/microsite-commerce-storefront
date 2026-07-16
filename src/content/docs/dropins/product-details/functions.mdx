@@ -16,7 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
 The Product Details drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.1</strong>
+<strong>Version: 3.2.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -24,13 +24,14 @@ The Product Details drop-in provides API functions that enable you to programmat
 | Function | Description |
 | --- | --- |
 | [`fetchProductData`](#fetchproductdata) | Fetches product data for a given SKU. |
-| [`getFetchedProductData`](#getfetchedproductdata) | Returns previously fetched product data from cache.. |
-| [`getProductConfigurationValues`](#getproductconfigurationvalues) | Returns the current product configuration values.. |
+| [`getFetchedProductData`](#getfetchedproductdata) | Returns previously fetched product data from cache. |
+| [`getProductConfigurationValues`](#getproductconfigurationvalues) | Returns the current product configuration values. |
 | [`getProductData`](#getproductdata) | Returns the product data for a given product SKU. |
+| [`getProductsData`](#getproductsdata) | Fetches multiple products by SKUs with optional per-product option configuration. |
 | [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
-| [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid.. |
-| [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes.. |
-| [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change.. |
+| [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid. |
+| [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes. |
+| [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change. |
 
 </TableWrapper>
 
@@ -76,7 +77,7 @@ const getFetchedProductData = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | Optional configuration for retrieving cached product data. |
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
 
 </TableWrapper>
 
@@ -102,7 +103,7 @@ const getProductConfigurationValues = (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | Optional configuration for retrieving product configuration values. |
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
 
 </TableWrapper>
 
@@ -145,9 +146,37 @@ Does not emit any drop-in events.
 
 Returns [`ProductModel`](#productmodel) or `null`.
 
+## getProductsData
+
+The `getProductsData` function fetches multiple products by their SKUs in a single request. Each item can include optional configuration such as selected option UIDs and a flag to pre-select the first available option. Useful for bulk product data retrieval, such as in Quick Order or product list pages.
+
+```ts
+const getProductsData = async (
+  items: ProductDataItem[],
+  raw?: boolean
+): Promise<ProductModel[] | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `ProductDataItem[]` | Yes | An array of product request objects. Each object must include a `sku` and optionally `optionsUIDs` (array of selected option UIDs) and `preselectFirstOption` (boolean to auto-select the first available option for each swatch). |
+| `raw` | `boolean` | No | When `true`, returns the raw GraphQL response without transformation. Defaults to `false`. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of [`ProductModel`](#productmodel) objects or `null` when no products are found or the input is empty.
+
 ## getRefinedProduct
 
-The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/refine-product/" text="refineProduct" /> query.
+The `getRefinedProduct` function returns refined product data with specific options selected. This is used for configurable products where options have been chosen. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/refine-product" text="refineProduct" /> query.
 
 For configurable products, the returned [`ProductModel`](#productmodel) always keeps the parent product’s `name` and `sku`. When refinement resolves to a simple variant (`SimpleProductView`), the model also includes `variantSku` and `variantName` for that variant so you can display or forward the child SKU and title (for example from the [`ProductHeader`](/dropins/product-details/containers/product-header/) container).
 
@@ -193,7 +222,7 @@ const isProductConfigurationValid = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `options` | `string } = {}` | Yes | Configuration options to validate. |
+| `options` | `{ scope?: string }` | No | Optional configuration. Use `scope` to identify the PDP instance when using scoped contexts. |
 
 </TableWrapper>
 

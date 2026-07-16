@@ -1,6 +1,6 @@
 ---
 title: OrdersList container
-description: Learn about the OrdersList container.
+description: Show paginated order history with filters in the full view or a compact minified list for account dashboards and side panels.
 ---
 
 import Diagram from '@components/Diagram.astro';
@@ -45,7 +45,7 @@ compact
         ['withThumbnails', 'boolean', 'No', 'Whether to enable/disable product thumbnails on order cards.'],
         ['withFilter', 'boolean', 'No', 'Whether to enable/disable filter dropdown.'],
         ['ordersInMinifiedView', 'number', 'No', 'Used only in minified view. Defines how many orders are visible in a minified view (default: 1).'],
-        ['pageSize', 'number', 'No', 'Sets the  pagination size (default: 10).'],
+        ['pageSize', 'number', 'No', 'Sets the pagination size (default: 10).'],
         ['routeOrdersList', 'function', 'No', 'Used only in minified view. Determines where the “View all orders” button redirects the customer.'],
         ['routeOrderDetails', 'function', 'No', 'Determines where a click on the order card button (a chevron icon to the right of the order card) redirects the customer.'],
         ['routeReturnDetails', 'function', 'No', 'Determines where the return number link redirects the customer.'],
@@ -53,6 +53,7 @@ compact
         ['routeOrderProduct', 'function', 'No', 'Determines where the product thumbnail link redirects the customer.'],
         ['slots.OrdersListAction', 'slot', 'No', 'Overrides or extends order actions (right side of the order card).'],
         ['slots.OrdersListCard', 'slot', 'No', 'Overrides or extends order card details.'],
+        ['slots.OrderItemImage', 'slot', 'No', 'Overrides the product thumbnail image rendered on each order item. Receives `data` (OrderItem) and `defaultImageProps` (ImageProps) as context.'],
     ]}
 />
 
@@ -77,3 +78,20 @@ export default async function decorate(block) {
  }
 }
 ```
+
+## Administrator-assisted orders
+
+When the seller-assisted buying feature is in use, the `OrdersList` container shows a "Placed by an administrator" label on any order where `adminAssistedOrder > 0`. The label appears automatically in both the minified and full-size views. No configuration is required.
+
+<Diagram caption="Order card showing the administrator label in the orders list">
+  ![Order card showing the administrator label](@images/dropins/SAB-OrdersList.png)
+</Diagram>
+
+To customize the label text, override the dictionary key in the account initializer:
+
+- Minified view: `Account.minifiedView.OrdersList.OrdersListCard.placedByAdministrator`
+- Full-size view: `Account.fullSizeView.OrdersList.OrdersListCard.placedByAdministrator`
+
+For the end-to-end flow, see [Seller-assisted buying](/dropins/user-account/containers/seller-assisted-buying/).
+
+{/* Verified against adobe-commerce/storefront-account src/components/OrdersListCard/OrdersListCard.tsx: minifiedViewKey = minifiedView ? 'minifiedView' : 'fullSizeView' (line 46) builds Account.${minifiedViewKey}.OrdersList.OrdersListCard.placedByAdministrator (line 54), rendered when adminAssistedOrder > 0 (lines 123-124); src/data/models/order-history-list.ts transforms admin_assisted_order. */}

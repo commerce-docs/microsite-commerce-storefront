@@ -11,14 +11,14 @@ import TableWrapper from '@components/TableWrapper.astro';
 Displays header information for a requisition list including name, description, and action buttons.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.4.0</strong>
 </div>
 
 ## Configuration
 
 The `RequisitionListHeader` container provides the following configuration options:
 
-<TableWrapper nowrap={[0,1]}>
+<TableWrapper nowrap={[0]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
@@ -26,7 +26,9 @@ The `RequisitionListHeader` container provides the following configuration optio
 | `routeRequisitionListGrid` | `function` | No | Generates the URL for navigating back to the requisition list grid view. Returns a URL string or performs navigation. Use to implement breadcrumb navigation, back buttons, or integrate with your application's routing system. |
 | `onUpdate` | `function` | No | Callback function to handle requisition list updates when the name or description changes. Use to refresh the parent component or show success notifications. |
 | `onAlert` | `function` | No | Callback function to handle alert notifications when alerts are displayed. |
-| `enrichConfigurableProducts` | `(items: Item[]) => Promise<Item[]>` | Yes | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
+| `enrichConfigurableProducts` | `function` | No | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
+| `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. When provided, this user is excluded from the list of selectable share recipients inside the share modal. |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Called with the relative share URL to format the final share link. The URL is built as `/<storefront_path>?requisition_id=<token>`, using the `requisition_list_share_storefront_path` store configuration (default: `customer/requisition-list-sharing`). Sharing is available only when `requisition_list_sharing_enabled` is `true`. Use this callback to prepend the domain, modify the path, or apply custom formatting. By default, the relative URL is used as-is. Example: `(url) => window.location.origin + url` for absolute URLs, or `(url) => url` to keep relative URLs. |
 
 </TableWrapper>
 
@@ -43,15 +45,11 @@ import { render as provider } from '@dropins/storefront-requisition-list/render.
 import { RequisitionListHeader } from '@dropins/storefront-requisition-list/containers/RequisitionListHeader.js';
 
 await provider.render(RequisitionListHeader, {
-  requisitionList,
-  routeRequisitionListGrid: () => '/requisition-lists',
-  onUpdate: (updatedList) => {
-    console.log('Requisition list updated:', updatedList);
-  },
-  enrichConfigurableProducts,
+  requisitionList: undefined, // Auto-populated from drop-in state, or provide explicitly
+  routeRequisitionListGrid: () => '/customer/requisition-lists',
+  onUpdate: (update) => console.log('Update', update),
+  currentCustomerEmail: 'current.user@example.com',
+  routeSharedRequisitionList: (url) => window.location.origin + url,
 })(block);
 ```
 
-
-
-{/* This documentation is auto-generated from: https://github.com/adobe-commerce/storefront-requisition-list */}

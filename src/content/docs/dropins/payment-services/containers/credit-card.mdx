@@ -5,28 +5,25 @@ sidebar:
   label: CreditCard
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-... See '`CardType`' from @`adobe-commerce/payment-services-sdk/payment`.
+The `CreditCard` container renders a form for entering credit card details during checkout.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.0.1</strong>
+<strong>Version: 4.0.0</strong>
 </div>
 
 ## Configuration
 
 The `CreditCard` container provides the following configuration options:
 
-<TableWrapper nowrap={[0]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `getCartId` | `function` | Yes | Returns a promise that resolves to the shopper\`s cart ID. |
-| `creditCardFormRef` | `RefObject<CreditCardFormRef>` | Yes | References the credit card form. Pass \{ current: null \} initially. After rendering, the container sets `current` to a \{ validate: () =&gt; boolean; submit: () =&gt; Promise&lt;void&gt; \} object for programmatic validation and submission. |
-| `onSuccess` | `function` | Yes | Executes when the payment flow completes successfully. |
-| `onError` | `function` | Yes | Executes when the payment flow aborts due to an error. Receives an object with two properties, \{ name: string, message: string \}, containing the localized error name and message. Both properties are user-facing and translatable through the "PaymentServices.CreditCard.errors" language definitions. **Note:** When omitted, the promise rejects properly so the calling code can catch errors directly. |
-
+<TableWrapper nowrap={[0, 1, 2]}>
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `getCartId` | function | Yes | Returns a promise that resolves to the shopper’s cart ID. |
+| `creditCardFormRef` | object | Yes | Reference to the credit card form. Initially, `{ current: null }` should be passed. After rendering, the container sets `current` to the `validate: () => boolean` and `submit: () => Promise<void>` object, which parent containers can use to programmatically validate and submit the form. Any error during the payment flow propagates to `onError` and causes the promise returned by `submit()` to be rejected.|
+| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. |
+| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). |
 </TableWrapper>
 
 ## Slots
@@ -35,19 +32,27 @@ This container exposes no customizable slots.
 
 ## Usage
 
-The following example demonstrates how to use the `CreditCard` container:
+The following example demonstrates how to render and submit a credit card form:
 
 ```js
-import { render as provider } from '@dropins/storefront-payment-services/render.js';
-import { CreditCard } from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
 
-await provider.render(CreditCard, {
-  getCartId: getCartId,
-  creditCardFormRef: {},
-  onSuccess: onSuccess,
-})(block);
+const $content = document.createElement('div');
+const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
+
+PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
+  creditCardFormRef: creditCardFormRef,
+})($content);
+
+placeOrderButton.onclick = () => {
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
+  }
+}
 ```
-
-
-
-{/* This documentation is auto-generated from: git@github.com:adobe-commerce/storefront-payment-services */}

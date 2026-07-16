@@ -1,6 +1,6 @@
 ---
 title: Company Management Events and Data
-description: Learn about the events used by the Company Management and the data available within the events.
+description: Learn about the events used by the Company Management drop-in and the data available within those events.
 sidebar:
   label: Events
   order: 5
@@ -12,7 +12,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The **Company Management** drop-in uses the [event bus](/sdk/reference/events) to emit and listen to events for communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.1.0</strong>
+<strong>Version: 1.3.0</strong>
 </div>
 
 ## Events reference
@@ -24,6 +24,7 @@ The **Company Management** drop-in uses the [event bus](/sdk/reference/events) t
 |-------|-----------|-------------|
 | [company/updated](#companyupdated-emits) | Emits | Emitted when the component state is updated. |
 | [companyStructure/updated](#companystructureupdated-emits) | Emits | Emitted when the component state is updated. |
+| [error](#error-emits) | Emits | Emitted when a network error occurs during any API call. |
 | [companyContext/changed](#companycontextchanged-listens) | Listens | Fired by Company Context (`companyContext`) when a change occurs. |
 
 </TableWrapper>
@@ -33,43 +34,35 @@ The **Company Management** drop-in uses the [event bus](/sdk/reference/events) t
 
 The following sections provide detailed information about each event, including its direction, event payload, and usage examples.
 
-
 ### `company/updated` (emits)
 
 Emitted when company information is updated. This event fires after successful company profile updates, legal address changes, contact information modifications, or sales representative information updates.
 
-#### Usage scenarios
-
-- Refresh company profile display after edits.
-- Trigger analytics tracking for profile changes.
-- Update related UI components (headers, sidebars, widgets).
-- Sync company data with external systems (CRM, ERP).
-- Show success notifications to users.
-- Update cached data and local storage.
-- Refresh company-dependent permissions.
-- Update breadcrumbs and navigation with company name.
-
 #### Event payload
 
 ```typescript
-{ company?: unknown; message?: string; error?: unknown }
+{
+  data?: {
+    id?: string;
+    companyName?: string;
+    email?: string;
+    telephone?: string;
+  };
+  message?: string;
+  error?: Error;
+}
 ```
 
-<TableWrapper nowrap={[0]}>
+#### When triggered
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `company` | `any` (optional) | See type definition in source code |
-| `message` | `string` (optional) | See type definition in source code |
-| `error` | `any` (optional) | See type definition in source code |
+- After successful company profile update
+- After updating company legal address
+- After updating company contact information
+- After updating sales representative information
 
-</TableWrapper>
+#### Example 1: Basic company update handler
 
-#### Usage
-
-Listen to this event in your storefront:
-
-```javascript
+```js
 import { events } from '@dropins/tools/event-bus.js';
 
 // Listen for company updates
@@ -120,8 +113,8 @@ async function updateCompanyProfile(updates) {
 
 // Usage
 updateCompanyProfile({
-  companyName: 'Example Corporation',
-  email: 'info@example.com',
+  companyName: 'Acme Corporation',
+  email: 'info@acme.com',
   telephone: '+1-555-0123'
 });
 ```
@@ -191,10 +184,51 @@ companyManager.subscribe((data) => {
 });
 ```
 
+#### Usage scenarios
+
+- Refresh company profile display after edits.
+- Trigger analytics tracking for profile changes.
+- Update related UI components (headers, sidebars, widgets).
+- Sync company data with external systems (CRM, ERP).
+- Show success notifications to users.
+- Update cached data and local storage.
+- Refresh company-dependent permissions.
+- Update breadcrumbs and navigation with company name.
+
 ---
 
+### `error` (emits)
 
+Emitted when a network error occurs during any Company Management API call. Does not fire for intentional user cancellations (`AbortError`).
 
+#### Event payload
+
+```typescript
+{
+  source: 'company';
+  type: 'network';
+  error: Error;
+}
+```
+
+#### When triggered
+
+- When any API mutation or query fails due to a network error.
+- Does **not** fire when the request is deliberately aborted.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('error', ({ source, type, error }) => {
+  if (source === 'company') {
+    console.error('Company Management network error:', error.message);
+  }
+});
+```
+
+---
 
 ### `companyContext/changed` (listens)
 
@@ -206,10 +240,6 @@ Fired by Company Context (`companyContext`) when a change occurs.
 string | null | undefined
 ```
 
-
-
-
-
 #### Example
 
 ```js
@@ -220,11 +250,6 @@ events.on('companyContext/changed', (payload) => {
   // Add your custom logic here
 });
 ```
-
-
-
-
-
 
 ### `companyStructure/updated` (emits)
 
@@ -244,18 +269,15 @@ Emitted when the company organizational structure changes. This event fires afte
 }
 ```
 
-#### Usage scenarios
+#### When triggered
 
-- Refresh the company structure tree display in real-time.
-- Update user access controls based on new hierarchy.
-- Trigger notifications to affected team members.
-- Log organizational changes for audit and compliance.
-- Update cached structure data and local storage.
-- Refresh team-based dropdowns and filters.
-- Update permission matrices after reassignments.
-- Highlight changes in the structure visualization.
-- Trigger workflow updates (approval chains, and so on).
-- Sync organizational structure with external HR systems.
+- After creating a new team
+- After updating team information
+- After deleting a team
+- After creating a new user
+- After updating user details
+- After moving users between teams
+- After changing team hierarchy
 
 #### Example 1: Interactive structure tree with live updates
 
@@ -427,6 +449,19 @@ function logStructureChange(logEntry) {
 }
 ```
 
+#### Usage scenarios
+
+- Refresh the company structure tree display in real-time.
+- Update user access controls based on new hierarchy.
+- Trigger notifications to affected team members.
+- Log organizational changes for audit and compliance.
+- Update cached structure data and local storage.
+- Refresh team-based dropdowns and filters.
+- Update permission matrices after reassignments.
+- Highlight changes in the structure visualization.
+- Trigger workflow updates (approval chains, and so on).
+- Sync organizational structure with external HR systems.
+
 ---
 
 ## Listening to events
@@ -457,10 +492,7 @@ Event listeners remain active until explicitly removed with `events.off()`. Clea
 
 - [Functions](/dropins-b2b/company-management/functions/) - API functions that emit these events
 - [Containers](/dropins-b2b/company-management/containers/) - UI components that respond to events
-- [Event bus documentation](/sdk/reference/events/) - Learn more about the event system
+- [Event bus documentation](/dropins/all/events/) - Learn more about the event system
 
 {/* This documentation is manually curated based on: https://github.com/adobe-commerce/storefront-company-management */}
-
-
-
 
