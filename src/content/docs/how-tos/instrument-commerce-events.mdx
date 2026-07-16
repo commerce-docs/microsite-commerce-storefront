@@ -1,0 +1,396 @@
+---
+title: Instrument commerce events without drop-ins
+description: Learn how to publish Adobe Client Data Layer (ACDL) commerce events, such as product page views and add-to-cart, when your storefront bypasses or replaces the AEM Commerce drop-ins.
+sidebar:
+  label: Custom commerce events
+prerequisites:
+  html: true
+  js: true
+  commerce: true
+time: "30 minutes"
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Link from '@components/Link.astro';
+
+If your storefront doesn't use the AEM Commerce drop-ins — or replaces one with a custom block — you lose the automatic [Adobe Client Data Layer (ACDL)](/setup/analytics/instrumentation/#adobe-client-data-layer-acdl) instrumentation that the drop-ins provide. This tutorial shows you how to publish the same commerce events yourself using a small helper script, so that analytics, personalization, Live Search, Product Recommendations, and Adobe Experience Platform (AEP) forwarding keep working.
+
+<Aside type="tip">
+For the full list of events drop-ins emit and the contexts each one requires, see the [Custom events reference](/dropins/all/custom-events/).
+</Aside>
+
+## What You'll Build
+
+By the end of this tutorial, you'll have:
+
+- A reusable `scripts/acdlHelper.js` file that sets ACDL contexts and publishes events
+- A `product-page-view` event fired from a custom PDP implementation
+- An `add-to-cart` event fired from a custom add-to-cart interaction
+
+## Prerequisites
+
+Before starting this tutorial, make sure you have:
+
+- A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
+- Basic understanding of JavaScript and asynchronous operations
+- The following packages at version `1.17.0` or later in `package.json`:
+
+```json title="package.json"
+"@adobe/magento-storefront-event-collector": "^1.17.0",
+"@adobe/magento-storefront-events-sdk": "^1.17.0"
+```
+
+These packages are included by default in the AEM Commerce boilerplate, but the versions in an existing project may be outdated. Confirm the versions in `package.json`, then run `npm install`. If the packages are missing entirely, add them manually to `package.json` before running `npm install`.
+
+<Aside type="note">
+`storefrontInstanceContext` and `pageContext` should already be set in the ACDL before any of the publish functions in this tutorial are called. These contexts are typically seeded once during page initialization — see [page-view](/dropins/all/custom-events/#page-view) in the Custom events reference. Events fired before these contexts are set still push successfully, but their `eventInfo` snapshot won't include storefront or page data.
+</Aside>
+
+<Tasks>
+
+<Task>
+
+### Step 1: Add the ACDL helper script
+
+Create `scripts/acdlHelper.js` in your project, at the root of your AEM boilerplate:
+
+```
+your-project/
+└── scripts/
+    └── acdlHelper.js   (create this file)
+```
+
+This file centralizes context management and event publishing so you don't have to duplicate ACDL logic across blocks.
+
+```js title="scripts/acdlHelper.js"
+/**
+ * See: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/contexts.ts
+ */
+export const contexts = {
+  PRODUCT_CONTEXT: 'productContext',
+  SHOPPING_CART_CONTEXT: 'shoppingCartContext',
+};
+
+/**
+ * See: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/events.ts
+ */
+export const events = {
+  PRODUCT_PAGE_VIEW: 'product-page-view',
+  ADD_TO_CART: 'add-to-cart',
+};
+
+export function getAdobeDataLayer() {
+  window.adobeDataLayer = window.adobeDataLayer || [];
+  return window.adobeDataLayer;
+}
+
+/**
+ * Sets a context in the Adobe Client Data Layer (ACDL).
+ * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L6
+ */
+function setContext(name, data) {
+  const adobeDataLayer = getAdobeDataLayer();
+
+  // Clear existing context
+  adobeDataLayer.push({
+    [name]: null,
+  });
+
+  // Set new context
+  adobeDataLayer.push({
+    [name]: data,
+  });
+}
+
+/**
+ * Pushes an event to the Adobe Client Data Layer (ACDL).
+ * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L34
+ */
+function pushEvent(event, additionalContext) {
+  const adobeDataLayer = getAdobeDataLayer();
+
+  adobeDataLayer.push((acdl) => {
+    const state = acdl.getState ? acdl.getState() : {};
+
+    acdl.push({
+      event,
+      eventInfo: {
+        ...state,
+        ...additionalContext,
+      },
+    });
+  });
+}
+
+/**
+ * Sets the shopping cart context in the Adobe Client Data Layer (ACDL).
+ *
+ * @param {Array<{
+ *   id: string,                  - Unique cart line item identifier
+ *   quantity: number,            - Quantity in cart (min 1)
+ *   prices: {
+ *     price: {
+ *       value: number,           - Numeric price value
+ *       currency?: string,       - ISO 4217 currency code
+ *     }
+ *   },
+ *   product: {
+ *     productId: number,         - Numeric product ID
+ *     name: string,              - Product display name
+ *     sku: string,               - Product SKU
+ *     topLevelSku: string,       - Parent/base product SKU
+ *     mainImageUrl?: string|null
+ *   },
+ * }>} items - Line items currently in the cart
+ *
+ * @param {{
+ *   id?: string|null,            - Cart identifier
+ *   totalQuantity?: number,      - Total item quantity (derived from items if omitted)
+ *   prices?: {
+ *     subtotalExcludingTax?: { value: number, currency?: string },
+ *     subtotalIncludingTax?: { value: number, currency?: string }
+ *   },
+ *   possibleOnepageCheckout?: boolean,
+ *   giftMessageSelected?: boolean,
+ *   giftWrappingSelected?: boolean,
+ *   source?: string,             - UI component or page that triggered the cart action
+ *   discountAmount?: number
+ * }} [cartDetails={}] - Cart-level metadata
+ */
+export function setShoppingCartContext(items, cartDetails = {}) {
+  if (!Array.isArray(items)) {
+    throw new TypeError('items must be an array');
+  }
+
+  for (const [index, item] of items.entries()) {
+    const missingFields = ['id', 'prices', 'product', 'quantity']
+      .filter((field) => item[field] === undefined);
+    if (missingFields.length) {
+      throw new Error(`Cart item [${index}] is missing required fields: ${missingFields.join(', ')}`);
+    }
+    if (item.quantity < 1) {
+      throw new Error(`Cart item [${index}]: quantity must be at least 1`);
+    }
+
+    const missingProductFields = ['productId', 'name', 'sku'].filter((field) => item.product[field] === undefined);
+    if (missingProductFields.length) {
+      throw new Error(`Cart item [${index}].product is missing required fields: ${missingProductFields.join(', ')}`);
+    }
+  }
+
+  const totalQuantity = cartDetails.totalQuantity ?? items.reduce((sum, item) => sum + item.quantity, 0);
+
+  setContext(contexts.SHOPPING_CART_CONTEXT, {
+    ...cartDetails,
+    totalQuantity,
+    items,
+  });
+}
+
+/**
+ * Sets the product context in the Adobe Client Data Layer (ACDL).
+ *
+ * Schema: com.adobe.magento.entity/product/jsonschema/3-0-0
+ *
+ * @param {{
+ *   name: string,                        - Product display name (max 256 chars)
+ *   sku: string,                         - Variant SKU (1-256 chars)
+ *   topLevelSku: string,                 - Parent/base product SKU (1-256 chars)
+ *   productId?: number,                  - Numeric product ID
+ *   productType?: string|null,           - Product type (e.g. 'simple', 'configurable')
+ *   categories?: string[],               - Category names (max 256 chars each)
+ *   canonicalUrl?: string|null,          - Canonical product URL (max 2083 chars)
+ *   mainImageUrl?: string|null,          - Main product image URL (max 2083 chars)
+ *   pricing?: {
+ *     regularPrice: number,              - Standard list price
+ *     currencyCode: string|null,         - ISO 4217 currency code (max 3 chars)
+ *     minimalPrice?: number,             - Lowest possible price
+ *     maximalPrice?: number,             - Highest possible price
+ *     specialPrice?: number,             - Promotional/sale price
+ *     tierPricing?: Array<{
+ *       customerGroupId: number|null,
+ *       qty: number,
+ *       value: number
+ *     }>
+ *   }
+ * }} product - Product data matching the ACDL product schema
+ */
+export function setProductContext(product) {
+  const requiredFields = ['name', 'sku', 'topLevelSku'];
+  const missingFields = requiredFields.filter((field) => product[field] === undefined);
+  if (missingFields.length) {
+    throw new Error(`Product is missing required fields: ${missingFields.join(', ')}`);
+  }
+
+  if (product.pricing !== undefined) {
+    const requiredPricingFields = ['regularPrice', 'currencyCode'];
+    const missingPricingFields = requiredPricingFields.filter((field) => product.pricing[field] === undefined);
+    if (missingPricingFields.length) {
+      throw new Error(`Product pricing is missing required fields: ${missingPricingFields.join(', ')}`);
+    }
+  }
+
+  setContext(contexts.PRODUCT_CONTEXT, product);
+}
+
+// Triggered when a product is added to the cart
+export function publishAddToCartEvent(items, cartDetails = {}) {
+  setShoppingCartContext(items, cartDetails);
+  pushEvent(events.ADD_TO_CART);
+}
+
+// Triggered when a product page is viewed
+export function publishProductPageViewEvent(product) {
+  setProductContext(product);
+  pushEvent(events.PRODUCT_PAGE_VIEW);
+}
+```
+
+</Task>
+
+<Task>
+
+### Step 2: Publish a product page view event
+
+**Suggested file:** `scripts/initializers/pdp.js` _(the appropriate location depends on your project's structure)_
+
+When you use the standard boilerplate, the PDP drop-in calls `publishProductPageViewEvent` as part of its initialization process. This ensures the event fires with a complete product context, only once the page is in a stable state.
+
+If you're not using the drop-in, call this function anywhere product data is available and the page view should be recorded — for example, after a successful product API response, after a client-side route change, or at the end of your own page initialization flow. The placement is up to you.
+
+This example shows a custom PDP page publishing a page view event for each of several products using the helper function:
+
+```js title="scripts/initializers/pdp.js"
+import { publishProductPageViewEvent } from '../acdlHelper.js';
+
+// Sample products — replace with real product data from your API or drop-in
+const products = [
+  {
+    name: 'Classic Leather Sneaker',
+    sku: 'SNK-001-WHT',
+    topLevelSku: 'SNK-001-WHT',
+    pricing: { regularPrice: 129.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Running Shoe Pro',
+    sku: 'RSP-042-BLK',
+    topLevelSku: 'RSP-042-BLK',
+    pricing: { regularPrice: 159.99, specialPrice: 119.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Canvas High-Top',
+    sku: 'CHT-007-NVY',
+    topLevelSku: 'CHT-007-NVY',
+    pricing: { regularPrice: 89.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Slip-On Loafer',
+    sku: 'SOL-019-TAN',
+    topLevelSku: 'SOL-019-TAN',
+    pricing: { regularPrice: 109.99, specialPrice: 79.99, currencyCode: 'USD' },
+  },
+];
+
+products.forEach((product) => publishProductPageViewEvent(product));
+```
+
+</Task>
+
+<Task>
+
+### Step 3: Publish an add-to-cart event
+
+**Suggested file:** `blocks/product-details/product-details.js` _(the appropriate location depends on your project's structure)_
+
+Call this function after a successful response from your add-to-cart API, passing the item being added to the cart:
+
+```js title="blocks/product-details/product-details.js"
+import { publishAddToCartEvent } from '../../scripts/acdlHelper.js';
+
+const sampleCartItem = {
+  id: 'SNK-001-WHT-cart-1',
+  quantity: 1,
+  prices: {
+    price: { value: 129.99, currency: 'USD' },
+  },
+  product: {
+    productId: 1001,
+    name: 'Classic Leather Sneaker',
+    sku: 'SNK-001-WHT',
+    topLevelSku: 'SNK-001-WHT',
+    mainImageUrl: 'https://example.com/images/snk-001-wht.jpg',
+  },
+};
+
+// Called on button click — in production this fires after your add-to-cart API responds
+publishAddToCartEvent([sampleCartItem]);
+```
+
+<Aside type="note">
+The second argument to `publishAddToCartEvent` is an optional `cartDetails` object for cart-level metadata (cart ID, subtotals, gift options, and so on). See the `setShoppingCartContext` JSDoc in `scripts/acdlHelper.js` for the full field reference.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Step 4: Test your implementation
+
+1. Open your browser's developer tools and check the Console tab.
+2. Confirm `window.adobeDataLayer` exists and contains the contexts and events you pushed.
+3. Trigger a product page view and an add-to-cart action, and verify each pushes the expected `productContext`, `shoppingCartContext`, and `event` entries.
+4. If AEP forwarding is configured, use the AEP Debugger Events view to confirm the events arrive — see [Analytics instrumentation](/setup/analytics/instrumentation/#manual-testing-steps).
+
+</Task>
+
+</Tasks>
+
+## Implementation Checklist
+
+When adding ACDL tracking to a new page or interaction:
+
+<Steps>
+1. Copy `scripts/acdlHelper.js` into your project's `scripts/` directory.
+1. Ensure `storefrontInstanceContext` and `pageContext` are set before any publish call.
+1. On product page load, call `publishProductPageViewEvent` with the resolved product data.
+1. On successful add-to-cart, call `publishAddToCartEvent` with the **full updated cart**, not just the item that was added.
+1. On cart update (quantity change, removal), call `setShoppingCartContext` directly to keep the context in sync without firing an event.
+1. On variant or option selection change, call `setProductContext` so the context always reflects the currently selected variant.
+</Steps>
+
+## Troubleshooting
+
+### Common Issues
+
+* **Events push successfully but `eventInfo` is missing storefront or page data**
+
+  > Confirm `storefrontInstanceContext` and `pageContext` are pushed to the ACDL before any `publish*` call runs. See [page-view](/dropins/all/custom-events/#page-view) in the Custom events reference for when these are normally seeded.
+
+* **`setShoppingCartContext` or `setProductContext` throws a missing field error**
+
+  > Check the JSDoc in `scripts/acdlHelper.js` for the required fields on `items`, `product`, and `pricing`. Each function validates its input and throws before pushing an incomplete context.
+
+* **Events aren't appearing in Adobe Experience Platform**
+
+  > Verify AEP forwarding is configured — see [Adobe Experience Platform](/setup/analytics/adobe-experience-platform/). Events still push to `window.adobeDataLayer` even if AEP forwarding isn't enabled, so check the browser console first before assuming the helper script is broken.
+
+### Getting Help
+
+If you encounter issues not covered here:
+
+- Review the [Custom events reference](/dropins/all/custom-events/) for the full list of events and required contexts
+- Review [Analytics instrumentation](/setup/analytics/instrumentation/) for ACDL validation and debugging steps
+- Consult the <Link href="https://github.com/adobe/commerce-events" text="Commerce Events GitHub repository" /> for the underlying SDK source
+
+## Summary
+
+In this tutorial, you learned how to:
+
+- Add a reusable `scripts/acdlHelper.js` file that sets ACDL contexts and publishes events
+- Publish a `product-page-view` event with a complete product context
+- Publish an `add-to-cart` event with the full updated cart
+- Validate your implementation using the browser console and the AEP Debugger
+
+You now have a pattern for instrumenting commerce events on any custom block or page that bypasses the AEM Commerce drop-ins.
