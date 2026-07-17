@@ -1,21 +1,69 @@
 ---
 title: AI tools overview
-description: Choose how to connect AI editors and coding agents to current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
+description: Set up AI editors and coding agents with current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
 sidebar:
   label: Overview
   order: 1
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import { Steps } from '@astrojs/starlight/components';
 
-AI editors and coding agents can help with storefront work, but they require up-to-date context. Use the table to determine which option to set up first, then add additional support as your task requires.
+If you are on the AEM Boilerplate Commerce project, set up all three tools below. Together they give your agent a full development workflow, source-accurate drop-in facts, and routing to every Adobe Commerce documentation site.
+
+## Set up everything
+
+<Steps>
+
+1. **Install the AEM Boilerplate Commerce skill set.** Requires Node.js 22 or later. Run this from your project root:
+
+   ```bash
+   npm install -g @adobe/aio-cli
+   aio plugins:install https://github.com/adobe-commerce/aio-cli-plugin-commerce
+   aio commerce extensibility tools-setup
+   ```
+
+   This installs planning, coding, content modeling, and testing skills, plus a documentation search tool. See [AI agent skills](/ai/ai-agent-skills/) for the full walkthrough and authentication notes.
+
+2. **Add the Dropins MCP server.** This checks drop-in questions against your project's actual source code, not only published docs. Add the following to your editor's MCP config — for Claude Code, `.mcp.json` at your project root:
+
+   ```json
+   {
+     "mcpServers": {
+       "dropins": {
+         "type": "stdio",
+         "command": "npx",
+         "args": ["@dropins/mcp"]
+       }
+     }
+   }
+   ```
+
+   See [Dropins MCP](/ai/dropins-mcp/) for the config for Cursor, VS Code, or Claude Desktop.
+
+3. **Add Wayfinder.** This routes questions that leave the storefront — Commerce Admin, App Builder, Document Authoring — to the right documentation site. Add this line to your project's `AGENTS.md` or `CLAUDE.md`:
+
+   ```markdown
+   Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
+   ```
+
+   See [Wayfinder](/ai/wayfinder/) for details.
+
+</Steps>
+
+Restart your agent after each step so it picks up the new configuration.
+
+## Not using the boilerplate?
+
+Use [Use docs in AI tools](/ai/build-with-ai/) instead. It works with any AI editor or coding agent — including ones that cannot install an MCP server or agent skills — by adding a documentation web address to your context file or pasting it into chat.
 
 <TableWrapper nowrap={[0]}>
 
-| Start here | What it gives you | Use it when |
-|------------|-------------------|-------------|
-| [Use docs in AI tools](/ai/build-with-ai/) | Current storefront documentation context. | You want any AI editor or coding agent to generate answers based on the storefront documentation you are viewing. |
-| [Dropins MCP](/ai/dropins-mcp/) | Exact drop-in slots, events, API functions, and design tokens. | Your task depends on source-backed drop-in API details. |
-| [AI agent skills](/ai/ai-agent-skills/) | Storefront planning, coding, customization, and testing conventions. | You want the agent to handle full storefront development tasks. |
+| Tool | What it gives you |
+|------|-------------------|
+| [AI agent skills](/ai/ai-agent-skills/) | Storefront planning, coding, customization, and testing conventions |
+| [Dropins MCP](/ai/dropins-mcp/) | Exact drop-in slots, events, API functions, and design tokens, checked against source |
+| [Wayfinder](/ai/wayfinder/) | Routing to the correct Adobe Commerce documentation source |
+| [Use docs in AI tools](/ai/build-with-ai/) | Current storefront documentation context for any AI tool |
 
 </TableWrapper>
