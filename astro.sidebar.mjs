@@ -40,7 +40,7 @@ export function generateSidebar() {
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
             { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
-            { label: 'Documentation exports', link: '/ai/documentation-exports/' },
+            { label: 'Static text files', link: '/ai/static-text-files/' },
           ],
         },
         {
