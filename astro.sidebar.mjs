@@ -33,14 +33,14 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Build with AI',
+          label: 'AI Integrations',
           collapsed: false,
           items: [
             { label: 'Overview', link: '/ai/' },
-            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
             { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
-            { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'Documentation exports', link: '/ai/documentation-exports/' },
           ],
         },
         {
@@ -87,7 +87,6 @@ export function generateSidebar() {
             { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Layouts', link: '/dropins/all/layouts/' },
             { label: 'Events', link: '/dropins/all/events/' },
-            { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
