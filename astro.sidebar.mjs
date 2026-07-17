@@ -48,6 +48,7 @@ export function generateSidebar() {
             { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
             { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
             { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
           ],
         },
         {
