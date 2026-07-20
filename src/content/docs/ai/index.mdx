@@ -25,11 +25,11 @@ If you are on the AEM Boilerplate Commerce project, set up all three integration
 
 ## Install the integrations
 
-Restart your agent after each step so it picks up the new configuration.
+Follow these steps in order.
 
 <Steps>
 
-1. **Install the AEM Boilerplate Commerce skill set.** This step installs planning, coding, content modeling, and testing skills, plus a documentation search tool. See [Boilerplate skills](/ai/boilerplate-skills/) for details. Requires Node.js 22 or later. Run this from your project root:
+1. **Install the AEM Boilerplate Commerce skill set.** Requires Node.js 22 or later. Run this from your project root:
 
    ```bash
    npm install -g @adobe/aio-cli
@@ -37,7 +37,7 @@ Restart your agent after each step so it picks up the new configuration.
    aio commerce extensibility tools-setup
    ```
 
-2. **Add the Dropins MCP server.** This step adds the server described in [Dropins MCP](/ai/dropins-mcp/), which uses the Model Context Protocol (MCP) to check drop-in questions against your project's actual source code, not only published docs. Add the following to your editor's MCP config — for Claude Code, `.mcp.json` at your project root:
+2. **Add the Dropins MCP server.** Add the following to your editor's MCP config. For Claude Code, `.mcp.json` at your project root:
 
    ```json
    {
@@ -52,23 +52,96 @@ Restart your agent after each step so it picks up the new configuration.
    ```
 
 
-3. **Add Wayfinder.** This step adds the routing described in [Wayfinder](/ai/wayfinder/), which sends questions that leave the storefront — Commerce Admin, App Builder, Document Authoring — to the right documentation site. Add this line to your project's `AGENTS.md` or `CLAUDE.md`:
+3. **Add Wayfinder.** Wayfinder routes questions that leave the storefront, such as Commerce Admin, App Builder, or Document Authoring, to the right documentation site. See [Wayfinder](/ai/wayfinder/) for details. Add this line to your project's `AGENTS.md` or `CLAUDE.md`:
 
    ```markdown
    Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
    ```
 
 
-4. **Tell your agent how the three integrations fit together.** Installed together, skills, the Dropins MCP server, and Wayfinder can still act in isolation. For example, your agent calls the MCP server directly and skips the skill that was supposed to use those results. Or it consults Wayfinder for a question the researcher skill already had a source-backed answer for. Add this to your project's `AGENTS.md` or `CLAUDE.md`, after the skill set installs its own instructions there:
+4. **Add coordination instructions.** Without them, your agent may query an MCP tool for drop-in facts, then make the change without invoking the boilerplate's `dropin-developer` skill first. Add the following directions to your project's `AGENTS.md` or `CLAUDE.md`:
 
    ```markdown
    ## Skill, MCP, and Wayfinder integration
 
    These three integrations have different jobs. Do not use one as a substitute for another:
 
-   - The Dropins MCP server answers factual questions about drop-in slots, containers, events, and APIs, but it does not replace the skill workflow. Before writing or modifying any drop-in customization, invoke the `dropin-developer` skill, even if you already queried Dropins MCP for the relevant facts. Treat MCP results as input to that skill's workflow, not a substitute for it.
-   - Wayfinder routes questions about Adobe Commerce products and documentation outside this storefront project (Commerce Admin, App Builder, Document Authoring, and similar). For questions about this storefront, its blocks, or its drop-ins, use the researcher skill and the Dropins MCP server first. Only fall back to Wayfinder's routing when the question is about a different product or documentation source.
+   - The `commerce-extensibility:search-commerce-docs` MCP tool (installed with the skill set) and the Dropins MCP server both answer factual questions — published documentation and drop-in source facts — but neither replaces the skill workflow. Before writing or modifying any drop-in customization, invoke the `dropin-developer` skill, even if you already queried either MCP tool for the relevant facts. Treat MCP results as input to that skill's workflow, not a substitute for it.
+   - Wayfinder routes questions about Adobe Commerce products and documentation outside this storefront project (Commerce Admin, App Builder, Document Authoring, and similar). For questions about this storefront, its blocks, or its drop-ins, use the researcher skill and its MCP tools first. Only fall back to Wayfinder's routing when the question is about a different product or documentation source.
    ```
+
+   Where you place this block in `AGENTS.md` or `CLAUDE.md` doesn't matter — your agent reads the whole file at the start of a session, not just the top. What matters is that this block doesn't contradict the skill set's or Wayfinder's own instructions elsewhere in the file.
+
+   <Aside type="tip" title="Verify the order with a PostToolUse hook">
+   Add a `PostToolUse` hook that deterministically tracks, in call order, whenever the agent touches one of the three integrations — a Dropins MCP tool call, a `commerce-extensibility:search-commerce-docs` call, a `dropin-developer`/`researcher` skill invocation, or a file read/grep/bash command touching an `@dropins/` path. The hook appends each match to a session-scoped log and feeds the accumulated sequence back to the agent as `additionalContext`, so the agent reports what actually happened instead of recalling it. This works no matter which integration fires first, second, or not at all.
+
+   Add a hook script, for example `.claude/hooks/track-dropin-integrations.sh`:
+
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+
+   input="$(cat)"
+   tool_name="$(jq -r '.tool_name // empty' <<<"$input")"
+   session_id="$(jq -r '.session_id // "default"' <<<"$input")"
+   logfile="/tmp/claude-dropin-track-${session_id}.log"
+
+   label=""
+
+   case "$tool_name" in
+     mcp__dropins__*)
+       label="Dropins MCP (${tool_name#mcp__dropins__})"
+       ;;
+     mcp__commerce-extensibility__search-commerce-docs)
+       label="commerce-extensibility docs MCP"
+       ;;
+     Skill)
+       skill="$(jq -r '.tool_input.skill // empty' <<<"$input")"
+       case "$skill" in
+         dropin-developer) label="dropin-developer skill" ;;
+         researcher) label="researcher skill" ;;
+       esac
+       ;;
+     Read|Grep|Bash)
+       haystack="$(jq -r '[.tool_input.file_path, .tool_input.pattern, .tool_input.command] | map(select(. != null)) | join(" ")' <<<"$input")"
+       grep -q '@dropins/' <<<"$haystack" && label="@dropins source (${tool_name})"
+       ;;
+   esac
+
+   [ -z "$label" ] && exit 0
+
+   echo "$label" >> "$logfile"
+   sequence="$(paste -sd '|' "$logfile" | sed 's/|/ → /g')"
+
+   jq -n --arg ctx "Drop-in integration tracker (observed this session, in actual call order): ${sequence}. If your next response touches a drop-in question, prepend the line: \"Integrations used: ${sequence}\"." \
+     '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
+   ```
+
+   Make it executable (`chmod +x .claude/hooks/track-dropin-integrations.sh`), then register it in `.claude/settings.json`:
+
+   ```json
+   {
+     "hooks": {
+       "PostToolUse": [
+         {
+           "matcher": "mcp__dropins__.*|mcp__commerce-extensibility__search-commerce-docs|Skill|Read|Grep|Bash",
+           "hooks": [
+             {
+               "type": "command",
+               "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/track-dropin-integrations.sh\"",
+               "timeout": 10
+             }
+           ]
+         }
+       ]
+     }
+   }
+   ```
+
+   Unlike the text-line probe, this hook is safe to leave in place permanently — it only adds context when a tracked integration actually fires, so it doesn't need to be removed after verification.
+   </Aside>
+
+5. **Restart your agent** so it picks up the new configuration from all three integrations.
 
 </Steps>
 
