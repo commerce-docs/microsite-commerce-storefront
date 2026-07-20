@@ -1,15 +1,15 @@
 ---
-title: Overview
-description: Install AI editors and coding agents with current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
+title: Install the integrations
+description: Give your AI editor or coding agent current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
 sidebar:
-  label: Overview
+  label: Install the integrations
   order: 1
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
 import { Steps, Aside } from '@astrojs/starlight/components';
 
-If you are on the AEM Boilerplate Commerce project, set up all three integrations below. Together, they give your agent a complete workflow for storefront development, source-accurate drop-in facts, and routing to Adobe Commerce documentation.
+If your project is based on the Adobe Commerce boilerplate, set up all three integrations below. Together, they give your agent a complete workflow for storefront development, source-accurate drop-in facts, and routing to Adobe Commerce documentation.
 
 ## Overview of the integrations
 
@@ -23,13 +23,21 @@ If you are on the AEM Boilerplate Commerce project, set up all three integration
 
 </TableWrapper>
 
-## Install the integrations
+## Prerequisites
+
+Before you install the integrations, make sure you have the following:
+
+- **Node.js 22 or later** — The highest requirement across all three integrations.
+- **An Adobe Commerce boilerplate project** — See [Getting started](/boilerplate/getting-started/) if you haven't created one.
+- **An AI editor or coding agent that supports MCP servers and agent skills** — See [Supported agents](/ai/boilerplate-skills/#supported-agents) and [Dropins MCP prerequisites](/ai/dropins-mcp/#prerequisites) for which tools qualify.
+
+## Installation steps
 
 Follow these steps in order.
 
 <Steps>
 
-1. **Install the AEM Boilerplate Commerce skill set.** Requires Node.js 22 or later. Run this from your project root:
+1. **Install the AEM Boilerplate Commerce skill set**, which requires Node.js 22 or later. Run this from your project root:
 
    ```bash
    npm install -g @adobe/aio-cli
@@ -37,7 +45,9 @@ Follow these steps in order.
    aio commerce extensibility tools-setup
    ```
 
-2. **Add the Dropins MCP server.** Add the following to your editor's MCP config. For Claude Code, `.mcp.json` at your project root:
+   The last command prompts you to choose a starter kit, your coding agent, and, if needed, a package manager. See [Install the skills](/ai/boilerplate-skills/#install-the-skills) for details.
+
+2. **Add the Dropins MCP (Model Context Protocol) server.** Add the following to your editor's MCP config file — for Claude Code, that's `.mcp.json` at your project root. See [Dropins MCP](/ai/dropins-mcp/) for the exact file and format for other editors:
 
    ```json
    {
@@ -52,103 +62,34 @@ Follow these steps in order.
    ```
 
 
-3. **Add Wayfinder.** Wayfinder routes questions that leave the storefront, such as Commerce Admin, App Builder, or Document Authoring, to the right documentation site. See [Wayfinder](/ai/wayfinder/) for details. Add this line to your project's `AGENTS.md` or `CLAUDE.md`:
+3. **Add Wayfinder.** Wayfinder routes questions about Commerce Admin, App Builder, or Document Authoring to the right documentation site. See [Wayfinder](/ai/wayfinder/) for details. Add this line to `AGENTS.md` or `CLAUDE.md` at your project root:
 
    ```markdown
    Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
    ```
 
 
-4. **Add coordination instructions.** Without them, your agent may query an MCP tool for drop-in facts, then make the change without invoking the boilerplate's `dropin-developer` skill first. Add the following directions to your project's `AGENTS.md` or `CLAUDE.md`:
+4. **Add coordination instructions.** Without them, your agent might query an MCP tool for drop-in facts, then make the change without invoking a boilerplate skill first. Add this rule near the top of `AGENTS.md` or `CLAUDE.md` at your project root, because your AI editor or coding agent is less likely to process content further down a long file:
 
    ```markdown
-   ## Skill, MCP, and Wayfinder integration
+   ## Skill, MCP, and Wayfinder priority
 
-   These three integrations have different jobs. Do not use one as a substitute for another:
+   Check these rules in order and stop at the first match:
 
-   - The `commerce-extensibility:search-commerce-docs` MCP tool (installed with the skill set) and the Dropins MCP server both answer factual questions — published documentation and drop-in source facts — but neither replaces the skill workflow. Before writing or modifying any drop-in customization, invoke the `dropin-developer` skill, even if you already queried either MCP tool for the relevant facts. Treat MCP results as input to that skill's workflow, not a substitute for it.
-   - Wayfinder routes questions about Adobe Commerce products and documentation outside this storefront project (Commerce Admin, App Builder, Document Authoring, and similar). For questions about this storefront, its blocks, or its drop-ins, use the researcher skill and its MCP tools first. Only fall back to Wayfinder's routing when the question is about a different product or documentation source.
+   1. Starting a new task or request: invoke the `project-manager` skill first. It scopes the work, screens for requests that belong to a different starter kit (backend integrations, checkout webhooks), and hands off to the right skill below.
+   2. Writing or modifying drop-in code: invoke the `dropin-developer` skill, even if an MCP tool already answered the underlying question.
+   3. Any other question about this storefront, its blocks, or its drop-ins: use the researcher skill and its MCP tools (`commerce-extensibility:search-commerce-docs`, Dropins MCP).
+   4. Anything outside this storefront that rule 1 didn't already redirect — Commerce Admin, App Builder, Document Authoring, and similar: use Wayfinder.
    ```
 
-   Where you place this block in `AGENTS.md` or `CLAUDE.md` doesn't matter — your agent reads the whole file at the start of a session, not just the top. What matters is that this block doesn't contradict the skill set's or Wayfinder's own instructions elsewhere in the file.
-
-   <Aside type="tip" title="Verify the order with a PostToolUse hook">
-   Add a `PostToolUse` hook that deterministically tracks, in call order, whenever the agent touches one of the three integrations — a Dropins MCP tool call, a `commerce-extensibility:search-commerce-docs` call, a `dropin-developer`/`researcher` skill invocation, or a file read/grep/bash command touching an `@dropins/` path. The hook appends each match to a session-scoped log and feeds the accumulated sequence back to the agent as `additionalContext`, so the agent reports what actually happened instead of recalling it. This works no matter which integration fires first, second, or not at all.
-
-   Add a hook script, for example `.claude/hooks/track-dropin-integrations.sh`:
-
-   ```bash
-   #!/usr/bin/env bash
-   set -euo pipefail
-
-   input="$(cat)"
-   tool_name="$(jq -r '.tool_name // empty' <<<"$input")"
-   session_id="$(jq -r '.session_id // "default"' <<<"$input")"
-   logfile="/tmp/claude-dropin-track-${session_id}.log"
-
-   label=""
-
-   case "$tool_name" in
-     mcp__dropins__*)
-       label="Dropins MCP (${tool_name#mcp__dropins__})"
-       ;;
-     mcp__commerce-extensibility__search-commerce-docs)
-       label="commerce-extensibility docs MCP"
-       ;;
-     Skill)
-       skill="$(jq -r '.tool_input.skill // empty' <<<"$input")"
-       case "$skill" in
-         dropin-developer) label="dropin-developer skill" ;;
-         researcher) label="researcher skill" ;;
-       esac
-       ;;
-     Read|Grep|Bash)
-       haystack="$(jq -r '[.tool_input.file_path, .tool_input.pattern, .tool_input.command] | map(select(. != null)) | join(" ")' <<<"$input")"
-       grep -q '@dropins/' <<<"$haystack" && label="@dropins source (${tool_name})"
-       ;;
-   esac
-
-   [ -z "$label" ] && exit 0
-
-   echo "$label" >> "$logfile"
-   sequence="$(paste -sd '|' "$logfile" | sed 's/|/ → /g')"
-
-   jq -n --arg ctx "Drop-in integration tracker (observed this session, in actual call order): ${sequence}. If your next response touches a drop-in question, prepend the line: \"Integrations used: ${sequence}\"." \
-     '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
-   ```
-
-   Make it executable (`chmod +x .claude/hooks/track-dropin-integrations.sh`), then register it in `.claude/settings.json`:
-
-   ```json
-   {
-     "hooks": {
-       "PostToolUse": [
-         {
-           "matcher": "mcp__dropins__.*|mcp__commerce-extensibility__search-commerce-docs|Skill|Read|Grep|Bash",
-           "hooks": [
-             {
-               "type": "command",
-               "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/track-dropin-integrations.sh\"",
-               "timeout": 10
-             }
-           ]
-         }
-       ]
-     }
-   }
-   ```
-
-   Unlike the text-line probe, this hook is safe to leave in place permanently — it only adds context when a tracked integration actually fires, so it doesn't need to be removed after verification.
-   </Aside>
-
-5. **Restart your agent** so it picks up the new configuration from all three integrations.
+5. **Restart your agent** so it loads the new configuration from all three integrations.
 
 </Steps>
 
-## Use the fallback path
+## Use fallback documentation files
 
-Use [Static text files](/ai/static-text-files/) when your editor or agent cannot use the integrations above. This option works with any AI editor or coding agent, including ones that cannot install an MCP server or agent skills. Add a documentation web address to your project instructions, or paste it into chat.
+When your AI editor or coding agent cannot use the integrations above, see [Fallback documentation files](/ai/static-text-files/). This option works with any such tool, including ones that cannot install an MCP server or agent skills. Add a documentation URL to your project instructions, or paste it into chat.
 
 <Aside type="note">
-Static text files are a fallback path, not an alternative setup. If you completed **Install the integrations**, your agent already has source-backed drop-in facts, routing to Commerce documentation, and storefront conventions. A static `llms.txt` link provides a lower-fidelity way to access the same information when those integrations are unavailable. Use it only if your agent cannot use skills or an MCP server.
+Fallback documentation files aren't an alternative setup. If you completed the steps above, your agent already has source-backed drop-in facts, routing to Commerce documentation, and storefront conventions. If your agent can't use skills or an MCP server, a static `llms.txt` link gives the same information instead, but it isn't checked against your project's source and can fall out of date.
 </Aside>
