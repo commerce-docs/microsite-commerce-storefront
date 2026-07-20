@@ -1,0 +1,50 @@
+---
+title: PayPalButtons Container
+description: Learn about the PayPalButtons container in the Payment Services drop-in.
+sidebar:
+  label: PayPalButtons
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `PayPalButtons` container renders a set of checkout buttons that enable shoppers to pay using <Link href="https://www.paypal.com/" text="PayPal" /> — including PayPal, Venmo, Pay Later, and debit/credit card, depending on which funding sources are enabled for the merchant.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 5.0.0</strong>
+</div>
+
+## Configuration
+
+The `PayPalButtons` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `onButtonClick` | function | No | Called when the shopper clicks a PayPal button. Receives a `showPaymentSheet` function, which must be called synchronously to begin the PayPal checkout and show the payment sheet. If not provided, clicking the button automatically triggers the payment sheet. |
+| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. If the function returns a promise, it is awaited before marking the payment as successful. If the promise rejects, the payment is marked as failed and the error is passed to `onError` (if provided). |
+| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.PayPalButtons.errors` [language definitions](/dropins/payment-services/dictionary/). |
+| `hidden` | boolean | No | Whether the buttons are hidden. Set to `true` to hide the PayPal buttons. Default: `false`. |
+| `disabled` | boolean | No | Whether the buttons are disabled. Set to `true` to disable the PayPal buttons. Default: `false`. |
+</TableWrapper>
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+### Checkout page example
+
+The following example demonstrates how to use the `PayPalButtons` container on the checkout page.
+
+```js
+import PayPalButtons from '@dropins/storefront-payment-services/containers/PayPalButtons.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+
+const $content = document.createElement('div');
+PaymentServices.render(PayPalButtons, {
+  onSuccess: ({ cartId }) => orderApi.placeOrder(cartId),
+  onError: (error) => { console.error(error) },
+})($content);
+```

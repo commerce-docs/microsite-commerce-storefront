@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit and listen for events, enabling communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.0.0</strong>
+<strong>Version: 5.0.0</strong>
 </div>
 
 ## Events reference
@@ -20,7 +20,7 @@ The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit
 | Event         | Direction | Description                                                |
 |---------------|-----------|------------------------------------------------------------|
 | [authenticated](#authenticated-listens) | Listens | Fired by the [User Auth](/dropins/user-auth/events/) drop-in when the user's authentication state changes. Used to determine whether the shopper is a guest customer. |
-| [cart/data](#cartdata-listens) | Listens | Fired by the [Cart](/dropins/cart/events/) drop-in when cart data is available or changes. Read by the `GooglePay` container at click time to supply cart items and totals to the Google Pay payment sheet. |
+| [cart/data](#cartdata-listens) | Listens | Fired by the [Cart](/dropins/cart/events/) drop-in when cart data is available or changes. Read by the `GooglePay` container at click time to supply cart items and totals to the Google Pay payment sheet, and by the `PayPalButtons` container at click time to supply the cart ID to PayPal checkout. |
 | [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is first loaded. Used as a fallback by the `GooglePay` container when `checkout/updated` has not yet been received. |
 | [checkout/updated](#checkoutupdated-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is updated. Read by the `GooglePay` container at click time to supply billing address and shipping method to the Google Pay payment sheet. |
 | [payment-services/initialized/checkout](#payment-servicesinitializedcheckout-emits) | Emits | Emitted when the drop-in finishes initializing for the `CHECKOUT` location. |
@@ -57,7 +57,7 @@ events.on('authenticated', (isAuthenticated) => {
 
 ### `cart/data` (listens)
 
-Fired by the [Cart](/dropins/cart/events/#cartdata-emits-and-listens) drop-in when cart data is available or changes. The `GooglePay` container reads this event using `events.lastPayload('cart/data')` at the moment the shopper clicks the Google Pay button — not at render time — to populate cart items and price totals in the Google Pay payment sheet.
+Fired by the [Cart](/dropins/cart/events/#cartdata-emits-and-listens) drop-in when cart data is available or changes. The `GooglePay` container reads this event using `events.lastPayload('cart/data')` at the moment the shopper clicks the Google Pay button — not at render time — to populate cart items and price totals in the Google Pay payment sheet. The `PayPalButtons` container reads the same event, at the same moment, to supply the cart ID to PayPal checkout — PayPal's own hosted checkout flow collects billing and shipping details itself, so `PayPalButtons` only needs the cart ID, not the full cart contents.
 
 The `cart/data` payload must therefore be present on the event bus before the shopper clicks the button. For the full `CartModel` type definition, see the [Cart events reference](/dropins/cart/events/#cartmodel).
 
