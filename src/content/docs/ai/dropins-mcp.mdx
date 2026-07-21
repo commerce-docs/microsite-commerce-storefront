@@ -1,41 +1,31 @@
 ---
-title: Drop-ins MCP
+title: Dropins MCP
 description: Install and configure the Dropins MCP server so your AI editor can look up current Adobe Commerce drop-in APIs, slots, events, and design tokens.
 ---
 
 import Link from '@components/Link.astro';
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 
-If you use Cursor, VS Code, or Claude on a Commerce storefront project, you can connect the Dropins MCP server so your assistant checks source-backed drop-in details while it works.
-
-The Dropins MCP is a <Link href="https://modelcontextprotocol.io" text="Model Context Protocol" /> (MCP) server. Your editor requests it when it needs current facts about Adobe Commerce drop-in components. The server reads an index built from drop-in source code so slots, events, containers, and API functions remain consistent with the versions in your project.
-
-Once you connect it, your assistant can answer questions like _"What slots does CartSummaryList have?"_, create a new block with the correct imports, flag renamed or removed APIs in your code, and generate event handlers and slot code that match the real APIs.
-
-## What you get
-
-Use the Dropins MCP server when your task depends on exact drop-in details. It helps your agent:
-
-- Look up slots, events, containers, API functions, and design tokens before writing code.
-- Avoid outdated imports, removed APIs, and incorrect event names.
-- Generate drop-in customizations that align with the source-backed API definitions.
+The Dropins MCP is a free <Link href="https://modelcontextprotocol.io" text="Model Context Protocol" /> (MCP) server for Cursor, VS Code, Claude Code, and Claude Desktop. It reads an index built from drop-in source code — B2C and B2B alike — so your AI editor can access current slots, events, containers, API functions, and design tokens instead of relying on outdated training data.
 
 <Aside type="note" title="Related topics">
-This page covers installation and verification. For every MCP tool with parameters and usage examples, see [Dropins MCP reference](/reference/dropins-mcp/). If the server does not connect or your editor cannot find it, see [FAQ](/troubleshooting/faq/#dropins-mcp).
+For every MCP tool's parameters and usage examples, see [Dropins MCP reference](/reference/dropins-mcp/). If the server does not connect or your editor cannot find it, see [FAQ](/troubleshooting/faq/#dropins-mcp).
 </Aside>
 
 ## Prerequisites
 
+Before installing the Dropins MCP server, make sure you have the following:
+
 - Node.js 18 or later (`node -v` to confirm)
-- An AI editor that supports MCP servers: <Link href="https://cursor.com/" text="Cursor" />, <Link href="https://code.visualstudio.com" text="VS Code" /> with <Link href="https://github.com/features/copilot" text="GitHub Copilot" />, or <Link href="https://claude.com/download" text="Claude Desktop" />
+- An AI editor that supports MCP servers: <Link href="https://cursor.com/" text="Cursor" />, <Link href="https://code.visualstudio.com" text="VS Code" /> with <Link href="https://github.com/features/copilot" text="GitHub Copilot" />, Claude Code, or <Link href="https://claude.com/download" text="Claude Desktop" />
 
 ## Installation
 
-Add the Dropins MCP server to your editor and confirm the connection works.
+Configure the Dropins MCP server in your editor and verify the connection.
 
 <Steps>
 
-1. **Add the server to your editor configuration.** Open the tab for your editor and paste the snippet into the config file shown.
+1. **Add the server to your editor configuration.** Open the tab for your editor and paste the snippet into the config file shown. If you use the Claude Code extension in VS Code, use the **Claude Code** tab, not the **VS Code (Copilot)** tab, which is for VS Code's built-in MCP support through GitHub Copilot.
 
    <Tabs>
      <TabItem label="Cursor">
@@ -52,7 +42,7 @@ Add the Dropins MCP server to your editor and confirm the connection works.
        }
        ```
      </TabItem>
-     <TabItem label="VS Code">
+     <TabItem label="VS Code (Copilot)">
        Add to `.vscode/mcp.json` inside your project:
 
        ```json
@@ -113,7 +103,7 @@ Add the Dropins MCP server to your editor and confirm the connection works.
        }
        ```
 
-       Claude Desktop is a desktop app, not a terminal, so it doesn't read your shell's PATH. Commands like `npx` may not be found when Claude Desktop tries to start the server. A global install puts the binary in a system location Claude Desktop can reach:
+       Claude Desktop is a desktop app, not a terminal, so it doesn't read your shell's PATH. Commands such as `npx` might not be found when Claude Desktop tries to start the server. A global install puts the binary in a system location Claude Desktop can reach:
 
        ```bash
        npm install -g @dropins/mcp
@@ -135,33 +125,29 @@ Add the Dropins MCP server to your editor and confirm the connection works.
 
 2. **Restart your editor.** When the server loads, `dropins` appears in your editor's MCP server list.
 
-3. **Verify the connection.** Ask your AI assistant:
+3. **Verify the connection.** Ask your AI editor:
 
    > _"Use the dropins MCP — what slots does the CartSummaryList container have?"_
 
-   If your assistant returns a list of slot names with context types, the MCP server is connected and working.
+   If your AI editor returns a list of slot names with context types, the MCP server is connected and working.
 
-   If the server does not appear, open your editor's MCP logs and confirm that `npx @dropins/mcp` runs without errors in a terminal outside the editor.
+   If `dropins` doesn't appear in your editor's MCP list, or your editor can't answer the question, open your editor's MCP logs and confirm that `npx @dropins/mcp` runs without errors in a terminal outside the editor.
 
 </Steps>
 
-## What you can ask
+## Example prompts
 
 The MCP works best when you ask specific questions about your project. For example:
 
 - _"What events does the checkout drop-in emit when a payment method is selected?"_
-- _"Create a block that combines CartSummaryList and OrderConfirmation"_
-- _"Are there any stale containers or removed APIs in my commerce-cart block?"_
-- _"What GraphQL mutation does checkout use to place an order?"_
 - _"Generate a slot implementation that adds a loyalty points badge next to the cart line item price"_
-- _"Am I using the latest drop-in versions?"_
-- _"What CSS design tokens control button colors?"_
+- _"Are there any stale containers or removed APIs in my commerce-cart block?"_
 
 <Aside type="tip">
   If your editor does not automatically use the MCP for drop-in questions, start your prompt with _"Use the dropins MCP"_. In Cursor, you can also add a rule in `.cursor/rules/` that tells the agent to consult the MCP for drop-in questions.
 </Aside>
 
-## Optional: enable AI-powered documentation search
+## Enable documentation search (optional)
 
 The `search_commerce_docs` tool searches Adobe Commerce documentation on Adobe's servers using the Adobe I/O command-line interface (CLI). Without it, the MCP still answers drop-in questions using `search_docs`, which searches a local copy of the documentation included with the server.
 
