@@ -44,11 +44,11 @@ export function generateSidebar() {
           label: 'AI Integrations',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/ai/' },
+            { label: 'Install the integrations', link: '/ai/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
+            { label: 'Dropins MCP', link: '/ai/dropins-mcp/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
-            { label: 'Static text files', link: '/ai/static-text-files/' },
+            { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
         },
         {
