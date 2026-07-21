@@ -1,0 +1,95 @@
+---
+title: Instrument analytics product page view event
+description: Publish a product-page-view Adobe Client Data Layer (ACDL) event from a custom product detail page that doesn't use the PDP drop-in.
+sidebar:
+  label: Product page view event
+prerequisites:
+  html: true
+  js: true
+  commerce: true
+time: "10 minutes"
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This example publishes a `product-page-view` analytics event from a custom product detail page. It's one of two focused, independent examples that build on the shared helper script from [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/) — complete that tutorial first if you haven't already.
+
+<Aside type="note">
+This example doesn't depend on [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/). Instrument only the events your custom implementation needs.
+</Aside>
+
+## Prerequisites
+
+- Completed [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/), so `scripts/acdlHelper.js` exists in your project
+- A custom product detail page implementation that doesn't use the PDP drop-in
+
+<Tasks>
+
+<Task>
+
+### Publish the event
+
+**Suggested file:** `scripts/initializers/pdp.js` _(the appropriate location depends on your project's structure)_
+
+When you use the standard boilerplate, the PDP drop-in calls `publishProductPageViewEvent` as part of its initialization process. This ensures the event fires with a complete product context, only once the page is in a stable state.
+
+If you're not using the drop-in, call this function anywhere product data is available and the page view should be recorded — for example, after a successful product API response, after a client-side route change, or at the end of your own page initialization flow. The placement is up to you.
+
+This example shows a custom PDP page publishing a page view event for each of several products using the helper function:
+
+```js title="scripts/initializers/pdp.js"
+import { publishProductPageViewEvent } from '../acdlHelper.js';
+
+// Sample products — replace with real product data from your API or drop-in
+const products = [
+  {
+    name: 'Classic Leather Sneaker',
+    sku: 'SNK-001-WHT',
+    topLevelSku: 'SNK-001-WHT',
+    pricing: { regularPrice: 129.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Running Shoe Pro',
+    sku: 'RSP-042-BLK',
+    topLevelSku: 'RSP-042-BLK',
+    pricing: { regularPrice: 159.99, specialPrice: 119.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Canvas High-Top',
+    sku: 'CHT-007-NVY',
+    topLevelSku: 'CHT-007-NVY',
+    pricing: { regularPrice: 89.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Slip-On Loafer',
+    sku: 'SOL-019-TAN',
+    topLevelSku: 'SOL-019-TAN',
+    pricing: { regularPrice: 109.99, specialPrice: 79.99, currencyCode: 'USD' },
+  },
+];
+
+products.forEach((product) => publishProductPageViewEvent(product));
+```
+
+</Task>
+
+<Task>
+
+### Test the event
+
+1. Open your browser's developer tools and check the Console tab.
+2. Confirm `window.adobeDataLayer` exists and contains a `productContext` entry and a `product-page-view` event.
+3. If AEP forwarding is configured, use the AEP Debugger Events view to confirm the event arrives — see [Analytics instrumentation](/setup/analytics/instrumentation/#manual-testing-steps).
+
+</Task>
+
+</Tasks>
+
+## Summary
+
+In this tutorial, you learned how to publish a `product-page-view` event with a complete product context from a custom product detail page.
+
+- Continue with [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/) to instrument the next event
+- See the [Analytics events reference](/dropins/all/analytics-events/) for the full list of events and the contexts each one sets

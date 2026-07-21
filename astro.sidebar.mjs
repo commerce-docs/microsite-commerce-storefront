@@ -66,7 +66,117 @@ export function generateSidebar() {
             { label: 'Blocks Reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
+          ],
+        },
+        {
+          label: 'Licensing',
+          collapsed: true,
+          autogenerate: { directory: '/licensing/' },
+        },
+        {
+          label: 'Storefront setup',
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              link: '/setup/',
+            },
+            {
+              label: 'Configuration',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/' },
+                { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+                { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
+                { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+                { label: 'AEM Commerce prerender', link: '/setup/configuration/aem-prerender/' },
+                { label: 'Content delivery network', link: '/setup/configuration/content-delivery-network/' },
+                { label: 'CORS setup', link: '/setup/configuration/cors-setup/' },
+                { label: 'CORS troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+                { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+                { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+              ],
+            },
+            {
+              label: 'Compatibility package',
+              collapsed: true,
+              items: [
+                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
+                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
+              ],
+            }
+          ]
+        },
+        {
+          label: 'Launch preparation',
+          collapsed: true,
+          items: [
+            { label: 'Launch checklist', link: '/setup/launch/' },
+            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+            { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+            { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+          ],
+        },
+        // ---------- HOW-TOS ----------
+        {
+          label: 'How-Tos',
+          collapsed: true,
+          items: [
+            { label: 'Federated search', link: '/how-tos/federated-search/' },
+            {
+              label: 'Analytics events',
+              collapsed: true,
+              items: [
+                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+                { label: 'Add to cart event', link: '/how-tos/instrument-add-to-cart-event/' },
+              ],
+            },
+            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
+            {
+              label: 'Cart',
+              collapsed: true,
+              items: [
+                { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+                { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
+                { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+                { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
+                { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+                { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+              ],
+            },
+            {
+              label: 'Checkout',
+              collapsed: true,
+              items: [
+                { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
+                { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+                { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
+                { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+                { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+              ],
+            },
+            {
+              label: 'Order',
+              collapsed: true,
+              items: [
+                { label: 'Enable order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+              ],
+            },
+            {
+              label: 'User Account',
+              collapsed: true,
+              items: [
+                { label: 'Customize layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
+              ],
+            },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -87,7 +197,7 @@ export function generateSidebar() {
             { label: 'Layouts', link: '/dropins/all/layouts/' },
             { label: 'Events', link: '/dropins/all/events/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
-            { label: 'Custom events', link: '/dropins/all/custom-events/' },
+            { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],

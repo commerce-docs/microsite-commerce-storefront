@@ -1,0 +1,83 @@
+---
+title: Instrument analytics add to cart event
+description: Publish an add-to-cart Adobe Client Data Layer (ACDL) event from a custom add-to-cart interaction that doesn't use the Cart drop-in.
+sidebar:
+  label: Add to cart event
+prerequisites:
+  html: true
+  js: true
+  commerce: true
+time: "10 minutes"
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This example publishes an `add-to-cart` analytics event from a custom add-to-cart interaction. It's one of two focused, independent examples that build on the shared helper script from [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/) — complete that tutorial first if you haven't already.
+
+<Aside type="note">
+This example doesn't depend on [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/). Instrument only the events your custom implementation needs.
+</Aside>
+
+## Prerequisites
+
+- Completed [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/), so `scripts/acdlHelper.js` exists in your project
+- A custom add-to-cart interaction that doesn't use the Cart drop-in
+
+<Tasks>
+
+<Task>
+
+### Publish the event
+
+**Suggested file:** `blocks/product-details/product-details.js` _(the appropriate location depends on your project's structure)_
+
+Call this function after a successful response from your add-to-cart API, passing the item being added to the cart:
+
+```js title="blocks/product-details/product-details.js"
+import { publishAddToCartEvent } from '../../scripts/acdlHelper.js';
+
+const sampleCartItem = {
+  id: 'SNK-001-WHT-cart-1',
+  quantity: 1,
+  prices: {
+    price: { value: 129.99, currency: 'USD' },
+  },
+  product: {
+    productId: 1001,
+    name: 'Classic Leather Sneaker',
+    sku: 'SNK-001-WHT',
+    topLevelSku: 'SNK-001-WHT',
+    mainImageUrl: 'https://example.com/images/snk-001-wht.jpg',
+  },
+};
+
+// Called on button click — in production this fires after your add-to-cart API responds
+publishAddToCartEvent([sampleCartItem]);
+```
+
+<Aside type="note">
+The second argument to `publishAddToCartEvent` is an optional `cartDetails` object for cart-level metadata (cart ID, subtotals, gift options, and so on). See the `setShoppingCartContext` JSDoc in `scripts/acdlHelper.js` for the full field reference.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Test the event
+
+1. Open your browser's developer tools and check the Console tab.
+2. Confirm `window.adobeDataLayer` exists and contains a `shoppingCartContext` entry and an `add-to-cart` event.
+3. If AEP forwarding is configured, use the AEP Debugger Events view to confirm the event arrives — see [Analytics instrumentation](/setup/analytics/instrumentation/#manual-testing-steps).
+
+</Task>
+
+</Tasks>
+
+## Summary
+
+In this tutorial, you learned how to publish an `add-to-cart` event with the full updated cart from a custom add-to-cart interaction.
+
+- Continue with [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/) if you haven't instrumented it yet
+- See the [Analytics events reference](/dropins/all/analytics-events/) for the full list of events and the contexts each one sets
