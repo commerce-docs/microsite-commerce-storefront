@@ -9,27 +9,29 @@ sidebar:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Steps, Aside } from '@astrojs/starlight/components';
 
-If your project is based on the Adobe Commerce boilerplate, set up all three integrations below. Together, they give your agent a complete workflow for storefront development, source-accurate drop-in facts, and routing to Adobe Commerce documentation.
+If your project is based on the Adobe Commerce boilerplate, set up all three integrations below. Together, they provide a complete workflow for storefront development, source-accurate drop-in information, and access to Adobe Commerce documentation.
 
 ## Overview of the integrations
 
 <TableWrapper nowrap={[0]}>
 
-| AI integrations | What it gives you |
-|------|-------------------|
+| AI integrations  | What it gives you |
+|-------------|---|
 | [Boilerplate skills](/ai/boilerplate-skills/) | Storefront planning, coding, customization, and testing conventions |
-| [Dropins MCP](/ai/dropins-mcp/) | Exact drop-in slots, events, API functions, and design tokens, checked against source |
+| [Dropins MCP](/ai/dropins-mcp/) | Accurate drop-in slots, events, API functions, and design tokens validated against source |
 | [Wayfinder](/ai/wayfinder/) | Routing to the correct Adobe Commerce documentation source |
+
 
 </TableWrapper>
 
 ## Prerequisites
 
-Before you install the integrations, make sure you have the following:
+Before installing the integrations, make sure you have the following:
 
-- **Node.js 22 or later** — The highest requirement across all three integrations.
-- **An Adobe Commerce boilerplate project** — See [Getting started](/boilerplate/getting-started/) if you haven't created one.
-- **An AI editor or coding agent that supports MCP servers and agent skills** — See [Supported agents](/ai/boilerplate-skills/#supported-agents) and [Dropins MCP prerequisites](/ai/dropins-mcp/#prerequisites) for which tools qualify.
+* **Node.js 22 or later** — Required for the Boilerplate skills setup. (If you're installing only Dropins MCP, Node.js 18 or later is sufficient.)
+* **An Adobe Commerce boilerplate project** — If you don't already have one, see [Getting started](/boilerplate/getting-started/).
+* **An AI editor or coding agent that supports MCP servers and agent skills** — See [Supported agents](/ai/boilerplate-skills/#supported-agents) and [Dropins MCP prerequisites](/ai/dropins-mcp/#prerequisites) for supported tools.
+
 
 ## Installation steps
 
@@ -37,7 +39,7 @@ Follow these steps in order.
 
 <Steps>
 
-1. **Install the AEM Boilerplate Commerce skill set**, which requires Node.js 22 or later. Run this from your project root:
+1. **Install the AEM Boilerplate Commerce skill set.** From the project root, run the following command:
 
    ```bash
    npm install -g @adobe/aio-cli
@@ -45,41 +47,29 @@ Follow these steps in order.
    aio commerce extensibility tools-setup
    ```
 
-   The last command prompts you to choose a starter kit, your coding agent, and, if needed, a package manager. See [Install the skills](/ai/boilerplate-skills/#install-the-skills) for details.
+   The command prompts you to choose a starter kit, a coding agent, and, if needed, a package manager. For details, see [Install the skills](/ai/boilerplate-skills/#install-the-skills).
 
-2. **Add the Dropins MCP (Model Context Protocol) server.** Add the following to your editor's MCP config file — for Claude Code, that's `.mcp.json` at your project root. See [Dropins MCP](/ai/dropins-mcp/) for the exact file and format for other editors:
+2. **Add the Dropins MCP (Model Context Protocol) server.** Add the server to your editor's MCP configuration. For the configuration snippet for your editor, see [Dropins MCP installation](/ai/dropins-mcp/#installation), then return here to continue installing the remaining integrations.
 
-   ```json
-   {
-     "mcpServers": {
-       "dropins": {
-         "type": "stdio",
-         "command": "npx",
-         "args": ["@dropins/mcp"]
-       }
-     }
-   }
-   ```
-
-
-3. **Add Wayfinder.** Wayfinder routes questions about Commerce Admin, App Builder, or Document Authoring to the right documentation site. See [Wayfinder](/ai/wayfinder/) for details. Add this line to `AGENTS.md` or `CLAUDE.md` at your project root:
+3. **Add or verify Wayfinder.** Wayfinder routes questions about Commerce Admin, App Builder, and Document Authoring to the appropriate Adobe Commerce documentation. For details, see [Wayfinder](/ai/wayfinder/). If you cloned the Adobe Commerce boilerplate, check `AGENTS.md` first—recent versions already include the required entry. Otherwise, add it to `AGENTS.md` or `CLAUDE.md` in your project root (create the file if it doesn't exist):
 
    ```markdown
    Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
    ```
 
 
-4. **Add coordination instructions.** Without them, your agent might query an MCP tool for drop-in facts, then make the change without invoking a boilerplate skill first. Add this rule near the top of `AGENTS.md` or `CLAUDE.md` at your project root, because your AI editor or coding agent is less likely to process content further down a long file:
+4. **Add coordination instructions.** Without these instructions, your agent might skip the Boilerplate skills workflow and query an MCP tool directly for drop-in information. Add the following rule near the top of `AGENTS.md` or `CLAUDE.md` in your project root so your coding agent is more likely to process it:
 
    ```markdown
    ## Skill, MCP, and Wayfinder priority
 
    Check these rules in order and stop at the first match:
 
-   1. Starting a new task or request: invoke the `project-manager` skill first. It scopes the work, screens for requests that belong to a different starter kit (backend integrations, checkout webhooks), and hands off to the right skill below.
-   2. Writing or modifying drop-in code: invoke the `dropin-developer` skill, even if an MCP tool already answered the underlying question.
-   3. Any other question about this storefront, its blocks, or its drop-ins: use the researcher skill and its MCP tools (`commerce-extensibility:search-commerce-docs`, Dropins MCP).
-   4. Anything outside this storefront that rule 1 didn't already redirect — Commerce Admin, App Builder, Document Authoring, and similar: use Wayfinder.
+   1. **Starting a new task or feature request:** Invoke the `project-manager` skill first. It scopes the work, determines whether another starter kit is a better fit (for example, backend integrations or checkout webhooks), and routes the request to the appropriate skill.
+   1. **Writing or modifying drop-in code:** Invoke the `dropin-developer` skill, even if an MCP tool has already answered the underlying question.
+   1. **Questions about this storefront, its blocks, or its drop-ins:** Use the `researcher` skill and its MCP tools (`commerce-extensibility:search-commerce-docs` and Dropins MCP).
+   1. **Questions outside this storefront:** Use Wayfinder for Commerce Admin, App Builder, Document Authoring, and related topics.
+
    ```
 
 5. **Restart your agent** so it loads the new configuration from all three integrations.
@@ -88,8 +78,14 @@ Follow these steps in order.
 
 ## Use fallback documentation files
 
-When your AI editor or coding agent cannot use the integrations above, see [Fallback documentation files](/ai/static-text-files/). This option works with any such tool, including ones that cannot install an MCP server or agent skills. Add a documentation URL to your project instructions, or paste it into chat.
+If your AI editor or coding agent doesn't support MCP servers or agent skills, add the following URL to your project instructions, or paste it into a chat instead:
+
+```text
+https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt
+```
+
+For editor-specific setup instructions and a verification prompt, see [Fallback documentation files](/ai/static-text-files/).
 
 <Aside type="note">
-Fallback documentation files aren't an alternative setup. If you completed the steps above, your agent already has source-backed drop-in facts, routing to Commerce documentation, and storefront conventions. If your agent can't use skills or an MCP server, a static `llms.txt` link gives the same information instead, but it isn't checked against your project's source and can fall out of date.
+The `llms.txt` file offers guidance similar to the integrations above, but it isn't validated against your project's source, so it can become outdated. If you completed the installation steps, your agent already has more reliable, source-backed information — use `llms.txt` only as a fallback.
 </Aside>
