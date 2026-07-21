@@ -233,6 +233,6 @@ export function generateRedirects(basePath) {
         // ========= AI SECTION REDIRECTS =========
         // ai-agent-skills.mdx and build-with-ai.mdx renamed to match sidebar labels
         '/ai/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
-        '/ai/build-with-ai': `${basePath}/ai/documentation-exports`,
+        '/ai/build-with-ai': `${basePath}/ai/static-text-files`,
     };
 }
