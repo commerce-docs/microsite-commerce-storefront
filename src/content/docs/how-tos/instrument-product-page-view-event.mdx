@@ -29,18 +29,72 @@ This example doesn't depend on [Instrument analytics add to cart event](/how-tos
 
 <Task>
 
-### Publish the event
+### Define the product context and publish function
 
 **Suggested file:** `scripts/initializers/pdp.js` _(the appropriate location depends on your project's structure)_
 
-When you use the standard boilerplate, the PDP drop-in calls `publishProductPageViewEvent` as part of its initialization process. This ensures the event fires with a complete product context, only once the page is in a stable state.
+When you use the standard boilerplate, the PDP drop-in calls its own `publishProductPageViewEvent` function as part of its initialization process. This ensures the event fires with a complete product context, only once the page is in a stable state.
 
-If you're not using the drop-in, call this function anywhere product data is available and the page view should be recorded — for example, after a successful product API response, after a client-side route change, or at the end of your own page initialization flow. The placement is up to you.
+Because this event is specific to the product page, `setProductContext` and `publishProductPageViewEvent` are defined here rather than in the shared `scripts/acdlHelper.js` — this file only imports the low-level `setContext` and `pushEvent` primitives it actually needs.
 
-This example shows a custom PDP page publishing a page view event for each of several products using the helper function:
+If you're not using the drop-in, call `publishProductPageViewEvent` anywhere product data is available and the page view should be recorded — for example, after a successful product API response, after a client-side route change, or at the end of your own page initialization flow. The placement is up to you.
+
+This example defines the product context and publish function, then shows a custom PDP page publishing a page view event for each of several products:
 
 ```js title="scripts/initializers/pdp.js"
-import { publishProductPageViewEvent } from '../acdlHelper.js';
+import { setContext, pushEvent } from '../acdlHelper.js';
+
+const PRODUCT_CONTEXT = 'productContext';
+const PRODUCT_PAGE_VIEW = 'product-page-view';
+
+/**
+ * Sets the product context in the Adobe Client Data Layer (ACDL).
+ *
+ * @param {{
+ *   name: string,                        - Product display name (max 256 chars)
+ *   sku: string,                         - Variant SKU (1-256 chars)
+ *   topLevelSku: string,                 - Parent/base product SKU (1-256 chars)
+ *   productId?: number,                  - Numeric product ID
+ *   productType?: string|null,           - Product type (e.g. 'simple', 'configurable')
+ *   categories?: string[],               - Category names (max 256 chars each)
+ *   canonicalUrl?: string|null,          - Canonical product URL (max 2083 chars)
+ *   mainImageUrl?: string|null,          - Main product image URL (max 2083 chars)
+ *   pricing?: {
+ *     regularPrice: number,              - Standard list price
+ *     currencyCode: string|null,         - ISO 4217 currency code (max 3 chars)
+ *     minimalPrice?: number,             - Lowest possible price
+ *     maximalPrice?: number,             - Highest possible price
+ *     specialPrice?: number,             - Promotional/sale price
+ *     tierPricing?: Array<{
+ *       customerGroupId: number|null,
+ *       qty: number,
+ *       value: number
+ *     }>
+ *   }
+ * }} product - Product data matching the ACDL product schema
+ */
+function setProductContext(product) {
+  const requiredFields = ['name', 'sku', 'topLevelSku'];
+  const missingFields = requiredFields.filter((field) => product[field] === undefined);
+  if (missingFields.length) {
+    throw new Error(`Product is missing required fields: ${missingFields.join(', ')}`);
+  }
+
+  if (product.pricing !== undefined) {
+    const requiredPricingFields = ['regularPrice', 'currencyCode'];
+    const missingPricingFields = requiredPricingFields.filter((field) => product.pricing[field] === undefined);
+    if (missingPricingFields.length) {
+      throw new Error(`Product pricing is missing required fields: ${missingPricingFields.join(', ')}`);
+    }
+  }
+
+  setContext(PRODUCT_CONTEXT, product);
+}
+
+function publishProductPageViewEvent(product) {
+  setProductContext(product);
+  pushEvent(PRODUCT_PAGE_VIEW);
+}
 
 // Sample products — replace with real product data from your API or drop-in
 const products = [

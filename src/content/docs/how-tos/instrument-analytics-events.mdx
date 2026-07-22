@@ -23,7 +23,7 @@ For the full event lifecycle and the list of events drop-ins emit, see the [Anal
 
 ## What You'll Build
 
-By the end of this tutorial, you'll have a reusable `scripts/acdlHelper.js` file that sets ACDL contexts and publishes events. From there, you can follow either of these focused, independent examples to instrument a specific event:
+By the end of this tutorial, you'll have a reusable `scripts/acdlHelper.js` file with the shared primitives for reading and writing to the ACDL. Each focused example below then defines its own event-specific context and publish functions on top of those primitives:
 
 - [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/)
 - [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/)
@@ -61,25 +61,9 @@ your-project/
     └── acdlHelper.js   (create this file)
 ```
 
-This file centralizes context management and event publishing so you don't have to duplicate ACDL logic across blocks.
+This file centralizes access to the ACDL - getting the data layer, setting a context, and pushing an event - so each event-specific example can build on shared logic instead of duplicating it. It doesn't contain any event-specific code: each focused example defines its own context and publish functions on top of these primitives, and imports only what it needs from here.
 
 ```js title="scripts/acdlHelper.js"
-/**
- * See: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/contexts.ts
- */
-export const contexts = {
-  PRODUCT_CONTEXT: 'productContext',
-  SHOPPING_CART_CONTEXT: 'shoppingCartContext',
-};
-
-/**
- * See: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/events.ts
- */
-export const events = {
-  PRODUCT_PAGE_VIEW: 'product-page-view',
-  ADD_TO_CART: 'add-to-cart',
-};
-
 export function getAdobeDataLayer() {
   window.adobeDataLayer = window.adobeDataLayer || [];
   return window.adobeDataLayer;
@@ -89,7 +73,7 @@ export function getAdobeDataLayer() {
  * Sets a context in the Adobe Client Data Layer (ACDL).
  * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L6
  */
-function setContext(name, data) {
+export function setContext(name, data) {
   const adobeDataLayer = getAdobeDataLayer();
 
   // Clear existing context
@@ -107,7 +91,7 @@ function setContext(name, data) {
  * Pushes an event to the Adobe Client Data Layer (ACDL).
  * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L34
  */
-function pushEvent(event, additionalContext) {
+export function pushEvent(event, additionalContext) {
   const adobeDataLayer = getAdobeDataLayer();
 
   adobeDataLayer.push((acdl) => {
@@ -122,127 +106,6 @@ function pushEvent(event, additionalContext) {
     });
   });
 }
-
-/**
- * Sets the shopping cart context in the Adobe Client Data Layer (ACDL).
- *
- * @param {Array<{
- *   id: string,                  - Unique cart line item identifier
- *   quantity: number,            - Quantity in cart (min 1)
- *   prices: {
- *     price: {
- *       value: number,           - Numeric price value
- *       currency?: string,       - ISO 4217 currency code
- *     }
- *   },
- *   product: {
- *     productId: number,         - Numeric product ID
- *     name: string,              - Product display name
- *     sku: string,               - Product SKU
- *     topLevelSku: string,       - Parent/base product SKU
- *     mainImageUrl?: string|null
- *   },
- * }>} items - Line items currently in the cart
- *
- * @param {{
- *   id?: string|null,            - Cart identifier
- *   totalQuantity?: number,      - Total item quantity (derived from items if omitted)
- *   prices?: {
- *     subtotalExcludingTax?: { value: number, currency?: string },
- *     subtotalIncludingTax?: { value: number, currency?: string }
- *   },
- *   possibleOnepageCheckout?: boolean,
- *   giftMessageSelected?: boolean,
- *   giftWrappingSelected?: boolean,
- *   source?: string,             - UI component or page that triggered the cart action
- *   discountAmount?: number
- * }} [cartDetails={}] - Cart-level metadata
- */
-export function setShoppingCartContext(items, cartDetails = {}) {
-  if (!Array.isArray(items)) {
-    throw new TypeError('items must be an array');
-  }
-
-  for (const [index, item] of items.entries()) {
-    const missingFields = ['id', 'prices', 'product', 'quantity']
-      .filter((field) => item[field] === undefined);
-    if (missingFields.length) {
-      throw new Error(`Cart item [${index}] is missing required fields: ${missingFields.join(', ')}`);
-    }
-    if (item.quantity < 1) {
-      throw new Error(`Cart item [${index}]: quantity must be at least 1`);
-    }
-
-    const missingProductFields = ['productId', 'name', 'sku'].filter((field) => item.product[field] === undefined);
-    if (missingProductFields.length) {
-      throw new Error(`Cart item [${index}].product is missing required fields: ${missingProductFields.join(', ')}`);
-    }
-  }
-
-  const totalQuantity = cartDetails.totalQuantity ?? items.reduce((sum, item) => sum + item.quantity, 0);
-
-  setContext(contexts.SHOPPING_CART_CONTEXT, {
-    ...cartDetails,
-    totalQuantity,
-    items,
-  });
-}
-
-/**
- * Sets the product context in the Adobe Client Data Layer (ACDL).
- *
- * @param {{
- *   name: string,                        - Product display name (max 256 chars)
- *   sku: string,                         - Variant SKU (1-256 chars)
- *   topLevelSku: string,                 - Parent/base product SKU (1-256 chars)
- *   productId?: number,                  - Numeric product ID
- *   productType?: string|null,           - Product type (e.g. 'simple', 'configurable')
- *   categories?: string[],               - Category names (max 256 chars each)
- *   canonicalUrl?: string|null,          - Canonical product URL (max 2083 chars)
- *   mainImageUrl?: string|null,          - Main product image URL (max 2083 chars)
- *   pricing?: {
- *     regularPrice: number,              - Standard list price
- *     currencyCode: string|null,         - ISO 4217 currency code (max 3 chars)
- *     minimalPrice?: number,             - Lowest possible price
- *     maximalPrice?: number,             - Highest possible price
- *     specialPrice?: number,             - Promotional/sale price
- *     tierPricing?: Array<{
- *       customerGroupId: number|null,
- *       qty: number,
- *       value: number
- *     }>
- *   }
- * }} product - Product data matching the ACDL product schema
- */
-export function setProductContext(product) {
-  const requiredFields = ['name', 'sku', 'topLevelSku'];
-  const missingFields = requiredFields.filter((field) => product[field] === undefined);
-  if (missingFields.length) {
-    throw new Error(`Product is missing required fields: ${missingFields.join(', ')}`);
-  }
-
-  if (product.pricing !== undefined) {
-    const requiredPricingFields = ['regularPrice', 'currencyCode'];
-    const missingPricingFields = requiredPricingFields.filter((field) => product.pricing[field] === undefined);
-    if (missingPricingFields.length) {
-      throw new Error(`Product pricing is missing required fields: ${missingPricingFields.join(', ')}`);
-    }
-  }
-
-  setContext(contexts.PRODUCT_CONTEXT, product);
-}
-
-// Triggered when a product is added to the cart
-export function publishAddToCartEvent(items, cartDetails = {}) {
-  setShoppingCartContext(items, cartDetails);
-  pushEvent(events.ADD_TO_CART);
-}
-
-// Triggered when a product page is viewed
-export function publishProductPageViewEvent(product) {
-  setProductContext(product);
-  pushEvent(events.PRODUCT_PAGE_VIEW);
-}
 ```
 
 </Task>
@@ -251,7 +114,7 @@ export function publishProductPageViewEvent(product) {
 
 ## Instrument specific events
 
-The helper script exposes two publish functions. Each of the following examples is a short, independent tutorial — instrument only the events your custom implementation actually needs, in any order:
+The helper script exposes the shared primitives (`getAdobeDataLayer`, `setContext`, `pushEvent`) used to build event-specific publish functions. Each of the following examples is a short, independent tutorial that defines its own context and publish functions on top of these primitives — instrument only the events your custom implementation actually needs, in any order:
 
 - **[Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/)** - publish a `product-page-view` event with a complete product context
 - **[Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/)** - publish an `add-to-cart` event with the full updated cart
@@ -263,8 +126,8 @@ When adding ACDL tracking to a new page or interaction:
 <Steps>
 1. Copy `scripts/acdlHelper.js` into your project's `scripts/` directory.
 1. Ensure `storefrontInstanceContext` and `pageContext` are set before any publish call.
-1. On product page load, call `publishProductPageViewEvent` with the resolved product data.
-1. On successful add-to-cart, call `publishAddToCartEvent` with the **full updated cart**, not just the item that was added.
+1. On product page load, call the `publishProductPageViewEvent` function from [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/) with the resolved product data.
+1. On successful add-to-cart, call the `publishAddToCartEvent` function from [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/) with the **full updated cart**, not just the item that was added.
 1. On cart update (quantity change, removal), call `setShoppingCartContext` directly to keep the context in sync without firing an event.
 1. On variant or option selection change, call `setProductContext` so the context always reflects the currently selected variant.
 </Steps>
@@ -279,7 +142,7 @@ When adding ACDL tracking to a new page or interaction:
 
 * **`setShoppingCartContext` or `setProductContext` throws a missing field error**
 
-  > Check the JSDoc in `scripts/acdlHelper.js` for the required fields on `items`, `product`, and `pricing`. Each function validates its input and throws before pushing an incomplete context.
+  > Check the JSDoc on `setShoppingCartContext` in [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/), or on `setProductContext` in [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/), for the required fields on `items`, `product`, and `pricing`. Each function validates its input and throws before pushing an incomplete context.
 
 * **Events aren't appearing in Adobe Experience Platform**
 
@@ -297,7 +160,7 @@ If you encounter issues not covered here:
 
 In this tutorial, you learned how to:
 
-- Add a reusable `scripts/acdlHelper.js` file that sets ACDL contexts and publishes events
+- Add a reusable `scripts/acdlHelper.js` file with the shared primitives for reading and writing to the ACDL
 - Identify where to go next to instrument specific analytics events
 
 Continue with [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/) or [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/) to see the helper script in action.

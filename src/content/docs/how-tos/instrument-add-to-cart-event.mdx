@@ -29,14 +29,89 @@ This example doesn't depend on [Instrument analytics product page view event](/h
 
 <Task>
 
-### Publish the event
+### Define the cart context and publish function
 
 **Suggested file:** `blocks/product-details/product-details.js` _(the appropriate location depends on your project's structure)_
 
-Call this function after a successful response from your add-to-cart API, passing the item being added to the cart:
+Because this event is specific to the cart, `setShoppingCartContext` and `publishAddToCartEvent` are defined here rather than in the shared `scripts/acdlHelper.js` — this file only imports the low-level `setContext` and `pushEvent` primitives it actually needs.
+
+Call `publishAddToCartEvent` after a successful response from your add-to-cart API, passing the item being added to the cart:
 
 ```js title="blocks/product-details/product-details.js"
-import { publishAddToCartEvent } from '../../scripts/acdlHelper.js';
+import { setContext, pushEvent } from '../../scripts/acdlHelper.js';
+
+const SHOPPING_CART_CONTEXT = 'shoppingCartContext';
+const ADD_TO_CART = 'add-to-cart';
+
+/**
+ * Sets the shopping cart context in the Adobe Client Data Layer (ACDL).
+ *
+ * @param {Array<{
+ *   id: string,                  - Unique cart line item identifier
+ *   quantity: number,            - Quantity in cart (min 1)
+ *   prices: {
+ *     price: {
+ *       value: number,           - Numeric price value
+ *       currency?: string,       - ISO 4217 currency code
+ *     }
+ *   },
+ *   product: {
+ *     productId: number,         - Numeric product ID
+ *     name: string,              - Product display name
+ *     sku: string,               - Product SKU
+ *     topLevelSku: string,       - Parent/base product SKU
+ *     mainImageUrl?: string|null
+ *   },
+ * }>} items - Line items currently in the cart
+ *
+ * @param {{
+ *   id?: string|null,            - Cart identifier
+ *   totalQuantity?: number,      - Total item quantity (derived from items if omitted)
+ *   prices?: {
+ *     subtotalExcludingTax?: { value: number, currency?: string },
+ *     subtotalIncludingTax?: { value: number, currency?: string }
+ *   },
+ *   possibleOnepageCheckout?: boolean,
+ *   giftMessageSelected?: boolean,
+ *   giftWrappingSelected?: boolean,
+ *   source?: string,             - UI component or page that triggered the cart action
+ *   discountAmount?: number
+ * }} [cartDetails={}] - Cart-level metadata
+ */
+function setShoppingCartContext(items, cartDetails = {}) {
+  if (!Array.isArray(items)) {
+    throw new TypeError('items must be an array');
+  }
+
+  for (const [index, item] of items.entries()) {
+    const missingFields = ['id', 'prices', 'product', 'quantity']
+      .filter((field) => item[field] === undefined);
+    if (missingFields.length) {
+      throw new Error(`Cart item [${index}] is missing required fields: ${missingFields.join(', ')}`);
+    }
+    if (item.quantity < 1) {
+      throw new Error(`Cart item [${index}]: quantity must be at least 1`);
+    }
+
+    const missingProductFields = ['productId', 'name', 'sku'].filter((field) => item.product[field] === undefined);
+    if (missingProductFields.length) {
+      throw new Error(`Cart item [${index}].product is missing required fields: ${missingProductFields.join(', ')}`);
+    }
+  }
+
+  const totalQuantity = cartDetails.totalQuantity ?? items.reduce((sum, item) => sum + item.quantity, 0);
+
+  setContext(SHOPPING_CART_CONTEXT, {
+    ...cartDetails,
+    totalQuantity,
+    items,
+  });
+}
+
+function publishAddToCartEvent(items, cartDetails = {}) {
+  setShoppingCartContext(items, cartDetails);
+  pushEvent(ADD_TO_CART);
+}
 
 const sampleCartItem = {
   id: 'SNK-001-WHT-cart-1',
@@ -58,7 +133,7 @@ publishAddToCartEvent([sampleCartItem]);
 ```
 
 <Aside type="note">
-The second argument to `publishAddToCartEvent` is an optional `cartDetails` object for cart-level metadata (cart ID, subtotals, gift options, and so on). See the `setShoppingCartContext` JSDoc in `scripts/acdlHelper.js` for the full field reference.
+The second argument to `publishAddToCartEvent` is an optional `cartDetails` object for cart-level metadata (cart ID, subtotals, gift options, and so on). See the `setShoppingCartContext` JSDoc above for the full field reference.
 </Aside>
 
 </Task>
