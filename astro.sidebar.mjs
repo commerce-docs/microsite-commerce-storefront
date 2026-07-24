@@ -339,7 +339,8 @@ export function generateSidebar() {
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                     { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
-                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' }
+                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' },
+                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' }
                   ],
                 },
               ],
