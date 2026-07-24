@@ -227,8 +227,13 @@ export function generateRedirects(basePath) {
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
-        '/boilerplate/ai-agent-skills': `${basePath}/ai/ai-agent-skills`,
+        '/boilerplate/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
         '/build-with-ai': `${basePath}/get-started/build-with-ai`,
         '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,
+
+        // ========= AI SECTION REDIRECTS =========
+        // ai-agent-skills.mdx and build-with-ai.mdx renamed to match sidebar labels
+        '/ai/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
+        '/ai/build-with-ai': `${basePath}/ai/static-text-files`,
     };
 }

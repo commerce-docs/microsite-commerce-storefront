@@ -33,13 +33,14 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Build with AI',
+          label: 'AI Integrations',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/ai/' },
-            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
-            { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
-            { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
+            { label: 'Install the integrations', link: '/ai/' },
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+            { label: 'Dropins MCP', link: '/ai/dropins-mcp/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
         },
         {
