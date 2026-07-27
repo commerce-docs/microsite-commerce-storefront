@@ -33,13 +33,14 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Build with AI',
+          label: 'AI Integrations',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/ai/' },
-            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
-            { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
-            { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
+            { label: 'Install the integrations', link: '/ai/' },
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+            { label: 'Dropins MCP', link: '/ai/dropins-mcp/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
         },
         {
@@ -211,6 +212,7 @@ export function generateSidebar() {
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
             { label: 'Custom Commerce Events', link: '/how-tos/instrument-commerce-events/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
             {
               label: 'Cart',
               collapsed: true,
@@ -450,7 +452,8 @@ export function generateSidebar() {
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                     { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
-                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' }
+                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' },
+                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' }
                   ],
                 },
               ],
