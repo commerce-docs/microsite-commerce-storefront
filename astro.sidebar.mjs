@@ -119,6 +119,7 @@ export function generateSidebar() {
               ],
             },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
             {
               label: 'Cart',
               collapsed: true,
