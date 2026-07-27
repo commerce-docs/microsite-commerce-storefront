@@ -100,6 +100,7 @@ export function generateSidebar() {
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
             {
               label: 'Cart',
               collapsed: true,

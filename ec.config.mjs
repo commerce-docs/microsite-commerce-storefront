@@ -22,7 +22,7 @@ export default {
     // Default properties for all code blocks
     defaultProps: {
         // Disable window frames for all code blocks
-        frame: 'none',
+        frame: 'auto',
         // Enable line numbers for all code blocks by default
         showLineNumbers: true,
     },
