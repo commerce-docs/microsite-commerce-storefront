@@ -45,7 +45,7 @@ Shoppers reach a PDP via categories, but the PDP is usually authored with a fixe
 |---|---|
 | Browses the Apparel category, sees `Home / Apparel` | Nothing — it only acts on product-link clicks and PDP loads |
 | Clicks through to the Adobe pattern hoodie product | Write `{ path, trail }` to `sessionStorage`, keyed to `/products/adobe-pattern-hoodie/ADB127` |
-| Lands on the PDP, authored as `Home / Adobe pattern hoodie` | Check whether the stored `path` matches the URL. It matches, so swap in the stored trail — the shopper now sees `Home / Apparel / Adobe pattern hoodie` |
+| Lands on the PDP, authored as `Home / Placeholder` | Check whether the stored `path` matches the URL. It matches, so swap in the stored trail and, once the drop-in loads catalog data, replace the leaf — the shopper now sees `Home / Apparel / Adobe pattern hoodie` |
 
 </TableWrapper>
 
@@ -182,27 +182,9 @@ export default function decorate(block) {
 
 Edge Delivery Services renders block tables in the order they appear in the document, so the breadcrumb needs to sit above the page's main block: the `product-list-page` table on the PLP, or the `product-details` table on the PDP. In [DA.live](/merchants/quick-start/document-authoring/), click above that table and insert a new one.
 
-![The commerce-breadcrumbs table placed above the product-list-page table in a DA.live document](images/commerce-breadcrumbs.png)
+![The commerce-breadcrumbs table placed above the product-list-page table on the apparel PLP, and above the product-details table on the products/default PDP template, in DA.live documents](images/commerce-breadcrumbs.png)
 
-Set its first row to `commerce-breadcrumbs` — this [block name row](/merchants/blocks/block-tables/#add-a-block-to-your-document) tells Edge Delivery Services which block to render. Populate the row below it with an ordered (`<ol>`) or unordered (`<ul>`) list, using one list item per breadcrumb in the hierarchy. Link every breadcrumb except the last, which represents the current page and remains plain text.
-
-<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
-<tbody>
-<tr>
-<td colspan="2" style="text-align: center; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">commerce-breadcrumbs</td>
-</tr>
-<tr>
-<td colspan="2" style="padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">
-
-<ol>
-<li><a href="/">Home</a></li>
-<li>Apparel</li>
-</ol>
-
-</td>
-</tr>
-</tbody>
-</table>
+As shown in the image above, set the table's first row to `commerce-breadcrumbs`. This [block name row](/merchants/blocks/block-tables/#add-a-block-to-your-document) tells Edge Delivery Services which block to render. Populate the row below it with a numbered or bulleted list using one list item per breadcrumb in the hierarchy. Add a link to each breadcrumb page except the last, which represents the current page and remains plain text.
 
 DA.live and Edge Delivery Services generate this HTML from what you author. It's shown here so you can confirm it matches what the Step 1 code expects. For example, the published HTML for `/apparel` looks like this:
 
@@ -225,28 +207,19 @@ It renders as:
 Home / Apparel
 ```
 
-Author the PDP the same way. For example, the published HTML for `/products/adobe-pattern-hoodie/ADB127` looks like this:
+Author the PDP the same way, but since `/products/default` is a shared template rendered for every product, use a generic placeholder for the leaf `<li>` instead of a real product name.
 
-```html
-<div class="commerce-breadcrumbs">
-  <div>
-    <div>
-      <ol>
-        <li><a href="/">Home</a></li>
-        <li>Adobe pattern hoodie</li>
-      </ol>
-    </div>
-  </div>
-</div>
+On a direct visit, it initially renders as:
+
+```text
+Home / Placeholder
 ```
 
-On a direct visit, it renders as:
+But once the Product Details drop-in loads catalog data for the user-selected product — for example, Adobe pattern hoodie at `/products/adobe-pattern-hoodie/ADB127` — the `commerce-breadcrumbs` block replaces the leaf automatically to display the product name:
 
 ```text
 Home / Adobe pattern hoodie
 ```
-
-On a PDP, the last `<li>` doesn't need to match the product name because the `commerce-breadcrumbs` block automatically replaces it with the product's catalog name after the Product Details drop-in loads.
 
 </Task>
 
