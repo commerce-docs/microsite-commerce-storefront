@@ -15,6 +15,152 @@ A suite release marks a point in time when we have tested the storefront and its
 
 The following sections provide high-level summaries of each release suite and details about the compatibility between storefront components. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
 
+## July 2026 suite
+
+This suite upgrades the Drop-in SDK to TypeScript 6.0 and ESLint 9; extensions of the shared Elsie ESLint configuration need to migrate to flat config. Accessibility fixes land across the Elsie component library and most drop-ins, improving screen reader, keyboard, and focus support. On the B2B side, Company Management moves to 1.4.0 and Requisition List to 1.5.0, with Requisition List now showing the correct SKU, options, price, and thumbnail for configurable products. See the [changelog](/releases/changelog/) for the full list of changes.
+
+<Aside type="caution" title="Breaking changes">
+- **Drop-in SDK v2.0.0 — TypeScript 6.0 and ESLint 9**: `@dropins/tools` and `@adobe-commerce/elsie` move to a TypeScript 6.0 and ESLint 9 (flat config) toolchain. If your implementation extends the shared `@adobe-commerce/elsie/config/eslint` configuration, migrate your own ESLint config to flat config, add `"type": "module"` to `package.json`, and rename `.elsie.js` to `.elsie.cjs`. See the StorefrontSDK repository's migration guide for the full list of steps.
+</Aside>
+
+### Highlights
+
+#### Drop-in SDK upgraded to TypeScript 6.0 and ESLint 9
+
+Implementers keep building against a current, supported toolchain: the Drop-in SDK's TypeScript moves from 4.7 to 6.0, and ESLint moves from 8 to 9 with flat config. If your project extends the shared Elsie ESLint configuration, migrate to flat config and rename `.elsie.js` to `.elsie.cjs` — see Breaking changes above.
+
+#### Accessibility improvements across drop-ins
+
+Shoppers using screen readers, keyboards, or other assistive technology get a more consistent experience across checkout, cart, account, and order pages. Fixes include correct heading semantics, accessible names on toggle buttons and form controls, focus management in modals, and higher-contrast keyboard focus indicators — spanning the Elsie component library and the Account, Auth, Cart, Checkout, Order, PDP, and Wishlist drop-ins.
+
+#### Accurate backorder messaging in Cart
+
+Shoppers see the real backorder message from Commerce instead of a generic "limited stock" warning or an incorrect out-of-stock state, so they understand when a backordered item is still available to order.
+
+#### Configurable wishlist pagination
+
+Implementers can control how many wishlist items load per page with the new `pageSize` option on the Wishlist drop-in's `initialize` config. Pagination controls render automatically once a shopper's wishlist grows past one page.
+
+#### Correct configurable product details in Requisition List (B2B)
+
+B2B buyers reviewing a requisition list now see the selected variant's SKU, chosen options, price, and thumbnail for configurable products, instead of only the parent product's name and SKU. A new built-in resolver handles this automatically, so integrators don't need to implement it themselves.
+
+### Updated boilerplate
+
+#### Infrastructure
+
+- **Drop-in SDK**: `@dropins/tools` upgraded to 2.0.0. See [Updated Drop-in SDK](#updated-drop-in-sdk) for consumer migration steps and sub-package versions.
+
+#### Document Authoring
+
+No Document Authoring changes in this release suite.
+
+#### Fixes and improvements
+
+- **Product recommendations**: Browsing history (`getPurchaseHistory`, `getProductViewHistory`) is now keyed by a storefront identifier, so history no longer mixes between different storefronts — for example a SaaS storefront and an Adobe Commerce Optimizer storefront — that share a domain ([#1301](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1301)).
+
+### Updated Drop-in SDK
+
+<Aside type="note" title="Internal Links">
+Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+</Aside>
+
+The Drop-in SDK (`@dropins/tools`) was upgraded to 2.0.0 in this release. The following sub-packages were also updated:
+
+| Package | Version |
+|---------|---------|
+| `@dropins/build-tools` | 1.2.1 |
+| `@adobe-commerce/elsie` | 2.0.0 |
+| `@adobe-commerce/event-bus` | 1.1.1 |
+| `@adobe-commerce/fetch-graphql` | 1.3.1 |
+| `@adobe-commerce/recaptcha` | 1.2.1 |
+| `@adobe-commerce/storefront-design` | 1.1.1 |
+
+- **New features**: The Incrementer component validates the field when it's changed to empty ([#204](https://github.com/adobe-commerce/StorefrontSDK/pull/204)). `DROPINS.showOverlays()` outlines drop-in containers and slots on the page for debugging, deprecating `DROPINS.showSlots()` ([#208](https://github.com/adobe-commerce/StorefrontSDK/pull/208)). A new optional `cypress` export from the shared ESLint config provides flat-config rules for Cypress test files ([#238](https://github.com/adobe-commerce/StorefrontSDK/pull/238)). A new `elsie changeset` CLI command wraps `@changesets/cli` ([#239](https://github.com/adobe-commerce/StorefrontSDK/pull/239)).
+- **Improvements and fixes**: Jest upgraded to 30.4.2 and Storybook to 10.4.0 ([#205](https://github.com/adobe-commerce/StorefrontSDK/pull/205)). `COMPANY_CREATE` added to the default reCAPTCHA form map ([#206](https://github.com/adobe-commerce/StorefrontSDK/pull/206)). Added a TypeScript return type for `events.lastPayload` ([#216](https://github.com/adobe-commerce/StorefrontSDK/pull/216)). Accessibility fixes: Picker no longer leaves Add to Cart disabled after single-option narrowing on configurable PDPs ([#219](https://github.com/adobe-commerce/StorefrontSDK/pull/219)); accessible labels on password validation icons ([#220](https://github.com/adobe-commerce/StorefrontSDK/pull/220)); Picker's accessible name and label association ([#233](https://github.com/adobe-commerce/StorefrontSDK/pull/233)); screen reader announcements for Field and InLineAlert status and error messages ([#242](https://github.com/adobe-commerce/StorefrontSDK/pull/242)); Modal focus management and dialog semantics ([#244](https://github.com/adobe-commerce/StorefrontSDK/pull/244)); ToggleButton's accessible name ([#246](https://github.com/adobe-commerce/StorefrontSDK/pull/246)) and invalid HTML ids when its value contains spaces ([#262](https://github.com/adobe-commerce/StorefrontSDK/pull/262)); plus higher-contrast keyboard focus indicators and a date-format fix in `InputDate`.
+
+### Updated B2C drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Cart**](/dropins/cart/) v3.3.1 | Shoppers now see the real backorder message from Commerce instead of a generic "limited stock" warning. Fixed the gift wrapping charge not being removed when unchecking "Gift wrap this item", plus several accessibility fixes (control names, form autocomplete, headings, screen reader announcements). |
+| [**Checkout**](/dropins/checkout/) v3.3.1 | Accessibility fixes: the payment method group label and each shipping method's accessible name are now announced correctly by screen readers. |
+| [**Order**](/dropins/order/) v4.0.1 | Accessibility fixes: correct `autocomplete` attributes on the guest order search form, and real headings across order sections. |
+| [**Product Details Page**](/dropins/product-details/) v3.3.0 | New per-option quantity control for bundle products that allow quantity editing. Accessibility fixes: real headings for the product name and "Details" title, and keyboard support for opening the gallery image preview. |
+| [**User Account**](/dropins/user-account/) v4.1.0 | Accessibility fixes: keyboard focus indicator on the "use a different address" option, heading and label fixes, and corrected `autocomplete` attributes across account and password forms. |
+| [**User Auth**](/dropins/user-auth/) v4.0.1 | Fixed a schema error during initialization on Adobe Commerce as a Cloud Service backends. Accessibility fixes: headings and corrected `autocomplete` attributes across sign in, sign up, and password forms. |
+| [**Personalization**](/dropins/personalization/) v3.2.1 | Rebuilt against Drop-in SDK 2.0.0 (TypeScript 6.0, ESLint 9). No props, APIs, or behavior changed. |
+| [**Product Discovery**](/dropins/product-discovery/) v3.1.1 | No user-facing changes in this release. |
+| [**Product Recommendations**](/dropins/recommendations/) v4.0.4 | No user-facing changes in this release. |
+| [**Payment Services**](/dropins/payment-services/) v3.1.2 | No user-facing changes in this release. |
+| [**Wishlist**](/dropins/wishlist/) v3.4.0 | New configurable `pageSize` option for wishlist pagination (defaults to 9). Fixed gift card items failing silently on Move to Cart, the wishlist icon showing the wrong state beyond the first page, and keyboard access to the image carousel controls. |
+
+</TableWrapper>
+
+### Updated B2B drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Company Management**](/dropins-b2b/company-management/) v1.4.0 | Fixed the reCAPTCHA integration on company registration, including the `X-ReCaptcha` header on `createCompany`. |
+| [**Company Switcher**](/dropins-b2b/company-switcher/) v1.2.1 | Rebuilt against Drop-in SDK 2.0.0 (TypeScript 6.0, ESLint 9). No props, APIs, or behavior changed. |
+| [**Purchase Order**](/dropins-b2b/purchase-order/) v1.2.1 | Rebuilt against Drop-in SDK 2.0.0 (TypeScript 6.0, ESLint 9). No props, APIs, or behavior changed. |
+| [**Quote Management**](/dropins-b2b/quote-management/) v1.2.1 | Rebuilt against Drop-in SDK 2.0.0 (TypeScript 6.0, ESLint 9). No props, APIs, or behavior changed. |
+| [**Requisition List**](/dropins-b2b/requisition-list/) v1.5.0 | `ProductListTable` now shows the selected variant's SKU, options, price, and thumbnail for configurable products, with a built-in resolver so integrators don't need to implement it themselves. Original (pre-discount) price now shows with a strikethrough alongside the discounted price. |
+| [**Quick Order**](/dropins-b2b/quick-order/) v1.1.0 | No user-facing changes in this release. |
+
+</TableWrapper>
+
+### Known issues
+
+There are no known issues for this release suite.
+
+### Component compatibility
+
+Adobe has tested and verified the following component versions for this release suite.
+
+**Commerce Foundation**
+
+| Adobe Commerce | Storefront Compatibility Package |
+|----------------|----------------------------------|
+| `2.4.7` | `4.7.14` |
+| `2.4.8` | `4.8.27` |
+| `2.4.9` | `4.9.2` (Adobe Commerce as a Cloud Service with Commerce Optimizer only — see [v2.4.9 package details](/setup/configuration/storefront-compatibility/v249/)) |
+
+| Adobe Commerce B2B | Storefront Compatibility B2B Package |
+|--------------------|--------------------------------------|
+| `1.5.2` | `1.0.25` |
+
+**Drop-in SDK**
+
+See [Updated Drop-in SDK](#updated-drop-in-sdk) above for sub-package versions.
+
+**B2C drop-ins**
+
+- `@dropins/storefront-account@~4.1.0`
+- `@dropins/storefront-auth@~4.0.1`
+- `@dropins/storefront-cart@~3.3.1`
+- `@dropins/storefront-checkout@~3.3.1`
+- `@dropins/storefront-order@~4.0.1`
+- `@dropins/storefront-payment-services@~3.1.2`
+- `@dropins/storefront-pdp@~3.3.0`
+- `@dropins/storefront-personalization@~3.2.1`
+- `@dropins/storefront-product-discovery@~3.1.1`
+- `@dropins/storefront-recommendations@~4.0.4`
+- `@dropins/storefront-wishlist@~3.4.0`
+
+**B2B drop-ins**
+
+- `@dropins/storefront-company-management@~1.4.0`
+- `@dropins/storefront-company-switcher@~1.2.1`
+- `@dropins/storefront-purchase-order@~1.2.1`
+- `@dropins/storefront-quote-management@~1.2.1`
+- `@dropins/storefront-requisition-list@~1.5.0`
+- `@dropins/storefront-quick-order@~1.1.0`
+
 ## June 2026 suite
 
 This suite introduces seller-assisted buying for B2B and B2C storefronts, company hierarchy management and requisition list sharing for B2B, reactive recommendations on the PDP, and cart item deletion confirmation. The Drop-in SDK was upgraded to 1.9.0 with significant bundle size reductions. Node.js 22 LTS is now required. See the [changelog](/releases/changelog/) for the full list of changes.
