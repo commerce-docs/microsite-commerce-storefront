@@ -1,21 +1,91 @@
 ---
-title: AI tools overview
-description: Choose how to connect AI editors and coding agents to current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
+title: Install the integrations
+description: Give your AI editor or coding agent current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
 sidebar:
-  label: Overview
+  label: Install the integrations
   order: 1
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
 
-AI editors and coding agents can help with storefront work, but they require up-to-date context. Use the table to determine which option to set up first, then add additional support as your task requires.
+If your project is based on the Adobe Commerce boilerplate, set up all three integrations below. Together, they provide a complete workflow for storefront development, source-accurate drop-in information, and access to Adobe Commerce documentation.
+
+## Overview of the integrations
 
 <TableWrapper nowrap={[0]}>
 
-| Start here | What it gives you | Use it when |
-|------------|-------------------|-------------|
-| [Use docs in AI tools](/ai/build-with-ai/) | Current storefront documentation context. | You want any AI editor or coding agent to generate answers based on the storefront documentation you are viewing. |
-| [Dropins MCP](/ai/dropins-mcp/) | Exact drop-in slots, events, API functions, and design tokens. | Your task depends on source-backed drop-in API details. |
-| [AI agent skills](/ai/ai-agent-skills/) | Storefront planning, coding, customization, and testing conventions. | You want the agent to handle full storefront development tasks. |
+| AI integrations  | What it gives you |
+|-------------|---|
+| [Boilerplate skills](/ai/boilerplate-skills/) | Storefront planning, coding, customization, and testing conventions |
+| [Dropins MCP](/ai/dropins-mcp/) | Accurate drop-in slots, events, API functions, and design tokens validated against source |
+| [Wayfinder](/ai/wayfinder/) | Routing to the correct Adobe Commerce documentation source |
+
 
 </TableWrapper>
+
+## Prerequisites
+
+Before installing the integrations, make sure you have the following:
+
+* **Node.js 22 or later** — Required for the Boilerplate skills setup. (If you're installing only Dropins MCP, Node.js 18 or later is sufficient.)
+* **An Adobe Commerce boilerplate project** — If you don't already have one, see [Getting started](/boilerplate/getting-started/).
+* **An AI editor or coding agent that supports MCP servers and agent skills** — See [Supported agents](/ai/boilerplate-skills/#supported-agents) and [Dropins MCP prerequisites](/ai/dropins-mcp/#prerequisites) for supported tools.
+
+
+## Installation steps
+
+Follow these steps in order.
+
+<Steps>
+
+1. **Install the AEM Boilerplate Commerce skill set.** From the project root, run the following command:
+
+   ```bash
+   npm install -g @adobe/aio-cli
+   aio plugins:install https://github.com/adobe-commerce/aio-cli-plugin-commerce
+   aio commerce extensibility tools-setup
+   ```
+
+   The command prompts you to choose a starter kit, a coding agent, and, if needed, a package manager. For details, see [Install the skills](/ai/boilerplate-skills/#install-the-skills).
+
+2. **Add the Dropins MCP (Model Context Protocol) server.** Add the server to your editor's MCP configuration. For the configuration snippet for your editor, see [Dropins MCP installation](/ai/dropins-mcp/#installation), then return here to continue installing the remaining integrations.
+
+3. **Add or verify Wayfinder.** Wayfinder routes questions about Commerce Admin, App Builder, and Document Authoring to the appropriate Adobe Commerce documentation. For details, see [Wayfinder](/ai/wayfinder/). If you cloned the Adobe Commerce boilerplate, check `AGENTS.md` first—recent versions already include the required entry. Otherwise, add it to `AGENTS.md` or `CLAUDE.md` in your project root (create the file if it doesn't exist):
+
+   ```markdown
+   Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
+   ```
+
+
+4. **Add coordination instructions.** Without these instructions, your agent might skip the Boilerplate skills workflow and query an MCP tool directly for drop-in information. Add the following rule near the top of `AGENTS.md` or `CLAUDE.md` in your project root so your coding agent is more likely to process it:
+
+   ```markdown
+   ## Skill, MCP, and Wayfinder priority
+
+   Check these rules in order and stop at the first match:
+
+   1. **Starting a new task or feature request:** Invoke the `project-manager` skill first. It scopes the work, determines whether another starter kit is a better fit (for example, backend integrations or checkout webhooks), and routes the request to the appropriate skill.
+   1. **Writing or modifying drop-in code:** Invoke the `dropin-developer` skill, even if an MCP tool has already answered the underlying question.
+   1. **Questions about this storefront, its blocks, or its drop-ins:** Use the `researcher` skill and its MCP tools (`commerce-extensibility:search-commerce-docs` and Dropins MCP).
+   1. **Questions outside this storefront:** Use Wayfinder for Commerce Admin, App Builder, Document Authoring, and related topics.
+
+   ```
+
+5. **Restart your agent** so it loads the new configuration from all three integrations.
+
+</Steps>
+
+## Use fallback documentation files
+
+If your AI editor or coding agent doesn't support MCP servers or agent skills, add the following URL to your project instructions, or paste it into a chat instead:
+
+```text
+https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt
+```
+
+For editor-specific setup instructions and a verification prompt, see [Fallback documentation files](/ai/static-text-files/).
+
+<Aside type="note">
+The `llms.txt` file offers guidance similar to the integrations above, but it isn't validated against your project's source, so it can become outdated. If you completed the installation steps, your agent already has more reliable, source-backed information — use `llms.txt` only as a fallback.
+</Aside>
