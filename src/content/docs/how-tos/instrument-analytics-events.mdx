@@ -15,13 +15,13 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 
-If your storefront doesn't use the AEM Commerce drop-ins — or replaces one with a custom block — you lose the automatic [Adobe Client Data Layer (ACDL)](/setup/analytics/instrumentation/#adobe-client-data-layer-acdl) instrumentation that the drop-ins provide. This tutorial shows you how to publish some Commerce events yourself using a small helper script, so that analytics data is collected to power Commerce tooling.
+If your storefront doesn't use the AEM Commerce drop-ins — or replaces one with a custom block — you lose the automatic [Adobe Client Data Layer (ACDL)](/setup/analytics/instrumentation/#adobe-client-data-layer-acdl) instrumentation that the drop-ins provide. This tutorial shows you how to publish some of those ACDL events yourself with a small helper script, so your storefront keeps sending analytics data to Commerce tooling.
 
 <Aside type="tip">
 For the full event lifecycle and the list of events drop-ins emit, see the [Analytics events reference](/dropins/all/analytics-events/).
 </Aside>
 
-## What You'll Build
+## What you'll build
 
 By the end of this tutorial, you'll have a reusable `scripts/acdlHelper.js` file with the shared primitives for reading and writing to the ACDL. Each focused example below then defines its own event-specific context and publish functions on top of those primitives:
 
@@ -53,9 +53,8 @@ These packages are included by default in the AEM Commerce boilerplate, but the 
 
 ### Add the ACDL helper script
 
-Create `scripts/acdlHelper.js` in your project, at the root of your AEM boilerplate:
+Create `scripts/acdlHelper.js` in your storefront project:
 
-```
 your-project/
 └── scripts/
     └── acdlHelper.js   (create this file)
@@ -114,12 +113,12 @@ export function pushEvent(event, additionalContext) {
 
 ## Instrument specific events
 
-The helper script exposes the shared primitives (`getAdobeDataLayer`, `setContext`, `pushEvent`) used to build event-specific publish functions. Each of the following examples is a short, independent tutorial that defines its own context and publish functions on top of these primitives — instrument only the events your custom implementation actually needs, in any order:
+The helper script exposes the shared primitives (`getAdobeDataLayer`, `setContext`, `pushEvent`) used to build event-specific publish functions. Each example below is a short, independent tutorial that defines its own context and publish functions on top of these primitives. Instrument only the events your custom implementation needs, in any order:
 
 - **[Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/)** - publish a `product-page-view` event with a complete product context
 - **[Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/)** - publish an `add-to-cart` event with the full updated cart
 
-## Implementation Checklist
+## Implementation checklist
 
 When adding ACDL tracking to a new page or interaction:
 
@@ -134,7 +133,7 @@ When adding ACDL tracking to a new page or interaction:
 
 ## Troubleshooting
 
-### Common Issues
+### Common issues
 
 * **Events push successfully but `eventInfo` is missing storefront or page data**
 
@@ -144,11 +143,11 @@ When adding ACDL tracking to a new page or interaction:
 
   > Check the JSDoc on `setShoppingCartContext` in [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/), or on `setProductContext` in [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/), for the required fields on `items`, `product`, and `pricing`. Each function validates its input and throws before pushing an incomplete context.
 
-* **Events aren't appearing in Adobe Experience Platform**
+* **Events aren't appearing in Adobe Experience Platform (AEP)**
 
   > Verify AEP forwarding is configured — see [Adobe Experience Platform](/setup/analytics/adobe-experience-platform/). Events still push to `window.adobeDataLayer` even if AEP forwarding isn't enabled, so check the browser console first before assuming the helper script is broken.
 
-### Getting Help
+### Getting help
 
 If you encounter issues not covered here:
 
