@@ -27,9 +27,17 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Backend options', link: '/get-started/backends/' },
+            {
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
+                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
+              ],
+            },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance best practices', link: '/get-started/performance/' },
           ],
         },
         {
@@ -155,18 +163,7 @@ export function generateSidebar() {
               link: '/setup/configuration/multistore-setup/',
             },
             {
-              label: 'Compatibility Package',
-              collapsed: true,
-              items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            },
-            {
-              label: 'Configuration',
+              label: 'Project configuration',
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/setup/configuration/' },
@@ -188,6 +185,8 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Launch Checklist', link: '/setup/launch/' },
+            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'SEO Overview', link: '/setup/seo/' },
@@ -822,6 +821,16 @@ export function generateSidebar() {
                 { label: 'getPathValue', link: '/sdk/utilities/getpathvalue/' },
               ],
             },
+          ],
+        },
+
+        {
+          label: 'Package archive',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/reference/storefront-compatibility/' },
+            { label: 'Adobe Commerce 2.4.8', link: '/reference/storefront-compatibility/v248/' },
+            { label: 'Adobe Commerce 2.4.7', link: '/reference/storefront-compatibility/v247/' },
           ],
         },
 
