@@ -27,19 +27,27 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Storefront architecture', link: '/get-started/architecture/' },
             { label: 'Backend options', link: '/get-started/backends/' },
+            {
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
+                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
+              ],
+            },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance best practices', link: '/get-started/performance/' },
           ],
         },
         {
-          label: 'Build with AI',
+          label: 'AI Integrations',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/ai/' },
-            { label: 'Use docs in AI tools', link: '/ai/build-with-ai/' },
-            { label: 'Drop-ins MCP', link: '/ai/dropins-mcp/' },
-            { label: 'AI agent skills', link: '/ai/ai-agent-skills/' },
+            { label: 'Install the integrations', link: '/ai/' },
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
         },
         {
@@ -99,6 +107,7 @@ export function generateSidebar() {
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
             {
               label: 'Cart',
               collapsed: true,
@@ -153,18 +162,7 @@ export function generateSidebar() {
               link: '/setup/configuration/multistore-setup/',
             },
             {
-              label: 'Compatibility Package',
-              collapsed: true,
-              items: [
-                { label: 'Installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
-                { label: 'Adobe Commerce 2.4.8', link: '/setup/configuration/storefront-compatibility/v248/' },
-                { label: 'Adobe Commerce 2.4.7', link: '/setup/configuration/storefront-compatibility/v247/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility-b2b/' },
-              ],
-            },
-            {
-              label: 'Configuration',
+              label: 'Project configuration',
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/setup/configuration/' },
@@ -186,11 +184,15 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Launch Checklist', link: '/setup/launch/' },
+            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance best practices', link: '/get-started/performance/' },
             { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'SEO Overview', link: '/setup/seo/' },
             { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+            { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
+            { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
           ],
         },
         {
@@ -206,7 +208,6 @@ export function generateSidebar() {
 
         // ---------- REFERENCE ----------
         { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
-        { label: 'Drop-ins MCP', link: '/reference/dropins-mcp/' },
 
         // ---------- B2C DROP-INS ----------
         {
@@ -335,7 +336,9 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/payment-services/containers/' },
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
-                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' }
+                    { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
+                    { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' },
+                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' }
                   ],
                 },
               ],
@@ -819,6 +822,16 @@ export function generateSidebar() {
           ],
         },
 
+        {
+          label: 'Package archive',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/reference/storefront-compatibility/' },
+            { label: 'Adobe Commerce 2.4.8', link: '/reference/storefront-compatibility/v248/' },
+            { label: 'Adobe Commerce 2.4.7', link: '/reference/storefront-compatibility/v247/' },
+          ],
+        },
+
         // ---------- OTHER ----------
         {
           label: 'Resources',
@@ -846,7 +859,20 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Edge Delivery Services',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
+            { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
+            { label: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
+            { label: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
+            { label: 'File and content limits', link: '/merchants/edge-delivery-services/file-limits/' },
+          ],
+        },
+        {
           label: 'Commerce Blocks',
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/' },
             { label: 'Content and Commerce blocks', link: '/merchants/blocks/content-commerce-blocks/' },
@@ -861,8 +887,6 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/merchants/blocks/b2c/' },
-                { label: 'Personalization Setup', link: '/merchants/blocks/personalization/' },
-                { label: 'Product Recommendations Setup', link: '/merchants/blocks/product-recommendations/' },
                 { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
                 { label: 'Account Sidebar', link: '/merchants/blocks/commerce-account-sidebar/' },
                 { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
@@ -936,16 +960,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Localization',
-          collapsed: true,
-          items: [
-            { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
-            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
-            { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
-          ],
-        },
-        {
-          label: 'Content Customizations',
+          label: 'Storefront Features',
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
@@ -957,12 +972,12 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Edge Delivery Services',
+          label: 'Localization',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/merchants/edge-delivery-services/' },
-            { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-            { label: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
+            { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
+            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
+            { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },
       ],

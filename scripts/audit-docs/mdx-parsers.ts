@@ -209,6 +209,19 @@ export function parseMdxSlots(content: string): Map<string, Set<string>> {
 }
 
 /**
+ * Parse the documented drop-in version from an initialization MDX file.
+ *
+ * Matches the styled version badge used across all drop-in init pages:
+ *   <strong>Version: X.Y.Z</strong>
+ *
+ * Returns the semver string (e.g. "3.2.0") or null when no badge is found.
+ */
+export function parseMdxVersion(content: string): string | null {
+  const match = /<strong>Version:\s*(\d+\.\d+\.\d+)<\/strong>/i.exec(content);
+  return match ? match[1] : null;
+}
+
+/**
  * Extract event names from the shared common-events.mdx page.
  * Each event has a dedicated `## eventName` section heading.
  */
