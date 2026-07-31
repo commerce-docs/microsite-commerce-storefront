@@ -74,7 +74,8 @@ export function generateSidebar() {
             { label: 'Blocks Reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -95,6 +96,7 @@ export function generateSidebar() {
             { label: 'Layouts', link: '/dropins/all/layouts/' },
             { label: 'Events', link: '/dropins/all/events/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
+            { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
@@ -106,6 +108,15 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            {
+              label: 'Analytics Events',
+              collapsed: true,
+              items: [
+                { label: 'Instrument Analytics Events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Product Page View Event', link: '/how-tos/instrument-product-page-view-event/' },
+                { label: 'Add to Cart Event', link: '/how-tos/instrument-add-to-cart-event/' },
+              ],
+            },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
             {
