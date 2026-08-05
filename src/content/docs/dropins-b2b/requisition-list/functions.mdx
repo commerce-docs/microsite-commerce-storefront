@@ -13,10 +13,10 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Requisition List drop-in provides **12 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, and managing list metadata.
+The Requisition List drop-in provides **18 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, managing list metadata, and sharing lists with company colleagues.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.3.0</strong>
+<strong>Version: 1.4.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -29,12 +29,18 @@ The Requisition List drop-in provides **12 API functions** for managing requisit
 | [`createRequisitionList`](#createrequisitionlist) | Creates a new requisition list with the name and description provided for the logged-in user. |
 | [`deleteRequisitionList`](#deleterequisitionlist) | Deletes a requisition list identified by UID. |
 | [`deleteRequisitionListItems`](#deleterequisitionlistitems) | Deletes items from a requisition list. |
+| [`enrichConfigurableProducts`](#enrichconfigurableproducts) | Resolves the selected variants for configurable product items. |
 | [`getRequisitionList`](#getrequisitionlist) | Returns information about the requested requisition list for the logged-in user. |
 | [`getRequisitionLists`](#getrequisitionlists) | Returns the requisition lists for the logged-in user. |
 | [`getStoreConfig`](#getstoreconfig) | Returns details about the store configuration. |
 | [`moveItemsBetweenRequisitionLists`](#moveitemsbetweenrequisitionlists) | Moves items from one requisition list to another for a logged-in user. |
 | [`updateRequisitionList`](#updaterequisitionlist) | Updates an existing requisition list with the name and description provided for the logged-in user. |
 | [`updateRequisitionListItems`](#updaterequisitionlistitems) | Updates the items of an existing requisition list with the quantity and options provided for the logged-in user. |
+| [`getCompanyUsers`](#getcompanyusers) | Returns a list of active company users for the current company. |
+| [`getSharedRequisitionList`](#getsharedrequisitionlist) | Retrieves a shared requisition list by its share token. |
+| [`importSharedRequisitionList`](#importsharedrequisitionlist) | Imports a shared requisition list into the current customer's account using a share token. |
+| [`shareRequisitionListByEmail`](#sharerequisitionlistbyemail) | Shares a requisition list with one or more company users by email. |
+| [`shareRequisitionListByToken`](#sharerequisitionlistbytoken) | Generates a shareable token for a requisition list. |
 
 </TableWrapper>
 
@@ -193,6 +199,32 @@ Emits the `requisitionList/data` event.
 ### Returns
 
 Returns [`RequisitionList`](#requisitionlist) or `null`.
+
+## enrichConfigurableProducts
+
+Resolves the selected variants for configurable product items in a requisition list. The function uses each item's selected option labels to retrieve the matching simple product so the item can display the selected variant's SKU, price, and thumbnail.
+
+```ts
+const enrichConfigurableProducts = async (
+  items: Item[]
+): Promise<Item[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `items` | `Item[]` | Yes | The requisition list items to enrich. Non-configurable items are returned unchanged. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the items with selected configurable product details attached. See the [`RequisitionListItemModel`](/dropins-b2b/requisition-list/initialization/#requisitionlistitemmodel).
 
 ## getRequisitionList
 
@@ -423,6 +455,176 @@ interface CopyItemsResult {
 ```
 
 - `destinationList`: The updated destination requisition list after items have been copied, or `null` if not available.
+
+## getCompanyUsers
+
+Returns a list of active company users for the current company. Used to populate the recipient picker in the share-by-email flow.
+
+```ts
+const getCompanyUsers = async (): Promise<CompanyUser[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of `CompanyUser` objects.
+
+```ts
+interface CompanyUser {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+```
+
+## getSharedRequisitionList
+
+Retrieves a shared requisition list by its share token. The caller must be authenticated and belong to the same company as the sender. Returns the sender's display name alongside the read-only requisition list data.
+
+```ts
+const getSharedRequisitionList = async (
+  token: string,
+  currentPage?: number,
+  pageSize?: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
+): Promise<SharedRequisitionListResult | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The share token from the URL (e.g. from `?requisition_id=<token>`). |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Defaults to page 1 if not specified. |
+| `pageSize` | `number` | No | The number of items to return per page. |
+| `enrichConfigurableProducts` | `(items: Item[]) => Promise<Item[]>` | No | Optional function to enrich configurable product items with variant data before returning. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `SharedRequisitionListResult | null`. Returns `null` if the token is valid but the requisition list cannot be resolved.
+
+```ts
+interface SharedRequisitionListResult {
+  senderName: string;
+  requisitionList: RequisitionList;
+}
+```
+
+## importSharedRequisitionList
+
+Imports a shared requisition list into the current customer's account using a share token. After a successful import, the recipient has full edit rights on the list.
+
+```ts
+const importSharedRequisitionList = async (
+  token: string
+): Promise<ImportSharedRequisitionListResult>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The share token extracted from the URL (e.g. from `?requisition_id=<token>`). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `ImportSharedRequisitionListResult`.
+
+```ts
+interface ImportSharedRequisitionListResult {
+  requisitionList: RequisitionList | null;
+  userErrors: ImportSharedRequisitionListUserError[];
+}
+
+interface ImportSharedRequisitionListUserError {
+  message: string;
+  code: string;
+}
+```
+
+## shareRequisitionListByEmail
+
+Shares a requisition list with one or more company users by email. An email notification is sent to each recipient with a link to import the list.
+
+```ts
+const shareRequisitionListByEmail = async (
+  requisitionListUid: string,
+  customerUids: string[]
+): Promise<Array<ShareRequisitionListByEmailError> | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | The unique identifier of the requisition list to share. |
+| `customerUids` | `string[]` | Yes | An array of company user IDs to share the list with. Obtain these from [`getCompanyUsers`](#getcompanyusers). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `null` on success, or an array of error objects if the share failed.
+
+```ts
+interface ShareRequisitionListByEmailError {
+  message: string;
+  code: string;
+}
+```
+
+## shareRequisitionListByToken
+
+Generates a shareable token for a requisition list. The token is used to build a share URL that recipients can open to import the list into their own account.
+
+```ts
+const shareRequisitionListByToken = async (
+  requisitionListUid: string
+): Promise<ShareRequisitionListByTokenResult>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | The unique identifier of the requisition list to generate a share token for. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `ShareRequisitionListByTokenResult`.
+
+```ts
+interface ShareRequisitionListByTokenResult {
+  token: string | null;
+  errorMessage: string | null;
+}
+```
 
 ## Data Models
 

@@ -1,0 +1,64 @@
+---
+title: Seller-assisted buying
+description: Learn how seller-assisted buying lets a store administrator shop on a customer's behalf, and where each part is documented across the Auth, Account, and Order drop-ins.
+sidebar:
+  label: Seller-assisted buying
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import Term from '@components/Term.astro';
+import Diagram from '@components/Diagram.astro';
+
+Seller-assisted buying lets a store administrator log in as a customer and act on their behalf by browsing products, building a cart, and placing orders. During the session, a banner tells the administrator they are browsing as the customer. Afterward, the customer can review every administrator action in their account activity log.
+
+Seller-assisted buying is not a separate <Term>drop-in</Term> or package. It extends three drop-ins you already have and adds a session banner to the <Term>boilerplate</Term>.
+
+<Aside type="note">
+The underlying Adobe Commerce <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/customers/customer-accounts/manage/login-as-customer" text="Login as Customer" /> feature works for both B2B and B2C stores. Common use cases include sales representatives assisting B2B buyers and customer support agents helping B2C shoppers. Because the feature spans several drop-ins rather than belonging to one, this page brings the pieces together in a single place.
+</Aside>
+
+## How it works
+
+When seller-assisted buying is enabled at the store level, an administrator generates a one-time password (OTP) in the Admin. The administrator uses the OTP to sign in as the customer through the standard storefront sign-in flow. The `storefront-auth` drop-in decodes the returned JSON Web Token (JWT) and checks it for an admin identifier. When the token includes an admin identifier, the drop-in sets an `auth_dropin_admin_session` cookie.
+
+The boilerplate header block reads that cookie on every page load. When the cookie is present, the block renders the session banner. The banner listens to the `authenticated` event and removes itself when the session ends. See [Session banner](#session-banner) for the UI details and CSS classes.
+
+If remote shopping assistance is disabled at the store level, both the settings block and the activity block display a feature-disabled message rather than their normal UI.
+
+## Where each part is documented
+
+Because the feature spans several drop-ins, each piece lives with the drop-in it belongs to:
+
+- Consent checkbox on the sign-up form — [User Auth — SignUp container](/dropins/user-auth/containers/sign-up/#seller-assisted-buying-consent) and the [`RemoteShoppingAssistanceConsent` slot](/dropins/user-auth/slots/#remoteshoppingassistanceconsent-slot). To relabel the checkbox or change its tooltip text, go to **Stores** > **Settings** > **Configuration** > **Customers** > **Login as Customer** in the Admin.
+- Customer preference control (`commerce-seller-assisted-buying-settings`) — [User Account — SellerAssistedBuyingSettings container](/dropins/user-account/containers/seller-assisted-buying-settings/)
+- Administrator activity log (`commerce-seller-assisted-buying-activity`) — [User Account — SellerAssistedBuyingActivity container](/dropins/user-account/containers/seller-assisted-buying-activity/)
+- Order label in the orders list — [User Account — OrdersList container](/dropins/user-account/containers/orders-list/#administrator-assisted-orders)
+- Order label on the order status page — [Order — OrderStatus container](/dropins/order/containers/order-status/#administrator-assisted-orders)
+- Functions and data models — [User Account — Functions](/dropins/user-account/functions/#getadminassistanceactions)
+- Text and labels — [User Account — Dictionary](/dropins/user-account/dictionary/#seller-assisted-buying-keys) and [Order — Dictionary](/dropins/order/dictionary/)
+- CSS classes — [User Account — Styles](/dropins/user-account/styles/)
+
+## Session banner
+
+<Diagram caption="Session banner displayed during an administrator-assisted buying session">
+  ![Session banner showing administrator connection status and Close Session button](@images/dropins/SAB-Boilerplate.png)
+</Diagram>
+
+The session banner lives in the boilerplate header block, not in a drop-in. It renders automatically when an admin session is active. You don't need to add any code. The banner shows the customer's name and the website name, and includes a "Close Session" button that calls `revokeCustomerToken()` and redirects to the home page. The CSS and rendering logic ship with the header block (`blocks/header/header.css` and `blocks/header/renderSellerAssistedBuyingBanner.js`).
+
+Target these classes to restyle the banner:
+
+```css title="blocks/header/header.css"
+/* Adds top padding to page content so the banner does not overlap it */
+body:has(.seller-assisted-buying-banner) {}
+
+/* Banner strip — rendered at the top of the page during an assisted session */
+.seller-assisted-buying-banner {}
+.seller-assisted-buying-banner__message {}
+.seller-assisted-buying-banner__close-button {}
+```
+
+If you change the banner height, update `body:has(.seller-assisted-buying-banner)` at the same time so the page content shifts down by the same amount.
+
+{/* Verified against adobe-commerce/storefront-auth (main): src/lib/jwtUtils.ts (decodeJwtToken, isAdminToken via positive admin_id), src/api/getCustomerToken/getCustomerToken.ts (sets auth_dropin_admin_session cookie, emits authenticated), src/api/revokeCustomerToken/revokeCustomerToken.ts. Banner verified against hlxsites/aem-boilerplate-commerce (integration branch, PR #1283, merged 2026-06-05): blocks/header/header.js reads the cookie and renders blocks/header/renderSellerAssistedBuyingBanner.js (customer name + website name, Close Session calls revokeCustomerToken then redirects home, removes itself on authenticated event). Block examples verified against integration branch: blocks/commerce-seller-assisted-buying-settings/commerce-seller-assisted-buying-settings.js (renders SellerAssistedBuyingSettings with no extra options) and blocks/commerce-seller-assisted-buying-activity/commerce-seller-assisted-buying-activity.js (renders SellerAssistedBuyingActivity with withWrapper: false). */}

@@ -9,10 +9,10 @@
     "astro": "astro",
     "dev": "astro dev --open",
     "start": "pnpm run build && pnpm run preview",
-    "build": "NODE_ENV=development astro build",
+    "build": "npm run generate:llms && NODE_ENV=development astro build",
     "preview": "NODE_ENV=development astro preview --open",
-    "build:prod": "NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront astro build",
-    "build:prod-fast": "NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront SKIP_COMPRESSION=true astro build",
+    "build:prod": "npm run generate:llms && NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront astro build",
+    "build:prod-fast": "npm run generate:llms && NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront SKIP_COMPRESSION=true astro build",
     "build:stage": "NODE_ENV=github VITE_GITHUB_BASE_PATH='' pnpm astro build --site ${STAGE_URL}",
     "preview:prod": "NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront astro preview",
     "preview:prod-fast": "NODE_ENV=production VITE_PROD_BASE_PATH=/developer/commerce/storefront SKIP_COMPRESSION=true astro preview",
@@ -27,6 +27,8 @@
     "apply-b2b-small-changes": "node scripts/apply-b2b-small-changes.js",
     "run-dropin-generators": "node scripts/run-dropin-generators.js",
     "preserve-paths": "node scripts/preserve-paths.js",
+    "patch:storybook-iframe": "node scripts/patch-storybook-iframe-metadata.mjs",
+    "build:storybook": "storybook build --output-dir public/storybook-static && npm run patch:storybook-iframe",
     "b2b-small-changes": "npm run run-dropin-generators",
     "generate-b2b-docs": "node scripts/generate-b2b-docs.js",
     "regenerate-b2b-overviews": "node scripts/regenerate-b2b-overviews.js",
@@ -36,6 +38,7 @@
     "update-all-versions": "npm run update-boilerplate-versions && npm run update-dropin-versions",
     "generate-all-docs": "node scripts/generate-all-docs.js",
     "generate-boilerplate-docs": "node scripts/@generate-boilerplate-docs.js",
+    "audit:docs": "tsx scripts/audit-docs.ts",
     "validate-diagrams": "node scripts/validate-diagrams.js",
     "verify-enrichments": "node scripts/verify-enrichments.js",
     "validate-b2b-enrichments": "node scripts/validate-b2b-enrichments.js",
@@ -71,7 +74,9 @@
     "validate:all-examples:small-changes": "node scripts/validate-all-examples.js small-changes",
     "test:example-runtime": "node scripts/test-example-runtime.mjs",
     "typecheck:examples": "node scripts/typecheck-examples.mjs",
-    "rollback:docs": "node scripts/rollback-generated-docs.js"
+    "rollback:docs": "node scripts/rollback-generated-docs.js",
+    "generate:llms": "node scripts/generate-llms-full.js",
+    "generate:llms-full": "npm run generate:llms"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -166,6 +171,7 @@
     "eslint-plugin-mdx": "^3.2.0",
     "jsdom": "^25.0.1",
     "playwright": "^1.57.0",
+    "tsx": "^4.21.0",
     "vite": "7.3.2"
   },
   "engines": {

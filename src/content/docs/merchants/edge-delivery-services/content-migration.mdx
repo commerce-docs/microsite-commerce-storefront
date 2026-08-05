@@ -1,0 +1,164 @@
+---
+title: Content migration
+description: Copy content between DA.live projects (for example, staging to production), then preview and publish with Traverse, Import, and Bulk Operations.
+time: 20 minutes
+---
+
+import Link from '@components/Link.astro';
+import Term from '@components/Term.astro';
+import Diagram from '@components/Diagram.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+
+To migrate content from one Document Authoring project to another, you use the Traverse, Import, and Bulk Operations apps. This page shows you how.
+
+<Aside type="tip" title="Authoring on AEM Sites instead?">
+This workflow is for DA.live only. For Universal Editor, see [Localization (Universal Editor)](/merchants/quick-start/content-localization-universal-editor/).
+</Aside>
+
+<Diagram caption="Migrate content between Document Authoring projects.">
+  ![Migrate content between Document Authoring projects.](@images/merchants/MigrationProcess.svg)
+</Diagram>
+
+## Before you start
+
+You'll need:
+
+- Write access to both projects on DA.live
+- The organization and site path for each project (for example, `/acme/storefront-staging` and `/acme/storefront`)
+- A target project that already exists with the right GitHub repository and Commerce backend
+- Permission to preview and publish on the target, or a developer who can run Bulk Operations for you
+
+## Step-by-step
+
+<Tasks>
+
+<Task>
+### Traverse the source project
+
+<Steps>
+
+1. Open <Link href="https://da.live" text="DA.live" />, select **Apps**, and open **Traverse**.
+
+1. Enter the source path `/organization/site` (for example, `/acme/storefront-staging`). Start with `/`.
+
+1. Select **Crawl**, then **Copy list**.
+
+</Steps>
+
+<Diagram caption="Traverse your source project.">
+  ![Traverse your source project.](@images/merchants/TraverseSourceProject.png)
+</Diagram>
+
+</Task>
+
+<Task>
+### Import into the target project
+
+<Aside type="caution">
+Import overwrites any file in the target project that has the same name as a file in your list. Review your list before you run it and move any files you want to keep to a different folder in the target project so you can copy them back later as needed.
+</Aside>
+
+<Steps>
+
+1. Open **Import** from **Apps** (<Link href="https://da.live/apps/import" text="da.live/apps/import" />).
+
+1. Paste the file paths from the Traverse into **By Url**.
+
+1. In the **Into** field, enter your organization and target site name (for example, `acme` and `storefront`).
+
+1. Select the **Import** button.
+
+</Steps>
+
+
+<Diagram caption="Import into the target project.">
+  ![Import your content into the target project.](@images/merchants/ImportContent.png)
+</Diagram>
+
+</Task>
+
+<Task>
+### Traverse the target project
+
+<Steps>
+
+1. Open the **Traverse** app again.
+
+1. Enter the target path (for example, `/acme/storefront`).
+
+1. Select the **Crawl** button, then the **Copy list** button. Use this target list in Bulk Operations, not the source list.
+
+</Steps>
+
+<Diagram caption="Traverse the target project.">
+  ![Traverse your target project.](@images/merchants/TraverseTargetProject.png)
+</Diagram>
+
+</Task>
+
+<Task>
+### Preview and publish
+
+<Steps>
+
+1. Open the **Bulk Operations** app from **Apps**.
+
+1. Paste the target Traverse list into the **URLs** field.
+
+1. Choose **Preview**, then select **Submit**. Spot-check home, product list, cart, and checkout on the preview site.
+
+1. Choose **Publish**, then select **Submit**. Confirm the live site.
+
+</Steps>
+
+<Diagram caption="Preview and publish on the target site.">
+  ![Preview and publish on the target site.](@images/merchants/BulkOperations.png)
+</Diagram>
+
+</Task>
+
+</Tasks>
+
+## Verify
+
+- Open migrated content in <Link href="https://da.live" text="DA.live" /> and on the preview site.
+- Spot check the home (index) page, product list page, product detail page, cart page, and checkout page.
+
+## Reference
+
+### What Import copies
+
+The **Traverse** app lists page paths in a project. The **Import** app copies only the paths you paste from that list. A typical crawl lists storefront documents such as `cart.html` and `checkout.html`, not every image or label sheet file.
+
+Import does not copy storefront code, Commerce catalog data, or shopper cart session data in Commerce. After Import, you still run the **Bulk Operations** app so the preview and live sites show the update.
+
+### Images and media
+
+When you import a path, you copy the page content and the image references inside that page. Traverse does not list a top-level `media` folder or hidden asset folders. Add `media/...`, sheet, or JSON paths to your list when you need them.
+
+If you see a broken image on the target preview site, the page references a media path (for example, `/media/hero.png`) that was not imported. Add that path to the Import list and run Import again, or upload the file in the target project on DA.live. See <Link href="https://docs.da.live/authors/guides/adding-media" text="Working with media" /> on docs.da.live.
+
+### If button labels or URLs look wrong
+
+Review [placeholder sheets](/merchants/blocks/placeholder-sheets/) (label text for cart, checkout, and other blocks) and `redirects.json` for URL-forwarding rules.
+
+### Troubleshooting
+
+<TableWrapper>
+
+| Symptom | What to try |
+| --- | --- |
+| Crawl returns nothing | Start the path with `/`. Confirm you have access to the project folder. |
+| Import fails | Confirm access to both projects. |
+| Broken images on preview | Add missing `media/...` paths to the Import list and import again. |
+| Live site unchanged | Run **Publish** after **Preview**. |
+
+</TableWrapper>
+
+## Related topics
+
+- <Link href="https://docs.da.live/authors/guides/apps/content-tree" text="Traversing a Content Tree" /> (docs.da.live)

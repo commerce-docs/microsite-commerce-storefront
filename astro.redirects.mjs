@@ -22,6 +22,34 @@ export function generateRedirects(basePath) {
         '/customize/style': `${basePath}/dropins/all/styling`,
         '/customize': `${basePath}/dropins/all/introduction`,
 
+        // Legacy /dropins/customize/* URLs (same targets as /customize/*; crawlers still hit the old paths)
+        '/dropins/customize/design-tokens': `${basePath}/dropins/all/branding`,
+        '/dropins/customize/enrich': `${basePath}/dropins/all/enriching`,
+        '/dropins/customize/localize': `${basePath}/dropins/all/localizing`,
+        '/dropins/customize/slots': `${basePath}/dropins/all/extending`,
+        '/dropins/customize/style': `${basePath}/dropins/all/styling`,
+        '/dropins/customize': `${basePath}/dropins/all/introduction`,
+
+        // Cart container slug alias
+        '/dropins/cart/containers/minicart': `${basePath}/dropins/cart/containers/mini-cart`,
+
+        // Legacy PDP paths under /dropins/product-details/pdp-* (older site map and bookmarks)
+        '/dropins/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
+        '/dropins/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
+        '/dropins/product-details/pdp-initialization': `${basePath}/dropins/product-details/initialization`,
+        '/dropins/product-details/pdp-installation': `${basePath}/dropins/product-details/quick-start`,
+        '/dropins/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
+        '/dropins/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
+
+        // Other legacy doc paths from crawlers and old bookmarks
+        '/dropins/user-account/tutorials': `${basePath}/dropins/user-account/`,
+        '/dropins/user-auth/auth-functions': `${basePath}/dropins/user-auth/functions`,
+        '/dropins/b2b/overview': `${basePath}/dropins-b2b/`,
+        '/dropins/checkout/containers/order-confirmation-header': `${basePath}/dropins/checkout/`,
+        '/dropins/checkout/containers/overview': `${basePath}/dropins/checkout/containers/`,
+        '/merchant/terms-and-conditions': `${basePath}/merchants/content-customizations/terms-and-conditions`,
+        '/superstar': `${basePath}/`,
+
         // ========= DROP-INS REDIRECTS =========
         '/dropins/all/installing': `${basePath}/dropins/all/quick-start`,
         '/dropins/all/anatomy': `${basePath}/dropins/all/introduction`,
@@ -55,8 +83,10 @@ export function generateRedirects(basePath) {
         // Product Details drop-in
         '/product-details/pdp-containers': `${basePath}/dropins/product-details/containers`,
         '/product-details/pdp-functions': `${basePath}/dropins/product-details/functions`,
+        '/product-details/pdp-initialization': `${basePath}/dropins/product-details/initialization`,
         '/product-details/pdp-installation': `${basePath}/dropins/product-details/quick-start`,
         '/product-details/pdp-introduction': `${basePath}/dropins/product-details/`,
+        '/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
         '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
         '/dropins/product-details/installation': `${basePath}/dropins/product-details/quick-start`,
 
@@ -90,6 +120,9 @@ export function generateRedirects(basePath) {
         '/get-started/release': `${basePath}/releases/`,
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/seo': `${basePath}/setup/seo/`,
+        '/get-started/seo/': `${basePath}/setup/seo/`,
+        '/get-started/dropins-mcp': `${basePath}/ai/`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
@@ -101,8 +134,17 @@ export function generateRedirects(basePath) {
         '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
-        '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
-        '/setup/configuration/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility/install`,
+        '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
+        '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
+        '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
+        '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
+        '/setup/configuration/storefront-compatibility/v248/': `${basePath}/reference/storefront-compatibility/v248`,
+        '/resources/v247': `${basePath}/reference/storefront-compatibility/v247`,
+        '/resources/v247/': `${basePath}/reference/storefront-compatibility/v247`,
+        '/resources/v248': `${basePath}/reference/storefront-compatibility/v248`,
+        '/resources/v248/': `${basePath}/reference/storefront-compatibility/v248`,
+        '/setup/configuration/storefront-compatibility-b2b': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
+        '/setup/configuration/storefront-compatibility-b2b/': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
         '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
@@ -194,5 +236,13 @@ export function generateRedirects(basePath) {
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
         '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
         '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
+        '/boilerplate/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
+        '/build-with-ai': `${basePath}/get-started/build-with-ai`,
+        '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,
+
+        // ========= AI SECTION REDIRECTS =========
+        // ai-agent-skills.mdx and build-with-ai.mdx renamed to match sidebar labels
+        '/ai/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
+        '/ai/build-with-ai': `${basePath}/ai/static-text-files`,
     };
 }

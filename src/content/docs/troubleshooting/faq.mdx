@@ -186,14 +186,37 @@ If the `x-error` header shows a failure when loading an `.md` file from content-
 Product detail pages (PDPs) may return a 404 when the requested URL cannot be resolved to a document in the Edge Delivery content pipeline. In most cases, this indicates that no corresponding content resource exists or is accessible for that path. Verify the following:
 
 **Overlay / BYOM not set up:** If your project depends on prerendering or BYOM (bring your own markup) to serve PDPs, make sure it is fully configured. See [AEM Commerce prerender](/setup/configuration/aem-prerender/).
-- **Folder mapping and uppercase SKUs:** If you are using the **deprecated** folder mapping method for PDPs, URLs must be lowercase. If your SKUs contain uppercase letters, you need to provide metadata (for example, using bulk metadata) so the correct content is matched to each URL. See:
-- <Link href={"https://www.aem.live/developer/folder-mapping"} text={"Folder mapping"} />
-- <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"Bulk metadata"} />
-- [SEO metadata](/setup/seo/metadata/#generate-metadata)
+- **Folder mapping (deprecated) and uppercase SKUs:** Folder mapping is deprecated and is no longer the recommended approach. To add or update folder mappings, use the Config Service API instead:
+
+  ```http
+  GET  https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+  {/* Modify the JSON object and POST it back to the same endpoint */}
+  POST https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
+  ```
+
+  Use GET to read the current mapping, edit the JSON object, then POST it back to the same URL.
+
+  See the <Link href={"https://www.aem.live/docs/admin.html"} text={"Admin API reference"} /> and the <Link href={"https://www.aem.live/developer/folder-mapping"} text={"folder mapping deprecation notice"} /> for details.
+
+  If you are still using folder mapping, note that URLs must be lowercase. If your SKUs contain uppercase letters, you need to provide metadata (for example, using bulk metadata) so the correct content is matched to each URL. See:
+
+  - <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"Bulk metadata"} />
+  - [SEO metadata](/setup/seo/metadata/#generate-metadata)
 
 ![Example storefront URL path for a product detail page](@images/troubleshoot/eds-pdp-url-path.png)
 
 ![productView JSON excerpt with an uppercase SKU](@images/troubleshoot/product-view-uppercase-sku.png)
+
+## `search_commerce_docs` is not available
+
+This tool requires the Adobe I/O CLI authenticated with an Adobe ID. Install it and log in:
+
+```bash
+npm install -g @adobe/aio-cli
+aio auth login
+```
+
+Without it, `search_docs` provides local documentation coverage and is always available.
 
 ## I can't preview, publish, or make content changes
 

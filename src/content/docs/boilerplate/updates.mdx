@@ -1,6 +1,6 @@
 ---
-title: Updates
-description: Learn how to upgrade your existing Adobe Commerce storefront to incorporate the latest features, security updates, and performance improvements.
+title: "Boilerplate updates"
+description: Learn how to upgrade your existing Adobe Commerce Storefront to incorporate the latest features, security updates, and performance improvements.
 sidebar:
   label: Updates
   order: 7
@@ -19,18 +19,23 @@ import Option from '@components/Option.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Upgrade your Adobe Commerce storefront to get the latest features, security updates, and performance improvements from the Commerce Boilerplate.
+Upgrade your Adobe Commerce Storefront to get the latest features, security updates, and performance improvements from the Commerce Boilerplate.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Boilerplate version: 7.0.0</strong>
-</div>
+<Aside type="note" title="Two distinct update paths">
+You can keep your storefront current in two ways:
+
+- **Updating drop-in npm packages** (`@dropins/*`, `@adobe/*`) — This is the primary update path for every Commerce boilerplate storefront. Drop-in packages follow semantic versioning: minor and patch releases stay non-breaking by contract. Run `npm outdated` to see available updates, or enable the `update-dropins.yml` GitHub Actions workflow included in the boilerplate to receive automatic weekly pull requests when newer stable versions are available.
+
+- **Merging the upstream Commerce boilerplate into your repository** — This path is optional and advanced. Most teams start from a new GitHub repository generated from the Commerce boilerplate template, then clone that repository locally. You are under no obligation to pull upstream boilerplate changes into your project. Merging upstream can bring in new integration patterns or bug fixes, but expect manual conflict resolution and a careful review of your customizations. Reserve this path when a specific upstream improvement is worth the effort.
+
+Suite releases are tagged snapshots that validate a specific combination of drop-in versions and boilerplate code. They work best as starting points for new implementations, not as recurring upgrade targets for existing storefronts.
+</Aside>
 
 ## Overview
 
 When you initially scaffold your Commerce storefront from the Commerce Boilerplate, you create a snapshot of the boilerplate at that point in time. As Adobe continues to improve the boilerplate with new features, bug fixes, and performance optimizations, your existing project won't automatically receive these updates.
 
-
-This guide shows you how to upgrade your storefront while preserving your customizations.
+This page shows you how to upgrade your storefront while preserving your customizations.
 
 ## Understanding the upgrade landscape
 
@@ -38,9 +43,9 @@ Upgrading is ongoing, not a one-time task. Regular, small updates are generally 
 
 ### What gets updated
 
-Most of your storefront's critical Commerce logic is now delivered through NPM packages, making upgrades significantly easier and more reliable. Upgrades typically involve these main areas:
+Most of your storefront's critical Commerce logic is now delivered through npm packages, making upgrades significantly easier and more reliable. Upgrades typically involve these main areas:
 
-**<Term>Drop-in components</Term>:** NPM packages containing the core Commerce functionality, including the following:
+**<Term>Drop-in components</Term>:** npm packages containing the core Commerce functionality, including the following:
 
 - `@dropins/storefront-account`
 - `@dropins/storefront-auth`
@@ -55,7 +60,22 @@ Most of your storefront's critical Commerce logic is now delivered through NPM p
 - `@dropins/storefront-wishlist`
 - `@dropins/tools`
 
-{/* TODO: Update this topic by including B2B drop-ins when they are released in Jan 2026. See issue #701 for more details. */}
+If your project serves business buyers, install and upgrade these business-to-business (B2B) packages too:
+
+- `@dropins/storefront-company-management`
+- `@dropins/storefront-company-switcher`
+- `@dropins/storefront-purchase-order`
+- `@dropins/storefront-quote-management`
+- `@dropins/storefront-quick-order`
+- `@dropins/storefront-requisition-list`
+
+The `*` in `npm list @dropins/storefront-*` and `npm update @dropins/storefront-*` is a wildcard: npm matches every installed package whose name starts with `@dropins/storefront-`, including these B2B packages when they are in your project. For what each drop-in does and how to connect it in your storefront, see [B2B drop-ins overview](/dropins-b2b/).
+
+On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, Adobe manages Storefront Compatibility packages on Commerce for you, so upgrades on this page are mainly npm packages and boilerplate changes—not a separate compatibility install checklist.
+
+<Aside type="tip" title="Commerce on Cloud or on-premises">
+Coordinate Commerce compatibility package upgrades with npm and boilerplate changes on this page. For B2B drop-ins, see [Storefront Compatibility B2B Package](/setup/configuration/storefront-compatibility/b2b/) and [Manual installation](/setup/configuration/storefront-compatibility/install/#install-the-b2b-package).
+</Aside>
 
 **Boilerplate <Term>integration layer</Term>:** storefront-level files that integrate drop-ins
 
@@ -63,7 +83,7 @@ Most of your storefront's critical Commerce logic is now delivered through NPM p
 
 | File | Purpose | Update Frequency | Typical Changes |
 |------|---------|------------------|-----------------|
-| `blocks/*` | Block integration folders | Frequent | Drop-in integration JS and CSS. Rare updates to non-drop-in block examples (cards, accordion, etc) sourced from other boilerplates |
+| `blocks/*` | Block integration folders | Frequent | Drop-in integration JS and CSS. Rare updates to non-drop-in block examples (cards, accordion, and so on) sourced from other boilerplates |
 | `scripts/aem.js` | Core AEM functionality | Very Rare | Core platform improvements |
 | `scripts/commerce.js` | Commerce-specific integration and utilities | Rare | Integration improvements, new utility functions |
 | `scripts/initializers/*` | Drop-in initialization scripts | Moderate | New drop-in integrations, configuration updates |
@@ -73,11 +93,11 @@ Most of your storefront's critical Commerce logic is now delivered through NPM p
 
 ### Why upgrades are now easier
 
-The Commerce Boilerplate team moved most of the complex Commerce logic into NPM-distributed drop-in packages, providing key advantages:
+The Commerce Boilerplate team moved most of the complex Commerce logic into npm-distributed drop-in packages, providing key advantages:
 
-- **Most logic is packaged**: Core Commerce functionality, business rules, and complex state management are delivered through NPM packages
+- **Most logic is packaged**: Core Commerce functionality, business rules, and complex state management are delivered through npm packages
 - **Simplified storefront code**: Your project primarily contains integration code, styling, and configuration
-- **Standard NPM upgrades**: Most updates can be applied using standard `npm install` commands
+- **Standard npm upgrades**: Most updates can be applied using standard `npm install` commands
 - **Reduced conflicts**: Fewer files in your project means fewer merge conflicts when updating
 - **Consistent behavior**: All storefronts benefit from the same tested, optimized Commerce logic
 
@@ -86,46 +106,49 @@ The Commerce Boilerplate team moved most of the complex Commerce logic into NPM-
 <Options label="Strategy">
 <Option>
 
-### NPM package updates
+### npm package updates
 
 <Aside type="tip" title="Recommended for most cases">
-Most Commerce logic lives in NPM packages, so this approach handles upgrades with minimal risk.
+Most Commerce logic lives in npm packages, so this approach handles upgrades with minimal risk.
 </Aside>
 
-#### Step 1: Update drop-in components
+<Steps>
+1. Update drop-in components
 
-Most of your Commerce functionality improvements come through these package updates:
+   Most of your Commerce functionality improvements come through these package updates:
 
-Check your current versions:
+   Check your current versions:
 
-```bash
-npm list @dropins/storefront-*
-```
+   ```bash
+   npm list @dropins/storefront-*
+   ```
 
-Update individual components:
+   Update individual components:
 
-```bash
-npm install @dropins/storefront-cart@latest
-npm install @dropins/storefront-checkout@latest
-# Repeat for other components as needed
-```
+   ```bash
+   npm install @dropins/storefront-cart@latest
+   npm install @dropins/storefront-checkout@latest
+   # Repeat for other components as needed
+   ```
 
-Or update all drop-in components at once:
+   Or update all drop-in components at once:
 
-```bash
-npm update @dropins/storefront-*
-```
+   ```bash
+   npm update @dropins/storefront-*
+   ```
 
 
-#### Step 2: Test your storefront
+1. Test your storefront
 
-Since most logic changes are packaged, testing focuses on integration points:
+   Since most logic changes are packaged, testing focuses on integration points:
 
-Start your local development environment:
+   Start your local development environment:
 
-```bash
-npm start
-```
+   ```bash
+   npm start
+   ```
+
+</Steps>
 
 Test all Commerce functionality:
 
@@ -134,6 +157,7 @@ Test all Commerce functionality:
 - Checkout flow
 - User account features
 - Search and navigation
+- B2B flows you ship (for example, company profiles and roles, negotiable quotes, purchase orders, requisition lists, quick order, or company switching), when those packages are in your project
 
 Review the release notes for any integration changes that may affect your implementation.
 
@@ -169,15 +193,17 @@ When you need integration layer improvements or new features that require change
    git fetch upstream
    ```
 
-2. **Review available updates**
+1. **Review available updates**
 
    Compare your current branch with the latest boilerplate to understand what changes are available.
 
-   For detailed instructions on reviewing upstream changes, see <Link href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork" text="GitHub's guide on syncing a fork" /> and <Link href="https://docs.github.com/en/pull-requests/committing-changes-to-your-project/viewing-and-comparing-commits/comparing-commits" text="comparing commits" />.
+   For detailed instructions on reviewing upstream changes, see <Link href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork" text="GitHub page on syncing a fork" /> and <Link href="https://docs.github.com/en/pull-requests/committing-changes-to-your-project/viewing-and-comparing-commits/comparing-commits" text="comparing commits" />.
+
+   A storefront repo created from the Commerce boilerplate template is not a GitHub fork of the boilerplate, but you can still add an `upstream` remote and merge or cherry-pick using the same Git operations.
 
    Focus your review on key files like `scripts/commerce.js` and the `scripts/initializers/` directory where most Commerce-specific updates occur.
 
-3. **Identify changes to include**
+1. **Identify changes to include**
 
    Focus on these integration layer improvements:
 
@@ -201,10 +227,11 @@ When you need integration layer improvements or new features that require change
    Each Commerce block now includes a README file that describes the block's purpose and functionality. These README files are particularly helpful when diffing changes, as they provide a summary of what has changed in the block before you examine the code.
    </Aside>
 
+   If you use B2B Commerce blocks and patterns from the Commerce Boilerplate, compare your branch with the upstream repository's `b2b` branch as well as `main`. The `b2b` branch holds B2B-oriented block and integration updates. Adopt the same selective merge or cherry-pick approach so you do not overwrite your customizations.
 
-4. **Apply selected changes**
+1. **Apply selected changes**
 
-   Create a branch for your upgrade work to isolate changes and test before merging to main. Use a descriptive name indicating the upgrade with a timeframe or version (e.g., `upgrade-august-2025` or `upgrade-cart-v2.1.0`).
+   Create a branch for your upgrade work to isolate changes and test before merging to main. Use a descriptive name indicating the upgrade with a timeframe or version (for example, `upgrade-august-2025` or `upgrade-cart-v2.1.0`).
 
    Once you're on your upgrade branch, you have several options for applying changes from the upstream boilerplate:
 
@@ -213,7 +240,7 @@ When you need integration layer improvements or new features that require change
 
    For each change you apply, commit it with a clear message describing what upstream improvement you're incorporating. This creates a clean history that makes it easy to understand what was updated and why, which will be valuable for future upgrades and troubleshooting.
 
-5. **Resolve integration points and test**
+1. **Resolve integration points and test**
 
    - Resolve any conflicts in integration code, preserving your customizations
    - Test thoroughly in your development environment
@@ -227,30 +254,30 @@ When you need integration layer improvements or new features that require change
 
 ## Special considerations for early-adopter projects
 
-<Aside type="caution">
 If you scaffolded your project before mid-2025, you may have encountered a major architectural change: Commerce logic moved from `scripts.js` to `scripts/commerce.js`. This shift affects your update scope but uses the same methods above.
-</Aside>
 
 ### Understanding the architectural change
 
 The major refactoring (PR #567) reorganized the boilerplate architecture with two significant improvements:
 
-**1. Separation of AEM and Commerce logic:**
+<Steps>
+1. Separation of AEM and Commerce logic:
+   - `scripts/scripts.js` - Core AEM functionality, aligned with the upstream AEM Boilerplate
+   - `scripts/commerce.js` - Commerce-specific integration and utility logic
 
-- `scripts/scripts.js` - Core AEM functionality, aligned with the upstream AEM Boilerplate
-- `scripts/commerce.js` - Commerce-specific integration and utility logic
+1. Core Commerce logic migration to npm packages:
 
-**2. Core Commerce logic migration to NPM packages:**
+   - Complex Commerce functionality moved to `@dropins/tools` and other drop-in packages
+   - Functions previously embedded in your integration code are now abstracted to reusable, versioned, and upgradable libraries
+   - The Commerce Boilerplate is now focused on pure integration code that you own
 
-- Complex Commerce functionality moved to `@dropins/tools` and other drop-in packages
-- Functions previously embedded in your integration code are now abstracted to reusable, versioned, and upgradable libraries
-- The Commerce Boilerplate is now focused on pure integration code that you own
+</Steps>
 
 **Before the refactoring:** In early versions of the Commerce Boilerplate, all logic lived in `scripts/scripts.js` where Commerce business logic was mixed with integration code. Core Commerce functions were embedded directly in your project files, making it difficult to upgrade Commerce functionality without encountering code conflicts during merges.
 
-**After the refactoring:** The architecture now separates concerns more effectively. Core Commerce logic lives in NPM packages that are easily upgradable, while the boilerplate contains minimal integration code that results in fewer merge conflicts. This creates clear boundaries between platform logic and your customizations, allowing future updates to focus on integration patterns rather than business logic.
+**After the refactoring:** The architecture now separates concerns more effectively. Core Commerce logic lives in npm packages that are easily upgradable, while the boilerplate contains minimal integration code that results in fewer merge conflicts. This creates clear boundaries between platform logic and your customizations, allowing future updates to focus on integration patterns rather than business logic.
 
-This architectural shift means that complex Commerce operations, utility functions, and business rules that you may have seen in your early boilerplate files are now delivered through NPM packages, making them upgradable without touching your project code.
+This architectural shift means that complex Commerce operations, utility functions, and business rules that you may have seen in your early boilerplate files are now delivered through npm packages, making them upgradable without touching your project code.
 
 ### Adapting your update approach
 
@@ -293,7 +320,7 @@ While early-adopter projects require more comprehensive selective updates, align
 
 - **Future updates simplified**: Once aligned, future updates will be much easier due to reduced code surface area
 - **Better separation of concerns**: Clear boundaries between platform logic and your customizations
-- **Reduced merge conflicts**: Commerce functionality updates through NPM packages instead of file merges
+- **Reduced merge conflicts**: Commerce functionality updates through npm packages instead of file merges
 - **Access to latest features**: Full compatibility with new drop-in components and features
 - **Enhanced PDP flexibility**: Container-based PDP architecture provides unprecedented customization control
 
@@ -302,12 +329,12 @@ While early-adopter projects require more comprehensive selective updates, align
 
 ### Previous architecture (slot-based customization)
 
-Early versions of `@dropins/storefront-pdp` used a single `ProductDetails` container with predefined slots. You could customize by:
+Older `@dropins/storefront-pdp` releases used the monolithic `ProductDetails` container (deprecated) with predefined slots. That pattern is deprecated and not a part of the Commerce boilerplate. It should not be used for new work. In that legacy model, teams could only:
 
-- Creating custom slot implementations for different sections of the page
-- Working within the constraints of the single-container structure
-- Limited ability to rearrange or completely replace sections of the PDP
-- Complex styling workarounds to achieve desired layouts
+- Create custom slot implementations for different sections of the page
+- Work within the constraints of a single-container structure
+- Rearrange or replace PDP sections with limited flexibility
+- Rely on complex styling workarounds to reach custom layouts
 
 ### New architecture (container-based composition)
 
@@ -337,63 +364,69 @@ For detailed information about the container-based architecture and implementati
 
 When updating your PDP block from slot-based to container-based:
 
-**1. Update dependencies**
+<Steps>
+1. Update dependencies
 
-```javascript
-// Old: Single container with slots
-import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js';
+   ```javascript
+   import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
 
-// New: Multiple independent containers  
-import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
-import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
-import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
-// ... other containers
-```
+   // Before: Single container with slots
+   import { ProductDetails } from '@dropins/storefront-pdp/containers/ProductDetails.js'; // (deprecated)
 
-**2. Replace slot implementations**
+   // After: multiple independent containers
+   import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
+   import ProductPrice from '@dropins/storefront-pdp/containers/ProductPrice.js';
+   import ProductGallery from '@dropins/storefront-pdp/containers/ProductGallery.js';
+   // ... other containers
+   ```
 
-You can often remove custom slot implementations entirely—the new containers provide better configuration.
+1. Replace slot implementations
 
-**3. Update block structure**
+   You can often remove custom slot implementations entirely. The new containers provide better configuration.
 
-Replace the single container render with multiple container renders:
+1. Update block structure
 
-```javascript
-// Old: Single render with slot configuration
-await productRenderer.render(ProductDetails, {
-  slots: {
-    Title: (ctx) => Title(ctx, block),
-    Options: (ctx) => Options(ctx, block),
-    // ... other slots
-  }
-})(block);
+   Replace the single container render with multiple container renders:
 
-// New: Multiple container renders
-await pdpRendered.render(ProductHeader, {})($header);
-await pdpRendered.render(ProductPrice, {})($price);  
-await pdpRendered.render(ProductGallery, { controls: 'thumbnailsColumn' })($gallery);
-// ... other containers
-```
+   ```javascript
+   // Before: Single render with slot configuration
+   await pdpRendered.render(
+     ProductDetails, // (deprecated)
+     {
+       slots: {
+         /* custom slot implementations */
+       },
+     },
+   )($pdpRoot);
 
-**4. Layout restructuring**
+   // After: multiple container renders to layout regions
+   await pdpRendered.render(ProductHeader, {})($header);
+   await pdpRendered.render(ProductPrice, {})($price);
+   await pdpRendered.render(ProductGallery, { controls: 'thumbnailsColumn' })($gallery);
+   // ... other containers
+   ```
 
-Create HTML structure that positions containers where you need them:
+1. Layout restructuring
 
-```javascript
-<div class="product-details__wrapper">
-  <div class="product-details__header"></div>
-  <div class="product-details__price"></div>
-  <div class="product-details__gallery"></div>
-  <!-- Full control over container placement -->
-</div>
-```
+   Create HTML structure that positions containers where you need them:
 
-**5. Styling migration**
+   ```html
+   <div class="product-details__wrapper">
+   <div class="product-details__header"></div>
+   <div class="product-details__price"></div>
+   <div class="product-details__gallery"></div>
+   <!-- Full control over container placement -->
+   </div>
+   ```
 
-- Remove complex CSS overrides targeting internal slot structures
-- Style containers directly with cleaner, more maintainable CSS
-- Review any potential class name changes between architectures
-- Handle breakpoints and responsive layout at the block level, as this is now the block's responsibility
+1. Styling migration
+
+   - Remove complex CSS overrides targeting internal slot structures
+   - Style containers directly with cleaner, more maintainable CSS
+   - Review any potential class name changes between architectures
+   - Handle breakpoints and responsive layout at the block level, as this is now the block's responsibility
+
+</Steps>
 
 ## Tracking updates
 
@@ -425,8 +458,8 @@ Stay informed about boilerplate updates:
 
 If post-install fails:
 
-- Check Node.js and NPM version compatibility
-- Clear NPM cache: `npm cache clean --force`
+- Check Node.js and npm version compatibility
+- Clear the npm cache: `npm cache clean --force`
 - Remove and reinstall: `rm -rf node_modules package-lock.json && npm install`
 - Check file permissions
 
@@ -443,7 +476,7 @@ When merging updates:
 
 When drop-in updates introduce breaking changes:
 
-- **Review migration guides**: Check package release notes for migration instructions
+- **Review migration pages in release notes**: Check package release notes for migration instructions
 - **Update integrations**: Modify custom code that depends on changed APIs
 - **Test edge cases**: Breaking changes often affect less common use cases
 - **Plan rollback**: Have a rollback plan ready before applying breaking changes
@@ -454,7 +487,7 @@ When drop-in updates introduce breaking changes:
 
 **Branch strategy**
 
-- Create upgrade branches with descriptive names (e.g., `upgrade-cart-v2.1.0`)
+- Create upgrade branches with descriptive names (for example, `upgrade-cart-v2.1.0`)
 - Merge upgrades through pull requests with thorough reviews
 
 **Testing approach**
@@ -487,9 +520,10 @@ When drop-in updates introduce breaking changes:
 
 ## Resources
 
-- [Storefront Developer Tutorial](/get-started/create-storefront/): Comprehensive storefront setup guide
-- [Architecture Guide](/get-started/architecture/): Understanding the technical foundation
-- [Drop-in Components Documentation](/dropins/all/introduction/): Detailed component guides
+- [Storefront Developer Tutorial](/get-started/create-storefront/): Comprehensive storefront setup page
+- [Storefront Architecture](/get-started/architecture/): Understanding the technical foundation
+- [Drop-in Components Documentation](/dropins/all/introduction/): Detailed component reference pages
+- [B2B drop-ins overview](/dropins-b2b/): B2B packages, containers, and initialization
 - <Link href="https://www.aem.live/docs/" text="AEM Edge Delivery Services" />: Core platform documentation
 - <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce Boilerplate Repository" />: Source code and latest updates
 - [Release Notes](/releases/): Track major changes and updates

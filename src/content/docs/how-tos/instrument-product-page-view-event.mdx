@@ -1,0 +1,149 @@
+---
+title: Instrument analytics product page view event
+description: Publish a product-page-view Adobe Client Data Layer (ACDL) event from a custom product detail page that doesn't use the PDP drop-in.
+sidebar:
+  label: Product page view event
+prerequisites:
+  html: true
+  js: true
+  commerce: true
+time: "10 minutes"
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+This example publishes a `product-page-view` analytics event from a custom product detail page. It's one of two focused, independent examples that build on the shared helper script from [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/) — complete that tutorial first if you haven't already.
+
+<Aside type="note">
+This example doesn't depend on [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/). Instrument only the events your custom implementation needs.
+</Aside>
+
+## Prerequisites
+
+- Completed [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/), so `scripts/acdlHelper.js` exists in your project
+- A custom product detail page that doesn't use the PDP drop-in
+
+<Tasks>
+
+<Task>
+
+### Define the product context and publish function
+
+**Suggested file:** `scripts/initializers/pdp.js` _(the appropriate location depends on your project's structure)_
+
+When you use the standard boilerplate, the PDP drop-in calls its own `publishProductPageViewEvent` during initialization. This ensures the event fires with a complete product context, only once the page reaches a stable state.
+
+Because this event is specific to the product page, `setProductContext` and `publishProductPageViewEvent` are defined here rather than in the shared `scripts/acdlHelper.js` — this file only imports the low-level `setContext` and `pushEvent` primitives it actually needs.
+
+If you're not using the drop-in, call `publishProductPageViewEvent` anywhere product data is available and the page view should be recorded. For example, call it after a successful product API response, after a client-side route change, or at the end of your own page initialization flow. The placement is up to you.
+
+This example defines the product context and publish function, then shows a custom PDP page publishing a page view event for each of several products:
+
+```js title="scripts/initializers/pdp.js"
+import { setContext, pushEvent } from '../acdlHelper.js';
+
+const PRODUCT_CONTEXT = 'productContext';
+const PRODUCT_PAGE_VIEW = 'product-page-view';
+
+/**
+ * Sets the product context in the Adobe Client Data Layer (ACDL).
+ *
+ * @param {{
+ *   name: string,                        - Product display name (max 256 chars)
+ *   sku: string,                         - Variant SKU (1-256 chars)
+ *   topLevelSku: string,                 - Parent/base product SKU (1-256 chars)
+ *   productId?: number,                  - Numeric product ID
+ *   productType?: string|null,           - Product type (e.g. 'simple', 'configurable')
+ *   categories?: string[],               - Category names (max 256 chars each)
+ *   canonicalUrl?: string|null,          - Canonical product URL (max 2083 chars)
+ *   mainImageUrl?: string|null,          - Main product image URL (max 2083 chars)
+ *   pricing?: {
+ *     regularPrice: number,              - Standard list price
+ *     currencyCode: string|null,         - ISO 4217 currency code (max 3 chars)
+ *     minimalPrice?: number,             - Lowest possible price
+ *     maximalPrice?: number,             - Highest possible price
+ *     specialPrice?: number,             - Promotional/sale price
+ *     tierPricing?: Array<{
+ *       customerGroupId: number|null,
+ *       qty: number,
+ *       value: number
+ *     }>
+ *   }
+ * }} product - Product data matching the ACDL product schema
+ */
+function setProductContext(product) {
+  const requiredFields = ['name', 'sku', 'topLevelSku'];
+  const missingFields = requiredFields.filter((field) => product[field] === undefined);
+  if (missingFields.length) {
+    throw new Error(`Product is missing required fields: ${missingFields.join(', ')}`);
+  }
+
+  if (product.pricing !== undefined) {
+    const requiredPricingFields = ['regularPrice', 'currencyCode'];
+    const missingPricingFields = requiredPricingFields.filter((field) => product.pricing[field] === undefined);
+    if (missingPricingFields.length) {
+      throw new Error(`Product pricing is missing required fields: ${missingPricingFields.join(', ')}`);
+    }
+  }
+
+  setContext(PRODUCT_CONTEXT, product);
+}
+
+function publishProductPageViewEvent(product) {
+  setProductContext(product);
+  pushEvent(PRODUCT_PAGE_VIEW);
+}
+
+// Sample products — replace with real product data from your API or drop-in
+const products = [
+  {
+    name: 'Classic Leather Sneaker',
+    sku: 'SNK-001-WHT',
+    topLevelSku: 'SNK-001-WHT',
+    pricing: { regularPrice: 129.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Running Shoe Pro',
+    sku: 'RSP-042-BLK',
+    topLevelSku: 'RSP-042-BLK',
+    pricing: { regularPrice: 159.99, specialPrice: 119.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Canvas High-Top',
+    sku: 'CHT-007-NVY',
+    topLevelSku: 'CHT-007-NVY',
+    pricing: { regularPrice: 89.99, currencyCode: 'USD' },
+  },
+  {
+    name: 'Slip-On Loafer',
+    sku: 'SOL-019-TAN',
+    topLevelSku: 'SOL-019-TAN',
+    pricing: { regularPrice: 109.99, specialPrice: 79.99, currencyCode: 'USD' },
+  },
+];
+
+products.forEach((product) => publishProductPageViewEvent(product));
+```
+
+</Task>
+
+<Task>
+
+### Test the event
+
+1. Open your browser's developer tools and check the Console tab.
+2. Confirm `window.adobeDataLayer` exists and contains a `productContext` entry and a `product-page-view` event.
+3. If Adobe Experience Platform (AEP) forwarding is configured, use the AEP Debugger Events view to confirm the event arrives — see [Analytics instrumentation](/setup/analytics/instrumentation/#manual-testing-steps).
+
+</Task>
+
+</Tasks>
+
+## Summary
+
+In this tutorial, you learned how to publish a `product-page-view` event with a complete product context from a custom product detail page.
+
+- Continue with [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/) to instrument the next event
+- See the [Analytics events reference](/dropins/all/analytics-events/) for the full list of events and the contexts each one sets

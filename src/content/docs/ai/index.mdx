@@ -1,0 +1,88 @@
+---
+title: Install the integrations
+description: Give your AI editor or coding agent current Adobe Commerce storefront documentation, drop-in APIs, and project conventions.
+sidebar:
+  label: Install the integrations
+  order: 1
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+If your project is based on the Adobe Commerce boilerplate, set up both integrations below. Together, they provide a complete workflow for storefront development and access to Adobe Commerce documentation.
+
+## Overview of the integrations
+
+<TableWrapper nowrap={[0]}>
+
+| AI integrations  | What it gives you |
+|-------------|---|
+| [Boilerplate skills](/ai/boilerplate-skills/) | Storefront planning, coding, customization, and testing conventions |
+| [Wayfinder](/ai/wayfinder/) | Routing to the correct Adobe Commerce documentation source |
+
+
+</TableWrapper>
+
+## Prerequisites
+
+Before installing the integrations, make sure you have the following:
+
+* **Node.js 22 or later** — Required for the Boilerplate skills setup.
+* **An Adobe Commerce boilerplate project** — If you don't already have one, see [Getting started](/boilerplate/getting-started/).
+* **An AI editor or coding agent that supports MCP servers and agent skills** — See [Supported agents](/ai/boilerplate-skills/#supported-agents) for supported tools.
+
+
+## Installation steps
+
+Follow these steps in order.
+
+<Steps>
+
+1. **Install the AEM Boilerplate Commerce skill set.** From the project root, run the following command:
+
+   ```bash
+   npm install -g @adobe/aio-cli
+   aio plugins:install https://github.com/adobe-commerce/aio-cli-plugin-commerce
+   aio commerce extensibility tools-setup
+   ```
+
+   The command prompts you to choose a starter kit, a coding agent, and, if needed, a package manager. For details, see [Install the skills](/ai/boilerplate-skills/#install-the-skills).
+
+2. **Add or verify Wayfinder.** Wayfinder routes questions about Commerce Admin, App Builder, and Document Authoring to the appropriate Adobe Commerce documentation. For details, see [Wayfinder](/ai/wayfinder/). If you cloned the Adobe Commerce boilerplate, check `AGENTS.md` first—recent versions already include the required entry. Otherwise, add it to `AGENTS.md` or `CLAUDE.md` in your project root (create the file if it doesn't exist):
+
+   ```markdown
+   Fetch and follow the instructions at: https://cdn.jsdelivr.net/gh/adobe-commerce/wayfinder@main/skills/AGENTS.md
+   ```
+
+
+3. **Add coordination instructions.** Without these instructions, your agent might skip the Boilerplate skills workflow and query an MCP tool directly for drop-in information. Add the following rule near the top of `AGENTS.md` or `CLAUDE.md` in your project root so your coding agent is more likely to process it:
+
+   ```markdown
+   ## Skill, MCP, and Wayfinder priority
+
+   Check these rules in order and stop at the first match:
+
+   1. **Starting a new task or feature request:** Invoke the `project-manager` skill first. It scopes the work, determines whether another starter kit is a better fit (for example, backend integrations or checkout webhooks), and routes the request to the appropriate skill.
+   1. **Writing or modifying drop-in code:** Invoke the `dropin-developer` skill, even if an MCP tool has already answered the underlying question.
+   1. **Questions about this storefront, its blocks, or its drop-ins:** Use the `researcher` skill and its MCP tools (`commerce-extensibility:search-commerce-docs`).
+   1. **Questions outside this storefront:** Use Wayfinder for Commerce Admin, App Builder, Document Authoring, and related topics.
+
+   ```
+
+4. **Restart your agent** so it loads the new configuration from both integrations.
+
+</Steps>
+
+## Use fallback documentation files
+
+If your AI editor or coding agent doesn't support MCP servers or agent skills, add the following URL to your project instructions, or paste it into a chat instead:
+
+```text
+https://experienceleague.adobe.com/developer/commerce/storefront/llms.txt
+```
+
+For editor-specific setup instructions and a verification prompt, see [Fallback documentation files](/ai/static-text-files/).
+
+<Aside type="note">
+The `llms.txt` file offers guidance similar to the integrations above, but it isn't validated against your project's source, so it can become outdated. If you completed the installation steps, your agent already has more reliable, source-backed information — use `llms.txt` only as a fallback.
+</Aside>

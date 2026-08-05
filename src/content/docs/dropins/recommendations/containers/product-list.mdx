@@ -1,12 +1,13 @@
 ---
 title: ProductList container
-description: Learn about the ProductList container.
+description: Show Adobe Commerce product recommendations using recId, optional currentProduct context, routing callbacks, and placement configuration.
 ---
 
 import Diagram from '@components/Diagram.astro';
 import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
 
-The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentSku`, `recId`, and `routing` through `routeProduct` callbacks.
+The `ProductList` container manages and displays a list of recommended products based on the current product. Its behavior is driven by configuration options such as `currentProduct`, `recId`, and routing through `routeProduct` callbacks.
 
 <Diagram caption="ProductList container">
   ![ProductList container](@images/dropins/recommendations/product-list.png)
@@ -21,7 +22,8 @@ The `ProductList` container provides the following configuration options:
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
     ['recId', 'string', 'Yes', 'Unique identifier for the recommendation unit.'],
-    ['currentSku', 'string', 'Yes', 'Current SKU for recommendation context.'],
+    ['currentProduct', 'object', 'No', 'Anchor product context (`{ sku: string; price?: number }`). Required fields depend on unit type and price filter operator. See [Product context](#product-context).'],
+    ['currentSku', 'string', 'No', 'Deprecated as of v4.0.3. Use `currentProduct` instead.'],
     ['cartSkus', 'string[]', 'No', 'Cart SKUs for recommendation context.'],
     ['userPurchaseHistory', 'any[]', 'No', 'User Purchase History for recommendation context.'],
     ['userViewHistory', 'any[]', 'No', 'User View History for recommendation context.'],
@@ -33,12 +35,64 @@ The `ProductList` container provides the following configuration options:
   ]}
 />
 
+<Aside type="caution" title="Deprecated prop">
+
+The `currentSku` prop is deprecated as of v4.0.3 and will be removed in a future release. Use `currentProduct` instead.
+
+</Aside>
+
+## Product context
+
+Pass product context with the optional `currentProduct` prop:
+
+```ts
+currentProduct?: { sku: string; price?: number };
+```
+
+- **`currentProduct.sku`** — seed product SKU for anchor-based recommendation unit types.
+- **`currentProduct.price`** — anchor product price. Required only when the unit uses dynamic or relative price filter operators (Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only).
+
+Whether each value is required depends on the **recommendation unit type** and the **price filter operator**:
+
+| Unit type | Seed SKU (`currentProduct.sku`) | Anchor price (`currentProduct.price`) |
+| --- | --- | --- |
+| **Anchor-based** (more-like-this, visual similarity, viewed-viewed, viewed-bought, bought-bought) | Required | Only for dynamic or relative price filter operators |
+| **Context-free** (most-viewed, most-purchased, and similar popularity or behavioral types) | Not required | Not applicable |
+
+A static price filter defines a fixed price range in the filter rule. It does not remove the need for a seed SKU on anchor-based types. Anchor-based units with static price filters work with the seed SKU alone—`currentProduct.price` is not sent.
+
+### How context is supplied
+
+- **PDP pages**: The Commerce boilerplate block reads `currentProduct` from the Adobe Client Data Layer (ACDL) product context. You do not need to pass `currentProduct` in block configuration.
+- **Non-PDP pages**: There is no product context on PLP, cart, home, and similar pages. For **anchor-based** unit types, set `currentsku` in the [product-recommendations block configuration](/merchants/content-customizations/product-recommendations/#configuration). Add `currentprice` only when the unit uses dynamic or relative price filter operators.
+- **Context-free unit types**: Omit `currentProduct`. The dropin renders with `recId` alone on any page type.
+
+<Aside type="caution" title="Do not omit seed SKU on anchor-based units">
+
+On non-PDP pages, anchor-based unit types return no products when the seed SKU is missing—even if the unit uses a static price filter. Only **context-free** unit types can run with `recId` alone.
+
+</Aside>
+
+## Query routing
+
+The container selects a GraphQL query based on whether anchor price is present:
+
+- When `currentProduct.price` is present (**Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service only**), the container uses `GetRecommendationsByUnitIdsWithCurrentProduct`, which supports dynamic and relative price filter operators.
+- When only `currentProduct.sku` is present, or `currentProduct` is absent, the container uses `GetRecommendationsByUnitIds`, which is compatible with all backend types, including PaaS.
+
+On Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service, the dropin sends `currentProduct.price` whenever it is available from the product context — it does not inspect the unit's configured filter operator. The extended query is selected whenever price is present; the backend applies the anchor only when the unit's filter uses a dynamic or relative operator, and ignores it for static or non-price filters.
+
 The `ProductListProps` interface has the following shape:
 
 ```ts
 export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
   recId: string;
-  currentSku: string;
+  currentProduct?: {
+    sku: string;
+    price?: number;
+  };
+  /** @deprecated As of v4.0.3. Use `currentProduct` instead. */
+  currentSku?: string;
   initialData?: {
     recommendations?: {
       results: RecommendationUnitModel[];
@@ -101,6 +155,7 @@ export interface Item {
   visibility: string;
   queryType: string;
   itemType: string;
+  inStock?: boolean;
 }
 
 interface ItemImage {
@@ -148,7 +203,7 @@ Each slot receives context data relevant to its purpose, allowing for highly cus
 
 ## Example configuration
 
-The following example demonstrates how to render the `ProductList` container with the `recId`, `currentSku`, and `routeProduct` callbacks with different slots:
+The following example demonstrates how to render the `ProductList` container with `recId`, `currentProduct`, and `routeProduct` callbacks with different slots:
 
 ```js
 
@@ -156,7 +211,7 @@ The following example demonstrates how to render the `ProductList` container wit
 provider.render(ProductList, {
   recId: 'recommendation-unit-1',
   routeProduct: (item) => `/products/${item.urlKey}`,
-  currentSku: 'ADB150',
+  currentProduct: { sku: 'ADB150', price: 49.99 },
   hideHeading: false,
   slots: {
       // Example of how to prepend or append to the default Heading
@@ -197,15 +252,18 @@ provider.render(ProductList, {
         addToCart.className = 'footer__button--add-to-cart';
         wrapper.appendChild(addToCart);
 
-        if (ctx.product.itemType === 'SimpleProductView') {
+        if (ctx.item.itemType === 'SimpleProductView') {
           // Add to Cart Button
           UI.render(Button, {
             children: 'Add to Cart',
-            onClick: () => {
-              // Call add to cart function from cart/api
-              console.log('Add to Cart');
-            },
+            onClick: ctx.item.inStock
+              ? () => {
+                // Call add to cart function from cart/api
+                console.log('Add to Cart');
+              }
+              : undefined,
             variant: 'primary',
+            disabled: !ctx.item.inStock,
           })(addToCart);
         } else {
           // View Product Button
@@ -213,7 +271,7 @@ provider.render(ProductList, {
             children: 'Select Options',
             onClick: () => {
               console.log('Select Options');
-              window.location.href = ctx.product.urlKey;
+              window.location.href = ctx.item.urlKey;
             },
             variant: 'tertiary',
           })(addToCart);
@@ -227,7 +285,7 @@ provider.render(ProductList, {
 
 ## Key Features
 
-- **Automatic Data Fetching**: Fetches recommendations based on `currentSku` and other context
+- **Automatic Data Fetching**: Fetches recommendations based on `currentProduct` (or legacy `currentSku`) and other context
 - **Intersection Observer**: Automatically tracks when recommendations are viewed
 - **Event Publishing**: Publishes render and view events for analytics
 - **Loading States**: Handles loading states during data fetching

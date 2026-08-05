@@ -67,7 +67,7 @@ The endpoints properties define the GraphQL API endpoints for your Commerce back
 
 **Configuration Properties:**
 
-- **`commerce-core-endpoint`** (read/write) - Core GraphQL endpoint for queries and mutations. This endpoint handles all write operations and some read operations. See <Link href="https://developer.adobe.com/commerce/webapi/graphql/reference/" text="Adobe Commerce GraphQL API" /> for details.
+- **`commerce-core-endpoint`** (read/write) - Core GraphQL endpoint for queries and mutations. This endpoint handles all write operations and some read operations. See <Link href="https://developer.adobe.com/commerce/webapi/reference/graphql/latest/" text="Adobe Commerce GraphQL API" /> for details.
 
 - **`commerce-endpoint`** (read-only) - Services GraphQL endpoint optimized for read-only operations with Catalog Service, Live Search, and Product Recommendations. It is also optimized for performance for product data retrieval. For details, see the following documentation:
    - For Adobe Commerce as a Cloud Service, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#access-the-service" text="Catalog Service Guide" />.
@@ -541,19 +541,25 @@ When your storefront loads in the browser, the following sequence occurs:
 1. **Browser requests** `https://[site]/config.json`
 2. **EDS CDN checks** if a `config.json` file exists in the code repository root
 3. **If found** - The `config.json` file from the repository is served
-4. **If not found** - The CDN falls back to the `public` config from the EDS site config
+4. **If not found** - The CDN falls back to the `public` config from the EDS site config (Config Service)
 
-**Important:** A committed `config.json` file in your repository will always take precedence over the public config from EDS site config.
+:::caution[Do not commit config.json to main]
+A `config.json` file in your repository **always** takes precedence over the Config Service. This means if `config.json` is committed to your `main` branch, your Config Service values will be silently ignored in production.
+
+`config.json` is intended for **local development and branch-based testing only**. For production, use the Config Service and ensure `config.json` is absent from the `main` branch.
+:::
 
 ### Getting a starter configuration
 
-To get a configuration for your Commerce storefront, you have two options:
+To get a configuration for your Commerce storefront, use one of these approaches:
 
-1. **Copy the demo configuration**: Download and customize the live configuration for the boilerplate from <Link href="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" text="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" />. This provides a working example with all required fields.
+1. **Config Service (recommended for production)**: Use the Config Service to store and manage your production configuration. See the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> to get started. Your configuration is stored at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` and served automatically — no `config.json` in the repository is needed.
 
-2. **Generate with your values**: Use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> to automatically generate a configuration for your Commerce backend. Note that the generated config may contain placeholders that you'll need to replace with actual values.
+2. **Generate a local starter config**: Use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> to automatically generate a configuration for your Commerce backend. Use this as the basis for your Config Service upload or for local development. Note that the generated config may contain placeholders that you'll need to replace with actual values.
 
-**Important**: Always update the configuration values to match your specific Commerce backend before deploying to production.
+3. **Copy the demo configuration**: Download and customize the live configuration for the boilerplate from <Link href="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" text="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" />. This provides a working example with all required fields — useful as a reference for local development.
+
+**Important**: Always update the configuration values to match your specific Commerce backend. For production, push your configuration to the Config Service rather than committing `config.json` to your `main` branch.
 
 ### Local Development Configuration
 

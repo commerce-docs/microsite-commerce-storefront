@@ -8,16 +8,22 @@ sidebar:
 
 import Link from '@components/Link.astro';
 import LinkCard from '@components/LinkCard.astro';
-import { Aside } from '@astrojs/starlight/components';
-import { Steps } from '@astrojs/starlight/components';
+import Term from '@components/Term.astro';
+import { Aside, Steps } from '@astrojs/starlight/components';
 
-When you change how scripts and styles load on the Adobe Commerce boilerplate, you follow the same performance model as other Edge Delivery storefronts. The sections below map eager, lazy, and delayed loading—and ideas such as LCP and fonts—to concrete files and load order in your project.
+If your storefront feels slow or your mobile scores look low, start here.
+
+You'll walk through `delayed.js`, CSS load order, and `head.html` next to <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" />, the Edge Delivery guide many teams keep open while they tune loading. After you change how things load, run [Lighthouse audits](#run-lighthouse-audits) for a fresh readout. Before launch, review [Performance and monitoring](/setup/launch/#performance-and-monitoring) on the launch checklist.
+
+When you already have the project from [Create a storefront](/get-started/create-storefront/), leave the repo open in your editor so you can open files such as `scripts/delayed.js` and `styles/styles.css` when this page points to them.
+
+The Commerce boilerplate uses the same <Term>Edge Delivery Services</Term> pattern as other Edge storefronts: eager, lazy, and delayed loading, fonts, and LCP (Largest Contentful Paint, how fast the main content shows).
 
 <LinkCard
   noborder
   icon="rocket"
   title="Start with Keeping it 100 on AEM.live"
-  description="The canonical guide covers eager, lazy, and delayed loading, Largest Contentful Paint (LCP), fonts, and mistakes such as overusing <code>preload</code> and early hints. Read it before you edit <code>head.html</code> or split CSS."
+  description="The canonical Keeping it 100 page covers eager, lazy, and delayed loading, Largest Contentful Paint (LCP), fonts, and mistakes such as overusing <code>preload</code> and early hints. Read it before you edit <code>head.html</code> or split CSS."
   link="https://www.aem.live/developer/keeping-it-100"
   rightIcon="external"
   target="_blank"
@@ -25,23 +31,15 @@ When you change how scripts and styles load on the Adobe Commerce boilerplate, y
   aria-label="Keeping it 100 on AEM.live (opens in a new tab)"
 />
 
-## How to use this page
-
-<Steps>
-1. Read Keeping it 100 to understand the eager, lazy, and delayed phases and LCP limits.
-1. Use the sections below to map each phase to files in the Commerce boilerplate.
-1. After you change loading behavior, run [Lighthouse audits](#run-lighthouse-audits) and review [Performance and monitoring](/setup/launch/#performance-and-monitoring) on the launch checklist.
-</Steps>
-
 ## Run Lighthouse audits
 
-PageSpeed Insights is a reliable tool for checking your storefront’s Web Vitals. It uses the same Lighthouse engine found in Chrome DevTools, but runs tests on real devices in a controlled environment for more consistent results. The metrics it reports—and the steps needed to achieve a score close to 100—match Google’s recommended performance standards. See <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" />.
+PageSpeed Insights runs Lighthouse on Google's hardware instead of on your computer, so you can compare one test run to the next more fairly than if you only tested locally. It reports Web Vitals, Google's standard scores for how fast and stable the page feels. The fix list follows Google's performance guidance. When you change load order or assets, compare those suggestions with <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" /> so resource hints, fonts, and load phases still match what Edge Delivery Services expects.
 
 <LinkCard
   noborder
   icon="rocket"
   title="PageSpeed Insights"
-  description="Make sure you enter your storefront's <strong>.live</strong> production URL for accurate results. The .live production site sits on CDNs that are closest to your customers, on the edge."
+  description="Enter your storefront production URL (typically <code>*.aem.live</code>) for accurate results. That hostname sits on CDNs close to your customers, on the edge."
   link="https://pagespeed.web.dev/"
   rightIcon="external"
   target="_blank"
@@ -51,14 +49,21 @@ PageSpeed Insights is a reliable tool for checking your storefront’s Web Vital
 
 ### Step-by-step
 
+The following steps run a PageSpeed Insights audit on a URL you choose.
+
 <Steps>
 
 1. Go to the <Link href="https://pagespeed.web.dev/" text="PageSpeed Insights website" />.
-1. Enter your `.live` storefront URL. The URLs for your preview and live sites take the following forms:
-   - **Preview**: `https://main--{repo}--{owner}.hlx.page/`
-   - **Live**: `https://main--{repo}--{owner}.hlx.live/`
+
+1. Paste your storefront URL into the PageSpeed Insights input field.
+
+1. If you use the default `main` branch pattern on Edge Delivery, typical preview and production hosts look like this (replace `{repo}` and `{owner}` with your GitHub repository name and owner):
+   - Preview: `https://main--{repo}--{owner}.aem.page/`
+   - Production: `https://main--{repo}--{owner}.aem.live/`
+
 1. Click the **Analyze** button to run the audit.
-1. You should see full Web Vital reports for both mobile and desktop, with Lighthouse scores at or very near 100 across Performance, Accessibility, Best Practices, and SEO.
+
+1. You'll see full Web Vitals reports for mobile and desktop. Scores are often high on tuned Edge Delivery storefronts, but they vary with page content, third-party scripts, and test conditions, so treat the report as a snapshot, not a guarantee of 100 on every run.
 
 </Steps>
 
@@ -74,18 +79,22 @@ In the Commerce boilerplate, implement that path in <Link href="https://github.c
 
 Keeping it 100 treats styles in two phases so LCP stays predictable.
 
-The **eager** phase is for everything the real LCP element needs right away: markup, CSS, and JavaScript for that first paint. Stay within the network and payload limits the guide describes.
+#### Eager phase
+
+The eager phase covers the markup, CSS, and JavaScript that must load first so the main content can appear quickly and your LCP score can settle. Stay within the network and payload limits the Keeping it 100 page describes.
 
 <Aside type="caution" title="Preload and early hints">
-Indiscriminate <code>preload</code>, early hints, and <code>preconnect</code> can steal bandwidth from what the visitor needs first and hurt mobile LCP. Keeping it 100 explains how to stay inside safe limits instead of adding every hint you can think of.
+Too many <code>preload</code> tags, early hints, and <code>preconnect</code> entries can steal bandwidth from what the visitor needs first and hurt mobile LCP. Keeping it 100 explains how to stay inside safe limits instead of adding every hint you can think of.
 </Aside>
 
-The **lazy** phase is for styles (and related assets) that do not need to block the first paint of the LCP element. You load them after LCP so they do not extend the critical path. For how the storefront splits global versus deferred CSS—including patterns such as `lazy-styles.css`—read [Branding and styles](/dropins/all/branding/).
+#### Lazy phase
 
-### File layout for eager and lazy CSS
+The lazy phase is for styles (and related assets) that can load after the main content and LCP finish so they do not slow the first screen.
 
-In the Commerce boilerplate, eager, site-wide tokens and styles usually live in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css" text="styles/styles.css" />. Deferred (lazy) CSS belongs in the patterns described in [Branding and styles](/dropins/all/branding/)—for example `lazy-styles.css`—not bundled into the eager file. Align `head.html` and load order with Keeping it 100 instead of inventing a parallel rule set. Keeping it 100 also explains why preloading web fonts is usually counterproductive. Rely on the Commerce boilerplate's font fallbacks unless you have a measured reason to change that.
+In the Commerce boilerplate, eager, site-wide tokens and styles usually start in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css" text="styles/styles.css" />. For deferred styles (for example, `lazy-styles.css`), use the folder-and-import patterns in [Branding and styles](/dropins/all/branding/) instead of merging them into the eager file.
+
+After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often backfires. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
 
 <Aside type="tip" title="Related storefront docs">
-For catalog-oriented tips (images, APIs, loading order), see the [FAQ](/troubleshooting/faq#how-can-i-improve-the-performance-of-my-catalog-pages). After you change loading behavior, run [Lighthouse audits](#run-lighthouse-audits) and review the [launch checklist](/setup/launch/#performance-and-monitoring).
+For tips on catalog pages (images, APIs, loading order), see the [FAQ](/troubleshooting/faq#how-can-i-improve-the-performance-of-my-catalog-pages).
 </Aside>
