@@ -15,7 +15,11 @@ export function isSdkEvent(e: EventEntry): boolean {
 
 /** PascalCase → kebab-case */
 export function toKebab(name: string): string {
-  return name.replace(/([A-Z])/g, (m, c, idx) => (idx === 0 ? c : '-' + c)).toLowerCase();
+  // Keep the PayPal brand name as one filename segment. Without normalization,
+  // the generic PascalCase conversion produces `pay-pal-buttons.mdx` instead of
+  // the canonical `paypal-buttons.mdx` documentation path.
+  const normalizedName = name.replace(/PayPal/g, 'Paypal');
+  return normalizedName.replace(/([A-Z])/g, (m, c, idx) => (idx === 0 ? c : '-' + c)).toLowerCase();
 }
 
 /**

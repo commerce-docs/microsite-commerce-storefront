@@ -27,6 +27,11 @@ export const KNOWN_FUNCTION_ALIASES = new Set([
  */
 export const KNOWN_EXTRACTOR_GAPS_FUNCTIONS = new Set(['storefront-company-management/initialize']);
 
-export const KNOWN_EXTRACTOR_GAPS_EVENTS = new Set<string>();
+export const KNOWN_EXTRACTOR_GAPS_EVENTS = new Set([
+  // Both events are emitted by storefront-payment-services 4.1.0 during
+  // initialization, but the MCP event extractor does not include them yet.
+  'storefront-payment-services/payment-services/initialized/checkout',
+  'storefront-payment-services/payment-services/initialized/product-detail',
+]);
 
 export const KNOWN_EXTRACTOR_GAPS_SLOTS = new Set<string>();

@@ -48,7 +48,10 @@ async function fetchNpmVersion(key: string): Promise<string | null> {
   const url = `https://registry.npmjs.org/@dropins/${key}/latest`;
   for (let attempt = 1; attempt <= NPM_FETCH_RETRIES; attempt++) {
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/vnd.npm.install-v1+json' } });
+      // The dist-tag endpoint returns 406 for npm's abbreviated metadata media type.
+      // Request regular JSON so version checks use the live package instead of
+      // silently falling back to the version bundled with @dropins/mcp.
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
       if (res.ok) {
         const data = (await res.json()) as { version?: string };
         return data.version ?? null;
