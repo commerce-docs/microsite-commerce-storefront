@@ -16,7 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
 The User Auth drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.2.0</strong>
+<strong>Version: 4.0.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -26,7 +26,7 @@ The User Auth drop-in provides API functions that enable you to programmatically
 | [`confirmEmail`](#confirmemail) | Completes the customer activation process using the supplied `customerEmail` and `customerConfirmationKey` parameters. |
 | [`createCustomer`](#createcustomer) | Creates a customer account based on the data supplied in the forms parameter. |
 | [`createCustomerAddress`](#createcustomeraddress) | Defines a new customer address. |
-| [`getAdobeCommerceOptimizerData`](#getadobecommerceoptimizerdata) | This function fetches Adobe Commerce Optimizer data. |
+| [`getAdobeCommerceOptimizerData`](#getadobecommerceoptimizerdata) | Fetches Adobe Commerce Optimizer data. |
 | [`getAttributesForm`](#getattributesform) | Retrieves EAV attributes associated with customer and customer address frontend forms. |
 | [`getCustomerData`](#getcustomerdata) | Retrieves data about the customer represented by the `auth_dropin_user_token` cookie value. |
 | [`getCustomerRolePermissions`](#getcustomerrolepermissions) | Retrieves customer role permissions. |
@@ -139,7 +139,7 @@ Returns [`AdobeCommerceOptimizerModel`](#adobecommerceoptimizermodel).
 
 ## getAttributesForm
 
-The `getAttributesForm` function retrieves EAV attributes associated with customer and customer address frontend forms. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/" text="attributesForm query" />.
+The `getAttributesForm` function retrieves entity-attribute-value (EAV) attributes associated with customer and customer address frontend forms. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/attributes/queries/attributes-form/" text="attributesForm query" />.
 
 ```ts
 const getAttributesForm = async (
@@ -165,7 +165,7 @@ Returns `AttributesFormModel[]`.
 
 ## getCustomerData
 
-The `getCustomerData` function retrieves data about the customer represented by the value of the `auth_dropin_user_token` parameter. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/" text="customer query" />.
+The `getCustomerData` function retrieves data about the customer represented by the value of the `auth_dropin_user_token` cookie. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/" text="customer query" />.
 
 ```ts
 const getCustomerData = async (
@@ -191,7 +191,7 @@ Returns [`CustomerModel`](#customermodel).
 
 ## getCustomerRolePermissions
 
-The `getCustomerRolePermissions` function retrieves customer role permissions. It uses efficient caching to minimize API calls and returns either cached data immediately or a promise for fresh data.
+The `getCustomerRolePermissions` function retrieves customer role permissions. It caches results to minimize API calls, returning cached data immediately when available or fetching fresh data when the cache is empty.
 
 ```ts
 const getCustomerRolePermissions = async (): Promise<PermissionsModel>
@@ -207,7 +207,7 @@ Returns [`PermissionsModel`](#permissionsmodel).
 
 ## getCustomerToken
 
-The `getCustomerToken` function handles the sign-in operation. It requires `email` and `password` (and accepts additional optional properties on the parameter object) and performs the following actions under the hood:
+The `getCustomerToken` function handles the sign-in operation. It requires `email` and `password` (and accepts additional optional properties on the parameter object) and performs these actions:
 
 1. Retrieves the customer token.
 2. Fetches customer data using the token.
@@ -352,7 +352,7 @@ Returns [`ResetPasswordModel`](#resetpasswordmodel).
 
 ## revokeCustomerToken
 
-The `revokeCustomerToken` function revokes the customer's token and clears the authentication cookie. It then publishes an ACDL event and emits an "authenticated" event. This API can also be used to build a custom sign-out flow that stays fully integrated with other drop-in components. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/revoke-token/" text="revokeCustomerToken mutation" />.
+The `revokeCustomerToken` function revokes the customer's token and clears the authentication cookie. It then publishes an ACDL event and emits an "authenticated" event. Use this function to build a custom sign-out flow that stays fully integrated with other drop-in components. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/mutations/revoke-token/" text="revokeCustomerToken mutation" />.
 
 ```ts
 const revokeCustomerToken = async (): Promise<RevokeCustomerTokenModel>
@@ -368,35 +368,41 @@ Returns [`RevokeCustomerTokenModel`](#revokecustomertokenmodel).
 
 ## verifyToken
 
-The `verifyToken` function checks the validity of the provided authentication token. It verifies the token by making a `GraphQL` request to validate the customer. If valid, it emits an `authenticated` event with `true` and the customer's group ID. If invalid or missing, it emits an `authenticated` event with `false`, removes the token cookie, and clears the authentication header.
+The `verifyToken` function checks the validity of the stored customer token. If valid, it emits the `authenticated` event with `true`. If the token is invalid or missing, it clears the authentication cookies and header, and emits `authenticated` with `false`.
+
+By default, the validation query is compatible with all backends. When `adobeCommerceOptimizer` is set to `true`, the function also emits the `auth/group-uid` event required for Adobe Commerce Optimizer price book resolution.
 
 ```ts
 const verifyToken = async (
   authType = 'Authorization',
-  type = 'Bearer'
-): Promise<any>
+  type = 'Bearer',
+  adobeCommerceOptimizer = false
+): Promise<boolean>
 ```
 
 <TableWrapper nowrap={[0,1]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `authType` | `string` | No | The HTTP header name to use for authentication. Defaults to \`Authorization\`. This allows customization of the authentication header if your backend uses a different header name. |
-| `type` | `string` | No | The authentication scheme type to use. Defaults to \`Bearer\`. This is prepended to the token value in the authentication header (e.g., \`Bearer &lt;token&gt;\`). |
+| `authType` | `string` | No | The name of the HTTP authorization header. Defaults to `Authorization`. |
+| `type` | `string` | No | The credential type prefixed to the token in the authorization header (for example, `Bearer <token>`). Defaults to `Bearer`. |
+| `adobeCommerceOptimizer` | `boolean` | No | When `true`, emits the `auth/group-uid` event for Adobe Commerce Optimizer price book resolution. Defaults to `false`. |
 
 </TableWrapper>
 
 ### Events
 
-Does not emit any drop-in events.
+Emits the [`authenticated`](/dropins/user-auth/events/#authenticated-emits) event.
+
+When `adobeCommerceOptimizer` is `true`, also emits the [`auth/group-uid`](/dropins/user-auth/events/#authgroup-uid-emits) event.
 
 ### Returns
 
-Returns `void`.
+Returns `Promise<boolean>`. Returns `true` if the token is valid, `false` otherwise.
 
 ## Data Models
 
-The following data models are used by functions in this drop-in.
+Functions in this drop-in use the following data models.
 
 ### AdobeCommerceOptimizerModel
 

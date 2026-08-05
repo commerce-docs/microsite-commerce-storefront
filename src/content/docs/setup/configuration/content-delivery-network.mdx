@@ -331,7 +331,7 @@ The following are optional configurations that can be added to the VCL snippets 
 
 ### URL rewrites
 
-Be aware that URLs in Edge Delivery Services may only contain a-z, 0-9, and the dash (`-`) character (see <Link href={"https://www.aem.live/docs/limits#document-naming"} text={"Document naming"} />). You may need to create a CDN rule to rewrite/remove these characters.
+Be aware that URLs in Edge Delivery Services can only contain a-z, 0-9, and the dash (`-`) character (see [Document naming restrictions](/setup/seo/platform-limits/#document-naming-and-url-format)). You might need to create a CDN rule to rewrite or remove these characters.
 
 As an example, consider one possible case where this applies with login referrer links. Luma may redirect to a page like `/login/referrer/<base64string>`. If the login page is implemented in Edge Delivery Services (with a Luma Bridge) and the base 64 string contains unsupported characters, this page will 404. Since the base64 part is only needed on the Edge Delivery Services client side to handle redirecting after a successful sign-in, this could be stripped for the request to the Edge Delivery Services backend.
 
@@ -503,9 +503,25 @@ if (req.backend == F_edge) {
 
 In the domains configuration, you must use a wildcard. Since the Commerce Admin doesn't let you do this, you must do it using the Fastly CLI (which also shows the wildcard URL in the Admin).
 
-### Maintenance page workaround
+### Maintenance mode
 
-The maintenance page can block requests to API Mesh/GraphQL. The solution is to create a VCL snippet with low priority that comes before the maintenance check in VCL and allows GraphQL requests through.
+The storefront has no built-in maintenance mode. However, you can add a custom VCL snippet similar to the one below to redirect all incoming requests to your maintenance page. This snippet excludes requests to the `/maintenance` path, so the maintenance page itself stays reachable.
+
+```txt
+if (req.url !~ "^/maintenance") {
+  error 302 "https://yoursite.com/maintenance";
+}
+```
+
+The `error 302` instruction issues an HTTP 302 (temporary redirect) to the URL you specify. Replace `https://yoursite.com/maintenance` with the URL of your maintenance page. Add this as a `recv` snippet with a priority lower than `100`, for example `5`, so it runs before the main routing logic.
+
+To add the snippet, see <Link href={"https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/cdn/custom-vcl-snippets/fastly-vcl-custom-snippets"} text={"Getting started with custom VCL"} /> in the Fastly documentation, or use the <Link href={"https://github.com/fastly/fastly-magento2"} text={"fastly-magento2"} /> Admin module in the Commerce Admin. Work with your Fastly administrator to confirm the priority before applying the snippet.
+
+<Aside type="note" title="API and GraphQL traffic">
+  This redirect applies to all incoming requests, including GraphQL and API Mesh requests.
+</Aside>
+
+To end maintenance mode, remove or disable the snippet in your Fastly configuration.
 
 ### Multiple set-cookie headers workaround
 

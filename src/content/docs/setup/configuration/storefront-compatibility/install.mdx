@@ -1,125 +1,202 @@
 ---
-title: Storefront Compatibility Package Installation
-description: Learn how to install the Storefront Compatibility Package.
+title: Manual installation
+description: Install the Storefront Compatibility Package with Composer on Commerce on Cloud or on-premises with Adobe Commerce Optimizer.
 sidebar:
-  label: Installation
-  order: 1
+  label: Manual installation
+  order: 2
 ---
 import Link from '@components/Link.astro';
-
-
-import Badge from '@components/overrides/Badge.astro';
-import Tasks from '@components/Tasks.astro';
-import Task from '@components/Task.astro';
-import Callouts from '@components/Callouts.astro';
 import Aside from '@components/Aside.astro';
+
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
-The Storefront Compatibility Package contains changes to the Adobe Commerce codebase that enable drop-in component functionality. On <Link href={"https://experienceleague.adobe.com/en/docs/commerce/cloud-service/overview"} text={"Adobe Commerce as a Cloud Service"} />, it is installed and updated automatically.
+On Commerce on Cloud or on-premises with Adobe Commerce Optimizer, install the B2C Storefront Compatibility Package with Composer on your Commerce server. If you use [B2B drop-ins](/dropins-b2b/), also install the Storefront Compatibility B2B Package (SCP-B2B) on the same instance after the B2C package. Not sure this is your path? See [Find your path](/setup/configuration/storefront-compatibility/#find-your-path).
 
-<Badge tooltip="Applies to Adobe Commerce on Cloud projects (Adobe-managed PaaS infrastructure) and on-premises projects only." text="PaaS only" variant="note" size="large" />
+## Choose your B2C package
 
-## Installation
+The package version must match your Adobe Commerce release. Use the version from this table in `composer require adobe-commerce/storefront-compatibility:VERSION`.
 
-:::note[Note]
-You must have Adobe Commerce 2.4.7 or 2.4.8 installed. Magento Open Source is not supported.
-:::
+| Adobe Commerce | Package version | Reference |
+|---|---|---|
+| 2.4.9 (recommended) | `4.9.3` | [GraphQL and REST changes](/setup/configuration/storefront-compatibility/v249/) |
+| 2.4.8 | `4.8.28` | [GraphQL and REST changes](/reference/storefront-compatibility/v248/) |
+| 2.4.7 | `4.7.15` | [GraphQL and REST changes](/reference/storefront-compatibility/v247/) |
+
+<Aside type="note" title="Composer key requirements">
+To access the latest Storefront Compatibility Package, you must have either an Adobe Commerce Optimizer license for Commerce on Cloud or on-premises, or an Adobe Commerce as a Cloud Service license. Adobe Commerce on Cloud or on-premises without Optimizer is not supported. Magento Open Source instances are not supported.
+</Aside>
+
+## Install the B2C package
 
 <Tabs>
-  <TabItem label="Cloud infrastructure">
+  <TabItem label="Commerce on Cloud">
 
-Use this method to install the Storefront Compatibility Package using the Cloud infrastructure.
+<Steps>
 
-    1. On your local workstation, change to the project directory for your Adobe Commerce on cloud infrastructure project.
+1. Change to your Commerce project directory.
 
-    1. Check out the environment branch to update using the Adobe Commerce Cloud CLI.
-
-       ```bash
-       magento-cloud environment:checkout <environment-id>
-       ```
-
-    1. Add the Storefront Compatibility module.
-
-       Use the appropriate package version based on your Adobe Commerce version:
-
-       For Adobe Commerce 2.4.7, run:
-
-       ```bash
-       composer require adobe-commerce/storefront-compatibility:4.7.10
-       ```
-
-       For Adobe Commerce 2.4.8, run:
-
-       ```bash
-       composer require adobe-commerce/storefront-compatibility:4.8.8
-       ```
-
-       To check the latest version of the Storefront Compatibility Package, go to the [changelog](/releases/changelog/).
-
-    1. Update package dependencies.
-
-       ```bash
-       composer update "adobe-commerce/storefront-compatibility"
-       ```
-
-    1. Commit and push code changes for the `composer.json` and `composer.lock` files.
-
-    1. Add, commit, and push the code changes for the `composer.json` and `composer.lock` files to the cloud environment
-
-       ```bash
-       git add -A
-       git commit -m "Add module"
-       git push origin <branch-name>
-       ```
-
-       Pushing the updates to the cloud environment initiates the <Link href={"https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/develop/deploy/process"} text={"Commerce cloud deployment process"} /> to apply the changes. Check the deployment status from the <Link href={"https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/develop/test/log-locations#deploy-log"} text={"deploy log"} />.
-
-  </TabItem>
-  
-  <TabItem label="On premises">
-
-Use this method to install the Storefront Compatibility Package for an on-premises instance.
-
-1. Use Composer to add the package module to your project:
-
-   Use the appropriate package version based on your Adobe Commerce version:
-
-   For Adobe Commerce 2.4.7, run:
+1. Check out the environment branch you want to update.
 
    ```bash
-   composer require adobe-commerce/storefront-compatibility:4.7.10
+   magento-cloud environment:checkout <environment-id>
    ```
 
-   For Adobe Commerce 2.4.8, run:
+1. Add the package using the version from [Choose your B2C package](#choose-your-b2c-package).
 
    ```bash
-   composer require adobe-commerce/storefront-compatibility:4.8.8
+   composer require adobe-commerce/storefront-compatibility:4.9.3
    ```
 
-   To check the latest version of the Storefront Compatibility Package, go to the [changelog](/releases/changelog/).
+   Use `4.8.28` for Adobe Commerce 2.4.8.
 
-1. Upgrade Adobe Commerce:
+   Use `4.7.15` for Adobe Commerce 2.4.7.
 
-   ```bash
-   bin/magento setup:upgrade
-   ```
-
-  </TabItem>
-
-</Tabs>
-
-## Update the package
-
-Use the following procedure to update patch versions of the Storefront Compatibility Package.
-
-1. Run the following command to update the package:
+1. Update package dependencies.
 
    ```bash
    composer update adobe-commerce/storefront-compatibility
    ```
 
-1. Run the following commands to upgrade Adobe Commerce and clear the cache.
+1. Commit and push so the cloud environment picks up `composer.json` and `composer.lock`.
+
+   ```bash
+   git add composer.json composer.lock
+   git commit -m "Add module"
+   git push origin <branch-name>
+   ```
+
+   To confirm the deployment succeeded, check the <Link href={"https://experienceleague.adobe.com/en/docs/commerce-cloud-service/user-guide/develop/test/log-locations#deploy-log"} text={"Deploy log"} /> in the Cloud console when the push finishes.
+
+</Steps>
+
+  </TabItem>
+  
+  <TabItem label="On-premises">
+
+<Steps>
+
+1. Add the package using the version from [Choose your B2C package](#choose-your-b2c-package).
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility:4.9.3
+   ```
+
+   Use `4.8.28` for Adobe Commerce 2.4.8.
+
+   Use `4.7.15` for Adobe Commerce 2.4.7.
+
+1. Apply the module and clear the cache.
 
    ```bash
    bin/magento setup:upgrade && bin/magento cache:clean
    ```
+
+</Steps>
+
+  </TabItem>
+
+</Tabs>
+
+## Choose your B2B package
+
+[B2B drop-ins](/dropins-b2b/) need SCP-B2B in addition to the B2C package. Adobe Commerce B2B must already be configured on your Commerce instance. SCP-B2B supports Adobe Commerce 2.4.8 and 2.4.9 only, not Adobe Commerce 2.4.7.
+
+Use the version from this table in `composer require adobe-commerce/storefront-compatibility-b2b:VERSION`. For GraphQL changes in the package, see [B2B Compatibility Package](/setup/configuration/storefront-compatibility/b2b/).
+
+| Adobe Commerce | Package version |
+|---|---|
+| 2.4.9 (recommended) | `1.0.25` |
+| 2.4.8 | `1.0.25` |
+
+<Aside type="note" title="Composer key requirements">
+To access the latest Storefront Compatibility B2B Package, you must have either an Adobe Commerce Optimizer license for Commerce on Cloud or on-premises, or an Adobe Commerce as a Cloud Service license — the same requirement as the Storefront Compatibility Package (B2C). PaaS-only and Magento Open Source instances are not supported.
+</Aside>
+
+## Install the B2B package
+
+Install SCP-B2B only after the B2C Storefront Compatibility Package is on the instance.
+
+<Tabs>
+  <TabItem label="Commerce on Cloud">
+
+<Steps>
+
+1. Change to your Commerce project directory.
+
+1. Check out the environment branch you want to update, if you have not already done so for the B2C package.
+
+1. Add SCP-B2B using the version from [Choose your B2B package](#choose-your-b2b-package).
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility-b2b:1.0.25
+   ```
+
+1. Update package dependencies.
+
+   ```bash
+   composer update adobe-commerce/storefront-compatibility-b2b
+   ```
+
+1. Commit and push so the cloud environment picks up `composer.json` and `composer.lock`.
+
+   ```bash
+   git add composer.json composer.lock
+   git commit -m "Add B2B compatibility package"
+   git push origin <branch-name>
+   ```
+
+</Steps>
+
+  </TabItem>
+
+  <TabItem label="On-premises">
+
+<Steps>
+
+1. Add SCP-B2B using the version from [Choose your B2B package](#choose-your-b2b-package).
+
+   ```bash
+   composer require adobe-commerce/storefront-compatibility-b2b:1.0.25
+   ```
+
+1. Apply the module and clear the cache.
+
+   ```bash
+   bin/magento setup:upgrade && bin/magento cache:clean
+   ```
+
+</Steps>
+
+  </TabItem>
+
+</Tabs>
+
+## Update the packages
+
+Use these steps after your initial Composer install to move to a newer patch version. Open the [changelog](/releases/changelog/) and filter for the **Storefront Compatibility Package** or **Storefront Compatibility B2B Package** before you update.
+
+<Steps>
+
+1. Update the B2C package:
+
+   ```bash
+   composer update adobe-commerce/storefront-compatibility
+   ```
+
+1. If you use B2B drop-ins, update the SCP-B2B package:
+
+   ```bash
+   composer update adobe-commerce/storefront-compatibility-b2b
+   ```
+
+1. Upgrade Commerce and clear the cache:
+
+   ```bash
+   bin/magento setup:upgrade && bin/magento cache:clean
+   ```
+
+</Steps>
+
+## What's next
+
+After you install the packages, [configure your storefront](/setup/configuration/commerce-configuration/) to connect to Commerce. Confirm any remaining items on the [Commerce on Cloud or on-premises checklist](/get-started/backends/#paas-required-packages-and-services) before going live.

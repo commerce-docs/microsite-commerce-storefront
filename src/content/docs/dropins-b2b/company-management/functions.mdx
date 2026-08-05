@@ -13,10 +13,10 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Company Management drop-in provides **26 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
+The Company Management drop-in provides **29 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.2.0</strong>
+<strong>Version: 1.3.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -25,6 +25,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | --- | --- |
 | [`acceptCompanyInvitation`](#acceptcompanyinvitation) | Accepts a company invitation using the invitation code and user details from an email link. |
 | [`allowCompanyRegistration`](#allowcompanyregistration) | Returns whether the backend allows company self-registration per store configuration. |
+| [`assignChildCompany`](#assignchildcompany) | Assigns a child company to a parent company in the company hierarchy. |
 | [`buildPermissionTree`](#buildpermissiontree) | Filters a complete ACL resource tree down to only the resources matching the provided permission IDs. |
 | [`checkCompanyCreditEnabled`](#checkcompanycreditenabled) | Checks whether the Company Credit functionality ("Payment on Account") is enabled for the logged-in customer's company. |
 | [`companyEnabled`](#companyenabled) | Returns whether the Company feature is enabled in store configuration. |
@@ -39,6 +40,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`flattenPermissionIds`](#flattenpermissionids) | Flattens a nested ACL resource tree into a flat array of permission ID strings. |
 | [`getCompany`](#getcompany) | Retrieves complete information about the current company including name, structure, settings, and metadata. |
 | [`getCompanyAclResources`](#getcompanyaclresources) | Retrieves the available ACL (Access Control List) resources for company role permissions. |
+| [`getCompanyHierarchy`](#getcompanyhierarchy) | Retrieves the hierarchy of companies related to the current company. |
 | [`getCompanyCredit`](#getcompanycredit) | Retrieves the company's credit information including available credit, credit limit, outstanding balance, and currency. |
 | [`getCompanyCreditHistory`](#getcompanycredithistory) | Retrieves the company's credit transaction history with pagination support. |
 | [`getCompanyRole`](#getcompanyrole) | Retrieves details for a single company role including permissions and assigned users. |
@@ -55,6 +57,7 @@ The Company Management drop-in provides **26 API functions** for managing compan
 | [`isCompanyRoleNameAvailable`](#iscompanyrolenameavailable) | Checks if a role name is available for use in the company. |
 | [`isCompanyUser`](#iscompanyuser) | Checks if the current authenticated customer belongs to any company. |
 | [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | Checks if an email address is available for a new company user. |
+| [`unassignChildCompany`](#unassignchildcompany) | Removes a child company from its parent in the company hierarchy. |
 | [`updateCompany`](#updatecompany) | Updates company profile information with permission-aware field filtering based on user's edit permissions. |
 | [`updateCompanyRole`](#updatecompanyrole) | Updates an existing company role's name, permissions, or assigned users. |
 | [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree. |
@@ -106,6 +109,34 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `boolean`.
+
+## assignChildCompany
+
+Assigns a child company to a parent company in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const assignChildCompany = async (
+  parentCompanyId: string,
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `parentCompanyId` | `string` | Yes | The unique ID of the parent company. |
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to assign. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the assignment.
 
 ## checkCompanyCreditEnabled
 
@@ -398,6 +429,22 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns an array of [`CompanyAclResourceModel`](#companyaclresourcemodel) objects.
+
+## getCompanyHierarchy
+
+Retrieves the hierarchy of companies related to the current company, including parent and child company relationships. Returns the full hierarchy as a flat array of `Company` objects.
+
+```ts
+const getCompanyHierarchy = async (): Promise<Company[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the full company hierarchy for the authenticated user's company context.
 
 ## getCompanyCredit
 
@@ -748,6 +795,32 @@ Does not emit any drop-in events.
 
 Returns `void`.
 
+## unassignChildCompany
+
+Removes a child company from its parent in the company hierarchy. Returns the updated hierarchy as a flat array of `Company` objects.
+
+```ts
+const unassignChildCompany = async (
+  childCompanyId: string
+): Promise<Company[]>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `childCompanyId` | `string` | Yes | The unique ID of the child company to unassign from its parent. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Company[]` — the updated company hierarchy after the child company is removed.
+
 ## updateCompany
 
 Updates company profile information with permission-aware field filtering.
@@ -1004,6 +1077,20 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns a `string[]` containing every permission ID found in the tree (including nested children).
+
+### Company
+
+The `Company` object is returned by the following functions: [`assignChildCompany`](#assignchildcompany), [`getCompanyHierarchy`](#getcompanyhierarchy), [`unassignChildCompany`](#unassignchildcompany).
+
+```ts
+interface Company {
+  id: string;
+  name: string;
+  is_admin: boolean;
+  parent_company: { id: string; name: string } | null;
+  child_companies: Company[];
+}
+```
 
 ## Data Models
 

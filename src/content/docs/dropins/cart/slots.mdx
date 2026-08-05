@@ -15,7 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
 The Cart drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.2.0</strong>
+<strong>Version: 3.3.0</strong>
 </div>
 
 <Aside type="tip" title="Slot usage best practice">
@@ -27,10 +27,10 @@ Do not use context methods inside other context methods (for example, `appendChi
 | Container | Slots |
 |-----------|-------|
 | [`CartSummaryGrid`](#cartsummarygrid-slots) | `Thumbnail` |
-| [`CartSummaryList`](#cartsummarylist-slots) | `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `Thumbnail`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`CartSummaryList`](#cartsummarylist-slots) | `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `Thumbnail`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ConfirmDeleteBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
 | [`CartSummaryTable`](#cartsummarytable-slots) | `Item`, `Price`, `Quantity`, `Subtotal`, `Thumbnail`, `ProductTitle`, `Sku`, `Configurations`, `ItemAlert`, `ItemWarning`, `Actions`, `UndoBanner`, `EmptyCart` |
 | [`GiftOptions`](#giftoptions-slots) | `SwatchImage` |
-| [`MiniCart`](#minicart-slots) | `ProductList`, `ProductListFooter`, `PreCheckoutSection`, `Thumbnail`, `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
+| [`MiniCart`](#minicart-slots) | `ProductList`, `ProductListFooter`, `PreCheckoutSection`, `Thumbnail`, `Heading`, `EmptyCart`, `Footer`, `RowTotalFooter`, `ProductAttributes`, `CartSummaryFooter`, `CartItem`, `UndoBanner`, `ConfirmDeleteBanner`, `ItemTitle`, `ItemPrice`, `ItemQuantity`, `ItemTotal`, `ItemSku`, `ItemRemoveAction` |
 | [`OrderSummary`](#ordersummary-slots) | `EstimateShipping`, `Coupons`, `GiftCards` |
 
 </TableWrapper>
@@ -97,6 +97,11 @@ interface CartSummaryListProps {
     error?: string;
     onUndo: () => void;
     onDismiss: () => void;
+    }>;
+    ConfirmDeleteBanner?: SlotProps<{
+    item: CartModel['items'][number];
+    onConfirm: () => void;
+    onCancel: () => void;
     }>;
     ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
     ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
@@ -337,6 +342,44 @@ await provider.render(CartSummaryList, {
 })(block);
 ```
 
+### ConfirmDeleteBanner slot
+
+The `ConfirmDeleteBanner` slot lets you replace the default confirmation banner that appears when `confirmBeforeDelete={true}` and a shopper reduces an item's quantity to 0 or clicks the remove button. Use it to customize the banner's appearance, message text, and action buttons.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item pending deletion. |
+| `onConfirm` | `() => void` | Call to confirm deletion and trigger the remove API. |
+| `onCancel` | `() => void` | Call to dismiss the banner and restore the item row with its original quantity. |
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { CartSummaryList } from '@dropins/storefront-cart/containers/CartSummaryList.js';
+
+await provider.render(CartSummaryList, {
+  confirmBeforeDelete: true,
+  slots: {
+    ConfirmDeleteBanner: (ctx) => {
+      const banner = document.createElement('div');
+      banner.innerHTML = `
+        <p>Remove "${ctx.item.name}" from your cart?</p>
+        <button id="confirm">Remove</button>
+        <button id="cancel">Keep it</button>
+      `;
+      banner.querySelector('#confirm').addEventListener('click', ctx.onConfirm);
+      banner.querySelector('#cancel').addEventListener('click', ctx.onCancel);
+      ctx.appendChild(banner);
+    }
+  }
+})(block);
+```
+
 ### ItemTitle slot
 
 The `ItemTitle` slot allows you to customize the item title section of the `CartSummaryList` container.
@@ -535,6 +578,11 @@ interface MiniCartProps {
     error?: string;
     onUndo: () => void;
     onDismiss: () => void;
+    }>;
+    ConfirmDeleteBanner?: SlotProps<{
+    item: CartModel['items'][number];
+    onConfirm: () => void;
+    onCancel: () => void;
     }>;
     ItemTitle?: SlotProps<{ item: CartModel['items'][number] }>;
     ItemPrice?: SlotProps<{ item: CartModel['items'][number] }>;
@@ -815,6 +863,44 @@ await provider.render(MiniCart, {
       const element = document.createElement('div');
       element.innerText = 'Custom CartItem';
       ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### ConfirmDeleteBanner slot
+
+The `ConfirmDeleteBanner` slot lets you replace the default confirmation banner that appears when `confirmBeforeDelete={true}` and a shopper clicks the remove button. Use it to customize the banner's appearance, message text, and action buttons.
+
+#### Context
+
+The slot receives the following context:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `item` | `CartModel['items'][number]` | The cart item pending deletion. |
+| `onConfirm` | `() => void` | Call to confirm deletion and trigger the remove API. |
+| `onCancel` | `() => void` | Call to dismiss the banner and restore the item row with its original quantity. |
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-cart/render.js';
+import { MiniCart } from '@dropins/storefront-cart/containers/MiniCart.js';
+
+await provider.render(MiniCart, {
+  confirmBeforeDelete: true,
+  slots: {
+    ConfirmDeleteBanner: (ctx) => {
+      const banner = document.createElement('div');
+      banner.innerHTML = `
+        <p>Remove "${ctx.item.name}" from your cart?</p>
+        <button id="confirm">Remove</button>
+        <button id="cancel">Keep it</button>
+      `;
+      banner.querySelector('#confirm').addEventListener('click', ctx.onConfirm);
+      banner.querySelector('#cancel').addEventListener('click', ctx.onCancel);
+      ctx.appendChild(banner);
     }
   }
 })(block);

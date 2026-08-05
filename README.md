@@ -79,7 +79,7 @@ pnpm generate:llms
 
 **Thematic bundles:** The script partitions docs into topic-scoped files (get-started, boilerplate, dropins-reference, tutorials, releases, and so on) using the `LLMS_TXT_BUNDLES` array in `scripts/generate-llms-full.js`. If you add a new top-level section to `src/content/docs/`, add a matching entry to that array — the script logs a warning for any pages not covered by a bundle filter.
 
-**MDX processing:** The script strips frontmatter and imports, then replaces MDX component syntax with readable equivalents: fenced code blocks for `<Code>` and `<Diagram type="mermaid">`, blockquotes for `<Aside>`, a heading per tab for `<Tabs>`, and inline definitions for `<Term>` drawn from `src/data/glossary.ts`. Relative links are resolved to absolute production URLs.
+**MDX processing:** The script strips frontmatter and imports, then replaces MDX component syntax with readable equivalents: fenced code blocks for `<Code>` and `<Diagram type="mermaid">`, blockquotes for `<Aside>`, a heading per tab for `<Tabs>`, and inline definitions for `<Term>` drawn from `src/data/glossary.ts`. Internal links become absolute URLs using the same public doc base as the build: Experience League production by default, or the GitHub Pages origin and base path when `NODE_ENV=github` with `GITHUB_PAGES_ORIGIN` (see `scripts/generate-llms-full.js`). You can override the base with `LLMS_PUBLIC_BASE_URL`.
 
 ## Content structure
 

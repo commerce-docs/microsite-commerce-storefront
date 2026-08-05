@@ -15,7 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
 The User Auth drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. Slot render functions receive a context object (for example, `DefaultSlotContext`, `ResetPasswordSlotContext`) with properties such as `isLoading`, `isSuccessful`, and where relevant `passwordError`. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.2.0</strong>
+<strong>Version: 4.0.0</strong>
 </div>
 
 <Aside type="tip" title="Slot usage best practices">
@@ -27,7 +27,7 @@ Do not use context methods inside other context methods (for example, `appendChi
 | Container | Slots |
 |-----------|-------|
 | [`SignIn`](#signin-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification` |
-| [`SignUp`](#signup-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification`, `PrivacyPolicyConsent` |
+| [`SignUp`](#signup-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification`, `PrivacyPolicyConsent`, `RemoteShoppingAssistanceConsent` |
 | [`ResetPassword`](#resetpassword-slots) | `Title`, `Form`, `Buttons` |
 | [`SuccessNotification`](#successnotification-slots) | `SuccessNotificationActions` |
 | [`UpdatePassword`](#updatepassword-slots) | `Title`, `Form`, `Buttons`, `SuccessNotification` |
@@ -122,6 +122,7 @@ interface SignUpProps {
     Buttons?: SlotProps<DefaultSlotContext>;
     SuccessNotification?: SlotProps<DefaultSlotContext>;
     PrivacyPolicyConsent: SlotProps;
+    RemoteShoppingAssistanceConsent?: SlotProps;
   };
 }
 ```
@@ -208,6 +209,41 @@ await provider.render(SignUp, {
   }
 })(block);
 ```
+
+### RemoteShoppingAssistanceConsent slot
+
+The `RemoteShoppingAssistanceConsent` slot lets you customize the remote shopping assistance consent checkbox shown in the `SignUp` form. This slot belongs to the seller-assisted buying feature and renders only when seller-assisted buying is enabled at the store level. When the feature is disabled, the slot does not render. For the end-to-end flow and Admin setup, see [Seller-assisted buying](/dropins/user-account/containers/seller-assisted-buying/).
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-auth/render.js';
+import { SignUp } from '@dropins/storefront-auth/containers/SignUp.js';
+
+await provider.render(SignUp, {
+  slots: {
+    RemoteShoppingAssistanceConsent: (ctx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'custom-consent';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.name = 'allowRemoteShoppingAssistance';
+      input.value = 'true';
+
+      const label = document.createElement('label');
+      label.append(input, ' I agree to remote shopping assistance');
+
+      wrapper.appendChild(label);
+      ctx.appendChild(wrapper);
+    },
+  }
+})(block);
+```
+
+<Aside type="tip">
+The form reads the consent value by looking for an input named `allowRemoteShoppingAssistance` with `value="true"`. If your custom implementation omits that name or value, the consent flag is silently dropped from the create-account mutation. Make sure your custom implementation also meets any consent and privacy requirements for your region.
+</Aside>
 
 ## ResetPassword slots
 

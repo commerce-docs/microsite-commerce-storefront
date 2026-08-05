@@ -6,6 +6,60 @@ import { fileURLToPath } from 'url';
 import { generateSidebar } from '../astro.sidebar.mjs';
 import { PRODUCTION_BASE_URL } from '../site.config.js';
 
+// STOREFRONT-LLMS-DEPLOY-BASE — optional preview URL for generated bundle links (grep repo to revert).
+
+/**
+ * Base URL for absolute links inside generated llms bundles.
+ *
+ * Precedence:
+ * 1. LLMS_PUBLIC_BASE_URL — manual override (any host).
+ * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN — GitHub Pages preview (same origin and base path as the Astro build). VITE_GITHUB_BASE_PATH may be empty for a site at the domain root.
+ * 3. NODE_ENV=production or default — site.config.js PRODUCTION_BASE_URL (Experience League production).
+ */
+function resolvePublicDocBase() {
+  const explicit = process.env.LLMS_PUBLIC_BASE_URL?.trim();
+  if (explicit) {
+    return explicit.replace(/\/+$/, '');
+  }
+
+  if (process.env.NODE_ENV === 'github') {
+    const origin = process.env.GITHUB_PAGES_ORIGIN?.trim();
+    if (origin) {
+      const originClean = origin.replace(/\/+$/, '');
+      const basePathRaw = (process.env.VITE_GITHUB_BASE_PATH ?? '').trim();
+      const basePath =
+        !basePathRaw || basePathRaw === '/'
+          ? ''
+          : basePathRaw.startsWith('/')
+            ? basePathRaw
+            : `/${basePathRaw}`;
+      return `${originClean}${basePath}`.replace(/\/+$/, '');
+    }
+  }
+
+  return PRODUCTION_BASE_URL.replace(/\/+$/, '');
+}
+
+const PUBLIC_DOC_BASE = resolvePublicDocBase();
+const PRODUCTION_DOC_BASE = PRODUCTION_BASE_URL.replace(/\/+$/, '');
+
+/**
+ * Turn any absolute Experience League storefront doc URLs into PUBLIC_DOC_BASE
+ * when this run targets a non-production host (for example GitHub Pages). Source
+ * pages may use full ExL URLs in markdown or after HTML unwrap; relative links
+ * already go through resolveMarkdownLinkTarget.
+ */
+function rewriteStorefrontProductionUrls(content) {
+  if (PUBLIC_DOC_BASE === PRODUCTION_DOC_BASE) {
+    return content;
+  }
+  // Literal string replace (not a RegExp) so hostnames in site.config.js are not treated as regex patterns.
+  return content.replaceAll(PRODUCTION_DOC_BASE, PUBLIC_DOC_BASE);
+}
+
+const browseDocsLabel =
+  PUBLIC_DOC_BASE === PRODUCTION_DOC_BASE ? 'on Experience League' : 'on this documentation site';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
@@ -87,19 +141,25 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'documentation-home',
     label: 'Documentation home',
-    blurb: 'Top-level documentation landing content',
-    filter: p => p === 'index'
+    blurb: 'Top-level documentation landing content and reference hub',
+    filter: p => p === 'index' || p.startsWith('reference/')
   },
   {
     slug: 'get-started',
     label: 'Get started',
-    blurb: 'Onboarding, architecture, performance, and Lighthouse for Commerce storefront projects',
+    blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, and browser compatibility',
     filter: p => p.startsWith('get-started/')
+  },
+  {
+    slug: 'ai',
+    label: 'Build with AI',
+    blurb: 'Overview, documentation context files, Dropins MCP server, and AI agent skills for storefront development',
+    filter: p => p.startsWith('ai/')
   },
   {
     slug: 'boilerplate',
     label: 'Boilerplate',
-    blurb: 'Boilerplate template, blocks reference, configuration, and Universal Editor',
+    blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, and updates',
     filter: p => p.startsWith('boilerplate/')
   },
   {
@@ -115,17 +175,99 @@ const LLMS_TXT_BUNDLES = [
     filter: p => p.startsWith('licensing/')
   },
   {
-    slug: 'setup-reference',
-    label: 'Setup and configuration',
-    blurb: 'Discovery, configuration, SEO, launch, analytics, and compatibility',
-    filter: p => p.startsWith('setup/')
+    slug: 'setup-configuration',
+    label: 'Setup — configuration',
+    blurb: 'Configuration: endpoints, headers, CORS, gated content, multistore, prerender, CDN, AEM Assets, Storefront Compatibility Package',
+    filter: p => p.startsWith('setup/configuration/')
   },
   {
-    slug: 'dropins-reference',
-    label: 'Drop-ins reference',
-    blurb: 'Drop-in components, containers, APIs, and guides (excludes step-by-step tutorials)',
+    slug: 'setup-go-live',
+    label: 'Setup — go live',
+    blurb: 'Discovery, Luma Bridge, analytics, AEP, SEO, launch checklist, and data export validation',
+    filter: p => p.startsWith('setup/') && !p.startsWith('setup/configuration/')
+  },
+  {
+    slug: 'dropins-intro',
+    label: 'Drop-ins overview',
+    blurb: 'Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins',
     filter: p =>
-      (p.startsWith('dropins/') || p.startsWith('dropins-b2b/')) && !p.includes('/tutorials/')
+      (p.startsWith('dropins/all/') || p === 'dropins/index' || p === 'dropins-b2b/index') &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-cart',
+    label: 'Cart drop-in',
+    blurb: 'Cart drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/cart/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-checkout',
+    label: 'Checkout drop-in',
+    blurb: 'Checkout drop-in containers, slots, events, and customization APIs',
+    filter: p => p.startsWith('dropins/checkout/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-order',
+    label: 'Order drop-in',
+    blurb: 'Order management, order confirmation, and returns drop-in reference',
+    filter: p => p.startsWith('dropins/order/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-pdp',
+    label: 'Product details drop-in',
+    blurb: 'Product details page drop-in containers, slots, and APIs',
+    filter: p => p.startsWith('dropins/product-details/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-account-auth',
+    label: 'Account and auth drop-ins',
+    blurb: 'User account and user authentication drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/user-account/') || p.startsWith('dropins/user-auth/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-catalog',
+    label: 'Catalog drop-ins',
+    blurb: 'Product discovery (Live Search), recommendations, and personalization drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/product-discovery/') ||
+        p.startsWith('dropins/recommendations/') ||
+        p.startsWith('dropins/personalization/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-wishlist-payments',
+    label: 'Wishlist and payments drop-ins',
+    blurb: 'Wishlist and payment services drop-in reference',
+    filter: p =>
+      (p.startsWith('dropins/wishlist/') || p.startsWith('dropins/payment-services/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-quote',
+    label: 'B2B quote management drop-in',
+    blurb: 'Quote management drop-in containers, slots, events, and APIs for B2B',
+    filter: p => p.startsWith('dropins-b2b/quote-management/') && !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-company',
+    label: 'B2B company management drop-ins',
+    blurb: 'Company management and company switcher drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/company-management/') ||
+        p.startsWith('dropins-b2b/company-switcher/')) &&
+      !p.includes('/tutorials/')
+  },
+  {
+    slug: 'dropins-b2b-purchasing',
+    label: 'B2B purchasing drop-ins',
+    blurb: 'Purchase order, quick order, and requisition list drop-in reference for B2B',
+    filter: p =>
+      (p.startsWith('dropins-b2b/purchase-order/') ||
+        p.startsWith('dropins-b2b/quick-order/') ||
+        p.startsWith('dropins-b2b/requisition-list/')) &&
+      !p.includes('/tutorials/')
   },
   {
     slug: 'tutorials-reference',
@@ -136,7 +278,7 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'blocks-reference',
     label: 'Commerce blocks reference',
-    blurb: 'Edge Delivery blocks for commerce (placeholders, slots, and block-level documentation)',
+    blurb: 'EDS block configurations for B2C and B2B commerce (cart, checkout, account, order, quotes, and purchasing)',
     filter: p => p.startsWith('merchants/blocks/')
   },
   {
@@ -148,15 +290,17 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'sdk-reference',
     label: 'Storefront SDK',
-    blurb: 'SDK components, patterns, and integration',
+    blurb: 'UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
     filter: p => p.startsWith('sdk/')
   },
-  {
-    slug: 'videos',
-    label: 'Videos',
-    blurb: 'Training videos and related notes',
-    filter: p => p.startsWith('videos/')
-  },
+  // Excluded: videos/ pages are descriptions of video content with no actionable text for AI tools;
+  // the corresponding step-by-step content lives in tutorials-reference.
+  // {
+  //   slug: 'videos',
+  //   label: 'Videos',
+  //   blurb: 'Training videos and related notes',
+  //   filter: p => p.startsWith('videos/')
+  // },
   {
     slug: 'releases',
     label: 'Releases',
@@ -169,18 +313,20 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'FAQ and operational troubleshooting',
     filter: p => p.startsWith('troubleshooting/')
   },
-  {
-    slug: 'resources',
-    label: 'Resources',
-    blurb: 'Placeholders, building with AI (context files), and supplementary resources',
-    filter: p => p.startsWith('resources/')
-  },
-  {
-    slug: 'playgrounds',
-    label: 'Playgrounds',
-    blurb: 'Interactive playground documentation',
-    filter: p => p.startsWith('playgrounds/')
-  }
+  // Excluded: resources/ contains only a list of external JSON URLs; no actionable content for AI tools.
+  // {
+  //   slug: 'resources',
+  //   label: 'Resources',
+  //   blurb: 'Placeholder files (storefront labels for drop-in components) and supplementary resources',
+  //   filter: p => p.startsWith('resources/')
+  // },
+  // Excluded: playgrounds/ pages wrap an interactive GraphiQL UI that renders nothing meaningful as text.
+  // {
+  //   slug: 'playgrounds',
+  //   label: 'Playgrounds',
+  //   blurb: 'Interactive playground documentation',
+  //   filter: p => p.startsWith('playgrounds/')
+  // }
 ];
 
 function shouldAddTrailingSlash(urlPath) {
@@ -380,7 +526,7 @@ function expandTermComponents(content) {
 /** <IFrame src={frontmatter.iframe.src} /> → Storybook link using the resolved src. */
 function expandIFrameComponents(content, iframeSrc) {
   if (!iframeSrc) return content;
-  const url = `${PRODUCTION_BASE_URL}/storybook-static/iframe.html?id=${iframeSrc}&viewMode=docs`;
+  const url = `${PUBLIC_DOC_BASE}/storybook-static/iframe.html?id=${iframeSrc}&viewMode=docs`;
   return content.replace(
     /<IFrame\b[\s\S]*?\/>/g,
     `\n\n[View interactive component in Storybook](${url})\n\n`
@@ -508,7 +654,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
     const rest = p.slice('@images/'.length);
     const urlPath = `/images/${rest}`;
     const slash = shouldAddTrailingSlash(urlPath) ? '/' : '';
-    return `${PRODUCTION_BASE_URL}${urlPath}${slash}${hash}`;
+    return `${PUBLIC_DOC_BASE}${urlPath}${slash}${hash}`;
   }
 
   if (p.startsWith('/')) {
@@ -516,7 +662,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
     if (shouldAddTrailingSlash(abs)) {
       abs += '/';
     }
-    return `${PRODUCTION_BASE_URL}${abs}${hash}`;
+    return `${PUBLIC_DOC_BASE}${abs}${hash}`;
   }
 
   const resolved = normalize(resolve(dirname(sourceFilePath), p));
@@ -529,7 +675,7 @@ function resolveMarkdownLinkTarget(link, sourceFilePath) {
   if (shouldAddTrailingSlash(urlPath)) {
     urlPath += '/';
   }
-  return `${PRODUCTION_BASE_URL}${urlPath}${hash}`;
+  return `${PUBLIC_DOC_BASE}${urlPath}${hash}`;
 }
 
 function convertLinks(content, filePath) {
@@ -593,6 +739,65 @@ function unwrapTableBlocks(content) {
   return content.replace(/<TableWrapper\b[^>]*>([\s\S]*?)<\/TableWrapper>/g, '$1');
 }
 
+/**
+ * Extract plain text from an HTML cell, stripping all tags and decoding common entities.
+ * Input is trusted internal MDX (no user-supplied HTML); output is a plain-text .txt file
+ * consumed by LLMs, never rendered in a browser — CodeQL sanitization heuristics don't apply.
+ */
+function cellText(html) {
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
+}
+
+/** Convert HTML tables to Markdown pipe tables. */
+function convertHtmlTablesToMarkdown(content) {
+  return content.replace(/<table[\s\S]*?<\/table>/gi, (tableHtml) => {
+    const rows = [];
+    const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    while ((rowMatch = rowPattern.exec(tableHtml)) !== null) {
+      const cells = [];
+      const cellPattern = /<t[dh]([^>]*)>([\s\S]*?)<\/t[dh]>/gi;
+      let cellMatch;
+      while ((cellMatch = cellPattern.exec(rowMatch[1])) !== null) {
+        const attrs = cellMatch[1];
+        const colspanMatch = attrs.match(/colspan=["']?(\d+)["']?/i);
+        const colspan = colspanMatch ? parseInt(colspanMatch[1], 10) : 1;
+        cells.push({ text: cellText(cellMatch[2]), colspan });
+      }
+      if (cells.length > 0) rows.push(cells);
+    }
+
+    if (rows.length === 0) return tableHtml;
+
+    // Determine column count from the widest row
+    const colCount = Math.max(2, ...rows.map(r => r.reduce((s, c) => s + c.colspan, 0)));
+
+    const lines = [];
+    for (let i = 0; i < rows.length; i++) {
+      // Expand colspan cells into empty sibling columns
+      const expanded = [];
+      for (const cell of rows[i]) {
+        expanded.push(cell.text);
+        for (let j = 1; j < cell.colspan; j++) expanded.push('');
+      }
+      while (expanded.length < colCount) expanded.push('');
+      lines.push('| ' + expanded.join(' | ') + ' |');
+      // Separator after header row
+      if (i === 0) lines.push('| ' + Array(colCount).fill('---').join(' | ') + ' |');
+    }
+
+    return '\n\n' + lines.join('\n') + '\n\n';
+  });
+}
+
 function unwrapTaskBlocks(content) {
   return content.replace(/<Tasks>([\s\S]*?)<\/Tasks>/g, (_, inner) => {
     let step = 0;
@@ -621,6 +826,7 @@ function stripMdxArtifacts(content) {
   let result = content;
   result = unwrapAsideBlocks(result);
   result = unwrapTableBlocks(result);
+  result = convertHtmlTablesToMarkdown(result);
   result = unwrapTaskBlocks(result);
   result = unwrapSimpleBlockWrappers(result);
   result = convertIframesToText(result);
@@ -652,6 +858,8 @@ function processFile(filePath, relativePath) {
     if (iframeSrc && description) {
       processed = description + '\n\n' + processed.trim();
     }
+
+    processed = rewriteStorefrontProductionUrls(processed);
 
     const sectionHeader = `\n\n---\n\n# ${title}\n\n`;
 
@@ -738,7 +946,7 @@ function buildBundleHeader({ label, description, timestamp }) {
 
 > ${description}
 > Generated: ${timestamp}
-> Source: ${PRODUCTION_BASE_URL}
+> Source: ${PUBLIC_DOC_BASE}
 `;
 }
 
@@ -749,14 +957,14 @@ function buildTopicBundleHeader({ title, blurb, timestamp }) {
 
 > ${blurb}
 > Generated: ${timestamp}
-> Source: ${PRODUCTION_BASE_URL}
+> Source: ${PUBLIC_DOC_BASE}
 `;
 }
 
 function writeLlmsTxt() {
   const thematic = LLMS_TXT_BUNDLES.map(
     b =>
-      `- [${b.label}](${PRODUCTION_BASE_URL}/_llms-txt/${b.slug}.txt): ${b.blurb}`
+      `- [${b.label}](${PUBLIC_DOC_BASE}/_llms-txt/${b.slug}.txt): ${b.blurb}`
   ).join('\n');
 
   const body = `# Adobe Commerce Storefront
@@ -769,8 +977,8 @@ function writeLlmsTxt() {
 
 ## Documentation Sets
 
-- [Abridged documentation](${PRODUCTION_BASE_URL}/llms-small.txt): a compact bundle with non-essential long-form changelog content removed
-- [Complete documentation](${PRODUCTION_BASE_URL}/llms-full.txt): the full documentation for Adobe Commerce Storefront
+- [Abridged documentation](${PUBLIC_DOC_BASE}/llms-small.txt): a compact bundle with non-essential long-form changelog content removed
+- [Complete documentation](${PUBLIC_DOC_BASE}/llms-full.txt): the full documentation for Adobe Commerce Storefront
 
 ${thematic}
 
@@ -781,15 +989,20 @@ ${thematic}
 
 ## Optional
 
-- [Browse the documentation](${PRODUCTION_BASE_URL}/) on Experience League
+- [Browse the documentation](${PUBLIC_DOC_BASE}/) ${browseDocsLabel}
 `;
 
   writeFileSync(OUTPUT_LLMSTXT, body, 'utf-8');
 }
 
+// Paths intentionally excluded from all bundles (content not useful for AI tools).
+const COVERAGE_EXCLUSIONS = ['videos/', 'resources/', 'playgrounds/'];
+
 function validateCoverage(allFiles) {
   const paths = allFiles.map(f => f.relativePath);
-  const uncovered = paths.filter(p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)));
+  const uncovered = paths.filter(
+    p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)) && !COVERAGE_EXCLUSIONS.some(e => p.startsWith(e))
+  );
   if (uncovered.length > 0) {
     console.warn(
       'Warning: some docs are not covered by any _llms-txt bundle filter:',
@@ -797,10 +1010,18 @@ function validateCoverage(allFiles) {
       uncovered.length > 20 ? `... (+${uncovered.length - 20} more)` : ''
     );
   }
+  for (const bundle of LLMS_TXT_BUNDLES) {
+    if (!paths.some(p => bundle.filter(p))) {
+      console.warn(`Warning: bundle "${bundle.slug}" matches zero documentation files`);
+    }
+  }
 }
 
 function generate() {
   console.log('Generating llms.txt, llms-full.txt, llms-small.txt, and _llms-txt bundles...\n');
+  if (PUBLIC_DOC_BASE !== PRODUCTION_DOC_BASE) {
+    console.log(`   Bundle link base: ${PUBLIC_DOC_BASE}\n`);
+  }
 
   mkdirSync(OUTPUT_LLMS_TXT_DIR, { recursive: true });
 
@@ -840,7 +1061,7 @@ function generate() {
     const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
     const relUrl = outputPath.replace(join(projectRoot, 'public') + '/', '');
     console.log(`   Done: ${processedCount} pages, ${fileSizeInMB} MB`);
-    console.log(`   URL: ${PRODUCTION_BASE_URL}/${relUrl}\n`);
+    console.log(`   URL: ${PUBLIC_DOC_BASE}/${relUrl}\n`);
   }
 
   writeBundle(
