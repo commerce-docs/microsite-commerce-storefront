@@ -95,6 +95,33 @@ In the Commerce boilerplate, eager, site-wide tokens and styles usually start in
 
 After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often backfires. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
 
+### Load fragments on demand
+
+Edge Delivery Services caps requests from one visitor to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Custom code can fetch a fragment — a separate page snippet Edge Delivery Services loads on request — or a drop-in container before the shopper asks for it. That adds to the request count on every page load, even if the shopper never uses it.
+
+Watch for this pattern in your own event handlers. An event fires on every page load — for example, a `cart/data` update — and the handler loads a fragment for a panel the shopper might never open.
+
+```javascript
+// Avoid: loads a fragment on every cart-data update,
+// even if the shopper never opens the panel
+events.on('cart/data', async (data) => {
+  if (data) await loadFragment('/mini-cart');
+});
+```
+
+```javascript
+// Better: load the fragment only when the shopper acts
+cartButton.addEventListener('click', async () => {
+  await loadFragment('/mini-cart');
+});
+```
+
+Update a small piece of UI, like an item-count badge, straight from the event data instead. Save the fragment fetch for the moment the shopper actually opens the panel. For how blocks wire up event handlers, see [Event bus integration](/boilerplate/blocks-reference/#event-bus-integration).
+
+<Aside type="tip" title="Two more requests to watch">
+Guard local-development-only scripts behind a hostname check, such as `window.location.hostname.includes('localhost')`, so they never ship to production. The boilerplate already uses this pattern in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/scripts.js" text="scripts/scripts.js" />. Also consolidate one-off utility files into a shared module instead of sending one HTTP request per helper function.
+</Aside>
+
 <Aside type="tip" title="Related storefront docs">
 For tips on catalog pages (images, APIs, loading order), see the [FAQ](/troubleshooting/faq#how-can-i-improve-the-performance-of-my-catalog-pages).
 </Aside>
