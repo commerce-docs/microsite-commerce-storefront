@@ -87,7 +87,7 @@ import Link from '@components/Link.astro';
       - **Drop-in SDK**: `@dropins/tools` upgraded from 1.8.0 to 1.8.1, which includes `@adobe-commerce/elsie` 1.8.1 and `@adobe-commerce/recaptcha` 1.1.0.
 
       **Fixes and improvements**
-      - **Product Recommendations block**: Block updated to use the Recommendations drop-in v4, which switches to the `getRecommendationsUnitsByIds` GraphQL query for proper catalog view support ([#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
+      - **Product Recommendations block**: Block updated to use the Recommendations drop-in v4, which switches to the `recommendationsByUnitIds` GraphQL query for proper catalog view support ([#1183](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1183)).
       - **B2B (Order Comments)**: New `commerce-order-comments` block renders order-level comments on B2B order details pages using the `OrderComments` container from the Order drop-in ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
       - **B2B (Quick Order)**: Quick Order block updated with consistent configurable-product Add to Cart handling, extended `handleAddToCart` callback payload with `parentSku` and `optionsUIDs`, and fixed duplicate event emissions on option changes ([#1210](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1210), B2B).
     </ChangelogEntry>
@@ -822,11 +822,26 @@ import Link from '@components/Link.astro';
 ************************************/}
 
       <ChangelogEntry
-            date="2026-07-30"
-            title="Storefront Compatibility Package — no user-facing changes"
+            date="2026-08-03"
+            title="Storefront Compatibility Package v4.9.3, v4.8.28, v4.7.15"
             components={['Storefront Compatibility Package']}
         >
-          This suite does not add user-facing Storefront Compatibility Package changes beyond the pinned version.
+          The Storefront Compatibility Package has been updated to include the following changes:
+
+          - **Sales Rule - Free Gift**:
+            - Added support for Free Gift promotions through Shopping Cart Price Rules.
+            - Added `gift_sku` and `gift_qty` extension attributes to `Magento\SalesRule\Api\Data\RuleInterface`.
+            - Added the `available_free_gifts` field to the `Cart` type to expose eligible free gift options.
+            - Added the `selectFreeGiftForCart` mutation to allow customers to select a free gift for the cart.
+            - Added the `is_free_gift` field to `CartItemInterface` to identify free gift line items.
+            - Added GraphQL validation to enforce free gift eligibility, quantity limits, and required gift selection before order placement.
+
+          - **Product Alert**:
+            - Added GraphQL support for Product Alert subscriptions in the Storefront Compatibility Package.
+            - Added `subscribeProductAlertStock`, `unsubscribeProductAlertStock`, and `unsubscribeProductAlertStockAll` mutations for back-in-stock alerts.
+            - Added `subscribeProductAlertPrice`, `unsubscribeProductAlertPrice`, and `unsubscribeProductAlertPriceAll` mutations for price-drop alerts.
+            - Added `isSubscribedProductAlertStock` and `isSubscribedProductAlertPrice` queries to check product alert subscription status.
+
       </ChangelogEntry>
 
       <ChangelogEntry
@@ -836,7 +851,7 @@ import Link from '@components/Link.astro';
         >
           The Storefront Compatibility Package has been updated to include the following changes:
 
-          - **Persistent Shopping Cart and Customer**: Exposed customer share scope, persistent cart, and persistent wishlist related settings through the `storeConfig` query.
+          - **Persistent Shopping Cart and Customer**: Adds `share_customer_accounts_scope`, `persistent_enabled`, `persistent_shopping_cart`, and `persistent_options_wishlist` to the `storeConfig` query. These fields expose the customer account share scope and the persistent cart and wishlist settings for the store.
           - **Login as Customer**: Fixed an issue where the `add_to_cart` event was not being logged when products were added to the cart using the Login as Customer feature.
       </ChangelogEntry>
 
@@ -847,7 +862,7 @@ import Link from '@components/Link.astro';
         >
           The Storefront Compatibility Package has been updated to include the following changes:
 
-          - **GraphQL Input Limits**: Updated the default configuration value for `GraphQL API Input Limits > Maximum Aliases Allowed`. This change adjusts the default limit to support the updated GraphQL request handling behavior while maintaining configurable limits for administrators.
+          - **GraphQL Input Limits**: Raises the default for **Maximum Alias Allowed** from `10` to `15`, configured at **Stores** > **Settings** > **Configuration** > **Services** > **Web API** > **GraphQL Input Limits** in the Admin. Storefront drop-ins need the higher limit because the `@dropins/tools` reCAPTCHA integration batches multiple `recaptchaFormConfig` calls into one query, with one alias per protected form.
       </ChangelogEntry>
 
       <ChangelogEntry
@@ -1272,14 +1287,6 @@ import Link from '@components/Link.astro';
 {/**********************************
 **Storefront Compatibility B2B Package**
 ************************************/}
-
-      <ChangelogEntry
-          date="2026-07-30"
-          title="Storefront Compatibility B2B Package — no user-facing changes"
-          components={['Storefront Compatibility B2B Package']}
-      >
-          This suite does not add user-facing Storefront Compatibility B2B Package changes beyond the pinned version.
-      </ChangelogEntry>
 
       <ChangelogEntry
           date="2026-07-24"
@@ -2144,7 +2151,7 @@ import Link from '@components/Link.astro';
     >
       **Major version upgrade.** The Product Recommendations drop-in has been updated to the following changes:
 
-      - **Catalog view support**: The drop-in now uses the `getRecommendationsUnitsByIds` GraphQL query instead of the legacy `getRecommendations` query. This ensures recommendation units respect catalog view scoping, so globally scoped units work correctly in multi-catalog and multi-store setups. The previous `getRecommendations` query did not honor catalog view context, causing recommendation units to appear blank for stores using non-default catalog views ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
+      - **Catalog view support**: The drop-in now uses the `recommendationsByUnitIds` GraphQL query instead of the legacy `getRecommendations` query. This ensures recommendation units respect catalog view scoping, so globally scoped units work correctly in multi-catalog and multi-store setups. The previous `getRecommendations` query did not honor catalog view context, causing recommendation units to appear blank for stores using non-default catalog views ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
       - **Corrupted view history recovery**: Resolved a reliability issue where a corrupted `userViewHistory` value in browser local storage could permanently prevent recommendations from loading on the product page. Because local storage is never automatically cleared, a single corrupted entry would break recommendations indefinitely for affected shoppers until they manually cleared their storage ([#34](https://github.com/adobe-commerce/storefront-recommendations/pull/34)).
       - **Title rendering fix**: Resolved an issue with recommendation unit title display ([#36](https://github.com/adobe-commerce/storefront-recommendations/pull/36)).
     </ChangelogEntry>

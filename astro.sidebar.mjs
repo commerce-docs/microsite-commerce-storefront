@@ -46,7 +46,6 @@ export function generateSidebar() {
           items: [
             { label: 'Install the integrations', link: '/ai/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Dropins MCP', link: '/ai/dropins-mcp/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
             { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
@@ -220,7 +219,6 @@ export function generateSidebar() {
 
         // ---------- REFERENCE ----------
         { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
-        { label: 'Drop-ins MCP', link: '/reference/dropins-mcp/' },
 
         // ---------- B2C DROP-INS ----------
         {
