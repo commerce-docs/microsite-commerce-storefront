@@ -11,13 +11,7 @@ import LinkCard from '@components/LinkCard.astro';
 import Term from '@components/Term.astro';
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-If your storefront feels slow or your mobile scores look low, start here.
-
-You'll walk through `delayed.js`, CSS load order, and `head.html` next to <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" />, the Edge Delivery guide many teams keep open while they tune loading. After you change how things load, run [Lighthouse audits](#run-lighthouse-audits) for a fresh readout. Before launch, review [Performance and monitoring](/setup/launch/#performance-and-monitoring) on the launch checklist.
-
-When you already have the project from [Create a storefront](/get-started/create-storefront/), leave the repo open in your editor so you can open files such as `scripts/delayed.js` and `styles/styles.css` when this page points to them.
-
-The Commerce boilerplate uses the same <Term>Edge Delivery Services</Term> pattern as other Edge storefronts: eager, lazy, and delayed loading, fonts, and LCP (Largest Contentful Paint, how fast the main content shows).
+If your storefront feels slow or your mobile scores look low, tune `delayed.js`, CSS load order, and `head.html` to match the <Term>Edge Delivery Services</Term> eager, lazy, and delayed loading pattern.
 
 <LinkCard
   noborder
@@ -95,34 +89,19 @@ In the Commerce boilerplate, eager, site-wide tokens and styles usually start in
 
 After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often backfires. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
 
-### Load fragments on demand
+### Load hidden UI on demand
 
-Edge Delivery Services caps requests from one visitor to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Custom code can fetch a fragment — a separate page snippet Edge Delivery Services loads on request — or a drop-in container before the shopper asks for it. That adds to the request count on every page load, even if the shopper never uses it.
+Treat any UI that stays hidden until the shopper interacts with it as lazy: load its scripts, fragments, and styles only on the interaction that reveals it, such as a click or tap, not before.
 
-Watch for this pattern in your own event handlers. An event fires on every page load — for example, a `cart/data` update — and the handler loads a fragment for a panel the shopper might never open.
+The Mini Cart panel is a good example. Most visitors never open it, so the scripts, fragment, and styles it needs to render shouldn't load until they do. Load the fragment on the click that opens the panel, and update the item-count badge, the piece shoppers always see, straight from event data instead.
 
-```javascript
-// Avoid: loads a fragment on every cart-data update,
-// even if the shopper never opens the panel
-events.on('cart/data', async (data) => {
-  if (data) await loadFragment('/mini-cart');
-});
-```
+The same rule applies to any drop-in container, fragment, or block that's hidden by default: request what it needs when the shopper's action reveals it, not on every page load.
 
-```javascript
-// Better: load the fragment only when the shopper acts
-cartButton.addEventListener('click', async () => {
-  await loadFragment('/mini-cart');
-});
-```
-
-Update a small piece of UI, like an item-count badge, straight from the event data instead. Save the fragment fetch for the moment the shopper actually opens the panel. For how blocks wire up event handlers, see [Event bus integration](/boilerplate/blocks-reference/#event-bus-integration).
-
-<Aside type="tip" title="Two more requests to watch">
-Guard local-development-only scripts behind a hostname check, such as `window.location.hostname.includes('localhost')`, so they never ship to production. The boilerplate already uses this pattern in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/scripts.js" text="scripts/scripts.js" />. Also consolidate one-off utility files into a shared module instead of sending one HTTP request per helper function.
-</Aside>
+Edge Delivery Services caps requests from one visitor to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Loading hidden UI eagerly adds to that count on every page load, even for shoppers who never see it. It also forces the browser to paint that UI before it's needed, which can slow LCP. One eager panel looks minor on its own, but the cost adds up as you add more blocks and logic to the storefront.
 
 Already seeing `429` errors? See [Too many requests (429 errors)](/troubleshooting/too-many-requests/) for a step-by-step diagnosis.
+
+Once you've tuned these areas, run [Lighthouse audits](#run-lighthouse-audits) for a fresh readout, and revisit [Performance and monitoring](/setup/launch/#performance-and-monitoring) on the launch checklist before you ship.
 
 <Aside type="tip" title="Related storefront docs">
 For tips on catalog pages (images, APIs, loading order), see the [FAQ](/troubleshooting/faq#how-can-i-improve-the-performance-of-my-catalog-pages).
