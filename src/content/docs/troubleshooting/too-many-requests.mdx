@@ -1,0 +1,44 @@
+---
+title: Too many requests (429 errors)
+description: Diagnose 429 Too Many Requests errors caused by exceeding Edge Delivery Services rate limits, and reduce your storefront's request count.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+## Status code 429
+
+### If you see this
+
+You see repeated `429` status codes in your browser's network tab, or a PageSpeed Insights or Lighthouse audit flags an unusually high number of requests on page load.
+
+### Why this happens
+
+Edge Delivery Services caps requests from one visitor to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Most storefronts hit that cap because custom code fetches more than shoppers need before they ask for it.
+
+Three patterns cause this most often:
+
+- Event handlers that fetch a fragment or container on every page load, instead of on interaction
+- Local-development-only scripts that ship to production without a hostname guard
+- Many small utility or component files loaded as separate requests instead of a shared module
+
+### What to do
+
+<Steps>
+
+1. Open your browser's network tab, or run a Lighthouse audit, and count the requests in the first second of page load.
+
+   For more information, see [Run Lighthouse audits](/get-started/performance/#run-lighthouse-audits).
+
+1. Find event handlers that fetch a fragment or container on every page load, and move the fetch to the interaction that needs it, such as a button click.
+
+   For more information, see [Load fragments on demand](/get-started/performance/#load-fragments-on-demand).
+
+1. Guard local-development-only scripts behind a hostname check so they never ship to production.
+
+1. Consolidate small utility files into a shared module instead of sending one request per file.
+
+1. Re-run the audit to confirm the request count dropped.
+
+</Steps>
+
+For load-order and LCP guidance beyond request count, see [How can I improve the performance of my catalog pages?](/troubleshooting/faq/#how-can-i-improve-the-performance-of-my-catalog-pages) in the FAQ.
