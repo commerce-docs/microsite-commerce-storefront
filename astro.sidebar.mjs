@@ -888,6 +888,7 @@ export function generateSidebar() {
             { label: 'Overview', link: '/merchants/blocks/' },
             { label: 'Content and Commerce blocks', link: '/merchants/blocks/content-commerce-blocks/' },
             { label: 'Author and developer tasks', link: '/merchants/blocks/author-and-developer-tasks/' },
+            { label: 'Content model overview', link: '/merchants/blocks/content-model/' },
             { label: 'Block table structure', link: '/merchants/blocks/block-tables/' },
             { label: 'Labels and placeholders', link: '/merchants/blocks/labels-and-placeholders/' },
             { label: 'Placeholder sheets', link: '/merchants/blocks/placeholder-sheets/' },
