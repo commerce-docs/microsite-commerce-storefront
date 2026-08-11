@@ -863,6 +863,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/quick-start/' },
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
+            { label: 'Content model overview', link: '/merchants/quick-start/content-model/' },
             { label: 'Your First Page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Document Authoring Tool', link: '/merchants/quick-start/document-authoring/' },
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
