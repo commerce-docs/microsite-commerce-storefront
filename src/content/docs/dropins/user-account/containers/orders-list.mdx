@@ -1,6 +1,6 @@
 ---
 title: OrdersList container
-description: Show paginated order history with filters in the full view or a compact minified list for account dashboards and side panels.
+description: Show paginated order history with search and filters in the full view or a compact minified list for account dashboards and side panels.
 ---
 
 import Diagram from '@components/Diagram.astro';
@@ -44,6 +44,8 @@ compact
         ['minifiedView', 'boolean', 'No', 'Whether to enable/disable minified view.'],
         ['withThumbnails', 'boolean', 'No', 'Whether to enable/disable product thumbnails on order cards.'],
         ['withFilter', 'boolean', 'No', 'Whether to enable/disable filter dropdown.'],
+        ['withSearch', 'boolean', 'No', 'Whether to show the order search box. Full-size view only. Disabled by default.'],
+        ['searchScope', 'string', 'No', 'How far a search term reaches: within the selected date range (`selectedDate`, the default) or across all orders (`allOrders`).'],
         ['ordersInMinifiedView', 'number', 'No', 'Used only in minified view. Defines how many orders are visible in a minified view (default: 1).'],
         ['pageSize', 'number', 'No', 'Sets the pagination size (default: 10).'],
         ['routeOrdersList', 'function', 'No', 'Used only in minified view. Determines where the “View all orders” button redirects the customer.'],
@@ -70,6 +72,8 @@ export default async function decorate(block) {
  } else {
    await accountRenderer.render(OrdersList, {
      minifiedView: minifiedViewConfig === 'true',
+     withSearch: true,
+     searchScope: 'allOrders',
      routeOrdersList: () => CUSTOMER_ORDERS_PATH,
      routeOrderDetails: (orderNumber) => `${CUSTOMER_ORDER_DETAILS_PATH}?orderRef=${orderNumber}`,
      routeReturnDetails: ({ orderNumber, returnNumber }) => `${CUSTOMER_RETURN_DETAILS_PATH}?orderRef=${orderNumber}&returnRef=${returnNumber}`,
@@ -78,6 +82,27 @@ export default async function decorate(block) {
  }
 }
 ```
+
+## Order search
+
+Set `withSearch` to `true` to add a search box above the order list in the full-size view. Customers use it to find their orders by order number, product name, or product SKU.
+
+The search runs when the customer presses **Enter** or selects the search button, not as they type. An order lookup does not need the type-ahead behavior used for product search, so this avoids sending a request on every keystroke.
+
+A search term must be between 3 and 100 characters. The container does not submit a term shorter than three characters.
+
+Use `searchScope` to set how far a search reaches:
+
+- `selectedDate` (default): the search stays within the date range the customer has selected.
+- `allOrders`: the search covers the customer's full order history, regardless of the selected date.
+
+Most storefronts set `searchScope` to `allOrders` so a customer can find any order without first widening the date filter.
+
+The search box appears in the full-size view only. The minified view does not render it.
+
+<Aside type="note">
+Order search filters by order number, historical product name, and historical product SKU. Historical values are the ones stored on the order when it was placed, so a search still matches after the catalog product is renamed or removed.
+</Aside>
 
 ## Administrator-assisted orders
 
