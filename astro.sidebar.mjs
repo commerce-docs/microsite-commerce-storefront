@@ -85,6 +85,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
+            { label: 'Compose a Block', link: '/dropins/all/compose-a-block/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
             { label: 'Styling', link: '/dropins/all/styling/' },
