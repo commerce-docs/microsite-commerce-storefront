@@ -84,7 +84,9 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extend, compose, substitute, or create', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extending', link: '/dropins/all/extending/' },
+            { label: 'Creating', link: '/dropins/all/creating/' },
             { label: 'Compose a Block', link: '/dropins/all/compose-a-block/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
@@ -98,8 +100,6 @@ export function generateSidebar() {
             { label: 'Events', link: '/dropins/all/events/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
-            { label: 'Extending', link: '/dropins/all/extending/' },
-            { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
         // ---------- HOW-TOS ----------

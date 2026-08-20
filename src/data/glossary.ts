@@ -267,6 +267,11 @@ const glossaryEntries: GlossaryEntry[] = [
       'Build a new drop-in from scratch when extension and substitution are not suitable for the required experience.',
   },
   {
+    term: 'Compose',
+    definition:
+      "Combine an existing drop-in's API function, shared SDK components, and the event bus in a plain block instead of creating a new drop-in.",
+  },
+  {
     term: 'Configuration',
     definition:
       'Settings used to change behavior without rewriting core implementation logic.',
