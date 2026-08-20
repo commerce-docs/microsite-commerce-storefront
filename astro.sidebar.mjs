@@ -65,7 +65,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Commerce Boilerplate',
+          label: 'Storefront Boilerplate',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
@@ -73,9 +73,9 @@ export function generateSidebar() {
             { label: 'Configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks Reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Blocks Composition', link: '/dropins/all/compose-a-block/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
+            { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -84,10 +84,9 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Extend, compose, substitute, or create', link: '/dropins/all/extend-or-create/' },
-            { label: 'Extending', link: '/dropins/all/extending/' },
-            { label: 'Creating', link: '/dropins/all/creating/' },
-            { label: 'Compose a Block', link: '/dropins/all/compose-a-block/' },
+            { label: 'Choose a Drop-in Approach', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extend a Drop-in', link: '/dropins/all/extending/' },
+            { label: 'Create a Drop-in', link: '/dropins/all/creating/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
             { label: 'Styling', link: '/dropins/all/styling/' },
