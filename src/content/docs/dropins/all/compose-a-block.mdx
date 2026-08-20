@@ -30,14 +30,40 @@ Use this pattern when no drop-in container covers the feature, an existing drop-
 
 Composing in a plain block costs less than creating a drop-in: no new package to publish, version, or maintain, and no drop-in SDK dependency to add. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
 
+## How it works
+
+Here's how the three elements fit together inside a block that uses this pattern.
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    API(Drop-in API function)
+    Components(SDK Components)
+    EventBus(Event Bus)
+    BlockA(Your Block)
+    BlockB(Another Block)
+
+    API -->|data| BlockA
+    Components -->|UI| BlockA
+    BlockA -->|emits custom event| EventBus
+    EventBus -->|listens| BlockB
+
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style API fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Components fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style BlockA fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style BlockB fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+`} caption="A plain block pulls data from an existing drop-in API function, renders it with shared SDK components, and coordinates with other blocks through the event bus.">
+</Diagram>
+
 ## The three elements
 
 Three elements, already installed in your storefront, let you build a new feature without creating a drop-in.
 
-<Options label="Element">
+<Options label="Use" numbered={false}>
 <Option>
 
-### API functions
+### Drop-in API functions
 
 Call the function a drop-in already exports from its `api.js`. It's the same function the drop-in's own containers use internally, so you get the same data from the same backend without reimplementing any Commerce logic.
 
@@ -79,28 +105,6 @@ Choose your own event name for a block-to-block signal that no drop-in emits yet
 
 </Option>
 </Options>
-
-<Diagram type="mermaid" code={`
-%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
-graph LR
-    API(Drop-in API function)
-    Components(SDK Components)
-    EventBus(Event Bus)
-    BlockA(Your Block)
-    BlockB(Another Block)
-
-    API -->|data| BlockA
-    Components -->|UI| BlockA
-    BlockA -->|emits custom event| EventBus
-    EventBus -->|listens| BlockB
-
-    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
-    style API fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style Components fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style BlockA fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
-    style BlockB fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
-`} caption="A plain block pulls data from an existing drop-in API function, renders it with shared SDK components, and coordinates with other blocks through the event bus.">
-</Diagram>
 
 ## Walkthrough: product comparison
 
