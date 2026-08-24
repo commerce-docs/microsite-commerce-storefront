@@ -1,6 +1,6 @@
 ---
 title: Blocks composition
-description: Build a new storefront feature by combining an existing drop-in's API function, shared SDK components, and the event bus inside a plain block, without creating a new drop-in.
+description: Build a new storefront feature by combining an existing drop-in's API function, shared SDK components, and the event bus inside a custom commerce block, without creating a new drop-in.
 sidebar:
   label: Blocks Composition
 ---
@@ -13,11 +13,15 @@ import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Sometimes no drop-in container provides the feature you need. In that case, you can build the feature in a standard Commerce block using an existing drop-in's API functions, SDK components, and the event bus, instead of creating a new drop-in.
+Sometimes existing drop-in containers don't cover the feature you need. In that case, you can build the feature in a custom commerce block using an existing drop-in's API functions, SDK components, and the event bus.
 
 ## When to use this pattern
 
-Use this pattern when no drop-in container covers the feature, an existing drop-in already exports the data as an API function, and you can build the UI from shared SDK components.
+Use this pattern when:
+
+- No existing container covers the feature.
+- An existing drop-in already exports the data you need as an API function.
+- You can build the UI from shared SDK components.
 
 <TableWrapper nowrap={[0]}>
 
@@ -28,7 +32,7 @@ Use this pattern when no drop-in container covers the feature, an existing drop-
 
 </TableWrapper>
 
-Composing in a plain block requires fewer resources than creating a drop-in. There's no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
+Blocks are the standard unit of functionality in an Edge Delivery Services page (see <Link href={"https://www.aem.live/docs/exploring-blocks"} text={"Exploring blocks"} /> on aem.live). Composing a custom commerce block this way requires fewer resources than creating a drop-in: there's no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
 
 ## How it works
 
@@ -53,19 +57,19 @@ graph LR
     style Components fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
     style BlockA fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
     style BlockB fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
-`} caption="A plain block pulls data from an existing drop-in API function, renders it with shared SDK components, and coordinates with other blocks through the event bus.">
+`} caption="A custom commerce block pulls data from an existing drop-in API function, renders it with shared SDK components, and coordinates with other blocks through the event bus.">
 </Diagram>
 
 ## API functions, SDK components, and the event bus
 
-Your storefront already has all three installed, and they allow you to build a new feature without creating a drop-in.
+Your storefront already has all three installed. Combine them to build a new feature from existing drop-in artifacts.
 
 <Options label="Use" numbered={false}>
 <Option>
 
 ### Drop-in API functions
 
-Call the function a drop-in already exports from its `api.js`. It is the same function the drop-in's own containers use internally, so you get the same data from the same backend without reimplementing any Commerce logic.
+Find the drop-in that already handles the data your feature needs from the [drop-in list](/dropins/all/introduction/#available-drop-ins), then check its Functions reference page, such as [Product Discovery Functions](/dropins/product-discovery/functions/), for the function to call from its `api.js`. It's the same function the drop-in's own containers use internally, so you get the same data from the same backend without reimplementing any Commerce logic.
 
 ```javascript
 import { search } from '@dropins/storefront-product-discovery/api.js';
@@ -114,7 +118,11 @@ The product comparison feature needs a table that shows up to three products sid
 - **Storefront SDK** — Provides the `Button`, `Icon`, `Image`, and `PriceRange` UI primitives this feature needs.
 - **Event bus** — Lets the **Compare** button signal the comparison tray to add a product, without either block importing the other.
 
-The steps below show how this feature can be built as two plain blocks: `product-compare` for the table and `product-compare-bar` for the tray.
+The steps below show how this feature can be built as two custom commerce blocks: `product-compare` for the table and `product-compare-bar` for the tray.
+
+<Diagram caption="The rendered product-compare table, with a search field for adding more products to the comparison">
+  ![Compare Products page showing an Adobe pattern hoodie and a badge reel side by side, with a search field for adding more products](@images/dropins/product-comparison-page.png)
+</Diagram>
 
 <Steps>
 
@@ -202,6 +210,10 @@ The steps below show how this feature can be built as two plain blocks: `product
    });
    ```
 
+   <Diagram caption="The product-compare-bar tray collecting products a shopper flags for comparison from a product list page">
+     ![Product list page with an Adobe pattern hoodie and a badge reel flagged for comparison, showing the persistent tray at the bottom of the page with Compare and Clear All buttons](@images/dropins/product-bar-page.png)
+   </Diagram>
+
 1. **Store state in the URL.** The comparison table's state — which SKUs to compare — doesn't need a drop-in or `localStorage`. Reading and writing that state to a URL query parameter means shoppers can share or bookmark the comparison page:
 
    ```javascript
@@ -224,6 +236,10 @@ The steps below show how this feature can be built as two plain blocks: `product
 Both blocks in this example would still use `readBlockConfig()` for author-facing options, such as an `attributes` key listing which product attributes appear as comparison rows, a `filter` key restricting which products are eligible for comparison, and a `page` key on the tray block pointing to the comparison page. You can still use the configuration patterns covered in [Blocks customization](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
 </Aside>
 
+<Diagram caption="An author-authored block table setting the product-compare-bar block's page option">
+  ![Document table naming the product-list-page block with a urlPath of apparel, and the product-compare-bar block with a page of /product-compare](@images/dropins/product-comparison-tables.png)
+</Diagram>
+
 ## Best practices
 
 - Reuse the drop-in's existing filters, scopes, and pagination options instead of writing your own data-fetching code, since you're calling the same function a container calls.
@@ -234,7 +250,7 @@ Both blocks in this example would still use `readBlockConfig()` for author-facin
 - Use this pattern only when no container covers the feature. If a drop-in container already handles most of the feature, extend it with slots or events instead of rebuilding its API function and components yourself.
 
 <Aside type="note" title="When to use Create instead">
-This pattern fits features that mostly fetch and display data, like the comparison example above. Features that need to persist new server-side state, such as their own mutations or a cart-like lifecycle, usually need more than a plain block can provide. In that case, use [Create](/dropins/all/extend-or-create/#create) instead.
+This pattern fits features that mostly fetch and display data, like the comparison example above. Features that need to persist new server-side state, such as their own mutations or a cart-like lifecycle, usually need more than a custom commerce block can provide. In that case, use [Create](/dropins/all/extend-or-create/#create) instead.
 </Aside>
 
 ## Next steps
