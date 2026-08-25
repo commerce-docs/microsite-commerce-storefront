@@ -39,7 +39,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Payment Services drop-in currently has no functions defined.
+The Payment Services drop-in provides API functions that enable you to programmatically control behavior and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 4.2.0</strong>
@@ -47,8 +47,67 @@ The Payment Services drop-in currently has no functions defined.
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
+<TableWrapper nowrap={[0]}>
 
+| Function | Description |
+| --- | --- |
+| [`submitCreditCard`](#submitcreditcard) | Validates and submits the currently-rendered `CreditCard` form, so you don't have to manage a `creditCardFormRef` yourself. |
 
+</TableWrapper>
 
+## submitCreditCard
+
+The `submitCreditCard` function validates and submits the currently-rendered `CreditCard` container's form. It replaces the deprecated `creditCardFormRef`/`onSuccess`/`onError` props on the `CreditCard` container: call it from your own "Place Order" button instead of managing a form ref.
+
+```ts
+async function submitCreditCard(): Promise<void>
+```
+
+The returned promise resolves only once the payment flow finishes successfully, and rejects with a [`PaymentServicesError`](#paymentserviceserror) in any of these cases:
+
+<TableWrapper nowrap={[0]}>
+
+| `code` | When it happens |
+| --- | --- |
+| `payment-services/credit-card-form-not-rendered` | No `CreditCard` container is currently rendered on the page. |
+| `payment-services/credit-card-form-invalid` | The form has one or more invalid fields; the first invalid field is focused automatically. |
+| `payment-services/unknown-error` | Any other error during the payment flow. If the underlying error is a localized, user-facing error, its `name` and `message` are preserved on the rejected `PaymentServicesError`. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Promise<void>`.
+
+### Example
+
+```js
+import { submitCreditCard } from '@dropins/storefront-payment-services/api.js';
+
+placeOrderButton.addEventListener('click', async () => {
+  try {
+    await submitCreditCard();
+  } catch (error) {
+    console.error(error.code, error.message);
+  }
+});
+```
+
+## PaymentServicesError
+
+`PaymentServicesError` is the common error type rejected by the Payment Services drop-in's public API functions.
+
+<TableWrapper nowrap={[0,1]}>
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `code` | `string` | A stable identifier in the format `payment-services/string-code`. The message for a given code can change between versions, but the code itself remains stable. |
+| `message` | `string` | A human-readable description of the error. |
+
+</TableWrapper>
 
 {/* This documentation is auto-generated from the drop-in source repository: git@github.com:adobe-commerce/storefront-payment-services */}
