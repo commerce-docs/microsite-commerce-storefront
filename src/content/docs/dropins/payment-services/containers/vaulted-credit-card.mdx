@@ -1,0 +1,61 @@
+---
+title: VaultedCreditCard Container
+description: Learn about the VaultedCreditCard container in the Payment Services drop-in.
+sidebar:
+  label: VaultedCreditCard
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `VaultedCreditCard` container renders a summary of a shopper's previously saved ("vaulted") credit card — brand, masked card number, cardholder name, and billing address — so they can reuse it at checkout without re-entering their card details.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 4.2.0</strong>
+</div>
+
+## Configuration
+
+The `VaultedCreditCard` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `tokenDetails` | string | Yes | The vault token's details, as a raw JSON string. |
+</TableWrapper>
+
+## Slots
+
+This container exposes no customizable slots.
+
+## Usage
+
+The following example demonstrates how to render a shopper's vaulted card inside the checkout drop-in's `PaymentMethods` container `StoredMethods` slot:
+
+```js
+import { PaymentMethodCode } from '@dropins/storefront-payment-services/api.js';
+import VaultedCreditCard from '@dropins/storefront-payment-services/containers/VaultedCreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import PaymentMethods from '@dropins/storefront-checkout/containers/PaymentMethods.js';
+import { render as CheckoutProvider } from '@dropins/storefront-checkout/render.js';
+
+const $content = document.createElement('div');
+
+CheckoutProvider.render(PaymentMethods, {
+  slots: {
+    StoredMethods: {
+      [PaymentMethodCode.VAULT]: {
+        tokenCode: PaymentMethodCode.CREDIT_CARD,
+        render: (ctx) => {
+          const $storedOption = document.createElement('div');
+          if (ctx.details) {
+            PaymentServices.render(VaultedCreditCard, {
+              tokenDetails: ctx.details,
+            })($storedOption);
+          }
+          ctx.replaceHTML($storedOption);
+        },
+      },
+    },
+  },
+})($content);
+```
