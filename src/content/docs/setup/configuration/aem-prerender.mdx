@@ -285,7 +285,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    | `PRODUCTS_TEMPLATE` | URL for the product template page (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live/products/default` |
    | `PRODUCT_PAGE_URL_FORMAT` | URL pattern for product pages (auto-populated by setup wizard). Supports tokens: `{locale}`, `{urlKey}`, `{sku}` | `/{locale}/products/{urlKey}` |
    | `LOCALES` | Comma-separated list of locales (for example, `en-us,en-gb,fr-fr`) or empty for non-localized sites | `en-us,fr-fr` |
-   | `ACO_CATEGORY_FAMILIES` | Adobe Commerce Optimizer only. Comma-separated category family identifiers. Determines which categories are pre-rendered for both category listing pages and product pages. Catalogs with 10,000 or fewer products are always fetched in full; larger catalogs fetch the first 10,000 products plus up to 10,000 more per configured category family, deduplicated by SKU. If unset, only the first 10,000 products are pre-rendered. | `electronics,apparel` |
+   | `ACO_CATEGORY_FAMILIES` | Adobe Commerce Optimizer only. Comma-separated category family identifiers. Determines which categories are prerendered for both category listing pages and product pages. Catalogs with 10,000 or fewer products are always fetched in full. Larger catalogs fetch the first 10,000 products, plus up to 10,000 more per configured category family, deduplicated by SKU. If unset, only the first 10,000 products are prerendered. | `electronics,apparel` |
    | `PLP_PRODUCTS_PER_PAGE` | Number of products shown per category listing page | `9` (default) |
    | `AEM_ADMIN_API_AUTH_TOKEN` | Long-lived authentication token for AEM Admin API (valid for 1 year). The setup wizard exchanges your temporary token for this automatically. | `your-admin-token-here` |
 
@@ -352,7 +352,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
      - **Absolute paths** mirror your live storefront URLs, but only for product pages:
        - Product page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/pdp-renderer/products/{urlKey}/{sku}` (adjust the path to match your `PRODUCT_PAGE_URL_FORMAT`)
 
-       This only works if the path segments match your site's `PRODUCT_PAGE_URL_FORMAT` exactly; a mismatch fails with a generic server error rather than a helpful message. Category listing pages don't support this form — `plp-renderer` only accepts `slug` as a query parameter, never as a path segment.
+       This only works if the path segments match your site's `PRODUCT_PAGE_URL_FORMAT` exactly. A mismatch fails with a generic server error rather than a helpful message. Category listing pages don't support this form: `plp-renderer` only accepts `slug` as a query parameter, never as a path segment.
    - Check that pages publish successfully to your AEM project
 
 7. **Enable automated synchronization**:
@@ -645,9 +645,9 @@ The prerender solution provides these customization options:
 | **GraphQL Queries** | Extend product data by modifying GraphQL queries in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="actions/queries.js" />. The rendering logic that uses these queries is implemented in the `generateProductHtml` method in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/render.js" text="actions/pdp-renderer/render.js" /> |
 | **URL Patterns** | Match your storefront URL structure by configuring `PRODUCT_PAGE_URL_FORMAT` in the `.env` file |
 | **Rendering Logic** | Transform product data before markup generation by implementing custom logic in App Builder actions |
-| **PLP Structured Data** | Customize the `CollectionPage`, `ItemList`, and `BreadcrumbList` JSON-LD generated for category listing pages in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/ldJson.js" text="actions/plp-renderer/ldJson.js" /> |
-| **Category Image Selection** | By default, the PLP renderer prefers the category image with the `BASE` role, falling back to the first available image. Customize this logic in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/render.js" text="actions/plp-renderer/render.js" /> |
-| **PLP Templates** | Control category listing page markup structure and styling using the Handlebars templates in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/tree/main/actions/plp-renderer/templates" text="actions/plp-renderer/templates" /> |
+| **Category Listing Page Structured Data** | Customize the `CollectionPage`, `ItemList`, and `BreadcrumbList` JSON-LD generated for category listing pages in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/ldJson.js" text="actions/plp-renderer/ldJson.js" /> |
+| **Category Image Selection** | By default, the `plp-renderer` action prefers the category image with the `BASE` role, falling back to the first available image. Customize this logic in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/render.js" text="actions/plp-renderer/render.js" /> |
+| **Category Listing Page Templates** | Control category listing page markup structure and styling using the Handlebars templates in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/tree/main/actions/plp-renderer/templates" text="actions/plp-renderer/templates" /> |
 
 </TableWrapper>
 
@@ -683,9 +683,9 @@ The prerender solution has these known limitations:
 
 - **Category updates aren't detected reactively.** Instead, category listing pages re-render on a fixed cadence (default every 15 minutes) rather than in response to a specific change.
 - **Catalog APIs cap pagination per category path.** Prerendering is limited to a maximum of approximately 10,000 products per category path.
-- **No per-SKU or per-category content overrides.** The prerender solution doesn't support merging custom content into individual product or category pages (for example, showing a widget only on one category or SKU). If the override needs to appear in the canonical, server-rendered response that search engines and AI crawlers see, it requires a customization to the AEMCP app. If it doesn't need to be in that canonical response, use <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/#_top" text="enrichment blocks" /> or another runtime customization approach, such as custom JavaScript that injects content based on the currently rendered category or product.
+- **No per-SKU or per-category content overrides.** The prerender solution doesn't support merging custom content into individual product or category pages (for example, showing a widget only on one category or SKU). If the override needs to appear in the canonical, server-rendered response that search engines and AI crawlers see, it requires a customization to the prerender app. If it doesn't need to be in that canonical response, use <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/#_top" text="enrichment blocks" /> or another runtime customization approach, such as custom JavaScript that injects content based on the currently rendered category or product.
 
-If your catalog or requirements run into these limits — an unusually large single category, a need for near-real-time category metadata updates, or per-category content overrides — work with your development team on a custom approach for those pages.
+If your catalog or requirements run into these limits — an unusually large category, a need for near-real-time updates, or per-category overrides — work with your development team on a custom approach for those pages.
 
 {/* TODO(USF-4304): link to guidance on per-SKU/per-category content overrides once available */}
 
@@ -717,9 +717,9 @@ Common issues include:
 - **Testing changes locally without deploying**: Set `LOCAL_FS=true` and run the scripts in the `runners/` directory to execute any action against local files in `./local-data/` instead of Adobe I/O Runtime storage. This is useful for inspecting rendered output or working around remote action timeout limits without a full deploy. See the runbook's "Running actions locally" section for details.
 
 - **Long-running or stuck activations**: `pdp-renderer` and `check-product-changes` default to a 3-hour timeout and 4096 MB of memory (increased from 1 hour and 256 MB) to support larger catalogs, especially with category families configured.
-  - A run that takes the full 3 hours won't appear in `aio rt activation list` until it finishes — Adobe I/O Runtime doesn't record an activation until the invocation completes
+  - A run that takes the full 3 hours won't appear in `aio rt activation list` until it finishes. Adobe I/O Runtime doesn't record an activation until the invocation completes
   - A watchdog aborts the action after 5 minutes without progress, rather than waiting out the full timeout
-  - If you customize the `timeout` for `pdp-renderer` in `app.config.yaml`, also update the matching `ACTION_TIMEOUT_MS` constant in `actions/check-product-changes/index.js` (and the equivalent value in `actions/render-all-categories/index.js` if you customize that action's timeout) — the "running" mutex that prevents overlapping executions derives its expiration from these values, so a mismatch can leave a stale lock or allow overlapping runs
+  - If you customize the `timeout` for `pdp-renderer` in `app.config.yaml`, also update the matching `ACTION_TIMEOUT_MS` constant in `actions/check-product-changes/index.js`. If you customize the timeout for `render-all-categories`, update the equivalent value in `actions/render-all-categories/index.js` too. The "running" mutex that prevents overlapping executions derives its expiration from these values, so a mismatch can leave a stale lock or allow overlapping runs
 
 - **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property.
   - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
