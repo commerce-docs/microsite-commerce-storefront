@@ -60,9 +60,27 @@ const allComponents = [
         message.hidden = !value || visible > 0;
       }
 
+      function applyHashFilter() {
+        const id = window.location.hash.slice(1);
+        if (!id) return;
+        const heading = document.getElementById(id);
+        const entry = heading && heading.closest('.changelog-entry');
+        const attr = entry && entry.getAttribute('data-components');
+        if (!attr) return;
+
+        const component = attr.split(',')[0].trim();
+        if (select.value !== component) {
+          select.value = component;
+          filter();
+        }
+        entry.scrollIntoView();
+      }
+
       select.addEventListener('change', filter);
       select.dataset.initialized = 'true';
       filter();
+      applyHashFilter();
+      window.addEventListener('hashchange', applyHashFilter);
     }
 
     if (document.readyState === 'loading') {
