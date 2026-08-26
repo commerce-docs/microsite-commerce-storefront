@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import { Steps, Aside } from '@astrojs/starlight/components';
 import Term from '@components/Term.astro';
 
-The AEM Commerce Prerender solution lets your <Term>Edge Delivery Services</Term> Commerce Storefront serve complete product page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
+The AEM Commerce Prerender solution lets your <Term>Edge Delivery Services</Term> Commerce Storefront serve product page and category listing page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
 
 ## How it works
 
@@ -289,6 +289,8 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
    | `PRODUCTS_TEMPLATE` | URL for the product template page (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live/products/default` |
    | `PRODUCT_PAGE_URL_FORMAT` | URL pattern for product pages (auto-populated by setup wizard). Supports tokens: `{locale}`, `{urlKey}`, `{sku}` | `/{locale}/products/{urlKey}` |
    | `LOCALES` | Comma-separated list of locales (for example, `en-us,en-gb,fr-fr`) or empty for non-localized sites | `en-us,fr-fr` |
+   | `ACO_CATEGORY_FAMILIES` | Adobe Commerce Optimizer only. Comma-separated category family identifiers. Determines which categories are prerendered for both category listing pages and product pages. Catalogs with 10,000 or fewer products are always fetched in full. Larger catalogs fetch the first 10,000 products, plus up to 10,000 more per configured category family, deduplicated by SKU. If unset, only the first 10,000 products are prerendered. | `electronics,apparel` |
+   | `PLP_PRODUCTS_PER_PAGE` | Number of products shown per category listing page | `9` (default) |
    | `AEM_ADMIN_API_AUTH_TOKEN` | Long-lived authentication token for AEM Admin API (valid for 1 year). The setup wizard exchanges your temporary token for this automatically. | `your-admin-token-here` |
 
    </TableWrapper>
@@ -299,6 +301,10 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 
    <Aside type="note" title="Commerce configuration">
    The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront configuration, not from environment variables. Ensure your storefront configuration includes Commerce endpoints and headers as documented in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront configuration.
+   </Aside>
+
+   <Aside type="note" title="Category discovery for PaaS and Adobe Commerce as a Cloud Service">
+   `ACO_CATEGORY_FAMILIES` only applies to Adobe Commerce Optimizer storefronts. For PaaS + Catalog Service and Adobe Commerce as a Cloud Service storefronts, category discovery is fully automatic through the catalog's `categories` query, so this variable is ignored entirely for those backends.
    </Aside>
 
 4. **Obtain required credentials**:
@@ -335,15 +341,28 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
      # Check for product changes and generate markup
      aio rt action invoke aem-commerce-ssg/check-product-changes
 
+     # Render all category listing pages
+     aio rt action invoke aem-commerce-ssg/render-all-categories
+
      # Clean up and unpublish deleted products
      aio rt action invoke aem-commerce-ssg/mark-up-clean-up
      ```
-   - Verify product markup generation for sample SKUs
+   - Verify markup generation directly by invoking the renderer actions over HTTP:
+     - **Query parameters** work regardless of your site's configuration:
+       - Product page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/pdp-renderer?sku={sku}` (`urlKey` also works in place of `sku`)
+       - Category listing page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/plp-renderer?slug={categorySlug}`
+
+       Add `&locale={locale}` to verify a specific locale. Without it, both actions resolve the default locale's configuration and content, even on a multi-locale storefront.
+     - **Absolute paths** mirror your live storefront URLs, but only for product pages:
+       - Product page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/pdp-renderer/products/{urlKey}/{sku}` (adjust the path to match your `PRODUCT_PAGE_URL_FORMAT`)
+
+       This only works if the path segments match your site's `PRODUCT_PAGE_URL_FORMAT` exactly. A mismatch fails with a generic server error rather than a helpful message. Category listing pages don't support this form: `plp-renderer` only accepts `slug` as a query parameter, never as a path segment.
    - Check that pages publish successfully to your AEM project
 
 7. **Enable automated synchronization**:
    - Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector
    - Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
+   - Category listing pages render on their own schedule via the `render-all-categories` action (default: every 15 minutes), enabled through the same trigger and rule configuration in `app.config.yaml` as the product pollers
    - Monitor the product index to verify continuous updates
 
    <Aside type="note" title="app.config.yaml productDependencies">
@@ -353,7 +372,7 @@ The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM C
 </Steps>
 
 <Aside type="note" title="App Builder costs">
-The prerender app runs as a paid App Builder application. Actions, scheduled triggers, and blob storage all consume App Builder quota. For large catalogs or frequent polling intervals, review the <Link href="https://developer.adobe.com/app-builder/docs/overview/pricing/" text="Adobe App Builder pricing" /> documentation before deploying to production.
+The prerender app runs as a paid App Builder application. Actions, scheduled triggers, and blob storage all consume App Builder quota. Rendering product pages for large catalogs requires more memory and a longer timeout than a small catalog. For large catalogs or frequent polling intervals, review the <Link href="https://developer.adobe.com/app-builder/docs/overview/pricing/" text="Adobe App Builder pricing" /> documentation before deploying to production.
 </Aside>
 
 ### Management UI
@@ -630,10 +649,49 @@ The prerender solution provides these customization options:
 | **GraphQL Queries** | Extend product data by modifying GraphQL queries in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="actions/queries.js" />. The rendering logic that uses these queries is implemented in the `generateProductHtml` method in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/render.js" text="actions/pdp-renderer/render.js" /> |
 | **URL Patterns** | Match your storefront URL structure by configuring `PRODUCT_PAGE_URL_FORMAT` in the `.env` file |
 | **Rendering Logic** | Transform product data before markup generation by implementing custom logic in App Builder actions |
+| **Category Listing Page Structured Data** | Customize the `CollectionPage`, `ItemList`, and `BreadcrumbList` JSON-LD generated for category listing pages in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/ldJson.js" text="actions/plp-renderer/ldJson.js" /> |
+| **Category Image Selection** | By default, the `plp-renderer` action prefers the category image with the `BASE` role, falling back to the first available image. Customize this logic in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/render.js" text="actions/plp-renderer/render.js" /> |
+| **Category Listing Page Templates** | Control category listing page markup structure and styling using the Handlebars templates in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/tree/main/actions/plp-renderer/templates" text="actions/plp-renderer/templates" /> |
 
 </TableWrapper>
 
 For implementation details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" />, particularly the `actions/` directory and repository root for templates and configuration files.
+
+## End-to-end testing
+
+The repository includes end-to-end tests that verify the deployed `pdp-renderer` and `plp-renderer` actions return correctly structured HTML and JSON-LD. These tests run against your live Adobe I/O Runtime deployment.
+
+Test inputs are defined in `e2e/config.json`:
+
+```json
+{
+  "pdpSku": "ADB177",
+  "plpSlug": "apparel"
+}
+```
+
+- `pdpSku` — the product SKU to use for product page rendering tests
+- `plpSlug` — the category slug to use for category listing page rendering tests
+
+Update these values to match products and categories available in your catalog, then run the tests:
+
+```bash
+npm run e2e
+```
+
+The tests validate structural correctness and field-level checks on the rendered HTML and JSON-LD, without asserting on catalog-specific values like product names or image domains.
+
+## Limitations
+
+The prerender solution has these known limitations:
+
+- **Category updates aren't detected reactively.** Instead, category listing pages re-render on a fixed cadence (default every 15 minutes) rather than in response to a specific change.
+- **Catalog APIs cap pagination per category path.** Prerendering is limited to a maximum of approximately 10,000 products per category path.
+- **No per-SKU or per-category content overrides.** The prerender solution doesn't support merging custom content into individual product or category pages (for example, showing a widget only on one category or SKU). If the override needs to appear in the canonical, server-rendered response that search engines and AI crawlers see, it requires a customization to the prerender app. If it doesn't need to be in that canonical response, use <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/#_top" text="enrichment blocks" /> or another runtime customization approach, such as custom JavaScript that injects content based on the currently rendered category or product.
+
+If your catalog or requirements run into these limits — an unusually large category, a need for near-real-time updates, or per-category overrides — work with your development team on a custom approach for those pages.
+
+{/* TODO(USF-4304): link to guidance on per-SKU/per-category content overrides once available */}
 
 ## Troubleshooting
 
@@ -654,6 +712,18 @@ Common issues include:
   - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
   - Run `aio rt activation list` to check activation logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
   - Manually trigger the change detector from the Management UI to test functionality
+
+- **Category pages not rendering**: Check the `render-all-categories` action the same way as `check-product-changes`.
+  - Run `aio rt activation list` and inspect the `aem-commerce-ssg/render-all-categories` activations
+  - A `plp-running` mutex prevents concurrent executions. To force a full re-render of all category pages, reset the corresponding `render-all-categories/{locale}.json` state file and wait for the next scheduled cycle
+  - See the runbook's <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="Category renderer (PLPs)" /> section for details
+
+- **Testing changes locally without deploying**: Set `LOCAL_FS=true` and run the scripts in the `runners/` directory to execute any action against local files in `./local-data/` instead of Adobe I/O Runtime storage. This is useful for inspecting rendered output or working around remote action timeout limits without a full deploy. See the runbook's "Running actions locally" section for details.
+
+- **Long-running or stuck activations**: `pdp-renderer` and `check-product-changes` default to a 3-hour timeout and 4096 MB of memory (increased from 1 hour and 256 MB) to support larger catalogs, especially with category families configured.
+  - A run that takes the full 3 hours won't appear in `aio rt activation list` until it finishes. Adobe I/O Runtime doesn't record an activation until the invocation completes
+  - A watchdog aborts the action after 5 minutes without progress, rather than waiting out the full timeout
+  - If you customize the `timeout` for `pdp-renderer` in `app.config.yaml`, also update the matching `ACTION_TIMEOUT_MS` constant in `actions/check-product-changes/index.js`. If you customize the timeout for `render-all-categories`, update the equivalent value in `actions/render-all-categories/index.js` too. The "running" mutex that prevents overlapping executions derives its expiration from these values, so a mismatch can leave a stale lock or allow overlapping runs
 
 - **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property.
   - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
