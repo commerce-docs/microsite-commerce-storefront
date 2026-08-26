@@ -51,13 +51,18 @@ The Payment Services drop-in provides API functions that enable you to programma
 
 | Function | Description |
 | --- | --- |
-| [`submitCreditCard`](#submitcreditcard) | Validates and submits the currently-rendered `CreditCard` form, so you don't have to manage a `creditCardFormRef` yourself. |
+| [`submitCreditCard`](#submitcreditcard) | Validates and submits the shopper's currently-selected payment method, when it is either the `CreditCard` container's form (the `CREDIT_CARD` payment method) or a card selected via the `VaultedCreditCard` container (the distinct `VAULT` payment method), so you don't have to manage a `creditCardFormRef` yourself. |
 
 </TableWrapper>
 
 ## submitCreditCard
 
-The `submitCreditCard` function validates and submits the currently-rendered `CreditCard` container's form. It replaces the deprecated `creditCardFormRef`/`onSuccess`/`onError` props on the `CreditCard` container: call it from your own "Place Order" button instead of managing a form ref.
+The `submitCreditCard` function validates and submits the shopper's currently-selected payment method, provided that method is either `CREDIT_CARD` (a freshly-entered card in the `CreditCard` container) or `VAULT` (a card selected via the separate `VaultedCreditCard` container). It replaces the deprecated `creditCardFormRef`/`onSuccess`/`onError` props on the `CreditCard` container.
+
+Based on the shopper's currently-selected payment method (from the `checkout/updated` event), `submitCreditCard` does one of the following:
+
+- If the selected method is `CREDIT_CARD`, it validates and submits the rendered `CreditCard` form.
+- If the selected method is `VAULT`, it places the order using the card the shopper selected via the [`VaultedCreditCard`](/dropins/payment-services/containers/vaulted-credit-card/) container, without requiring a `CreditCard` form to be rendered at all.
 
 ```ts
 async function submitCreditCard(): Promise<void>
@@ -69,8 +74,11 @@ The returned promise resolves only once the payment flow finishes successfully, 
 
 | `code` | When it happens |
 | --- | --- |
-| `payment-services/credit-card-form-not-rendered` | No `CreditCard` container is currently rendered on the page. |
-| `payment-services/credit-card-form-invalid` | The form has one or more invalid fields; the first invalid field is focused automatically. |
+| `payment-services/dropin-not-initialized` | The Payment Services drop-in has not finished initializing yet. |
+| `payment-services/unsupported-payment-method` | The shopper's currently-selected payment method is neither `CREDIT_CARD` nor `VAULT`. |
+| `payment-services/missing-cart-data` | Required cart data (for example, the cart ID) is not yet available when submitting a selected `VAULT` payment method. |
+| `payment-services/credit-card-form-not-rendered` | The shopper is entering a new card, but no `CreditCard` container is currently rendered on the page. |
+| `payment-services/credit-card-form-invalid` | The shopper is entering a new card and the form has one or more invalid fields; the first invalid field is focused automatically. |
 | `payment-services/unknown-error` | Any other error during the payment flow. If the underlying error is a localized, user-facing error, its `name` and `message` are preserved on the rejected `PaymentServicesError`. |
 
 </TableWrapper>
