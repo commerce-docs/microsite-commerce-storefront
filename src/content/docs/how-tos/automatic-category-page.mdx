@@ -1,0 +1,167 @@
+---
+title: Generate category pages programmatically
+description: Learn how to generate category (product listing) page documents with a script, push them to Document Authoring, and publish them through the Edge Delivery Services pipeline.
+sidebar:
+  label: Generate Category Pages Programmatically
+prerequisites:
+  html: false
+  css: false
+  js: true
+  commerce: true
+time: 30 minutes
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+When you need more category pages than you'd want to [author by hand](/how-tos/manual-category-page/), but the automated [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution doesn't fit your catalog's scale or requirements, you can generate the pages with a script. You produce the same category document — a `product-list-page` block plus a `metadata` block — but instead of authoring it in Document Authoring, you build it from a template, push it to Document Authoring through its Source API, and publish the path through the Edge Delivery Services pipeline.
+
+This is a developer workflow: you write and run the script, and you own when it runs again.
+
+<Aside type="note" title="How this differs from prerendering">
+The [prerender solution](/setup/configuration/aem-prerender/) publishes category HTML as a [Bring Your Own Markup](https://www.aem.live/developer/byom) overlay and detects catalog changes for you. This approach instead creates a real, editable Document Authoring document, and there is no change detection — you re-run the script (or schedule it) to refresh a page. That trade is what lets you sidestep the prerender limits: you control the catalog query, the pagination, and the content that goes on each page. Treat this as an interim pattern until first-class support for large or custom category pages is available.
+</Aside>
+
+## How it works
+
+<Steps>
+
+1. **Fetch category data** from Commerce with your own catalog query (category metadata, and the products to list).
+2. **Build a document** by injecting that data into a template that contains the `product-list-page` and `metadata` blocks.
+3. **Create the document** in Document Authoring by posting it to the DA Source API.
+4. **Publish the path** by calling the AEM Admin API to preview, then publish — the same preview/publish pipeline the rest of your site uses.
+
+</Steps>
+
+Re-run the script whenever the category or its metadata changes. The output is a normal Document Authoring document, so an author can still open and edit it afterward.
+
+<Tasks>
+
+<Task>
+
+### Step 1: Fetch category data from Commerce
+
+Query your Commerce backend for the category and the products you want to list. Use your own query — `YOUR_CATALOG_QUERY` below stands in for it.
+
+```js
+// Adobe Commerce as a Cloud Service / PaaS + Catalog Service: post to your Catalog Service GraphQL endpoint.
+// Adobe Commerce Optimizer: post to your Merchandising GraphQL endpoint with your Optimizer headers.
+const response = await fetch(CATALOG_ENDPOINT, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    // ...your store/context headers...
+  },
+  body: JSON.stringify({
+    query: YOUR_CATALOG_QUERY,
+    variables: { categoryPath },
+  }),
+});
+
+const { data } = await response.json();
+```
+
+For ready-made category queries — fetching categories, the category tree, and product listing data by category path — see the queries in the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="aem-commerce-prerender repository" /> (`actions/queries.js` on `main`), such as `CategoriesQuery`, `CategoryTreeQuery`, and `PlpProductSearchQuery`. For the schema each backend exposes, see the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service" text="Catalog Service GraphQL schema" /> (Adobe Commerce as a Cloud Service and PaaS) or the <Link href="https://developer.adobe.com/commerce/services/optimizer/" text="Merchandising Services guide" /> (Adobe Commerce Optimizer).
+
+</Task>
+
+<Task>
+
+### Step 2: Build the document from a template
+
+Render the category data into a Document Authoring document. A DA document is HTML: each block is a table, wrapped in the standard document structure. Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/) describes — a `product-list-page` block bound to the category through `urlPath`, and a `metadata` block for SEO.
+
+```html
+<body>
+  <main>
+    <div>
+      <table>
+        <tr><td>metadata</td></tr>
+        <tr><td>template</td><td>plp</td></tr>
+        <tr><td>title</td><td>Apparel</td></tr>
+        <tr><td>description</td><td>Shop the apparel collection.</td></tr>
+        <tr><td>breadcrumb</td><td>auto</td></tr>
+        <tr><td>json-ld</td><td>{ "@context": "https://schema.org", ... }</td></tr>
+      </table>
+      <table>
+        <tr><td>product-list-page</td></tr>
+        <tr><td>urlPath</td><td>apparel</td></tr>
+      </table>
+    </div>
+  </main>
+</body>
+```
+
+Fill the values from the data you fetched in Step 1 — the category's `urlPath`, title, description, and structured data. For the full list of metadata properties, see [Page metadata](/merchants/blocks/page-metadata/). Generate one document per category.
+
+</Task>
+
+<Task>
+
+### Step 3: Create the document in Document Authoring
+
+Post the document to the <Link href="https://opensource.adobe.com/da-admin" text="Document Authoring Source API" />. The path you post to becomes the document's location in your content tree, which becomes the page URL — a document at `apparel.html` is served at `/apparel`.
+
+```js
+const form = new FormData();
+form.append('data', new Blob([documentHtml], { type: 'text/html' }));
+
+// path must include the file extension, e.g. apparel.html
+await fetch(`https://admin.da.live/source/${org}/${repo}/${path}.html`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${DA_TOKEN}` },
+  body: form,
+});
+```
+
+The Source API takes `multipart/form-data` with a `data` field holding the document, authenticated with a bearer token for your Document Authoring organization. A successful create returns `201`.
+
+</Task>
+
+<Task>
+
+### Step 4: Publish the path through Edge Delivery Services
+
+Creating the source document doesn't make it live. Publish it the same way the rest of your site publishes: call the <Link href="https://www.aem.live/docs/admin.html" text="AEM Admin API" /> to preview the path, then publish it.
+
+```js
+const base = `https://admin.hlx.page`;
+const opts = { method: 'POST', headers: { Authorization: `Bearer ${AEM_TOKEN}` } };
+
+// Preview, then publish. ref is your branch, typically "main".
+await fetch(`${base}/preview/${org}/${site}/${ref}/${path}`, opts);
+await fetch(`${base}/live/${org}/${site}/${ref}/${path}`, opts);
+```
+
+The preview call pulls your new document into the preview environment; the live call copies it to production and purges the CDN. After the live call succeeds, the category page is served at its path.
+
+<Aside type="note" title="Authentication">
+The AEM Admin API uses an admin token — the same credential the prerender app uses. See <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="Setting up authentication for the Admin API" />. Treat both the Document Authoring and AEM Admin tokens like passwords: keep them out of source control.
+</Aside>
+
+</Task>
+
+<Task>
+
+### Step 5: Refresh when the catalog changes
+
+Because there's no change detection, re-run the script to refresh a page after the category or its metadata changes. Run it on demand, or schedule it (for example, a cron job or a scheduled App Builder action) at whatever cadence your catalog needs. Re-posting to the same path overwrites the existing document, so re-runs are safe to repeat.
+
+</Task>
+
+</Tasks>
+
+## Which approach should you use?
+
+<TableWrapper nowrap={[0]}>
+
+| Approach | Best for | Change handling |
+|---|---|---|
+| [Prerender](/setup/configuration/aem-prerender/) | Most catalogs; hands-off category and product pages | Automatic, on a fixed cadence |
+| [Manually authored page](/how-tos/manual-category-page/) | One or a few categories, or a page that needs custom content | You edit the document |
+| Generate programmatically (this tutorial) | Many category pages, or requirements the prerender limits block | You re-run the script |
+
+</TableWrapper>
