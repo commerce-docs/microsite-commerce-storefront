@@ -10,10 +10,6 @@ import { Aside, Badge } from '@astrojs/starlight/components';
 
 The `CreditCard` container renders a form for entering credit card details during checkout.
 
-<Aside type="caution" title="Configuration options are deprecated">
-The configuration options approach below is deprecated. Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function to validate and submit the rendered form instead. These options remain documented below only to support existing integrations that have not migrated yet.
-</Aside>
-
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
 <strong>Version: 4.2.1</strong>
 </div>
@@ -25,10 +21,10 @@ The `CreditCard` container provides the following configuration options:
 <TableWrapper nowrap={[0, 1, 2]}>
 | Option | Type | Req? | Description |
 |--------|------|------|-------------|
-| `getCartId` | function | No | Returns a promise that resolves to the shopper’s cart ID. <Badge text="Deprecated" variant="caution" size="small" /> |
-| `creditCardFormRef` | object | No | Reference to the credit card form. Initially, `{ current: null }` should be passed. After rendering, the container sets `current` to the `validate: () => boolean` and `submit: () => Promise<void>` object, which parent containers can use to programmatically validate and submit the form. Any error during the payment flow propagates to `onError` and causes the promise returned by `submit()` to be rejected. <Badge text="Deprecated" variant="caution" size="small" /> Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function instead. |
-| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. <Badge text="Deprecated" variant="caution" size="small" /> Await [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead; it resolves on success, but without the cart ID. |
-| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). <Badge text="Deprecated" variant="caution" size="small" /> Catch the rejection from [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead. |
+| `getCartId` | function | No | Returns a promise that resolves to the shopper’s cart ID. <Aside type="caution" title="Deprecated as of version 4.2.1">Provide the cart ID with a [cart/data](/dropins/cart/events/#cartdata-emits-and-listens) event instead.</Aside> |
+| `creditCardFormRef` | object | No | Reference to the credit card form. Initially, `{ current: null }` should be passed. After rendering, the container sets `current` to the `validate: () => boolean` and `submit: () => Promise<void>` object, which parent containers can use to programmatically validate and submit the form. Any error during the payment flow propagates to `onError` and causes the promise returned by `submit()` to be rejected. <Aside type="caution" title="Deprecated as of version 4.2.1">Validate and submit the credit card form using the [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) API function instead.</Aside> |
+| `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. <Aside type="caution" title="Deprecated as of version 4.2.1">Await the promise returned by API function [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead. It resolves only if the payment order was submitted successfully, but it doesn't return the cart ID. One can read the cart ID from the [cart/data](/dropins/cart/events/#cartdata-emits-and-listens) event instead. </Aside> |
+| `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). <Aside type="caution" title="Deprecated as of version 4.2.1">Catch promise rejection from API function [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead.</Aside> |
 </TableWrapper>
 
 ## Slots
@@ -40,47 +36,25 @@ This container exposes no customizable slots.
 The following example demonstrates how to render a credit card form and submit it using the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function:
 
 ```js
+import * as paymentsApi from '@dropins/storefront-payment-services/api.js';
 import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
 import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
-import { submitCreditCard } from '@dropins/storefront-payment-services/api.js';
 
 const $content = document.createElement('div');
-const placeOrderButton = document.getElementById('place-order');
+const $placeOrderButton = document.getElementById('place-order');
 
 PaymentServices.render(CreditCard)($content);
 
-placeOrderButton.onclick = async () => {
-  try {
-    await submitCreditCard();
-  } catch (error) {
-    console.error(error.code, error.message);
-  }
+$placeOrderButton.onclick = () => {
+  paymentsApi.submitCreditCard()
+    .then(() => {
+      console.log("Credit card submitted successfully.")
+    })
+    .catch((error) => {
+      if (error.code === "payment-services/invalid-credit-card-form") {
+        return;
+      }
+      console.error(error.code, error.message);
+    })
 };
 ```
-
-<Aside type="caution" title="Deprecated: configuration options approach">
-The following example is shown only for backwards compatibility. This approach should not be used anymore — whether you are starting a new integration or already have one using it, migrate to [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) instead.
-
-```js
-import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
-import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
-
-const $content = document.createElement('div');
-const creditCardFormRef = { current: null };
-const placeOrderButton = document.getElementById('place-order');
-
-PaymentServices.render(CreditCard, {
-  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
-  creditCardFormRef: creditCardFormRef,
-})($content);
-
-placeOrderButton.onclick = () => {
-  if (creditCardFormRef.current) {
-    if (creditCardFormRef.current.validate()) {
-      const future = creditCardFormRef.current.submit()
-      future.catch(console.error)
-    }
-  }
-}
-```
-</Aside>
