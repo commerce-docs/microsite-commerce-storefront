@@ -13,7 +13,7 @@ import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Sometimes existing drop-in containers don't cover the feature you need. In that case, you can build the feature in a custom commerce block using an existing drop-in's API functions, SDK components, and the event bus.
+You don't have to wait for Adobe to ship a feature you need. Sometimes existing drop-in containers don't cover it, but you can build it yourself in a custom commerce block using an existing drop-in's API functions, SDK components, and the event bus.
 
 ## When to use this pattern
 
@@ -32,7 +32,9 @@ Use this pattern when:
 
 </TableWrapper>
 
-Blocks are the standard unit of functionality in an Edge Delivery Services page (see <Link href={"https://www.aem.live/docs/exploring-blocks"} text={"Exploring blocks"} /> on aem.live). Composing a custom commerce block this way requires fewer resources than creating a drop-in: there's no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
+## Blocks and drop-ins
+
+A block is a unit of UI you own — the standard unit of functionality in an Edge Delivery Services page (see <Link href={"https://www.aem.live/docs/exploring-blocks"} text={"Exploring blocks"} /> on aem.live). Composing a custom commerce block this way requires fewer resources than creating a drop-in. There's no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
 
 ## How it works
 
@@ -112,10 +114,10 @@ Choose your own event name for a block-to-block signal that no drop-in emits yet
 
 ## Walkthrough: product comparison
 
-The product comparison feature needs a table that shows up to three products side by side, plus a persistent tray that collects the products a shopper picks while browsing. No drop-in container covers that feature, but everything the feature needs is already installed:
+The product comparison feature needs a table that shows up to three products side by side, plus a persistent tray that collects the products a shopper picks while browsing. No drop-in container covers that feature, but every piece it needs already exists in your storefront:
 
-- **Existing drop-in** — The Product Discovery drop-in exports a `search` function that looks up products by keyword or SKU.
-- **Storefront SDK** — Provides the `Button`, `Icon`, `Image`, and `PriceRange` UI primitives this feature needs.
+- **Drop-in API function** — The Product Discovery drop-in exports a `search` function that looks up products by keyword or SKU.
+- **SDK components** — Provides the `Button`, `Icon`, `Image`, and `PriceRange` UI primitives this feature needs.
 - **Event bus** — Lets the **Compare** button signal the comparison tray to add a product, without either block importing the other.
 
 The steps below show how this feature can be built as two custom commerce blocks: `product-compare` for the table and `product-compare-bar` for the tray.
@@ -141,6 +143,8 @@ The steps below show how this feature can be built as two custom commerce blocks
    }
    ```
 
+   The `searchFilters` argument carries the block's author-configured `filter` option into this same query, so the SKU lookup enforces the same eligibility rule as the rest of the block. Without it, a shopper could request an ineligible product just by editing the `?compare=` URL directly.
+
 1. **Render the UI with SDK components.** Mount `Image` and `PriceRange` for each product column and a `Button` for the remove action — the same components a drop-in container uses:
 
    ```javascript
@@ -165,7 +169,7 @@ The steps below show how this feature can be built as two custom commerce blocks
 
    Write your block's own CSS against the same [shared design tokens](/dropins/all/styling/#design-tokens-reference) the SDK components use, such as `--spacing-big` and `--spacing-medium`, so the table and tray don't look bolted on next to the rest of the page.
 
-1. **Coordinate blocks with the event bus.** The Compare button itself is often added through a slot on an existing drop-in container, such as the `ProductActions` slot on the product-discovery `SearchResults` container, rather than in a custom commerce block. See [Extend](/dropins/all/extend-or-create/) for slot mechanics. Either way, the product list page doesn't know the comparison tray exists, and the tray doesn't know which block added a product. They only agree on an event name and a payload shape:
+1. **Coordinate blocks with the event bus.** The Compare button is often added through a slot on an existing drop-in container, such as the `ProductActions` slot on the product-discovery `SearchResults` container, rather than in a custom commerce block. See [Extend](/dropins/all/extend-or-create/) for slot mechanics. Either way, the product list page doesn't know the comparison tray exists, and the tray doesn't know which block added a product. They only agree on an event name and a payload shape:
 
    ```javascript
    // blocks/product-list-page/product-list-page.js
@@ -210,6 +214,8 @@ The steps below show how this feature can be built as two custom commerce blocks
    });
    ```
 
+   Emitting `compare/products` again for a SKU already in the tray removes it, so the same Compare button can add or remove a product without tracking its own state.
+
    <Diagram caption="The product-compare-bar tray collecting products a shopper flags for comparison from a product list page">
      ![Product list page with an Adobe pattern hoodie and a badge reel flagged for comparison, showing the persistent tray at the bottom of the page with Compare and Clear All buttons](@images/dropins/product-bar-page.png)
    </Diagram>
@@ -230,10 +236,18 @@ The steps below show how this feature can be built as two custom commerce blocks
    window.history.replaceState({}, '', url);
    ```
 
+   Reloading the page, sharing its URL, or bookmarking it now reproduces the same comparison, since every selection lives in the `?compare=` parameter.
+
 </Steps>
 
 <Aside type="tip" title="Author-facing configuration">
-Both blocks in this example would still use `readBlockConfig()` for author-facing options, such as an `attributes` key listing which product attributes appear as comparison rows, a `filter` key restricting which products are eligible for comparison, and a `page` key on the tray block pointing to the comparison page. You can still use the configuration patterns covered in [Blocks customization](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
+Both blocks in this example would still use `readBlockConfig()` for author-facing options:
+
+- An `attributes` key listing which product attributes appear as comparison rows.
+- A `filter` key restricting which products are eligible for comparison.
+- A `page` key on the tray block pointing to the comparison page.
+
+You can still use the configuration patterns covered in [Blocks customization](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
 </Aside>
 
 <Diagram caption="An author-authored block table setting the product-compare-bar block's page option">
@@ -246,12 +260,18 @@ Both blocks in this example would still use `readBlockConfig()` for author-facin
 - Follow the `noun/verb` convention already used by drop-in events, such as `cart/updated` and `search/result`, so another developer can tell what your custom event does without reading its source.
 - Design the event so any block with a matching trigger can emit it, not just the one you're building. A comparison tray listening for `compare/products` can respond to that same event from a product list page, search results, or a carousel, without a separate integration for each.
 - Before adding `localStorage` or a new global variable, check whether the URL or an event's last payload (`events.lastPayload()`) already has what you need.
-- Handle your own loading and error states. A drop-in container already renders a fallback when its data fetch fails; your block calls the same API function, so it needs its own `catch` and an empty-results message.
+- Handle your own loading and error states. A drop-in container already renders a fallback when its data fetch fails, but your block calls the same API function directly, so it needs its own `catch` and an empty-results message.
 - Use this pattern only when no container covers the feature. If a drop-in container already handles most of the feature, extend it with slots or events instead of rebuilding its API function and components yourself.
 
 <Aside type="note" title="When to use Create instead">
 This pattern fits features that mostly fetch and display data, like the comparison example above. Features that need to persist new server-side state, such as their own mutations or a cart-like lifecycle, usually need more than a custom commerce block can provide. In that case, use [Create](/dropins/all/extend-or-create/#create) instead.
 </Aside>
+
+## Hand your plan to AI
+
+AI works best from a plan, not a blank prompt. The plan is the decisions this page walks through: whether to compose, extend, or create, and within a composed block, whether each part reuses a drop-in API function or a drop-in component.
+
+Once that plan is clear, install [Boilerplate skills](/ai/boilerplate-skills/) so your AI coding agent can build from it. The skills encode this project's real conventions, so the agent looks up actual slot names, event payloads, and component props from the drop-in TypeScript definitions instead of inventing new conventions. A plan this concrete makes the generated code cheap enough to test, improve, or throw away.
 
 ## Next steps
 
@@ -260,5 +280,5 @@ This pattern fits features that mostly fetch and display data, like the comparis
 - Browse the [SDK component library](/sdk/components/overview/) to see all available components.
 - Read [Events](/dropins/all/events/) for event-naming conventions and the full `events.on()` / `events.emit()` API.
 - Read [Blocks customization](/boilerplate/customizing-blocks/) for `readBlockConfig()` and other block-authoring patterns.
-- Read [Block tables](/merchants/blocks/block-tables/) for how a content author places `product-compare` or `product-compare-bar` on a page; no code change required.
+- Read [Block tables](/merchants/blocks/block-tables/) for how a content author places `product-compare` or `product-compare-bar` on a page — no code change required.
 
