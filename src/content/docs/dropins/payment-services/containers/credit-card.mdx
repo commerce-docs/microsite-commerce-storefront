@@ -10,8 +10,8 @@ import { Aside, Badge } from '@astrojs/starlight/components';
 
 The `CreditCard` container renders a form for entering credit card details during checkout.
 
-<Aside type="caution" title="creditCardFormRef, onSuccess, and onError are deprecated">
-Do not use `creditCardFormRef`, `onSuccess`, or `onError` in new integrations. Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function to validate and submit the rendered form instead. These props remain documented below only to support existing integrations that have not migrated yet.
+<Aside type="caution" title="Configuration options are deprecated">
+The configuration options approach below is deprecated. Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function to validate and submit the rendered form instead. These options remain documented below only to support existing integrations that have not migrated yet.
 </Aside>
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
@@ -58,28 +58,29 @@ placeOrderButton.onclick = async () => {
 };
 ```
 
-<Aside type="caution" title="Deprecated: creditCardFormRef, onSuccess, and onError">
-Existing integrations may still pass `creditCardFormRef` and call `validate()`/`submit()` on it directly, with `onSuccess` and `onError` handling the result, as shown below. Do not use this pattern in new integrations — use [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) instead.
+<Aside type="caution" title="Deprecated: configuration options approach">
+The following example is shown only for backwards compatibility. This approach should not be used anymore — whether you are starting a new integration or already have one using it, migrate to [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) instead.
 
 ```js
+import CreditCard from '@dropins/storefront-payment-services/containers/CreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+
+const $content = document.createElement('div');
 const creditCardFormRef = { current: null };
+const placeOrderButton = document.getElementById('place-order');
 
 PaymentServices.render(CreditCard, {
+  getCartId: async () => 'ozGi7uLI74etDYyMijoI2cla5CmGIBch',
   creditCardFormRef: creditCardFormRef,
-  onSuccess: ({ cartId }) => {
-    // Place the order using cartId
-  },
-  onError: ({ name, message }) => {
-    console.error(name, message);
-  },
 })($content);
 
 placeOrderButton.onclick = () => {
-  if (creditCardFormRef.current?.validate()) {
-    creditCardFormRef.current.submit().catch(console.error);
+  if (creditCardFormRef.current) {
+    if (creditCardFormRef.current.validate()) {
+      const future = creditCardFormRef.current.submit()
+      future.catch(console.error)
+    }
   }
-};
+}
 ```
-
-This still works for backward compatibility, but should not be used going forward. `submitCreditCard()` doesn't require holding a ref or passing callbacks: it resolves on success and rejects with a stable `PaymentServicesError` `code` on failure.
 </Aside>
