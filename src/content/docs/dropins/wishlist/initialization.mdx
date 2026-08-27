@@ -27,9 +27,29 @@ The following table describes the configuration options available for the **Wish
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Provides language definitions for internationalization (i18n). Overrides dictionary keys for localization or branding. |
 | `isGuestWishlistEnabled` | `boolean` | No | Allows guest users to create and manage wishlists without authentication when set to true. Stores guest wishlists in browser storage. |
-| `storeCode` | `string` | No | Scopes wishlist data (cookies and browser storage) per store. Shares wishlist data across all stores when omitted or set to `default`. |
+| `storeCode` | `string` | No | Scopes wishlist cookies and browser storage per store view. Uses unscoped browser keys when omitted or set to `default`, so store views served from the same host and browser origin share client-side data. See [Multistore support](#multistore-support). |
+| `pageSize` | `number` | No | Sets how many wishlist items are fetched and displayed per page. Defaults to `9`. Pagination controls render automatically when the total number of pages exceeds one. |
 
 </TableWrapper>
+
+## Multistore support
+
+In multistore storefronts, pass a `storeCode` so that the drop-in isolates wishlist data per store view. The Commerce Boilerplate reads the value from the `Store` header defined in `config.json`:
+
+```javascript title="scripts/initializers/wishlist.js"
+const headers = getHeaders('wishlist');
+
+await initializers.mountImmediately(initialize, {
+  isGuestWishlistEnabled: true,
+  storeCode: headers.Store,
+});
+```
+
+When `storeCode` is set to a value other than `default`, the drop-in appends `__<storeCode>` to its browser storage keys and to the wishlist ID cookie. This isolates guest wishlist data and cached authenticated data per store view, and does not change the authoritative wishlist scope in Adobe Commerce. When `storeCode` is omitted or set to `default`, the drop-in keeps the original unscoped keys for backward compatibility.
+
+<Aside type="tip">
+For storage key details, back-end scoping rules, required Adobe Commerce versions, and a verification checklist, see [Wishlist multistore support](/dropins/wishlist/multistore/).
+</Aside>
 
 ## Default configuration
 
