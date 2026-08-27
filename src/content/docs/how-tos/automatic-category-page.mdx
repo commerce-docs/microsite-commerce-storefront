@@ -72,30 +72,54 @@ For ready-made category queries — fetching categories, the category tree, and 
 
 ### Step 2: Build the document from a template
 
-Render the category data into a Document Authoring document. A DA document is HTML: each block is a table, wrapped in the standard document structure. Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/) describes — a `product-list-page` block bound to the category through `urlPath`, and a `metadata` block for SEO.
+Render the category data into a Document Authoring document. A DA document is HTML with a specific shape: a `<body>` holding `<header>`, `<main>`, and `<footer>`, where `<main>` contains one or more sections (each a `<div>`). A block is a `<div>` whose class is the block name, with one `<div>` per row and one `<div>` per cell. This is the same markup Edge Delivery Services serves, so you can confirm the exact structure for any page by appending `.plain.html` to its URL.
+
+Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/) describes — a `product-list-page` block bound to the category through `urlPath`, and a `metadata` block for SEO.
 
 ```html
 <body>
+  <header></header>
   <main>
     <div>
-      <table>
-        <tr><td>metadata</td></tr>
-        <tr><td>template</td><td>plp</td></tr>
-        <tr><td>title</td><td>Apparel</td></tr>
-        <tr><td>description</td><td>Shop the apparel collection.</td></tr>
-        <tr><td>breadcrumb</td><td>auto</td></tr>
-        <tr><td>json-ld</td><td>{ "@context": "https://schema.org", ... }</td></tr>
-      </table>
-      <table>
-        <tr><td>product-list-page</td></tr>
-        <tr><td>urlPath</td><td>apparel</td></tr>
-      </table>
+      <div class="product-list-page">
+        <div>
+          <div>urlPath</div>
+          <div>apparel</div>
+        </div>
+      </div>
+      <div class="metadata">
+        <div>
+          <div>template</div>
+          <div>plp</div>
+        </div>
+        <div>
+          <div>title</div>
+          <div>Apparel</div>
+        </div>
+        <div>
+          <div>description</div>
+          <div>Shop the apparel collection.</div>
+        </div>
+        <div>
+          <div>breadcrumb</div>
+          <div>auto</div>
+        </div>
+        <div>
+          <div>json-ld</div>
+          <div>{ "@context": "https://schema.org", ... }</div>
+        </div>
+      </div>
     </div>
   </main>
+  <footer></footer>
 </body>
 ```
 
 Fill the values from the data you fetched in Step 1 — the category's `urlPath`, title, description, and structured data. For the full list of metadata properties, see [Page metadata](/merchants/blocks/page-metadata/). Generate one document per category.
+
+<Aside type="caution" title="Match the block markup exactly">
+The block name must be the `<div>` class (`product-list-page`, `metadata`), and every row and cell must be its own nested `<div>` — not a `<table>`. Hand-assembling this markup per category is error-prone: prefer generating it, and confirm your output against a real page's `.plain.html` before you publish at scale. A malformed block is silently ignored, so the page publishes but renders no products.
+</Aside>
 
 </Task>
 
@@ -153,6 +177,26 @@ Because there's no change detection, re-run the script to refresh a page after t
 </Task>
 
 </Tasks>
+
+## Change a category page's URL
+
+When you change the path your script generates for a category — for example, from `/apparel` to `/clothing` — publishing the new path is only half the job. The old path keeps serving the old document until you remove it, and once removed it returns a 404 unless you redirect it. This is the easiest thing to get wrong when you regenerate pages at new paths: the old URL gets orphaned, and you lose the inbound links and search equity pointing at it.
+
+Whenever your generation logic changes a category's output path:
+
+<Steps>
+
+1. Generate and publish the document at the new path, following Steps 2–4.
+2. Remove the old page: delete the old document from Document Authoring and unpublish its path through the AEM Admin API, so it's no longer served at the old URL.
+3. Add a 301 redirect from the old path to the new one — for example, `/apparel` → `/clothing`.
+
+</Steps>
+
+You can automate the redirect in the same script: the `redirects` sheet is itself a Document Authoring resource, so append the old-to-new row and republish it. See [Redirects](/merchants/edge-delivery-services/redirects/) and <Link href="https://www.aem.live/docs/redirects" text="Redirects on AEM.live" /> for the sheet format, then update your [sitemap](/merchants/edge-delivery-services/sitemaps/).
+
+<Aside type="caution" title="Never orphan the old URL">
+Every path your script stops generating should either still resolve or 301-redirect to its replacement. If you change a category's URL key without adding a redirect for the old path, shoppers and crawlers that follow existing links hit a 404. Make the redirect part of the same run that publishes the new path, not a manual afterthought.
+</Aside>
 
 ## Which approach should you use?
 
