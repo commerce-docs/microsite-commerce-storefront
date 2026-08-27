@@ -49,13 +49,13 @@ The Payment Services drop-in provides API functions that enable you to programma
 
   | Function | Description |
   | --- | --- |
-  | [`submitCreditCard`](#submitcreditcard) | Validates and submits the currently-rendered `CreditCard` form. |
+  | [`submitCreditCard`](#submitcreditcard) | Validates and submits the currently-rendered [`CreditCard`](/dropins/payment-services/containers/credit-card/) form. |
 
 </TableWrapper>
 
 ## submitCreditCard
 
-The `submitCreditCard` function validates and submits the currently-rendered `CreditCard` container's form.
+The `submitCreditCard` function validates and submits the currently-rendered [`CreditCard`](/dropins/payment-services/containers/credit-card/) container's form.
 
 ```ts
 async function submitCreditCard(): Promise<void>
@@ -67,7 +67,7 @@ The returned promise resolves only once the payment flow finishes successfully, 
 
   | `code` | When it happens |
   | --- | --- |
-  | `payment-services/credit-card-form-not-rendered` | No `CreditCard` container is currently rendered on the page. |
+  | `payment-services/credit-card-form-not-rendered` | No [`CreditCard`](/dropins/payment-services/containers/credit-card/) container is currently rendered on the page. |
   | `payment-services/credit-card-form-invalid` | The form has one or more invalid fields; the first invalid field is focused automatically. |
   | `payment-services/unknown-error` | Any other error during the payment flow. If the underlying error is a localized, user-facing error, its `name` and `message` are preserved on the rejected `PaymentServicesError`. |
 
@@ -84,15 +84,22 @@ Returns `Promise<void>`.
 ### Example
 
 ```js
-import { submitCreditCard } from '@dropins/storefront-payment-services/api.js';
+import * as paymentsApi from '@dropins/storefront-payment-services/api.js';
 
-placeOrderButton.addEventListener('click', async () => {
-  try {
-    await submitCreditCard();
-  } catch (error) {
-    console.error(error.code, error.message);
-  }
-});
+const $placeOrderButton = document.getElementById('place-order');
+
+$placeOrderButton.onclick = () => {
+  paymentsApi.submitCreditCard()
+    .then(() => {
+      console.log("Credit card submitted successfully.")
+    })
+    .catch((error) => {
+      if (error.code === "payment-services/credit-card-form-invalid") {
+        return;
+      }
+      console.error(error.code, error.message);
+    })
+};
 ```
 
 ## PaymentServicesError
