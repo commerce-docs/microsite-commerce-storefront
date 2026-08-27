@@ -66,14 +66,20 @@ placeOrderButton.onclick = async () => {
 };
 ```
 
-<Aside type="note" title="Migrating from creditCardFormRef">
-Older integrations may still pass `creditCardFormRef` and call `validate()`/`submit()` on it directly:
+<Aside type="note" title="Migrating from creditCardFormRef, onSuccess, and onError">
+Older integrations may still pass `creditCardFormRef` and call `validate()`/`submit()` on it directly, with `onSuccess` and `onError` handling the result:
 
 ```js
 const creditCardFormRef = { current: null };
 
 PaymentServices.render(CreditCard, {
   creditCardFormRef: creditCardFormRef,
+  onSuccess: ({ cartId }) => {
+    // Place the order using cartId
+  },
+  onError: ({ name, message }) => {
+    console.error(name, message);
+  },
 })($content);
 
 placeOrderButton.onclick = () => {
@@ -83,5 +89,5 @@ placeOrderButton.onclick = () => {
 };
 ```
 
-This still works, but new integrations should use `submitCreditCard()` instead — it doesn't require holding a ref, and it rejects with a stable `PaymentServicesError` `code` instead of a bare `{ name, message }` object.
+This still works — including the save-card checkbox, which is wired up regardless of which submission path you use — but new integrations should use `submitCreditCard()` instead. It doesn't require holding a ref or passing callbacks: it resolves on success and rejects with a stable `PaymentServicesError` `code` on failure.
 </Aside>
