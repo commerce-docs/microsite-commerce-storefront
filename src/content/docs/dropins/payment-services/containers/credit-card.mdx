@@ -10,8 +10,8 @@ import { Aside, Badge } from '@astrojs/starlight/components';
 
 The `CreditCard` container renders a form for entering credit card details during checkout.
 
-<Aside type="tip">
-Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function to validate and submit the rendered form. All of the container's own props below are optional and only needed if you want to override the defaults or migrate from the older `creditCardFormRef` pattern.
+<Aside type="caution" title="creditCardFormRef, onSuccess, and onError are deprecated">
+Do not use `creditCardFormRef`, `onSuccess`, or `onError` in new integrations. Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function to validate and submit the rendered form instead. These props remain documented below only to support existing integrations that have not migrated yet.
 </Aside>
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
@@ -25,7 +25,7 @@ The `CreditCard` container provides the following configuration options:
 <TableWrapper nowrap={[0, 1, 2]}>
 | Option | Type | Req? | Description |
 |--------|------|------|-------------|
-| `getCartId` | function | No | Returns a promise that resolves to the shopper’s cart ID. <Badge text="Deprecated" variant="caution" size="small" /> When omitted, the cart ID is read from the `cart/data` event instead; only pass this to override that with a custom cart ID. |
+| `getCartId` | function | No | Returns a promise that resolves to the shopper’s cart ID. <Badge text="Deprecated" variant="caution" size="small" /> |
 | `creditCardFormRef` | object | No | Reference to the credit card form. Initially, `{ current: null }` should be passed. After rendering, the container sets `current` to the `validate: () => boolean` and `submit: () => Promise<void>` object, which parent containers can use to programmatically validate and submit the form. Any error during the payment flow propagates to `onError` and causes the promise returned by `submit()` to be rejected. <Badge text="Deprecated" variant="caution" size="small" /> Use the [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) API function instead. |
 | `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. <Badge text="Deprecated" variant="caution" size="small" /> Await [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead; it resolves on success, but without the cart ID. |
 | `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.CreditCard.errors` [language definitions](/dropins/payment-services/dictionary/). <Badge text="Deprecated" variant="caution" size="small" /> Catch the rejection from [`submitCreditCard()`](/dropins/payment-services/functions/#submitcreditcard) instead. |
@@ -58,8 +58,8 @@ placeOrderButton.onclick = async () => {
 };
 ```
 
-<Aside type="note" title="Migrating from creditCardFormRef, onSuccess, and onError">
-Older integrations may still pass `creditCardFormRef` and call `validate()`/`submit()` on it directly, with `onSuccess` and `onError` handling the result:
+<Aside type="caution" title="Deprecated: creditCardFormRef, onSuccess, and onError">
+Existing integrations may still pass `creditCardFormRef` and call `validate()`/`submit()` on it directly, with `onSuccess` and `onError` handling the result, as shown below. Do not use this pattern in new integrations — use [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard) instead.
 
 ```js
 const creditCardFormRef = { current: null };
@@ -81,5 +81,5 @@ placeOrderButton.onclick = () => {
 };
 ```
 
-This still works, but new integrations should use `submitCreditCard()` instead. It doesn't require holding a ref or passing callbacks: it resolves on success and rejects with a stable `PaymentServicesError` `code` on failure.
+This still works for backward compatibility, but should not be used going forward. `submitCreditCard()` doesn't require holding a ref or passing callbacks: it resolves on success and rejects with a stable `PaymentServicesError` `code` on failure.
 </Aside>
