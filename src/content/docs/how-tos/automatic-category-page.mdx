@@ -17,19 +17,19 @@ import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-When you need more category pages than you'd want to [author by hand](/how-tos/manual-category-page/), but the automated [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution doesn't fit your catalog's scale or requirements, you can generate the pages with a script. You produce the same category document — a `product-list-page` block plus a `metadata` block — but instead of authoring it in Document Authoring, you build it from a template, push it to Document Authoring through its Source API, and publish the path through the Edge Delivery Services pipeline.
+When you need more category pages than you'd want to [author by hand](/how-tos/manual-category-page/), but the automated [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution doesn't fit your catalog's scale or requirements, you can generate the pages with a script. You produce the same category document — a `product-list-page` block plus a `metadata` block — but instead of authoring it in [Document Authoring](https://docs.da.live/), you build it from a template, push it to Document Authoring through its Source API, and publish the path through the Edge Delivery Services pipeline.
 
 This is a developer workflow: you write and run the script, and you own when it runs again.
 
 <Aside type="note" title="How this differs from prerendering">
-The [prerender solution](/setup/configuration/aem-prerender/) publishes category HTML as a [Bring Your Own Markup](https://www.aem.live/developer/byom) overlay and detects catalog changes for you. This approach instead creates a real, editable Document Authoring document, and there is no change detection — you re-run the script (or schedule it) to refresh a page. That trade is what lets you sidestep the prerender limits: you control the catalog query, the pagination, and the content that goes on each page. Treat this as an interim pattern until first-class support for large or custom category pages is available.
+The [prerender solution](/setup/configuration/aem-prerender/) publishes category HTML as a [Bring Your Own Markup](https://www.aem.live/developer/byom) overlay and detects catalog changes for you. This approach instead creates a real, editable Document Authoring document, and there is no change detection — you re-run the script (or schedule it) to refresh a page. That trade is what lets you sidestep the prerender limits: you control the catalog query, the pagination, and the content that goes on each page.
 </Aside>
 
 ## How it works
 
 <Steps>
 
-1. **Fetch category data** from Commerce with your own catalog query (category metadata, and the products to list).
+1. **Fetch category data** from Adobe Commerce with your own catalog query (category metadata, and the products to list).
 2. **Build a document** by injecting that data into a template that contains the `product-list-page` and `metadata` blocks.
 3. **Create the document** in Document Authoring by posting it to the DA Source API.
 4. **Publish the path** by calling the AEM Admin API to preview, then publish — the same preview/publish pipeline the rest of your site uses.
@@ -72,7 +72,7 @@ For ready-made category queries — fetching categories, the category tree, and 
 
 ### Step 2: Build the document from a template
 
-Render the category data into a Document Authoring document. A DA document is HTML with a specific shape: a `<body>` holding `<header>`, `<main>`, and `<footer>`, where `<main>` contains one or more sections (each a `<div>`). A block is a `<div>` whose class is the block name, with one `<div>` per row and one `<div>` per cell. This is the same markup Edge Delivery Services serves, so you can confirm the exact structure for any page by appending `.plain.html` to its URL.
+Render the category data into a Document Authoring source document. A DA source document is HTML with a specific shape: a `<body>` holding `<header>`, `<main>`, and `<footer>`, where `<main>` contains one or more sections (each a `<div>`). A block is a `<div>` whose class is the block name, with one `<div>` per row and one `<div>` per cell. This is the same markup Edge Delivery Services serves, so you can confirm the exact structure for any page by appending `.plain.html` to its URL.
 
 Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/) describes — a `product-list-page` block bound to the category through `urlPath`, and a `metadata` block for SEO.
 
@@ -115,11 +115,9 @@ Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/
 </body>
 ```
 
-Fill the values from the data you fetched in Step 1 — the category's `urlPath`, title, description, and structured data. For the full list of metadata properties, see [Page metadata](/merchants/blocks/page-metadata/). Generate one document per category.
+Fill the values from the data you fetched in Step 1 — the category's `urlPath`, title, description, and structured data. For the full list of metadata properties, see [Page metadata](/merchants/blocks/page-metadata/). Generate one canonical document per category.
 
-<Aside type="caution" title="Match the block markup exactly">
-The block name must be the `<div>` class (`product-list-page`, `metadata`), and every row and cell must be its own nested `<div>` — not a `<table>`. Hand-assembling this markup per category is error-prone: prefer generating it, and confirm your output against a real page's `.plain.html` before you publish at scale. A malformed block is silently ignored, so the page publishes but renders no products.
-</Aside>
+{/* TODO: Add link to SSR and Crawlability document when published.*/}
 
 </Task>
 
@@ -127,7 +125,7 @@ The block name must be the `<div>` class (`product-list-page`, `metadata`), and 
 
 ### Step 3: Create the document in Document Authoring
 
-Post the document to the <Link href="https://opensource.adobe.com/da-admin" text="Document Authoring Source API" />. The path you post to becomes the document's location in your content tree, which becomes the page URL — a document at `apparel.html` is served at `/apparel`.
+Post the document to the <Link href="https://opensource.adobe.com/da-admin" text="Document Authoring Source API" />. The path you post to becomes the document's location in your content tree, which becomes the page URL — a document at `/foo/apparel.html` is served at `/foo/apparel`.
 
 ```js
 const form = new FormData();
@@ -141,15 +139,13 @@ await fetch(`https://admin.da.live/source/${org}/${repo}/${path}.html`, {
 });
 ```
 
-The Source API takes `multipart/form-data` with a `data` field holding the document, authenticated with a bearer token for your Document Authoring organization. A successful create returns `201`.
-
 </Task>
 
 <Task>
 
 ### Step 4: Publish the path through Edge Delivery Services
 
-Creating the source document doesn't make it live. Publish it the same way the rest of your site publishes: call the <Link href="https://www.aem.live/docs/admin.html" text="AEM Admin API" /> to preview the path, then publish it.
+Creating the source document in DA doesn't make it live. Publish it the same way the rest of your site publishes: call the <Link href="https://www.aem.live/docs/admin.html" text="AEM Admin API" /> to preview the path first, then publish it.
 
 ```js
 const base = `https://admin.hlx.page`;
@@ -172,7 +168,7 @@ The AEM Admin API uses an admin token — the same credential the prerender app 
 
 ### Step 5: Refresh when the catalog changes
 
-Because there's no change detection, re-run the script to refresh a page after the category or its metadata changes. Run it on demand, or schedule it (for example, a cron job or a scheduled App Builder action) at whatever cadence your catalog needs. Re-posting to the same path overwrites the existing document, so re-runs are safe to repeat.
+Because there's no change detection, re-run the script to refresh a page after the category or its metadata changes. Run it on demand, or schedule it (for example, a cron job or a scheduled App Builder action) at whatever cadence your catalog needs. Re-posting to the same path overwrites the existing document, so manually authored changes will not persist. If you think authors will change the pages manually, then you should add a read/merge mechanism to this flow.
 
 </Task>
 
