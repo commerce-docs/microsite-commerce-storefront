@@ -89,20 +89,12 @@ Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/
       </div>
       <div class="metadata">
         <div>
-          <div>template</div>
-          <div>plp</div>
-        </div>
-        <div>
           <div>title</div>
           <div>Apparel</div>
         </div>
         <div>
           <div>description</div>
           <div>Shop the apparel collection.</div>
-        </div>
-        <div>
-          <div>breadcrumb</div>
-          <div>auto</div>
         </div>
         <div>
           <div>json-ld</div>
@@ -149,7 +141,14 @@ Creating the source document in DA doesn't make it live. Publish it the same way
 
 ```js
 const base = `https://admin.hlx.page`;
-const opts = { method: 'POST', headers: { Authorization: `Bearer ${AEM_TOKEN}` } };
+const opts = {
+  method: 'POST',
+  // The AEM Admin API expects the token in both headers.
+  headers: {
+    Authorization: `Bearer ${AEM_TOKEN}`,
+    'x-content-source-authorization': `Bearer ${AEM_TOKEN}`,
+  },
+};
 
 // Preview, then publish. ref is your branch, typically "main".
 await fetch(`${base}/preview/${org}/${site}/${ref}/${path}`, opts);
@@ -158,8 +157,14 @@ await fetch(`${base}/live/${org}/${site}/${ref}/${path}`, opts);
 
 The preview call pulls your new document into the preview environment; the live call copies it to production and purges the CDN. After the live call succeeds, the category page is served at its path.
 
-<Aside type="note" title="Authentication">
-The AEM Admin API uses an admin token — the same credential the prerender app uses. See <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="Setting up authentication for the Admin API" />. Treat both the Document Authoring and AEM Admin tokens like passwords: keep them out of source control.
+<Aside type="note" title="Getting DA_TOKEN and AEM_TOKEN">
+Both are Adobe IMS bearer tokens — the same kind of credential, but authorized separately in each system.
+
+For a one-off script, mint a token quickly with <Link href="https://github.com/adobe-rnd/da-auth-helper" text="da-auth-helper" />: `npx github:adobe-rnd/da-auth-helper token` opens a browser to sign in once, then prints a token you can reuse until it expires.
+
+For a scheduled script — a cron job or a scheduled App Builder action — use a dedicated system-to-system credential instead of a personal login. Create an Adobe Developer Console project with the Edge Delivery Services API card, using an OAuth Server-to-Server credential, then exchange it for a token with the IMS `client_credentials` grant. Before the token works, authorize the resulting technical account's email in both systems: through the DA Permissions App (or a permissions sheet) for Document Authoring, and through the AEM User Admin Tool for the AEM Admin API. See <Link href="https://main--aem-website--adobe.aem.page/examples/how-to-edge-delivery-services-api-card" text="Setting up a Tech Account for the Edge Delivery Services API" /> for the full setup.
+
+Treat both tokens like passwords: keep them out of source control.
 </Aside>
 
 </Task>
