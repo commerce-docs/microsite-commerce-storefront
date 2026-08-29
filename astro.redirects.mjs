@@ -166,8 +166,6 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)
