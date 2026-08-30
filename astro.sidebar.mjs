@@ -27,14 +27,33 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+          ],
+        },
+        {
+          label: 'How the Storefront Works',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/get-started/architecture/' },
+            { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
+            { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
+            { label: 'Drop-in coordination', link: '/get-started/architecture/drop-ins-on-a-page/' },
+            {
+              label: 'Commerce services and backends',
+              link: '/get-started/architecture/commerce-services-and-backends/',
+            },
+          ],
+        },
+        {
+          label: 'Boilerplate',
+          collapsed: true,
+          items: [
             { label: 'What is the boilerplate?', link: '/boilerplate/' },
             { label: 'Boilerplate getting started', link: '/boilerplate/getting-started/' },
-            { label: 'Boilerplate configuration', link: '/boilerplate/configuration/' },
             { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },
         {
-          label: 'Set Up AI Coding Tools',
+          label: 'AI Coding Tools',
           collapsed: true,
           items: [
             { label: 'Install the integrations', link: '/ai/' },
@@ -44,53 +63,52 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Work with Blocks',
+          label: 'Blocks',
           collapsed: true,
           items: [
-            { label: 'Blocks Reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
-            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
+            { label: 'Blocks and the repository', link: '/get-started/architecture/blocks-and-repo/' },
+            { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
+            { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Blocks and the Universal Editor', link: '/boilerplate/universal-editor/' },
           ],
         },
         {
-          label: 'Use Drop-Ins',
+          label: 'Custom Features',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
-          ],
-        },
-        {
-          label: 'Build a Custom Feature',
-          collapsed: true,
-          items: [
-            { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
-            { label: 'Compose a Block', link: '/dropins/all/compose-a-block/' },
+            { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
+            { label: 'Composing blocks', link: '/dropins/all/compose-a-block/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
         {
-          label: 'Style Your Storefront',
+          label: 'Drop-Ins',
           collapsed: true,
           items: [
-            { label: 'Styling', link: '/dropins/all/styling/' },
-            { label: 'Branding', link: '/dropins/all/branding/' },
+            { label: 'Introduction', link: '/dropins/all/introduction/' },
+            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
           ],
         },
         {
-          label: 'Localize Your Storefront',
+          label: 'Styling',
+          collapsed: true,
+          items: [
+            { label: 'Branding', link: '/dropins/all/branding/' },
+            { label: 'Styling', link: '/dropins/all/styling/' },
+          ],
+        },
+        {
+          label: 'Localization',
           collapsed: true,
           items: [
             { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
-            { label: 'Localizing Links', link: '/dropins/all/linking/' },
+            { label: 'Localizing links', link: '/dropins/all/linking/' },
             { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
           ],
         },
         {
-          label: 'Customize Layout',
+          label: 'Layout',
           collapsed: true,
           items: [
             { label: 'Slots', link: '/dropins/all/slots/' },
@@ -98,7 +116,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Work with Events',
+          label: 'Events',
           collapsed: true,
           items: [
             { label: 'The event bus', link: '/dropins/all/events/' },
@@ -106,19 +124,39 @@ export function generateSidebar() {
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
           ],
         },
+        // ---------- PLAN A PRODUCTION ROLLOUT ----------
+        { label: 'Plan your storefront project', link: '/setup/', attrs: { class: 'sidebar-section-label large' } },
+
         {
-          label: 'How the Storefront Works',
+          label: 'Commerce Backend',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/get-started/architecture/' },
-            { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
-            { label: 'Blocks and the repository', link: '/get-started/architecture/blocks-and-repo/' },
-            { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
-            { label: 'Drop-in coordination', link: '/get-started/architecture/drop-ins-on-a-page/' },
+            { label: 'Setup at a glance', link: '/setup/configuration/' },
+            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+            { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
+            { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+            { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
             {
-              label: 'Commerce services and backends',
-              link: '/get-started/architecture/commerce-services-and-backends/',
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
+                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
+              ],
             },
+            { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
+            { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+            { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+          ],
+        },
+        {
+          label: 'AEM Services',
+          collapsed: true,
+          items: [
+            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+            { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
           ],
         },
         // ---------- HOW-TOS ----------
@@ -132,9 +170,9 @@ export function generateSidebar() {
               label: 'Analytics Events',
               collapsed: true,
               items: [
-                { label: 'Instrument Analytics Events', link: '/how-tos/instrument-analytics-events/' },
-                { label: 'Product Page View Event', link: '/how-tos/instrument-product-page-view-event/' },
-                { label: 'Add to Cart Event', link: '/how-tos/instrument-add-to-cart-event/' },
+                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+                { label: 'Add to cart event', link: '/how-tos/instrument-add-to-cart-event/' },
               ],
             },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
@@ -173,7 +211,7 @@ export function generateSidebar() {
               label: 'User Account',
               collapsed: true,
               items: [
-                { label: 'Customize Layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+                { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
                 { label: 'Stored Payment Methods', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
                 { label: 'Validate Address', link: '/dropins/user-account/tutorials/validate-address/' },
               ],
@@ -181,65 +219,20 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Storefront Configuration',
+          label: 'Launch',
           collapsed: true,
           items: [
-            { label: 'Plan your storefront project', link: '/setup/' },
-            {
-              label: 'Connect to Commerce',
-              collapsed: true,
-              items: [
-                { label: 'Setup at a glance', link: '/setup/configuration/' },
-                { label: 'Storefront Configuration', link: '/setup/configuration/commerce-configuration/' },
-                {
-                  label: 'Compatibility Package',
-                  collapsed: true,
-                  items: [
-                    { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
-                    { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                    { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
-                    { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
-                  ],
-                },
-                { label: 'Price Book ID Setup', link: '/setup/configuration/price-book-setup/' },
-                { label: 'Data Export Validation', link: '/setup/discovery/data-export-validation/' },
-                { label: 'Multistore', link: '/setup/configuration/multistore-setup/' },
-              ],
-            },
-            {
-              label: 'Connect to AEM Services',
-              collapsed: true,
-              items: [
-                { label: 'AEM Assets Integration', link: '/setup/configuration/aem-assets-configuration/' },
-                { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
-                { label: 'Content Delivery Network', link: '/setup/configuration/content-delivery-network/' },
-                { label: 'Gated Content', link: '/setup/configuration/gated-content/' },
-              ],
-            },
-            {
-              label: 'Configure CORS',
-              collapsed: true,
-              items: [
-                { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
-                { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-              ],
-            },
-          ]
-        },
-        {
-          label: 'Go Live',
-          collapsed: true,
-          items: [
-            { label: 'Launch Checklist', link: '/setup/launch/' },
+            { label: 'Launch checklist', link: '/setup/launch/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
-            { label: 'Analytics Instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            { label: 'SEO Overview', link: '/setup/seo/' },
-            { label: 'SEO Indexing', link: '/setup/seo/indexing/' },
-            { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
+            { label: 'SEO overview', link: '/setup/seo/' },
+            { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+            { label: 'SEO metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
-            { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'Platform limits', link: '/setup/seo/platform-limits/' },
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
           ],
         },
         {
@@ -333,7 +326,7 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'Order Management',
+              label: 'Order',
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/dropins/order/' },
@@ -873,7 +866,7 @@ export function generateSidebar() {
         },
 
         {
-          label: 'Package archive',
+          label: 'Package Archive',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/reference/storefront-compatibility/' },

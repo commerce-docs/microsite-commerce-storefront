@@ -649,6 +649,170 @@ After creating or updating your configuration (either in public config or `confi
 Always verify your configuration loaded correctly by checking the session storage `config` entry after reload. This ensures your storefront is using the expected configuration values.
 :::
 
+## Production Configuration Templates
+
+Beyond `config.json`, the boilerplate includes template configuration files with placeholders for the rest of your production site setup.
+
+### default-site.json
+
+Comprehensive site configuration template for production deployment:
+
+```json
+{
+  "version": 1,
+  "code": {
+    "owner": "{ORG}",
+    "repo": "{REPO}",
+    "source": {
+      "type": "github",
+      "url": "https://github.com/{ORG}/{REPO}"
+    }
+  },
+  "content": {
+    "source": {
+      "url": "{CONTENT_SOURCE}",
+      "type": "onedrive"
+    }
+  },
+  "folders": {
+    "/products/": "/products/default"
+  },
+  "cdn": {
+    "live": {
+      "host": "main--{SITE}--{ORG}.aem.live"
+    },
+    "preview": {
+      "host": "main--{SITE}--{ORG}.aem.page"
+    }
+  },
+  "headers": {},
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "{ENDPOINT}",
+      "commerce-endpoint": "{CATALOG_ENDPOINT}",
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "Magento-Store-Code": "{STORE_CODE}",
+          "Magento-Store-View-Code": "{STORE_VIEW_CODE}",
+          "Magento-Website-Code": "{WEBSITE_CODE}",
+          "x-api-key": "{COMMERCE_API_KEY}",
+          "Magento-Environment-Id": "{COMMERCE_ENVIRONMENT_ID}"
+        }
+      },
+      "analytics": {
+        "aep-ims-org-id": "{IMS_ORG_ID}",
+        "aep-datastream-id": "{DATASTREAM_ID}",
+        "base-currency-code": "USD",
+        "environment": "Production",
+        "store-id": "{STORE_ID}",
+        "store-name": "Main Website Store",
+        "store-url": "{DOMAIN}",
+        "store-view-id": "{STORE_VIEW_ID}",
+        "store-view-name": "Default Store View",
+        "website-id": "{WEBSITE_ID}",
+        "website-name": "Main Website"
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "{YOUR_ROOT_CATEGORY_ID}"
+        }
+      }
+    }
+  },
+  "robots": {
+    "txt": "User-agent: *\nAllow: /\nDisallow: /drafts/\nDisallow: /enrichment/\nDisallow: /tools/\nDisallow: /plugins/experimentation/\n\nSitemap: https://{DOMAIN}/sitemap-index.xml"
+  },
+  "access": {
+    "admin": {
+      "role": {
+        "config_admin": ["{ADMIN_USER_EMAIL}"]
+      },
+      "requireAuth": "auto"
+    }
+  }
+}
+```
+
+Replace the `{PLACEHOLDER}` values with your actual configuration.
+
+### default-query.yaml
+
+Content indexing configuration for generating sitemap and enrichment data:
+
+```yaml
+version: 1
+indices:
+  sitemap:
+    target: /sitemap.json
+    exclude:
+      - 'drafts/**'
+      - 'enrichment/**'
+      - 'fragments/**'
+      - 'products/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      image:
+        select: head > meta[property="og:image"]
+        value: |
+          attribute(el, 'content')
+      description:
+        select: head > meta[name="description"]
+        value: |
+          attribute(el, 'content')
+      template:
+        select: head > meta[name="template"]
+        value: |
+          attribute(el, 'content')
+      robots:
+        select: head > meta[name="robots"]
+        value: |
+          attribute(el, 'content')
+      lastModified:
+        select: none
+        value: parseTimestamp(headers["last-modified"], "ddd, DD MMM YYYY hh:mm:ss GMT")
+  enrichment:
+    target: /enrichment/enrichment.json
+    include:
+      - '**/enrichment/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      products:
+        select: head > meta[name="enrichment-products"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      categories:
+        select: head > meta[name="enrichment-categories"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      positions:
+        select: head > meta[name="enrichment-positions"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+```
+
+### default-sitemap.yaml
+
+Sitemap generation configuration:
+
+```yaml
+sitemaps:
+  default:
+    source: /sitemap.json
+    destination: /sitemap-content.xml
+    lastmod: YYYY-MM-DD
+```
+
+The sitemap reads from the generated `sitemap.json` (created by `default-query.yaml`) and outputs an XML sitemap.
+
 ## Step-by-step
 
 We'll use a mock PDP / Catalog Service block to demonstrate how to utilize the config utilities and values. This example shows how to access the configuration sections detailed above.
@@ -763,8 +927,40 @@ export default async function decorate(block) {
 
 </Task>
 
+<Task>
+
+### Configure a drop-in initializer.
+
+Most Commerce blocks read configuration through a drop-in's initializer in `scripts/initializers/`, rather than calling `getConfigValue` directly. The initializer wires the resolved endpoint into the drop-in before the block ever renders.
+
+```javascript title="scripts/initializers/cart.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize, setEndpoint } from '@dropins/storefront-cart/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL, fetchPlaceholders } from '../commerce.js';
+
+await initializeDropin(async () => {
+  // Set Fetch GraphQL (Core)
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  // Fetch placeholders
+  const labels = await fetchPlaceholders('placeholders/cart.json');
+
+  const langDefinitions = {
+    default: {
+      ...labels,
+    },
+  };
+
+  // Initialize cart
+  return initializers.mountImmediately(initialize, { langDefinitions });
+})();
+```
+
+</Task>
+
 </Tasks>
 
 ## Summary
 
-The Commerce configuration provides a structured approach to connecting your storefront to Adobe Commerce backends. By organizing settings into clear sections for endpoints, headers, analytics, plugins, and multistore configurations, you can easily customize your storefront for different Commerce environments. The configuration system supports Adobe Commerce (PaaS), Adobe Commerce as a Cloud Service (SaaS), and Adobe Commerce Optimizer, each with specific header requirements and authentication methods. For local development and testing, you can use a `config.json` file in your repository or the public config from the Configuration Service, with repository files taking precedence. Use the `getConfigValue` and `getHeaders` helper functions to access these settings in your Commerce blocks, ensuring consistent and maintainable integration with your Commerce backend.
+The Storefront configuration provides a structured approach to connecting your storefront to Adobe Commerce backends. By organizing settings into clear sections for endpoints, headers, analytics, plugins, and multistore configurations, you can easily customize your storefront for different Commerce environments. The configuration system supports Adobe Commerce (PaaS), Adobe Commerce as a Cloud Service (SaaS), and Adobe Commerce Optimizer, each with specific header requirements and authentication methods. For local development and testing, you can use a `config.json` file in your repository or the public config from the Configuration Service, with repository files taking precedence. Use the `getConfigValue` and `getHeaders` helper functions to access these settings in your Commerce blocks, ensuring consistent and maintainable integration with your Commerce backend.
