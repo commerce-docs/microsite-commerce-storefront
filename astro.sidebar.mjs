@@ -20,7 +20,7 @@ export function generateSidebar() {
       icon: 'seti:json',
       items: [
         {
-          label: 'Start Here',
+          label: 'Start here',
           collapsed: false,
           items: [
             { label: 'Storefront developer guide', link: '/get-started/' },
@@ -30,7 +30,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'How the Storefront Works',
+          label: 'How the storefront works',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/get-started/architecture/' },
@@ -73,7 +73,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Custom Features',
+          label: 'Custom features',
           collapsed: true,
           items: [
             { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
@@ -83,7 +83,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Drop-Ins',
+          label: 'Drop-ins',
           collapsed: true,
           items: [
             { label: 'Introduction', link: '/dropins/all/introduction/' },
