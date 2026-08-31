@@ -27,6 +27,7 @@ export function generateSidebar() {
             { label: 'Before you start', link: '/get-started/before-you-start/' },
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Plan your storefront project', link: '/setup/' },
           ],
         },
         {
@@ -36,9 +37,9 @@ export function generateSidebar() {
             { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
             { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
-            { label: 'Drop-in coordination', link: '/get-started/architecture/drop-ins-on-a-page/' },
+            { label: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
             {
-              label: 'Commerce services and backends',
+              label: 'Commerce services at a glance',
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
           ],
@@ -47,13 +48,12 @@ export function generateSidebar() {
           label: 'Boilerplate',
           collapsed: true,
           items: [
-            { label: 'What is the boilerplate?', link: '/boilerplate/' },
-            { label: 'Boilerplate getting started', link: '/boilerplate/getting-started/' },
+            { label: 'Overview', link: '/boilerplate/' },
             { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },
         {
-          label: 'AI Coding Tools',
+          label: 'AI Tools',
           collapsed: true,
           items: [
             { label: 'Install the integrations', link: '/ai/' },
@@ -66,20 +66,12 @@ export function generateSidebar() {
           label: 'Blocks',
           collapsed: true,
           items: [
-            { label: 'Blocks and the repository', link: '/get-started/architecture/blocks-and-repo/' },
             { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
+            { label: 'How blocks connect to drop-ins', link: '/get-started/architecture/blocks-and-repo/' },
             { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Blocks and the Universal Editor', link: '/boilerplate/universal-editor/' },
-          ],
-        },
-        {
-          label: 'Custom features',
-          collapsed: true,
-          items: [
-            { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Composing blocks', link: '/dropins/all/compose-a-block/' },
-            { label: 'Extending', link: '/dropins/all/extending/' },
-            { label: 'Creating', link: '/dropins/all/creating/' },
+            { label: 'Arranging block layouts', link: '/dropins/all/layouts/' },
+            { label: 'Instrumenting blocks for Universal Editor', link: '/boilerplate/universal-editor/' },
           ],
         },
         {
@@ -87,6 +79,8 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Introduction', link: '/dropins/all/introduction/' },
+            { label: 'Containers', link: '/dropins/all/containers/' },
+            { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
           ],
         },
@@ -108,14 +102,6 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Layout',
-          collapsed: true,
-          items: [
-            { label: 'Slots', link: '/dropins/all/slots/' },
-            { label: 'Layouts', link: '/dropins/all/layouts/' },
-          ],
-        },
-        {
           label: 'Events',
           collapsed: true,
           items: [
@@ -124,9 +110,15 @@ export function generateSidebar() {
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
           ],
         },
-        // ---------- PLAN A PRODUCTION ROLLOUT ----------
-        { label: 'Plan your storefront project', link: '/setup/', attrs: { class: 'sidebar-section-label large' } },
-
+        {
+          label: 'Custom features',
+          collapsed: true,
+          items: [
+            { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extending', link: '/dropins/all/extending/' },
+            { label: 'Creating', link: '/dropins/all/creating/' },
+          ],
+        },
         {
           label: 'Commerce Backend',
           collapsed: true,

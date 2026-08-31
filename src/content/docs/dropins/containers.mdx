@@ -1,0 +1,64 @@
+---
+title: Drop-in containers
+description: Learn what a drop-in container is, how it differs from a shared SDK component, how a Commerce block imports and renders one, and what you can customize.
+slug: dropins/all/containers
+sidebar:
+  label: Containers
+---
+
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+import Term from '@components/Term.astro';
+import Diagram from '@components/Diagram.astro';
+
+[Introduction to drop-ins](/dropins/all/introduction/) covers the three parts of a drop-in: the npm package, the initializer, and containers. This page covers containers: what they are, how they differ from shared SDK components, and how a block renders one.
+
+## What is a container?
+
+A container is a complete, pre-built UI feature that a drop-in package exports, so you can add working UI without building it yourself. `CartSummaryList`, for example, is a container the Cart drop-in exports from `@dropins/storefront-cart/containers/CartSummaryList.js`. Unlike a standard UI component, a container manages its own Commerce data and state: it fetches, syncs, and renders markup for its part of the drop-in.
+
+One drop-in package exports several containers, each covering one piece of that drop-in's feature. Cart, for example, exports containers for cart summary, mini cart, coupons, and shipping. Each drop-in has its own containers reference page, which lists every container it exports, along with the props and slots each one supports. For example, see <Link href="/dropins/cart/containers/" text="Cart containers" />.
+
+## Containers compared to SDK components
+
+A container is not the same as a shared <Term>SDK</Term> component like `Button`, `Image`, or `PriceRange` from `@dropins/tools/components.js`. Those components are presentation-only: they render UI but hold no Commerce data or state of their own. Internally, a container is typically built from several of them. Use a container for a complete, drop-in-provided feature with less code to write and maintain. Use SDK components directly when you're composing a custom block. See [Composing blocks](/dropins/all/compose-a-block/) for that pattern.
+
+## How containers reach the page
+
+A Commerce block mounts a container the same way regardless of which drop-in it comes from:
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+flowchart LR
+    pkg["Drop-in package<br/><small>@dropins/storefront-cart</small>"]
+    container["Container<br/><small>CartSummaryList</small>"]
+    provider["Render provider<br/><small>provider.render() from the same package</small>"]
+    block["Commerce block<br/><small>blocks/commerce-cart/commerce-cart.js</small>"]
+    dom["Mounted UI<br/><small>Rendered into the block's DOM</small>"]
+
+    pkg -->|exports| container
+    pkg -->|exports| provider
+    container --> block
+    provider --> block
+    block -->|renders into| dom
+
+    style container fill:#dbeafe,stroke:#1d4ed8,stroke-width:4px
+    style pkg fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style provider fill:#f1f5f9,stroke:#475569,stroke-width:2px
+    style dom fill:#fffbeb,stroke:#d97706,stroke-width:1px
+`} caption="A Commerce block imports a container and that drop-in's render provider from the same npm package, then mounts the container into the block's DOM.">
+</Diagram>
+
+The block's `decorate()` function imports the container plus the render <Term>provider</Term> from that drop-in's own `render.js`, then calls `provider.render(Container, props)(block)` to mount it. [Using drop-ins](/dropins/all/quick-start/) walks through that three-line pattern in full, and [How blocks connect to drop-ins](/get-started/architecture/blocks-and-repo/) shows it in a complete block file.
+
+<Aside type="note" title="Each drop-in exports its own render provider">
+The render provider a container uses comes from that drop-in's own package (`@dropins/storefront-*/render.js`), not from `@dropins/tools/components.js`. If you're rendering shared SDK components instead of a container, you import `provider.render()` from `@dropins/tools/components.js`. See [Composing blocks](/dropins/all/compose-a-block/).
+</Aside>
+
+## What you can customize
+
+Every container accepts props to configure its behavior. Check that drop-in's containers reference page for the specific props each one supports. Most containers also expose slots for adding or replacing pieces of their UI. See [Slots](/dropins/all/slots/) for extension points and [Styling](/dropins/all/styling/) for restyling with design tokens and CSS classes.
+
+## What's next
+
+Now that you know what a container is, [Using drop-ins](/dropins/all/quick-start/) shows the three-step pattern — import the initializer, import a container, render it — with a complete working example.

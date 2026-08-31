@@ -1,0 +1,753 @@
+---
+title: AEM Commerce Prerender
+description: Learn how to set up the AEM Commerce Prerender app to serve complete product page HTML to search engines and AI systems before JavaScript runs.
+slug: setup/configuration/aem-prerender
+---
+
+import Diagram from '@components/Diagram.astro';
+import Link from '@components/Link.astro';
+import ToolsAemLiveNote from 'src/content/fragments/aem-live-tools-note.mdx';
+import LinkCard from '@components/LinkCard.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+import Term from '@components/Term.astro';
+
+The AEM Commerce Prerender solution lets your <Term>Edge Delivery Services</Term> Commerce Storefront serve product page and category listing page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
+
+## How it works
+
+<Steps>
+1. Deploy the <Term>App Builder</Term> app first, because your storefront integration depends on the HTML it generates. The app runs in Adobe's cloud on a schedule, polling your product catalog and generating HTML for each product.
+
+1. The app publishes that HTML to Edge Delivery Services as <Term>overlay</Term> content, where it becomes part of the initial page HTML served to visitors.
+
+1. Your `product-details` block adds interactive features to the prerendered HTML using the product detail page (PDP) <Term>drop-in</Term>.
+</Steps>
+
+<Aside type="note" title="Prerequisite: Bring Your Own Markup">
+The prerender solution uses Edge Delivery Services' <Link href="https://www.aem.live/developer/byom" text="Bring Your Own Markup (BYOM)" /> API to publish HTML content. The app generates one HTML file per product and publishes it as overlay content, so Edge Delivery Services serves complete product HTML at your product page URLs.
+</Aside>
+
+## Why use prerender?
+
+By default, Adobe Commerce on Edge Delivery Services renders product information with client-side JavaScript, which limits discoverability for search engines and AI systems that don't run JavaScript. Edge Delivery Services has no built-in server-side rendering, so the prerender solution is the closest equivalent. Prerendering generates complete HTML — including structured data — and publishes it via the Bring Your Own Markup (BYOM) API before any page is requested. Structured data is machine-readable product information embedded in the HTML, so search engines can read product details without running JavaScript.
+
+- **Enhanced SEO**: Complete HTML for search engines improves indexing and rankings.
+- **AI-readable catalog**: AI systems can read structured markup to understand and recommend your products.
+- **Content appears immediately**: Prerendered product content is visible while interactive drop-ins finish loading.
+- **Faster first load**: Pages start displaying content before JavaScript finishes running.
+- **Automated updates**: Monitors the product catalog and updates markup when products change.
+
+## Implementation roadmap
+
+To implement the prerender solution, you'll work in two repositories. Follow these steps in order:
+
+<Diagram
+  type="mermaid"
+  caption="Complete implementation workflow showing the step-by-step process for setting up prerendered product pages in your storefront."
+  code={`%%{init: {'theme':'base', 'themeVariables': {'fontSize':'16px'}}}%%
+flowchart LR
+    Start([<strong>Start Implementation</strong>]):::start
+
+    Step1["<strong>1. Check Prerequisites</strong><br/>Verify access, tools, and storefront requirements"]:::step
+    Step2["<strong>2. Understand the Architecture</strong><br/>Learn how the two repositories work together"]:::step
+    Step3["<strong>3. Install & Deploy App Builder App</strong><br/>Repository: aem-commerce-prerender<br/>Clone, configure, and deploy to App Builder"]:::repo1
+    Step4["<strong>4. Integrate with Your Storefront</strong><br/>Repository: Your Commerce Boilerplate<br/>Modify the product-details block to use prerendered markup"]:::repo2
+    Step5["<strong>5. Customize (Optional)</strong><br/>Adjust templates, schemas, and queries"]:::optional
+
+    End([<strong>✓ Implementation Complete</strong>]):::complete
+
+    Start --> Step1
+    Step1 --> Step2
+    Step2 --> Step3
+    Step3 --> Step4
+    Step4 --> Step5
+    Step5 --> End
+
+    classDef start fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef step fill:#f5f5f5,stroke:#666,stroke-width:2px,color:#000
+    classDef repo1 fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
+    classDef repo2 fill:#e8f5e9,stroke:#388e3c,stroke-width:3px,color:#000
+    classDef optional fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000,stroke-dasharray: 5 5
+    classDef complete fill:#c8e6c9,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    linkStyle default stroke-width:3px,stroke:#666
+`}
+/>
+
+## Prerequisites
+
+Before implementing the prerender solution, verify you have:
+
+### Required access and permissions
+
+- **Adobe Developer Console access** with "Developer" role for your organization
+- **App Builder workspace** (Stage and Production workspaces recommended)
+- **AEM Admin API access** for your Edge Delivery Services project (see <Link href="https://www.aem.live/docs/admin.html" text="AEM Admin API" /> documentation)
+- **Adobe Commerce instance** with <Term>Catalog Service</Term> configured and operational
+
+<ToolsAemLiveNote />
+
+### Storefront requirements
+
+Your Edge Delivery Services Commerce Storefront must be:
+
+- Built on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" />
+- Configured with valid [storefront configuration](/setup/configuration/commerce-configuration/) connecting to your Adobe Commerce backend
+- Using product URLs with consistent format (typically `/products/{urlKey}/{sku}`)
+
+### Technical requirements
+
+- **Node.js** (current LTS version) installed locally
+- **Adobe I/O CLI** (`@adobe/aio-cli`) installed globally
+- **Git** for cloning the prerender repository
+- Familiarity with JavaScript, Handlebars templates, and GraphQL
+
+## Detailed workflow
+
+The three steps in "How it works" describe the high-level flow. The steps below show how the prerender system carries out that process on a schedule in the background:
+
+1. The store admin manages products in Adobe Commerce.
+2. The prerender system detects product changes.
+3. The prerender system renders pages with semantic markup.
+4. The prerender system publishes the pages via the AEM Admin API.
+5. The prerender system updates the sitemap via the AEM Admin API.
+6. Shoppers access the prerendered product details pages.
+
+The diagram below shows how data moves through each stage, from the store admin's product update to the shopper's product page.
+
+<Diagram
+  type="mermaid"
+  caption="High-level workflow showing how product data flows from Store Admin through the prerender system to deliver Product Details Pages to Store Customers."
+  code={`flowchart LR
+    A["<span style='font-size:80px'>👨‍💼</span><br/><span style='font-size:18px'>Store Admin</span>"]:::actor
+    B["Product"]:::product
+
+    subgraph subGraph0["<strong>Prerender system</strong>"]
+        direction TB
+        C["Product changed"]:::prerender
+        D["Render page"]:::prerender
+        C --> D
+    end
+
+    E["Store HTML in<br/>App Builder blob store"]:::action
+    F["AEM Admin API configures<br/>overlay & updates sitemap"]:::action
+    G["Product Details Page<br/>With embedded JSON-LD<br/>Metadata and Semantic Markup"]:::output
+    H["<span style='font-size:80px'>🛒</span><br/><span style='font-size:18px'>Store Customer</span>"]:::actor
+
+    A --> B
+    B --> subGraph0
+    subGraph0 --> E
+    E -->|AEM Admin API| F
+    F --> G
+    G --> H
+
+    classDef actor fill:none,stroke:none,color:#000000
+    classDef product fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef prerender fill:#fff3e0,stroke:#f57c00,stroke-width:2px,stroke-dasharray: 5 5
+    classDef action fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef output fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+`}
+/>
+
+### Architecture components
+
+The solution consists of these components:
+
+- **App Builder Actions**: Handle product fetching, change detection, and markup generation.
+- **Scheduled Triggers**: Invoke actions on a configurable schedule to keep content synchronized.
+- **Catalog Service Integration**: Queries product data from your Adobe Commerce backend.
+- **AEM Admin API**: Publishes generated markup to your Edge Delivery Services project.
+- **Storage Layer**: Maintains product state and generated markup in App Builder storage.
+- **Management UI**: Provides a web interface for monitoring, configuration, and troubleshooting.
+
+The diagram below shows how these components connect and work together to generate and serve prerendered product pages.
+
+<Diagram
+  type="mermaid"
+  caption="Complete architecture showing App Builder actions, content management, and how prerendered and dynamic content are delivered to consumers."
+  code={`flowchart TB
+    subgraph subGraph0["<strong>App Builder Workspace</strong>"]
+        direction TB
+        A["Product Change Detector<br/>(publishes products upon change)"]:::appBuilder
+        B["Product List Scraper<br/>(fetch and store list)"]:::appBuilder
+        C["PDP Renderer<br/>(generates/stores pages)"]:::appBuilder
+        D[("Blob Store")]:::storage
+        A --> D
+        B --> D
+        C --> D
+    end
+
+    E["AEM Admin API<br/>configures overlay link<br/>to App Builder blob store"]:::api
+    F["Edge Delivery Services<br/>serves HTML from overlay<br/>at product URLs"]:::helix
+
+    subgraph subGraph1["<strong>Product Page</strong>"]
+        direction TB
+        G["Embedded markup with product data<br/>and attributes, injected ahead of time"]:::embedded
+        H["Description"]:::prerendered
+        I["Product image carousel"]:::prerendered
+        J["Price<br/>Stock qty"]:::dynamic
+        K["More<br/>Customer-defined fields"]:::dynamic
+    end
+
+    subgraph subGraph2["<strong>Consumers</strong>"]
+        direction TB
+        L["SEO / AI systems"]
+        M["AI Scrapers<br/>(read markup, no js)"]
+        N["Googlebot<br/>(reads JSON-LD, Rendered page)"]
+        O["Other crawlers<br/>(read markup, no js)"]
+    end
+
+    P["Catalog service<br/>(high frequency data)"]:::api
+    Q["API for price retrieval"]:::api
+
+    D -->|HTML stored in blob store| E
+    E -->|Overlay configured| F
+    F -->|Edge Delivery serves the final page| subGraph1
+    subGraph1 --> subGraph2
+    G --> H
+    G --> I
+    H --> subGraph2
+    I --> subGraph2
+    P -->|Provides data| J
+    Q -->|Provides data| J
+    P -->|Provides data| K
+
+    classDef appBuilder fill:#e3f2fd,stroke:#2962FF,color:#2962FF
+    classDef storage fill:#fff3e0,stroke:#f57c00
+    classDef helix fill:#e8f5e9,stroke:#388e3c
+    classDef embedded fill:#fff9c4,stroke:#f57f17
+    classDef prerendered fill:#c8e6c9,stroke:#388e3c
+    classDef dynamic fill:#ffcdd2,stroke:#c62828
+    classDef api fill:#fce4ec,stroke:#c2185b
+`}
+/>
+
+<Aside type="note" title="Catalog Size Considerations">
+For catalogs exceeding 50,000 products, see [Edge Delivery Services limits](/setup/seo/platform-limits/#indexing-and-sitemap-size) for sitemap splitting strategies and scaling considerations.
+</Aside>
+
+## Product lifecycle management
+
+The prerender solution publishes everything Catalog Service returns, without filtering by product status, visibility, or stock level. A product gets prerendered when Catalog Service includes it in search results and it has a valid URL key.
+
+### Draft product preview
+
+The prerender system does not have a draft mode. It renders every product that Catalog Service returns, regardless of whether that product is enabled, visible, or in stock. Whether a draft or inactive product appears in the prerendered site therefore depends entirely on your Commerce and Catalog Service configuration — not on any filtering in the prerender system.
+
+You can also preview the product template itself — the BYOM template document that provides the page structure for all product pages. Open it in Document Authoring (DA), Universal Editor (UE), or another supported editor, with a `defaultSku` configured to review the layout and content before any products go live.
+
+### Scheduled publishing
+
+Products become live on your storefront only when they have been prerendered and published to Edge Delivery Services. The prerender system runs two coordinated polling actions:
+
+- **`fetch-all-products`** — runs every 60 minutes to discover new products in the catalog
+- **`check-product-changes`** — runs every 5 minutes to detect changes, render updated markup, and publish product pages
+
+To schedule when a product goes live, control when it becomes visible in Catalog Service. When the product appears in Catalog Service search results, the `fetch-all-products` action discovers it within 60 minutes and the `check-product-changes` action publishes it within 5 minutes of discovery.
+
+See the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="aem-commerce-prerender repository" /> for details on configuring polling intervals in `app.config.yaml`.
+
+### Offline product removal
+
+When a product is removed from Catalog Service — because it was disabled, deleted, or its visibility changed — the `mark-up-clean-up` action removes it from the published storefront. This action runs every 60 minutes and works by comparing the list of currently published product pages against current Catalog Service results: any product in the published index that is no longer returned by Catalog Service is unpublished and deleted.
+
+For faster, event-driven removal, you can build custom instrumentation that observes product changes in Commerce and calls the Edge Delivery Services unpublish API directly. The <Link href="https://www.aem.live/docs/admin.html#tag/publish/operation/unpublishResource" text="AEM Admin API unpublish endpoint" /> accepts a resource path and immediately removes it from your live site.
+
+## Installation and configuration
+
+The <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" /> has complete installation instructions. The steps below cover the key configuration values for your deployment.
+
+<Steps>
+
+1. **Clone the repository** and install dependencies:
+   ```bash
+   git clone https://github.com/adobe-rnd/aem-commerce-prerender.git
+   cd aem-commerce-prerender
+   npm install
+   ```
+
+2. **Run the setup wizard** to generate your `.env` configuration:
+   ```bash
+   npm run setup
+   ```
+   The wizard prompts for your App Builder workspace selection and Adobe I/O authentication.
+
+3. **Configure environment variables** in the generated `.env` file with your storefront-specific values:
+
+   <TableWrapper nowrap={[0]}>
+
+   | Variable | Description | Example |
+   |----------|-------------|---------|
+   | `ORG` | Your GitHub organization or username | `adobe` |
+   | `SITE` | Your AEM site/repository name | `your-storefront` |
+   | `CONTENT_URL` | Your AEM content URL (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live` |
+   | `STORE_URL` | Your Commerce store URL (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live` |
+   | `PRODUCTS_TEMPLATE` | URL for the product template page (auto-populated by setup wizard) | `https://main--your-storefront--adobe.aem.live/products/default` |
+   | `PRODUCT_PAGE_URL_FORMAT` | URL pattern for product pages (auto-populated by setup wizard). Supports tokens: `{locale}`, `{urlKey}`, `{sku}` | `/{locale}/products/{urlKey}` |
+   | `LOCALES` | Comma-separated list of locales (for example, `en-us,en-gb,fr-fr`) or empty for non-localized sites | `en-us,fr-fr` |
+   | `ACO_CATEGORY_FAMILIES` | Adobe Commerce Optimizer only. Comma-separated category family identifiers. Determines which categories are prerendered for both category listing pages and product pages. Catalogs with 10,000 or fewer products are always fetched in full. Larger catalogs fetch the first 10,000 products, plus up to 10,000 more per configured category family, deduplicated by SKU. If unset, only the first 10,000 products are prerendered. | `electronics,apparel` |
+   | `PLP_PRODUCTS_PER_PAGE` | Number of products shown per category listing page | `9` (default) |
+   | `AEM_ADMIN_API_AUTH_TOKEN` | Long-lived authentication token for AEM Admin API (valid for 1 year). The setup wizard exchanges your temporary token for this automatically. | `your-admin-token-here` |
+
+   </TableWrapper>
+
+   <Aside type="caution" title="Token expiration">
+   `AEM_ADMIN_API_AUTH_TOKEN` expires after one year. When it expires, product markup stops updating. Set a calendar reminder to rotate the token before expiration and redeploy with `npm run deploy`. See the Troubleshooting section for how to generate a new token.
+   </Aside>
+
+   <Aside type="note" title="Commerce configuration">
+   The prerender app reads Commerce configuration (endpoints, headers, and store context) from your storefront configuration, not from environment variables. Ensure your storefront configuration includes Commerce endpoints and headers as documented in the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation. For Adobe Commerce Optimizer, configure the appropriate headers (`AC-View-ID`, `AC-Source-Locale`, `AC-Price-Book-ID`) in your storefront configuration.
+   </Aside>
+
+   <Aside type="note" title="Category discovery for PaaS and Adobe Commerce as a Cloud Service">
+   `ACO_CATEGORY_FAMILIES` only applies to Adobe Commerce Optimizer storefronts. For PaaS + Catalog Service and Adobe Commerce as a Cloud Service storefronts, category discovery is fully automatic through the catalog's `categories` query, so this variable is ignored entirely for those backends.
+   </Aside>
+
+4. **Obtain required credentials**:
+   - **AEM Admin API token**: To obtain your token:
+     1. Log in to the <Link href="https://admin.hlx.page/login" text="AEM Admin API" /> (select the link from your preferred Identity Provider, where links suffixed by "_sa" let you pick a specific account instead of the one currently logged in)
+     2. Once redirected to the JSON response, open your browser's Developer Tools (F12)
+     3. Go to the Application tab (Chrome) or Storage tab (Firefox)
+     4. Under Cookies, find and copy the value of the `auth_token` cookie
+     5. Paste that token in the setup wizard textarea (the setup wizard exchanges your temporary token for a long-lived token automatically)
+
+     <Aside type="caution" title="Keep this token secret">
+     `AEM_ADMIN_API_AUTH_TOKEN` is a long-lived credential. Treat it like a password: never commit it to source control, and confirm your `.env` file is listed in `.gitignore` before you deploy.
+     </Aside>
+   - **App Builder credentials**: To configure the credentials:
+     1. Go to the <Link href="https://developer.adobe.com/console" text="Adobe Developer Console" />
+     2. Open your project and navigate to the workspace you want to use (Stage or Production)
+     3. Click **Download All** in the top-right to download the App Builder configuration file (a `.json` file)
+     4. Run `aio app use <file_name>` in the root directory of your prerender project to activate the credentials
+   - **Commerce credentials** (Adobe Commerce as a Cloud Service): Access your Commerce Admin → System → Services → <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> for environment and API configuration
+   - **Commerce credentials** (Adobe Commerce Optimizer): Configure your Commerce backend connection according to your deployment type. See the <Link href="/setup/configuration/commerce-configuration/" text="Storefront configuration" /> documentation for details on configuring Optimizer headers and endpoints.
+
+5. **Deploy to App Builder**:
+   ```bash
+   npm run deploy
+   ```
+   This deploys all actions and schedules to your selected workspace (Stage or Production).
+
+6. **Test the deployment**:
+   - Manually invoke actions using the Management UI or via CLI commands:
+     ```bash
+     # Fetch all products from Catalog Service and store them
+     aio rt action invoke aem-commerce-ssg/fetch-all-products
+
+     # Check for product changes and generate markup
+     aio rt action invoke aem-commerce-ssg/check-product-changes
+
+     # Render all category listing pages
+     aio rt action invoke aem-commerce-ssg/render-all-categories
+
+     # Clean up and unpublish deleted products
+     aio rt action invoke aem-commerce-ssg/mark-up-clean-up
+     ```
+   - Verify markup generation directly by invoking the renderer actions over HTTP:
+     - **Query parameters** work regardless of your site's configuration:
+       - Product page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/pdp-renderer?sku={sku}` (`urlKey` also works in place of `sku`)
+       - Category listing page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/plp-renderer?slug={categorySlug}`
+
+       Add `&locale={locale}` to verify a specific locale. Without it, both actions resolve the default locale's configuration and content, even on a multi-locale storefront.
+     - **Absolute paths** mirror your live storefront URLs, but only for product pages:
+       - Product page: `https://{namespace}.adobeioruntime.net/api/v1/web/aem-commerce-ssg/pdp-renderer/products/{urlKey}/{sku}` (adjust the path to match your `PRODUCT_PAGE_URL_FORMAT`)
+
+       This only works if the path segments match your site's `PRODUCT_PAGE_URL_FORMAT` exactly. A mismatch fails with a generic server error rather than a helpful message. Category listing pages don't support this form: `plp-renderer` only accepts `slug` as a query parameter, never as a path segment.
+   - Check that pages publish successfully to your AEM project
+
+7. **Enable automated synchronization**:
+   - Use the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to start the change detector
+   - Configure polling intervals in the `app.config.yaml` file (default: checks for changes every 5 minutes)
+   - Category listing pages render on their own schedule via the `render-all-categories` action (default: every 15 minutes), enabled through the same trigger and rule configuration in `app.config.yaml` as the product pollers
+   - Monitor the product index to verify continuous updates
+
+   <Aside type="note" title="app.config.yaml productDependencies">
+   If your `app.config.yaml` includes a `productDependencies` array, ensure each entry includes the required `maxVersion` property. The Adobe I/O CLI validates this during `aio app build`. See the Troubleshooting section below for details if you encounter build errors.
+   </Aside>
+
+</Steps>
+
+<Aside type="note" title="App Builder costs">
+The prerender app runs as a paid App Builder application. Actions, scheduled triggers, and blob storage all consume App Builder quota. Rendering product pages for large catalogs requires more memory and a longer timeout than a small catalog. For large catalogs or frequent polling intervals, review the <Link href="https://developer.adobe.com/app-builder/docs/overview/pricing/" text="Adobe App Builder pricing" /> documentation before deploying to production.
+</Aside>
+
+### Management UI
+
+After deployment, access the web-based <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to monitor and control your prerender deployment. Configure the UI with your App Builder workspace credentials before deployment-specific data appears.
+
+The Management UI provides:
+
+- **Monitoring capabilities** to view published products and track the product index
+- **Change detector controls** to start, stop, and configure scheduled product polling
+- **Markup preview** to view generated HTML for product pages before publication
+- **Logs and activations** for debugging App Builder action executions
+- **Storage management** to trigger manual product operations and manage App Builder file storage
+- **Configuration settings** to review environment variables and deployment parameters
+
+You configure access and authentication during the initial deployment. See the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="repository documentation" /> for details.
+
+## Storefront integration
+
+With the App Builder app deployed, you've completed the first repository. Now modify your Commerce boilerplate — the second repository — so product pages can read and enhance the prerendered HTML the app publishes.
+
+### The two-repository architecture
+
+The prerender solution involves two separate codebases that work together:
+
+1. **The aem-commerce-prerender repository** (App Builder app)
+   - This is the repository you cloned, configured, and deployed in the previous section
+   - Runs as a serverless application in Adobe App Builder
+   - Generates prerendered HTML and publishes it to your Edge Delivery Services site
+   - Operates independently as a background process
+
+2. **Your storefront repository** (Commerce boilerplate)
+   - Your customer-facing website code
+   - Built on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" />
+   - Needs code changes to read and use the prerendered HTML
+   - You'll make the integration changes in this repository.
+
+#### How they connect
+
+The prerender app and your storefront meet at each product page URL.
+
+The prerender app saves generated HTML in App Builder storage. The AEM Admin API tells Edge Delivery Services where to find those files so they can be served as an overlay: ready-made HTML at the same address as your product pages (for example, `/products/acme-widget/sku123`). When a shopper or search crawler opens that URL, Edge Delivery Services returns the prerendered HTML first, so product names, images, and descriptions appear without waiting for JavaScript.
+
+After the page loads, your storefront JavaScript runs and replaces that static HTML with the interactive product detail page (PDP) drop-in. Shoppers then see live prices, stock, and add-to-cart. Use lowercase SKUs in your product URLs because the drop-in reads the SKU from the `<meta name="sku">` tag (which preserves the original casing) rather than from the URL. See [URL format and SKU handling](#url-format-and-sku-handling) below.
+
+<Diagram
+  type="mermaid"
+  caption="Two-repository architecture showing how the App Builder prerender app publishes HTML that your storefront code consumes and enhances for visitors."
+  code={`flowchart LR
+ subgraph repo1[" "]
+    direction TB
+        A0["<strong>Repository 1</strong><br>aem-commerce-prerender<br>(App Builder Application)"]
+        A1@{ label: "<span style=\"font-size:60px\">👨‍💻</span><br><span style=\"font-size:18px\">Developer Actions</span>" }
+        A2["Clone repo<br>Configure .env<br>Deploy to App Builder"]
+  end
+ subgraph repo2[" "]
+    direction TB
+        D0["<strong>Repository 2</strong><br>Your Storefront<br>(Commerce Boilerplate)"]
+        D1@{ label: "<span style=\"font-size:60px\">👨‍💻</span><br><span style=\"font-size:18px\">Developer Actions</span>" }
+        D2["Modify product-details block<br>to read prerendered HTML<br>and enhance with PDP drop-in"]
+  end
+ subgraph repos["<strong>Developer Repositories</strong>"]
+    direction TB
+        repo1
+        repo2
+  end
+ subgraph appbuilder["<strong>App Builder Workspace</strong>"]
+    direction TB
+        B0["Runs Independently"]
+        B1["Detect product changes"]
+        B2["Generate prerendered HTML<br>with semantic markup"]
+        B3["Store HTML in<br>App Builder blob store"]
+        B4["AEM Admin API configures<br>overlay link to blob store"]
+  end
+ subgraph eds["<strong>Edge Delivery Services</strong>"]
+    direction TB
+        C0["Content Delivery Layer"]
+        C1["Serves prerendered HTML<br>from overlay at product URLs<br>/products/{urlKey}/{sku}"]
+  end
+ subgraph delivery["<strong>Page Delivery Flow</strong>"]
+    direction TB
+        E1@{ label: "<span style=\"font-size:60px\">🤖</span><br><span style=\"font-size:18px\">Crawler Request</span>" }
+        E2@{ label: "<span style=\"font-size:60px\">👤</span><br><span style=\"font-size:18px\">User Request</span>" }
+        E3["Edge Delivery serves<br>prerendered HTML"]
+        E4["Crawler reads<br>static HTML"]
+        E5["Browser executes<br>storefront JavaScript"]
+        E6["PDP drop-in replaces<br>HTML with interactive UI"]
+  end
+    A0 -.-> A1
+    A1 --> A2
+    D0 -.-> D1
+    D1 --> D2
+    B0 L_B0_B1_0@--> B1
+    B1 L_B1_B2_0@--> B2
+    B2 L_B2_B3_0@--> B3
+    B3 L_B3_B4_0@--> B4
+    C0 -.-> C1
+    E1 --> E3
+    E2 --> E3
+    E3 --> E4 & E5
+    E5 --> E6
+    repo1 L_repo1_appbuilder_0@-. <strong>npm run deploy</strong> .-> appbuilder
+    repo2 == <strong>Deployed to</strong> ==> eds
+    B4 L_B4_eds_0@-. <strong>Overlay configured</strong> .-> eds
+    eds L_eds_delivery_0@-. <strong>Serves content</strong> .-> delivery
+    A1@{ shape: rect}
+    D1@{ shape: rect}
+    E1@{ shape: rect}
+    E2@{ shape: rect}
+     A0:::title
+     A1:::icon
+     A2:::action
+     D0:::title
+     D1:::icon
+     D2:::action
+     B0:::note
+     B1:::process
+     B2:::process
+     B3:::process
+     B4:::process
+     C0:::note
+     C1:::storage
+     E1:::icon
+     E2:::icon
+     E3:::delivery
+     E4:::crawlerEnd
+     E5:::delivery
+     E6:::delivery
+    classDef title fill:#f5f5f5,stroke:#666,stroke-width:1px,color:#333
+    classDef note fill:#fff,stroke:#999,stroke-width:1px,color:#666,font-style:italic
+    classDef icon fill:none,stroke:none,color:#000000
+    classDef action fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef storage fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef delivery fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef crawlerEnd fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style repo1 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px
+    style repo2 fill:#fff3e0,stroke:#f57c00,stroke-width:1px
+    style appbuilder fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style eds fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style delivery fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style repos fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    L_B0_B1_0@{ animation: slow }
+    L_B1_B2_0@{ animation: slow }
+    L_B2_B3_0@{ animation: slow }
+    L_B3_B4_0@{ animation: slow }
+    L_repo1_appbuilder_0@{ animation: slow }
+    L_B4_eds_0@{ animation: slow }
+    L_eds_delivery_0@{ animation: slow }
+`}
+/>
+
+### How prerendered HTML reaches your storefront
+
+The prerendered HTML flows from the App Builder app to your storefront through App Builder storage and Edge Delivery Services overlay configuration:
+
+#### Publishing mechanism
+
+1. The App Builder app generates complete HTML files with prerendered product markup.
+2. The App Builder app saves those HTML files to its own file storage.
+3. The AEM Admin API configures the link to the App Builder file storage as an overlay in your Edge Delivery Services configuration.
+4. The AEM Admin API updates your sitemap to include the new and updated product pages.
+5. Edge Delivery Services serves the prerendered HTML from the overlay when product page URLs are requested.
+
+The Commerce Prerender app uses App Builder file storage and Edge Delivery Services overlay configuration. It does _not_ use events to trigger updates. Each time the App Builder app detects a product change and generates HTML, it saves the HTML to App Builder storage and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically. The storefront needs no additional fetching or configuration.
+
+### How the storefront serves prerendered HTML
+
+When a visitor requests a product page URL (for example, `/products/acme-widget/sku123`), Edge Delivery Services serves the prerendered HTML as the actual page. The HTML already contains the `product-details` block populated with prerendered content. Your storefront doesn't fetch it separately.
+
+#### The delivery sequence
+
+<Steps>
+
+1. **Request arrives** → Edge Delivery Services receives the URL request
+2. **HTML served** → Edge Delivery Services returns the prerendered HTML file (published by the App Builder app)
+3. **Page loads** → The browser displays the page with prerendered content (crawlers stop here)
+4. **JavaScript executes** → Your storefront code runs
+5. **Enhancement** → The `product-details` block's `decorate()` function replaces the static HTML with the interactive PDP drop-in, which fetches live prices, stock, and add-to-cart from Commerce APIs
+
+</Steps>
+
+This process is called <Term>progressive enhancement</Term>: the prerendered HTML is the complete page that everyone sees first. The storefront code reads the page's existing HTML, extracts the SKU from the meta tag, and upgrades the page to a fully interactive experience for shoppers with JavaScript. Crawlers and shoppers without JavaScript always see complete product information from the prerendered HTML.
+
+### Modifying your `product-details` block
+
+To integrate prerendered markup with the PDP drop-in, you'll need to modify the `product-details` block in your <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate" />.
+
+#### Location
+
+The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details" text="product-details block" /> lives in your boilerplate at:
+
+```
+blocks/product-details/product-details.js
+```
+
+#### Integration pattern
+
+By the time `decorate()` runs, Edge Delivery Services has already served the prerendered HTML to the browser, so crawlers have read that content before any JavaScript executes. When `decorate()` runs, it replaces the static block content with the interactive PDP layout.
+
+Your `decorate()` function should:
+
+<Steps>
+
+1. **Retrieve the SKU**: Read the product SKU from the `<meta name="sku">` tag. The prerender system stores the original-casing SKU here, so the drop-in gets the correct value even after URL lowercasing.
+2. **Mount the PDP drop-in**: Call `mountImmediately` to initialize the PDP with the retrieved SKU.
+3. **Replace with PDP layout**: Clear the block content and render the interactive PDP containers.
+
+</Steps>
+
+<Aside type="note" title="Simplified code example">
+This snippet is a minimal teaching version: it reads the SKU, runs `mountImmediately(initialize, { sku })`, clears the block, and mounts `ProductHeader` only. In the Commerce boilerplate, PDP is initialized from `scripts/initializers/pdp.js`, which calls `mountImmediately` with `langDefinitions`, `models`, fetched placeholders, and the other options documented on [Product Details initialization](/dropins/product-details/initialization/). The real `product-details` block builds a layout fragment and renders every region (for example, `ProductGallery`, `ProductHeader`, `ProductPrice`, and `ProductOptions`). For production patterns, see the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details" text="product-details block" /> in the Commerce boilerplate and the [containers overview](/dropins/product-details/containers/).
+</Aside>
+
+```js
+// File location: blocks/product-details/product-details.js
+// Import paths are relative to blocks/product-details/product-details.js
+import { getProductSku } from '../../scripts/commerce.js';
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-pdp';
+import { render as productRenderer } from '@dropins/storefront-pdp/render.js';
+import ProductHeader from '@dropins/storefront-pdp/containers/ProductHeader.js';
+
+export default async function decorate(block) {
+  // Edge Delivery Services served the prerendered HTML before this function ran.
+  // Crawlers have already read that content. decorate() now replaces it with the interactive layout.
+
+  // Step 1: Retrieve the SKU from the meta tag (with URL fallback), then initialize PDP
+  // getProductSku() reads the SKU from the <meta name="sku"> tag and falls back to URL parsing.
+  // In template preview mode (Universal Editor or Document Authoring), it reads a defaultSku value from the block config instead.
+  const sku = getProductSku();
+  await initializers.mountImmediately(initialize, { sku });
+
+  // Step 2: Replace prerendered HTML with interactive composed containers
+  // Production code builds a layout fragment and renders every region. This sample mounts ProductHeader only.
+  block.innerHTML = '';
+  await productRenderer.render(ProductHeader, {})(block);
+  // ... other rendering code
+}
+```
+
+#### URL format and SKU handling
+
+The prerender system generates markup files that match your storefront product URL structure. By default, this uses the format:
+
+```plaintext
+/products/{urlKey}/{sku}
+```
+
+The `PRODUCT_PAGE_URL_FORMAT` can be customized in your <Link href="https://github.com/adobe-rnd/aem-commerce-prerender?tab=readme-ov-file#url-naming-and-sanitization" text=".env configuration" />.
+
+<Aside type="note" title="SKU lowercase requirement">
+Starting with the October 2025 Adobe Commerce Storefront release, all SKUs in product URLs are automatically converted to lowercase to ensure URL consistency and proper resolution. When the prerendered markup is generated, the actual SKU (with original casing) is stored in a meta tag:
+
+```html
+<meta name="sku" content="MY_PRODUCT_123">
+```
+
+This allows your PDP drop-in to retrieve the correct SKU regardless of URL transformations, which is why the code example above retrieves the SKU from the meta tag rather than parsing it from the URL.
+</Aside>
+
+For complete implementation examples, refer to the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/product-details" text="product-details block" /> in the Commerce boilerplate.
+
+## Customization
+
+The prerender solution provides these customization options:
+
+<TableWrapper nowrap={[0]}>
+
+| Customization | Purpose and Configuration |
+|---------------|---------------------------|
+| **Templates** | Control HTML markup structure and styling. By default, markup is handled on the client side at `{store_url}/product/default`. If the default template is not available, you can edit the template at <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/templates/product-details.hbs" text="actions/pdp-renderer/templates/product-details.hbs" /> |
+| **Structured Data** | Customize JSON-LD schemas in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/ldJson.js" text="actions/pdp-renderer/ldJson.js" /> to optimize product rich snippets for search engines |
+| **GraphQL Queries** | Extend product data by modifying GraphQL queries in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="actions/queries.js" />. The rendering logic that uses these queries is implemented in the `generateProductHtml` method in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/pdp-renderer/render.js" text="actions/pdp-renderer/render.js" /> |
+| **URL Patterns** | Match your storefront URL structure by configuring `PRODUCT_PAGE_URL_FORMAT` in the `.env` file |
+| **Rendering Logic** | Transform product data before markup generation by implementing custom logic in App Builder actions |
+| **Category Listing Page Structured Data** | Customize the `CollectionPage`, `ItemList`, and `BreadcrumbList` JSON-LD generated for category listing pages in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/ldJson.js" text="actions/plp-renderer/ldJson.js" /> |
+| **Category Image Selection** | By default, the `plp-renderer` action prefers the category image with the `BASE` role, falling back to the first available image. Customize this logic in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/plp-renderer/render.js" text="actions/plp-renderer/render.js" /> |
+| **Category Listing Page Templates** | Control category listing page markup structure and styling using the Handlebars templates in <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/tree/main/actions/plp-renderer/templates" text="actions/plp-renderer/templates" /> |
+
+</TableWrapper>
+
+For implementation details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender" text="AEM Commerce Prerender repository" />, particularly the `actions/` directory and repository root for templates and configuration files.
+
+## End-to-end testing
+
+The repository includes end-to-end tests that verify the deployed `pdp-renderer` and `plp-renderer` actions return correctly structured HTML and JSON-LD. These tests run against your live Adobe I/O Runtime deployment.
+
+Test inputs are defined in `e2e/config.json`:
+
+```json
+{
+  "pdpSku": "ADB177",
+  "plpSlug": "apparel"
+}
+```
+
+- `pdpSku` — the product SKU to use for product page rendering tests
+- `plpSlug` — the category slug to use for category listing page rendering tests
+
+Update these values to match products and categories available in your catalog, then run the tests:
+
+```bash
+npm run e2e
+```
+
+The tests validate structural correctness and field-level checks on the rendered HTML and JSON-LD, without asserting on catalog-specific values like product names or image domains.
+
+## Limitations
+
+The prerender solution has these known limitations:
+
+- **Category updates aren't detected reactively.** Instead, category listing pages re-render on a fixed cadence (default every 15 minutes) rather than in response to a specific change.
+- **Catalog APIs cap pagination per category path.** Prerendering is limited to a maximum of approximately 10,000 products per category path.
+- **No per-SKU or per-category content overrides.** The prerender solution doesn't support merging custom content into individual product or category pages (for example, showing a widget only on one category or SKU). If the override needs to appear in the canonical, server-rendered response that search engines and AI crawlers see, it requires a customization to the prerender app. If it doesn't need to be in that canonical response, use <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/#_top" text="enrichment blocks" /> or another runtime customization approach, such as custom JavaScript that injects content based on the currently rendered category or product.
+
+If your catalog or requirements run into these limits — an unusually large category, a need for near-real-time updates, or per-category overrides — work with your development team on a custom approach for those pages.
+
+{/* TODO(USF-4304): link to guidance on per-SKU/per-category content overrides once available */}
+
+## Troubleshooting
+
+For troubleshooting during development and operations, consult the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="prerender runbook" />.
+
+Common issues include:
+
+- **Authentication failures**: Verify that your AEM Admin API token is valid (tokens expire after 1 year). To check the token expiration, decode the token using <Link href="https://www.jwt.io/" text="jwt.io" /> or check your <Link href="https://www.aem.live/docs/admin.html#setting-up-authentication-for-admin-api" text="AEM project admin panel" />.
+  - Generate a new token if expired (see <Link href="https://www.aem.live/docs/admin.html#tag/orgConfig/operation/createOrgApiKey" text="how to generate a new token" />) and update `AEM_ADMIN_API_AUTH_TOKEN` in your `.env` file
+  - Redeploy with `npm run deploy` after updating credentials
+
+- **Product not rendering**: Check that the product exists in Catalog Service and that the SKU matches.
+  - Query the Catalog Service directly using its <Link href="https://developer.adobe.com/commerce/services/graphql/catalog-service/products/" text="GraphQL Product API" /> to verify product data
+  - Use the Management UI to view the product index and confirm that the SKU is listed
+  - Run `aio rt activation list` to check action logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
+
+- **Markup not updating**: Review the Change Detector logs to ensure scheduled triggers are running.
+  - Access the <Link href="https://prerender.aem-storefront.com" text="Management UI" /> to verify the change detector status (should show "Running")
+  - Run `aio rt activation list` to check activation logs. For more details, see the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" />
+  - Manually trigger the change detector from the Management UI to test functionality
+
+- **Category pages not rendering**: Check the `render-all-categories` action the same way as `check-product-changes`.
+  - Run `aio rt activation list` and inspect the `aem-commerce-ssg/render-all-categories` activations
+  - A `plp-running` mutex prevents concurrent executions. To force a full re-render of all category pages, reset the corresponding `render-all-categories/{locale}.json` state file and wait for the next scheduled cycle
+  - See the runbook's <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="Category renderer (PLPs)" /> section for details
+
+- **Testing changes locally without deploying**: Set `LOCAL_FS=true` and run the scripts in the `runners/` directory to execute any action against local files in `./local-data/` instead of Adobe I/O Runtime storage. This is useful for inspecting rendered output or working around remote action timeout limits without a full deploy. See the runbook's "Running actions locally" section for details.
+
+- **Long-running or stuck activations**: `pdp-renderer` and `check-product-changes` default to a 3-hour timeout and 4096 MB of memory (increased from 1 hour and 256 MB) to support larger catalogs, especially with category families configured.
+  - A run that takes the full 3 hours won't appear in `aio rt activation list` until it finishes. Adobe I/O Runtime doesn't record an activation until the invocation completes
+  - A watchdog aborts the action after 5 minutes without progress, rather than waiting out the full timeout
+  - If you customize the `timeout` for `pdp-renderer` in `app.config.yaml`, also update the matching `ACTION_TIMEOUT_MS` constant in `actions/check-product-changes/index.js`. If you customize the timeout for `render-all-categories`, update the equivalent value in `actions/render-all-categories/index.js` too. The "running" mutex that prevents overlapping executions derives its expiration from these values, so a mismatch can leave a stale lock or allow overlapping runs
+
+- **Build error: "Missing or invalid keys in app.config.yaml"**: This error occurs when `productDependencies` entries are missing the required `maxVersion` property.
+  - **Error message**: `must have required property 'maxVersion'` in `/productDependencies/0`
+  - **Solution**: Ensure each entry in the `productDependencies` array includes `maxVersion`. Example:
+    ```yaml
+    productDependencies:
+      - code: <PRODUCT_CODE>
+        minVersion: <MIN_VERSION>
+        maxVersion: <MAX_VERSION>  # Required field
+    ```
+  - Update your `app.config.yaml` file and redeploy with `npm run deploy`
+
+- **Deployment errors**: If you encounter 403 errors when running `npm run deploy`, the `aio` CLI may be authenticated to the wrong organization. Run `aio login --force` to re-authenticate and choose the correct organization.
+
+## Additional resources
+
+- **App Builder Documentation**: <Link href="https://developer.adobe.com/app-builder/docs/overview/" text="Adobe Developer App Builder" />
+- **Catalog Service Guide**: <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation" text="Adobe Commerce Catalog Service" />
+- **Edge Delivery Services**: <Link href="https://www.aem.live/docs/publishing-from-authoring" text="Publishing to Edge Delivery Services" />
+- **AEM Admin API**: <Link href="https://www.aem.live/docs/admin.html" text="AEM Admin API" /> (The prerender app automatically uses this API to publish content; useful for understanding the publishing mechanism and troubleshooting authentication issues)
+
+## Support
+
+For technical issues or questions during implementation, consult the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/docs/RUNBOOK.md" text="runbook" /> or contact Adobe Commerce support.
+
+<LinkCard
+  title="Merchant documentation"
+  description="Explain prerendering benefits to store administrators"
+  link="/merchants/content-customizations/prerendered-product-pages/"
+/>

@@ -113,8 +113,8 @@ export function generateRedirects(basePath) {
         // ========= GET STARTED REDIRECTS =========
         '/get-started/launch-checklist': `${basePath}/launch`,
         '/get-started/requirements': `${basePath}/get-started/architecture`,
-        '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
-        '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/get-started/boilerplate-project': `${basePath}/boilerplate`,
+        '/get-started/working-with-boilerplate': `${basePath}/boilerplate`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
@@ -125,7 +125,8 @@ export function generateRedirects(basePath) {
         '/get-started/dropins-mcp': `${basePath}/ai/`,
 
         // ========= BOILERPLATE REDIRECTS =========
-        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/boilerplate/getting-started': `${basePath}/boilerplate`,
+        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate`,
         '/boilerplate/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/boilerplate/blocks': `${basePath}/boilerplate/blocks-reference`,
         '/dropins/all/commerce-blocks': `${basePath}/boilerplate/blocks-reference`,

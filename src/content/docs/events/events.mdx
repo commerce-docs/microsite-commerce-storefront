@@ -1,0 +1,581 @@
+---
+title: The event bus
+description: Learn how drop-ins and your own custom blocks use events for communication, including the event bus architecture and common events shared across all drop-ins.
+slug: dropins/all/events
+sidebar:
+  label: The event bus
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
+import Link from '@components/Link.astro';
+
+Drop-ins and your own custom blocks can share a single event-driven architecture using the `@dropins/tools/event-bus.js` module to communicate. This event system lets any block respond to application state changes, stay loosely coupled from other blocks, and keep state synchronized across your storefront.
+
+<Aside type="tip" title="Looking for the API reference?">
+For detailed API documentation including methods like `events.on()`, `events.emit()`, and advanced features like scoping, see the [Event Bus API Reference](/sdk/reference/events/).
+</Aside>
+
+## Event system architecture
+
+The system uses a publish-subscribe pattern where components can:
+
+<Steps>
+
+1. **Subscribe** to specific events using `events.on()`
+2. **Emit** events using `events.emit()`
+3. **Unsubscribe** using `subscription.off()`
+
+</Steps>
+
+This pattern allows drop-ins to communicate without having direct dependencies on each other, making your storefront more modular and maintainable.
+
+### Multiple storefront routes
+
+<Aside type="note">
+The bus coordinates drop-ins on the same loaded document. It does not send events from one full page navigation to the next. When the shopper moves from a cart route to a checkout route, the checkout document loads a new bus instance; cart continuity comes from Commerce (server-side cart) and from your storefront wiring that rehydrates the cart on the new page. The Commerce boilerplate persists the cart id when `cart/data` fires (`persistCartDataInSession` in the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/index.js" text="global initializers module" />) and imports the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/cart.js" text="cart initializer" /> on startup. The checkout block listens on that new page's bus; see <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/commerce-checkout/commerce-checkout.js" text="blocks/commerce-checkout/commerce-checkout.js" /> for `cart/initialized` and related handlers. For a shorter introduction, read [How drop-ins coordinate on a page](/get-started/architecture/drop-ins-on-a-page/). For synchronous reads from code, see [Using drop-ins](/dropins/all/quick-start/) (`getCartDataFromCache`).
+</Aside>
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    Cart(Cart Drop-in)
+    Checkout(Checkout Drop-in)
+    Auth(User Auth Drop-in)
+    EventBus(Event Bus)
+    Custom(Custom Code)
+    
+    Cart -->|emits cart/updated| EventBus
+    EventBus -->|cart/updated| Checkout
+    Auth -->|emits authenticated| EventBus
+    EventBus -->|authenticated| Cart
+    EventBus -->|authenticated| Checkout
+    Custom -->|emits locale| EventBus
+    EventBus -->|locale| Cart
+    
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style Cart fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Auth fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style Custom fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+`} caption="Drop-ins communicate through the central event bus without direct dependencies on each other. Custom storefront code (pink) can also emit events like locale and authenticated that drop-ins listen to.">
+</Diagram>
+
+## Common event patterns
+
+Drop-ins use consistent naming conventions for their events:
+
+- **`dropin/initialized`**: Fires when a drop-in completes initialization
+- **`dropin/updated`**: Fires when a drop-in's state changes
+- **`dropin/data`**: Provides the current data state
+- **`dropin/reset`**: Fires when a drop-in's state is reset
+- **`dropin/error`**: Fires when an error occurs
+
+### Event directions
+
+Events can flow in different directions:
+
+- **Emits**: The drop-in publishes this event for others to consume
+- **Listens**: The drop-in subscribes to this event from external sources
+- **Emits and listens**: The drop-in both publishes and subscribes to this event (bidirectional)
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph TB
+    DropinA(Drop-in A<br/>Emits Only)
+    DropinB(Drop-in B<br/>Listens Only)
+    DropinC(Drop-in C<br/>Emits and Listens)
+    EventBus(Event Bus)
+    External1(Other<br/>Components)
+    External2(Other<br/>Components)
+    
+    DropinA -->|emits| EventBus
+    EventBus -.->|listens| External1
+    External2 -->|emits| EventBus
+    EventBus -.->|listens| DropinB
+    DropinC -->|<br/>emits| EventBus
+    EventBus -.->|listens| DropinC
+    
+    linkStyle 0 stroke-width:2px
+    linkStyle 1 stroke-width:1.5px
+    linkStyle 2 stroke-width:2px
+    linkStyle 3 stroke-width:1.5px
+    linkStyle 4 stroke-width:2px
+    linkStyle 5 stroke-width:1.5px
+    
+    style DropinA fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style DropinB fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style DropinC fill:#f3e8ff,stroke:#a855f7,stroke-width:2px
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style External1 fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+    style External2 fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+`} caption="Three types of event flow: emits only (blue), listens only (indigo), and bidirectional (purple).">
+</Diagram>
+
+<Aside type="tip">
+Each drop-in's event documentation clearly indicates which events it emits and which it listens to. This helps you understand the data flow in your storefront.
+</Aside>
+
+## Event subscription
+
+Components subscribe to events to listen for and respond to the changes elsewhere in the application.
+
+### Subscription syntax
+
+To subscribe to an event, provide:
+
+<Steps>
+
+1. The **event name** (as a string)
+2. An **event handler** callback function that receives the payload
+3. Optional **configuration** parameters
+
+</Steps>
+
+```javascript
+const subscription = events.on('event-name', handler, options);
+```
+
+### Subscription options
+
+Event subscriptions support an optional configuration parameter:
+
+- **`eager: true`**: The handler executes immediately if the event has been emitted previously
+- **`eager: false`** (default): The handler only responds to future emissions of the event
+
+See [Best Practices](#best-practices) for detailed guidance on using eager mode effectively.
+
+### Example: Subscribing to an event
+
+Listen to an initialization event:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// Subscribe to the event
+const subscription = events.on('cart/initialized', (data) => {
+  console.log('Cart initialized with data:', data);
+  // Handle the cart data
+  updateUI(data);
+});
+
+// Later, unsubscribe when no longer needed
+subscription.off();
+```
+
+
+## Event emission
+
+Components emit events to share information with other components, drop-ins, or external systems.
+
+### Emission syntax
+
+To emit an event, provide:
+
+<Steps>
+
+1. The **event name** (as a string)
+2. The **payload** containing the data to share
+
+</Steps>
+
+```javascript
+events.emit('event-name', payload);
+```
+
+### Example: Emitting an event
+
+Emit an event when state changes:
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+function updateCartQuantity(itemId, quantity) {
+  // Update the cart
+  const updatedCart = performCartUpdate(itemId, quantity);
+  
+  // Notify other components about the change
+  events.emit('cart/updated', updatedCart);
+}
+```
+
+---
+
+## Common events reference
+
+These three events are shared across multiple drop-ins. Your storefront code emits `authenticated` and `locale`; drop-ins emit `error` for your code to handle.
+
+<TableWrapper nowrap={[0]}>
+
+| Event | Category | Used By | Description |
+|-------|----------|---------|-------------|
+| [authenticated](#authenticated) | Authentication | Most B2C & B2B drop-ins | Authentication state changes |
+| [error](#error) | Error Handling | Most drop-ins | Error notifications |
+| [locale](#locale) | Localization | All drop-ins | Language/locale changes |
+
+</TableWrapper>
+
+### authenticated
+
+Category: Authentication
+Direction: Emitted by an external source, listened to by drop-ins
+Used By: Cart, Checkout, Order, User Account, User Auth, Wishlist, and most B2B drop-ins
+
+Fires when the user's authentication state changes (login, logout, token refresh, session expiration). Drop-ins listen to this event to update their internal state and UI.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- An authentication token is refreshed
+- The authentication state is restored (for example, page refresh with active session)
+- A session expires
+- A user logs out
+- A user successfully logs in
+
+#### Data payload
+
+```typescript
+boolean
+```
+
+`true` = user is authenticated. `false` = user is not authenticated or has logged out.
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User logged in
+events.emit('authenticated', true);
+
+// User logged out
+events.emit('authenticated', false);
+```
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const authListener = events.on('authenticated', (isAuthenticated) => {
+  if (isAuthenticated) {
+    // Update UI, load user-specific data, etc.
+  } else {
+    // Clear user data, redirect to login, etc.
+  }
+});
+
+// Stop listening when no longer needed
+authListener.off();
+```
+
+---
+
+### error
+
+Category: Error Handling
+Direction: Emitted by drop-ins, external code listens
+Used By: Most drop-ins for error reporting
+
+Fires when a drop-in encounters an error (API failure, validation error, network timeout). Listen to this event to display error messages, log errors, or trigger error recovery logic.
+
+#### When emitted
+
+Drop-ins emit this event when:
+
+- API requests fail
+- Critical operations fail
+- Network errors occur
+- Validation fails
+
+#### Data payload
+
+```typescript
+{
+  message: string;
+  code?: string;
+  details?: any;
+  source?: string;
+}
+```
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const errorListener = events.on('error', (error) => {
+  console.error('Drop-in error:', error.message);
+  showErrorNotification(error.message);
+
+  if (error.code === 'AUTH_EXPIRED') {
+    redirectToLogin();
+  }
+});
+
+errorListener.off();
+```
+
+---
+
+### locale
+
+Category: Localization
+Direction: Emitted by external source, listened to by drop-ins
+Used By: All drop-ins with internationalization support
+
+Fires when the application's language or locale changes. Drop-ins listen to update their text content, date formatting, currency display, and other locale-specific elements.
+
+#### When to emit
+
+Emit this event from your storefront when:
+
+- A user selects a different language
+- The application detects and applies a locale based on user preferences
+- The locale is programmatically changed
+
+#### Data payload
+
+```typescript
+string
+```
+
+The locale string should follow standard format (for example, `en-US`, `fr-FR`, `de-DE`).
+
+#### Usage examples
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+// User selects a new language
+events.emit('locale', 'fr-FR');
+
+// Or based on browser detection
+const userLocale = navigator.language || 'en-US';
+events.emit('locale', userLocale);
+```
+
+```javascript
+import { events } from '@dropins/tools/event-bus.js';
+
+const localeListener = events.on('locale', (newLocale) => {
+  updateTranslations(newLocale);
+});
+
+localeListener.off();
+```
+
+---
+
+## Best practices
+
+### Use type-safe event names
+
+Import event types when available to ensure you're using the correct event names:
+
+```typescript
+import type { Events } from '@adobe-commerce/event-bus';
+
+// TypeScript will validate the event name
+events.on('cart/initialized', (data) => {
+  // ...
+});
+```
+
+### Use eager mode wisely
+
+Set `eager: true` when you need the current state immediately:
+
+```javascript
+// Good: Getting initial state on component mount
+events.on('cart/data', (data) => {
+  initializeComponent(data);
+}, { eager: true });
+
+// Good: Only responding to future changes
+events.on('cart/updated', (data) => {
+  updateComponent(data);
+}, { eager: false });
+```
+
+### Keep handlers focused
+
+Event handlers should be small and focused on a single responsibility:
+
+```javascript
+// Good: Focused handler
+events.on('cart/updated', (cart) => {
+  updateCartBadge(cart.itemCount);
+});
+
+// Avoid: Handler doing too much
+events.on('cart/updated', (cart) => {
+  updateCartBadge(cart.itemCount);
+  updateMiniCart(cart);
+  recalculateTotals(cart);
+  logAnalytics(cart);
+  // Too many responsibilities
+});
+```
+
+### Use state management helpers
+
+Use `events.lastPayload('<event>')` to retrieve the most recent state without waiting for the next event:
+
+```javascript
+// Get current authentication state
+const isAuthenticated = events.lastPayload('authenticated');
+if (isAuthenticated) {
+  console.log('User is authenticated');
+}
+
+// Get current locale
+const currentLocale = events.lastPayload('locale');
+console.log('Current locale:', currentLocale);
+```
+
+### Handle errors gracefully
+
+Always include error listeners in production applications to gracefully handle failures and provide helpful feedback to users.
+
+---
+
+## Event sources: External vs. Internal
+
+Events can originate from different sources in your storefront:
+
+**External events** are fired by:
+- Your storefront application code (authentication, locale changes)
+- Other drop-ins (cart updates affecting checkout)
+- Third-party integrations (payment processors, analytics)
+
+**Internal events** are fired by:
+- Components within the same drop-in (checkout steps communicating with each other)
+- Drop-in initialization and state management
+
+Understanding whether an event is external or internal helps you determine:
+- Where to emit the event in your custom code
+- Which events you need to handle from your storefront
+- How drop-ins coordinate internally vs. with the broader application
+
+The following diagram illustrates this using the Checkout drop-in as an example:
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph TB
+    subgraph Sources["External to Checkout"]
+        Storefront(Storefront Code)
+        Cart(Cart Drop-in)
+        ThirdParty(Third-party<br/>Integrations)
+    end
+    
+    subgraph EventBus["Event Bus"]
+        EB(Central Event Bus)
+    end
+    
+    subgraph Checkout["Checkout"]
+        direction TB
+        Container1(Address Form)
+        Container2(Shipping Methods)
+        Container3(Payment Form)
+        Container4(Order Summary)
+    end
+    
+    Storefront -->|authenticated, locale| EB
+    Cart -->|cart/initialized, cart/updated, cart/data| EB
+    ThirdParty -->|payment/complete| EB
+    
+    EB -.->|External Events| Container1
+    EB -.->|External Events| Container2
+    EB -.->|External Events| Container3
+    EB -.->|External Events| Container4
+    
+    Container2 ==>|Internal Events| Container4
+    Container3 ==>|Internal Events| Container4
+    
+    linkStyle 3 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 4 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 5 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 6 stroke:#6366f1,stroke-width:1.5px
+    linkStyle 7 stroke:#6366f1,stroke-width:3px
+    linkStyle 8 stroke:#6366f1,stroke-width:3px
+    
+    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style Checkout fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
+    style Storefront fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style Cart fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style ThirdParty fill:#fce7f3,stroke:#ec4899,stroke-width:1.5px
+    style EB fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    style Container1 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container2 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container3 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+    style Container4 fill:#e0e7ff,stroke:#6366f1,stroke-width:1.5px
+`} caption="External events (thin dashed arrows) flow from outside sources through the Event Bus to the drop-in. Internal events (thick solid arrows) coordinate between containers within the same drop-in.">
+</Diagram>
+
+The Checkout drop-in:
+- **Listens to external events**: `authenticated`, `cart/initialized`, `cart/updated`, `cart/merged`, `cart/reset`, `cart/data`, `locale`
+- **Uses internal events**: `checkout/initialized`, `checkout/updated`, `shipping/estimate` (for coordinating between its own containers)
+
+## Event declaration
+
+Events are strongly typed using TypeScript declaration merging to provide type safety and autocomplete support. Each drop-in declares its events by extending the `Events` interface from the event bus.
+
+### Basic declaration
+
+Here's a simplified example of how events are declared:
+
+```typescript title="event-bus.d.ts"
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'dropin/initialized': DataModel | null;
+    'dropin/updated': DataModel | null;
+    'dropin/data': DataModel;
+    authenticated: boolean;
+    locale: string;
+    error: { source: string; type: string; error: Error };
+  }
+}
+```
+
+### Complete declaration example
+
+In practice, drop-ins declare their events with imports and type extensions. Here's a more comprehensive example from the Checkout drop-in:
+
+```typescript title="event-bus.d.ts"
+import {
+  Cart as CheckoutData,
+  ShippingEstimate,
+  ValuesModel,
+} from '@/checkout/data/models';
+
+import { CartModel } from '@/checkout/types/cart';
+
+declare module '@adobe-commerce/event-bus' {
+  interface Events {
+    'cart/initialized': CartModel | null;
+    'cart/updated': CartModel | null;
+    'cart/reset': void;
+    'cart/merged': { oldCartItems: any[] };
+    'checkout/initialized': CheckoutData | null;
+    'checkout/updated': CheckoutData | null;
+    'checkout/values': ValuesModel;
+    'shipping/estimate': ShippingEstimate;
+    authenticated: boolean;
+    error: { source: string; type: string; error: Error };
+  }
+
+  interface Cart extends CartModel {}
+}
+```
+
+This pattern allows TypeScript to provide autocomplete and type checking for both event names and their payloads throughout your application.
+
+---
+
+## Next steps
+
+- Review the [Event Bus API Reference](/sdk/reference/events/) for detailed API methods and code examples
+- Check individual drop-in event pages for component-specific events
+- Try drop-in tutorials for practical event usage examples
+
