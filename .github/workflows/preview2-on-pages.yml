@@ -8,6 +8,9 @@
 # workflow to bring the /preview2/ subpath back.
 name: Deploy second branch to Pages alongside preview
 on:
+  push:
+    branches:
+      - docs-reorg
   workflow_dispatch:
     inputs:
       branch:
@@ -70,10 +73,10 @@ jobs:
     needs: configure
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ${{ github.event.inputs.branch }}
+      - name: Checkout ${{ github.event.inputs.branch || 'docs-reorg' }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.event.inputs.branch || 'docs-reorg' }}
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node
@@ -84,7 +87,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install
-      - name: Build ${{ github.event.inputs.branch }} (/preview2/ subpath)
+      - name: Build ${{ github.event.inputs.branch || 'docs-reorg' }} (/preview2/ subpath)
         env:
           NODE_ENV: github
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
