@@ -1,0 +1,62 @@
+---
+title: VaultedCreditCard Container
+description: Learn about the VaultedCreditCard container in the Payment Services drop-in.
+sidebar:
+  label: VaultedCreditCard
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `VaultedCreditCard` container renders a summary of a shopper's previously saved credit card — brand, masked card number, cardholder name, and billing address — so they can reuse it at checkout without re-entering their card details. It is presentational only: it does not fetch the shopper's saved cards or select the card as the active payment method.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 4.3.0</strong>
+</div>
+
+## Configuration
+
+The `VaultedCreditCard` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `tokenDetails` | string | Yes | The vault token's details, as a raw JSON string. This is typically the `details` field for a stored payment method — for example, from the checkout drop-in's `PaymentMethods` container `StoredMethods` slot context. Missing or malformed fields are omitted gracefully rather than causing an error. |
+</TableWrapper>
+
+## Slots
+
+This container exposes no customizable slots.
+
+## Usage
+
+The following example demonstrates how to render the `VaultedCreditCard` container for a stored payment method rendered via the checkout drop-in's `PaymentMethods` container, and submit an order using it with the [submitCreditCard](/dropins/payment-services/functions/#submitcreditcard) API function:
+
+```js
+import VaultedCreditCard from '@dropins/storefront-payment-services/containers/VaultedCreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as paymentsApi from '@dropins/storefront-payment-services/api.js';
+
+function renderVaultedCard(ctx) {
+  const $storedOption = document.createElement('div');
+  if (ctx.details) {
+    PaymentServices.render(VaultedCreditCard, {
+      tokenDetails: ctx.details,
+    })($storedOption);
+  }
+  ctx.replaceHTML($storedOption);
+}
+
+const $placeOrderButton = document.getElementById('place-order');
+
+$placeOrderButton.onclick = () => {
+  paymentsApi.submitCreditCard()
+    .then(() => {
+      console.log('Order placed using the selected payment method.');
+    })
+    .catch((error) => {
+      console.error(error.code, error.message);
+    });
+};
+```
+
+When the shopper selects a stored card and clicks "Place order," `submitCreditCard()` reads the currently-selected payment method and, if it is `PaymentMethodCode.VAULT`, places the order using that vaulted card — no `CreditCard` form needs to be rendered for this to work. See the [submitCreditCard function reference](/dropins/payment-services/functions/#submitcreditcard) for the full list of error codes this can reject with.
