@@ -1,0 +1,126 @@
+---
+# Manually-triggered workflow that deploys a second branch alongside the
+# existing `preview` branch on the same GitHub Pages site, under a /preview2/
+# subpath. GitHub Pages only serves one live deployment per repo, so both
+# builds are merged into a single Pages artifact instead of two separate
+# sites. The next automatic push to `preview` or `b2b-documentation` (see
+# preview-on-pages.yml) will overwrite this combined deployment — re-run this
+# workflow to bring the /preview2/ subpath back.
+name: Deploy second branch to Pages alongside preview
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build into the /preview2/ subpath'
+        required: false
+        default: 'docs-reorg'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    outputs:
+      base_path: ${{ steps.pages.outputs.base_path }}
+      origin: ${{ steps.pages.outputs.origin }}
+    steps:
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+  build-preview:
+    needs: configure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview
+        uses: actions/checkout@v4
+        with:
+          ref: preview
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build preview (site root)
+        env:
+          NODE_ENV: github
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          VITE_GITHUB_BASE_PATH: ${{ needs.configure.outputs.base_path }}
+          GITHUB_PAGES_ORIGIN: ${{ needs.configure.outputs.origin }}
+        run: pnpm run generate:llms && pnpm astro build \
+            --site "${{ needs.configure.outputs.origin }}"
+      - name: Upload preview build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-preview
+          path: dist
+          retention-days: 1
+
+  build-preview2:
+    needs: configure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ${{ github.event.inputs.branch }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build ${{ github.event.inputs.branch }} (/preview2/ subpath)
+        env:
+          NODE_ENV: github
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          VITE_GITHUB_BASE_PATH: ${{ needs.configure.outputs.base_path }}/preview2
+          GITHUB_PAGES_ORIGIN: ${{ needs.configure.outputs.origin }}
+        run: pnpm run generate:llms && pnpm astro build \
+            --site "${{ needs.configure.outputs.origin }}"
+      - name: Upload preview2 build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-preview2
+          path: dist
+          retention-days: 1
+
+  merge-and-deploy:
+    needs: [build-preview, build-preview2]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download preview build (site root)
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-preview
+          path: combined
+      - name: Download preview2 build (subpath)
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-preview2
+          path: combined/preview2
+      - name: Upload combined static files as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: combined
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
