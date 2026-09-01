@@ -329,6 +329,85 @@ if (req.backend == F_edge_delivery) {
 
 The following are optional configurations that can be added to the VCL snippets to handle specific use cases.
 
+### Multiple Edge Delivery Services sites on one Fastly service
+
+Some Adobe Commerce on Cloud projects are entitled to only a single Fastly service but need to serve two or more independent domains — for example, when each domain is migrating to Edge Delivery Services as its own site (separate GitHub repository and content source) rather than as a single [multistore](/setup/configuration/multistore-setup/) codebase. You can serve multiple Edge Delivery Services sites from the same shared Fastly service.
+
+:::note
+This differs from [multistore](/setup/configuration/multistore-setup/), which uses a single Edge Delivery Services site (one codebase and content repository) to serve multiple domains. Use the guidance below when each domain is backed by a **separate** Edge Delivery Services site.
+:::
+
+#### Backend configuration
+
+Repeat the [backend configuration](#backend-configuration) steps once for each Edge Delivery Services site, using a distinct backend name and origin address per site. For example:
+
+| Backend name        | Origin address                   |
+|----------------------|-----------------------------------|
+| `F_edge_delivery_a`  | `main--site-a--yourorg.aem.live` |
+| `F_edge_delivery_b`  | `main--site-b--yourorg.aem.live` |
+
+As before, attach a condition set to `false` to each new backend, and confirm that same `false` condition is also applied to the default Adobe Commerce backend and to every other Edge Delivery Services backend you add. Skipping this on any backend risks one backend's condition silently overriding another's routing (including the Admin, as noted above).
+
+#### VCL configuration
+
+Extend the `recv` snippet to select the backend based on the request's `Host` header, in addition to the existing path-based routing:
+
+```txt
+if (req.http.host == "www.domain-a.com") {
+    set req.backend = F_edge_delivery_a;
+} else if (req.http.host == "www.domain-b.com") {
+    set req.backend = F_edge_delivery_b;
+}
+```
+
+Update the `pass` and `miss` snippets so each backend is given its own origin `Host` header:
+
+```txt
+if (req.backend == F_edge_delivery_a) {
+    set bereq.http.Host = "main--site-a--yourorg.aem.live";
+    set bereq.http.X-BYO-CDN-Type = "fastly";
+    set bereq.http.X-Push-Invalidation = "enabled";
+} else if (req.backend == F_edge_delivery_b) {
+    set bereq.http.Host = "main--site-b--yourorg.aem.live";
+    set bereq.http.X-BYO-CDN-Type = "fastly";
+    set bereq.http.X-Push-Invalidation = "enabled";
+}
+```
+
+Update the `deliver` snippet's backend check to cover every Edge Delivery Services backend:
+
+```txt
+if (req.backend == F_edge_delivery_a || req.backend == F_edge_delivery_b) {
+    unset resp.http.Age;
+
+    if (req.url.path !~ "\.plain\.html$") {
+        unset resp.http.X-Robots-Tag;
+    }
+}
+```
+
+#### Push invalidation configuration
+
+Each Edge Delivery Services site registers its own push invalidation configuration (see [Edge Delivery Service configuration](#edge-delivery-service-configuration)). That configuration is stored per site, not per Fastly service, so you can register the **same** Fastly `serviceId` and purge `authToken` for each site — as long as the `host` value in each site's configuration matches that site's own production domain:
+
+```bash
+curl --request POST \
+  --url https://admin.hlx.page/config/{org}/sites/{site-a}/cdn.json \
+  --header 'content-type: application/json' \
+  --data '{ "prod": { "host": "www.domain-a.com", "type": "fastly", "serviceId": "<shared-service-id>", "authToken": "<shared-auth-token>" } }'
+
+curl --request POST \
+  --url https://admin.hlx.page/config/{org}/sites/{site-b}/cdn.json \
+  --header 'content-type: application/json' \
+  --data '{ "prod": { "host": "www.domain-b.com", "type": "fastly", "serviceId": "<shared-service-id>", "authToken": "<shared-auth-token>" } }'
+```
+
+Fastly purges by URL and by surrogate key, so a publish on site A purges only the URLs/surrogate keys scoped to `www.domain-a.com` and does not affect site B's cache. Confirm this with the cross-site check in [Validation](#validation).
+
+:::caution
+Both sites share the same Fastly purge API rate limit, since purge requests for both sites go through the same `serviceId`/`authToken`. If either site publishes very frequently, monitor for throttling on the shared token.
+:::
+
 ### URL rewrites
 
 Be aware that URLs in Edge Delivery Services can only contain a-z, 0-9, and the dash (`-`) character (see [Document naming restrictions](/setup/seo/platform-limits/#document-naming-and-url-format)). You might need to create a CDN rule to rewrite or remove these characters.
@@ -587,6 +666,10 @@ To obtain a purge API token for Fastly, you must contact Adobe Commerce Customer
 
 Then, follow the instructions in <Link href={"https://www.aem.live/docs/byo-cdn-fastly-setup#setup-push-invalidation-for-fastly"} text={"Setup push invalidation for Fastly"} />. The remaining configuration described on this page is already taken care of by applying the VCL snippets above.
 
+:::note
+If multiple Edge Delivery Services sites share this same Fastly service (for example, two domains migrating to Edge Delivery Services as separate sites), repeat this registration once per site. See [Multiple Edge Delivery Services sites on one Fastly service](#multiple-edge-delivery-services-sites-on-one-fastly-service).
+:::
+
 ## Validation
 
 To validate your CDN setup, use `curl` requests to check expected responses from the paths you have configured.
@@ -697,6 +780,27 @@ x-cache-hits: 1
 Ensure that the base URL change is propagated to Catalog Service. You can do this with a query against your Catalog Service API to verify that the URLs for product images contain the APEX domain, including `www`. This is to prevent a redirect and subsequent load for images not including the APEX domain.
 
 ![Commerce base URL](@images/implementation/commerce-base-url.png)
+
+### Multiple Edge Delivery Services sites (cross-site isolation)
+
+If you are running [multiple Edge Delivery Services sites on one Fastly service](#multiple-edge-delivery-services-sites-on-one-fastly-service), confirm that publishing on one site does not purge or otherwise affect the other site's cache:
+
+<Steps>
+
+1. Publish a small, identifiable content change on site A only.
+
+1. Immediately request the changed path on site A, and an unrelated, already-cached path on site B:
+
+   ```bash
+   curl -sI https://www.domain-a.com/path-you-changed | grep -i 'age\|x-cache'
+   curl -sI https://www.domain-b.com/some-unrelated-cached-path | grep -i 'age\|x-cache'
+   ```
+
+1. Confirm that `www.domain-a.com` reflects the change immediately (a fresh `x-cache: MISS` followed by `HIT`, or `age: 0`), and that `www.domain-b.com`'s response is unaffected (`age` keeps counting up rather than resetting to `0`).
+
+1. Repeat in the opposite direction — publish on site B and confirm site A is unaffected — to verify isolation both ways.
+
+</Steps>
 
 ## Troubleshooting
 
