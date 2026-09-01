@@ -17,7 +17,7 @@ import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution generates category (product listing) pages automatically. It fits most catalogs, but it has [documented limits](/setup/configuration/aem-prerender/#limitations): category changes are picked up on a fixed cadence rather than reactively, each category path prerenders a maximum of approximately 10,000 products, and it can't merge per-category content overrides. When one of those limits gets in your way — an unusually large category, a need for near-real-time updates, or custom content on a single category — you can author that category page by hand instead.
+The [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution generates category (product listing) pages automatically. It fits most catalogs, but has [documented limits](/setup/configuration/aem-prerender/#limitations): category changes are picked up on a fixed cadence, each path prerenders ~10,000 products, and it can't merge content overrides. If you encounter these limits, you can author the category page by hand instead.
 
 This tutorial covers the manual path: create a page that represents one category, give it SEO metadata, and keep existing links working when you change the page's URL. You author everything in Document Authoring (DA.live), so no code changes are required. To produce many category pages with a script instead of by hand, see [Generate category pages programmatically](/how-tos/automatic-category-page/).
 
@@ -40,10 +40,12 @@ Before starting this tutorial, make sure you have:
 - The **URL key** (also called the URL path) of the Commerce category you want to display
 
 <Aside type="note" title="When to prefer automation">
-  Author category pages by hand only if your requirements will exceed the automated limits. For
-  everything else, the [prerender solution](/setup/configuration/aem-prerender/) keeps category
-  pages in sync with your catalog without per-page maintenance. A hand-authored page does not update
-  itself when the catalog changes.
+  Author category pages by hand only for one or a few categories, or a page that needs custom
+  content the prerender solution can't produce. For most catalogs, the [prerender
+  solution](/setup/configuration/aem-prerender/) keeps category pages in sync with your catalog
+  without per-page maintenance. If you need many category pages at once, [generate them
+  programmatically](/how-tos/automatic-category-page/) instead of authoring each by hand. A
+  hand-authored page does not update itself when the catalog changes.
 </Aside>
 
 ## How a category page works
@@ -73,7 +75,7 @@ Add a table whose header row (both cells merged) reads `product-list-page`. In t
 
 ![The product-list-page block in a Document Authoring document, with a urlPath row set to apparel](images/manual-category-page-plp-block.png)
 
-This single value binds the page to the Commerce category. When the page loads, the `product-list-page` block reads `urlPath` and fetches that category's products. This is the same block the storefront uses for its automatically generated category pages, so the layout, filters, and pagination match the rest of your site.
+This single value binds the page to the Commerce category. When the page loads, the `product-list-page` block reads `urlPath` and fetches that category's products. This block is the same one the storefront uses for its automatically generated category pages, so the layout, filters, and pagination match the rest of your site.
 
 <Aside type="note" title="Find the category URL key">
   The `urlPath` value must match the category's URL key in Commerce. If you're unsure of the exact
@@ -87,7 +89,7 @@ This single value binds the page to the Commerce category. When the page loads, 
 
 ### Step 3: Add SEO metadata to the page
 
-Add a `metadata` table to the document to set the page's title, description, and structured data. At minimum, add a `title` and `description` for search results.
+To set the page's title, description, and structured data, add a `metadata` table to the document. At minimum, add a `title` and `description` for search results.
 
 ![A metadata block in Document Authoring with description and json-ld rows](images/manual-category-page-metadata.png)
 
@@ -129,7 +131,7 @@ Preview the document with the [AEM Sidekick](/merchants/quick-start/), confirm t
 
 ## Change a category page's URL
 
-When a category's URL changes — you're moving the page from one path to another, for example `/apparel` to `/clothing` — you can't just rename it in place. Create the page at the new path, remove the old one, and redirect so existing links and search rankings follow to the new URL.
+When a category's URL changes — you're moving the page from one path to another, for example `/apparel` to `/clothing` — you can't rename it in place. Create the page at the new path, remove the old one, and redirect so existing links and search rankings follow to the new URL.
 
 <Steps>
 
@@ -139,7 +141,7 @@ When a category's URL changes — you're moving the page from one path to anothe
 
 </Steps>
 
-Add the redirect rather than only deleting the old page: a redirect preserves inbound links and search equity, while a deleted page with no redirect returns a 404, and the old URL is orphaned. Edge Delivery Services redirects are permanent (301) redirects managed in a spreadsheet — see [Redirects](/merchants/edge-delivery-services/redirects/) for how the sheet works in this storefront, and <Link href="https://www.aem.live/docs/redirects" text="Redirects on AEM.live" /> for the sheet columns and behavior. After the redirect is live, update your [sitemap](/merchants/edge-delivery-services/sitemaps/) so search engines discover the new URL.
+Add the redirect rather than only deleting the old page: a redirect preserves inbound links and search equity, while a deleted page with no redirect returns a 404, and the old URL is disconnected. Edge Delivery Services redirects are permanent (301) redirects managed in a spreadsheet — see [Redirects](/merchants/edge-delivery-services/redirects/) for how the sheet works in this storefront, and <Link href="https://www.aem.live/docs/redirects" text="Redirects on AEM.live" /> for the sheet columns and behavior. After the redirect is live, update your [sitemap](/merchants/edge-delivery-services/sitemaps/) so search engines discover the new URL.
 
 <Aside type="note" title="Redirects override pages">
   A redirect for a URL takes precedence over any published page at that URL. Add the old-to-new

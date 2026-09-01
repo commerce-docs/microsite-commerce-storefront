@@ -17,7 +17,7 @@ import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-When you need more category pages than you'd want to [author by hand](/how-tos/manual-category-page/), but the automated [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution doesn't fit your catalog's scale or requirements, you can generate the pages with a script. You produce the same category document — a `product-list-page` block plus a `metadata` block — but instead of authoring it in [Document Authoring](https://docs.da.live/), you build it from a template, push it to Document Authoring through its Source API, and publish the path through the Edge Delivery Services pipeline.
+When you need more category pages than are practical to create with the [manual tutorial](/how-tos/manual-category-page/), but the automated [AEM Commerce Prerender](/setup/configuration/aem-prerender/) solution doesn't fit your catalog's scale or requirements, you can generate the pages with a script. You produce the same category document — a `product-list-page` block plus a `metadata` block — but instead of authoring it in [Document Authoring](https://docs.da.live/), you build it from a template, push it to Document Authoring through its Source API, and publish the path through the Edge Delivery Services pipeline.
 
 This is a developer workflow: you write and run the script, and you own when it runs again.
 
@@ -25,16 +25,18 @@ This is a developer workflow: you write and run the script, and you own when it 
 The [prerender solution](/setup/configuration/aem-prerender/) publishes category HTML as a [Bring Your Own Markup](https://www.aem.live/developer/byom) overlay and detects catalog changes for you. This approach instead creates a real, editable Document Authoring document, and there is no change detection — you re-run the script (or schedule it) to refresh a page. That trade is what lets you sidestep the prerender limits: you control the catalog query, the pagination, and the content that goes on each page.
 </Aside>
 
+## Prerequisites
+
+Before starting this tutorial, make sure you have:
+
+- A working [Commerce storefront](/get-started/create-storefront/) on Edge Delivery Services
+- Comfort writing and running a JavaScript (Node.js) script
+- Access to your Commerce catalog's GraphQL endpoint — Catalog Service (Adobe Commerce as a Cloud Service or PaaS) or the Merchandising Services API (Adobe Commerce Optimizer)
+- An Adobe IMS bearer token for the Document Authoring Source API and one for the AEM Admin API (see Step 4 for how to generate these)
+
 ## How it works
 
-<Steps>
-
-1. **Fetch category data** from Adobe Commerce with your own catalog query (category metadata, and the products to list).
-2. **Build a document** by injecting that data into a template that contains the `product-list-page` and `metadata` blocks.
-3. **Create the document** in Document Authoring by posting it to the DA Source API.
-4. **Publish the path** by calling the AEM Admin API to preview, then publish — the same preview/publish pipeline the rest of your site uses.
-
-</Steps>
+Your script fetches category data from Adobe Commerce, builds a Document Authoring document from a template containing the `product-list-page` and `metadata` blocks, then publishes it through the Document Authoring and Edge Delivery Services APIs — the same preview/publish pipeline the rest of your site uses. The tasks below walk through each part in detail.
 
 Re-run the script whenever the category or its metadata changes. The output is a normal Document Authoring document, so an author can still open and edit it afterward.
 
@@ -64,7 +66,7 @@ const response = await fetch(CATALOG_ENDPOINT, {
 const { data } = await response.json();
 ```
 
-For ready-made category queries — fetching categories, the category tree, and product listing data by category path — see the queries in the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="aem-commerce-prerender repository" /> (`actions/queries.js` on `main`), such as `CategoriesQuery`, `CategoryTreeQuery`, `CategoryTreeBySlugsQuery`, and `PlpProductSearchQuery`. For the schema each backend exposes, see the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service" text="Catalog Service GraphQL schema" /> (Adobe Commerce as a Cloud Service and PaaS) or the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/" text="Merchandising Services API guide" /> (Adobe Commerce Optimizer).
+For ready-made category queries — fetching categories, the category tree, and product listing data by category path — see the queries in the <Link href="https://github.com/adobe-rnd/aem-commerce-prerender/blob/main/actions/queries.js" text="aem-commerce-prerender repository" /> (`actions/queries.js` on `main`), such as `CategoriesQuery`, `CategoryTreeQuery`, `CategoryTreeBySlugsQuery`, and `PlpProductSearchQuery`. For the schema each backend exposes, see the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/" text="Catalog Service GraphQL schema" /> (Adobe Commerce as a Cloud Service and PaaS) or the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/" text="Merchandising Services API guide" /> (Adobe Commerce Optimizer).
 
 </Task>
 
@@ -72,7 +74,7 @@ For ready-made category queries — fetching categories, the category tree, and 
 
 ### Step 2: Build the document from a template
 
-Render the category data into a Document Authoring source document. A DA source document is HTML with a specific shape: a `<body>` holding `<header>`, `<main>`, and `<footer>`, where `<main>` contains one or more sections (each a `<div>`). A block is a `<div>` whose class is the block name, with one `<div>` per row and one `<div>` per cell. This is the same markup Edge Delivery Services serves, so you can confirm the exact structure for any page by appending `.plain.html` to its URL.
+Render the category data into a Document Authoring source document. A DA source document is HTML with a specific shape: a `<body>` holding `<header>`, `<main>`, and `<footer>`, where `<main>` contains one or more sections (each a `<div>`). A block is a `<div>` whose class is the block name, with one `<div>` per row and one `<div>` per cell. This markup is the same as what Edge Delivery Services serves, so you can confirm the exact structure for any page by appending `.plain.html` to its URL.
 
 Produce the same two blocks the [manual tutorial](/how-tos/manual-category-page/) describes — a `product-list-page` block bound to the category through `urlPath`, and a `metadata` block for SEO.
 
@@ -117,7 +119,7 @@ Fill the values from the data you fetched in Step 1 — the category's `urlPath`
 
 ### Step 3: Create the document in Document Authoring
 
-Post the document to the <Link href="https://opensource.adobe.com/da-admin" text="Document Authoring Source API" />. The path you post to becomes the document's location in your content tree, which becomes the page URL — a document at `/foo/apparel.html` is served at `/foo/apparel`.
+Post the document to the <Link href="https://opensource.adobe.com/da-admin/" text="Document Authoring Source API" />. The path you post to becomes the document location in your content tree and the page URL — a document at `/foo/apparel.html` is served at `/foo/apparel`.
 
 ```js
 const form = new FormData();
@@ -155,14 +157,14 @@ await fetch(`${base}/preview/${org}/${site}/${ref}/${path}`, opts);
 await fetch(`${base}/live/${org}/${site}/${ref}/${path}`, opts);
 ```
 
-The preview call pulls your new document into the preview environment; the live call copies it to production and purges the CDN. After the live call succeeds, the category page is served at its path.
+The preview call pulls your new document into the preview environment, and the live call copies it to production and purges the CDN. After the live call succeeds, the category page is served at its path.
 
 <Aside type="note" title="Getting DA_TOKEN and AEM_TOKEN">
 Both are Adobe IMS bearer tokens — the same kind of credential, but authorized separately in each system.
 
-For a one-off script, mint a token quickly with <Link href="https://github.com/adobe-rnd/da-auth-helper" text="da-auth-helper" />: `npx github:adobe-rnd/da-auth-helper token` opens a browser to sign in once, then prints a token you can reuse until it expires.
+For a one-off script, generate a token quickly with <Link href="https://github.com/adobe-rnd/da-auth-helper" text="da-auth-helper" />: `npx github:adobe-rnd/da-auth-helper token` opens a browser to sign in once, then prints a token you can reuse until it expires.
 
-For a scheduled script — a cron job or a scheduled App Builder action — use a dedicated system-to-system credential instead of a personal login. Create an Adobe Developer Console project with the Edge Delivery Services API card, using an OAuth Server-to-Server credential, then exchange it for a token with the IMS `client_credentials` grant. Before the token works, authorize the resulting technical account's email in both systems: through the DA Permissions App (or a permissions sheet) for Document Authoring, and through the AEM User Admin Tool for the AEM Admin API. See <Link href="https://main--aem-website--adobe.aem.page/examples/how-to-edge-delivery-services-api-card" text="Setting up a Tech Account for the Edge Delivery Services API" /> for the full setup.
+For a scheduled script — a cron job or a scheduled App Builder action — use a dedicated system-to-system credential instead of a personal login. Create an Adobe Developer Console project with the Edge Delivery Services API card, using an OAuth Server-to-Server credential, then exchange it for a token with the IMS `client_credentials` grant. Before the token works, authorize the technical account's email in the DA Permissions App for Document Authoring and the AEM User Admin Tool for the AEM Admin API. See <Link href="https://main--aem-website--adobe.aem.page/examples/how-to-edge-delivery-services-api-card" text="Setting up a Tech Account for the Edge Delivery Services API" /> for the full setup.
 
 Treat both tokens like passwords: keep them out of source control.
 </Aside>
@@ -173,7 +175,7 @@ Treat both tokens like passwords: keep them out of source control.
 
 ### Step 5: Refresh when the catalog changes
 
-Because there's no change detection, re-run the script to refresh a page after the category or its metadata changes. Run it on demand, or schedule it (for example, a cron job or a scheduled App Builder action) at whatever cadence your catalog needs. Re-posting to the same path overwrites the existing document, so manually authored changes will not persist. If you think authors will change the pages manually, then you should add a read/merge mechanism to this flow.
+Because there's no change detection, re-run the script to refresh a page after the category or its metadata changes. Run it on demand, or schedule it (for example, a cron job or a scheduled App Builder action) at whatever cadence your catalog needs. Re-posting to the same path overwrites the existing document, so manually authored changes do not persist. If authors change the pages manually, add a read/merge mechanism to this flow.
 
 </Task>
 
@@ -181,7 +183,7 @@ Because there's no change detection, re-run the script to refresh a page after t
 
 ## Change a category page's URL
 
-When you change the path your script generates for a category — for example, from `/apparel` to `/clothing` — publishing the new path is only half the job. The old path keeps serving the old document until you remove it, and once removed it returns a 404 unless you redirect it. This is the easiest thing to get wrong when you regenerate pages at new paths: the old URL gets orphaned, and you lose the inbound links and search equity pointing at it.
+When you change the path your script generates for a category — for example, from `/apparel` to `/clothing` — publishing the new path is only part of the process. The old path keeps serving the old document until you remove it, and once removed it returns a 404 unless you redirect it. This error is the easiest one to make when you regenerate pages at new paths: the old URL gets orphaned, and you lose the inbound links and search equity pointing at it.
 
 Whenever your generation logic changes a category's output path:
 
