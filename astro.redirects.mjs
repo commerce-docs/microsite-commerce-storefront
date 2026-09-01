@@ -132,7 +132,7 @@ export function generateRedirects(basePath) {
         '/dropins/all/commerce-blocks': `${basePath}/boilerplate/blocks-reference`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
-        '/config': `${basePath}/setup/configuration`,
+        '/config': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,

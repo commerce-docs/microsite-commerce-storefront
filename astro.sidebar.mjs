@@ -28,75 +28,48 @@ export function generateSidebar() {
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Plan your storefront project', link: '/setup/' },
-          ],
-        },
-        {
-          label: 'Architecture',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/get-started/architecture/' },
-            { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
-            { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
-            { label: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
             {
-              label: 'Commerce services at a glance',
-              link: '/get-started/architecture/commerce-services-and-backends/',
-            },
-          ],
-        },
-        {
-          label: 'Boilerplate',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/boilerplate/' },
-            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-          ],
-        },
-        {
-          label: 'AI tools',
-          collapsed: true,
-          items: [
-            { label: 'Install the integrations', link: '/ai/' },
-            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Wayfinder', link: '/ai/wayfinder/' },
-            { label: 'Fallback docs', link: '/ai/static-text-files/' },
-          ],
-        },
-        {
-          label: 'Commerce backend',
-          collapsed: true,
-          items: [
-            { label: 'Setup at a glance', link: '/setup/configuration/' },
-            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
-            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
-            { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
-            { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-            { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
-            {
-              label: 'Compatibility Package',
+              label: 'Architecture',
               collapsed: true,
               items: [
-                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
-                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
-                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
-                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
+                { label: 'Overview', link: '/get-started/architecture/' },
+                { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
+                { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
+                { label: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
+                {
+                  label: 'Commerce services at a glance',
+                  link: '/get-started/architecture/commerce-services-and-backends/',
+                },
+                { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+                {
+                  label: 'Events',
+                  collapsed: true,
+                  items: [
+                    { label: 'The event bus', link: '/dropins/all/events/' },
+                    { label: 'Common events reference', link: '/dropins/all/common-events/' },
+                    { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
+                  ],
+                },
               ],
             },
-            { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
-            { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
-            { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
-            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-          ],
-        },
-        {
-          label: 'Drop-ins',
-          collapsed: true,
-          items: [
-            { label: 'Introduction', link: '/dropins/all/introduction/' },
-            { label: 'Containers', link: '/dropins/all/containers/' },
-            { label: 'Slots', link: '/dropins/all/slots/' },
-            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
+            {
+              label: 'Boilerplate',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/boilerplate/' },
+                { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+              ],
+            },
+            {
+              label: 'AI tools',
+              collapsed: true,
+              items: [
+                { label: 'Install the integrations', link: '/ai/' },
+                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+                { label: 'Wayfinder', link: '/ai/wayfinder/' },
+                { label: 'Fallback docs', link: '/ai/static-text-files/' },
+              ],
+            },
           ],
         },
         {
@@ -112,11 +85,22 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Drop-ins',
+          collapsed: true,
+          items: [
+            { label: 'Introduction', link: '/dropins/all/introduction/' },
+            { label: 'Containers', link: '/dropins/all/containers/' },
+            { label: 'Slots', link: '/dropins/all/slots/' },
+            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
+          ],
+        },
+        {
           label: 'Styling',
           collapsed: true,
           items: [
             { label: 'Branding', link: '/dropins/all/branding/' },
             { label: 'CSS customization', link: '/dropins/all/styling/' },
+            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
           ],
         },
         {
@@ -129,21 +113,36 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Events',
-          collapsed: true,
-          items: [
-            { label: 'The event bus', link: '/dropins/all/events/' },
-            { label: 'Common events reference', link: '/dropins/all/common-events/' },
-            { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
-          ],
-        },
-        {
           label: 'Custom features',
           collapsed: true,
           items: [
             { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Extending', link: '/dropins/all/extending/' },
             { label: 'Creating', link: '/dropins/all/creating/' },
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
+          ],
+        },
+        {
+          label: 'Backend',
+          collapsed: true,
+          items: [
+            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+            { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
+            { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
+            { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+            {
+              label: 'Compatibility Package',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/setup/configuration/storefront-compatibility/' },
+                { label: 'Manual installation', link: '/setup/configuration/storefront-compatibility/install/' },
+                { label: 'Adobe Commerce 2.4.9', link: '/setup/configuration/storefront-compatibility/v249/' },
+                { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
+              ],
+            },
+            { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
+            { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+            { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
           ],
         },
         // ---------- HOW-TOS ----------
@@ -227,17 +226,17 @@ export function generateSidebar() {
             { label: 'SEO metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform limits', link: '/setup/seo/platform-limits/' },
+            {
+              label: 'Licensing',
+              collapsed: true,
+              autogenerate: { directory: '/licensing/' },
+            },
+            {
+              label: 'Troubleshooting',
+              collapsed: true,
+              autogenerate: { directory: '/troubleshooting/' },
+            },
           ],
-        },
-        {
-          label: 'Licensing',
-          collapsed: true,
-          autogenerate: { directory: '/licensing/' },
-        },
-        {
-          label: 'Troubleshooting',
-          collapsed: true,
-          autogenerate: { directory: '/troubleshooting/' },
         },
 
         // ---------- REFERENCE ----------
@@ -394,17 +393,6 @@ export function generateSidebar() {
       link: '/reference/',
       icon: 'open-book',
       items: [
-        // ---------- API PLAYGROUNDS ----------
-        {
-          label: 'API Playgrounds',
-          collapsed: true,
-          items: [
-            { label: 'Introduction', link: '/playgrounds/' },
-            { label: 'Commerce API Playground', link: '/playgrounds/commerce-services/' },
-            { label: 'Commerce Optimizer API Playground', link: '/playgrounds/commerce-optimizer/' },
-          ],
-        },
-
         // ---------- B2C DROP-INS ----------
         {
           label: 'B2C Drop-Ins',
@@ -1020,7 +1008,16 @@ export function generateSidebar() {
             },
           ],
         },
-
+        // ---------- API PLAYGROUNDS ----------
+        {
+          label: 'API Playgrounds',
+          collapsed: true,
+          items: [
+            { label: 'Introduction', link: '/playgrounds/' },
+            { label: 'Commerce API Playground', link: '/playgrounds/commerce-services/' },
+            { label: 'Commerce Optimizer API Playground', link: '/playgrounds/commerce-optimizer/' },
+          ],
+        },
         {
           label: 'Package Archive',
           collapsed: true,
