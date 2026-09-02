@@ -204,6 +204,7 @@ export function generateSidebar() {
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and Crawlability', link: '/setup/seo/ssr-and-crawlability/' },
           ],
         },
         {
