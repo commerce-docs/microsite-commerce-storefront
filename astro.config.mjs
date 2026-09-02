@@ -16,8 +16,13 @@ import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
 import { PRODUCTION_SITE, PRODUCTION_BASE_PATH } from './site.config.js';
 
-const isProduction = process.env.NODE_ENV === 'production';
-const isGitHub = process.env.NODE_ENV === 'github';
+// BUILD_TARGET takes precedence when set (needed by build:stage, which must set
+// NODE_ENV=production for Vite/Pagefind but still needs the GitHub base path);
+// falls back to NODE_ENV for scripts that don't set it (e.g. build:prod), so
+// V1's build:prod/build:prod-fast work unchanged.
+const buildTarget = process.env.BUILD_TARGET || process.env.NODE_ENV;
+const isProduction = buildTarget === 'production';
+const isGitHub = buildTarget === 'github';
 const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
 // Determine the base path based on the environment
