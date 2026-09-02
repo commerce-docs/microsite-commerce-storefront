@@ -108,6 +108,8 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
             {
               label: 'Analytics Events',
               collapsed: true,
@@ -204,6 +206,7 @@ export function generateSidebar() {
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and Crawlability', link: '/setup/seo/ssr-and-crawlability/' },
           ],
         },
         {
