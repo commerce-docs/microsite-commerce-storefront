@@ -352,7 +352,8 @@ export function generateSidebar() {
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                     { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
                     { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' },
-                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' }
+                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' },
+                    { label: 'VaultedCreditCard', link: '/dropins/payment-services/containers/vaulted-credit-card/' }
                   ],
                 },
               ],
