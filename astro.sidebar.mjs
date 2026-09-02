@@ -157,6 +157,8 @@ export function generateSidebar() {
                 { label: 'Federated Search', link: '/how-tos/federated-search/' },
                 { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
                 { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
+                { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+                { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
               ],
             },
             {
@@ -226,6 +228,7 @@ export function generateSidebar() {
             { label: 'SEO metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and crawlability', link: '/setup/seo/ssr-and-crawlability/' },
             {
               label: 'Licensing',
               collapsed: true,
