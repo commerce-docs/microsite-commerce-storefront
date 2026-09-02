@@ -1,41 +1,34 @@
 ---
-title: Composing blocks
-description: Build a new storefront feature by combining an existing drop-in's API function, shared SDK components, and the event bus inside a custom commerce block, without creating a new drop-in.
-slug: dropins/all/compose-a-block
+title: Build custom features
+description: Build new storefront features by combining an existing drop-in's API function, shared SDK components, and the event bus inside a custom commerce block, without creating a new drop-in.
+slug: dropins/all/build-custom-features
 sidebar:
-  label: Composing blocks
+  label: Build custom features
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
-import Term from '@components/Term.astro';
 import Diagram from '@components/Diagram.astro';
 import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
-import TableWrapper from '@components/TableWrapper.astro';
 
-You don't have to wait for Adobe to ship a feature you need. Sometimes existing drop-in containers don't cover it, but you can build it yourself in a custom commerce block using an existing drop-in's API functions, SDK components, and the event bus.
+You don't have to wait for Adobe to ship a feature you need, and you don't have to build a new drop-in to get it. When no existing drop-in container covers the feature, combine that drop-in's API functions, shared SDK components, and the event bus directly inside a custom commerce block instead.
+
+<Aside type="note">
+This page assumes you already know how Edge Delivery Services loads a block, and that you've already tried wiring in a drop-in's pre-built container. If you haven't created a custom commerce block before, start with [Create commerce blocks](/boilerplate/create-commerce-blocks/) for the file conventions and `decorate()` function this pattern builds on. For the standard way to add a drop-in to a block, see [Connect a drop-in](/dropins/all/quick-start/) first — come back here only if no container fits your UI.
+</Aside>
 
 ## When to use this pattern
 
 Use this pattern when:
 
-- No existing container covers the feature.
+- No existing container covers the feature — see [Connect a drop-in](/dropins/all/quick-start/) if one does.
 - An existing drop-in already exports the data you need as an API function.
 - You can build the UI from shared SDK components.
 
-<TableWrapper nowrap={[0]}>
+This pattern fits features that mostly fetch and display data, like the product comparison example below. If the feature needs to persist new server-side state — its own mutations or a cart-like lifecycle — or needs a data model, containers, and events that no installed drop-in exposes, see [Extension options](/dropins/all/extend-or-create/) to compare that path against this one.
 
-| Choose instead | When |
-|---|---|
-| [Extend](/dropins/all/extend-or-create/) | A drop-in container already covers the feature, and you only need to change its look, add content, or react to its events. |
-| [Create](/dropins/all/extend-or-create/) | The feature needs its own data model, containers, and events that no installed drop-in exposes, and you're prepared to maintain a new drop-in package long-term. |
-
-</TableWrapper>
-
-## Blocks and drop-ins
-
-A block is a unit of UI you own — the standard unit of functionality in an Edge Delivery Services page (see <Link href={"https://www.aem.live/docs/exploring-blocks"} text={"Exploring blocks"} /> on aem.live). Composing a custom commerce block this way requires fewer resources than creating a drop-in. There's no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
+This pattern also costs less than creating a drop-in: no new package to publish, version, or maintain, no drop-in SDK dependency to add, and no separate build step — your code is plain JS and CSS that Edge Delivery Services decorates client-side. The tradeoff is that you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path.
 
 ## How it works
 
@@ -248,7 +241,7 @@ Both blocks in this example would still use `readBlockConfig()` for author-facin
 - A `filter` key restricting which products are eligible for comparison.
 - A `page` key on the tray block pointing to the comparison page.
 
-You can still use the configuration patterns covered in [Blocks customization](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
+You can still use the configuration patterns covered in [Customize blocks](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
 </Aside>
 
 <Diagram caption="An author-authored block table setting the product-compare-bar block's page option">
@@ -264,10 +257,6 @@ You can still use the configuration patterns covered in [Blocks customization](/
 - Handle your own loading and error states. A drop-in container already renders a fallback when its data fetch fails, but your block calls the same API function directly, so it needs its own `catch` and an empty-results message.
 - Use this pattern only when no container covers the feature. If a drop-in container already handles most of the feature, extend it with slots or events instead of rebuilding its API function and components yourself.
 
-<Aside type="note" title="When to use Create instead">
-This pattern fits features that mostly fetch and display data, like the comparison example above. Features that need to persist new server-side state, such as their own mutations or a cart-like lifecycle, usually need more than a custom commerce block can provide. In that case, use [Create](/dropins/all/extend-or-create/#create) instead.
-</Aside>
-
 ## Hand your plan to AI
 
 AI works best from a plan, not a blank prompt. The plan is the decisions this page walks through: whether to compose, extend, or create, and within a composed block, whether each part reuses a drop-in API function or a drop-in component.
@@ -276,10 +265,9 @@ Once that plan is clear, install [Boilerplate skills](/ai/boilerplate-skills/) s
 
 ## Next steps
 
-- Review [Extend, substitute, or create?](/dropins/all/extend-or-create/) to place this pattern alongside your other options.
+- Review [Extension options](/dropins/all/extend-or-create/) to place this pattern alongside your other options.
 - Read the [drop-in Functions reference](/dropins/product-discovery/functions/) for the full `search()` signature and its data models.
 - Browse the [SDK component library](/sdk/components/overview/) to see all available components.
 - Read [Events](/dropins/all/events/) for event-naming conventions and the full `events.on()` / `events.emit()` API.
-- Read [Blocks customization](/boilerplate/customizing-blocks/) for `readBlockConfig()` and other block-authoring patterns.
+- Read [Customize blocks](/boilerplate/customizing-blocks/) for `readBlockConfig()` and other block-authoring patterns.
 - Read [Block tables](/merchants/blocks/block-tables/) for how a content author places `product-compare` or `product-compare-bar` on a page — no code change required.
-

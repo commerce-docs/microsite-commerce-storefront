@@ -1,6 +1,6 @@
 ---
-title: How blocks connect to drop-ins
-description: "How a Commerce block connects to a drop-in: the initializer-to-render sequence, how content blocks differ from Commerce blocks, and which boilerplate files to edit."
+title: Blocks and drop-ins
+description: "How a commerce block connects to a drop-in: the initializer-to-render sequence, how content blocks differ from commerce blocks, and which boilerplate files to edit."
 slug: get-started/architecture/blocks-and-repo
 ---
 
@@ -9,20 +9,20 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Term from '@components/Term.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Your Git repository is where blocks connect to drop-ins: its decorators, initializers, styles, and configuration load the correct drop-in for each Commerce block on the page.
+Your Git repository is where blocks connect to drop-ins: its decorators, initializers, styles, and configuration load the correct drop-in for each commerce block on the page.
 
 ## Comparing blocks and drop-in components
 
-Each document table becomes a block `div` that EDS and your JavaScript identify. Your repo connects Commerce blocks to drop-ins through decorators, `scripts/initializers/`, styles, and storefront configuration, then pushes to GitHub to drive Edge Delivery builds.
+Each document table becomes a block `div` that EDS and your JavaScript identify. Your repo connects commerce blocks to drop-ins through decorators, `scripts/initializers/`, styles, and storefront configuration, then pushes to GitHub to drive Edge Delivery builds.
 
 Authoring references: <Link href={"https://docs.da.live/"} text={"Document Authoring documentation"} />, [Document Authoring](/merchants/quick-start/document-authoring/) and [Universal Editor](/merchants/quick-start/universal-editor/) Quick Starts, <Link href="https://www.aem.live/docs/authoring-guide" text="authoring page" />, <Link href="https://www.aem.live/docs/" text="AEM documentation" />. For packages and shared vocabulary, see [Drop-ins at a glance](/get-started/architecture/drop-ins-at-a-glance/) and [Boilerplate overview](/boilerplate/).
 
 <TableWrapper nowrap={[0]}>
 
-| | Content blocks | Commerce blocks | Drop-in components |
+| | Content blocks | commerce blocks | Drop-in components |
 |---|----------------|-----------------|---------------------|
-| Role | Layout and marketing UI (cards, heroes, columns, headers, footers) | Interactive Commerce experiences (cart, checkout, account, PDP, …) | Packaged UI and logic that Commerce blocks load and initialize |
-| Where it comes from | Block Collection and custom blocks in `blocks/` | Commerce blocks in `blocks/`, mapped in the boilerplate | <Term>npm</Term> packages such as `@dropins/storefront-cart` |
+| Role | Layout and marketing UI (cards, heroes, columns, headers, footers) | Interactive Commerce experiences (cart, checkout, account, PDP, …) | Packaged UI and logic that commerce blocks load and initialize |
+| Where it comes from | Block Collection and custom blocks in `blocks/` | commerce blocks in `blocks/`, mapped in the boilerplate | <Term>npm</Term> packages such as `@dropins/storefront-cart` |
 | Authored as document tables | Yes | Yes | No — developers add packages and wire initializers in code |
 | Typical tie to Adobe Commerce | None — no Commerce GraphQL for most blocks | Yes — GraphQL, REST, and services through the boilerplate | Direct — Commerce API calls (GraphQL, REST, services) are built into each package |
 | Learn more | <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" /> | [Key files and folders](#key-files-and-folders) · [Blocks reference](/boilerplate/blocks-reference/) | [Drop-ins introduction](/dropins/all/introduction/) |
@@ -36,13 +36,13 @@ Drop-in components are built on shared Commerce Storefront <Term>SDK</Term> patt
 - [Commerce Storefront SDK](/sdk/) — Reference for APIs, design components, and utilities used across drop-in components  
 - [Drop-ins introduction](/dropins/all/introduction/) — Full map of B2C and B2B drop-in components and how they install into the boilerplate  
 
-### Content blocks and Commerce blocks
+### Content blocks and commerce blocks
 
-Both kinds are document tables EDS turns into HTML. The split is what runs next. Content blocks are layout and marketing (cards, columns, headers, footers from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />). They contain no drop-ins or Commerce GraphQL. Commerce blocks load interactive cart, checkout, account, PDP, and similar flows via initializers and `@dropins/*` calling Commerce GraphQL and related APIs. Prefer plain JavaScript for Commerce blocks, since React can make a top Lighthouse score hard to achieve. See [Libraries](/troubleshooting/faq/#libraries) for the details, and use the boilerplate's existing blocks as patterns for your own.
+Both kinds are document tables EDS turns into HTML. The split is what runs next. Content blocks are layout and marketing (cards, columns, headers, footers from the <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" />). They contain no drop-ins or Commerce GraphQL. commerce blocks load interactive cart, checkout, account, PDP, and similar flows via initializers and `@dropins/*` calling Commerce GraphQL and related APIs. Prefer plain JavaScript for commerce blocks, since React can make a top Lighthouse score hard to achieve. See [Libraries](/troubleshooting/faq/#libraries) for the details, and use the boilerplate's existing blocks as patterns for your own.
 
-## How a block connects to a drop-in
+## How blocks connect to drop-ins
 
-Every Commerce block wires itself to a drop-in the same way. Here is Cart as an example:
+Every commerce block wires itself to a drop-in the same way. Here is Cart as an example:
 
 <Steps>
 
@@ -52,7 +52,7 @@ Every Commerce block wires itself to a drop-in the same way. Here is Cart as an 
    import '../../scripts/initializers/cart.js';
    ```
 
-1. The initializer sets the drop-in's GraphQL endpoint, loads its UI labels, and calls `initializers.mountImmediately()`, passing the drop-in package's `initialize` function to activate the drop-in.
+   That import runs the initializer, which sets the drop-in's GraphQL endpoint, loads its UI labels, and calls `initializers.mountImmediately()`, passing the drop-in package's `initialize` function to activate the drop-in.
 
    ```js title="scripts/initializers/cart.js" {7,8,10}
    import { initializers } from '@dropins/tools/initializer.js';
@@ -83,13 +83,13 @@ Every Commerce block wires itself to a drop-in the same way. Here is Cart as an 
 
 </Steps>
 
-The same pattern repeats for every Commerce block: import the initializer, let it configure and activate the drop-in, then call the drop-in's render function.
+The same pattern repeats for every commerce block: import the initializer, let it configure and activate the drop-in, then call the drop-in's render function.
 
 ### Key files and folders
 
 The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" /> separates core AEM block delivery from Commerce-specific code (`scripts/commerce.js`, `scripts/initializers/`, and storefront configuration) so both sides stay maintainable independently.
 
-For the full repository map, see [Exploring the code](/boilerplate/#exploring-the-code) in Boilerplate overview. The table below explains the key files and folders that wire a Commerce block to a drop-in. For the full <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts"} text={"Scripts folder in the boilerplate"} /> and `blocks/`:
+For the full repository map, see [Exploring the code](/boilerplate/#exploring-the-code) in Boilerplate overview. The table below explains the key files and folders that wire a commerce block to a drop-in. For the full <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts"} text={"Scripts folder in the boilerplate"} /> and `blocks/`:
 
 <TableWrapper nowrap={[0]}>
 
@@ -97,9 +97,9 @@ For the full repository map, see [Exploring the code](/boilerplate/#exploring-th
 |-------------|------|
 | <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/scripts.js" text="scripts/scripts.js" /> | Page load, block decoration, fonts, and orchestration of eager, lazy, and delayed loading phases. Imports from `scripts/aem.js` and `scripts/commerce.js`. Also the extension point for global DOM decorators, third-party plugins (such as experimentation tools), and any code that must run eagerly on page load. |
 | <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/commerce.js" text="scripts/commerce.js" /> | Commerce-specific loading, templates, page type detection, Adobe Client Data Layer (ACDL) initialization, and storefront configuration. ACDL is a JavaScript library that captures shopper behavior for analytics. You will see it again in [How drop-ins coordinate](/get-started/architecture/drop-ins-on-a-page/) and [Analytics events](/dropins/all/analytics-events/). Centralizes all commerce features and keeps them distinct from core AEM logic. |
-| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts/initializers" text="scripts/initializers/" /> | One <Term>initializer</Term> file per drop-in. See [How a block connects to a drop-in](#how-a-block-connects-to-a-drop-in) above for the full sequence, and [Using drop-ins](/dropins/all/quick-start/) for the code pattern. |
-| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/" text="blocks/" /> | Where Commerce block decorators call drop-in initializers; content blocks render markup only. See [Content blocks and Commerce blocks](#content-blocks-and-commerce-blocks) above and [Blocks and the Universal Editor](/boilerplate/universal-editor/) for how blocks map to Universal Editor models. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts/initializers" text="scripts/initializers/" /> | One <Term>initializer</Term> file per drop-in. See [How blocks connect to drop-ins](#how-blocks-connect-to-drop-ins) above for the full sequence, and [Connect a drop-in](/dropins/all/quick-start/) for the code pattern. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/" text="blocks/" /> | Where commerce block decorators call drop-in initializers; content blocks render markup only. See [Content blocks and commerce blocks](#content-blocks-and-commerce-blocks) above and [Blocks and the Universal Editor](/boilerplate/universal-editor/) for how blocks map to Universal Editor models. |
 
 </TableWrapper>
 
-Customize and connect: [Customizing blocks](/boilerplate/customizing-blocks/), [Blocks reference](/boilerplate/blocks-reference/), [Storefront configuration](/setup/configuration/commerce-configuration/).
+Customize and connect: [Customize blocks](/boilerplate/customizing-blocks/), [Blocks reference](/boilerplate/blocks-reference/), [Storefront configuration](/setup/configuration/commerce-configuration/).

@@ -1,0 +1,111 @@
+---
+title: Create commerce blocks
+description: The file, folder, and Document Authoring table conventions Edge Delivery Services needs to find and load a brand-new commerce block.
+slug: boilerplate/create-commerce-blocks
+sidebar:
+  label: Create commerce blocks
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Sometimes no shipped commerce block covers what you need, and there's nothing to extend — you need a new one. This page covers the baseline mechanics: the files Edge Delivery Services expects, the `decorate()` function it calls, and how you name the block so authors can add it to a page.
+
+<Aside type="tip" title="Which page do you need?">
+- Modifying a block that ships with the boilerplate (Cart, Checkout, and similar)? See [Customize blocks](/boilerplate/customizing-blocks/).
+- Building a new block that reads or writes live commerce data — the case this page covers? Start here, then see [Connect a drop-in](/dropins/all/quick-start/) for the standard way to wire one in. If no drop-in container fits the UI you need, see [Build custom features](/dropins/all/build-custom-features/) instead.
+- Building a purely visual or marketing block with no commerce data at all? That's a **content block**, not a commerce block — see <Link href="https://www.aem.live/developer/block-collection" text="Block Collection" /> on aem.live instead. This site only covers blocks that connect to Adobe Commerce.
+</Aside>
+
+## How Edge Delivery Services finds your block
+
+There's no manifest to update and no import to add anywhere else in the codebase. Edge Delivery Services loads a block purely by matching names: whatever kebab-case name an author types into a document table, it looks for a folder and file with that exact name under `blocks/`. Get the name right in both places and the block loads automatically.
+
+This name-matching mechanism is the same for content blocks and commerce blocks — it's a generic Edge Delivery Services convention, not something specific to commerce blocks. What's specific to this boilerplate is everything below: the `commerce-` naming convention, how a commerce block reads its block-specific settings, and how it connects to a drop-in.
+
+Most commerce blocks in this boilerplate use a `commerce-` prefix (`commerce-cart`, `commerce-checkout`) so they're easy to pick out from content blocks in a folder listing or a document. It's a convention, not a hard requirement — a few shipped blocks, such as `product-details`, don't follow it — but use it for any new commerce block you create.
+
+## File structure
+
+Create a new folder under `blocks/`, named in kebab-case, alongside the boilerplate's existing blocks:
+
+```text
+blocks/
+├── commerce-cart/                 an existing shipped block, for comparison
+│   ├── commerce-cart.js
+│   ├── commerce-cart.css
+│   └── README.md
+└── commerce-your-block-name/      your new block
+    ├── commerce-your-block-name.js    required: exports decorate(block)
+    ├── commerce-your-block-name.css   conventional: loaded automatically if present
+    └── README.md                      conventional: documents config keys and behavior
+
+scripts/
+└── initializers/
+    └── cart.js                    one file per drop-in; only needed if your block connects to one
+```
+
+<Aside type="note" title="The folder, file, and table name must match exactly">
+Edge Delivery Services builds the file paths it loads directly from the name in your document table: `blocks/<block-name>/<block-name>.js` and `blocks/<block-name>/<block-name>.css`. A mismatch anywhere — a typo, a different case, a missing hyphen — means the block silently doesn't load.
+</Aside>
+
+The CSS file isn't strictly required for `decorate()` to run, but every shipped block includes one. The README isn't enforced by Edge Delivery Services either — it's a project convention in this boilerplate that documents the block's configuration keys for whoever authors pages with it later. Add one; see `blocks/commerce-cart/README.md` for the pattern.
+
+## Write the decorate function
+
+Your `<block-name>.js` file needs a default export that receives the block's element:
+
+```javascript
+// blocks/commerce-quote/commerce-quote.js
+export default async function decorate(block) {
+  const [quoteRow, attributionRow] = [...block.children];
+  const quote = quoteRow?.textContent.trim();
+  const attribution = attributionRow?.textContent.trim();
+
+  block.innerHTML = '';
+
+  const quoteEl = document.createElement('blockquote');
+  quoteEl.textContent = quote;
+  block.append(quoteEl);
+
+  if (attribution) {
+    const citeEl = document.createElement('cite');
+    citeEl.textContent = attribution;
+    block.append(citeEl);
+  }
+}
+```
+
+The `decorate()` function can be synchronous or `async` — Edge Delivery Services awaits it either way. The `block` element it receives already contains the document table's rows and cells as nested `div` elements. See [Block DOM structure](/boilerplate/customizing-blocks/#block-dom-structure) for what that structure looks like and when to clear it, as this example does, versus reading values from it in place.
+
+This example only rearranges text already in the block's DOM — it doesn't touch commerce data yet. If your block needs to show or update live commerce data, see [Connect a drop-in](/dropins/all/quick-start/) for the standard import-initializer-and-render pattern.
+
+## Name the block in your document table
+
+An author adds your block to a page by creating a table in Document Authoring. The first row names the block; it must be the exact kebab-case name from your folder:
+
+<TableWrapper nowrap={[0]}>
+
+| Row | Contents |
+|-----|----------|
+| 1 | `commerce-quote` — the block name, matching `blocks/commerce-quote/` exactly |
+| 2+ | Optional key-value settings, read in your code with `readBlockConfig()` |
+
+</TableWrapper>
+
+See [Block table structure](/merchants/blocks/block-tables/) for the full author-facing convention, including the optional merged full-width row. Whatever settings your block reads with `readBlockConfig()` belong in your block's README, since that's how authors know which rows to add.
+
+## Next steps
+
+<Steps>
+
+1. Check the [Blocks reference](/boilerplate/blocks-reference/) to confirm no existing block already covers what you need.
+
+1. If your block needs live commerce data, see [Connect a drop-in](/dropins/all/quick-start/) for the standard pattern, or [Build custom features](/dropins/all/build-custom-features/) if no drop-in container fits your UI.
+
+1. Review [Block DOM structure](/boilerplate/customizing-blocks/#block-dom-structure) and [Creating DOM elements](/boilerplate/customizing-blocks/#creating-dom-elements) for patterns your `decorate()` function will need.
+
+1. Test your block locally with a real document table before publishing.
+
+</Steps>

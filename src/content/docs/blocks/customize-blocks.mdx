@@ -1,9 +1,9 @@
 ---
-title: Customizing blocks
-description: Learn how to customize Commerce block behavior, styling, and drop-in integration in your storefront.
+title: Customize blocks
+description: Learn how to customize commerce block behavior, styling, and drop-in integration in your storefront.
 slug: boilerplate/customizing-blocks
 sidebar:
-  label: Customizing blocks
+  label: Customize blocks
   order: 5
 ---
 
@@ -12,8 +12,9 @@ import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
+import Diagram from '@components/Diagram.astro';
 
-All Commerce blocks in the boilerplate work out of the box, but you can customize them to match your business requirements. This page covers the main customization approaches.
+All commerce blocks in the boilerplate work out of the box, but you can customize them to match your business requirements. This page covers the main customization approaches.
 
 <Aside type="tip" title="Faster with an AI coding agent">
 Install [Boilerplate skills](/ai/boilerplate-skills/) before you start. Your agent will already know these block and drop-in customization conventions instead of inventing its own.
@@ -29,7 +30,7 @@ Most files in the boilerplate can be modified. The table below lists the usual l
 |-------|----------|
 | `styles/` | Change colors, fonts, spacing, and layout here. Tokens in `styles/styles.css` apply across the whole site. |
 | `blocks/` | Edit block appearance and behavior. Keep block folder names unchanged because authors reference them by name in documents. |
-| `scripts/initializers/` | Configure the API endpoint and UI labels for each drop-in. Each drop-in has one initializer file, such as `cart.js` or `checkout.js`. If you remove a drop-in, also remove its initializer file and all imports of it in the codebase. See [Using drop-ins](/dropins/all/quick-start/). |
+| `scripts/initializers/` | Configure the API endpoint and UI labels for each drop-in. Each drop-in has one initializer file, such as `cart.js` or `checkout.js`. If you remove a drop-in, also remove its initializer file and all imports of it in the codebase. See [Connect a drop-in](/dropins/all/quick-start/). |
 | `scripts/commerce.js` | Edit this file to add Commerce-specific logic such as consent handling (`getConsent`) or custom page type detection. It reads your [storefront configuration](/setup/configuration/commerce-configuration/) and sets up Commerce API connections on every page. |
 | `scripts/scripts.js` | Add automatically generated blocks to `buildAutoBlocks` (the boilerplate uses this for the hero block). Load third-party scripts, tag managers, or analytics tools in `scripts/delayed.js`. That file runs 3 seconds after page load so these scripts do not affect the initial page render. |
 | `build.mjs` | Edit this file to customize what data drop-ins fetch from Commerce. For example, you can add a custom product field to the PDP query or skip query fragments your project doesn't need. Use the existing entries as patterns. Changes take effect after running `npm install`. |
@@ -173,6 +174,41 @@ events.on('cart/data', (cartData) => {
 ```
 </Option>
 </Options>
+
+## Block DOM structure
+
+Before your block's `decorate()` function runs, Edge Delivery Services has already converted the block's document table into nested `<div>` elements. The table's first row names the block — for example, "Commerce Cart" — and becomes the block's class name and `data-block-name` attribute; it does not become a div itself. Every row after that becomes a row `div`, and each cell in that row becomes a nested cell `div` inside it.
+
+<Diagram type="mermaid" code={`
+%%{init: {'flowchart': {'curve': 'basis'}}}%%
+graph LR
+  T1["Row 1<br/><b>Commerce Cart</b>"]
+  T2["Row 2<br/>custom-option | premium"]
+
+  subgraph blockDiv["<strong>div.commerce-cart</strong><br/>data-block-name"]
+    subgraph rowDiv["row div"]
+      direction LR
+      C1["cell div<br/>custom-option"]
+      C2["cell div<br/>premium"]
+    end
+  end
+
+  T1 -.->|"names"| blockDiv
+  T2 ==>|"becomes"| rowDiv
+
+  style T1 fill:#FEF3E2,stroke:#E8A33D,stroke-width:1.5px
+  style T2 fill:#E3F2FD,stroke:#4C9AD4,stroke-width:1.5px
+  style blockDiv fill:#FFFDF8,stroke:#E8A33D,stroke-width:1.5px
+  style rowDiv fill:#F1F8F2,stroke:#5CB85C,stroke-width:1.5px
+  style C1 fill:#ffffff,stroke:#5CB85C,stroke-width:1px
+  style C2 fill:#ffffff,stroke:#5CB85C,stroke-width:1px
+`} caption="How a document table maps to a block's DOM. Row 1 names the block and becomes its class and data-block-name attribute rather than a row div. Row 2, and every row after it, becomes a row div, with each cell becoming a nested cell div." />
+
+Your `decorate(block)` function receives the outer block element as `block`, with that row-and-cell structure already inside it.
+
+Edge Delivery Services also adds two data attributes to the block element for you. `data-block-name` holds the block's name, taken from its first CSS class. `data-block-status` tracks the block's load state and moves through `initialized`, `loading`, and `loaded` as the block's CSS and JavaScript load. You don't set either attribute yourself.
+
+Whether `decorate()` should remove that original row-and-cell markup depends on the block. Some blocks clear it — the `block.innerHTML = ''` call in the [promotional banner example](#add-promotional-banner-to-cart) below removes the original divs before appending new markup. Other blocks read values from the original divs and update them in place, without clearing anything. Check whether the block you're customizing depends on its original markup before you clear it.
 
 ## Creating DOM elements
 
@@ -557,7 +593,7 @@ export default async function decorate(block) {
 
 1. Check the [Blocks reference](/boilerplate/blocks-reference/) for the full list of blocks, their drop-ins, and page-type groupings.
 
-1. Browse the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks" text="Commerce blocks source code" /> to see implementation patterns.
+1. Browse the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks" text="commerce blocks source code" /> to see implementation patterns.
 
 1. Review the [drop-in documentation](/dropins/all/quick-start/) for slots, events, and API functions.
 

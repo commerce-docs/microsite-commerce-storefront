@@ -76,22 +76,26 @@ export function generateSidebar() {
           label: 'Blocks',
           collapsed: true,
           items: [
-            { label: 'Blocks reference', link: '/boilerplate/blocks-reference/' },
-            { label: 'How blocks connect to drop-ins', link: '/get-started/architecture/blocks-and-repo/' },
-            { label: 'Customizing blocks', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Composing blocks', link: '/dropins/all/compose-a-block/' },
-            { label: 'Arranging block layouts', link: '/dropins/all/layouts/' },
-            { label: 'Instrumenting blocks for Universal Editor', link: '/boilerplate/universal-editor/' },
+            { label: 'Overview', link: '/boilerplate/blocks-reference/' },
+            { label: 'Blocks and drop-ins', link: '/get-started/architecture/blocks-and-repo/' },
+            { label: 'Customize blocks', link: '/boilerplate/customizing-blocks/' },
+            { label: 'Arrange block layouts', link: '/dropins/all/layouts/' },
+            { label: 'Create commerce blocks', link: '/boilerplate/create-commerce-blocks/' },
+            { label: 'Build custom features', link: '/dropins/all/build-custom-features/' },
+            { label: 'Instrument blocks for Universal Editor', link: '/boilerplate/universal-editor/' },
           ],
         },
         {
           label: 'Drop-ins',
           collapsed: true,
           items: [
-            { label: 'Introduction', link: '/dropins/all/introduction/' },
+            { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Containers', link: '/dropins/all/containers/' },
             { label: 'Slots', link: '/dropins/all/slots/' },
-            { label: 'Using drop-ins', link: '/dropins/all/quick-start/' },
+            { label: 'Connect a drop-in', link: '/dropins/all/quick-start/' },
+            { label: 'Extension options', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extend a drop-in', link: '/dropins/all/extending/' },
+            { label: 'Create a drop-in', link: '/dropins/all/creating/' },
           ],
         },
         {
@@ -113,21 +117,12 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Custom features',
-          collapsed: true,
-          items: [
-            { label: 'Extend, substitute, or create?', link: '/dropins/all/extend-or-create/' },
-            { label: 'Extending', link: '/dropins/all/extending/' },
-            { label: 'Creating', link: '/dropins/all/creating/' },
-            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-          ],
-        },
-        {
           label: 'Backend',
           collapsed: true,
           items: [
             { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
             { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
             { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
             { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
             {
