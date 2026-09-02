@@ -113,8 +113,8 @@ export function generateRedirects(basePath) {
         // ========= GET STARTED REDIRECTS =========
         '/get-started/launch-checklist': `${basePath}/launch`,
         '/get-started/requirements': `${basePath}/get-started/architecture`,
-        '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
-        '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/get-started/boilerplate-project': `${basePath}/boilerplate`,
+        '/get-started/working-with-boilerplate': `${basePath}/boilerplate`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
@@ -125,16 +125,20 @@ export function generateRedirects(basePath) {
         '/get-started/dropins-mcp': `${basePath}/ai/`,
 
         // ========= BOILERPLATE REDIRECTS =========
-        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/boilerplate/getting-started': `${basePath}/boilerplate`,
+        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate`,
         '/boilerplate/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/boilerplate/blocks': `${basePath}/boilerplate/blocks-reference`,
+        '/dropins/all/commerce-blocks': `${basePath}/boilerplate/blocks-reference`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
-        '/config': `${basePath}/setup/configuration`,
+        '/config': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
+        '/boilerplate/configuration': `${basePath}/setup/configuration/commerce-configuration`,
+        '/boilerplate/configuration/': `${basePath}/setup/configuration/commerce-configuration`,
         '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
@@ -166,8 +170,6 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)

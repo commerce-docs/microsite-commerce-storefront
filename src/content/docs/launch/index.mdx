@@ -1,0 +1,188 @@
+---
+title: Launch checklist
+description: Launch steps for Adobe Commerce Storefront on Edge Delivery Services, plus Adobe Commerce Optimizer program checks when you use Cloud, Optimizer, and the storefront together.
+slug: setup/launch
+---
+import Link from '@components/Link.astro';
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Checklist from '@components/Checklist.astro';
+
+Complete these steps before production traffic reaches your Adobe Commerce Storefront (EDS). As you do, capture what you changed in staging and outline the exact go-live sequence—such as DNS, CDN, endpoints, and content. Then document your rollback plan so production cleanly reflects what you've already validated.
+
+## When your launch includes Adobe Commerce Optimizer
+
+If your launch includes Adobe Commerce on Cloud, Adobe Commerce Optimizer, and a storefront on Edge Delivery Services, start with the Optimizer program linked here: <Link href={"https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist"} text={"Launch checklist (Adobe Commerce Optimizer) on Experience League"} />. This ensures Cloud, Optimizer, and publishing stay aligned before moving on to storefront-specific tasks.
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > Content and Authoring — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="content">
+### Content and authoring
+
+* [ ] Complete the <Link href={"https://www.aem.live/docs/go-live-checklist"} text={"Edge Delivery Services go-live checklist"} /> (hosted on the Adobe Experience Manager documentation site).
+* [ ] Confirm that your authoring source is document-based or Universal Editor (and configured correctly). For Universal Editor in the Commerce boilerplate, see [Blocks and the Universal Editor](/boilerplate/universal-editor/).
+* [ ] Publish content using the preview → publish cycle and verify it appears as expected.
+* [ ] Complete content and design QA on your project's `.aem.live` preview URL (Edge Delivery Services preview hostname).
+* [ ] Confirm that a favicon is configured and served correctly.
+* [ ] If your content lives in SharePoint, set up dedicated SharePoint access so only the right people can edit it.
+* [ ] Confirm that all drop-ins you use (cart, checkout, product detail page, product listing page, sign-in, account) are customized and tested. See the [Drop-ins introduction](/dropins/all/introduction/).
+* [ ] Confirm that storefront branding matches your CSS design tokens, typography, and colors. See [Customizing blocks](/boilerplate/customizing-blocks/).
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > SEO and Indexing — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="seo">
+### SEO and indexing
+
+* [ ] Add document title metadata for key pages (especially PDPs and PLPs). See the [SEO metadata](/setup/seo/metadata/) documentation for details.
+* [ ] Ensure that your PDPs have [metadata and structured data](/setup/seo/metadata/) (for example, JSON-LD is configured).
+* [ ] Standardize URL formats for products (for example, `domain/product-name`).
+* [ ] Redirect all vanity URLs to canonical URLs.
+* [ ] Confirm that canonical URLs return `2xx` status codes (not `3xx` or `4xx`).
+* [ ] Add a `robots.txt` file to your project, which allows your site to be indexed by search
+      engines. Ensure that your sitemaps are referenced and that you add rules to block indexing
+      of any content that you do not want to be indexed (for example, the `/drafts` folder).
+* [ ] Add one or multiple <Link href={"https://www.aem.live/docs/redirects"} text={"redirect"} /> files to ensure that
+      URLs that were changed as part of the migration still work (for example, when you remove the
+      `.html` file extension).
+* [ ] Generate a sitemap for your site and catalog. To speed up the indexing process, Adobe
+      recommends adding the sitemap to Google Search Console. For storefront indexing patterns (including multilingual setups), see [Indexing](/setup/seo/indexing/).
+* [ ] For multilingual sites, include `hreflang` tags in the sitemap.
+* [ ] Review the Google Search Console coverage report and resolve any indexing errors.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > Pre-rendering — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="prerendering">
+### Enable pre-rendering
+
+* [ ] Turn on pre-rendering for the pages that matter most at launch. See [Pre-rendering](/setup/configuration/aem-prerender/) and use [SSR and crawlability](/setup/seo/ssr-and-crawlability/) to decide which pages need it.
+* [ ] Use lowercase URLs everywhere so pre-rendered links stay valid.
+* [ ] View page source on a pre-rendered page and confirm you see metadata and main body content in the first HTML response.
+* [ ] For each language or region you support, open a sample page and confirm the translated content loads.
+* [ ] Add any extra HTML your project needs (for example, analytics snippets that must appear in the initial HTML). If snippets depend on the Adobe Client Data Layer or storefront events, align them with [Analytics instrumentation](/setup/analytics/instrumentation/).
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > Performance and Monitoring — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="performance">
+### Performance and monitoring
+
+* [ ] Follow [Performance best practices](/get-started/performance/) for your storefront.
+* [ ] (Optional) Set up Google Analytics and Google Tag Manager.
+* [ ] Validate your <Link href={"https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger"} text={"storefront\n      events"} /> implementation, then confirm events appear in Live Search and Product Recommendations dashboards in the Adobe Commerce Admin.
+* [ ] Validate that the `environment` field in your [Storefront configuration](/setup/configuration/commerce-configuration/#analytics) is set to `Testing` while you build, then change it to `Production` when you launch. See [Analytics](/setup/analytics/instrumentation/).
+* [ ] Confirm that your Lighthouse scores are green on key templates and aim for a strong score (for example, `100` on mobile and desktop where practical), using the same checks you already ran on your `.aem.live` preview site.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Analytics and Monitoring (top-level section) — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="analytics">
+### Analytics and monitoring
+
+* [ ] Confirm that Operational Telemetry is enabled before launch so you can compare performance before and after you switch traffic. Adobe documents this feature as Operational Telemetry; teams often call it Real User Monitoring (RUM). See <Link href={"https://www.aem.live/docs/rum"} text={"Operational Telemetry on the Edge Delivery Services documentation site"} /> and <Link href={"https://www.aem.live/developer/rum"} text={"Operational Telemetry developer documentation"} /> if you implement or tune the collection. If you proxy RUM through your origin, follow [CDN configuration](/setup/configuration/content-delivery-network/#proxy-rum-through-the-origin-to-avoid-a-tls-handshake).
+* [ ] If you use Adobe Experience Platform, confirm data collection is configured for the production site. See [Adobe Experience Platform](/setup/analytics/adobe-experience-platform/) for storefront credentials, datastreams, and how events reach the Edge Network.
+* [ ] On the production hostname, confirm that marketing technology (MarTech) tags fire and send data to the right tools. For the Adobe Client Data Layer, storefront events, and Commerce analytics settings, see [Analytics instrumentation](/setup/analytics/instrumentation/) and the [analytics section of Storefront configuration](/setup/configuration/commerce-configuration/#analytics).
+* [ ] Write down current analytics baselines (page views, bounce rate, and similar metrics) from your reporting tools so your team expects a shift after the new site ships. Separately, record Web Vitals and Lighthouse baselines using [Performance best practices](/get-started/performance/) so you can compare site speed before and after launch.
+* [ ] Walk a test order from add to cart through checkout to the order confirmation page and confirm each step is tracked. See [Validation and testing](/setup/analytics/instrumentation/#validation-and-testing) in Analytics instrumentation (checkout-related events are listed under [Event collection and validation](/setup/analytics/instrumentation/#event-collection-and-validation)), and use the <Link href={"https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger"} text={"Snowplow debugger example"} /> in the commerce-events repository if you need a structured view of storefront events.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > Security and Access — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="security">
+### Security and access
+
+* [ ] Set permissions for Document Authoring (DA.live) content and Edge Delivery Services sites so only trusted people can publish. See <Link href={"https://da.live/docs/administration/permissions"} text={"DA.live permissions"} /> and <Link href={"https://www.aem.live/docs/authentication-setup-authoring"} text={"Edge Delivery Services authentication setup for authoring"} />.
+* [ ] Confirm that the Product Visuals integration is available for your project. For required entitlements, prerequisites, and how the integration works, see the <Link href={"https://experienceleague.adobe.com/en/docs/commerce/aem-assets-integration/overview"} text={"AEM Assets Integration for Adobe Commerce guide"} /> on Experience League. To enable AEM Assets images in your storefront configuration, see [AEM Assets integration](/setup/configuration/aem-assets-configuration/).
+* [ ] Update password reset links in email templates so they match your Edge Delivery Services URLs. See the [FAQ](/troubleshooting/faq#what-should-i-do-if-my-email-template-links-are-broken-after-migrating-to-edge-delivery-services-or-helix).
+* [ ] Add production API keys and secrets for every integration and payment provider you use in production.
+* [ ] Add your production domains to allowlists where your backends require it, and send a test webhook to confirm delivery.
+* [ ] Restrict Cross-Origin Resource Sharing (CORS) to the origins your storefront and tools actually use. See [CORS setup](/setup/configuration/cors-setup/).
+* [ ] Publish a privacy policy and a cookie consent flow that match your regions, including General Data Protection Regulation (GDPR) or California Consumer Privacy Act (CCPA) rules when they apply.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > CDN and Caching — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="cdn">
+### CDN and caching
+
+* [ ] Point your CDN, Sidekick extensions, sitemap jobs, and image importer to the same production GraphQL endpoints your storefront uses in `config.json`.
+  * **For Adobe Commerce on Cloud or on-premises (PaaS)**, this is typically `commerce-core-endpoint`, for example, `https://yourstore.example.com/graphql`, and sometimes a separate `commerce-endpoint` when Catalog Service handles catalog reads.
+  * **For Adobe Commerce as a Cloud Service** or Adobe Commerce Optimizer**, use `commerce-endpoint` on the Adobe Commerce API host, for example, `https://na1-production.api.commerce.adobe.com/your-environment-id/graphql`.  See [Storefront configuration](/setup/configuration/commerce-configuration/)).
+  * **For Adobe Commerce Optimizer**, also configure `commerce-core-endpoint` when checkout or account services still rely on a separate core Commerce host.
+* [ ] If you use Adobe Commerce Fastly, request a new CDN purge token for production, then add `authToken` and `serviceId` in your <Link href={"https://tools.aem.live/tools/cdn-setup/index.html"} text={"site configuration"} />.
+* [ ] Test your [CDN configuration](/setup/configuration/content-delivery-network/) and confirm cache hits, manual purges, and automatic invalidation behave as you expect.
+* [ ] Publish a small content change and confirm it appears on the production domain without stale HTML (push invalidation works end to end).
+* [ ] For [multi-store setups](/setup/seo/indexing/#multi-store-setups), add a store-specific cache buster to Catalog Service and Live Search requests (for example, a query string or a CDN rule) so each storefront cache stays separate.
+* [ ] Lower DNS time-to-live (TTL) values a few days before cutover so DNS changes propagate quickly.
+* [ ] Confirm that DNS A and CNAME records for every hostname point to the right targets.
+* [ ] Confirm that the SSL/TLS certificate is provisioned and verified for the production domain and that HTTPS is enforced everywhere.
+* [ ] Confirm that visitors who type the apex domain and visitors who type `www` both land on the URL you want.
+</Checklist>
+
+{/* Overlaps EL Optimizer checklist: Cloud and Optimizer Integration + Storefront and Optimizer Integration (storefront-side config only) — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="catalog">
+### Catalog service
+
+* [ ] In your storefront configuration, switch to the production endpoint for Catalog or Merchandising Services.
+
+  * **For Adobe Commerce on Cloud or on-premises (PaaS)**, switch the `commerce-endpoint` to `https://catalog-service.adobe.io/graphql`. If the Adobe Commerce Optimizer Connector is configured for your project, use the Adobe Commerce Optimizer GraphQL endpoint.
+  * **For Adobe Commerce as a Cloud Service** or **Adobe Commerce Optimizer**,  switch the `commerce-endpoint` to the Commerce GraphQL production endpoint for your instance, for example `https://na1-production.api.commerce.adobe.com/your-environment-id/graphql`.  See [Storefront configuration](/setup/configuration/commerce-configuration/)).
+* [ ] If you use Adobe Commerce Optimizer, confirm `adobe-commerce-optimizer` is set to `true`, `commerce-endpoint` points to the production Optimizer GraphQL endpoint, and the `AC-View-ID` header holds the catalog view ID for your production instance. See [Storefront configuration](/setup/configuration/commerce-configuration/).
+* [ ] For Commerce on cloud or on-premises only, ensure a production environment is configured in the Commerce Services Connector (will result in a new `environmentId`). See [Select or create a SaaS project](https://experienceleague.adobe.com/en/docs/commerce/user-guides/integration-services/saas#createsaasenv).
+* [ ] Sync the production catalog to the new production environment.
+* [ ] Create a new Commerce production API key-pair and use the public key as the `x-api-key` value.
+* [ ] Verify category IDs and ensure all category pages reference the correct category.
+* [ ] Update `environmentId` and `x-api-key` values in the `config.json` code file. See [Storefront configuration](/setup/configuration/commerce-configuration/) for header and environment field names your storefront expects.
+* [ ] Notify the Catalog Service team about the new production environment and launch date.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Testing (top-level section) — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="testing">
+### Testing
+
+* [ ] Confirm that core flows work end to end: browse → search → filter → add to cart → checkout → account creation.
+* [ ] Confirm that payment gateways accept real and test transactions.
+* [ ] Confirm that order placement, confirmation email, and order tracking work correctly.
+* [ ] Confirm that shipping options and tax calculations are accurate.
+* [ ] Confirm that coupons, discounts, and loyalty programs behave as expected.
+* [ ] Complete user acceptance testing (UAT) on staging and production.
+* [ ] Complete load and stress testing and share results with your Adobe team.
+* [ ] Confirm that page load time is under three seconds on desktop and mobile.
+* [ ] Confirm that images, scripts, and assets are optimized.
+* [ ] Test Chrome, Firefox, Safari, and Edge for consistent behavior.
+* [ ] Confirm that responsive layouts work on mobile, tablet, and desktop.
+* [ ] Test performance on 3G, 4G, and Wi-Fi connections.
+* [ ] Complete an accessibility audit (WCAG, screen reader, keyboard navigation).
+* [ ] Establish a post-launch 404 monitoring plan.
+* [ ] Test your rollback plan to confirm it works if launch issues occur.
+</Checklist>
+
+{/* Mirrors EL Optimizer checklist: Launch Day and Post-Launch (top-level section) — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
+<Checklist checklistKey="management">
+### Launch day and post-launch
+
+* [ ] Confirm your launch date with Adobe and notify your CTA, CSE, or AM so they can coordinate support during the go-live.
+* [ ] Record the P1 support hotline number: US (+1) 800-497-0335, then select the menu number for Adobe Commerce.
+* [ ] Train your team to open a support ticket before calling the P1 hotline.
+* [ ] Check for the latest boilerplate changes and update your project accordingly. See [Monitor boilerplate changes](/boilerplate/updates/#monitor-boilerplate-changes).
+* [ ] Confirm that a disaster recovery plan exists and has been tested.
+* [ ] After launch, verify Lighthouse scores on the production domain.
+* [ ] After launch, monitor Google Search Console for indexing and crawl errors.
+* [ ] After launch, monitor 404 reports and add redirects for high-traffic legacy URLs.
+* [ ] After launch, confirm that MarTech and analytics data appears on production.
+* [ ] Ask your Adobe Customer Technical Advisor (CTA), Customer Service Engineer (CSE), or Account Manager (AM) to enable high-SLA monitoring.
+* [ ] Establish a process to track and upgrade boilerplate and extension packages to current versions. Start from [Updates](/boilerplate/updates/) and [Release Information](/releases/).
+</Checklist>
+
+## Documentation
+
+Edge Delivery Services launch topics (DNS, CDN vendors, redirects, and platform checks) are available on the Adobe Experience Manager documentation site. Start from the <Link href={"https://www.aem.live/docs/#launch"} text={"Launch hub for Edge Delivery Services"} />, or use the table below. The checklist sections above focuses on Adobe Commerce Storefront tasks for sites integrated with an Adobe Commerce backend.
+
+<TableWrapper nowrap={[0]}>
+
+| Topic | Description |
+| ----- | ----------- |
+| <Link href={"https://www.aem.live/docs/go-live-checklist"} text={"Go-Live Checklist"} /> | Edge Delivery Services go-live practices; apply the items that match your storefront project. |
+| <Link href={"https://www.aem.live/docs/setup-byo-cdn-push-invalidation"} text={"Push Invalidation"} /> | Automatically purge content on your production CDN whenever an author publishes content changes. |
+| <Link href={"https://www.aem.live/docs/byo-cdn-cloudflare-worker-setup"} text={"Cloudflare Worker Setup"} /> | Configure Cloudflare to deliver your storefront site. |
+| <Link href={"https://www.aem.live/docs/byo-cdn-akamai-setup"} text={"Akamai Setup"} /> | Use the Akamai Property Manager to configure a property to deliver your storefront site. |
+| <Link href={"https://www.aem.live/docs/byo-cdn-fastly-setup"} text={"Fastly Setup"} /> | Configure Fastly to deliver your storefront site. |
+| <Link href={"https://www.aem.live/docs/byo-cdn-cloudfront-setup"} text={"CloudFront Setup"} /> | Set up Amazon Web Services CloudFront to deliver your storefront site with push invalidation. |
+| <Link href={"https://www.aem.live/docs/byo-dns"} text={"Bring your own DNS"} /> | Custom domain without having to set up a content delivery network. |
+| <Link href={"https://www.aem.live/docs/redirects"} text={"Redirects"} /> | Manage redirects as a spreadsheet from the `redirects` document in the root of your project folder. |
+
+</TableWrapper>

@@ -1,0 +1,92 @@
+---
+title: SEO indexing
+description: Guidelines for canonical URLs, redirects, sitemaps, and multi-store crawling on Adobe Commerce storefronts with Edge Delivery Services.
+slug: setup/seo/indexing
+---
+import Link from '@components/Link.astro';
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page covers URL and crawling concerns so search engines index the right Adobe Commerce storefront pages on Edge Delivery Services. For how indexing fits with platform SEO and metadata on first-load HTML, start with [SEO overview](/setup/seo/).
+
+These recommendations come from customer and partner storefront projects on Edge Delivery Services. Use them to keep URLs, canonical signals, and crawlers aligned.
+
+### Canonical URLs
+
+- When product detail pages (PDPs) have multiple URLs, set a consistent canonical URL for each product.
+- Make sure that canonical URLs do not point to redirects (301).
+
+### Configurable products
+
+For configurable products, ensure that the canonical URL is set to the parent product URL. Without this, Google may index child product URLs instead, creating duplicate content issues.
+
+### URL format of catalog pages
+
+The default PDP URL format is:
+
+```plaintext
+/products/{urlKey}/{sku}
+```
+
+The `urlKey` carries the SEO-relevant product name, and the `sku` is required for Catalog Service queries. You can customize the format, but changes to the URL structure require CDN configuration.
+
+<Aside type="note" title="Lowercase SKUs in URLs">
+The Commerce boilerplate enforces lowercase SKUs in all product URLs to comply with Edge Delivery Services [document naming restrictions](/setup/seo/platform-limits/#document-naming-and-url-format). The `getProductLink(urlKey, sku)` function handles this automatically. If your existing product URLs use uppercase SKUs, add redirects from the old paths to the new lowercase ones. See [SEO metadata](/setup/seo/metadata/) for implementation details.
+</Aside>
+
+### Multi-store setups
+
+For [multi-store setups](/setup/configuration/multistore-setup/) or stores supporting multiple locales:
+
+- Verify a <Link href={"https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually"} text={"correct hreflang setup"} />. You can validate using the <Link href={"https://technicalseo.com/tools/hreflang/"} text={"hreflang Tags Testing Tool"} />.
+
+- Verify that the `Magento-Store-Code` header value defined in your [storefront configuration](/setup/configuration/commerce-configuration/) is part of the URL for every Catalog Service or Live Search request.
+
+  <Aside type="note" title="Store code in URLs">
+  This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
+  </Aside>
+
+### Cache-busting Query Parameter
+
+The <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main"} text={"Commerce boilerplate template"} /> includes a mechanism to prevent stale data from being served. It does this by adding a dynamic cache-busting parameter to Catalog Service requests.
+
+When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
+
+Here's how the boilerplate handles it:
+
+1. It collects headers from your [storefront configuration](/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
+1. It creates a short hash (5 characters by default) based on those headers.
+1. It adds the hash to the Catalog Service URL using the format `?cb=<hash>`.
+1. When the headers change, it generates a new hash automatically.
+
+This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
+
+You don't need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
+
+- The PDP drop-in component initializes.
+- Any component sends a request to the Catalog Service.
+- Your configuration headers update.
+
+The boilerplate always manages the `cb` parameter for you.
+
+### Redirects
+
+The Edge Delivery Services redirect sheet handles most migration-time URL changes: removing `.html` suffixes, restructuring content paths, and remapping product URLs after a replatform. Create the redirect list as a spreadsheet called `redirects` in the root of your project folder. Each row maps a source path to a destination URL or path. Preview changes before publishing so stakeholders can verify them on the `.page` preview site.
+
+The redirect sheet matches URL paths only. The `Source` column accepts a relative path, so query parameters are not part of the match. It cannot target individual search terms like `/search?q=running`. For that use case, see the [search redirects tutorial](/how-tos/search-redirects/). For CDN-level wildcard redirects, see [CDN configuration](/setup/configuration/content-delivery-network/).
+
+If you are migrating from Adobe Commerce on Cloud (PaaS) to Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, PaaS URL rewrites (Marketing > SEO & Search > URL Rewrites) don't transfer automatically. Add any active ones as rows in the EDS redirect sheet.
+
+For the full reference — spreadsheet column names, wildcard CDN redirects, and SEO guidance for site migrations — see <Link href={"https://www.aem.live/docs/redirects"} text={"Redirects on AEM.live"} />.
+
+### Sitemaps
+
+Edge Delivery Services generates a sitemap automatically upon publication. Commerce storefronts often require additional sitemap configuration to support prerendered catalog pages, multi-store `hreflang` tags, and large catalogs that exceed the 50,000-URL-per-file limit.
+
+See [Sitemaps](/setup/seo/sitemaps/) for configuration options and Commerce-specific guidance.
+
+### Other
+
+- You can validate indexing using Google Search Console by inspecting the markup of the crawl to see if all important information was tracked.
+- Transactional pages (for example, cart, checkout, and account) should not be indexed.
+- Staging or any non-production environments must not be indexed. Once indexed, URLs from a staging environment can reduce traffic to the production environment. It takes a significant amount of time to remove staging URLs from the Google index.

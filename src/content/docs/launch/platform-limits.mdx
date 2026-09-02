@@ -1,0 +1,68 @@
+---
+title: Edge Delivery Services limits
+description: Understand which Edge Delivery Services platform limits affect Commerce storefronts, including delivery rate limits, URL naming, index size, sitemap file size, and redirect counts.
+slug: setup/seo/platform-limits
+---
+
+import Link from '@components/Link.astro';
+import LinkCard from '@components/LinkCard.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+Edge Delivery Services enforces limits on delivery rate, URL format, index size, sitemap file size, and redirect count.
+
+## Delivery rate limits
+
+Edge Delivery Services caps requests from one shopper to 200 per second for each `aem.page` (preview) or `aem.live` (production) host name. Requests beyond that limit get a `429` response instead of the page or asset. See <Link href="https://www.aem.live/docs/limits#rate-limits-number-of-requests-from-single-ip-address-per-time" text="Rate limits on AEM.live" />.
+
+A single page load rarely reaches this limit on its own. A storefront can get close, though, if it loads scripts, fragments, or styles for hidden UI, such as a panel or container the shopper hasn't opened yet. See [Load hidden UI on demand](/get-started/performance/#load-hidden-ui-on-demand) for ways to reduce the request count in your own code.
+
+Seeing `429` errors? See [Too many requests (429 errors)](/troubleshooting/too-many-requests/) to find the cause and fix it.
+
+## Document naming and URL format
+
+URLs in Edge Delivery Services can contain only lowercase letters (`a-z`), numbers (`0-9`), and hyphens (`-`). Unsupported characters are replaced with hyphens, and leading or trailing hyphens are stripped. The full file path cannot exceed 900 characters.
+
+For Commerce storefronts, this means:
+
+- Product SKUs in URLs must be lowercase. The Commerce boilerplate enforces this automatically in the `getProductLink()` function.
+- If you are migrating from a platform that used uppercase or special-character SKUs in URLs, add redirects from the old paths to the new lowercase ones. See [Redirects](/setup/seo/indexing/#redirects) for setup instructions.
+
+If your existing URLs contain unsupported characters, add a CDN rewrite rule to normalize them before they reach the origin. See [CDN configuration](/setup/configuration/content-delivery-network/).
+
+<Aside type="note" title="Lowercase SKU enforcement">
+Switching to lowercase SKUs on a live site changes URLs, which affects indexing. Plan the transition to lowercase before launch.
+</Aside>
+
+## Indexing and sitemap size
+
+Index and sitemap files are subject to page count, URL count, and file size limits. See <Link href="https://www.aem.live/docs/limits#sitemap-limits" text="Sitemap limits on AEM.live" />.
+
+For large catalogs, a single sitemap might not be sufficient. In that case, create multiple query indexes and corresponding sitemap files. Add all sitemap files to `sitemap-index.xml`, and reference each sitemap URL in `robots.txt`.
+
+If you use [AEM Commerce prerender](/setup/configuration/aem-prerender/) for a large catalog, split your sitemap into multiple files before enabling prerender to avoid exceeding the per-file limit.
+
+See [Sitemaps](/setup/seo/sitemaps/) for configuration steps.
+
+## Redirects
+
+The redirect sheet has a maximum number of entries. If you have many URL changes, import redirects in phases. See <Link href="https://www.aem.live/docs/limits#redirect-limits" text="Redirect limits on AEM.live" /> for the limit.
+
+See [SEO indexing — redirects](/setup/seo/indexing/#redirects) for Commerce-specific guidance.
+
+## File upload limits
+
+Each file type you upload through <Link href="https://da.live" text="Document Authoring" /> has a maximum size. These limits apply to content authors, not to storefront code or product data. Files that exceed the limit should be hosted on a CDN or third-party asset service and linked from your storefront pages.
+
+For merchant guidance on when these limits apply, see [File and content limits](/merchants/edge-delivery-services/file-limits/).
+
+<LinkCard
+  noborder
+  icon="information"
+  title="Limits on AEM.live"
+  description="Complete reference for delivery, content source, GitHub sync, and Admin API rate limits across Edge Delivery Services."
+  link="https://www.aem.live/docs/limits"
+  rightIcon="external"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Limits on AEM.live (opens in a new tab)"
+/>
