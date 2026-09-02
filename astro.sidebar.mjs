@@ -108,6 +108,8 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
             {
               label: 'Analytics Events',
               collapsed: true,
