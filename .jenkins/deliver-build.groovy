@@ -9,6 +9,6 @@
 
 micrositeBuildDeliverPipeline(
     repoName: 'microsite-commerce-storefront',
-    dockerImage: 'node:20.13.1',
+    dockerImage: 'node:jod',
     pnpmVersion: '10.6.5'
 )

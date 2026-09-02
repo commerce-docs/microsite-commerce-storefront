@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import { Steps, Aside } from '@astrojs/starlight/components';
 import Term from '@components/Term.astro';
 
-The AEM Commerce Prerender solution lets your <Term>Edge Delivery Services</Term> Commerce Storefront serve product page and category listing page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
+The AEM Commerce Prerender solution lets your Commerce Storefront, built on <Term>Edge Delivery Services</Term>, serve product page and category listing page HTML to search engines and AI crawlers _before_ JavaScript runs. This can improve SEO rankings and make your product catalog readable by large language models (LLMs) and other AI systems.
 
 ## How it works
 
@@ -25,6 +25,10 @@ The AEM Commerce Prerender solution lets your <Term>Edge Delivery Services</Term
 
 <Aside type="note" title="Prerequisite: Bring Your Own Markup">
 The prerender solution uses Edge Delivery Services' <Link href="https://www.aem.live/developer/byom" text="Bring Your Own Markup (BYOM)" /> API to publish HTML content. The app generates one HTML file per product and publishes it as overlay content, so Edge Delivery Services serves complete product HTML at your product page URLs.
+</Aside>
+
+<Aside type="tip" title="Deciding which pages need this">
+BYOM is one way to server-side render catalog pages on Edge Delivery Services. Not every product or category page needs it. See [SSR and crawlability](/setup/seo/ssr-and-crawlability/) for how to use Google Search Console crawl-demand data, rather than SKU count, to decide which pages benefit from server-side rendering.
 </Aside>
 
 ## Why use prerender?
@@ -89,7 +93,7 @@ Before implementing the prerender solution, verify you have:
 
 ### Storefront requirements
 
-Your Edge Delivery Services Commerce Storefront must be:
+Your Commerce Storefront, built on Edge Delivery Services, must be:
 
 - Built on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" />
 - Configured with valid [storefront configuration](/setup/configuration/commerce-configuration/) connecting to your Adobe Commerce backend
@@ -202,7 +206,7 @@ The diagram below shows how these components connect and work together to genera
 
     D -->|HTML stored in blob store| E
     E -->|Overlay configured| F
-    F -->|Edge Delivery serves the final page| subGraph1
+    F -->|Edge Delivery Services serves the final page| subGraph1
     subGraph1 --> subGraph2
     G --> H
     G --> I
@@ -452,7 +456,7 @@ After the page loads, your storefront JavaScript runs and replaces that static H
     direction TB
         E1@{ label: "<span style=\"font-size:60px\">🤖</span><br><span style=\"font-size:18px\">Crawler Request</span>" }
         E2@{ label: "<span style=\"font-size:60px\">👤</span><br><span style=\"font-size:18px\">User Request</span>" }
-        E3["Edge Delivery serves<br>prerendered HTML"]
+        E3["Edge Delivery Services serves<br>prerendered HTML"]
         E4["Crawler reads<br>static HTML"]
         E5["Browser executes<br>storefront JavaScript"]
         E6["PDP drop-in replaces<br>HTML with interactive UI"]
@@ -533,7 +537,7 @@ The prerendered HTML flows from the App Builder app to your storefront through A
 4. The AEM Admin API updates your sitemap to include the new and updated product pages.
 5. Edge Delivery Services serves the prerendered HTML from the overlay when product page URLs are requested.
 
-The Commerce Prerender app uses App Builder file storage and Edge Delivery Services overlay configuration. It does _not_ use events to trigger updates. Each time the App Builder app detects a product change and generates HTML, it saves the HTML to App Builder storage and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically. The storefront needs no additional fetching or configuration.
+The AEM Commerce Prerender app uses App Builder file storage and Edge Delivery Services overlay configuration. It does _not_ use events to trigger updates. Each time the App Builder app detects a product change and generates HTML, it saves the HTML to App Builder storage and configures the overlay link via the AEM Admin API. When the overlay is configured, the prerendered HTML is served at the product URLs automatically. The storefront needs no additional fetching or configuration.
 
 ### How the storefront serves prerendered HTML
 
@@ -685,9 +689,7 @@ The prerender solution has these known limitations:
 - **Catalog APIs cap pagination per category path.** Prerendering is limited to a maximum of approximately 10,000 products per category path.
 - **No per-SKU or per-category content overrides.** The prerender solution doesn't support merging custom content into individual product or category pages (for example, showing a widget only on one category or SKU). If the override needs to appear in the canonical, server-rendered response that search engines and AI crawlers see, it requires a customization to the prerender app. If it doesn't need to be in that canonical response, use <Link href="https://experienceleague.adobe.com/developer/commerce/storefront/merchants/content-customizations/enrichment/#_top" text="enrichment blocks" /> or another runtime customization approach, such as custom JavaScript that injects content based on the currently rendered category or product.
 
-If your catalog or requirements run into these limits — an unusually large category, a need for near-real-time updates, or per-category overrides — work with your development team on a custom approach for those pages.
-
-{/* TODO(USF-4304): link to guidance on per-SKU/per-category content overrides once available */}
+If your catalog or requirements run into these limits — an unusually large category, a need for near-real-time updates, or per-category overrides — consider authoring those category pages by hand instead. See [Build a category page manually](/how-tos/manual-category-page/) for how to create a single category page, attach its SEO metadata, and handle a change to its URL. See [Generate category pages programmatically](/how-tos/automatic-category-page/) for how to create a script to automate this using the AEM and DA APIs.
 
 ## Troubleshooting
 
