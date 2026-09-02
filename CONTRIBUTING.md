@@ -20,7 +20,7 @@ Welcome! This guide will help you contribute effectively to the Adobe Commerce S
 
 ### Prerequisites
 
-- **Node.js**: Version specified in `.nvmrc` (currently Node 20.x)
+- **Node.js**: Version specified in `.nvmrc` (currently Node 22.x)
 - **Package Manager**: pnpm (preferred) or npm
 - **Git**: For version control and collaboration
 - **Code Editor**: VS Code recommended with MDX extension

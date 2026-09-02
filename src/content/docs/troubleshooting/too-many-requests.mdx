@@ -1,0 +1,46 @@
+---
+title: Too many requests (429 errors)
+description: Diagnose 429 Too Many Requests errors caused by exceeding the delivery rate limit, and reduce your storefront's request count.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+A `429` error means Edge Delivery Services throttled your storefront for sending too many requests too fast. This page helps you find the cause and fix it.
+
+## Status code 429
+
+### If you see this
+
+You see repeated `429` status codes in your browser's network tab, or a PageSpeed Insights or Lighthouse audit flags an unusually high number of requests on page load.
+
+### Why this happens
+
+Edge Delivery Services caps requests from one shopper to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Custom code that fetches data before shoppers ask for it pushes a storefront toward that cap.
+
+The most common causes include:
+
+- Hidden UI, such as a Mini Cart panel or drop-in container, that fetches its scripts, fragments, or styles on every page load instead of on the interaction that reveals it
+- Many small utility or component files that aren't consolidated into a shared module — each separate file is one more request, and that adds up fast as a storefront grows
+- Local-development-only scripts that ship to production without a hostname guard
+
+### What to do
+
+<Steps>
+
+1. Open your browser's network tab, or run a Lighthouse audit, and count the requests in the first second of page load.
+
+   Lighthouse lists them under its Network requests diagnostic. For how to run the audit, see [Run Lighthouse audits](/get-started/performance/#run-lighthouse-audits).
+
+1. Find hidden UI, such as a Mini Cart panel, that fetches its scripts, fragments, or styles on every page load, and move that fetch to the interaction that reveals it, such as a click or tap.
+
+   For more information, see [Load hidden UI on demand](/get-started/performance/#load-hidden-ui-on-demand).
+
+1. Consolidate small utility files into a shared module instead of sending one request per file.
+
+1. Guard local-development-only scripts behind a hostname check so they never ship to production.
+
+1. Re-run the audit to confirm the request count dropped.
+
+</Steps>
+
+For load-order and LCP guidance beyond request count, see [How can I improve the performance of my catalog pages?](/troubleshooting/faq/#how-can-i-improve-the-performance-of-my-catalog-pages) in the FAQ.

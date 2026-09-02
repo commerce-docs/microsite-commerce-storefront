@@ -108,6 +108,8 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
             {
               label: 'Analytics Events',
               collapsed: true,
@@ -204,6 +206,7 @@ export function generateSidebar() {
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and Crawlability', link: '/setup/seo/ssr-and-crawlability/' },
           ],
         },
         {
@@ -773,7 +776,9 @@ export function generateSidebar() {
                 { label: 'InputDate', link: '/sdk/components/inputdate/' },
                 { label: 'InputFile', link: '/sdk/components/inputfile/' },
                 { label: 'InputPassword', link: '/sdk/components/inputpassword/' },
+                { label: 'LiveRegion', link: '/sdk/components/liveregion/' },
                 { label: 'Modal', link: '/sdk/components/modal/' },
+                { label: 'MultiSelect', link: '/sdk/components/multiselect/' },
                 { label: 'Pagination', link: '/sdk/components/pagination/' },
                 { label: 'Picker', link: '/sdk/components/picker/' },
                 { label: 'Portal', link: '/sdk/components/portal/' },
@@ -783,6 +788,7 @@ export function generateSidebar() {
                 { label: 'ProgressSpinner', link: '/sdk/components/progressspinner/' },
                 { label: 'RadioButton', link: '/sdk/components/radiobutton/' },
                 { label: 'Skeleton', link: '/sdk/components/skeleton/' },
+                { label: 'Table', link: '/sdk/components/table/' },
                 { label: 'Tag', link: '/sdk/components/tag/' },
                 { label: 'TextArea', link: '/sdk/components/textarea/' },
                 { label: 'TextSwatch', link: '/sdk/components/textswatch/' },
@@ -860,12 +866,13 @@ export function generateSidebar() {
       icon: 'seti:svg',
       items: [
         {
-          label: 'Quick Start',
+          label: 'Start Here',
           items: [
             { label: 'Overview', link: '/merchants/quick-start/' },
             { label: 'What is Commerce Storefront?', link: '/merchants/quick-start/create-content/' },
-            { label: 'Your First Page', link: '/merchants/quick-start/your-first-page/' },
+            { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
             { label: 'Using the Document Authoring Tool', link: '/merchants/quick-start/document-authoring/' },
+            { label: 'Create your first commerce page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
