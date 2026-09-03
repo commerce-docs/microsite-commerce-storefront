@@ -109,6 +109,8 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
             {
               label: 'Analytics Events',
               collapsed: true,
@@ -205,6 +207,7 @@ export function generateSidebar() {
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and Crawlability', link: '/setup/seo/ssr-and-crawlability/' },
           ],
         },
         {
@@ -532,6 +535,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/wishlist/' },
                 { label: 'Quick Start', link: '/dropins/wishlist/quick-start/' },
+                {
+                  label: 'How-Tos',
+                  collapsed: true,
+                  items: [
+                    { label: 'Render an Additional Wishlist', link: '/dropins/wishlist/tutorials/render-additional-wishlist/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
                 { label: 'Functions', link: '/dropins/wishlist/functions/' },
                 { label: 'Slots', link: '/dropins/wishlist/slots/' },
