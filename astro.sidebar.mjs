@@ -65,7 +65,7 @@ export function generateSidebar() {
               label: 'Commerce services at a glance',
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
-            { label: 'The event bus', link: '/dropins/all/events/' },
+            { label: 'Event bus', link: '/dropins/all/events/' },
           ],
         },
         {
