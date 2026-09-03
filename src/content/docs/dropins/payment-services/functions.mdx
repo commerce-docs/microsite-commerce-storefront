@@ -39,16 +39,77 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Payment Services drop-in currently has no functions defined.
+The Payment Services drop-in provides API functions that enable you to programmatically control behavior and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.1.0</strong>
+<strong>Version: 4.2.1</strong>
 </div>
 
-{/* AUTO-GENERATED CONTENT - Do not edit below this line */}
+<TableWrapper nowrap={[0]}>
+| Function | Description |
+|----------|-------------|
+| [submitCreditCard](#submitcreditcard) | Validates and submits the currently-rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form. |
+</TableWrapper>
 
+## submitCreditCard
 
+Validates and submits the currently-rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form, placing the payment order for the cart identified by the latest [cart/data](/dropins/cart/events/#cartdata-emits-and-listens) event. That event must have fired at least once with the shopper's cart before calling this function.
 
+```ts
+function submitCreditCard(): Promise<void>
+```
 
+The returned promise resolves only when the payment flow finishes successfully. It rejects otherwise, guaranteeing a specific [PaymentServicesError](#paymentserviceserror) `code` in these cases:
 
-{/* This documentation is auto-generated from the drop-in source repository: git@github.com:adobe-commerce/storefront-payment-services */}
+<TableWrapper nowrap={[1]}>
+| Condition | `PaymentServicesError.code` |
+|-----------|-----------------------------|
+| The page has no rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form to submit. | `"payment-services/credit-card-form-not-rendered"` |
+| The rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form has one or more invalid fields. The first invalid field is focused automatically. | `"payment-services/credit-card-form-invalid"` |
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `Promise<void>`.
+
+### Example
+
+```js
+import * as paymentsApi from '@dropins/storefront-payment-services/api.js';
+
+const $placeOrderButton = document.getElementById('place-order');
+
+$placeOrderButton.onclick = () => {
+  paymentsApi.submitCreditCard()
+    .then(() => {
+      console.log('Credit card submitted successfully.');
+    })
+    .catch((error) => {
+      if (error.code === 'payment-services/credit-card-form-invalid') {
+        return;
+      }
+      console.error(error.code, error.message);
+    });
+};
+```
+
+## Data Models
+
+The following data models are used by functions in this drop-in.
+
+### PaymentServicesError
+
+Common error type for every error the Payment Services drop-in's public API functions can throw or reject with.
+
+<TableWrapper nowrap={[0]}>
+| Property | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Represents the name for the type of error. If `error.localized` is present, this is a translated, user-facing string intended for UI display, for example, "Network error." |
+| `message` | `string` | Error message. If `error.localized` is present, this is a translated, user-facing string intended for UI display, for example, "An unexpected network error occurred." |
+| `code` | `string` | A stable identifier in the format `"payment-services/string-code"`. While `error.name` and `error.message` for a given error code can change, `code` will remain the same between backward-compatible versions of the Payment Services drop-in. |
+| `localized` | `true?` | If present, `error.name` and `error.message` are user-friendly, localized strings intended for UI display. |
+</TableWrapper>

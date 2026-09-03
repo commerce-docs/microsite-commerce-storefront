@@ -541,6 +541,7 @@ export function generateSidebar() {
                   ],
                 },
                 { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
+                { label: 'Multistore', link: '/dropins/wishlist/multistore/' },
                 { label: 'Functions', link: '/dropins/wishlist/functions/' },
                 { label: 'Slots', link: '/dropins/wishlist/slots/' },
                 { label: 'Styles', link: '/dropins/wishlist/styles/' },
