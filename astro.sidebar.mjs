@@ -25,6 +25,11 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/get-started/' },
             { label: 'Prerequisites', link: '/get-started/before-you-start/' },
+            {
+              label: 'Licensing',
+              collapsed: true,
+              autogenerate: { directory: '/licensing/' },
+            },
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Plan your storefront project', link: '/setup/' },
@@ -60,16 +65,7 @@ export function generateSidebar() {
               label: 'Commerce services at a glance',
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
-            {
-              label: 'Events',
-              collapsed: true,
-              items: [
-                { label: 'The event bus', link: '/dropins/all/events/' },
-                { label: 'Common events reference', link: '/dropins/all/common-events/' },
-                { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
-              ],
-            },
+            { label: 'The event bus', link: '/dropins/all/events/' },
           ],
         },
         {
@@ -102,6 +98,8 @@ export function generateSidebar() {
             { label: 'Overview', link: '/dropins/all/introduction/' },
             { label: 'Containers', link: '/dropins/all/containers/' },
             { label: 'Slots', link: '/dropins/all/slots/' },
+            { label: 'Common events reference', link: '/dropins/all/common-events/' },
+            { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
             { label: 'Connect a drop-in', link: '/dropins/all/quick-start/' },
             {
               label: 'Styling',
@@ -109,7 +107,6 @@ export function generateSidebar() {
               items: [
                 { label: 'Branding', link: '/dropins/all/branding/' },
                 { label: 'CSS customization', link: '/dropins/all/styling/' },
-                { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
               ],
             },
             {
@@ -119,6 +116,7 @@ export function generateSidebar() {
                 { label: 'Labeling and Localization', link: '/dropins/all/labeling/' },
                 { label: 'Localizing links', link: '/dropins/all/linking/' },
                 { label: 'Dictionaries', link: '/dropins/all/dictionaries/' },
+                { label: 'Commerce localization tasks', link: '/dropins/all/commerce-tasks/' },
               ],
             },
             { label: 'Extension options', link: '/dropins/all/extend-or-create/' },
@@ -131,11 +129,15 @@ export function generateSidebar() {
           label: 'Configuration',
           collapsed: true,
           items: [
+            { label: 'Overview', link: '/setup/configuration/' },
             { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
             { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
             { label: 'Gated content', link: '/setup/configuration/gated-content/' },
             { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
             { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
+            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+            { label: 'Enrichment configuration', link: '/setup/configuration/enrichment/' },
+            { label: 'Commerce Picker configuration', link: '/setup/configuration/commerce-picker/' },
             {
               label: 'Compatibility Package',
               collapsed: true,
@@ -149,6 +151,7 @@ export function generateSidebar() {
             { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
             { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
             { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
           ],
         },
         {
@@ -182,11 +185,6 @@ export function generateSidebar() {
               ],
             },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            {
-              label: 'Licensing',
-              collapsed: true,
-              autogenerate: { directory: '/licensing/' },
-            },
             {
               label: 'Troubleshooting',
               collapsed: true,
@@ -338,7 +336,7 @@ export function generateSidebar() {
           items: [
             { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
             { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
-            { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
+            { label: 'Looking for developer localization tasks?', link: '/dropins/all/commerce-tasks/' },
           ],
         },
       ],
@@ -559,7 +557,6 @@ export function generateSidebar() {
                     { label: 'ProductDownloadableOptions', link: '/dropins/product-details/containers/product-downloadable-options/' },
                     { label: 'ProductGallery', link: '/dropins/product-details/containers/product-gallery/' },
                     { label: 'ProductGiftCardOptions', link: '/dropins/product-details/containers/product-gift-card-options/' },
-                    { label: 'ProductGiftcardOptions', link: '/dropins/product-details/containers/product-giftcard-options/' },
                     { label: 'ProductHeader', link: '/dropins/product-details/containers/product-header/' },
                     { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                     { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
@@ -644,6 +641,7 @@ export function generateSidebar() {
                 { label: 'Styles', link: '/dropins/user-account/styles/' },
                 { label: 'Dictionary', link: '/dropins/user-account/dictionary/' },
                 { label: 'Sidebar', link: '/dropins/user-account/sidebar/' },
+                { label: 'Seller-Assisted Buying', link: '/dropins/user-account/containers/seller-assisted-buying/' },
                 {
                   label: 'Containers',
                   collapsed: true,
@@ -657,7 +655,6 @@ export function generateSidebar() {
                     {
                       label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
-                    { label: 'Seller-Assisted Buying', link: '/dropins/user-account/containers/seller-assisted-buying/' },
                     { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
                     { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
                   ],
@@ -1030,13 +1027,6 @@ export function generateSidebar() {
             { label: 'Adobe Commerce 2.4.8', link: '/reference/storefront-compatibility/v248/' },
             { label: 'Adobe Commerce 2.4.7', link: '/reference/storefront-compatibility/v247/' },
           ],
-        },
-
-        // ---------- OTHER ----------
-        {
-          label: 'Resources',
-          collapsed: true,
-          autogenerate: { directory: '/resources/' },
         },
       ],
     },

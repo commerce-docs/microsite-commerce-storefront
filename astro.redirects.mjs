@@ -89,6 +89,7 @@ export function generateRedirects(basePath) {
         '/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
         '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
         '/dropins/product-details/installation': `${basePath}/dropins/product-details/quick-start`,
+        '/dropins/product-details/containers/product-giftcard-options': `${basePath}/dropins/product-details/containers/product-gift-card-options`,
 
         // Product Discovery drop-in
         '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
@@ -236,6 +237,17 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/content-localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
+
+        // Commerce localization tasks moved out of Merchants (developer procedure) into Drop-ins reference
+        '/merchants/quick-start/content-localization-commerce-tasks': `${basePath}/dropins/all/commerce-tasks`,
+        '/merchants/quick-start/content-localization-commerce-tasks/': `${basePath}/dropins/all/commerce-tasks/`,
+
+        // Placeholder sheets reference moved out of API Reference (resources) into Merchants
+        '/resources/placeholders': `${basePath}/merchants/blocks/placeholder-sheets`,
+        '/resources/placeholders/': `${basePath}/merchants/blocks/placeholder-sheets/`,
+        // Resources index removed (API Reference); its only content already lived in Merchants
+        '/resources': `${basePath}/merchants/blocks/placeholder-sheets`,
+        '/resources/': `${basePath}/merchants/blocks/placeholder-sheets/`,
 
         // ========= MISC REDIRECTS =========
         // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
