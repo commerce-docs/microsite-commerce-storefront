@@ -16,7 +16,7 @@ import { Aside } from '@astrojs/starlight/components';
 The Product Details drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: TBD</strong> {/* TODO(ACCS-1665): set to the release version before merge (unreleased; alpha only) */}
+<strong>Version: 3.2.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
@@ -30,10 +30,8 @@ The Product Details drop-in provides API functions that enable you to programmat
 | [`getProductsData`](#getproductsdata) | Fetches multiple products by SKUs with optional per-product option configuration. |
 | [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
 | [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid. |
-| [`isSubscribedStockAlert`](#issubscribedstockalert) | Checks whether the current shopper is subscribed to a back-in-stock alert for a SKU. |
 | [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes. |
 | [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change. |
-| [`subscribeStockAlert`](#subscribestockalert) | Subscribes the current shopper to a back-in-stock alert for a SKU. |
 
 </TableWrapper>
 
@@ -236,41 +234,6 @@ Does not emit any drop-in events.
 
 Returns `boolean | null`.
 
-## isSubscribedStockAlert
-
-The `isSubscribedStockAlert` function checks whether the currently authenticated shopper is subscribed to a back-in-stock alert for a given SKU. Use it to render the correct state of a "Notify me" control on the product details page. This is typically paired with [`subscribeStockAlert`](#subscribestockalert).
-
-<Aside type="note">
-Stock alerts require an authenticated shopper and the product alerts feature to be enabled in the Commerce backend. This function is served by Commerce Core, so the drop-in must be pointed at the Commerce Core GraphQL endpoint.
-</Aside>
-
-```ts
-interface IsSubscribedStockAlertResult {
-  isSubscribed: boolean;
-  message?: string;
-}
-
-const isSubscribedStockAlert = async (
-  sku: string
-): Promise<IsSubscribedStockAlertResult>
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `sku` | `string` | Yes | The SKU of the product to check the subscription status for. |
-
-</TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns a `Promise<IsSubscribedStockAlertResult>` with `isSubscribed` set to `true` when the shopper is already subscribed.
-
 ## setProductConfigurationValid
 
 The `setProductConfigurationValid` function sets a callback to be called when product configuration validity changes.
@@ -324,41 +287,6 @@ Emits the [`pdp/values`](/dropins/product-details/events/#pdpvalues-emits-and-li
 ### Returns
 
 Returns `void`.
-
-## subscribeStockAlert
-
-The `subscribeStockAlert` function subscribes the currently authenticated shopper to a back-in-stock alert for a given SKU. The shopper is notified when the product is available again. Use [`isSubscribedStockAlert`](#issubscribedstockalert) first to determine whether the shopper is already subscribed. For a complete example, see [Add a "Notify me" CTA](/dropins/product-details/tutorials/notify-me-cta/).
-
-<Aside type="note">
-Stock alerts require an authenticated shopper and the product alerts feature to be enabled in the Commerce backend. This function is served by Commerce Core, so the drop-in must be pointed at the Commerce Core GraphQL endpoint.
-</Aside>
-
-```ts
-interface SubscribeStockAlertResult {
-  success: boolean;
-  message?: string;
-}
-
-const subscribeStockAlert = async (
-  sku: string
-): Promise<SubscribeStockAlertResult>
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `sku` | `string` | Yes | The SKU of the product to subscribe to. |
-
-</TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns a `Promise<SubscribeStockAlertResult>`. On success, `success` is `true` and `message` contains the confirmation text. The promise rejects when the subscription cannot be created.
 
 ## Data Models
 
