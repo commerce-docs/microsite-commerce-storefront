@@ -2,7 +2,7 @@
 title: Extend, substitute, or create?
 description: Decision guidance for customizing drop-ins—when to extend existing ones, when to substitute with third-party solutions, and when it might be necessary to create new ones.
 sidebar:
-  label: Extend, substitute, or create
+  label: Choose a Drop-in Approach
 ---
 import Link from '@components/Link.astro';
 import Term from '@components/Term.astro';
@@ -16,7 +16,11 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
 
-You can build on the drop-ins Adobe provides in more than one way, and the path you pick changes how much is supported for you and how much you maintain yourself. The sections below step through the tradeoffs. Start with the recommended path, then read the others if your requirements rule it out.
+You can build on the drop-ins Adobe provides in more than one way, and the path you pick changes how much is supported for you and how much you maintain yourself. The sections below step through the tradeoffs. Start with the recommended path, then read the others if your requirements exclude it.
+
+<Aside type="tip" title="Don't need a drop-in at all?">
+If the feature doesn't fit inside any single drop-in container, you can combine an existing drop-in's API function, shared SDK components, and the event bus in a plain block instead. See [Build custom features](/blocks/build-custom-features/).
+</Aside>
 
 ## Choose your approach
 
@@ -25,7 +29,7 @@ You can build on the drop-ins Adobe provides in more than one way, and the path 
 
 ### EXTEND
 
-When you <Term>Extend</Term> a drop-in, you keep the Adobe package and add behavior or UI through the extension levers the product exposes. This is the path that Adobe is set up to support and keep compatible across releases.
+When you <Term>Extend</Term> a drop-in, you keep the Adobe package and add behavior or UI through the extension levers the product exposes. This extension path is the one that Adobe is designed to support and keep compatible across releases.
 
 <Aside type="tip" title="Recommended approach">
 Most needs are met with the levers in Extension methods below—without replacing the whole package or writing a new drop-in from scratch.
@@ -59,14 +63,14 @@ Most needs are met with the levers in Extension methods below—without replacin
 
 ### SUBSTITUTE
 
-Use <Term>Substitute</Term> when you will put a <Term>third-party solution</Term> in place of the Adobe drop-in for that part of the experience, so you own integration, updates, and API compatibility—not when you only need a contained integration (for example, a payment provider you wire in while still extending the Checkout drop-in).
+Use <Term>Substitute</Term> when replacing an Adobe drop-in with a <Term>third-party solution</Term>. You own the integration, updates, and API compatibility. Do not use this for contained integrations, such as wiring in a payment provider while extending the Checkout drop-in.
 
 <Aside type="caution" title="Proceed with caution">
 If you substitute, you are responsible for keeping compatibility with Commerce APIs and keeping up with changes yourself.
 </Aside>
 
 **Replace an Adobe drop-in with a full third-party solution if you have:**
-- Complete solutions from a single provider (not just payment methods)
+- Solutions from a single provider (excluding payment methods)
 - Specialized functionality that doesn't align with Adobe's approach
 - Legacy system integration requirements
 - Provider-specific workflows requiring their complete UI and logic
@@ -79,8 +83,8 @@ If you substitute, you are responsible for keeping compatibility with Commerce A
 
 #### Handling analytics instrumentation:
 A substituted drop-in no longer emits the ACDL events that analytics, personalization, product recommendations, and Live Search rely on. You'll need to publish those events yourself:
-- [Analytics events reference](/dropins/all/analytics-events/) - the event lifecycle and the events each drop-in emits
-- [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/) - a tutorial showing how to publish those events with a helper script
+- [Analytics events reference](/dropins/all/analytics-events/) — the event lifecycle and the events each drop-in emits
+- [Instrument analytics events without drop-ins](/how-tos/instrument-analytics-events/) — a tutorial showing how to publish those events with a helper script
 
 </Option>
 
@@ -88,10 +92,10 @@ A substituted drop-in no longer emits the ACDL events that analytics, personaliz
 
 ### CREATE
 
-The <Term>SDK</Term> is what you use to <Term>Create</Term> a new drop-in package. Reserve that for cases where you need a whole new feature surface that the existing family of drop-ins does not cover, and you can commit to owning it over time.
+The <Term>SDK</Term> is what you use to <Term>Create</Term> a new drop-in package. Reserve that for cases where you need a new feature surface that the existing family of drop-ins does not cover, and you can commit to maintaining it over time.
 
-<Aside type="caution" title='Early access considerations'>
-The drop-in SDK is in early access, with limited third-party support. Before you invest, contact Adobe to discuss your use case in the <Link href={"https://discordapp.com/channels/1131492224371277874/1220042081209421945"} text={"Discord Commerce Storefront channel"} />.
+<Aside type="tip" title="Before you invest">
+Building a new drop-in is a long-term commitment. Before you start, contact Adobe to discuss your use case in the <Link href={"https://discordapp.com/channels/1131492224371277874/1220042081209421945"} text={"Discord Commerce Storefront channel"} />.
 </Aside>
 
 **Create a drop-in if you:**
@@ -136,7 +140,7 @@ Extending is fully supported, maintains compatibility with updates, and reduces 
 Substitution is acceptable when you need complete solutions from a single provider, have specialized functionality that doesn't align with Adobe's approach, need legacy system integration, or require provider-specific workflows with their complete UI and logic. However, you become responsible for maintaining compatibility with Commerce APIs and handling all updates independently.
 
 **Q: Is the drop-in SDK ready for production use?**  
-No. The SDK is currently in early access with limited third-party support and no timeline for full support. Contact Adobe before investing in custom drop-in development.
+The SDK is available. Building and maintaining a new drop-in is still a long-term commitment, so contact Adobe to discuss your use case before you start.
 
 **Q: What extensibility options are available beyond slots?**  
 While slots are the primary mechanism, you can also:
@@ -149,4 +153,4 @@ While slots are the primary mechanism, you can also:
 Follow the decision flow in this guide. Most needs can be met by extending existing drop-ins. Only consider building new drop-ins if you have a use case that no existing drop-in addresses, are building entirely new functionality for multiple storefronts or brands, and have the resources and expertise for long-term maintenance.
 
 **Q: What happens if I substitute a drop-in and Commerce APIs change?**  
-You're responsible for updating your substitute to maintain compatibility. Adobe cannot provide support for third-party substitutes, and you may miss out on new features or security updates.
+You're responsible for updating your substitute to maintain compatibility. Adobe does not provide support for third-party substitutes, and you miss out on new features or security updates.
