@@ -12,7 +12,7 @@ import Task from '@components/Task.astro';
 When a product or selected variant is out of stock, the primary Call to Action (CTA) button on the Product Detail Page (PDP) can display **"Notify Me"** instead of **"Add to Cart"**. This applies to both simple products and configurable products with multiple options (for example, size and color). When the shopper switches to a different variant, the CTA updates dynamically based on that variant's stock status.
 
 <Aside type="note" title="Notify Me as customization">
-"Notify Me" is a frequently requested customization. This tutorial shows how to wire and update the CTA using the event bus, and how to subscribe the shopper with the drop-in's [`subscribeStockAlert`](/dropins/product-details/functions/#subscribestockalert) function. The CTA wiring stays in your block. The back-in-stock subscription itself is handled by the drop-in against Adobe Commerce.
+"Notify Me" is a frequently requested customization. This tutorial shows how to add it using the event bus and CTA updates. If your implementation requires backend integration (for example, an admin toggle for back-in-stock notifications), this approach keeps the logic in your block. If it becomes standard behavior in the future, it may be added to the boilerplate directly.
 </Aside>
 
 ## Prerequisites
@@ -148,30 +148,19 @@ events.on('pdp/valid', (valid) => {
 <Task>
 ### Handle out-of-stock clicks in the button handler
 
-Add this at the **top** of the `onClick` handler you created in Step 1. When `isOutOfStock` is `true`, subscribe the shopper to a back-in-stock alert and return early so no cart logic executes.
-
-The Product Details drop-in exposes [`subscribeStockAlert`](/dropins/product-details/functions/#subscribestockalert) for exactly this. It subscribes the currently authenticated shopper to a back-in-stock alert for the given SKU.
+Add this at the **top** of the `onClick` handler you created in Step 1. When `isOutOfStock` is `true`, run your custom notify-me logic and return early so no cart logic executes.
 
 ```js
 // Inside the onClick from Step 1:
 if (isOutOfStock) {
-  try {
-    const { message } = await pdpApi.subscribeStockAlert(product.sku);
-    // Show your own confirmation (toast, inline message, etc.)
-    console.log(message);
-  } catch (error) {
-    // Surface the failure to the shopper
-    console.error(error);
-  }
+  const values = pdpApi.getProductConfigurationValues();
+  // Replace with your logic: open modal, call back-in-stock API, emit custom event, etc.
+  console.log('Notify Me', { sku: product?.sku, values });
   return;
 }
 
 // ... existing Add to Cart / Update in Cart logic (try block)
 ```
-
-<Aside type="note">
-`subscribeStockAlert` and [`isSubscribedStockAlert`](/dropins/product-details/functions/#issubscribedstockalert) are served by Commerce Core, so the drop-in must be pointed at the Commerce Core GraphQL endpoint, and the shopper must be authenticated. To reflect an existing subscription in the CTA on load, call `isSubscribedStockAlert(product.sku)` and adjust the button label accordingly.
-</Aside>
 
 </Task>
 <Task>

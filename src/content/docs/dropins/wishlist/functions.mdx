@@ -16,15 +16,14 @@ import { Aside } from '@astrojs/starlight/components';
 The Wishlist drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: TBD</strong> {/* TODO(ACCS-1665): set to the release version before merge (unreleased; alpha only) */}
+<strong>Version: 3.3.0</strong>
 </div>
 
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
 | --- | --- |
-| [`addProductsToWishlist`](#addproductstowishlist) | Add products to a user's wishlist, or to a specific list. |
-| [`createWishlist`](#createwishlist) | Create an additional named wishlist beyond the default one. |
+| [`addProductsToWishlist`](#addproductstowishlist) | Add products to a user's wishlist. |
 | [`clearPersistedAllWishlistItems`](#clearpersistedallwishlistitems) | Removes all persisted wishlist items from browser storage. |
 | [`clearPersistedLocalStorage`](#clearpersistedlocalstorage) | Removes the persisted wishlist data from local storage. |
 | [`getAllItemsCacheVersion`](#getallitemscacheversion) | Returns the current version of the all-items cache. |
@@ -53,18 +52,9 @@ The Wishlist drop-in provides API functions that enable you to programmatically 
 
 The `addProductsToWishlist` function allows you to add products to a user's wishlist. This function is typically used when a user wants to save a product for later purchase. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/add-products/" text="addProductsToWishlist" /> mutation.
 
-Pass an optional `wishlistId` to add to a specific list instead of the active (default) one—for example, a separate "Save for Later" list. For an authenticated shopper, `wishlistId` is the server list ID. For a guest, it is a reserved local key (such as `save-for-later`). When you omit `wishlistId`, the product is added to the active wishlist.
-
 ```ts
 const addProductsToWishlist = async (
-  items: {
-    sku: string;
-    quantity: number;
-    optionsUIDs?: string[];
-    enteredOptions?: { uid: string; value: string }[];
-  }[],
-  wishlistId?: string,
-  options?: { scope?: string }
+  items: [ { sku: string; quantity: number; optionsUIDs?: string[]; // should be the options available for the product enteredOptions?: { uid: string; value: string }[]; // refer to both selected and entered options } ]
 ): Promise<Wishlist | null>
 ```
 
@@ -75,52 +65,16 @@ const addProductsToWishlist = async (
 | `sku` | `string` | Yes | The product identifier (SKU) for the product. For configurable products (like a shirt available in multiple colors and sizes), use the child product SKU that represents the specific variant selected by the customer (for example, \`MS09-M-Blue\` for a medium blue shirt). |
 | `quantity` | `number` | Yes | The number of items. This value must be a positive number. |
 | `optionsUIDs` | `string[]` | No | An array of option UIDs for configurable products—the selected options (such as color or size) that identify the variant. Use the product query to retrieve available option UIDs for a product. |
-| `wishlistId` | `string` | No | Target a specific list instead of the active one. Omit it to add to the active wishlist. |
-| `options.scope` | `string` | No | Event channel to broadcast the updated list on, so a container rendered with the same `scope` refreshes. See [Render an additional wishlist](/dropins/wishlist/tutorials/render-additional-wishlist/). |
 
 </TableWrapper>
 
 ### Events
 
-When you omit `wishlistId`, emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event for the active wishlist. When you target a specific list with `wishlistId`, the active-list event is not emitted. Instead, if you pass `options.scope`, the updated list is broadcast on that scope so a matching container refreshes.
+Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the updated wishlist information after adding the products. This event may be emitted multiple times depending on the operation flow (for example, creating a new wishlist, merging wishlists, or updating an existing wishlist).
 
 ### Returns
 
-Returns [`Wishlist`](#wishlist) or `null`. When targeting a specific list, returns that list's updated data.
-
-## createWishlist
-
-The `createWishlist` function creates an additional named wishlist beyond the shopper's default one, using the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/create-wishlist/" text="createWishlist" /> mutation. Use it to provision an extra list that lives alongside the shopper's default wishlist.
-
-<Aside type="note">
-Multiple wishlists must be enabled for the store. Creating a list fails if it would exceed the configured maximum number of wishlists.
-</Aside>
-
-```ts
-type WishlistVisibility = 'PUBLIC' | 'PRIVATE';
-
-const createWishlist = async (
-  name: string,
-  visibility?: WishlistVisibility
-): Promise<Wishlist | null>
-```
-
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `name` | `string` | Yes | The name of the wishlist to create. Use this same name to find and reuse the list later (for example, with [`getWishlists`](#getwishlists)). |
-| `visibility` | `WishlistVisibility` | No | `PRIVATE` (default) or `PUBLIC`. |
-
-</TableWrapper>
-
-### Events
-
-Does not emit any drop-in events.
-
-### Returns
-
-Returns the created [`Wishlist`](#wishlist), or `null`.
+Returns [`Wishlist`](#wishlist) or `null`.
 
 ## getStoreConfig
 
@@ -142,14 +96,9 @@ Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
 
 The `getWishlistById` function returns a customer's wishlist by ID, using the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/customer/queries/customer/" text="customer" /> query, with the contents defined by the `wishlist_v2` object.
 
-Pass an optional `scope` to broadcast the result on a dedicated event channel, so a container rendered with the same `scope` can display this list without disturbing the shopper's active wishlist. See [Render an additional wishlist](/dropins/wishlist/tutorials/render-additional-wishlist/).
-
 ```ts
 const getWishlistById = async (
-  wishlistId: string,
-  pageSize?: number,
-  currentPage?: number,
-  options?: { scope?: string }
+  wishlistId: string
 ): Promise<void | Wishlist | null>
 ```
 
@@ -157,16 +106,13 @@ const getWishlistById = async (
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `wishlistId` | `string` | Yes | The unique identifier of the wishlist to retrieve. For a guest, this is the reserved local key of the list. |
-| `pageSize` | `number` | No | Number of items per page. |
-| `currentPage` | `number` | No | The page of items to retrieve. |
-| `options.scope` | `string` | No | Event channel to broadcast the result on. When set, the `wishlist/data` event is scoped to this channel instead of the active wishlist's. |
+| `wishlistId` | `string` | Yes | The unique identifier of the wishlist to retrieve. |
 
 </TableWrapper>
 
 ### Events
 
-Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the retrieved wishlist. When `options.scope` is set, the event is broadcast on that scope so it does not overwrite the active wishlist.
+Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the retrieved wishlist information.
 
 ### Returns
 
@@ -208,43 +154,21 @@ Returns [`Wishlist`](#wishlist) or `null`.
 
 The `mergeWishlists` function allows you to merge a wishlist from local storage with one belonging to a registered user. This is useful when a user wants to synchronize both local and remote wishlists into one wishlist after logging in.
 
-Pass an optional `listKey` to merge a specific guest list (stored under that key) instead of the default guest wishlist—for example, the guest "Save for Later" list. Items are deduplicated by SKU and selected options.
+### Signature
 
-```ts
-const mergeWishlists = async (
-  wishlist: Wishlist,
-  listKey?: string
-): Promise<Wishlist | null>
+```typescript
+function mergeWishlists(wishlist: Wishlist): Promise<Wishlist | null>
 ```
 
-<TableWrapper nowrap={[0,1]}>
-
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `wishlist` | [`Wishlist`](#wishlist) | Yes | The registered user's server wishlist to merge the local items into. |
-| `listKey` | `string` | No | The local-storage key of the guest list to merge. Omit it to merge the default guest wishlist. |
-
-</TableWrapper>
-
-### Events
-
-Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the merged wishlist information.
-
-### Returns
-
-Returns [`Wishlist`](#wishlist) or `null`.
+---
 
 ## removeProductsFromWishlist
 
 The `removeProductsFromWishlist` function allows you to remove products from a user's wishlist. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/wishlist/mutations/remove-products/" text="removeProductsFromWishlist" /> mutation.
 
-Pass an optional `wishlistId` to remove from a specific list instead of the active one. When you omit it, products are removed from the active wishlist.
-
 ```ts
 const removeProductsFromWishlist = async (
-  items: Array<Item>,
-  wishlistId?: string,
-  options?: { scope?: string }
+  items: Array<Item>
 ): Promise<Wishlist | null>
 ```
 
@@ -253,18 +177,16 @@ const removeProductsFromWishlist = async (
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `items` | `Array<Item>` | Yes | An array of wishlist item identifiers to remove from the wishlist. |
-| `wishlistId` | `string` | No | Target a specific list instead of the active one. Omit it to remove from the active wishlist. |
-| `options.scope` | `string` | No | Event channel to broadcast the updated list on, so a container rendered with the same `scope` refreshes. See [Render an additional wishlist](/dropins/wishlist/tutorials/render-additional-wishlist/). |
 
 </TableWrapper>
 
 ### Events
 
-When you omit `wishlistId`, emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event for the active wishlist. When you target a guest list with `wishlistId` and pass `options.scope`, the updated list is broadcast on that scope. Removals from an authenticated specific list are non-emitting. Refresh that container yourself (the drop-in `Wishlist` container handles this in a page-aware way when given a `wishlistId`).
+Emits the [`wishlist/data`](/dropins/wishlist/events/#wishlistdata-emits-and-listens) event with the updated wishlist information after removing the products. This event may be emitted multiple times depending on whether the wishlist becomes empty after removal.
 
 ### Returns
 
-Returns [`Wishlist`](#wishlist) or `null`. When targeting a specific list, returns that list's updated data.
+Returns [`Wishlist`](#wishlist) or `null`.
 
 ## resetWishlist
 
@@ -602,12 +524,11 @@ interface StoreConfigModel {
 
 ### Wishlist
 
-The `Wishlist` object is returned by the following functions: [`addProductsToWishlist`](#addproductstowishlist), [`createWishlist`](#createwishlist), [`getWishlistById`](#getwishlistbyid), [`getWishlists`](#getwishlists), [`initializeWishlist`](#initializewishlist), [`mergeWishlists`](#mergewishlists), [`removeProductsFromWishlist`](#removeproductsfromwishlist), [`resetWishlist`](#resetwishlist), [`updateProductsInWishlist`](#updateproductsinwishlist).
+The `Wishlist` object is returned by the following functions: [`addProductsToWishlist`](#addproductstowishlist), [`getWishlistById`](#getwishlistbyid), [`getWishlists`](#getwishlists), [`initializeWishlist`](#initializewishlist), [`mergeWishlists`](#mergewishlists), [`removeProductsFromWishlist`](#removeproductsfromwishlist), [`resetWishlist`](#resetwishlist), [`updateProductsInWishlist`](#updateproductsinwishlist).
 
 ```ts
 interface Wishlist {
   id: string;
-  name?: string;
   updated_at: string;
   sharing_code: string;
   items_count: number;
