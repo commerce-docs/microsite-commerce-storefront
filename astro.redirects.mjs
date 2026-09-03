@@ -128,8 +128,17 @@ export function generateRedirects(basePath) {
         '/boilerplate/getting-started': `${basePath}/boilerplate`,
         '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate`,
         '/boilerplate/update-boilerplate': `${basePath}/boilerplate/updates`,
-        '/boilerplate/blocks': `${basePath}/boilerplate/blocks-reference`,
-        '/dropins/all/commerce-blocks': `${basePath}/boilerplate/blocks-reference`,
+        '/boilerplate/blocks': `${basePath}/blocks`,
+        '/dropins/all/commerce-blocks': `${basePath}/blocks`,
+
+        // Blocks folder consolidation (blocks physically moved into src/content/docs/blocks/)
+        '/get-started/architecture/blocks-and-repo': `${basePath}/blocks/blocks-and-dropins`,
+        '/boilerplate/blocks-reference': `${basePath}/blocks`,
+        '/dropins/all/layouts': `${basePath}/blocks/arrange-block-layouts`,
+        '/dropins/all/build-custom-features': `${basePath}/blocks/build-custom-features`,
+        '/boilerplate/create-commerce-blocks': `${basePath}/blocks/create-commerce-blocks`,
+        '/boilerplate/customizing-blocks': `${basePath}/blocks/customize-blocks`,
+        '/boilerplate/universal-editor': `${basePath}/blocks/universal-editor`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
         '/config': `${basePath}/setup/configuration/commerce-configuration`,
