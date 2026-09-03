@@ -152,6 +152,13 @@ export function generateSidebar() {
               ],
             },
             {
+              label: 'Payment Services',
+              collapsed: true,
+              items: [
+                { label: 'Add buttons to checkout', link: '/dropins/payment-services/tutorials/add-buttons-to-checkout/' },
+              ],
+            },
+            {
               label: 'User Account',
               collapsed: true,
               items: [
