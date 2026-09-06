@@ -323,6 +323,21 @@ ul li details ul:last-child {
   max-width: 100%;
 }
 
+/* Header band: a distinct zone (fill + accent rule + tracked caps),
+   since bold weight alone reads as body text. Excludes the metadata
+   TableWrapper variant, which styles its own headers. */
+.sl-markdown-content thead th:not(:where(.not-content *, .metadata-table *)) {
+  background-color: var(--sl-color-gray-6);
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  border-bottom: 2px solid var(--sl-color-accent);
+  padding-block: 0.6rem;
+}
+
 .content-panel {
   border-top: none;
   display: flex;
@@ -535,6 +550,35 @@ table {
 
 thead {
   text-align: left;
+}
+
+/* "Copied!" toast shown when a heading anchor link is clicked (anchor-link-copy.ts) */
+.anchor-link-copied {
+  position: absolute;
+  z-index: 100;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--sl-color-black);
+  background-color: var(--sl-color-accent);
+  opacity: 0;
+  transform: translateY(0.25rem);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.anchor-link-copied.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor-link-copied {
+    transition: opacity 0.15s ease;
+    transform: none;
+  }
 }
 
 [type='text']:focus,
@@ -886,6 +930,13 @@ main {
   padding: 1rem 2rem 1.5rem 2rem;
   box-shadow: var(--sl-shadow-sm);
   color: var(--sl-color-text);
+}
+
+/* Anchor jumps land on the entry title, but the date and card top sit above it.
+   Add offset (on top of Starlight's scroll-padding-top) so they clear the
+   sticky header instead of being clipped. */
+.changelog-entry .entry-title {
+  scroll-margin-top: 3rem;
 }
 
 .changelog-entry .entry-meta {
