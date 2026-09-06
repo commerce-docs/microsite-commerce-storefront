@@ -1,106 +1,153 @@
 ---
 title: Build custom features
-description: Build storefront features you own by combining three tools inside a custom commerce block — a drop-in API function (or your own GraphQL query) for data, shared SDK components for the UI, and the event bus to coordinate blocks — without creating a new drop-in.
+description: Build a storefront feature inside a custom commerce block by composing an existing drop-in's data and components, without creating a new drop-in.
 sidebar:
   label: Build custom features
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 import Diagram from '@components/Diagram.astro';
 import Options from '@components/Options.astro';
 import Option from '@components/Option.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
 
-You don't have to wait for Adobe to ship a feature you need, and you don't have to build a new drop-in to get it. The storefront is meant to be extended: a block is a small unit of UI you own, and drop-ins carry the tested commerce logic beneath it. When no existing drop-in container covers a feature, compose that drop-in's data and components directly inside your own block instead.
+You don't have to wait for Adobe to ship a feature you need, and you don't have to build a new drop-in to get it. When no existing drop-in container covers a feature, compose that drop-in's data and components directly inside a custom commerce block instead.
 
 <Aside type="note">
-This page assumes you already know how Edge Delivery Services loads a block, including the file conventions and `decorate()` function this pattern builds on, and that you've already tried wiring in a drop-in's pre-built container. The examples use the shared `CS_FETCH_GRAPHQL` instance and the `@dropins/tools` component provider, which your storefront includes by default. On an older or heavily forked project, confirm both are present before you start. For the standard way to add a drop-in to a block, see [Connect a drop-in](/dropins/all/quick-start/) first. Come back here only if no container fits your UI.
+This page assumes you already know how Edge Delivery Services loads a block, and that you've already tried wiring in a drop-in's pre-built container. If you haven't created a custom commerce block before, start with [Create commerce blocks](/blocks/create-commerce-blocks/) for the file conventions and `decorate()` function this pattern builds on. The examples use the shared `CS_FETCH_GRAPHQL` instance and the `@dropins/tools` component provider, which your storefront includes by default.
 </Aside>
 
-## Blocks and drop-ins
-
-Before you build, it's worth clarifying what a block is and how it differs from a drop-in, because the two solve different problems:
-
-- A **block** is a folder with a JavaScript file and a CSS file that decorates the semantic HTML Edge Delivery Services renders from an authored document. The table an author writes there is the contract — it maps directly to your block's markup, so you decide what an author can configure and what your code renders. You build, ship, and maintain it on your own timeline.
-- A **drop-in** is a packaged commerce library Adobe builds and maintains, such as cart, checkout, and product discovery, with a stable API and its own release cycle. Integrating one into your blocks means you reuse tested, Adobe-maintained commerce logic instead of building and securing it yourself — you can customize and extend it, but you don't own or fork it.
-
-The practical split: build a block for the storefront-specific feature you want, and rely on drop-ins for the tested commerce logic beneath it. The product comparison feature on this page is a **custom commerce block** — a block that composes a drop-in's data and components rather than shipping as a drop-in itself. It consumes the Product Discovery drop-in.
-
-Composing is the lightest of three ways to extend the storefront — compose, extend, or create — and the one this page covers. Reach for extend or create only when composing can't do the job.
-
-This pattern also costs less than creating a drop-in. Your code is plain JS and CSS that Edge Delivery Services decorates client-side, so there's:
-
-- No new package to publish, version, or maintain.
-- No drop-in SDK dependency to add.
-- No separate build step.
-
-The tradeoff: you maintain the composition logic yourself, and it won't appear in any drop-in's release notes or upgrade path. **Because you depend on functions the drop-in owns, watch that drop-in's release notes for changes to the signatures and payloads you call.**
-
-## Before you write code
-
-Before you build anything, answer one question: where does the data your feature needs live? The answer tells you which technique to use — and whether this page even covers it. The storefront talks to Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer through GraphQL, so start by checking the GraphQL schema for the fields you need, then match your situation to the table.
-
-<TableWrapper>
-
-| Where the data lives | What to do | Where it's covered |
-| --- | --- | --- |
-| A drop-in container already renders the feature | Use the container as-is | [Connect a drop-in](/dropins/all/quick-start/) — you don't need this page |
-| A drop-in's API returns the data, but no container renders the UI you want | Call the drop-in API function in your block | [Get data](#get-data), below |
-| The field is in the schema, but no drop-in exposes it | Write your own GraphQL query | [Get data](#get-data), below |
-| A drop-in's API is close, but its payload is missing a field | Extend the drop-in's data payload | [Extend](/dropins/all/extend-or-create/) |
-| The field isn't in the schema at all | Extend the schema with App Builder | <Link href="https://developer.adobe.com/commerce/extensibility/" text="App Builder" /> |
-
-</TableWrapper>
-
-The rows that stay on this page both feed the [Get data](#get-data) tool below; the others hand off to another guide. You're never blocked: if the data isn't there yet, you can extend a drop-in's payload or the schema itself to expose it.
-
-If the feature needs to persist new server-side state — its own mutations or a cart-like lifecycle — or needs a data model, containers, and events that no installed drop-in exposes, see [Extension options](/dropins/all/extend-or-create/) to compare that path against this one.
-
-## How it works
-
-The following diagram shows how an existing drop-in's API function, components from the Drop-in SDK, and the event bus combine inside a block that uses this pattern.
+## The drop-in is your starting point
+A drop-in is more than a pre-built container. It's an installed package that bundles the parts you build features from: containers, slots, API functions, and events. Its containers render with shared SDK components from `@dropins/tools`, the same components you can render in your own block. Pull only the parts you need into a custom commerce block, and ship the block as a new storefront feature.
 
 <Diagram type="mermaid" code={`
 %%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
 graph LR
-    API(Drop-in API function)
-    Components(SDK Components)
-    EventBus(Event bus)
-    BlockA(Your Block)
-    BlockB(Another Block)
+    Dropin["<b>Drop-in</b><br/>installed abstraction"]
+    SDK["<b>Shared SDK</b><br/>@dropins/tools"]
 
-    API -->|data| BlockA
-    Components -->|UI| BlockA
-    BlockA -->|emits custom event| EventBus
-    EventBus -->|listens| BlockB
+    subgraph parts["Parts you can reuse"]
+      direction TB
+      subgraph Containers["Containers"]
+        Slots("Slots")
+      end
+      Functions("API functions")
+      Events("Events")
+      Components("SDK components")
+    end
 
-    style EventBus fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
-    style API fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style Components fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    style BlockA fill:#e0e7ff,stroke:#6366f1,stroke-width:2px
-    style BlockB fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
-`} caption="A custom commerce block pulls data from an existing drop-in API function, renders it with shared SDK components, and coordinates with other blocks through the event bus.">
+    Block["<b>Your custom<br/>commerce block</b>"]
+    Feature["<b>New storefront feature</b><br/>Product Compare"]
+
+    Dropin --> Containers
+    Dropin --> Functions
+    Dropin --> Events
+    SDK --> Components
+
+    Containers --> Block
+    Functions --> Block
+    Events --> Block
+    Components --> Block
+
+    Block -->|ships as| Feature
+
+    style Dropin fill:#bbf7d0,stroke:#16a34a,stroke-width:3px
+    style SDK fill:#bbf7d0,stroke:#16a34a,stroke-width:3px
+    style Containers fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Slots fill:#f0fdf4,stroke:#16a34a,stroke-width:2px
+    style Functions fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Events fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Components fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Block fill:#334155,stroke:#1e293b,stroke-width:3px,color:#ffffff
+    style Feature fill:#fef3c7,stroke:#d97706,stroke-width:2px
+
+    linkStyle 0,1,2,3 stroke:#16a34a,stroke-width:2px
+    linkStyle 4,5,6,7 stroke:#94a3b8,stroke-width:2px
+    linkStyle 8 stroke:#d97706,stroke-width:3px
+`} caption="A drop-in and the shared SDK give you reusable parts. You compose the ones you need into a custom commerce block, which ships as a new storefront feature such as Product Compare.">
 </Diagram>
 
-## Three tools to combine
+## Get data, render UI, and coordinate blocks
 
-Your storefront already has all three installed. A block combines them to build a new feature from existing drop-in artifacts: one **gets the data**, one **renders the UI**, and one **coordinates** with other blocks. The product comparison feature later on this page uses all three.
+A custom commerce block is built from three parts: the data it gets, the UI it renders, and the events it uses to coordinate with other blocks. For both the data and the UI, lean on what the drop-in provides and write your own code only when it doesn't cover your case, so you own and maintain less.
 
-For the data, you choose how much to write yourself. Let a drop-in's API function fetch and shape the data for you, or write your own GraphQL query when no drop-in covers the field you need. You can mix these choices within one block.
+Those two choices form a spectrum of ownership, from leaning on the drop-in for both down to writing everything yourself:
 
-The event bus sits outside that choice: coordinating blocks is a separate concern, not something a drop-in fetches or renders for you.
+<TableWrapper>
+
+| How much you own | Get data | Render UI |
+| --- | --- | --- |
+| **Least** | Drop-in API function | SDK component |
+| **Some** | Drop-in API function | Your own markup |
+| **Most** | Your own GraphQL query | Your own markup |
+
+</TableWrapper>
+
+<Diagram type="mermaid" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    subgraph getdata["<b>Get Data</b>"]
+      API("Drop-in API function<br/>(preferred)")
+      GraphQL("Your own GraphQL query<br/>(fallback)")
+    end
+    subgraph renderui["<b>Render UI</b>"]
+      Components("SDK component<br/>(preferred)")
+      Markup("Your own markup<br/>(fallback)")
+    end
+    BlockA("<b>Your Block</b>")
+    subgraph coordinate["<b>Coordinate Blocks</b>"]
+      EventBus(Event bus)
+      BlockB(Another Block)
+    end
+
+    API -->|shaped data| BlockA
+    GraphQL -.->|raw data| BlockA
+    Components -->|rendered UI| BlockA
+    Markup -.->|custom UI| BlockA
+    BlockA e4@-->|"events.emit()"| EventBus
+    EventBus e5@-->|"events.on()"| BlockB
+    BlockB e6@-->|"events.emit()"| EventBus
+    EventBus e7@-->|"events.on()"| BlockA
+    e4@{ animate: true }
+    e5@{ animate: true }
+    e6@{ animate: true }
+    e7@{ animate: true }
+
+    subgraph legend["Legend"]
+      direction TB
+      LegendProvided["Storefront provides"] ~~~ LegendYou["You write (fallback)"]
+    end
+    BlockB ~~~ legend
+
+    style API fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style GraphQL fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,stroke-dasharray:5 5
+    style Components fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Markup fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,stroke-dasharray:5 5
+    style EventBus fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style BlockA fill:#334155,stroke:#1e293b,stroke-width:3px,color:#ffffff
+    style BlockB fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
+    style LegendProvided fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style LegendYou fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,stroke-dasharray:5 5
+
+    linkStyle 0,2 stroke:#16a34a,stroke-width:3px,color:#16a34a
+    linkStyle 1,3 stroke:#94a3b8,stroke-width:3px,stroke-dasharray:8 5
+    linkStyle 4,5,6,7 stroke:#64748b,stroke-width:2px
+`} caption="How a custom commerce block gets data, renders UI, and coordinates with other blocks.">
+</Diagram>
 
 <Options label="Action" numbered={false}>
 <Option>
 
 ### Get data
 
-You have two ways to fetch data, depending on coverage. Most of the time, let a drop-in's API function do it. When no drop-in exposes the field you need, drop down and write your own GraphQL query.
+You have two ways to get data, and each one also decides who shapes the raw GraphQL response into the fields your block renders. Most of the time, let a drop-in's API function fetch and shape it for you. When no drop-in exposes the field you need, write your own query and shape the response yourself.
 
 #### Call a drop-in API function
 
-Find the drop-in that already handles the data your feature needs from the [drop-in list](/dropins/all/introduction/#available-drop-ins), then check its Functions reference page, such as [Product Discovery Functions](/dropins/product-discovery/functions/), for the function to call from its `api.js`:
+To find the function to call from `api.js`, check the drop-in's Functions reference page, such as [Product Discovery Functions](/dropins/product-discovery/functions/), after locating the drop-in in the [drop-in list](/dropins/all/introduction/#available-drop-ins):
 
 ```javascript
 import { search } from '@dropins/storefront-product-discovery/api.js';
@@ -117,10 +164,10 @@ It's the same function the drop-in's own containers use, so you write and mainta
 
 #### Write your own GraphQL query
 
-When the schema has the field you need but no drop-in exposes it, a block is just JavaScript, so nothing stops you from querying GraphQL directly. Use the shared `CS_FETCH_GRAPHQL` instance from `scripts/commerce.js` rather than the browser's `fetch`, so you don't re-implement the endpoint URL, store-context headers, authentication token, and cache-busting that every catalog request needs:
+When the schema has the field you need but no drop-in exposes it, a block is just JavaScript, so you can query GraphQL directly. Use the shared `CS_FETCH_GRAPHQL` instance from `scripts/commerce.js` rather than the browser's `fetch`, so you don't re-implement the endpoint URL, store-context headers, authentication token, and cache-busting that every catalog request needs:
 
 ```javascript
-// blocks/product-compare/product-compare.js
+// blocks/your-block/your-block.js
 import { CS_FETCH_GRAPHQL } from '../../scripts/commerce.js';
 
 const PRODUCT_COMPARE_QUERY = `query CompareProducts($phrase: String!, $filter: [SearchClauseInput!]) {
@@ -147,14 +194,18 @@ const { data } = await CS_FETCH_GRAPHQL.fetchGraphQl(PRODUCT_COMPARE_QUERY, {
 const products = data?.productSearch?.items?.map((item) => item.productView) ?? [];
 ```
 
-The tradeoff is that you own the raw response shape: results come back nested under `items[].productView`, with prices split across `SimpleProductView` and `ComplexProductView`. Drop to this level only when a drop-in API doesn't cover your case.
+The trade-off is that you own the raw response shape: results come back nested under `items[].productView`, with prices split across `SimpleProductView` and `ComplexProductView`. Drop to this level only when a drop-in API doesn't cover your case.
 
 </Option>
 <Option>
 
 ### Render UI
 
-Render shared UI components, such as `Button`, `Image`, `Input`, and `PriceRange`, from `@dropins/tools/components.js` through a provider. These are the same components drop-in containers use, so instead of restyling pricing or re-optimizing images by hand, you render the real component into your own markup:
+You have two ways to render UI, depending on coverage. Most of the time, reuse a shared SDK component. When no component fits the piece you need, build that markup yourself. A single block usually does both, mounting components into markup it authored.
+
+#### Reuse an SDK component
+
+Render shared SDK components, such as `Button`, `Icon`, `Image`, and `PriceRange`, from `@dropins/tools/components.js` through a provider. These components are the same ones drop-in containers use, so instead of restyling pricing or re-optimizing images manually, you render the real component into your own markup:
 
 ```javascript
 import { PriceRange, Image, provider as UI } from '@dropins/tools/components.js';
@@ -163,12 +214,38 @@ await UI.render(PriceRange, { currency: 'USD', amount })(priceEl);
 await UI.render(Image, { src, alt, params: { width: 400, height: 400 } })(imgEl);
 ```
 
-Components inherit the storefront's design tokens, so your block matches the rest of the site without you copying styles. They also carry correctness you'd otherwise re-solve, with **accessibility baked in rather than bolted on later:**
+Components inherit the storefront's design tokens, so your block matches the rest of the site without you copying styles. They also carry correctness you'd otherwise re-solve, with **accessibility included by design rather than added later:**
 
 - `PriceRange` handles currency and locale formatting, sale-versus-regular price display, and range calculations.
 - `Image` produces Adobe Experience Manager Assets-optimized URLs and lazy loading.
 
 See the [`.render()` reference](/sdk/reference/render/) for how the provider mounts a component into a DOM node, and the [component overview](/sdk/components/overview/) for the full set.
+
+#### Build your own markup
+
+When no SDK component covers a piece of your UI, a block is just JavaScript and CSS, so you build the DOM yourself. This is the render-side counterpart to writing your own GraphQL query: full control, and you own the result. Reach for it only for the parts no component provides, such as the layout and wrappers your components mount into:
+
+```javascript
+// blocks/product-compare/product-compare.js
+// A <th> only parses inside a table, so wrap the markup in one, then read the
+// <th> back out and mount SDK components into the wrappers you created.
+const frag = document.createRange().createContextualFragment(`
+  <table><thead><tr>
+    <th>
+      <div class="product-compare__remove"></div>
+      <a></a>
+      <div class="product-compare__price"></div>
+    </th>
+  </tr></thead></table>
+`);
+const th = frag.querySelector('th');
+const imgLink = th.querySelector('a');
+const priceWrap = th.querySelector('.product-compare__price');
+const removeWrap = th.querySelector('.product-compare__remove');
+// imgLink, priceWrap, and removeWrap are now ready for UI.render(...)
+```
+
+Style your own markup against the same [shared design tokens](/dropins/all/styling/#design-tokens-reference) the SDK components use, such as `--spacing-big` and `--spacing-medium`, so hand-built parts still match the rest of the storefront.
 
 </Option>
 <Option>
@@ -188,13 +265,28 @@ Choose your own event name for a block-to-block signal that no drop-in emits yet
 </Option>
 </Options>
 
+## Check what your feature needs
+
+The rows below run from least work to most, so take the first that matches your case.
+
+<TableWrapper>
+
+| If this is true | Do this |
+| --- | --- |
+| **A container already renders it** | Use it as-is: [Connect a drop-in](/dropins/all/quick-start/) |
+| **An API has the data**, no container fits | Call the API function: [Get data](#get-data) above |
+| **The field's in the schema**, no API exposes it | Write your own query: [Get data](#get-data) above |
+| **A payload is missing a field** | [Extend the data payload](/dropins/all/extending/#extend-the-data-payload-for-the-drop-in) |
+| **The field isn't in the schema** | Extend the schema with <Link href="https://developer.adobe.com/commerce/extensibility/" text="App Builder" /> |
+| **The feature needs its own state or model** | [Extend or create a drop-in](/dropins/all/extend-or-create/) |
+
+</TableWrapper>
+
 ## Walkthrough: Product comparison
 
-The product comparison feature needs a table that shows up to three products side by side, plus a persistent tray that collects the products a shopper picks while browsing. No drop-in container covers that feature, but everything it needs already exists in your storefront. It uses all three tools without ever writing a raw query: the [`search`](/dropins/product-discovery/functions/) API gets the products, the SDK components format prices and images, and the event bus coordinates the two blocks. What's left is the logic specific to the feature: reading the selected SKUs, rendering the comparison table, and adding or removing products.
+The product comparison feature shows up to three products side by side, plus a persistent tray that collects the products a shopper picks while browsing. No drop-in container covers it, so you build it with the drop-in for both data and UI: the Product Discovery drop-in's [`search`](/dropins/product-discovery/functions/) for data and SDK components for UI, leaving you just the feature-specific logic.
 
-The steps below build this feature as two custom commerce blocks: `product-compare` for the table and `product-compare-bar` for the tray. The two blocks never reference each other. They coordinate through the event bus, a shared publish-and-subscribe channel where one block emits a named event and any others listening for it respond.
-
-Each block is a folder with a JavaScript file, a CSS file, and an optional `README.md`, following the same convention as every other block on the storefront:
+The steps below build it as two custom commerce blocks that coordinate only through the event bus, `product-compare` for the table and `product-compare-bar` for the tray:
 
 ```plaintext
 blocks/
@@ -208,147 +300,287 @@ blocks/
     README.md
 ```
 
+Those two blocks produce the comparison table this walkthrough builds toward:
+
 <Diagram caption="The rendered product-compare table, comparing an Adobe pattern hoodie, a Pride at Adobe t-shirt, and an Adobe Life tee">
   ![Compare Products page showing an Adobe pattern hoodie, a Pride at Adobe t-shirt, and an Adobe Life tee side by side](@images/dropins/product-comparison-page.png)
 </Diagram>
 
-<Steps>
+### Steps
 
-1. **Fetch data using a drop-in API function.** To look up the exact products a shopper picked, call `search()` with a `sku` filter:
+Each step maps to one reusable pattern:
 
-   ```javascript
-   // blocks/product-compare/product-compare.js
-   import { search } from '@dropins/storefront-product-discovery/api.js';
+<TableWrapper>
 
-   async function fetchProductsBySkus(skus, searchFilters = []) {
-     const result = await search(
-       { filter: [{ attribute: 'sku', in: skus }, ...searchFilters], pageSize: skus.length },
-       { scope: 'product-compare-lookup' },
-     );
-     return result?.items ?? [];
-   }
-   ```
+| Step | Pattern to reuse | Uses |
+| --- | --- | --- |
+| 1. [Fetch data](#fetch-data-using-a-drop-in-api-function) | Call a drop-in API with a filter | `search()` |
+| 2. [Render columns](#render-the-ui-with-sdk-components) | Mount SDK components into your markup | `Image`, `PriceRange`, `Button` |
+| 3. [Build rows](#build-the-comparison-rows) | Hand-build what no component covers | your own DOM |
+| 4. [Coordinate](#coordinate-blocks-with-the-event-bus) | Signal other blocks through an event | `compare/products` |
+| 5. [Store state](#store-state-in-the-url) | Keep shareable state in the URL | `?compare=` |
+| 6. [Wire it up](#wire-it-together) | Parse config, orchestrate in `decorate()` | `readBlockConfig()` |
 
-   The `searchFilters` argument carries the block's author-configured `filter` option into this same query, so the SKU lookup enforces the same eligibility rule as the rest of the block. **Without it, a shopper could request an ineligible product just by editing the `?compare=` URL directly.**
+</TableWrapper>
 
-1. **Render the UI with SDK components.** For each product column, mount `Image` and `PriceRange`, plus a `Button` for the remove action — the same components a drop-in container uses, so the drop-in handles image optimization and price formatting:
+<Tasks>
 
-   ```javascript
-   // blocks/product-compare/product-compare.js
-   import {
-     Button, Icon, Image, PriceRange, provider as UI,
-   } from '@dropins/tools/components.js';
-   import { h } from '@dropins/tools/preact.js';
+<Task>
 
-   await UI.render(Image, {
-     src: image.url, alt: image.label || product.name, loading: 'lazy', params: { width: 400, height: 400 },
-   })(imgWrap);
-   await UI.render(PriceRange, { display: 'from to', minimumAmount, maximumAmount, currency })(priceWrap);
-   await UI.render(Button, {
-     icon: h(Icon, { source: 'Close' }),
-     variant: 'tertiary',
-     'aria-label': `Remove ${product.name}`,
-     onClick: () => removeProductColumn(block, product.sku),
-   })(removeWrap);
-   ```
+### Fetch data using a drop-in API function
 
-   Write your block's own CSS against the same [shared design tokens](/dropins/all/styling/#design-tokens-reference) the SDK components use, such as `--spacing-big` and `--spacing-medium`, so the table and tray don't look bolted on next to the rest of the page.
+To look up the exact products a shopper picked, call `search()` with a `sku` filter:
 
-1. **Coordinate blocks with the event bus.** The Compare button is often added through a slot on an existing drop-in container, such as the `ProductActions` slot on the product-discovery `SearchResults` container, rather than in a custom commerce block. See [Extend](/dropins/all/extend-or-create/) for slot mechanics. Either way, the product list page doesn't know the comparison tray exists, and the tray doesn't know which block added a product. They only agree on an event name and a payload shape:
+```javascript
+// blocks/product-compare/product-compare.js
+import { search } from '@dropins/storefront-product-discovery/api.js';
 
-   ```javascript
-   // blocks/product-list-page/product-list-page.js
-   import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
-   import { render as provider } from '@dropins/storefront-product-discovery/render.js';
-   import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
-   import { events } from '@dropins/tools/event-bus.js';
+async function fetchProductsBySkus(skus, searchFilters = []) {
+  const result = await search(
+    { filter: [{ attribute: 'sku', in: skus }, ...searchFilters], pageSize: skus.length },
+    { scope: 'product-compare-lookup' },
+  );
+  return result?.items ?? [];
+}
+```
 
-   const getCompareButton = (product) => {
-     const productName = product.name || product.sku;
-     const wrap = document.createElement('div');
-     wrap.className = 'product-discovery-product-actions__compare';
-     // The entire integration: emit the event, let product-compare-bar react.
-     UI.render(Button, {
-       icon: Icon({ source: 'Bulk' }),
-       'aria-label': `${labels.Global?.Compare ?? 'Compare'} ${productName}`,
-       variant: 'tertiary',
-       onClick: () => events.emit('compare/products', {
-         sku: product.sku,
-         img: product.images?.[0]?.url ?? '',
-         name: productName,
-       }),
-     })(wrap);
-     return wrap;
-   };
+The `searchFilters` argument carries the block's author-configured `filter` option into this same query, so the SKU lookup enforces the same eligibility rule as the rest of the block, even when a shopper edits the `?compare=` URL directly.
 
-   // Render the drop-in's SearchResults container and hook the button into its
-   // ProductActions slot. Containers render through the drop-in's own `provider`;
-   // shared components like Button render through the tools `UI` provider.
-   provider.render(SearchResults, {
-     slots: {
-       ProductActions: (ctx) => {
-         const actionsWrapper = document.createElement('div');
-         actionsWrapper.appendChild(getAddToCartButton(ctx.product));
-         actionsWrapper.appendChild(getCompareButton(ctx.product));
-         ctx.replaceWith(actionsWrapper);
-       },
-     },
-   })($productList);
-   ```
+</Task>
 
-   ```javascript
-   // blocks/product-compare-bar/product-compare-bar.js
-   import { events } from '@dropins/tools/event-bus.js';
+<Task>
 
-   events.on('compare/products', ({ sku, img, name } = {}) => {
-     if (!sku) return;
-     const idx = products.findIndex((p) => p.sku === sku);
-     if (idx !== -1) {
-       products.splice(idx, 1);
-     } else if (products.length < MAX_PRODUCTS) {
-       products.push({ sku, img, name });
-     }
-     render();
-   });
-   ```
+### Render the UI with SDK components
 
-   Emitting `compare/products` again for a SKU already in the tray removes it, so the same Compare button can add or remove a product without tracking its own state.
+For each product column, mount `Image` and `PriceRange`, plus a `Button` for the remove action:
 
-   <Diagram caption="The product-compare-bar tray collecting products a shopper flags for comparison from a product list page">
-     ![Apparel product list page with an Adobe pattern hoodie, a Pride at Adobe t-shirt, and an Adobe Life tee flagged for comparison, showing the persistent tray at the bottom of the page with Compare and Clear All buttons](@images/dropins/product-bar-page.png)
-   </Diagram>
+```javascript
+// blocks/product-compare/product-compare.js
+import {
+  Button, Icon, Image, PriceRange, provider as UI,
+} from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
 
-1. **Store state in the URL.** The comparison table's state — which SKUs to compare — doesn't need a drop-in or `localStorage`. Reading and writing that state to a URL query parameter means shoppers can share or bookmark the comparison page:
+const image = product.images[0];
+await UI.render(Image, {
+  src: image.url, alt: image.label || product.name, loading: 'lazy', params: { width: 400, height: 400 },
+})(imgWrap);
+await UI.render(PriceRange, { display: 'from to', minimumAmount, maximumAmount, currency })(priceWrap);
+await UI.render(Button, {
+  icon: h(Icon, { source: 'Close' }),
+  variant: 'tertiary',
+  'aria-label': `Remove ${product.name}`,
+  onClick: () => removeProductColumn(block, product.sku),
+})(removeWrap);
+```
 
-   ```javascript
-   // blocks/product-compare/product-compare.js
-   const skus = (new URLSearchParams(window.location.search).get('compare') ?? '')
-     .split(',')
-     .map((s) => s.trim())
-     .filter(Boolean)
-     .slice(0, MAX_PRODUCTS);
+Write your block's own CSS against the same [shared design tokens](/dropins/all/styling/#design-tokens-reference) the SDK components use, such as `--spacing-big` and `--spacing-medium`, so the table and tray appear integrated with the rest of the page.
 
-   // After adding or removing a product:
-   const url = new URL(window.location.href);
-   url.searchParams.set('compare', updatedSkus.join(','));
-   window.history.replaceState({}, '', url);
-   ```
+</Task>
 
-   Reloading the page, sharing its URL, or bookmarking it now reproduces the same comparison, since every selection lives in the `?compare=` parameter.
+<Task>
 
-</Steps>
+### Build the comparison rows
 
-<Aside type="tip" title="Author-facing configuration">
-Both blocks in this example would still use `readBlockConfig()` for author-facing options:
+Those columns are the table header, one per product. The comparison itself is the table body: one row per attribute, with the attribute's label first, then each product's value. Use the author-configured `attributes` option to choose and order the rows, or fall back to every attribute the products expose:
 
-- An `attributes` key listing which product attributes appear as comparison rows.
-- A `filter` key restricting which products are eligible for comparison.
+```javascript
+// blocks/product-compare/product-compare.js
+// allowedAttrs comes from the author's `attributes` option, or null to show all.
+const attributeNames = allowedAttrs
+  ?? [...new Set(products.flatMap((p) => (p.attributes ?? []).map((a) => a.name)))];
+
+attributeNames.forEach((name) => {
+  const cells = products.map((p) => p.attributes?.find((a) => a.name === name));
+  if (cells.every((attr) => !attr?.value)) return; // skip rows no product fills
+
+  const row = document.createElement('tr');
+  const th = document.createElement('th');
+  th.scope = 'row';
+  th.textContent = cells.find(Boolean)?.label ?? name;
+  row.append(th);
+  cells.forEach((attr) => {
+    const td = document.createElement('td');
+    td.textContent = attr?.value || '--';
+    row.append(td);
+  });
+  tbody.append(row);
+});
+```
+
+If the SKU lookup returns no products, render a short empty-state message instead of an empty table.
+
+</Task>
+
+<Task>
+
+### Coordinate blocks with the event bus
+
+The Compare button is often added through a slot on an existing drop-in container, such as the `ProductActions` slot on the product-discovery `SearchResults` container, rather than in a custom commerce block. See [Slots](/dropins/all/slots/) for slot mechanics. Either way, the product list page and the tray only agree on an event name and a payload shape:
+
+```javascript
+// blocks/product-list-page/product-list-page.js
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import { Button, Icon, provider as UI } from '@dropins/tools/components.js';
+import { events } from '@dropins/tools/event-bus.js';
+
+const getCompareButton = (product) => {
+  const productName = product.name || product.sku;
+  const wrap = document.createElement('div');
+  wrap.className = 'product-discovery-product-actions__compare';
+  // The entire integration: emit the event, let product-compare-bar react.
+  UI.render(Button, {
+    icon: Icon({ source: 'Bulk' }),
+    'aria-label': `${labels.Global?.Compare ?? 'Compare'} ${productName}`,
+    variant: 'tertiary',
+    onClick: () => events.emit('compare/products', {
+      sku: product.sku,
+      img: product.images?.[0]?.url ?? '',
+      name: productName,
+    }),
+  })(wrap);
+  return wrap;
+};
+
+// Render the drop-in's SearchResults container and hook the button into its
+// ProductActions slot. Containers render through the drop-in's own `provider`;
+// shared components like Button render through the tools `UI` provider.
+provider.render(SearchResults, {
+  slots: {
+    ProductActions: (ctx) => {
+      const actionsWrapper = document.createElement('div');
+      // getAddToCartButton is the block's existing helper; keep it so Compare
+      // sits alongside Add to Cart instead of replacing it.
+      actionsWrapper.appendChild(getAddToCartButton(ctx.product));
+      actionsWrapper.appendChild(getCompareButton(ctx.product));
+      ctx.replaceWith(actionsWrapper);
+    },
+  },
+})($productList);
+```
+
+```javascript
+// blocks/product-compare-bar/product-compare-bar.js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('compare/products', ({ sku, img, name } = {}) => {
+  if (!sku) return;
+  const idx = products.findIndex((p) => p.sku === sku);
+  if (idx !== -1) {
+    products.splice(idx, 1);
+  } else if (products.length < MAX_PRODUCTS) {
+    products.push({ sku, img, name });
+  }
+  render();
+});
+```
+
+Emitting `compare/products` again for a SKU already in the tray removes it, so the same Compare button can add or remove a product without tracking its own state.
+
+The tray's own Compare button is a link to the comparison page, carrying the collected SKUs in the `?compare=` parameter that the `product-compare` block reads in the next step:
+
+```javascript
+// blocks/product-compare-bar/product-compare-bar.js — inside render()
+const skus = products.map((p) => p.sku).join(',');
+await UI.render(Button, {
+  children: 'Compare',
+  href: skus ? `${comparePage}?compare=${skus}` : undefined,
+  variant: 'primary',
+  disabled: !skus,
+})(compareBtnWrap);
+```
+
+`comparePage` comes from the tray block's author-configured `page` option.
+
+<Diagram caption="The product-compare-bar tray collecting products a shopper flags for comparison from a product list page">
+  ![Apparel product list page with an Adobe pattern hoodie, a Pride at Adobe t-shirt, and an Adobe Life tee flagged for comparison, showing the persistent tray at the bottom of the page with Compare and Clear All buttons](@images/dropins/product-bar-page.png)
+</Diagram>
+
+</Task>
+
+<Task>
+
+### Store state in the URL
+
+The comparison table's state is the list of SKUs to compare, so it needs no drop-in or `localStorage`. Reading and writing that state to a URL query parameter means shoppers can share or bookmark the comparison page:
+
+```javascript
+// blocks/product-compare/product-compare.js
+const skus = (new URLSearchParams(window.location.search).get('compare') ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .slice(0, MAX_PRODUCTS);
+
+// After adding or removing a product:
+const url = new URL(window.location.href);
+url.searchParams.set('compare', updatedSkus.join(','));
+window.history.replaceState({}, '', url);
+```
+
+Reloading the page, sharing its URL, or bookmarking it now reproduces the same comparison, since every selection lives in the `?compare=` parameter.
+
+</Task>
+
+<Task>
+
+### Wire it together
+
+`decorate()` is the entry point Edge Delivery Services calls for each block. For `product-compare`, it reads the author options and the SKUs from the URL, fetches the products, then renders the table from the pieces above:
+
+```javascript
+// blocks/product-compare/product-compare.js
+import { readBlockConfig } from '../../scripts/aem.js';
+
+export default async function decorate(block) {
+  const config = readBlockConfig(block); // author options, as text
+
+  // readBlockConfig returns each option as a string, so parse them into the
+  // shapes the block uses: an attribute-name list, and search-clause objects.
+  const allowedAttrs = config.attributes
+    ? config.attributes.split(',').map((s) => s.trim()).filter(Boolean)
+    : null;
+  const searchFilters = config.filter // each entry is "attribute:value"
+    ? config.filter.split(',').flatMap((pair) => {
+      const i = pair.indexOf(':');
+      if (i === -1) return [];
+      const attribute = pair.slice(0, i).trim();
+      const value = pair.slice(i + 1).trim();
+      return attribute && value ? [{ attribute, in: [value] }] : [];
+    })
+    : [];
+
+  const skus = readSkusFromUrl(); // from the ?compare= parameter
+  const products = await fetchProductsBySkus(skus, searchFilters);
+
+  if (!products.length) {
+    block.textContent = 'No products to compare.';
+    return;
+  }
+
+  renderColumns(block, products);                      // Render the UI with SDK components
+  renderComparisonRows(block, products, allowedAttrs); // Build the comparison rows
+}
+```
+
+Because `readBlockConfig()` returns each option as text, `decorate()` first parses `attributes` into a list and `filter` into search clauses before passing them on. The helpers map to the tasks above: `fetchProductsBySkus` fetches data, `renderColumns` renders the product columns, `renderComparisonRows` builds the comparison rows, and `readSkusFromUrl` reads the `?compare=` parameter.
+
+</Task>
+
+</Tasks>
+
+### Author-facing configuration
+
+Both blocks in this example use `readBlockConfig()` for author-facing options:
+
+- An `attributes` key listing which product attributes appear as comparison rows, as comma-separated names.
+- A `filter` key restricting which products are eligible for comparison, as comma-separated `attribute:value` pairs.
 - A `page` key on the tray block pointing to the comparison page.
 
-You can still use the configuration patterns covered in [Blocks customization](/boilerplate/customizing-blocks/). A content author places each block by adding a table with its name to a document — see [Block tables](/merchants/blocks/block-tables/) — so placing or moving a block never requires a code change.
-</Aside>
+For the configuration patterns behind these options, see [Customize blocks](/blocks/customize-blocks/). A content author places each block by adding a table with its name to a document, so placing or moving a block never requires a code change. See [Block tables](/merchants/blocks/block-tables/) for how those tables work.
 
-<Diagram caption="An author-authored block table setting the product-compare-bar block's page option">
+<Diagram caption="An author-created block table setting the product-compare-bar block's page option">
   ![Document table naming the product-list-page block with a urlPath of apparel, and the product-compare-bar block with a page of /product-compare](@images/dropins/product-comparison-tables.png)
 </Diagram>
 
@@ -358,24 +590,9 @@ You can still use the configuration patterns covered in [Blocks customization](/
 
 ## Best practices
 
-- <strong class="keep-bold">Reuse the drop-in's options.</strong> Its existing filters, scopes, and pagination options work because you're calling the same function a container calls.
 - <strong class="keep-bold">Name events `noun/verb`.</strong> Follow the convention drop-in events already use, such as `cart/updated` and `search/result`, so another developer can tell what your custom event does without reading its source.
 - <strong class="keep-bold">Make events shareable.</strong> Design the event so any block with a matching trigger can emit it, not just the one you're building. A comparison tray listening for `compare/products` can respond to that same event from a product list page, search results, or a carousel, without a separate integration for each.
 - <strong class="keep-bold">Reuse existing state.</strong> Before adding `localStorage` or a new global variable, check whether the URL or an event's last payload (`events.lastPayload()`) already has what you need.
 - <strong class="keep-bold">Handle loading and errors.</strong> A drop-in container already renders a fallback when its data fetch fails, but your block calls the same API function directly, so it needs its own `catch` and an empty-results message.
-- <strong class="keep-bold">Compose only when needed.</strong> Use this pattern only when no container covers the feature. If a drop-in container already handles most of the feature, extend it with slots or events instead of rebuilding its API function and components yourself.
-
-## Hand your plan to AI
-
-AI works best from a plan, not a blank prompt. The plan is the decisions this page walks through: whether to compose, extend, or create, and within a composed block, which parts reuse a drop-in API function, which reuse a drop-in component, and whether anything has to drop to a raw query.
-
-Once that plan is clear, install [Boilerplate skills](/ai/boilerplate-skills/) so your AI coding agent can build from it. The skills encode this project's real conventions, so the agent looks up actual slot names, event payloads, and component props from the drop-in TypeScript definitions instead of inventing new conventions. A plan this concrete makes the generated code cheap enough to test, improve, or throw away.
-
-## Next steps
-
-- Review [Extension options](/dropins/all/extend-or-create/) to place this pattern alongside your other options.
-- Read the [drop-in Functions reference](/dropins/product-discovery/functions/) for the full `search()` signature and its data models.
-- Browse the [SDK component library](/sdk/components/overview/) to see all available components.
-- Read [Events](/dropins/all/events/) for event-naming conventions and the full `events.on()` / `events.emit()` API.
-- Read [Blocks customization](/boilerplate/customizing-blocks/) for `readBlockConfig()` and other block-authoring patterns.
-- Read [Block tables](/merchants/blocks/block-tables/) for how a content author places `product-compare` or `product-compare-bar` on a page — no code change required.
+- <strong class="keep-bold">Enforce eligibility server-side.</strong> When an author option restricts which products qualify, carry that filter into every query the block runs, including direct SKU lookups. A shopper can edit values in the URL, so a rule enforced only in the UI is no rule at all.
+- <strong class="keep-bold">Track the drop-in's releases.</strong> You depend on functions the drop-in owns, so watch its release notes for changes to the signatures and payloads you call.
