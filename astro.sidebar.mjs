@@ -25,14 +25,14 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/get-started/' },
             { label: 'Prerequisites', link: '/get-started/before-you-start/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Plan your storefront project', link: '/setup/' },
             {
               label: 'Licensing',
               collapsed: true,
               autogenerate: { directory: '/licensing/' },
             },
-            { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Plan your storefront project', link: '/setup/' },
             {
               label: 'Boilerplate',
               collapsed: true,
@@ -88,7 +88,6 @@ export function generateSidebar() {
                 { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
               ],
             },
-            { label: 'Looking for merchant block reference?', link: '/merchants/blocks/' },
           ],
         },
         {
@@ -101,6 +100,10 @@ export function generateSidebar() {
             { label: 'Common events reference', link: '/dropins/all/common-events/' },
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
             { label: 'Connect a drop-in', link: '/dropins/all/quick-start/' },
+            { label: 'Extension options', link: '/dropins/all/extend-or-create/' },
+            { label: 'Extend a drop-in', link: '/dropins/all/extending/' },
+            { label: 'Create a drop-in', link: '/dropins/all/creating/' },
+            { label: 'Video library', link: '/videos/' },
             {
               label: 'Styling',
               collapsed: true,
@@ -119,10 +122,6 @@ export function generateSidebar() {
                 { label: 'Commerce localization tasks', link: '/dropins/all/commerce-tasks/' },
               ],
             },
-            { label: 'Extension options', link: '/dropins/all/extend-or-create/' },
-            { label: 'Extend a drop-in', link: '/dropins/all/extending/' },
-            { label: 'Create a drop-in', link: '/dropins/all/creating/' },
-            { label: 'Video library', link: '/videos/' },
           ],
         },
         {
@@ -131,13 +130,6 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/setup/configuration/' },
             { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
-            { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
-            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
-            { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
-            { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
-            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
-            { label: 'Enrichment configuration', link: '/setup/configuration/enrichment/' },
-            { label: 'Commerce Picker configuration', link: '/setup/configuration/commerce-picker/' },
             {
               label: 'Compatibility Package',
               collapsed: true,
@@ -148,10 +140,17 @@ export function generateSidebar() {
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
               ],
             },
-            { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
-            { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+            { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+            { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
+            { label: 'Commerce Picker configuration', link: '/setup/configuration/commerce-picker/' },
+            { label: 'CORS Setup', link: '/setup/configuration/cors-setup/' },
+            { label: 'CORS Troubleshooting', link: '/setup/configuration/cors-troubleshooting/' },
             { label: 'Data export validation', link: '/setup/discovery/data-export-validation/' },
+            { label: 'Enrichment configuration', link: '/setup/configuration/enrichment/' },
+            { label: 'Gated content', link: '/setup/configuration/gated-content/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+            { label: 'Price Book ID setup', link: '/setup/configuration/price-book-setup/' },
           ],
         },
         {
@@ -161,6 +160,8 @@ export function generateSidebar() {
             { label: 'Launch checklist', link: '/setup/launch/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
+            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             {
               label: 'SEO',
               collapsed: true,
@@ -174,7 +175,6 @@ export function generateSidebar() {
                 { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
               ],
             },
-            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             {
               label: 'Manual analytics instrumentation',
               collapsed: true,
@@ -184,7 +184,6 @@ export function generateSidebar() {
                 { label: 'Add to cart event', link: '/how-tos/instrument-add-to-cart-event/' },
               ],
             },
-            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             {
               label: 'Troubleshooting',
               collapsed: true,
@@ -192,9 +191,6 @@ export function generateSidebar() {
             },
           ],
         },
-
-        // ---------- REFERENCE ----------
-        { label: 'Looking for API reference?', link: '/reference/' },
       ],
     },
 
@@ -270,14 +266,14 @@ export function generateSidebar() {
             { label: 'Order Returns', link: '/merchants/blocks/commerce-order-returns/' },
             { label: 'Order Status', link: '/merchants/blocks/commerce-order-status/' },
             { label: 'Orders List', link: '/merchants/blocks/commerce-orders-list/' },
+            { label: 'Product Details', link: '/merchants/blocks/product-details/' },
+            { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
             { label: 'Return Header', link: '/merchants/blocks/commerce-return-header/' },
             { label: 'Returns List', link: '/merchants/blocks/commerce-returns-list/' },
             { label: 'Search Order', link: '/merchants/blocks/commerce-search-order/' },
             { label: 'Seller-Assisted Buying', link: '/merchants/blocks/seller-assisted-buying/' },
             { label: 'Shipping Status', link: '/merchants/blocks/commerce-shipping-status/' },
             { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
-            { label: 'Product Details', link: '/merchants/blocks/product-details/' },
-            { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
           ],
         },
         // B2B Commerce blocks (30 total): commerce-b2b-* (18), commerce-company-* (7),
