@@ -78,7 +78,7 @@ Those two choices form a spectrum of ownership, from leaning on the drop-in for 
 
 <TableWrapper>
 
-| How much you own | Get data | Render UI |
+| Ownership (effort) | Get data | Render UI |
 | --- | --- | --- |
 | **Least** | Drop-in API function | SDK component |
 | **Some** | Drop-in API function | Your own markup |
@@ -194,7 +194,15 @@ const { data } = await CS_FETCH_GRAPHQL.fetchGraphQl(PRODUCT_COMPARE_QUERY, {
 const products = data?.productSearch?.items?.map((item) => item.productView) ?? [];
 ```
 
-The trade-off is that you own the raw response shape: results come back nested under `items[].productView`, with prices split across `SimpleProductView` and `ComplexProductView`. Drop to this level only when a drop-in API doesn't cover your case.
+The trade-off is that you own the raw response shape: results come back nested under `items[].productView`, with prices split across `SimpleProductView` and `ComplexProductView`.
+
+<Aside type="note" title="When composition isn't enough">
+If your own query still can't reach the data, the field lives past what this page's pattern covers:
+
+- The drop-in has the data but its payload omits the field — [extend the data payload](/dropins/all/extending/#extend-the-data-payload-for-the-drop-in).
+- The field isn't in the schema at all — extend the schema with <Link href="https://developer.adobe.com/commerce/extensibility/" text="App Builder" />.
+- The feature needs its own persistent state or data model — it has outgrown composition, so [extend or create a drop-in](/dropins/all/extend-or-create/).
+</Aside>
 
 </Option>
 <Option>
@@ -264,23 +272,6 @@ Choose your own event name for a block-to-block signal that no drop-in emits yet
 
 </Option>
 </Options>
-
-## Check what your feature needs
-
-The rows below run from least work to most, so take the first that matches your case.
-
-<TableWrapper>
-
-| If this is true | Do this |
-| --- | --- |
-| **A container already renders it** | Use it as-is: [Connect a drop-in](/dropins/all/quick-start/) |
-| **An API has the data**, no container fits | Call the API function: [Get data](#get-data) above |
-| **The field's in the schema**, no API exposes it | Write your own query: [Get data](#get-data) above |
-| **A payload is missing a field** | [Extend the data payload](/dropins/all/extending/#extend-the-data-payload-for-the-drop-in) |
-| **The field isn't in the schema** | Extend the schema with <Link href="https://developer.adobe.com/commerce/extensibility/" text="App Builder" /> |
-| **The feature needs its own state or model** | [Extend or create a drop-in](/dropins/all/extend-or-create/) |
-
-</TableWrapper>
 
 ## Walkthrough: Product comparison
 
