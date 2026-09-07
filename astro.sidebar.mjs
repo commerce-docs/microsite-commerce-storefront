@@ -65,7 +65,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Storefront Boilerplate',
+          label: 'Commerce Boilerplate',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
@@ -75,7 +75,8 @@ export function generateSidebar() {
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
             { label: 'Build custom features', link: '/blocks/build-custom-features/' },
             { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -84,9 +85,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Choose a Drop-in Approach', link: '/dropins/all/extend-or-create/' },
-            { label: 'Extend a Drop-in', link: '/dropins/all/extending/' },
-            { label: 'Create a Drop-in', link: '/dropins/all/creating/' },
+            { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
             { label: 'Styling', link: '/dropins/all/styling/' },
@@ -99,6 +98,8 @@ export function generateSidebar() {
             { label: 'Events', link: '/dropins/all/events/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
+            { label: 'Extending', link: '/dropins/all/extending/' },
+            { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
         // ---------- HOW-TOS ----------
