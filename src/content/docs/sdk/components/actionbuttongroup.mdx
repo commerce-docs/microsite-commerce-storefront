@@ -1,11 +1,55 @@
 ---
 title: ActionButtonGroup
-description: Use Action Button Groups to organize related actions together.
-tableOfContents: false
-iframe:
-    src: "components-actionbuttongroup--overview"
+description: Group related ActionButtons into a single control where a shopper selects one option, with optional dividers and variants.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `ActionButtonGroup` to group related actions into a single control where a shopper selects one option at a time. Pass `ActionButton` elements as children, each with a `value`, and the group tracks which one is active.
+
+## Import
+
+```js
+import { ActionButtonGroup } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['variant', "'primary' | 'secondary'", 'No', 'Change the group style. Defaults to primary.'],
+    ['activeOption', 'string', 'No', 'The value of the option that starts selected.'],
+    ['disabled', 'boolean', 'No', 'Disable the whole group. Defaults to false.'],
+    ['dividers', 'boolean', 'No', 'Show dividers between options. Defaults to true.'],
+    ['children', 'VNode<ActionButtonProps>[] | VNode<ActionButtonProps>', 'Yes', 'The ActionButton options in the group, each with a value.'],
+    ['handleSelect', '(value: string) => void', 'No', 'Callback for when an option is selected.'],
+  ]}
+/>
+
+`ActionButtonGroup` also accepts standard `<div>` HTML attributes (for example, `className` and `aria-label`).
+
+## Example
+
+Render a group of two options and handle the selection.
+
+```js
+import { ActionButtonGroup, ActionButton, provider as UI } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+await UI.render(ActionButtonGroup, {
+  variant: 'primary',
+  activeOption: 'grid',
+  handleSelect: (value) => yourApplyLayout(value),
+  children: [
+    h(ActionButton, { key: 'grid', value: 'grid' }, 'Grid'),
+    h(ActionButton, { key: 'list', value: 'list' }, 'List'),
+  ],
+})(document.querySelector('.action-button-group'));
+```
+
+## Related
+
+- [ActionButton](/sdk/components/actionbutton/) — the option elements you pass as children.
+- [Button](/sdk/components/button/) — for standalone primary and secondary actions.

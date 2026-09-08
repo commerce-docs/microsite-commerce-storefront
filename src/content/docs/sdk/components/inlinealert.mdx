@@ -1,11 +1,57 @@
 ---
 title: Inline Alert
-description: Use Inline Alerts to display important messages and notifications.
-tableOfContents: false
-iframe:
-    src: "components-inlinealert--overview"
+description: Display an inline message or warning with a heading, optional description, actions, and a dismiss button.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `InLineAlert` to display a message or warning to the shopper, with a heading, an optional description, action buttons, and an optional dismiss button. The `type` prop sets the alert's semantics and border color.
+
+## Import
+
+```js
+import { InLineAlert } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['heading', 'string', 'Yes', 'The alert heading message.'],
+    ['variant', "'primary' | 'secondary'", 'No', 'Change the appearance of the alert. The secondary variant disables the border and adds a background. Defaults to primary.'],
+    ['description', 'string', 'No', 'The alert description text.'],
+    ['type', "'error' | 'warning' | 'success'", 'No', 'The alert type, which determines the border color and accessibility role. Defaults to warning.'],
+    ['icon', 'VNode<HTMLAttributes<SVGSVGElement>>', 'No', 'An Icon component to display next to the heading.'],
+    ['additionalActions', "Array<{ label: string; onClick: (event: Event) => void; 'aria-label'?: string }>", 'No', "One or more action buttons. Each action needs a label and onClick, and may include an aria-label to give the button a unique accessible name (falls back to label when omitted)."],
+    ['onDismiss', '(event: Event) => void', 'No', 'When set, renders a dismiss button and calls this function when the shopper clicks it.'],
+    ['itemList', 'VNode', 'No', 'A list of items to display inside the alert.'],
+    ['actionButtonPosition', "'top' | 'bottom'", 'No', 'Position of the action buttons. Defaults to bottom.'],
+  ]}
+/>
+
+`InLineAlert` also accepts standard HTML attributes (for example, `onClick`, `className`), except `icon`.
+
+## Example
+
+Render a success alert with a description, a single action, and a dismiss button.
+
+```js
+import { InLineAlert, provider as UI } from '@dropins/tools/components.js';
+
+await UI.render(InLineAlert, {
+  heading: 'Item added to your cart',
+  description: 'Check out when you are ready.',
+  type: 'success',
+  additionalActions: [
+    { label: 'View cart', onClick: () => yourGoToCart() },
+  ],
+  onDismiss: () => yourHideAlert(),
+})(document.querySelector('.inline-alert'));
+```
+
+## Related
+
+- [Icon](/sdk/components/icon/) — pass an `Icon` as the `icon` prop.
+- [Button](/sdk/components/button/) — the component used to render each action.

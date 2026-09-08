@@ -1,11 +1,55 @@
 ---
 title: LiveRegion
-description: Use LiveRegion to announce dynamic content changes to screen readers without moving focus.
-tableOfContents: false
-iframe:
-  src: "components-liveregion--overview"
+description: Announce dynamic content changes to screen readers without moving focus, using an always-mounted ARIA live region.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `LiveRegion` to announce dynamic content changes to screen readers without moving focus. It renders a visually hidden, always-mounted element that uses `aria-live` and `aria-atomic` to announce updates. Pair it with loading indicators like [Skeleton](/sdk/components/skeleton/) or [ProgressSpinner](/sdk/components/progressspinner/), or use it whenever content changes without a focus move, to satisfy WCAG 4.1.3 (Status Messages).
+
+<Aside type="caution">
+Keep `LiveRegion` mounted at all times and change only its `message`. Assistive technology announces an update only when the content of an already-mounted region changes, so conditionally rendering the component prevents announcements.
+</Aside>
+
+## Import
+
+```js
+import { LiveRegion } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['message', 'string', 'No', 'The message announced to screen readers. Pass an empty string to clear a previous announcement without unmounting the element.'],
+    ['politeness', "'polite' | 'assertive'", 'No', 'Announcement urgency. "polite" waits for a pause in screen reader output; "assertive" interrupts. Defaults to polite.'],
+  ]}
+/>
+
+`LiveRegion` also accepts standard HTML attributes (for example, `className`).
+
+## Example
+
+```js
+import { LiveRegion, provider as UI } from '@dropins/tools/components.js';
+
+// Render once and keep it mounted for the life of the page
+const liveRegion = await UI.render(LiveRegion, {
+  message: '',
+  politeness: 'polite',
+})(document.querySelector('.live-region'));
+
+// Announce a change by updating only the message
+liveRegion.setProps((prev) => ({ ...prev, message: 'Loading order summary' }));
+
+// Clear the announcement without unmounting
+liveRegion.setProps((prev) => ({ ...prev, message: '' }));
+```
+
+## Related
+
+- [ProgressSpinner](/sdk/components/progressspinner/) — pair with a live region to announce loading state.
+- [Skeleton](/sdk/components/skeleton/) — announce when skeleton content finishes loading.

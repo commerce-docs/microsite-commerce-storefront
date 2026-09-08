@@ -1,11 +1,57 @@
 ---
 title: Table
-description: Use the Table component to render data in a structured, sortable table.
-tableOfContents: false
-iframe:
-  src: "components-table--overview"
+description: Render structured data in an accessible, optionally sortable table with a responsive stacked layout and loading skeletons.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Table` to render data in rows and columns. It supports column sorting, a responsive stacked layout for narrow screens, a caption for screen readers, and loading skeletons.
+
+## Import
+
+```js
+import { Table } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['columns', 'Column[]', 'Yes', 'Column definitions. Each column has a `key` and a `label`.'],
+    ['rowData', 'RowData[]', 'Yes', 'Row objects whose keys match the column keys; the values are the cell content.'],
+    ['mobileLayout', "'stacked' | 'none'", 'No', 'Responsive behavior. When stacked, cells stack vertically once the container is 600px or narrower.'],
+    ['caption', 'string', 'No', 'Caption shown above the table and announced by screen readers.'],
+    ['expandedRows', 'Set<number>', 'No', 'Indexes of the rows that are expanded.'],
+    ['loading', 'boolean', 'No', 'Show loading skeleton rows instead of data.'],
+    ['skeletonRowCount', 'number', 'No', 'Number of skeleton rows to show while loading.'],
+    ['onSortChange', '(columnKey: string, direction: Sortable) => void', 'No', 'Called when the sort column or direction changes.'],
+  ]}
+/>
+
+`Table` also accepts standard HTML table attributes (for example, `className`), except `loading`.
+
+## Example
+
+```js
+import { Table, provider as UI } from '@dropins/tools/components.js';
+
+await UI.render(Table, {
+  caption: 'Customers',
+  columns: [
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'age', label: 'Age' },
+  ],
+  rowData: [
+    { name: 'John', email: 'john@example.com', age: 20 },
+    { name: 'Jane', email: 'jane@example.com', age: 21 },
+  ],
+})(document.querySelector('.customers-table'));
+```
+
+## Related
+
+- [Skeleton](/sdk/components/skeleton/) — the loading placeholder shown while data loads.
+- [ActionButton](/sdk/components/actionbutton/) — commonly rendered in an actions column.

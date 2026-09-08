@@ -1,11 +1,62 @@
 ---
 title: Image Swatch
-description: Use Image Swatches to display and select image-based options.
-tableOfContents: false
-iframe:
-    src: "components-imageswatch--overview"
+description: Use ImageSwatch to display and select an image-based product option, with selected, disabled, and out-of-stock states.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `ImageSwatch` to display a selectable image-based option, such as a product's pattern or finish. It renders a radio input by default, or a checkbox when you set `multi`.
+
+## Import
+
+```js
+import { ImageSwatch } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['src', 'string', 'Yes', 'Image path.'],
+    ['label', 'string', 'No', 'Field label.'],
+    ['groupAriaLabel', 'string', 'No', 'Label for the swatch group, used in the accessible label.'],
+    ['name', 'string', 'No', 'Field name, used to map the value in a form.'],
+    ['id', 'string', 'No', 'Field id.'],
+    ['value', 'string', 'No', 'Field value.'],
+    ['alt', 'string', 'No', 'Alt text for the image.'],
+    ['selected', 'boolean', 'No', 'Whether the image swatch is selected. Defaults to false.'],
+    ['disabled', 'boolean', 'No', 'Whether the image swatch is disabled. Defaults to false.'],
+    ['outOfStock', 'boolean', 'No', 'Whether the image swatch is out of stock. Defaults to false.'],
+    ['multi', 'boolean', 'No', 'Whether the swatch allows multiple selection, rendering a checkbox instead of a radio. Defaults to false.'],
+    ['imageNode', 'VNode | ((props: ImageNodeRenderProps) => JSX.Element)', 'No', 'Custom image content to render instead of the default Image, as a node or a render function.'],
+    ['onValue', '(value: any) => void', 'No', 'Function to handle value changes.'],
+    ['onUpdateError', '(error: Error) => void', 'No', 'Function to handle errors thrown by onValue.'],
+  ]}
+/>
+
+`ImageSwatch` also accepts standard input HTML attributes (for example, `onChange` and `className`), except `label`. When you provide `imageNode` as a render function, it receives the resolved image props plus an `imageSwatchContext` object typed by the exported `ImageNodeRenderProps` interface.
+
+## Example
+
+Render a selectable image swatch and handle selection with `onValue`:
+
+```js
+import { ImageSwatch, provider as UI } from '@dropins/tools/components.js';
+
+await UI.render(ImageSwatch, {
+  name: 'pattern',
+  label: 'Striped',
+  groupAriaLabel: 'Pattern',
+  value: 'striped',
+  src: '/media/swatches/striped.jpg',
+  alt: 'Striped pattern',
+  onValue: (value) => yourSelectPattern(value),
+})(document.querySelector('.imageswatch'));
+```
+
+## Related
+
+- [Color Swatch](/sdk/components/colorswatch/) — the same selection pattern for color options.
+- [Image](/sdk/components/image/) — the component that renders the swatch thumbnail.

@@ -1,11 +1,57 @@
 ---
 title: Pagination
-description: Use Pagination to display a list of items in a paginated manner.
-tableOfContents: false
-iframe:
-    src: "components-pagination--overview"
+description: Split a large set of items into pages and let shoppers navigate with previous, next, and numbered controls, with optional anchor links for SEO.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import OptionsTable from '@components/OptionsTable.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Pagination` to divide a large set of items into pages and let shoppers move between them with previous, next, and numbered controls. Provide `routePage` to render the controls as links instead of buttons.
+
+## Import
+
+```js
+import { Pagination } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<OptionsTable
+compact
+  options={[
+    ['Prop', 'Type', 'Req?', 'Description'],
+    ['currentPage', 'number', 'No', 'The current active page. Defaults to 1.'],
+    ['totalPages', 'number', 'No', 'The total number of pages. Defaults to 10.'],
+    ['onChange', '(currentPage: number, e?: Event) => void', 'No', 'Called with the resulting page number when the page changes.'],
+    ['routePage', '(page: number) => string', 'No', 'Generates an href for each page. When provided, the controls render as anchor tags instead of buttons, for proper SEO and link behavior.'],
+    ['className', 'string', 'No', 'Custom CSS class name.'],
+  ]}
+/>
+
+## Example
+
+Render a paginated control and update the active page on change.
+
+```js
+import { Pagination, provider as UI } from '@dropins/tools/components.js';
+
+await UI.render(Pagination, {
+  totalPages: 20,
+  currentPage: 1,
+  onChange: (page) => yourGoToPage(page),
+})(document.querySelector('.pagination'));
+```
+
+To render the controls as links, add `routePage`:
+
+```js
+await UI.render(Pagination, {
+  totalPages: 10,
+  currentPage: 1,
+  routePage: (page) => `?page=${page}`,
+})(document.querySelector('.pagination'));
+```
+
+## Related
+
+- [ContentGrid](/sdk/components/contentgrid/) — lay out the items you paginate.
+- [Design tokens](/sdk/design/) — the colors, spacing, and typography the controls use.
