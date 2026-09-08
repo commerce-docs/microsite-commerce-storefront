@@ -1,0 +1,177 @@
+---
+title: Render an additional wishlist
+description: Render a second, purpose-built wishlist (such as a Save for Later list) alongside the shopper's main wishlist without the two colliding, using wishlistId and event scope.
+---
+
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+The Wishlist drop-in renders the shopper's active wishlist out of the box. Sometimes you want a **second, purpose-built list** somewhere else on the storefront: a "Save for Later" list in the cart, a "Buy again" list on an account page, or a curated list on a landing page. This tutorial shows the general pattern for rendering an additional wishlist beside the main one, and uses **Save for Later in the cart** as the worked example.
+
+The two mechanics that make this possible are:
+
+- **`wishlistId`** identifies *which* list a container renders and mutates, instead of the active one.
+- **`scope`** gives that container its own event channel, so its data never overwrites the active wishlist's.
+
+<Aside type="note">
+The active wishlist lives on a single shared channel. Without a `scope`, a second container would emit and listen on that same channel and the two lists would overwrite each other. Always pair a specific `wishlistId` with a `scope`.
+</Aside>
+
+## Before you begin
+
+You should be familiar with:
+
+- [Wishlist functions](/dropins/wishlist/functions/) — `getWishlists`, `createWishlist`, `getWishlistById`, `addProductsToWishlist`, `mergeWishlists`
+- [Wishlist events](/dropins/wishlist/events/#wishlistdata-emits-and-listens) — the scoped `wishlist/data` event
+- [Wishlist container](/dropins/wishlist/containers/wishlist/) — the `wishlistId` and `scope` props
+
+This tutorial shows the general approach. The snippets are a reference, not a drop-in-complete integration.
+
+## The pattern
+
+<Tasks>
+<Task>
+### Choose a stable scope and resolve the list ID
+
+Pick a constant `scope` string for your list. It is the event channel every call for this list shares, so keep it stable and unique on the page.
+
+Resolving the `wishlistId` differs by authentication state, so wrap it in a helper. Authenticated shoppers have server lists you look up (or create) by name. Guests have no server lists, so you use a reserved local key that the drop-in persists in browser storage.
+
+```js
+import * as WishlistApi from '@dropins/storefront-wishlist/api.js';
+
+const LIST_NAME = 'Save for Later'; // used to find/create the authenticated list
+const GUEST_KEY = 'save-for-later'; // reserved local key for guests
+const SCOPE = 'save-for-later';     // this list's event channel
+
+async function resolveListId() {
+  const lists = await WishlistApi.getWishlists();
+  // getWishlists() returns an array for authenticated shoppers and a single
+  // object for guests.
+  if (!Array.isArray(lists)) return GUEST_KEY;
+
+  let list = lists.find((w) => w.name === LIST_NAME);
+  if (!list) {
+    list = await WishlistApi.createWishlist(LIST_NAME);
+  }
+  return list?.id ?? null;
+}
+```
+
+<Aside type="note">
+Using the same value as both the guest key and part of your scope keeps the rest of the code auth-agnostic: you pass one `listId` through every call regardless of who is signed in.
+</Aside>
+</Task>
+
+<Task>
+### Render the container with `wishlistId` and `scope`
+
+Render the `Wishlist` container into your own element, passing the resolved ID and the scope. Everything else (move-to-cart, routing, product data) is the same as the main wishlist.
+
+```js
+import { render as wishlistRender } from '@dropins/storefront-wishlist/render.js';
+import Wishlist from '@dropins/storefront-wishlist/containers/Wishlist.js';
+
+function renderList(listId, $container) {
+  wishlistRender.render(Wishlist, {
+    wishlistId: listId,
+    scope: SCOPE,
+    moveProdToCart: Cart.addProductsToCart,
+    routeProdDetailPage: (product) => getProductLink(product.urlKey, product.sku),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct,
+  })($container);
+}
+```
+
+Because the container is given a `wishlistId`, it loads and mutates only that list and never touches the active-list state.
+</Task>
+
+<Task>
+### Drive UI off the scoped `wishlist/data` event
+
+Subscribe to `wishlist/data` on your scope to keep a count or heading in sync. With `{ eager: true }`, the handler also runs with the current value as soon as it subscribes. Because it is scoped, it only ever receives this list's data.
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on(
+  'wishlist/data',
+  (list) => setCount(list?.items_count ?? 0),
+  { eager: true, scope: SCOPE },
+);
+```
+</Task>
+
+<Task>
+### Add items to the specific list
+
+Pass the resolved `wishlistId` to `addProductsToWishlist` to target this list instead of the active one. In the Save for Later example, you add the cart line to the list and then remove it from the cart.
+
+```js
+await WishlistApi.addProductsToWishlist(
+  [{ sku: item.sku, quantity: item.quantity || 1 }],
+  listId,
+);
+await Cart.updateProductsFromCart([{ uid: item.uid, quantity: 0 }]);
+```
+
+<Aside type="note">
+A targeted add to an authenticated list does not emit on the active channel, so no `wishlist/alert` toast fires automatically. Re-render the section (or show your own confirmation) after the add. For a guest list, pass `{ scope }` as the third argument if you want the updated list broadcast on your channel.
+</Aside>
+</Task>
+
+<Task>
+### Merge the guest list on login
+
+Guests build their list in browser storage. When a guest signs in, fold that local list into the server list so nothing is lost. Resolve the server list, fetch it on your scope, then hand it to `mergeWishlists` with the guest key. The drop-in owns reading the list, deduplicating items by SKU and selected options, and clearing it afterward.
+
+```js
+async function mergeGuestListIntoServer(serverListId) {
+  if (!serverListId || serverListId === GUEST_KEY) return;
+  const serverList = await WishlistApi.getWishlistById(serverListId, 200, 1, {
+    scope: SCOPE,
+  });
+  if (serverList) {
+    await WishlistApi.mergeWishlists(serverList, GUEST_KEY);
+  }
+}
+
+events.on('authenticated', async (authenticated) => {
+  if (!authenticated) return;
+  const serverListId = await resolveListId();
+  await mergeGuestListIntoServer(serverListId);
+  renderList(serverListId, $container);
+});
+```
+</Task>
+
+<Task>
+### Set a guest expiry (optional)
+
+The default guest wishlist never expires, but a named guest list can. Configure a time to live, in days, in your wishlist initializer, keyed by the same list key you used above.
+
+```js title="scripts/initializers/wishlist.js"
+await initializers.mountImmediately(initialize, {
+  isGuestWishlistEnabled: true,
+  guestWishlistTtl: {
+    'save-for-later': 14, // the guest list expires 14 days after its last save
+  },
+});
+```
+
+See [Guest list expiry](/dropins/wishlist/initialization/#guest-list-expiry) for details.
+</Task>
+</Tasks>
+
+## Recap
+
+To render an additional wishlist beside the active one:
+
+- Resolve a `wishlistId` (server list for authenticated shoppers, reserved local key for guests) and pick a stable `scope`.
+- Render the `Wishlist` container with both, and drive your UI from the scoped `wishlist/data` event.
+- Target the list explicitly in `addProductsToWishlist` / `removeProductsFromWishlist`, and merge the guest list into the server list on login with `mergeWishlists`.
+
+The same pattern works for any secondary list, not just Save for Later. Swap the list name, key, and scope for your use case.

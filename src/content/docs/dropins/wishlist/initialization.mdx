@@ -12,7 +12,7 @@ import { Aside } from '@astrojs/starlight/components';
 The **Wishlist initializer** configures wishlist functionality including saving items, sharing lists, and managing multiple wishlists. Use initialization to customize wishlist behavior and data models.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.4.0</strong>
+<strong>Version: 3.5.0</strong>
 </div>
 
 
@@ -27,8 +27,9 @@ The following table describes the configuration options available for the **Wish
 |---|---|---|---|
 | `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Provides language definitions for internationalization (i18n). Overrides dictionary keys for localization or branding. |
 | `isGuestWishlistEnabled` | `boolean` | No | Allows guest users to create and manage wishlists without authentication when set to true. Stores guest wishlists in browser storage. |
-| `storeCode` | `string` | No | Scopes wishlist cookies and browser storage per store view. Uses unscoped browser keys when omitted or set to `default`, so store views served from the same host and browser origin share client-side data. See [Multistore support](#multistore-support). |
-| `pageSize` | `number` | No | Sets how many wishlist items are fetched and displayed per page. Defaults to `9`. Pagination controls render automatically when the total number of pages exceeds one. |
+| `storeCode` | `string` | No | Scopes wishlist data (cookies and browser storage) per store. Shares wishlist data across all stores when omitted or set to `default`. |
+| `pageSize` | `number` | No | Number of items per page for wishlist containers. When omitted, the drop-in uses its built-in default. |
+| `guestWishlistTtl` | `Record<string, number>` | No | Per-list expiry, in days, for named guest lists. Keys are list keys (such as `save-for-later`). Each value is the number of days that list persists in browser storage. See [Guest list expiry](#guest-list-expiry). |
 
 </TableWrapper>
 
@@ -144,7 +145,25 @@ await initializers.mountImmediately(initialize, {
 Refer to the [Configuration options](#configuration-options) table for detailed descriptions of each option.
 </Aside>
 
+## Guest list expiry
 
+When you render an additional guest list beyond the default wishlist (for example, a "Save for Later" list), you can set how long that list persists in the guest's browser. Use `guestWishlistTtl` to map each list key to a number of days:
+
+```javascript title="scripts/initializers/wishlist.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-wishlist';
+
+await initializers.mountImmediately(initialize, {
+  isGuestWishlistEnabled: true,
+  guestWishlistTtl: {
+    'save-for-later': 14, // The guest "Save for Later" list expires after 14 days
+  },
+});
+```
+
+<Aside type="note">
+Expiry is opt-in and applies only to named guest lists. A list with a configured TTL is stamped with a save time and is discarded lazily the next time it is read after the TTL elapses.
+</Aside>
 
 ## Configuration types
 
