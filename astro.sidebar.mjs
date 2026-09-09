@@ -145,6 +145,35 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Production',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/setup/launch/' },
+            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
+            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
+            { label: 'Performance best practices', link: '/get-started/performance/' },
+            {
+              label: 'SEO',
+              collapsed: true,
+              items: [
+                { label: 'SEO overview', link: '/setup/seo/' },
+                { label: 'SEO indexing', link: '/setup/seo/indexing/' },
+                { label: 'SEO metadata', link: '/setup/seo/metadata/' },
+                { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
+                { label: 'Platform limits', link: '/setup/seo/platform-limits/' },
+                { label: 'SSR and crawlability', link: '/setup/seo/ssr-and-crawlability/' },
+                { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
+              ],
+            },
+            {
+              label: 'Troubleshooting',
+              collapsed: true,
+              autogenerate: { directory: '/troubleshooting/' },
+            },
+          ],
+        },
+        {
           label: 'Tutorials',
           collapsed: true,
           items: [
@@ -173,35 +202,6 @@ export function generateSidebar() {
             { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
             { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
             { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
-          ],
-        },
-        {
-          label: 'Production',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/setup/launch/' },
-            { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
-            { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-            { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-            { label: 'Performance best practices', link: '/get-started/performance/' },
-            {
-              label: 'SEO',
-              collapsed: true,
-              items: [
-                { label: 'SEO overview', link: '/setup/seo/' },
-                { label: 'SEO indexing', link: '/setup/seo/indexing/' },
-                { label: 'SEO metadata', link: '/setup/seo/metadata/' },
-                { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
-                { label: 'Platform limits', link: '/setup/seo/platform-limits/' },
-                { label: 'SSR and crawlability', link: '/setup/seo/ssr-and-crawlability/' },
-                { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
-              ],
-            },
-            {
-              label: 'Troubleshooting',
-              collapsed: true,
-              autogenerate: { directory: '/troubleshooting/' },
-            },
           ],
         },
       ],
