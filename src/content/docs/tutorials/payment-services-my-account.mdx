@@ -1,14 +1,27 @@
 ---
-title: Stored payment methods
+slug: dropins/user-account/tutorials/payment-services-my-account
+title: Add stored payment methods to My Account
 description: Surface Adobe Payment Services vaulted cards on My Account by adding a block that renders the User Account PaymentMethods container.
 ---
 
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-Shoppers who save a card with Payment Services during checkout can see and remove those vaulted methods on a **My Account** page. Removal uses a confirmation step before the token is deleted—see [Remove confirmation](/dropins/user-account/containers/payment-methods/#remove-confirmation). The Commerce boilerplate does **not** include a payment-methods block out of the box. This tutorial shows how to add one yourself (for example a `commerce-payment-methods` block) that renders the User Account [PaymentMethods](/dropins/user-account/containers/payment-methods/) container. That container loads tokens with the same GraphQL `customerPaymentTokens` query used for vault data elsewhere. What was vaulted through Payment Services appears here when the shopper is signed in.
+Shoppers who save a card with Payment Services during checkout can view and remove those vaulted methods on a **My Account** page. The Commerce boilerplate doesn't include this by default, so this tutorial shows you how to add it.
 
-This page is Payment Services–specific: it assumes vaulting is enabled for your Payment Services integration and focuses on wiring the account experience with a small custom block.
+## What you'll edit or create
+
+- Create the `commerce-payment-methods` block
+- Edit the `PaymentMethods` container
+- Create the block config — `blocks/your-block-name/_your-block-name.json`
+
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- A `commerce-payment-methods` block that redirects guests to login and renders the User Account `PaymentMethods` container for signed-in shoppers.
+- A `with-header` and `minified-view` block configuration that controls the container's title and compact layout.
+- An optional `filterPaymentMethodCodes` prop that limits the list to Payment Services–vaulted tokens.
 
 ## Prerequisites
 
@@ -87,13 +100,14 @@ Adjust the prefix list if your Admin or integration uses a different payment met
 
 - By default, the container calls `getCustomerPaymentTokens`, which executes the `customerPaymentTokens` query and transforms the returned vault details (JSON) into rows for the PaymentCard component. The details include Payment Services fields like brand and last four digits.
 - If another part of the page already has token rows on the client, you can emit **`account/customerPaymentTokens`** on the event bus so the container **shows that list** without an extra **`getCustomerPaymentTokens`** round trip (see [Events](/dropins/user-account/events/#accountcustomerpaymenttokens-listens) and [TypeScript declaration](/dropins/user-account/events/#typescript-declaration)). That is optional injection only; **Remove** still calls **`deletePaymentToken`** on the GraphQL API, not the bus. Payment Services + GraphQL alone is the usual path for My Account.
+- Removal uses a confirmation step before the token is deleted. See [Remove confirmation](/dropins/user-account/containers/payment-methods/#remove-confirmation) for how that flow works.
 
 ## Related documentation
 
 - [PaymentMethods container](/dropins/user-account/containers/payment-methods/) — props, GraphQL vs bus, and errors.
 - [User Account functions](/dropins/user-account/functions/) — **`getCustomerPaymentTokens`**, **`deletePaymentToken`**.
 - [Payment Services installation](/dropins/payment-services/installation/) and [initialization](/dropins/payment-services/initialization/).
-- Checkout: [Add payment method](/dropins/checkout/tutorials/add-payment-method/) when customizing how cards are vaulted at purchase time.
+- Checkout: [Add a custom payment method](/dropins/checkout/tutorials/add-payment-method/) when customizing how cards are vaulted at purchase time.
 
 <Aside type="caution" title="PCI and SDK UI">
 Payment card entry at checkout remains within the Payment Services drop-in/SDK to maintain PCI compliance. My Account only lists and removes existing saved tokens—it does not replace the hosted card form used during checkout.

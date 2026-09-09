@@ -1,27 +1,32 @@
 ---
+slug: dropins/checkout/tutorials/multi-step
 title: Implement multi-step checkout
 description: This tutorial provides a customizable example to implement a comprehensive multi-step checkout in your Adobe Commerce storefront.
 ---
-import Link from '@components/Link.astro';
-
-
 import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
 import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-This tutorial provides a customizable example to implement a comprehensive multi-step checkout in your Adobe Commerce storefront that supports **all user scenarios**: guest users, logged-in customers, and virtual products.
+The Commerce boilerplate ships a single-page checkout, but some storefronts need a step-by-step flow instead, with separate steps for shipping, payment, and billing. This tutorial shows you how to build a multi-step checkout that supports guest and logged-in shoppers, as well as virtual-only carts.
 
-## Overview
+## What you'll edit or create
 
-This implementation provides a **complete multi-step checkout** for the Adobe Commerce boilerplate that handles:
+- Create the block entry point — `blocks/commerce-checkout-multi-step/commerce-checkout-multi-step.js`
+- Create the step coordinator — `blocks/commerce-checkout-multi-step/steps.js`
+- Create the per-step modules — `steps/`
+- Create the fragment builder — `blocks/commerce-checkout-multi-step/fragments.js`
+- Edit the `LoginForm`, `ShippingMethods`, `PaymentMethods` containers
 
-- **Guest users** - Email capture and address entry
-- **Logged-in customers** - Saved address selection and account integration  
-- **Virtual products** - Automatic shipping step bypass
-- **Mixed carts** - Physical + virtual product combinations
-- **Modular architecture** - Event-driven step coordination
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- A `commerce-checkout-multi-step.js` block entry point that replaces the boilerplate's single-page checkout with a step-by-step flow, coordinated by `steps.js`.
+- Individual step modules in `steps/shipping.js`, `steps/shipping-methods.js`, `steps/payment-methods.js`, and `steps/billing-address.js`, each rendering its own container and validating before advancing.
+- The `LoginForm`, `ShippingMethods`, `PaymentMethods`, and `BillToShippingAddress` containers rendered with `autoSync` set to `false`, so each step saves to the cart only when the shopper continues.
+- Virtual-only carts that skip the shipping step automatically.
 
 ## Implementation Features
 
@@ -103,7 +108,7 @@ const continueFromStep = async () => {
   
   // Manual API call with error handling
   try {
-    await checkoutApi.setShippingMethodsOnCart([{
+    await checkoutApi.setShippingMethods([{
       carrier_code: selectedMethod.carrier.code,
       method_code: selectedMethod.code,
     }]);
@@ -138,7 +143,7 @@ Step modules rely on the checkout drop-in's API functions for cart management. T
 |----------|---------|--------------|
 | `setGuestEmailOnCart()` | Set guest user email | Shipping (email capture) |
 | `setShippingAddress()` | Set shipping address on cart | Shipping (address collection) |
-| `setShippingMethodsOnCart()` | Set shipping methods on cart | Shipping Methods |
+| `setShippingMethods()` | Set shipping methods on cart | Shipping Methods |
 | `setPaymentMethod()` | Set payment method on cart | Payment Methods |
 | `setBillingAddress()` | Set billing address on cart | Payment Methods, Billing Address |
 | `isEmailAvailable()` | Check email availability | Order Header (account creation) |
@@ -621,7 +626,7 @@ Create individual step modules that implement the universal step interface. Each
 
 **Implementation reference:**
 
-For complete implementations of these step modules, see the sample files in the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/blocks/commerce-checkout-multi-step/steps"} text={"demo repository"} />. Each file demonstrates the full step interface implementation with proper error handling, user flow logic, and integration with containers and APIs.
+Implement each step module following the same interface pattern described in the [Step Modules architecture section](#step-modules) above, with proper error handling, user flow logic, and integration with containers and APIs.
 </Task>
 
 <Task>
@@ -745,17 +750,13 @@ Create the CSS that controls step visibility and progression. Add this to your `
    }
    ```
 
-2. **Step progression styling** - For complete visual styling (borders, colors, animations, etc.), see <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/blocks/commerce-checkout-multi-step/commerce-checkout-multi-step.css"} text={"commerce-checkout-multi-step.css"} /> in the demo repository.
+2. **Step progression styling** - Add complete visual styling (borders, colors, animations, and so on) to `commerce-checkout-multi-step.css`, following the visibility rules above as the foundation.
 </Steps>
 
 These CSS rules create the core multi-step behavior: **content shows when active**, **summaries show when completed**, and **step progression controls** guide users through the checkout flow.
 </Task>
 
 </Tasks>
-
-## Example
-
-See <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/demos/blocks/commerce-checkout-multi-step"} text={"blocks/commerce-checkout-multi-step"} /> in the `demos` branch of the boilerplate repository for complete JS and CSS code for the multi-step checkout flow.
 
 ## Related
 

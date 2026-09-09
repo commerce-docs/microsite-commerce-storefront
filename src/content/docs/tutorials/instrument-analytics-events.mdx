@@ -1,6 +1,7 @@
 ---
+slug: how-tos/instrument-analytics-events
 title: Instrument analytics events
-description: Learn how to publish Adobe Client Data Layer (ACDL) analytics events when your storefront bypasses or replaces the AEM Commerce drop-ins.
+description: Learn how to publish Adobe Client Data Layer (ACDL) analytics events when your storefront bypasses or replaces the Adobe Commerce drop-ins.
 sidebar:
   label: Instrument analytics events
 prerequisites:
@@ -15,7 +16,14 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Link from '@components/Link.astro';
 
-If your storefront doesn't use the AEM Commerce drop-ins — or replaces one with a custom block — you lose the automatic [Adobe Client Data Layer (ACDL)](/setup/analytics/instrumentation/#adobe-client-data-layer-acdl) instrumentation that the drop-ins provide. This tutorial shows you how to publish some of those ACDL events yourself with a small helper script, so your storefront keeps sending analytics data to Commerce tooling.
+If your storefront doesn't use the Adobe Commerce drop-ins, or replaces one with a custom block, you lose the automatic [Adobe Client Data Layer (ACDL)](/setup/analytics/instrumentation/#adobe-client-data-layer-acdl) instrumentation that the drop-ins provide. This tutorial shows you how to publish some of those ACDL events yourself with a small helper script, so your storefront keeps sending analytics data to Commerce tooling.
+
+## What you'll edit or create
+
+- Create the ACDL helper module — `scripts/acdlHelper.js`
+- Create the `getAdobeDataLayer()` function
+- Create the `setContext()` function
+- Create the `pushEvent()` function
 
 <Aside type="tip">
 For the full event lifecycle and the list of events drop-ins emit, see the [Analytics events reference](/dropins/all/analytics-events/).
@@ -23,10 +31,11 @@ For the full event lifecycle and the list of events drop-ins emit, see the [Anal
 
 ## What you'll build
 
-By the end of this tutorial, you'll have a reusable `scripts/acdlHelper.js` file with the shared primitives for reading and writing to the ACDL. Each focused example below then defines its own event-specific context and publish functions on top of those primitives:
+By the end of this tutorial, you'll have:
 
-- [Instrument analytics product page view event](/how-tos/instrument-product-page-view-event/)
-- [Instrument analytics add to cart event](/how-tos/instrument-add-to-cart-event/)
+- A reusable `scripts/acdlHelper.js` file exporting `getAdobeDataLayer`, `setContext`, and `pushEvent` — the shared primitives every ACDL event needs.
+- A `setContext` function that clears and re-pushes a named context to `window.adobeDataLayer` before each event.
+- A `pushEvent` function that publishes an event to `window.adobeDataLayer`, merged with the current ACDL state.
 
 ## Prerequisites
 
@@ -88,7 +97,7 @@ export function setContext(name, data) {
 
 /**
  * Pushes an event to the Adobe Client Data Layer (ACDL).
- * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L34
+ * Logic based on: https://github.com/adobe/commerce-events/blob/main/packages/storefront-events-sdk/src/Base.ts#L35
  */
 export function pushEvent(event, additionalContext) {
   const adobeDataLayer = getAdobeDataLayer();

@@ -1,5 +1,6 @@
 ---
-title: Add custom product lines
+slug: dropins/cart/tutorials/add-product-lines-to-cart-summary
+title: Add custom product lines to cart summary
 description: Learn how to add custom lines related to products in the cart summary.
 ---
 import Link from '@components/Link.astro';
@@ -12,10 +13,18 @@ import { Tabs, TabItem, Code, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-This tutorial describes how to make the following customizations to the `CartSummaryList` container using the Adobe Commerce Boilerplate:
+## What you'll edit or create
 
-- Add text from a custom product attribute
-- Display promotional information in the footer of each product in the cart
+- Edit the cart block — `blocks/commerce-cart/commerce-cart.js`
+- Edit the `ProductAttributes` slot on the `CartSummaryList` container
+- Edit the `Footer` slot on the `CartSummaryList` container
+
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- A `ProductAttributes` slot added to the `CartSummaryList` container in `blocks/commerce-cart/commerce-cart.js` that shows a custom product attribute, like shipping notes, on cart items that have it.
+- A `Footer` slot in the same container that displays promotional text from a cart price rule beneath qualifying items.
 
 ## Prerequisites
 
@@ -103,6 +112,17 @@ Now we'll add information defined in a custom cart price rule to the footer of t
 
 <Steps>
 
+1. The `Footer` slot only receives the current item in its context — cart-level information like the applied cart price rule's label lives on the cart itself, not on the item. Track the cart's `appliedDiscounts` in a variable your block updates whenever the cart changes:
+
+   ```javascript
+   import { events } from '@dropins/tools/event-bus.js';
+
+   let appliedDiscounts = [];
+   events.on('cart/data', (data) => {
+     appliedDiscounts = data?.appliedDiscounts ?? [];
+   }, { eager: true });
+   ```
+
 1. Add a `Footer` slot beneath the `ProductAttributes` slot.
 
    ```javascript
@@ -117,11 +137,14 @@ Now we'll add information defined in a custom cart price rule to the footer of t
         const wrapper = document.createElement('div');
         ctx.appendChild(wrapper);
 
-        // Append Product Promotions on every update
+        // Append the cart's applied discount labels on every update, for items that qualify
         ctx.onChange((next) => {
         wrapper.innerHTML = '';
 
-          next.item?.discount?.label?.forEach((label) => {
+          const itemQualifies = next.item?.discountPercentage || next.item?.savingsAmount;
+          if (!itemQualifies) return;
+
+          appliedDiscounts.forEach(({ label }) => {
           const discount = document.createElement('div');
           discount.style.color = '#3d3d3d';
           discount.innerText = label;
@@ -131,7 +154,7 @@ Now we'll add information defined in a custom cart price rule to the footer of t
     },
    ```
 
-   This code creates a slot named `Footer`, which displays the promotional information defined in the custom cart price rule. If the conditions set in the cart price rule are met, the slot creates a new `div` element and appends the promotional information to the element. The element is then appended to the `ctx` element, which is the product line in the cart summary.
+   This code creates a slot named `Footer`, which displays the promotional information defined in the custom cart price rule beneath items that received a discount. The `next.item?.discountPercentage` and `next.item?.savingsAmount` checks identify items the discount applied to; the label text itself comes from the cart's `appliedDiscounts`, not from the item.
 
 1. Save the file. Add products that total at least $75 and apply the BOO24 coupon code to the cart. The page displays the rule name beneath each item in the cart.
 

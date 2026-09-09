@@ -1,20 +1,26 @@
 ---
+slug: dropins/cart/tutorials/order-summary-lines
 title: Customize order summary lines
 description: Learn how to customize the lines of the Order Summary of the Cart drop-in component.
 ---
 import Link from '@components/Link.astro';
 import Diagram from '@components/Diagram.astro';
 
-The Cart drop-in allows you to customize the lines of the Order Summary to meet your requirements.
+The Cart drop-in's `OrderSummary` container renders a fixed set of lines by default, such as subtotal, discounts, and tax. This tutorial shows you how to customize those lines: reorder, remove, or add your own, using the `updateLineItems` prop.
 
-You might want to group and sort the order summary lines into sections using the Accordion component from the Storefront SDK (Elsie). See the <Link href="/sdk/components/accordion/" text="Accordion" /> component reference in this documentation.
+## What you'll edit or create
 
-:::note[Note]
-For the full set of UI primitives (including icons), start from the <Link href="/sdk/components/overview/" text="Storefront SDK components overview" /> in this documentation.
-:::
+- Edit the `OrderSummary` container
+- Edit the `updateLineItems` prop
+- Edit the `OrderSummaryLine` container
 
-You can specify the line items shown in the accordion and decide the order in which they are displayed.
-You can also customize the title and content of these order summary lines.
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- Order summary lines customized through the `updateLineItems` prop on the `OrderSummary` container — reordering, removing, or adding lines like the fixed product tax (FPT) example.
+- Subtotal and tax lines grouped into a collapsible section using the Storefront SDK's Accordion component.
+- A new order summary line rendered with the `OrderSummaryLine` container, showing a custom label and price.
 
 ## Customize the lines of the Order Summary to meet your needs
 
@@ -48,8 +54,8 @@ export interface OrderSummaryLineItem {
 }
 ```
 
-There are default order summary lines in the `OrderSummary` component. If no customization is needed, and therefore nothing is passed using the `updateLineItems` attribute, the default order summary lines will be rendered.
-Let's imagine that `lineItems` contains the following lines:
+There are default order summary lines in the `OrderSummary` component (including several not shown here, such as shipping and gift wrapping). If no customization is needed, and therefore nothing is passed using the `updateLineItems` attribute, the default order summary lines will be rendered.
+Let's imagine that `lineItems` contains the following subset of those lines:
 ```typescript
   const lineItems: Array<OrderSummaryLineItem> = [
     {
@@ -59,12 +65,12 @@ Let's imagine that `lineItems` contains the following lines:
     },
     {
       key: 'discountsContent',
-      sortOrder: 300,
+      sortOrder: 600,
       content: discountsContent,
     },
     {
       key: 'taxContent',
-      sortOrder: 400,
+      sortOrder: 800,
       content: taxContent,
     },
   ];
@@ -80,7 +86,7 @@ This `OrderSummaryLine` container it is defined as follows:
 
 ```typescript
 export interface OrderSummaryLineProps extends HTMLAttributes<HTMLDivElement> {
-  label: string;
+  label: VNode | string;
   price: VNode<HTMLAttributes<HTMLSpanElement>>;
   classSuffixes?: Array<string>;
   labelClassSuffix?: string;
@@ -107,7 +113,7 @@ The component ultimately decides how to render the line item based on the `child
 ```typescript
 export interface OrderSummaryLineComponentProps
   extends HTMLAttributes<HTMLDivElement> {
-  label: string;
+  label: VNode | string;
   price: VNode<HTMLAttributes<HTMLSpanElement>>;
   classSuffixes?: Array<string>;
   labelClassSuffix?: string;
@@ -188,6 +194,8 @@ updateLineItems: (lineItems) => {
 
 ### Group items: Group subtotal and tax in an accordion
 
+You can group and sort order summary lines into sections using the Accordion component from the <Link href="/sdk/components/accordion/" text="Storefront SDK (Elsie)" />. For the full set of UI primitives, see the <Link href="/sdk/components/overview/" text="Storefront SDK components overview" />.
+
 The following example groups the subtotal and tax in an accordion:
 
 ```typescript
@@ -256,4 +264,4 @@ updateLineItems: (lineItems) => {
 ## Related
 
 - [OrderSummary container](/dropins/cart/containers/order-summary/) — reference for the summary you customized.
-- [Add custom product lines](/dropins/cart/tutorials/add-product-lines-to-cart-summary/) — a related cart summary customization.
+- [Add custom product lines to cart summary](/dropins/cart/tutorials/add-product-lines-to-cart-summary/) — a related cart summary customization.

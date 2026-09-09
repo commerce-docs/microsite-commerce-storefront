@@ -80,15 +80,6 @@ export function generateSidebar() {
             { label: 'Create commerce blocks', link: '/blocks/create-commerce-blocks/' },
             { label: 'Build custom features', link: '/blocks/build-custom-features/' },
             { label: 'Instrument blocks for Universal Editor', link: '/blocks/universal-editor/' },
-            {
-              label: 'Tutorials',
-              collapsed: true,
-              items: [
-                { label: 'Breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
-                { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
-                { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
-              ],
-            },
           ],
         },
         {
@@ -154,6 +145,37 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Tutorials',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/tutorials/' },
+            { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
+            { label: 'Add custom product lines to cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
+            { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
+            { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
+            { label: 'Enable product variation updates in cart', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
+            { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
+            { label: 'Add a custom payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
+            { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
+            { label: 'Validate a shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
+            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
+            { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+            { label: 'Implement order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
+            { label: 'Add a Notify Me CTA to the PDP', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+            { label: 'Federated search', link: '/how-tos/federated-search/' },
+            { label: 'Search redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
+            { label: 'Add stored payment methods to My Account', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
+            { label: 'Validate a saved address', link: '/dropins/user-account/tutorials/validate-address/' },
+            { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
+            { label: 'Add breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
+            { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+            { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+            { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
+          ],
+        },
+        {
           label: 'Production',
           collapsed: true,
           items: [
@@ -162,15 +184,6 @@ export function generateSidebar() {
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
-            {
-              label: 'Analytics tutorials',
-              collapsed: true,
-              items: [
-                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
-                { label: 'Product page view event', link: '/how-tos/instrument-product-page-view-event/' },
-                { label: 'Add to cart event', link: '/how-tos/instrument-add-to-cart-event/' },
-              ],
-            },
             {
               label: 'SEO',
               collapsed: true,
@@ -184,12 +197,12 @@ export function generateSidebar() {
                 { label: 'AEM Commerce Prerender', link: '/setup/configuration/aem-prerender/' },
               ],
             },
+            {
+              label: 'Troubleshooting',
+              collapsed: true,
+              autogenerate: { directory: '/troubleshooting/' },
+            },
           ],
-        },
-        {
-          label: 'Troubleshooting',
-          collapsed: true,
-          autogenerate: { directory: '/troubleshooting/' },
         },
       ],
     },
@@ -381,18 +394,6 @@ export function generateSidebar() {
                     { label: 'OrderSummaryLine', link: '/dropins/cart/containers/order-summary-line/' },
                   ],
                 },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
-                    { label: 'Add custom product lines', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
-                    { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
-                    { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
-                    { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
-                    { label: 'Enable product variation updates', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
-                  ],
-                },
               ],
             },
             {
@@ -431,17 +432,6 @@ export function generateSidebar() {
                     { label: 'TermsAndConditions', link: '/dropins/checkout/containers/terms-and-conditions/' },
                   ],
                 },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Add payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-                    { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
-                    { label: 'Validate shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
-                    { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-                    { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
-                  ],
-                },
               ],
             },
             {
@@ -473,13 +463,6 @@ export function generateSidebar() {
                     { label: 'OrderStatus', link: '/dropins/order/containers/order-status/' },
                     { label: 'ReturnsList', link: '/dropins/order/containers/returns-list/' },
                     { label: 'ShippingStatus', link: '/dropins/order/containers/shipping-status/' },
-                  ],
-                },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Enable order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
                   ],
                 },
               ],
@@ -561,13 +544,6 @@ export function generateSidebar() {
                     { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
                   ],
                 },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Notify me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
-                  ],
-                },
               ],
             },
             {
@@ -591,14 +567,6 @@ export function generateSidebar() {
                     { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
                     { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
                     { label: 'Pagination', link: '/dropins/product-discovery/containers/pagination/' },
-                  ],
-                },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Federated search', link: '/how-tos/federated-search/' },
-                    { label: 'Search redirects', link: '/how-tos/search-redirects/' },
                   ],
                 },
               ],
@@ -654,15 +622,6 @@ export function generateSidebar() {
                     },
                     { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
                     { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
-                  ],
-                },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
-                    { label: 'Stored payment methods', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
-                    { label: 'Validate address', link: '/dropins/user-account/tutorials/validate-address/' },
                   ],
                 },
               ],

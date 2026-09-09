@@ -1,4 +1,5 @@
 ---
+slug: dropins/cart/tutorials/add-messages-to-mini-cart
 title: Add messages to mini cart
 description: Learn how to add inline feedback messages when products are added or updated in the mini cart.
 ---
@@ -10,25 +11,40 @@ import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 import Diagram from '@components/Diagram.astro';
 
-This tutorial shows you how to add inline and overlay feedback messages that appear in the mini cart when products are added or updated to the cart. These messages provide visual feedback to shoppers about their cart actions.
+The mini cart block already includes inline feedback messages by default: a brief message flashes at the top of the mini cart when a shopper adds or updates a product, then disappears automatically. This tutorial explains how those default messages work, then shows you how to build a custom overlay-style alternative that displays the same feedback centered over the mini cart with a semi-transparent background.
 
-Inline messages appear at the top of the mini cart for a brief period (three seconds by default) and then automatically disappear, providing immediate feedback to users about their cart actions.
+## What you'll edit or create
+
+- Edit the mini cart block — `blocks/commerce-mini-cart/commerce-mini-cart.js` (to add the overlay variant)
+- Edit the mini cart styles — `blocks/commerce-mini-cart/commerce-mini-cart.css` (to add overlay styles)
+- Create an overlay version of the `showMessage()` function
+- Reuse the existing message placeholders — `Global.MiniCartAddedMessage` / `Global.MiniCartUpdatedMessage`
+
+## What you'll build
+
+By the end of this tutorial, you'll have:
+
+- An understanding of the inline messages that already ship by default in `commerce-mini-cart.js`, flashing at the top of the mini cart for a few seconds after a cart update.
+- A custom overlay variant of the same messages, styled through `commerce-mini-cart.css`, that appears centered over the mini cart instead of inline.
+- Message text and display duration driven by the content placeholders sheet and the `cart/product/added` and `cart/product/updated` events, for either variant.
+
+Inline messages already appear at the top of the mini cart by default for a brief period (three seconds) and then automatically disappear, providing immediate feedback to users about their cart actions.
 
 <Diagram caption="Minicart inline message">
   ![Minicart inline message](@images/dropins/cart/minicart-inline.png)
 </Diagram>
 
-Overlay messages are displayed at the top center of the mini cart with a semi-transparent background when the same events occur.
+If you'd rather show that same feedback as an overlay, build a custom variant that displays a message at the top center of the mini cart with a semi-transparent background instead:
 
 <Diagram caption="Minicart overlay message">
   ![Minicart overlay message](@images/dropins/cart/minicart-overlay.png)
 </Diagram>
 
-You can customize the appearance and behavior of the inline and overlay messages by modifying the following:
+You can customize the appearance and behavior of either variant by modifying the following:
 
-- **Message text**: Update the translations in the content placeholders sheet under the `Cart.MiniCart.Message` namespace.
-- **Message styling**: Modify the CSS classes in `commerce-mini-cart.css`. The styles use design tokens (prefixed with `--`) to maintain consistency with the design system. Overlays can be customized as follows:
-   - Background opacity using the alpha value in the overlay's `background-color` (default is 50%)
+- **Message text**: Update the translations in the content placeholders sheet under the `Global.MiniCartAddedMessage` and `Global.MiniCartUpdatedMessage` keys.
+- **Message styling**: Modify the CSS classes in `commerce-mini-cart.css`. The styles use design tokens (prefixed with `--`) to maintain consistency with the design system. The overlay variant can be customized as follows:
+   - Background opacity using the alpha value in the overlay's `background-color` (the sample below uses 50%)
    - Message position using the `top`, `left`, and `transform` properties
    - Colors, spacing, shadows, and other visual properties using design tokens
 
@@ -55,6 +71,10 @@ The inline and overlay messages respond to two cart events:
 
 To add inline or overlay messages to your mini cart, follow these steps:
 
+<Aside type="note">
+  The **Inline messages** tab below walks through the mini cart's existing default implementation, included here for reference and comparison — if you're using the boilerplate as-is, this code is already in `commerce-mini-cart.js`. The **Overlay messages** tab is the new code you add as a custom alternative.
+</Aside>
+
 <Tasks>
 <Task>
 ### Retrieve translations for message texts using placeholders
@@ -64,10 +84,10 @@ Get translations for custom messages from the content folder.
 ```javascript
 const placeholders = await fetchPlaceholders();
 
-// Access the message texts from the Cart.MiniCart.Message namespace
+// Access the message texts from the Global placeholders sheet
 const MESSAGES = {
-  ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
-  UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
+  ADDED: placeholders?.Global?.MiniCartAddedMessage,
+  UPDATED: placeholders?.Global?.MiniCartUpdatedMessage,
 };
 ```
 </Task>
@@ -264,8 +284,8 @@ import { events } from '@dropins/tools/event-bus.js';
 // Initializers
 import '../../scripts/initializers/cart.js';
 
-import { readBlockConfig, fetchPlaceholders } from '../../scripts/aem.js';
-import { rootLink } from '../../scripts/commerce.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+import { fetchPlaceholders, rootLink } from '../../scripts/commerce.js';
 
 export default async function decorate(block) {
   const {
@@ -278,8 +298,8 @@ export default async function decorate(block) {
   const placeholders = await fetchPlaceholders();
 
   const MESSAGES = {
-    ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
-    UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
+    ADDED: placeholders?.Global?.MiniCartAddedMessage,
+    UPDATED: placeholders?.Global?.MiniCartUpdatedMessage,
   };
 
   // Create a container for the update message
@@ -341,8 +361,8 @@ import { events } from '@dropins/tools/event-bus.js';
 // Initializers
 import '../../scripts/initializers/cart.js';
 
-import { readBlockConfig, fetchPlaceholders } from '../../scripts/aem.js';
-import { rootLink } from '../../scripts/commerce.js';
+import { readBlockConfig } from '../../scripts/aem.js';
+import { fetchPlaceholders, rootLink } from '../../scripts/commerce.js';
 
 export default async function decorate(block) {
   const {
@@ -355,8 +375,8 @@ export default async function decorate(block) {
   const placeholders = await fetchPlaceholders();
 
   const MESSAGES = {
-    ADDED: placeholders?.Cart?.MiniCart?.Message?.added,
-    UPDATED: placeholders?.Cart?.MiniCart?.Message?.updated,
+    ADDED: placeholders?.Global?.MiniCartAddedMessage,
+    UPDATED: placeholders?.Global?.MiniCartUpdatedMessage,
   };
 
   block.innerHTML = '';
