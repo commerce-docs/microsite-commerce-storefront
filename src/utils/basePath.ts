@@ -1,7 +1,7 @@
 import { isProductionOrGitHub } from '../utils/env';
 
 function getBasePath(): string {
-  return import.meta.env.VITE_PROD_BASE_PATH || import.meta.env.VITE_GITHUB_BASE_PATH || '';
+  return import.meta.env.VITE_BASE_PATH || '';
 }
 
 export function withBasePath(path: string): string {
