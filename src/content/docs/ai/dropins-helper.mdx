@@ -1,0 +1,163 @@
+---
+title: Drop-in helper
+description: Install and configure the drop-in helper so your AI editor can look up current Adobe Commerce drop-in APIs, slots, events, and design tokens.
+---
+
+import Link from '@components/Link.astro';
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+The drop-in helper is a free tool server for Cursor, VS Code, Claude Code, and Claude Desktop. It indexes drop-in source code — both B2C and B2B — so your AI editor gets current slots, events, containers, API functions, and design tokens, instead of relying on outdated training data.
+
+<Aside type="note" title="Related topics">
+See the [drop-in helper reference](/reference/dropins-helper/) for each tool's parameters and usage examples. If the server doesn't connect or your editor can't find it, see the [FAQ](/troubleshooting/faq/#drop-in-helper).
+</Aside>
+
+## Prerequisites
+
+Before installing the drop-in helper, make sure you have the following:
+
+- Node.js 18 or later (`node -v` to confirm)
+- An AI editor that supports tool servers: <Link href="https://cursor.com/" text="Cursor" />, <Link href="https://code.visualstudio.com" text="VS Code" /> with <Link href="https://github.com/features/copilot" text="GitHub Copilot" />, <Link href="https://claude.com/claude-code" text="Claude Code" />, or <Link href="https://claude.com/download" text="Claude Desktop" />
+
+## Installation
+
+Configure the drop-in helper in your editor and verify the connection.
+
+<Steps>
+
+1. **Add the server to your editor configuration.** Open the tab for your editor and paste the snippet into the config file shown. If you use the Claude Code extension in VS Code, choose the Claude Code tab, rather than VS Code (Copilot), which is for VS Code's built-in tool-server support through GitHub Copilot.
+
+   <Tabs>
+     <TabItem label="Cursor">
+       Add to `~/.cursor/mcp.json` for all projects, or `.cursor/mcp.json` inside a specific project:
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="VS Code (Copilot)">
+       Add to `.vscode/mcp.json` inside your project:
+
+       ```json
+       {
+         "servers": {
+           "dropins": {
+             "type": "stdio",
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+     </TabItem>
+     <TabItem label="Claude Code">
+       Add to `.mcp.json` at your project root (this applies to both the Claude Code VS Code extension and the Claude Code CLI):
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "type": "stdio",
+             "command": "npx",
+             "args": ["@dropins/mcp"]
+           }
+         }
+       }
+       ```
+
+       Claude Code uses your terminal's PATH, so `npx` works without a global install.
+
+       To auto-approve the server without a prompt each session, add the following to `.claude/settings.json` in your project:
+
+       ```json
+       {
+         "enableAllProjectMcpServers": true
+       }
+       ```
+
+     </TabItem>
+     <TabItem label="Claude Desktop">
+       The config file lives outside your project:
+
+       - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+       - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+       In Claude Desktop, choose **Settings**, open **Developer**, then click **Edit Config** to create or open that file.
+
+       Add to `claude_desktop_config.json`:
+
+       ```json
+       {
+         "mcpServers": {
+           "dropins": {
+             "command": "dropins-mcp"
+           }
+         }
+       }
+       ```
+
+       Claude Desktop is a desktop app, not a terminal, so it doesn't read your shell's PATH. Commands such as `npx` might not be found when Claude Desktop tries to start the server. A global install puts the binary in a system location Claude Desktop can reach:
+
+       ```bash
+       npm install -g @dropins/mcp
+       ```
+
+       If you use `nvm`, the binary lands in a version-specific folder that isn't on the system PATH. Run this in your terminal to find the full path:
+
+       ```bash
+       which dropins-mcp
+       ```
+
+       Then replace `dropins-mcp` in the config with that absolute path. For example:
+
+       ```text
+       /Users/yourname/.nvm/versions/node/v20.11.0/bin/dropins-mcp
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Restart your editor.** When the server loads, `dropins` appears in your editor's tool server list.
+
+3. **Verify the connection.** Ask your AI editor:
+
+   > _"Use the drop-in helper — what slots does the CartSummaryList container have?"_
+
+   If your AI editor returns a list of slot names with context types, the drop-in helper is connected and working.
+
+   If `dropins` doesn't appear in your editor's tool server list, or your editor can't answer the question, open your editor's tool server logs and confirm that `npx @dropins/mcp` runs without errors in a terminal outside the editor.
+
+</Steps>
+
+## Example prompts
+
+The drop-in helper works best when you ask specific questions about your project. For example:
+
+- _"What events does the checkout drop-in emit when a payment method is selected?"_
+- _"Create a block that combines CartSummaryList and OrderConfirmation"_
+- _"Are there any stale containers or removed APIs in my commerce-cart block?"_
+- _"What GraphQL mutation does checkout use to place an order?"_
+- _"Generate a slot implementation that adds a loyalty points badge next to the cart line item price"_
+- _"Am I using the latest drop-in versions?"_
+- _"What CSS design tokens control button colors?"_
+
+<Aside type="tip">
+  If your editor doesn't automatically use the drop-in helper for drop-in questions, start your prompt with _"Use the drop-in helper"_. In Cursor, you can also add a rule in `.cursor/rules/` that tells the agent to consult the drop-in helper for drop-in questions.
+</Aside>
+
+## Enable documentation search (optional)
+
+The `search_commerce_docs` tool searches Adobe Commerce documentation on Adobe's servers using the Adobe I/O command-line interface (CLI). Without it, the drop-in helper still answers drop-in questions using `search_docs`, which searches a local copy of the documentation included with the server.
+
+To sign in and enable remote documentation search, install the Adobe I/O CLI and log in once:
+
+```bash
+npm install -g @adobe/aio-cli
+aio auth login
+```
