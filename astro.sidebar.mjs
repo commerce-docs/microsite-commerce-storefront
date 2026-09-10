@@ -156,6 +156,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Add buttons to checkout', link: '/dropins/payment-services/tutorials/add-buttons-to-checkout/' },
+                { label: 'Vaulted cards in checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-in-checkout/' },
               ],
             },
             {
