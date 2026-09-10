@@ -12,7 +12,7 @@ import Task from '@components/Task.astro';
 When a product or selected variant is out of stock, the primary Call to Action (CTA) button on the Product Detail Page (PDP) can display **"Notify Me"** instead of **"Add to Cart"**. This applies to both simple products and configurable products with multiple options (for example, size and color). When the shopper switches to a different variant, the CTA updates dynamically based on that variant's stock status.
 
 <Aside type="note" title="Notify Me as customization">
-"Notify Me" is a frequently requested customization. This tutorial shows how to wire and update the CTA using the event bus, and how to subscribe the shopper with the drop-in's [`subscribeStockAlert`](/dropins/product-details/functions/#subscribestockalert) function. The CTA wiring stays in your block. The back-in-stock subscription itself is handled by the drop-in against Adobe Commerce.
+"Notify Me" is a frequently requested customization. This tutorial shows how to wire and update the CTA using the event bus, and how to subscribe the shopper by calling the Commerce Core `subscribeProductAlertStock` mutation. The CTA wiring stays in your block, and the mutation is sent through your Commerce Core GraphQL fetch, which carries the customer token.
 </Aside>
 
 ## Prerequisites
@@ -150,15 +150,33 @@ events.on('pdp/valid', (valid) => {
 
 Add this at the **top** of the `onClick` handler you created in Step 1. When `isOutOfStock` is `true`, subscribe the shopper to a back-in-stock alert and return early so no cart logic executes.
 
-The Product Details drop-in exposes [`subscribeStockAlert`](/dropins/product-details/functions/#subscribestockalert) for exactly this. It subscribes the currently authenticated shopper to a back-in-stock alert for the given SKU.
+Back-in-stock alerts are handled by the Commerce Core `subscribeProductAlertStock` mutation. Call it through your Commerce Core GraphQL fetch (in the boilerplate, `CORE_FETCH_GRAPHQL`), which already carries the customer token.
 
 ```js
+import { CORE_FETCH_GRAPHQL } from '../../scripts/commerce.js';
+
+const SUBSCRIBE_PRODUCT_ALERT_STOCK = `
+  mutation SubscribeProductAlertStock($input: ProductAlertStockInput!) {
+    subscribeProductAlertStock(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
 // Inside the onClick from Step 1:
 if (isOutOfStock) {
   try {
-    const { message } = await pdpApi.subscribeStockAlert(product.sku);
+    const { data, errors } = await CORE_FETCH_GRAPHQL.fetchGraphQl(
+      SUBSCRIBE_PRODUCT_ALERT_STOCK,
+      { variables: { input: { sku: product.sku } } },
+    );
+    const result = data?.subscribeProductAlertStock;
+    if (errors?.length || !result?.success) {
+      throw new Error(result?.message || 'Unable to subscribe to stock alert.');
+    }
     // Show your own confirmation (toast, inline message, etc.)
-    console.log(message);
+    console.log(result.message);
   } catch (error) {
     // Surface the failure to the shopper
     console.error(error);
@@ -170,7 +188,10 @@ if (isOutOfStock) {
 ```
 
 <Aside type="note">
-`subscribeStockAlert` and [`isSubscribedStockAlert`](/dropins/product-details/functions/#issubscribedstockalert) are served by Commerce Core, so the drop-in must be pointed at the Commerce Core GraphQL endpoint, and the shopper must be authenticated. To reflect an existing subscription in the CTA on load, call `isSubscribedStockAlert(product.sku)` and adjust the button label accordingly.
+`subscribeProductAlertStock` is a customer-scoped Commerce Core mutation: the shopper must be authenticated, and product alerts must be enabled in the Commerce backend (`catalog/productalert/allow_stock`), exposed through `storeConfig.product_alert_allow_stock`.
+
+To reflect an existing subscription in the CTA when the page loads, query `isSubscribedProductAlertStock(input: { sku })` using the same conditions, then update the button label based on the returned subscription state.
+
 </Aside>
 
 </Task>
