@@ -14,23 +14,19 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
-import { PRODUCTION_SITE, PRODUCTION_BASE_PATH } from './site.config.js';
+import { PRODUCTION_SITE } from './site.config.js';
 
-// BUILD_TARGET takes precedence when set (needed by build:stage, which must set
-// NODE_ENV=production for Vite/Pagefind but still needs the GitHub base path);
-// falls back to NODE_ENV for scripts that don't set it (e.g. build:prod), so
-// V1's build:prod/build:prod-fast work unchanged.
-const buildTarget = process.env.BUILD_TARGET || process.env.NODE_ENV;
-const isProduction = buildTarget === 'production';
-const isGitHub = buildTarget === 'github';
+// NODE_ENV=production makes Vite replace process.env.NODE_ENV in bundled client
+// code with "production", which is what strips React's (and other packages')
+// dev-only warnings/checks from the output. It also gates production-only
+// features here (for example, loading Adobe Launch - see the analytics script
+// below). It's independent of the base path, which every build (stage or prod)
+// sets explicitly via VITE_BASE_PATH, and independent of Pagefind indexing and
+// compression (SKIP_COMPRESSION), neither of which are gated by NODE_ENV.
+const isProduction = process.env.NODE_ENV === 'production';
 const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
-// Determine the base path based on the environment
-const basePath = isProduction
-  ? PRODUCTION_BASE_PATH
-  : isGitHub
-    ? process.env.VITE_GITHUB_BASE_PATH
-    : '';
+const basePath = process.env.VITE_BASE_PATH || '';
 
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
