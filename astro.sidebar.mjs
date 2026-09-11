@@ -66,7 +66,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Storefront Boilerplate',
+          label: 'Commerce Boilerplate',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/boilerplate/' },
@@ -74,9 +74,9 @@ export function generateSidebar() {
             { label: 'Configuration', link: '/boilerplate/configuration/' },
             { label: 'Blocks Reference', link: '/boilerplate/blocks-reference/' },
             { label: 'Blocks Customization', link: '/boilerplate/customizing-blocks/' },
-            { label: 'Blocks Composition', link: '/dropins/all/compose-a-block/' },
-            { label: 'Universal Editor', link: '/boilerplate/universal-editor/' },
-            { label: 'Boilerplate Updates', link: '/boilerplate/updates/' },
+            { label: 'Build custom features', link: '/blocks/build-custom-features/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
+            { label: 'AI agent skills', link: '/boilerplate/ai-agent-skills/' },
           ],
         },
         // ---------- DROP-INS Overview ----------
@@ -85,9 +85,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
-            { label: 'Choose a Drop-in Approach', link: '/dropins/all/extend-or-create/' },
-            { label: 'Extend a Drop-in', link: '/dropins/all/extending/' },
-            { label: 'Create a Drop-in', link: '/dropins/all/creating/' },
+            { label: 'Extend or Create?', link: '/dropins/all/extend-or-create/' },
             { label: 'Using Drop-Ins', link: '/dropins/all/quick-start/' },
             { label: 'Commerce Blocks', link: '/dropins/all/commerce-blocks/' },
             { label: 'Styling', link: '/dropins/all/styling/' },
@@ -100,6 +98,8 @@ export function generateSidebar() {
             { label: 'Events', link: '/dropins/all/events/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
             { label: 'Analytics events', link: '/dropins/all/analytics-events/' },
+            { label: 'Extending', link: '/dropins/all/extending/' },
+            { label: 'Creating', link: '/dropins/all/creating/' },
           ],
         },
         // ---------- HOW-TOS ----------
@@ -109,6 +109,8 @@ export function generateSidebar() {
           items: [
             { label: 'Federated Search', link: '/how-tos/federated-search/' },
             { label: 'Search Redirects', link: '/how-tos/search-redirects/' },
+            { label: 'Build a Category Page Manually', link: '/how-tos/manual-category-page/' },
+            { label: 'Generate Category Pages Programmatically', link: '/how-tos/automatic-category-page/' },
             {
               label: 'Analytics Events',
               collapsed: true,
@@ -205,6 +207,7 @@ export function generateSidebar() {
             { label: 'SEO Metadata', link: '/setup/seo/metadata/' },
             { label: 'Sitemaps', link: '/setup/seo/sitemaps/' },
             { label: 'Platform Limits', link: '/setup/seo/platform-limits/' },
+            { label: 'SSR and Crawlability', link: '/setup/seo/ssr-and-crawlability/' },
           ],
         },
         {
@@ -871,7 +874,7 @@ export function generateSidebar() {
             { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
             { label: 'Using the Document Authoring Tool', link: '/merchants/quick-start/document-authoring/' },
             { label: 'Create your first commerce page', link: '/merchants/quick-start/your-first-page/' },
-            { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
+            { label: 'Using Experience Workspace', link: '/merchants/quick-start/experience-workspace/' },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
         },
@@ -994,7 +997,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
-            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
             { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },

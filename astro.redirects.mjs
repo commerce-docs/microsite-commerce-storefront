@@ -176,7 +176,7 @@ export function generateRedirects(basePath) {
         '/merchants/get-started/': `${basePath}/merchants/quick-start`,
         '/merchants/storefront-builder/create-content': `${basePath}/merchants/quick-start/create-content`,
         '/merchants/storefront-builder/document-authoring': `${basePath}/merchants/quick-start/document-authoring`,
-        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
+        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/page-metadata/': `${basePath}/merchants/quick-start/page-metadata`,
@@ -226,7 +226,7 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/commerce-localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/content-localization': `${basePath}/merchants/quick-start/content-localization`,
-        '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
+        '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization`,
 
         // ========= MISC REDIRECTS =========
         // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
@@ -236,8 +236,8 @@ export function generateRedirects(basePath) {
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
-        '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
-        '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
+        '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
+        '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/create-content`,
         '/boilerplate/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
         '/build-with-ai': `${basePath}/get-started/build-with-ai`,
         '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,

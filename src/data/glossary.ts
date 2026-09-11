@@ -23,6 +23,12 @@ const glossaryEntries: GlossaryEntry[] = [
     aliases: ['DA.live', 'Document Author'],
   },
   {
+    term: 'Experience Workspace',
+    definition:
+      "Adobe's recommended visual editor for Document Authoring (DA.live) projects. It lets you edit text and images directly on a page's rendered preview or live URL, without opening the underlying document.",
+    aliases: ['EW'],
+  },
+  {
     term: 'GraphQL',
     definition:
       'A query language that drop-in components use to request and update data from Adobe Commerce APIs. Catalog Service, Live Search, and the core Commerce API all expose GraphQL endpoints.',
@@ -265,11 +271,6 @@ const glossaryEntries: GlossaryEntry[] = [
     term: 'Create',
     definition:
       'Build a new drop-in from scratch when extension and substitution are not suitable for the required experience.',
-  },
-  {
-    term: 'Compose',
-    definition:
-      "Combine an existing drop-in's API function, shared SDK components, and the event bus in a plain block instead of creating a new drop-in.",
   },
   {
     term: 'Configuration',
