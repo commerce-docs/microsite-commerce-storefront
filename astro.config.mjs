@@ -83,6 +83,14 @@ async function config() {
             // bundled in production.
             // Dynamic import keeps the main `page.*.js` entry smaller; Mermaid loads as its own chunk.
             injectScript('page', `void import('/src/components/diagram/mermaid-global-mount.js');`);
+
+            // Same bundling gap as above: a `<script>` in the MarkdownContent override that only
+            // contains bare `import '…'` statements is silently dropped from the production build
+            // (present in dev, absent from every dist chunk). injectScript is unaffected by that gap.
+            injectScript(
+              'page',
+              `import '/src/scripts/term-tooltip-portal.ts'; import '/src/scripts/anchor-link-copy.ts';`,
+            );
           },
         },
       },
