@@ -873,6 +873,7 @@ export function generateSidebar() {
             { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
             { label: 'Using the Document Authoring Tool', link: '/merchants/quick-start/document-authoring/' },
             { label: 'Create your first commerce page', link: '/merchants/quick-start/your-first-page/' },
+            { label: 'Using Experience Workspace', link: '/merchants/quick-start/experience-workspace/' },
             { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
