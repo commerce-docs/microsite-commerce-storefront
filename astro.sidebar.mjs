@@ -873,7 +873,6 @@ export function generateSidebar() {
             { label: 'Using the Document Authoring Tool', link: '/merchants/quick-start/document-authoring/' },
             { label: 'Create your first commerce page', link: '/merchants/quick-start/your-first-page/' },
             { label: 'Using Experience Workspace', link: '/merchants/quick-start/experience-workspace/' },
-            { label: 'Using the Universal Editor', link: '/merchants/quick-start/universal-editor/' },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
         },
@@ -995,7 +994,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Document Authoring Workflow', link: '/merchants/quick-start/content-localization/' },
-            { label: 'Universal Editor Workflow', link: '/merchants/quick-start/content-localization-universal-editor/' },
             { label: 'Commerce-Specific Tasks', link: '/merchants/quick-start/content-localization-commerce-tasks/' },
           ],
         },
