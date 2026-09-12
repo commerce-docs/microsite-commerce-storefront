@@ -1,11 +1,67 @@
 ---
 title: Icon
-description: Use Icons to add visual cues and enhance user interface elements.
-tableOfContents: false
-iframe:
-    src: "components-icon--overview"
+description: Render an SVG icon from the built-in Commerce icon set, a custom component, or a same-domain SVG URL, with preset sizes and stroke widths.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import IconGallery from '@components/IconGallery.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/icon.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Icon` to render an SVG symbol that conveys meaning or reinforces an action. The `source` prop accepts three kinds of value: a built-in icon name, your own SVG component, or a same-domain URL to an SVG file. External URLs are rejected for security.
+
+<ComponentPreview src={previewImage} alt="The SDK Icon rendered as an SVG symbol." />
+
+## Import
+
+```js
+import { Icon } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `source` | `IconType \| FunctionComponent \| string` | No | The icon to render: a built-in icon name, an SVG component, or a same-domain SVG URL. |
+| `size` | `'12' \| '16' \| '24' \| '32' \| '64' \| '80'` | No | Icon size in pixels. Defaults to 24. |
+| `stroke` | `'1' \| '2' \| '3' \| '4'` | No | Stroke width. Applies only to stroke-based icons. Defaults to 2. |
+| `title` | `string` | No | Accessible title announced by screen readers. |
+
+</TableWrapper>
+
+`Icon` also accepts standard SVG attributes (for example, `className`), except `size`.
+
+## Example
+
+```js
+import { Icon, Button, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+// Pass a built-in icon into another component's `icon` prop
+await provider.render(Button, {
+  children: 'Search',
+  icon: h(Icon, { source: 'Search' }),
+})(document.querySelector('.search'));
+
+// Render an icon on its own, at a larger size
+await provider.render(Icon, { source: 'Cart', size: '32' })(document.querySelector('.cart-icon'));
+
+// Load a same-domain SVG by URL; external URLs are rejected for security
+await provider.render(Icon, {
+  source: `${window.location.origin}/icons/custom.svg`,
+  title: 'Custom',
+})(document.querySelector('.custom-icon'));
+```
+
+## Built-in icons
+
+Pass any of these names as a string to `source` (for example, `source: 'Cart'`):
+
+<IconGallery />
+
+## Related
+
+- [Button](/sdk/components/button/) — commonly takes an `Icon` as its `icon` prop.
+- [Design tokens](/sdk/design/) — the sizing and color scales icons use.

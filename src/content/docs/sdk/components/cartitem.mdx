@@ -1,11 +1,82 @@
 ---
 title: CartItem
-description: Use CartItems to display a single item in the cart.
-tableOfContents: false
-iframe:
-    src: "components-cartitem--overview"
+description: Display a single product line in the cart, with image, title, price, quantity control, configurations, and messaging slots.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/cartitem.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `CartItem` to display a single product line in the cart. It composes slots for the product image, title, price, quantity control, and messages, and calls back when the shopper changes the quantity or removes the item.
+
+<ComponentPreview src={previewImage} alt="The SDK CartItem showing a product line with image, title, price, and quantity control." />
+
+## Import
+
+```js
+import { CartItem } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `ariaLabel` | `string` | No | Accessible name for the component. |
+| `image` | `VNode` | No | Product image. |
+| `title` | `VNode` | No | Title of the product. |
+| `price` | `VNode` | No | Price of each item. |
+| `rowTotalFooter` | `VNode` | No | Content displayed right below the total row price. |
+| `taxIncluded` | `boolean` | No | Render the tax-included message. Defaults to false. |
+| `taxExcluded` | `boolean` | No | Render the tax-excluded message. Defaults to false. |
+| `total` | `VNode` | No | Total price of the product. |
+| `totalExcludingTax` | `VNode` | No | Total price of the product excluding tax. |
+| `sku` | `VNode` | No | The product SKU. |
+| `quantity` | `number` | No | The quantity of the product. |
+| `quantityContent` | `VNode` | No | Custom content that replaces the quantity control. |
+| `description` | `VNode` | No | Description of the product. |
+| `attributes` | `VNode` | No | Product attributes. |
+| `footer` | `VNode` | No | Footer content displayed at the bottom of the item. |
+| `configurations` | `{ [key: string]: any }` | No | Selected product options as key-value pairs, such as Color and Size. |
+| `warning` | `VNode` | No | A warning message. |
+| `alert` | `VNode` | No | An alert message. |
+| `discount` | `VNode` | No | A discount message. |
+| `savings` | `VNode` | No | A savings message. |
+| `actions` | `VNode` | No | Action controls, such as a move-to-wishlist button. |
+| `removeContent` | `VNode` | No | Custom content for the remove control. |
+| `loading` | `boolean` | No | Render the loading skeleton. Defaults to false. |
+| `updating` | `boolean` | No | Render the updating state. Defaults to false. |
+| `onRemove` | `() => void` | No | Handler called when the shopper removes the item. |
+| `onQuantity` | `(value: number) => void` | No | Handler called when the shopper changes the quantity. |
+| `quantityType` | `'stepper' \| 'dropdown'` | No | Quantity input type. Defaults to stepper. |
+| `dropdownOptions` | `{ value: string; text: string }[]` | No | Options for the quantity dropdown when quantityType is dropdown. |
+
+</TableWrapper>
+
+`CartItem` also accepts standard `<div>` HTML attributes (for example, `className`), except `title` and `loading`. When `loading` is true, the component renders a `CartItemSkeleton` placeholder instead of its content.
+
+## Example
+
+Render a cart item with an image, title, price, and quantity control. Build the slot content with `h`, and use the `Image` and `Price` components for the media and pricing.
+
+```js
+import { CartItem, Image, Price, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+await provider.render(CartItem, {
+  ariaLabel: 'Product name',
+  image: h(Image, { src: '/media/product.jpg', width: '132', height: '184', alt: 'Product name' }),
+  title: h('div', {}, 'Product name'),
+  sku: h('div', {}, 'SKU: 59YK7'),
+  price: h(Price, { amount: 53.99 }),
+  quantity: 1,
+  onQuantity: (value) => yourUpdateQuantity(value),
+  onRemove: () => yourRemoveItem(),
+})(document.querySelector('.cart-item'));
+```
+
+## Related
+
+- [CartList](/sdk/components/cartlist/) — wrap multiple cart items in a single list.
+- [Price](/sdk/components/price/) — format the prices shown in each item.
