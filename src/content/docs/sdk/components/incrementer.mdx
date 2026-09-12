@@ -1,11 +1,62 @@
 ---
 title: Incrementer
-description: Use Incrementers to adjust numeric values with plus and minus buttons. Set `showButtons` to `false` to hide the increase/decrease buttons for a compact design.
-tableOfContents: false
-iframe:
-    src: "components-incrementer--overview"
+description: Use Incrementer to let shoppers raise or lower a numeric value, such as a cart quantity, with optional plus and minus buttons.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/incrementer.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Incrementer` to let shoppers increase or decrease a numeric value, such as a cart quantity. It enforces `min` and `max`, shows a validation message when the value is out of range, and can hide its buttons for a compact layout.
+
+<ComponentPreview src={previewImage} alt="The SDK Incrementer showing a numeric value with increase and decrease buttons." />
+
+## Import
+
+```js
+import { Incrementer } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `name` | `string` | No | Field name, used to map the value in a form. |
+| `size` | `'medium' \| 'large'` | No | Change the incrementer size. Defaults to medium. |
+| `min` | `number` | No | Minimum allowed value. |
+| `max` | `number` | No | Maximum allowed value. |
+| `showButtons` | `boolean` | No | Show the increase and decrease buttons. Defaults to true. |
+| `disabled` | `boolean` | No | Whether the field is disabled. Defaults to false. |
+| `error` | `boolean` | No | Whether the field shows an error state. |
+| `success` | `boolean` | No | Whether the field value updated successfully. |
+| `maxLength` | `number` | No | Maximum length of the input field. |
+| `onValue` | `(value: any) => void` | No | Callback to handle value changes. |
+| `onUpdateError` | `(error: Error) => void` | No | Callback to handle errors thrown by onValue. |
+
+</TableWrapper>
+
+`Incrementer` also accepts standard input HTML attributes (for example, `value`, which defaults to `1`, and `aria-label`), except `size`.
+
+## Example
+
+Render a quantity incrementer bounded between 1 and 100:
+
+```js
+import { Incrementer, provider } from '@dropins/tools/components.js';
+
+await provider.render(Incrementer, {
+  name: 'quantity',
+  value: '1',
+  min: 1,
+  max: 100,
+  'aria-label': 'Quantity',
+  onValue: (value) => yourUpdateQuantity(value),
+})(document.querySelector('.incrementer'));
+```
+
+## Related
+
+- [Field](/sdk/components/field/) — wrap the Incrementer with a label and helper text.
+- [Button](/sdk/components/button/) — pair with an add-to-cart action.
