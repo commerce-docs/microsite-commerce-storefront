@@ -4,8 +4,12 @@ description: Display content in an accessible dialog that traps focus, dims the 
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/modal.webp';
 
 Use `Modal` to present content in an accessible dialog. It traps focus while open, restores focus to the trigger when it closes, and can dismiss on a background click, the Escape key, or a close button.
+
+<ComponentPreview src={previewImage} alt="The SDK Modal showing content in a centered dialog." />
 
 ## Import
 
@@ -35,16 +39,29 @@ import { Modal } from '@dropins/tools/components.js';
 
 ## Example
 
-```js
-import { Modal, provider as UI } from '@dropins/tools/components.js';
-import { h } from '@dropins/tools/preact.js';
+The Cart drop-in opens `Modal` for its gift-wrapping picker: a centered, medium dialog with a titled header that dismisses through `onClose`. Because a drop-in composes components as JSX, the picker returns a `Modal` element instead of mounting one with `provider.render`, and renders nothing until you open it.
 
-await UI.render(Modal, {
-  size: 'small',
-  title: h('h4', {}, 'Modal Title'),
-  onClose: () => yourCloseModal(),
-  children: 'Modal content goes here.',
-})(document.querySelector('.modal-root'));
+```jsx
+import { Modal, Button } from '@dropins/tools/components.js';
+
+function GiftWrapDialog({ open, onClose, onConfirm }) {
+  // Modal renders nothing until you choose to open it.
+  if (!open) return null;
+
+  return (
+    <Modal
+      size="medium"
+      centered
+      title={<h2>Choose a gift wrap</h2>}
+      onClose={onClose}
+    >
+      <p>Pick a wrap for your order, then confirm.</p>
+
+      <Button onClick={onConfirm}>Add gift wrap</Button>
+      <Button variant="secondary" onClick={onClose}>Cancel</Button>
+    </Modal>
+  );
+}
 ```
 
 ## Related

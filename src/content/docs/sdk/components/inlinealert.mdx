@@ -4,8 +4,12 @@ description: Display an inline message or warning with a heading, optional descr
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/inlinealert.webp';
 
 Use `InLineAlert` to display a message or warning to the shopper, with a heading, an optional description, action buttons, and an optional dismiss button. The `type` prop sets the alert's semantics and border color.
+
+<ComponentPreview src={previewImage} alt="The SDK InLineAlert showing a success notification with a heading, icon, and dismiss button." />
 
 ## Import
 
@@ -35,20 +39,25 @@ import { InLineAlert } from '@dropins/tools/components.js';
 
 ## Example
 
-Render a success alert with a description, a single action, and a dismiss button.
+The cart shows `InLineAlert` as a transient success notification after a shopper updates a cart item's quantity or options through the mini PDP, with an `Icon` next to the heading and a dismiss button that clears it.
 
 ```js
-import { InLineAlert, provider as UI } from '@dropins/tools/components.js';
+import { InLineAlert, Icon, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
 
-await UI.render(InLineAlert, {
-  heading: 'Item added to your cart',
-  description: 'Check out when you are ready.',
+const notification = await provider.render(InLineAlert, {
+  heading: 'Item updated in cart',
   type: 'success',
-  additionalActions: [
-    { label: 'View cart', onClick: () => yourGoToCart() },
-  ],
-  onDismiss: () => yourHideAlert(),
-})(document.querySelector('.inline-alert'));
+  variant: 'primary',
+  icon: h(Icon, { source: 'CheckWithCircle' }),
+  // Announce the notification to screen readers as soon as it appears.
+  'aria-live': 'assertive',
+  role: 'alert',
+  onDismiss: () => notification.remove(),
+})(yourCartNotificationElement);
+
+// Auto-dismiss after 5 seconds, the way the cart does.
+setTimeout(() => notification.remove(), 5000);
 ```
 
 ## Related

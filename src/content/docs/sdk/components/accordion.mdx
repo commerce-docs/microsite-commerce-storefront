@@ -4,8 +4,12 @@ description: Group related content into collapsible sections, such as product de
 ---
 
 import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/accordion.webp';
 
 Use `Accordion` to group related content into collapsible sections, such as product details or order summaries. Each section is an `AccordionSection` child that a shopper can expand or collapse.
+
+<ComponentPreview src={previewImage} alt="The SDK Accordion showing a collapsed Coupon code section with a leading icon and an expand icon on the right." />
 
 ## Import
 
@@ -41,18 +45,29 @@ Each `AccordionSection` takes its own props:
 
 ## Example
 
-Render an accordion with a single section. Build the `AccordionSection` children with `h`.
+Render an accordion with a single section, opening its icon on the right and showing a
+leading icon on the section title. Build the `AccordionSection` children with `h`.
 
 ```js
-import { Accordion, AccordionSection, provider as UI } from '@dropins/tools/components.js';
+import { Accordion, AccordionSection, Icon, provider } from '@dropins/tools/components.js';
 import { h } from '@dropins/tools/preact.js';
 
-await UI.render(Accordion, {
+await provider.render(Accordion, {
+  // Move the expand/collapse icon to the right of each section title.
+  actionIconPosition: 'right',
+  iconOpen: h(Icon, { source: 'Add' }),
+  iconClose: h(Icon, { source: 'Minus' }),
   children: [
     h(
       AccordionSection,
-      { title: 'Product details', ariaLabelTitle: 'Product details' },
-      h('p', {}, 'Short product details should be kept to six lines maximum.'),
+      {
+        title: 'Coupon code',
+        iconLeft: h(Icon, { source: 'Coupon' }),
+        showIconLeft: true,
+        // Skip rendering the form while collapsed.
+        renderContentWhenClosed: false,
+      },
+      h('p', {}, 'Enter your coupon code here.'),
     ),
   ],
 })(document.querySelector('.accordion'));
