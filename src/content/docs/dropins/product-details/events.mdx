@@ -191,6 +191,66 @@ interface ProductModel {
 }
 ```
 
+### Attribute
+
+Used in: [`ProductModel.attributes`](#productmodel).
+
+```ts
+interface Attribute {
+  id: string;
+  label: string;
+  value: string;
+  roles?: string[];
+}
+```
+
+`value` is delivered as a JSON string (or, for some attributes, an already-parsed object) whose shape depends on the attribute's `id`. Attributes with an `id` starting with `ac_` carry a JSON payload specific to that attribute — for example `ac_giftcard`, `ac_downloadable`, and `ac_customizable_options`.
+
+#### `ac_customizable_options`
+
+Carries Magento **Customizable Options** — priced selectable choices (dropdown, radio, checkbox, multi-select) and shopper-input fields (text, textarea, date, date/time, time) attached to a product:
+
+```json
+{
+  "schemaVersion": 1,
+  "selectable": [
+    {
+      "id": "1",
+      "label": "Add Pressure Gauges?",
+      "renderType": "drop_down",
+      "type": "custom_option",
+      "required": "1",
+      "sortOrder": "1",
+      "values": [
+        { "id": "Y3VzdG9tLW9wdGlvbi8xLzE=", "label": "No Thanks", "price": "0.000000", "priceType": "fixed", "sku": "PG-NO", "sortOrder": "1", "isDefault": false },
+        { "id": "Y3VzdG9tLW9wdGlvbi8xLzI=", "label": "Yes - 3 x GT16-3S", "price": "108.000000", "priceType": "fixed", "sku": "PG-YES", "sortOrder": "2", "isDefault": false }
+      ]
+    }
+  ],
+  "shopperInput": [
+    {
+      "id": "Y3VzdG9tLW9wdGlvbi8y",
+      "label": "Engraving text",
+      "renderType": "field",
+      "required": "0",
+      "price": "15.000000",
+      "sku": "ENGRAVE",
+      "sortOrder": "2",
+      "range": { "to": "30" },
+      "productSku": "TEST-CUSTOPT-SIMPLE"
+    }
+  ]
+}
+```
+
+- `price` fields arrive as numeric strings (for example, `"108.000000"`) — convert to a number before doing arithmetic or formatting.
+- `selectable[].values[].id` and `shopperInput[].id` are base64-encoded `custom-option/<optionId>[/<valueId>]` tokens. These are the same tokens the cart drop-in's [`addProductsToCart`](/dropins/cart/functions/#addproductstocart) expects in `optionsUIDs` (for selectable choices) and `enteredOptions` (for shopper-input values) — no mapping step is required between reading this attribute and adding the product to the cart.
+- A product with no customizable options simply has no `ac_customizable_options` entry in `attributes`.
+
+<Aside type="caution">
+Dedicated rendering, required-option validation, and a live price preview for `ac_customizable_options` are on the roadmap for this drop-in (see the [Overview](/dropins/product-details/#supported-commerce-features) for status) — today this attribute is data-only.
+</Aside>
+
 ### ValuesModel
 
 Used in: [`pdp/values`](#pdpvalues-emits-and-listens).

@@ -390,7 +390,6 @@ export function generateSidebar() {
                   collapsed: true,
                   items: [
                     { label: 'Notify Me CTA', link: '/dropins/product-details/tutorials/notify-me-cta/' },
-                    { label: 'Customizable Options Data', link: '/dropins/product-details/tutorials/customizable-options-data/' },
                   ],
                 },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
