@@ -1,0 +1,60 @@
+---
+title: VaultedCreditCard Container
+description: Learn about the VaultedCreditCard container in the Payment Services drop-in.
+sidebar:
+  label: VaultedCreditCard
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `VaultedCreditCard` container renders a shopper's previously saved credit card so they can reuse it at checkout without re-entering their card details.
+
+<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
+<strong>Version: 4.3.0</strong>
+</div>
+
+## Configuration
+
+The `VaultedCreditCard` container provides the following configuration options:
+
+<TableWrapper nowrap={[0, 1, 2]}>
+| Option | Type | Req? | Description |
+|--------|------|------|-------------|
+| `tokenDetails` | string | Yes | The vault token's details. Missing or malformed fields are omitted gracefully rather than causing an error. |
+</TableWrapper>
+
+## Slots
+
+This container exposes no customizable slots.
+
+## Usage
+
+The following example demonstrates how to render a vaulted credit card and submit a payment order using the [submitCreditCard](/dropins/payment-services/functions/#submitcreditcard) API function:
+
+```js
+import VaultedCreditCard from '@dropins/storefront-payment-services/containers/VaultedCreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as paymentsApi from '@dropins/storefront-payment-services/api.js';
+
+function renderVaultedCard(ctx) {
+  const $storedOption = document.createElement('div');
+  if (ctx.details) {
+    PaymentServices.render(VaultedCreditCard, {
+      tokenDetails: ctx.details,
+    })($storedOption);
+  }
+  ctx.replaceHTML($storedOption);
+}
+
+const $placeOrderButton = document.getElementById('place-order');
+
+$placeOrderButton.onclick = () => {
+  paymentsApi.submitCreditCard()
+    .then(() => {
+      console.log('Order placed using the selected payment method.');
+    })
+    .catch((error) => {
+      console.error(error.code, error.message);
+    });
+};
+```
