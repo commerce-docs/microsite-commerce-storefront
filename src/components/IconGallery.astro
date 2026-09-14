@@ -1,0 +1,67 @@
+---
+/**
+ * IconGallery
+ *
+ * Renders every SVG in `src/assets/sdk-icons/` as a glyph + its name, in a
+ * responsive grid. The icons are vendored from the Storefront SDK (elsie)
+ * `src/icons/` set; the file name (without extension) is the value you pass to
+ * the Icon component's `source` prop. Drop a new SVG into the folder and it
+ * appears here automatically — no code change needed.
+ */
+const modules = import.meta.glob('../assets/sdk-icons/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+
+const icons = Object.entries(modules)
+  .map(([path, svg]) => ({
+    name: (path.split('/').pop() ?? '').replace('.svg', ''),
+    svg: svg as string,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<ul class="icon-gallery" role="list">
+  {
+    icons.map(({ name, svg }) => (
+      <li class="icon-gallery__item">
+        <span class="icon-gallery__glyph" aria-hidden="true" set:html={svg} />
+        <code class="icon-gallery__name">{name}</code>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .icon-gallery {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: 0.5rem;
+  }
+
+  .icon-gallery__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+
+  .icon-gallery__glyph :global(svg) {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--sl-color-text);
+  }
+
+  .icon-gallery__name {
+    font-size: var(--sl-text-xs);
+    white-space: nowrap;
+  }
+</style>

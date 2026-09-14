@@ -14,18 +14,19 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
-import { PRODUCTION_SITE, PRODUCTION_BASE_PATH } from './site.config.js';
+import { PRODUCTION_SITE } from './site.config.js';
 
+// NODE_ENV=production makes Vite replace process.env.NODE_ENV in bundled client
+// code with "production", which is what strips React's (and other packages')
+// dev-only warnings/checks from the output. It also gates production-only
+// features here (for example, loading Adobe Launch - see the analytics script
+// below). It's independent of the base path, which every build (stage or prod)
+// sets explicitly via VITE_BASE_PATH, and independent of Pagefind indexing and
+// compression (SKIP_COMPRESSION), neither of which are gated by NODE_ENV.
 const isProduction = process.env.NODE_ENV === 'production';
-const isGitHub = process.env.NODE_ENV === 'github';
 const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
-// Determine the base path based on the environment
-const basePath = isProduction
-  ? PRODUCTION_BASE_PATH
-  : isGitHub
-    ? process.env.VITE_GITHUB_BASE_PATH
-    : '';
+const basePath = process.env.VITE_BASE_PATH || '';
 
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
@@ -78,6 +79,14 @@ async function config() {
             // bundled in production.
             // Dynamic import keeps the main `page.*.js` entry smaller; Mermaid loads as its own chunk.
             injectScript('page', `void import('/src/components/diagram/mermaid-global-mount.js');`);
+
+            // Same bundling gap as above: a `<script>` in the MarkdownContent override that only
+            // contains bare `import '…'` statements is silently dropped from the production build
+            // (present in dev, absent from every dist chunk). injectScript is unaffected by that gap.
+            injectScript(
+              'page',
+              `import '/src/scripts/term-tooltip-portal.ts'; import '/src/scripts/anchor-link-copy.ts';`,
+            );
           },
         },
       },
@@ -198,7 +207,7 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
-              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**', '/dropins/all/common-events/**'],
+              exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
             }
           ),
           starlightHeadingBadges(),

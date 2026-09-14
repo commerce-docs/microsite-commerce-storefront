@@ -13,7 +13,7 @@ import { PRODUCTION_BASE_URL } from '../site.config.js';
  *
  * Precedence:
  * 1. LLMS_PUBLIC_BASE_URL — manual override (any host).
- * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN — GitHub Pages preview (same origin and base path as the Astro build). VITE_GITHUB_BASE_PATH may be empty for a site at the domain root.
+ * 2. NODE_ENV=github plus GITHUB_PAGES_ORIGIN — GitHub Pages preview (same origin and base path as the Astro build). VITE_BASE_PATH may be empty for a site at the domain root.
  * 3. NODE_ENV=production or default — site.config.js PRODUCTION_BASE_URL (Experience League production).
  */
 function resolvePublicDocBase() {
@@ -26,7 +26,7 @@ function resolvePublicDocBase() {
     const origin = process.env.GITHUB_PAGES_ORIGIN?.trim();
     if (origin) {
       const originClean = origin.replace(/\/+$/, '');
-      const basePathRaw = (process.env.VITE_GITHUB_BASE_PATH ?? '').trim();
+      const basePathRaw = (process.env.VITE_BASE_PATH ?? '').trim();
       const basePath =
         !basePathRaw || basePathRaw === '/'
           ? ''

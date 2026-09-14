@@ -54,10 +54,10 @@ export { MY_FRAGMENT } from '@/my-dropin/api/graphql/MyFragment';
 <Task>
 ### Update the API Configuration
 
-Finally, add the new file reference to the API configuration in `./.elsie.js`.
+Finally, add the new file reference to the API configuration in `./.elsie.cjs`.
 
 ```js
-// ./.elsie.js
+// ./.elsie.cjs
 
 module.exports = {
   name: 'MyDropin',
@@ -194,6 +194,51 @@ An array of string or template literal with operations.
     - If new variables are provided, the new variable will be added. i.e. `favorites(page: 1, offset: 5) { ... }`.
     - If the existing variables are changed, the new variables will be used. i.e. `favorites(page: 2) { ... }`.
 
+#### skipFragments: string[]
+
+An array of fragment names to remove from the drop-in's exported fragments file. 
+When a fragment name is listed in `skipFragments`:
+
+- The fragment definition is removed from its exported variable.
+- All references (fragment spreads) to the skipped fragment are also removed from other operations in the same file.
+
+```js
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/my-dropin',
+    skipFragments: ['MY_FRAGMENT'],
+  },
+]);
+```
+
+#### Using `skipFragments` and `operations` together
+
+When both `skipFragments` and `operations` are provided for the same fragment name, the fragment is **fully replaced** rather than merged:
+
+1. `skipFragments` removes the original fragment definition entirely.
+2. `operations` writes the new fragment definition directly, without merging it with the (now-removed) original.
+
+```js
+import { overrideGQLOperations } from '@dropins/build-tools/gql-extend.js';
+
+overrideGQLOperations([
+  {
+    npm: '@dropins/my-dropin',
+    skipFragments: ['MY_FRAGMENT'],
+    operations: [`
+      fragment MY_FRAGMENT on FragmentInterface {
+        fragmentName
+      }
+    `],
+  },
+]);
+```
+
+In the example above, the original `MY_FRAGMENT` is fully removed by `skipFragments` and then replaced by the new definition containing only `fragmentName`.
+
+> **Note:** If `skipFragments` is used without a matching `operations` entry, the fragment is simply removed (emptied). If `operations` is used without `skipFragments`, the new fields are **merged** into the existing fragment definition.
 
 ```js
 import overrideGQLOperations from '@dropins/build-tools/gql-extend.js';

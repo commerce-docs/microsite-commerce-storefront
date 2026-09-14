@@ -1,11 +1,54 @@
 ---
 title: ContentGrid
-description: Use a ContentGrid to display a list of items in a grid.
-tableOfContents: false
-iframe:
-    src: "components-contentgrid--overview"
+description: Use ContentGrid to lay out items such as products or images in a responsive grid, with a fallback for the empty state.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/contentgrid.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `ContentGrid` to display a grid of content, such as products or images, with a set maximum number of columns. When you omit `maxColumns`, it behaves like a flex container that wraps its children.
+
+<ComponentPreview src={previewImage} alt="The SDK ContentGrid showing content arranged in a grid." />
+
+## Import
+
+```js
+import { ContentGrid } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `emptyGridContent` | `VNode` | Yes | Content to display when the grid has no children. |
+| `maxColumns` | `number` | No | Maximum number of columns to display. When unset, the grid wraps its children like a flex container. |
+| `columnWidth` | `string` | No | Width of each column, as a CSS value such as 1fr or 100px. Defaults to 1fr. |
+| `children` | `ComponentChildren` | No | Items to display in the grid. Each child renders in its own grid cell. |
+
+</TableWrapper>
+
+`ContentGrid` also accepts standard HTML attributes (for example, `className` and `onClick`).
+
+## Example
+
+Render a grid of items, with a fallback for when the list is empty:
+
+```js
+import { ContentGrid, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+await provider.render(ContentGrid, {
+  maxColumns: 6,
+  columnWidth: '1fr',
+  emptyGridContent: h('div', {}, 'No products found'),
+  children: yourProducts.map((product) => h('div', { key: product.id }, product.name)),
+})(document.querySelector('.contentgrid'));
+```
+
+## Related
+
+- [Image](/sdk/components/image/) — render product photos inside grid cells.
+- [Design tokens](/sdk/design/) — the spacing and layout scales the grid uses.
