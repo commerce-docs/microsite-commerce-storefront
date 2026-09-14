@@ -864,16 +864,15 @@ export function generateSidebar() {
 
         // ---------- DROP-INS SDK ----------
         {
-          label: 'Drop-In SDK',
+          label: 'Storefront SDK',
           collapsed: true,
           items: [
-            { label: 'SDK Introduction', link: '/sdk/' },
-            { label: 'SDK CLI Usage', link: '/sdk/get-started/cli/' },
+            { label: 'Overview', link: '/sdk/' },
             {
               label: 'SDK Components',
               collapsed: true,
               items: [
-                { label: 'Components Overview', link: '/sdk/components/overview/' },
+                { label: 'Overview', link: '/sdk/components/overview/' },
                 { label: 'Accordion', link: '/sdk/components/accordion/' },
                 { label: 'ActionButton', link: '/sdk/components/actionbutton/' },
                 { label: 'ActionButtonGroup', link: '/sdk/components/actionbuttongroup/' },
@@ -922,7 +921,7 @@ export function generateSidebar() {
               label: 'SDK Design',
               collapsed: true,
               items: [
-                { label: 'Design Overview', link: '/sdk/design/' },
+                { label: 'Overview', link: '/sdk/design/' },
                 { label: 'Design Tokens', link: '/sdk/design/base/' },
                 { label: 'Colors', link: '/sdk/design/colors/' },
                 { label: 'Typography', link: '/sdk/design/typography/' },
@@ -935,7 +934,7 @@ export function generateSidebar() {
               label: 'SDK Reference',
               collapsed: true,
               items: [
-                { label: 'Reference Overview', link: '/sdk/reference/' },
+                { label: 'Overview', link: '/sdk/reference/' },
                 { label: 'Events', link: '/sdk/reference/events/' },
                 { label: 'GraphQL', link: '/sdk/reference/graphql/' },
                 { label: 'Initializer', link: '/sdk/reference/initializer/' },
@@ -950,7 +949,7 @@ export function generateSidebar() {
               label: 'SDK Utilities',
               collapsed: true,
               items: [
-                { label: 'Utilities overview', link: '/sdk/utilities/' },
+                { label: 'Overview', link: '/sdk/utilities/' },
                 { label: 'classList', link: '/sdk/utilities/classlist/' },
                 { label: 'debounce', link: '/sdk/utilities/debounce/' },
                 { label: 'deepmerge', link: '/sdk/utilities/deepmerge/' },
@@ -960,6 +959,7 @@ export function generateSidebar() {
                 { label: 'getPathValue', link: '/sdk/utilities/getpathvalue/' },
               ],
             },
+            { label: 'SDK CLI', link: '/sdk/cli/' },
           ],
         },
         // ---------- API PLAYGROUNDS ----------
