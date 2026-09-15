@@ -11,7 +11,7 @@ import LinkCard from '@components/LinkCard.astro';
 import Term from '@components/Term.astro';
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-If your storefront feels slow or your mobile scores look low, tune `consented.js`, CSS load order, and `head.html` to match the <Term>Edge Delivery Services</Term> eager, lazy, and delayed loading pattern.
+If your storefront feels slow or your mobile scores look low, tune `consented.js`, CSS load order, and `head.html` to match the <Term>Edge Delivery Services</Term> eager, lazy, and delayed loading patterns.
 
 <LinkCard
   noborder
@@ -67,9 +67,9 @@ The following steps run a PageSpeed Insights audit on a URL you choose.
 
 <Link href="https://www.aem.live/developer/keeping-it-100" text="Keeping it 100" /> describes a delayed phase for third-party tags, marketing tooling, extended analytics, consent, chat, and similar scripts. Load them through `consented.js` so they do not compete with LCP or the rest of the experience.
 
-In the Commerce boilerplate, implement that path in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/consented.js" text="scripts/consented.js" />. The delayed phase runs <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/consent-check.js" text="scripts/consent-check.js" /> first, which loads `consented.js` only after the shopper grants consent. Keep this work off the eager path. For Adobe Experience Platform and related patterns, see [Adobe Experience Platform analytics](/setup/analytics/adobe-experience-platform/).
+In the Commerce boilerplate, implement that path in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/consented.js" text="scripts/consented.js" />. The delayed phase runs <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/consent-check.js" text="scripts/consent-check.js" /> first, which loads `consented.js` only after the shopper grants consent. Keep this work out of the eager loading phase. For Adobe Experience Platform and related patterns, see [Adobe Experience Platform Analytics](/setup/analytics/adobe-experience-platform/).
 
-### Eager vs lazy styles
+### Eager versus lazy styles
 
 Keeping it 100 treats styles in two phases so LCP stays predictable.
 
@@ -87,21 +87,21 @@ The lazy phase is for styles (and related assets) that can load after the main c
 
 In the Commerce boilerplate, eager, site-wide tokens and styles usually start in <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css" text="styles/styles.css" />. For deferred styles (for example, `lazy-styles.css`), use the folder-and-import patterns in [Branding and styles](/dropins/all/branding/) instead of merging them into the eager file.
 
-After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often backfires. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
+After your split matches that guidance, align `head.html` and load order with Keeping it 100 so you are not maintaining a second rule set. Keeping it 100 also explains why preloading every web font often causes unintended results. Keep the boilerplate font fallbacks unless you have a clear measurement that says to change them.
 
 ### Load hidden UI on demand
 
-Don't load the scripts, fragments, and styles for UI that shoppers may never need.
+Do not load the scripts, fragments, and styles for UI that shoppers never need.
 
 Treat any UI that stays hidden until the shopper interacts with it as lazy: load what it needs only on the interaction that reveals it, such as a click or tap.
 
-The Mini Cart panel is a good example. Most shoppers never open it, so the scripts, fragment, and styles it needs shouldn't load until they do. Load the fragment on the click that opens the panel, and update the item-count badge — the piece shoppers always see — directly from event data instead.
+The Mini Cart panel is a good example. Most shoppers never open it, so the scripts, fragment, and styles it needs do not load until they do. Load the fragment on the click that opens the panel, and update the item-count badge — the piece shoppers always see — directly from event data instead.
 
-The same rule applies to any drop-in container, fragment, or block that's hidden by default, such as the header search button. Request what it needs when the shopper's action reveals it, not on every page load. It stays visible on every page, but the Product Discovery drop-in that powers search results and autocomplete loads only when the shopper opens it.
+The same rule applies to any drop-in container, fragment, or block that defaults to hidden, such as the header search button. Request what it needs when the shopper's action reveals it, not on every page load. It stays visible on every page, but the Product Discovery drop-in that powers search results and autocomplete loads only when the shopper opens it.
 
 Edge Delivery Services caps requests from one shopper to 200 per second for each `aem.page` or `aem.live` host name. See [Delivery rate limits](/setup/seo/platform-limits/#delivery-rate-limits). Loading hidden UI eagerly adds to that count on every page load, even for shoppers who never see it. It also forces the browser to paint that UI before it's needed, which can slow LCP. One eager panel looks minor on its own, but the cost adds up as you add more blocks and logic to the storefront.
 
-Seeing `429` errors? See [Too many requests (429 errors)](/troubleshooting/too-many-requests/) to find the cause and fix it.
+Seeing `429` errors? To find the cause and fix it, see [Too many requests (429 errors)](/troubleshooting/too-many-requests/).
 
 Once you've tuned these areas, run [Lighthouse audits](#run-lighthouse-audits) for a fresh readout, and revisit [Performance and monitoring](/setup/launch/#performance-and-monitoring) on the launch checklist before you ship.
 
