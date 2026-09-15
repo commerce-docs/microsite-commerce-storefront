@@ -1044,6 +1044,7 @@ export function generateSidebar() {
           label: 'Release Notes',
           items: [
             { label: 'Overview', link: '/releases/' },
+            { label: 'Changelog', link: '/releases/changelog/' },
             { label: 'July 2026 suite', link: '/releases/2026-07/' },
             { label: 'June 2026 suite', link: '/releases/2026-06/' },
             { label: 'April 2026 suite', link: '/releases/2026-04/' },
@@ -1055,7 +1056,6 @@ export function generateSidebar() {
             { label: 'June 2025 suite', link: '/releases/2025-06/' },
             { label: 'April 2025 suite', link: '/releases/2025-04/' },
             { label: 'December 2024 suite', link: '/releases/2024-12/' },
-            { label: 'Changelog', link: '/releases/changelog/' },
           ],
         },
         {

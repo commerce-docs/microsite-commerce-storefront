@@ -15,13 +15,19 @@
 
 interface Props {
   nowrap?: number[]; // Column indices that should not wrap (0-based)
-  variant?: 'default' | 'metadata'; // Visual style variant
+  variant?: 'default' | 'metadata' | 'release'; // Visual style variant
 }
 
 const { nowrap = [], variant = 'default' } = Astro.props;
 ---
 
-<div class={`table-wrapper ${variant === 'metadata' ? 'metadata-table' : ''}`} data-nowrap-columns={nowrap.join(",")}>
+<div
+  class:list={[
+    'table-wrapper',
+    { 'metadata-table': variant === 'metadata', 'release-table': variant === 'release' },
+  ]}
+  data-nowrap-columns={nowrap.join(",")}
+>
   <slot />
 </div>
 
@@ -34,6 +40,16 @@ const { nowrap = [], variant = 'default' } = Astro.props;
   .table-wrapper table {
     width: 100%;
     border-collapse: collapse;
+  }
+
+  /* Keep columns aligned across separate release tables. */
+  .release-table table {
+    table-layout: fixed;
+  }
+
+  .release-table th:first-child,
+  .release-table td:first-child {
+    width: 9.5rem;
   }
 
   /* Apply nowrap to specific columns based on data attribute */
