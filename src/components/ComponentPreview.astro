@@ -1,0 +1,50 @@
+---
+// Frames an SDK component screenshot on the component reference pages.
+//
+// Drop-in components are light only (dark text on transparent fills), so the
+// preview surface stays light in both docs themes to keep them legible; the
+// border adapts to the theme so the card still reads as native in dark mode.
+// Screenshots are captured transparent at 2x DPI and shown at half their pixel
+// size — their true on-page size, crisp on high-density displays. The card
+// hugs the component (fit-content) so small components don't float in a void.
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+}
+
+const { src, alt } = Astro.props;
+const displayWidth = Math.round(src.width / 2);
+---
+
+<figure class="component-preview">
+  <Image src={src} alt={alt} loading="lazy" style={`width:${displayWidth}px`} />
+</figure>
+
+<style>
+  .component-preview {
+    width: fit-content;
+    max-width: 100%;
+    min-width: min(18rem, 100%);
+    margin: 1.25rem auto 2rem;
+    padding: 2.25rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
+  }
+  /* Keep the stage light for legibility, but shift the tone in dark mode so it
+     reads as intentionally themed rather than a stark white block. */
+  :global([data-theme='dark']) .component-preview {
+    background-color: #d0d0d5;
+    box-shadow: none;
+  }
+  .component-preview :global(img) {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

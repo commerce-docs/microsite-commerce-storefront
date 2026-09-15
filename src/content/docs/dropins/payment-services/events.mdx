@@ -20,9 +20,9 @@ The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit
 | Event         | Direction | Description                                                |
 |---------------|-----------|------------------------------------------------------------|
 | [authenticated](#authenticated-listens) | Listens | Fired by the [User Auth](/dropins/user-auth/events/) drop-in when the user's authentication state changes. Used to determine whether the shopper is a guest customer. |
-| [cart/data](#cartdata-listens) | Listens | Fired by the [Cart](/dropins/cart/events/) drop-in when cart data is available or changes. Read by the `GooglePay` container at click time to supply cart items and totals to the Google Pay payment sheet, and by the `PayPalButtons` container at click time to supply the cart ID to PayPal checkout. |
-| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is first loaded. Used as a fallback by the `GooglePay` container when `checkout/updated` has not yet been received. |
-| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is updated. Read by the `GooglePay` container at click time to supply billing address and shipping method to the Google Pay payment sheet, and by the `PayPalButtons` container at click time to supply the cart ID to PayPal checkout. |
+| [cart/data](#cartdata-listens) | Listens | Fired by the [Cart](/dropins/cart/events/) drop-in when cart data is available or changes. Used by various payment method containers to retrieve the cart ID and other cart data. |
+| [checkout/initialized](#checkoutinitialized-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout page is first loaded. Used as a fallback by the `GooglePay` container when `checkout/updated` has not yet been received. |
+| [checkout/updated](#checkoutupdated-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is updated. Read by the `GooglePay` container at button click time to determine the selected shipping method and billing address. |
 | [payment-services/initialized/checkout](#payment-servicesinitializedcheckout-emits) | Emits | Emitted when the drop-in finishes initializing for the `CHECKOUT` location. |
 | [payment-services/initialized/product-detail](#payment-servicesinitializedproduct-detail-emits) | Emits | Emitted when the drop-in finishes initializing for the `PRODUCT_DETAIL` location. |
 </TableWrapper>
@@ -57,9 +57,7 @@ events.on('authenticated', (isAuthenticated) => {
 
 ### `cart/data` (listens)
 
-Fired by the [Cart](/dropins/cart/events/#cartdata-emits-and-listens) drop-in when cart data is available or changes. The `GooglePay` container reads this event using `events.lastPayload('cart/data')` at the moment the shopper clicks the Google Pay button — not at render time — to populate cart items and price totals in the Google Pay payment sheet. The `PayPalButtons` container reads the same event, at the same moment, to supply the cart ID to PayPal checkout — PayPal's own hosted checkout flow collects billing and shipping details itself, so `PayPalButtons` only needs the cart ID, not the full cart contents.
-
-The `cart/data` payload must therefore be present on the event bus before the shopper clicks the button. For the full `CartModel` type definition, see the [Cart events reference](/dropins/cart/events/#cartmodel).
+Fired by the [Cart](/dropins/cart/events/#cartdata-emits-and-listens) drop-in when cart data is available or changes. Used by various payment method containers to retrieve the cart ID and other cart data at checkout. The event must have fired at least once with a non-null payload before the shopper initiates payment (for example, clicks a payment button).
 
 #### Event payload
 
@@ -83,7 +81,7 @@ events.on('cart/data', (payload) => {
 
 ### `checkout/initialized` (listens)
 
-Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is first loaded. The `GooglePay` container uses this event as a fallback when `checkout/updated` has not yet been received — for example, when the shopper opens the Google Pay payment sheet without having interacted with the checkout form.
+Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout page is first loaded. The `GooglePay` container uses this event as a fallback when `checkout/updated` has not yet been received — for example, when the shopper opens the Google Pay payment sheet without having interacted with the checkout form.
 
 #### Event payload
 
@@ -105,9 +103,9 @@ events.on('checkout/initialized', (payload) => {
 
 ### `checkout/updated` (listens)
 
-Fired by the [Checkout](/dropins/checkout/events/#checkoutupdated-emits-and-listens) drop-in when the checkout state is updated. The `GooglePay` container reads this event using `events.lastPayload('checkout/updated')` at the moment the shopper clicks the Google Pay button to populate billing address and shipping method in the Google Pay payment sheet. If `checkout/updated` has not yet been received, the container falls back to `checkout/initialized`.
+Fired by the [Checkout](/dropins/checkout/events/#checkoutupdated-emits-and-listens) drop-in when the checkout state is updated. Used by the `GooglePay` container to determine the selected shipping method and billing address when the shopper clicks the Google Pay button. If `checkout/updated` has not yet been received, the container falls back to `checkout/initialized`.
 
-Like `cart/data`, one of these payloads must be present on the event bus before the shopper clicks the button. For the full `Cart` and `NegotiableQuote` type definitions, see the [Checkout events reference](/dropins/checkout/events/#cart).
+At least one `checkout/updated` or `checkout/initialized` event must have been emitted on the event bus before clicking the Google Pay button.
 
 #### Event payload
 
@@ -136,5 +134,3 @@ See [Payment method availability](/dropins/payment-services/initialization/#paym
 
 ### `payment-services/initialized/product-detail` (emits)
 See [Payment method availability](/dropins/payment-services/initialization/#payment-method-availability).
-
-

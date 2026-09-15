@@ -20,8 +20,8 @@ Welcome to the storefront documentation site! This site is built with [Astro](ht
 
 You'll use **Node.js** (the JavaScript runtime) and **pnpm** (a package manager for Node projects). Install these before you clone the repo:
 
-- `Node.js 20.13.1` or later.
-- `pnpm 9.x` or later. See the [pnpm installation instructions](https://pnpm.io/installation).
+- `Node.js 22` or later.
+- `pnpm 10.6.5` or later. See the [pnpm installation instructions](https://pnpm.io/installation).
 
 ## Set up your local environment
 
@@ -204,7 +204,7 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
 
 1. Open a pull request against the `release` branch. That branch is what the site uses for publishing.
 
-1. After your PR merges into `release`, the nightly build publishes updates to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site.
+1. After your PR merges into `release`, the nightly build publishes updates to the [Commerce Storefront](https://experienceleague.adobe.com/en/tools/commerce-storefront/) site.
 
 ## How to prepare for a new release
 
