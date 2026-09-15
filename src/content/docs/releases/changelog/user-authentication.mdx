@@ -1,0 +1,88 @@
+---
+title: User Authentication changelog
+description: Track changes and updates to the User Authentication.
+---
+
+import Link from '@components/Link.astro';
+
+<p class="changelog-date">July 30, 2026</p>
+
+## User Authentication v4.0.1
+
+The User Authentication drop-in has been updated with the following changes:
+
+**Fixes**
+- **Adobe Commerce as a Cloud Service compatibility**: Fixed a schema error during drop-in initialization caused by a token validation query field not available on Adobe Commerce as a Cloud Service backends. The query now splits into a minimal, broadly compatible variant and a variant that includes the extra field only when Adobe Commerce Optimizer support is enabled, so no changes are required for existing implementations ([#102](https://github.com/adobe-commerce/storefront-auth/pull/102)).
+- **Autocomplete**: Fixed incorrect or missing `autocomplete` attributes on sign in, sign up, and password fields, including using `autocomplete="email"` instead of `"username"` on email fields, and correct `given-name`/`family-name`/`new-password` values elsewhere, WCAG 1.3.5 ([#118](https://github.com/adobe-commerce/storefront-auth/pull/118)).
+- **Accessibility**: Marked visual heading text as real headings across sign in, sign up, reset password, and update password forms ([#120](https://github.com/adobe-commerce/storefront-auth/pull/120)).
+
+<p class="changelog-date">June 10, 2026</p>
+
+## User Authentication v4.0.0
+
+**New features**
+- **Remote Shopping Assistance**: Admin session management using JSON Web Token (JWT) validation and a new customer-facing consent UI for approving or revoking administrator assistance. This enables store administrators to assist customers with purchases directly from the storefront ([#62](https://github.com/adobe-commerce/storefront-auth/pull/62)).
+
+**Improvements and fixes**
+- **Enhanced cookie security**: All authentication cookies now use proper encoding and strict `SameSite` protection. This is a potentially breaking change for implementations relying on specific cookie attributes or cross-domain authentication behavior.
+- **B2C permissions fix**: `getCustomerRolePermissions` now always emits `auth/permissions` with `Magento_Sales::place_order` set for standard customers, preventing the checkout drop-in from incorrectly treating B2C users as permission-denied.
+
+**Infrastructure**
+- **Node.js 22 LTS**: The package now builds and distributes using Node.js 22 LTS. The `engines.node` constraint has been removed as this drop-in targets browser environments exclusively.
+
+<p class="changelog-date">February 17, 2026</p>
+
+## User Authentication v3.1.0
+
+The User Auth drop-in has been updated with the following changes:
+
+- **Custom error messages** - New `apiErrorMessageOverride` prop enables custom login error message overrides for brand-specific error messaging ([#53](https://github.com/adobe-commerce/storefront-auth/pull/53)).
+
+<p class="changelog-date">January 8, 2026</p>
+
+## User Authentication v3.0.0
+
+**Major version upgrade** with B2B role permissions and Adobe Commerce Optimizer support. The User Auth drop-in has been updated to include the following changes:
+
+**New features**
+
+- **Customer role permissions API** - New `getCustomerRolePermissions()` function retrieves B2B customer role permissions with intelligent caching. Returns permissions as a flat object with `all` and `admin` flags, plus specific B2B permissions like purchase order and company management capabilities. Includes automatic handling of purchase order permissions when the feature is disabled. Emits `auth/permissions` event for application-wide permission updates ([#21](https://github.com/adobe-commerce/storefront-auth/pull/21), [#27](https://github.com/adobe-commerce/storefront-auth/pull/27), [#39](https://github.com/adobe-commerce/storefront-auth/pull/39)).
+- **Adobe Commerce Optimizer integration** - New `getAdobeCommerceOptimizerData()` function fetches Adobe Commerce Optimizer data (price book ID) for dynamic pricing support. Works for both authenticated and non-authenticated users, with automatic event emission via `auth/adobe-commerce-optimizer` ([#44](https://github.com/adobe-commerce/storefront-auth/pull/44)).
+- **Customer group tracking** - Customer group UIDs are now automatically tracked and emitted via the `auth/group-uid` event. The drop-in converts base64-encoded group UIDs to SHA1 hashes for consistent event formatting. Non-logged-in customers emit a default group ID. Events are emitted during login, logout, token validation, and role permission checks ([#30](https://github.com/adobe-commerce/storefront-auth/pull/30), [#35](https://github.com/adobe-commerce/storefront-auth/pull/35)).
+
+**Improvements**
+
+- **Cookie security for localhost** - Auth cookies no longer set the Secure flag when running on localhost (including 127.0.0.1 and ::1), fixing Safari browser compatibility issues during local development while maintaining security on production domains ([#43](https://github.com/adobe-commerce/storefront-auth/pull/43)).
+- **Elsie SDK upgrade** - Updated to Elsie SDK 1.6.0, bringing pagination SEO enhancements, improved price formatting utilities, table component mobile responsiveness improvements, enhanced field component rendering, and icon stroke width fixes ([#41](https://github.com/adobe-commerce/storefront-auth/pull/41)).
+- **Enhanced initialization** - The `initialize()` function now supports optional `customerPermissionRoles` and `adobeCommerceOptimizer` configuration flags to enable these features. When enabled, the drop-in automatically fetches permissions and optimizer data on initialization and re-fetches when authentication state changes.
+- **Authentication state tracking** - The initialize function now properly tracks authentication state changes and automatically refreshes permissions and optimizer data when users log in or out.
+- **GraphQL fetch upgrade** - Updated to @adobe-commerce/fetch-graphql 1.2.3 for improved GraphQL query handling and better header management.
+- **Token cleanup on logout** - The `revokeCustomerToken()` function now properly removes the authentication header and emits the default non-logged-in group ID when users log out.
+- **Revised Adobe Commerce Drop-in License Agreement** - Updated license agreement to current terms. Drop-ins are now exclusively licensed for Adobe Commerce as a Cloud Service (ACCS) and Adobe Commerce Optimizer (ACO). Use on on-premise or Platform-as-a-Service (PaaS) deployments is not permitted under the license agreement ([#46](https://github.com/adobe-commerce/storefront-auth/pull/46)).
+
+<p class="changelog-date">October 14, 2025</p>
+
+## User Authentication v2.1.1
+
+The User Authentication drop-in has been updated to include the following changes:
+
+- **Cookies now use Secure flag**: Authentication cookies (`auth_dropin_firstname` and `auth_dropin_user_token`) now include the Secure flag, ensuring they're only transmitted over HTTPS connections for improved security and protection against man-in-the-middle attacks. Note that this requires your application to run over HTTPS in production environments (<Link href={"https://github.com/adobe-commerce/storefront-auth/pull/20"} text={"#20"} />).
+
+<p class="changelog-date">August 12, 2025</p>
+
+## User Authentication v2.1.0
+
+The User Authentication drop-in has been updated to include the following changes:
+
+- **Fixed missing Channel Field**: Added the `channel` attribute to all Adobe Experience Platform (AEP) events as part of the global storefront context, ensuring complete event data collection and proper event categorization.
+- **Fixed invalid email validation**: Prevented GraphQL requests from being sent when an invalid email is entered in the Reset Password form, eliminating unnecessary API calls and error responses for malformed email addresses.
+
+<p class="changelog-date">June 25, 2025</p>
+
+## User Authentication v2.0.3
+
+**Callback for successful password reset**
+
+{/* USF-2338 */}
+
+You can now customize the user experience after a successful password reset request. A new `onSuccessCallback` method is available in the [`UpdatePassword`](/dropins/user-auth/containers/update-password/) container, allowing developers to override the default notification banner. Use this callback to redirect users, display a custom modal, or implement any other custom behavior upon a successful password reset request.
