@@ -1,11 +1,83 @@
 ---
 title: Portal
-description: Mount UI into a separate DOM node outside the parent tree so overlays, tooltips, and popovers escape layout constraints safely.
-tableOfContents: false
-iframe:
-    src: "components-portal--overview"
+description: Render content into a separate DOM node appended to the document body so overlays, tooltips, and popovers escape parent layout constraints.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import Diagram from '@components/Diagram.astro';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Portal` to render content into a separate DOM node appended to `document.body`, so overlays such as modals, tooltips, and popovers can escape a parent's layout and stacking constraints. Portal creates this node when it mounts and removes it when it unmounts, and marks it with a `data-portal-root` attribute so you can find it in your browser's DevTools.
+
+For example, `ProductItemCard`'s image container clips anything that renders past its edge, so its images crop cleanly. A tooltip that pops up above the image would get clipped by that same edge, so nest it in a `Portal`: it renders in the DOM as a sibling of the image container instead, even though your code still nests it inside the image slot.
+
+<Diagram type="mermaid" caption="The same running app, shown two ways: your code nests Portal inside the image container, but its content ends up beside it in the DOM" code={`
+%%{init: {'theme':'base', 'themeVariables': { 'edgeLabelBackground':'#ffffff'}}}%%
+graph LR
+    subgraph Tree["How you nest it in code"]
+        A("Image container<br/>overflow: hidden")
+        subgraph B["Portal"]
+            C(Tooltip)
+        end
+        A --> B
+    end
+    subgraph DOM["Where it lives in the DOM"]
+        Body(document.body)
+        D("Image container<br/>overflow: hidden")
+        subgraph E["Portal root [data-portal-root]"]
+            F(Tooltip)
+        end
+        Body --> D
+        Body --> E
+    end
+    B -.->|same Portal| E
+
+    style B fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style E fill:#fef3c7,stroke:#f59e0b,stroke-width:3px
+    style A fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    style D fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+`} />
+
+Both panels describe the same moment, not a before and after. Preact first renders Portal's children at the element you pass to `provider.render`, then immediately moves them into the portal root, before the browser paints. You never see the content in its original position.
+
+## Import
+
+```js
+import { Portal } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `children` | `ComponentChildren` | Yes | The content to render into the portal root. |
+
+</TableWrapper>
+
+## Example
+
+Render a tooltip through a portal so `ProductItemCard`'s image container doesn't clip it. Build the children with `h`.
+
+```js
+import { ProductItemCard, Portal, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+// ProductItemCard's image container clips overflow, so portal the tooltip
+// out to keep it fully visible.
+await provider.render(ProductItemCard, {
+  initialized: true,
+  image: h('div', {}, [
+    h('img', { src: '/media/product.jpg', alt: 'Product name' }),
+    h(Portal, {
+      children: h('div', { className: 'tooltip' }, 'Tooltip content'),
+    }),
+  ]),
+})(document.querySelector('.product-item'));
+```
+
+## Related
+
+- [Modal](/sdk/components/modal/) — an overlay that renders through a portal.
+- [ProductItemCard](/sdk/components/productitemcard/) — its image container clips overflow that a portal can escape.
+- [Design tokens](/sdk/design/) — the colors, spacing, and typography overlays use.

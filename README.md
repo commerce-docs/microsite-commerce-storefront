@@ -204,7 +204,7 @@ If you don't have write access to the repo, [fork the repository](https://docs.g
 
 1. Open a pull request against the `release` branch. That branch is what the site uses for publishing.
 
-1. After your PR merges into `release`, the nightly build publishes updates to the [Commerce Storefront](https://experienceleague.adobe.com/developer/commerce/storefront/) site.
+1. After your PR merges into `release`, the nightly build publishes updates to the [Commerce Storefront](https://experienceleague.adobe.com/en/tools/commerce-storefront/) site.
 
 ## How to prepare for a new release
 

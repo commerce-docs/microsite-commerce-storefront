@@ -2,6 +2,14 @@
 // (`a.sl-anchor-link`, rendered by AnchorHeading.astro) is clicked. The default
 // hash navigation still runs, so the URL bar updates and the page scrolls to the
 // heading as before; this only adds the copy that readers expect from the icon.
+//
+// Starlight renders heading links and table-of-contents links as bare `#id`
+// fragments. The published site wraps every page in a `<base href>` pointing at
+// the site root (injected outside this repo, by the experienceleague.adobe.com
+// publishing layer), so those fragments resolve against that root instead of the
+// current page. `fixSamePageHrefs` rewrites them to `<current pathname>#id` using
+// `location.pathname`, which reflects the real current URL regardless of any
+// `<base>` tag.
 
 let feedbackEl: HTMLElement | null = null;
 let feedbackTimer: number | undefined;
@@ -51,11 +59,31 @@ function showCopiedFeedback(anchor: HTMLElement): void {
   }, 1200);
 }
 
+// Rewrites heading permalinks and desktop/mobile table-of-contents links from a
+// bare `#id` to `<pathname>#id`, so they resolve against the current page even
+// when a `<base>` tag points elsewhere.
+function fixSamePageHrefs(): void {
+  const anchors = document.querySelectorAll<HTMLAnchorElement>(
+    [
+      'a.sl-anchor-link:not([data-href-fixed])',
+      'starlight-toc a:not([data-href-fixed])',
+      'mobile-starlight-toc a:not([data-href-fixed])',
+    ].join(', '),
+  );
+  anchors.forEach((anchor) => {
+    const hash = anchor.getAttribute('href');
+    if (!hash?.startsWith('#')) return;
+    anchor.dataset.hrefFixed = '';
+    anchor.setAttribute('href', `${location.pathname}${hash}`);
+  });
+}
+
 // Advertise the copy affordance before the click with a hover tooltip. The icon
 // looks like a plain link, so without this a reader has no cue that it copies.
 // The accessible label Starlight sets (section navigation) is left intact, since
 // the element is still a real navigating link for keyboard and screen-reader use.
 function annotateAnchors(): void {
+  fixSamePageHrefs();
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
     'a.sl-anchor-link:not([data-copy-annotated])',
   );
