@@ -15,6 +15,160 @@ A suite release marks a point in time when we have tested the storefront and its
 
 The following sections provide high-level summaries of each release suite and details about the compatibility between storefront components. To see more details about each drop-in component by version, go to the [changelog](/releases/changelog/).
 
+## September 2026 suite
+
+Shoppers can pick their own free gift in the cart and complete it at checkout, instead of a promotional item being added for them automatically. Checkout gains two new payment options, Google Pay and PayPal Buttons, alongside Apple Pay coupon code support. On the B2B side, buyers get a company-wide address book they can use across account management, checkout, and quotes. See the [changelog](/releases/changelog/) for the full list of changes.
+
+<Aside type="caution" title="No breaking changes">
+No breaking API or configuration changes from the July 2026 suite.
+</Aside>
+
+### Highlights
+
+#### Free gift selection in cart and checkout
+
+Shoppers who qualify for a "Free Gift" cart price rule can now choose which gift they want, instead of one being added to their cart automatically. The Cart drop-in exposes a new `selectFreeGiftForCart` API and `FreeGiftSelection` container for this ([#109](https://github.com/adobe-commerce/storefront-cart/pull/109)). Checkout now accepts the selection and completes the order instead of rejecting it ([#324](https://github.com/adobe-commerce/storefront-checkout/pull/324)). Order history and returns show the gift at zero price with a "Free Gift" label, so it doesn't look like a pricing error ([#93](https://github.com/adobe-commerce/storefront-order/pull/93)).
+
+#### New payment options: Google Pay and PayPal Buttons
+
+Shoppers can now complete checkout with Google Pay or PayPal Buttons, in addition to credit cards and Apple Pay ([#53](https://github.com/adobe-commerce/storefront-payment-services/pull/53), [#63](https://github.com/adobe-commerce/storefront-payment-services/pull/63)). Apple Pay also supports coupon codes from the Payments JS SDK ([#56](https://github.com/adobe-commerce/storefront-payment-services/pull/56)). The Payment Services drop-in moves to a new major version, 4.2.1, to reflect these additions — existing Credit Card and Apple Pay integrations don't need any changes.
+
+#### Multiple named wishlists per shopper
+
+Shoppers can now create more than one wishlist, for example a gift list kept separate from a save-for-later list, and add products to a specific list instead of only the default one ([#113](https://github.com/adobe-commerce/storefront-wishlist/pull/113), [#114](https://github.com/adobe-commerce/storefront-wishlist/pull/114)). Implementers can render more than one wishlist widget on the same page without them interfering with each other, using a new `scope` prop ([#117](https://github.com/adobe-commerce/storefront-wishlist/pull/117)). Guest wishlists can now persist with an optional expiration, so a signed-out shopper's saved items survive a return visit ([#119](https://github.com/adobe-commerce/storefront-wishlist/pull/119)).
+
+#### B2B Company Address Book
+
+B2B buyers can manage a shared company address book and use those saved addresses throughout account management, checkout, and quotes, instead of only their own personal addresses ([#131](https://github.com/adobe-commerce/storefront-account/pull/131)). Company Administrators turn the feature on or off, and choose whether custom shipping addresses are still allowed, from the Company Profile page ([#118](https://github.com/adobe-commerce/storefront-company-management/pull/118)), with role-based permissions controlling who can view, add, edit, or delete company addresses. Checkout and Quote Management were updated so orders and quotes using a company address complete successfully instead of being rejected ([#358](https://github.com/adobe-commerce/storefront-checkout/pull/358), [#128](https://github.com/adobe-commerce/storefront-quote-management/pull/128)).
+
+#### B2B reCAPTCHA protection for company registration
+
+reCAPTCHA verification on the company registration ("create company") form now requires an explicit opt-in instead of running by default, fixing a bug where the always-on check could error out on non-B2B backends. B2B storefronts must pass `{ b2bEnabled: true }` to the reCAPTCHA `setConfig()` call to keep verifying company registration submissions after upgrading ([#287](https://github.com/adobe-commerce/StorefrontSDK/pull/287)).
+
+### Updated boilerplate
+
+#### Infrastructure
+
+- **Drop-in SDK**: `@dropins/tools` upgraded to 2.1.0. See [Updated Drop-in SDK](#updated-drop-in-sdk) for sub-package versions.
+
+#### Document Authoring
+
+No Document Authoring changes in this release suite.
+
+#### Fixes and improvements
+
+- **Mini cart**: Defers loading the mini cart's fragment and its dependent containers until a shopper actually opens the cart panel, instead of on every page load, cutting unnecessary requests and reducing rate-limit errors ([#1387](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1387), B2C) ([#1389](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1389), B2B).
+- **Product recommendations**: Fixed a bug where adding a recommended item to cart could overwrite the "current SKU" anchor used to generate recommendations, keeping suggestions accurate after cart interactions ([#1403](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1403)).
+
+### Updated Drop-in SDK
+
+<Aside type="note" title="Internal Links">
+Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+</Aside>
+
+The Drop-in SDK (`@dropins/tools`) was upgraded to 2.1.0 in this release. The following sub-packages were also updated:
+
+| Package | Version |
+|---------|---------|
+| `@dropins/build-tools` | 1.2.1 |
+| `@adobe-commerce/elsie` | 2.1.0 |
+| `@adobe-commerce/event-bus` | 1.1.1 |
+| `@adobe-commerce/fetch-graphql` | 1.3.1 |
+| `@adobe-commerce/recaptcha` | 1.3.0 |
+| `@adobe-commerce/storefront-design` | 1.1.1 |
+
+- **New features**: The Incrementer component now accepts an optional `label` prop that renders a visible, associated `<label>` element ([#260](https://github.com/adobe-commerce/StorefrontSDK/pull/260), [#295](https://github.com/adobe-commerce/StorefrontSDK/pull/295)). A new `LiveRegion` component and `loading`/`loadingLabel` props on `Button` let you announce status changes and loading state to screen readers ([#260](https://github.com/adobe-commerce/StorefrontSDK/pull/260)). New `sanitizeHtml` and `createSanitizedHtml` helpers, backed by DOMPurify, make it safer to render untrusted HTML ([#300](https://github.com/adobe-commerce/StorefrontSDK/pull/300)).
+- **Improvements and fixes**: reCAPTCHA form types are now configurable via a `b2bEnabled` flag; see [B2B reCAPTCHA protection for company registration](#b2b-recaptcha-protection-for-company-registration) above ([#287](https://github.com/adobe-commerce/StorefrontSDK/pull/287)). Accessibility fixes:
+  - `Incrementer` no longer flickers when a server value arrives while a shopper is typing ([#217](https://github.com/adobe-commerce/StorefrontSDK/pull/217)), and no longer triggers a spurious update when keyboard focus moves to its buttons, now exposing `aria-valuetext` for VoiceOver ([#288](https://github.com/adobe-commerce/StorefrontSDK/pull/288)).
+  - `Modal` hides sibling page content from assistive technology while open, so screen reader users can't navigate outside the dialog ([#254](https://github.com/adobe-commerce/StorefrontSDK/pull/254)).
+  - Active pagination buttons announce their state correctly and have higher-contrast focus indicators ([#259](https://github.com/adobe-commerce/StorefrontSDK/pull/259)).
+  - `PasswordStatusIndicator` requirement changes are now announced as they happen ([#261](https://github.com/adobe-commerce/StorefrontSDK/pull/261)).
+  - `InputPassword` and `Field` accessible names and error associations ([#291](https://github.com/adobe-commerce/StorefrontSDK/pull/291)).
+  - Higher-contrast disabled button and progress spinner states ([#294](https://github.com/adobe-commerce/StorefrontSDK/pull/294)).
+  - `RadioButton`'s focusable input stays anchored to its visible label when the page scrolls ([#298](https://github.com/adobe-commerce/StorefrontSDK/pull/298)).
+
+### Updated B2C drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Cart**](/dropins/cart/) v3.4.0 | Shoppers can select which free gift they receive when a cart price rule qualifies them for one, instead of one being added automatically ([#109](https://github.com/adobe-commerce/storefront-cart/pull/109)). Loading states in the mini cart, order summary, and estimate shipping now announce themselves to screen readers, and cart line item prices and the empty-cart message are more accessible ([#170](https://github.com/adobe-commerce/storefront-cart/pull/170), [#172](https://github.com/adobe-commerce/storefront-cart/pull/172), [#173](https://github.com/adobe-commerce/storefront-cart/pull/173), [#174](https://github.com/adobe-commerce/storefront-cart/pull/174), [#175](https://github.com/adobe-commerce/storefront-cart/pull/175)). Errors returned by `updateCartItems` are now surfaced instead of silently swallowed ([#178](https://github.com/adobe-commerce/storefront-cart/pull/178)). |
+| [**Checkout**](/dropins/checkout/) v3.4.0 | Shoppers can complete checkout with a free gift selected in the cart, instead of the order being rejected ([#324](https://github.com/adobe-commerce/storefront-checkout/pull/324)). Checkout now accepts a saved company address book address for B2B orders, fixing an issue that could block order placement entirely once the company address book was enabled ([#358](https://github.com/adobe-commerce/storefront-checkout/pull/358)). |
+| [**Order**](/dropins/order/) v4.1.0 | Order history and returns show a free gift at zero price with a "Free Gift" label, and can display discount labels on order items ([#93](https://github.com/adobe-commerce/storefront-order/pull/93)). `placeOrder` no longer silently succeeds when the backend omits a required field ([#152](https://github.com/adobe-commerce/storefront-order/pull/152)). Order comments now render safe HTML formatting instead of showing literal tags ([#154](https://github.com/adobe-commerce/storefront-order/pull/154)). Shipment details now display for completed orders with a single untracked shipment ([#156](https://github.com/adobe-commerce/storefront-order/pull/156)). |
+| [**Product Details Page**](/dropins/product-details/) v3.3.2 | Fixed a bug where selecting a custom option on a configurable product could show the parent product's image gallery instead of the selected variant's ([#94](https://github.com/adobe-commerce/storefront-pdp/pull/94)). |
+| [**User Account**](/dropins/user-account/) v4.2.0 | B2B buyers can manage a shared company address book, with role-based permissions controlling who can view, add, edit, or delete addresses ([#131](https://github.com/adobe-commerce/storefront-account/pull/131)). Shoppers can search order history by order number, product name, or SKU ([#128](https://github.com/adobe-commerce/storefront-account/pull/128), [#133](https://github.com/adobe-commerce/storefront-account/pull/133)). A hot-fix restored the previous personal-address behavior for shoppers not using company addresses ([#138](https://github.com/adobe-commerce/storefront-account/pull/138)). Accessibility fixes across account pages and the orders list ([#129](https://github.com/adobe-commerce/storefront-account/pull/129), [#132](https://github.com/adobe-commerce/storefront-account/pull/132), [#134](https://github.com/adobe-commerce/storefront-account/pull/134)). |
+| [**User Auth**](/dropins/user-auth/) v4.1.0 | Signed-in shoppers using per-website account sharing are now signed out automatically when they switch websites, instead of staying signed in with the wrong account context ([#129](https://github.com/adobe-commerce/storefront-auth/pull/129)). Loading state on sign-in, sign-up, and password forms is now announced to screen readers ([#126](https://github.com/adobe-commerce/storefront-auth/pull/126)). |
+| [**Personalization**](/dropins/personalization/) v3.2.2 | No user-facing changes in this release. |
+| [**Product Discovery**](/dropins/product-discovery/) v3.1.2 | Accessibility fixes: facet titles now render as real headings with an overridable `FacetHeading` slot ([#102](https://github.com/adobe-commerce/storefront-search-dropin/pull/102)), descriptive accessible names on product image, price, and "Clear all" links ([#104](https://github.com/adobe-commerce/storefront-search-dropin/pull/104)), and facet filter groups now correctly announce their group label to screen readers ([#100](https://github.com/adobe-commerce/storefront-search-dropin/pull/100), [#101](https://github.com/adobe-commerce/storefront-search-dropin/pull/101), [#105](https://github.com/adobe-commerce/storefront-search-dropin/pull/105)). |
+| [**Product Recommendations**](/dropins/recommendations/) v4.0.4 | No user-facing changes in this release. |
+| [**Payment Services**](/dropins/payment-services/) v4.2.1 | Shoppers can pay with Google Pay or PayPal Buttons in addition to credit cards and Apple Pay ([#53](https://github.com/adobe-commerce/storefront-payment-services/pull/53), [#63](https://github.com/adobe-commerce/storefront-payment-services/pull/63)). Apple Pay supports coupon codes from the Payments JS SDK ([#56](https://github.com/adobe-commerce/storefront-payment-services/pull/56)). A new `submitCreditCard()` API lets the drop-in handle credit card submission internally; the existing `creditCardFormRef` prop still works ([#66](https://github.com/adobe-commerce/storefront-payment-services/pull/66)). Accessibility fixes for the credit card form's loading indicator and field labels ([#61](https://github.com/adobe-commerce/storefront-payment-services/pull/61), [#62](https://github.com/adobe-commerce/storefront-payment-services/pull/62)). |
+| [**Wishlist**](/dropins/wishlist/) v3.5.0 | Shoppers can create more than one wishlist and add products to a specific list ([#113](https://github.com/adobe-commerce/storefront-wishlist/pull/113), [#114](https://github.com/adobe-commerce/storefront-wishlist/pull/114)). Guest wishlists can now persist with an optional expiration ([#119](https://github.com/adobe-commerce/storefront-wishlist/pull/119)), and implementers can render multiple independent wishlist widgets on one page using a new `scope` prop ([#117](https://github.com/adobe-commerce/storefront-wishlist/pull/117)). A new `slots.actions` slot and an optional stock-status label give implementers more control over each item ([#122](https://github.com/adobe-commerce/storefront-wishlist/pull/122), [#116](https://github.com/adobe-commerce/storefront-wishlist/pull/116)). |
+
+</TableWrapper>
+
+### Updated B2B drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Company Management**](/dropins-b2b/company-management/) v1.5.0 | Company Administrators can turn the company address book and custom shipping addresses on or off from the Company Profile page ([#118](https://github.com/adobe-commerce/storefront-company-management/pull/118)). Fixed reCAPTCHA verification on the company registration form ([#121](https://github.com/adobe-commerce/storefront-company-management/pull/121)). |
+| [**Company Switcher**](/dropins-b2b/company-switcher/) v1.3.0 | The company switcher now scopes catalog data to the active company's assigned catalog view when switching companies ([#72](https://github.com/adobe-commerce/storefront-company-switcher/pull/72)). |
+| [**Purchase Order**](/dropins-b2b/purchase-order/) v1.2.2 | No user-facing changes in this release. |
+| [**Quote Management**](/dropins-b2b/quote-management/) v1.3.0 | Buyers can select a company address book address for a quote's shipping address, required once a company enables its address book ([#128](https://github.com/adobe-commerce/storefront-quote-management/pull/128)). |
+| [**Requisition List**](/dropins-b2b/requisition-list/) v1.5.1 | No user-facing changes in this release. |
+| [**Quick Order**](/dropins-b2b/quick-order/) v1.1.0 | No user-facing changes in this release. |
+
+</TableWrapper>
+
+### Known issues
+
+There are no known issues for this release suite.
+
+### Component compatibility
+
+Adobe has tested and verified the following component versions for this release suite.
+
+**Commerce Foundation**
+
+| Adobe Commerce | Storefront Compatibility Package |
+|----------------|----------------------------------|
+| `2.4.7` | `4.7.18` |
+| `2.4.8` | `4.8.30` |
+| `2.4.9` | `4.9.5` (Adobe Commerce as a Cloud Service with Adobe Commerce Optimizer only — see [v2.4.9 package details](/setup/configuration/storefront-compatibility/v249/)) |
+
+| Adobe Commerce B2B | Storefront Compatibility B2B Package |
+|--------------------|--------------------------------------|
+| `1.5.2` | `1.0.28` |
+
+**Drop-in SDK**
+
+See [Updated Drop-in SDK](#updated-drop-in-sdk) above for sub-package versions.
+
+**B2C drop-ins**
+
+- `@dropins/storefront-account@~4.2.0`
+- `@dropins/storefront-auth@~4.1.0`
+- `@dropins/storefront-cart@~3.4.0`
+- `@dropins/storefront-checkout@~3.4.0`
+- `@dropins/storefront-order@~4.1.0`
+- `@dropins/storefront-payment-services@~4.2.1`
+- `@dropins/storefront-pdp@~3.3.2`
+- `@dropins/storefront-personalization@~3.2.2`
+- `@dropins/storefront-product-discovery@~3.1.2`
+- `@dropins/storefront-recommendations@~4.0.4`
+- `@dropins/storefront-wishlist@~3.5.0`
+
+**B2B drop-ins**
+
+- `@dropins/storefront-company-management@~1.5.0`
+- `@dropins/storefront-company-switcher@~1.3.0`
+- `@dropins/storefront-purchase-order@~1.2.2`
+- `@dropins/storefront-quote-management@~1.3.0`
+- `@dropins/storefront-requisition-list@~1.5.1`
+- `@dropins/storefront-quick-order@~1.1.0`
+
 ## July 2026 suite
 
 This suite upgrades the Drop-in SDK to TypeScript 6.0 and ESLint 9. If your implementation extends the shared Elsie ESLint configuration, migrate it to flat config. Accessibility fixes land across the Elsie component library and most drop-ins, improving screen reader, keyboard, and focus support. On the B2B side, Company Management moves to 1.4.0, and Requisition List moves to 1.5.0 with correct SKU, options, price, and thumbnail display for configurable products. See the [changelog](/releases/changelog/) for the full list of changes.
