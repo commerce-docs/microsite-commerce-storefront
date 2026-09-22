@@ -34,7 +34,7 @@ The Company Address Book feature is intended for organizations where addresses b
 
 ## Core settings
 
-Company Address Book behavior is controlled by company-level settings.
+Company-level settings control Company Address Book behavior as described below.
 
 <TableWrapper>
 
@@ -93,8 +93,8 @@ The feature defines no events of its own. It relies on events from neighboring d
 
 The feature exposes two key read patterns:
 
-1. `getCompanyAddressBookConfig`: returns only feature settings. This is used for feature gates and navigation checks.
-1. `getCompanyAddressBook`: returns settings plus the address list. This is used by checkout and address-aware flows.
+1. `getCompanyAddressBookConfig`: returns only feature settings used for feature gates and navigation checks.
+1. `getCompanyAddressBook`: returns settings plus the address list used by checkout and address-aware flows.
 
 Write operations are separate from personal-address writes and include `createCompanyAddress`, `updateCompanyAddress`, `deleteCompanyAddress`, and `setDefaultCompanyAddress`.
 
@@ -174,7 +174,7 @@ A common storefront pattern is to guard both navigation visibility and direct-ro
 
 ## Extensibility notes
 
-The feature adds no new slot family. It reuses existing `Addresses` slots and `CompanyProfile` slot extension points. If you override `CompanyData`, the Address Book Configuration block can be replaced with it, so custom slot implementations should preserve required configuration visibility.
+The feature adds no new slot family. It reuses existing `Addresses` and `CompanyProfile` slot extension points. If you override `CompanyData`, your slot content replaces the Address Book Configuration block, so custom slot implementations should preserve required configuration visibility.
 
 ## Addresses container
 
@@ -354,7 +354,11 @@ The feature adds an Address Book Configuration section to the company profile, o
 
 </figure>
 
-Submitting the form persists the settings with the `updateCompanyConfig` mutation, which accepts them as a partial payload of `addressBookEnabled` and `customShippingAddressEnabled`. In practice the form always writes both, so the mutation fires on every administrator save even when neither checkbox moved. The profile and the configuration are not sent in one call: the profile update is issued first and the configuration update only after it succeeds. Each of the two writes reads the customer's role first, so a full administrator save costs four round trips. `updateCompanyConfig` resolves to the updated company model, with the two settings as camelCase `addressBookEnabled` and `customShippingAddressEnabled`. The raw GraphQL response carries them under `company.config` in snake_case, but that shape is not what the function returns. Both settings take effect for every user of the company.
+Submitting the form persists the settings through the `updateCompanyConfig` mutation, which accepts `addressBookEnabled` and `customShippingAddressEnabled` as a partial payload. In practice the form always writes both settings, so the mutation runs on every administrator save, even when neither checkbox changed. Both settings apply to every user in the company.
+
+The profile and configuration are updated separately and sequentially: the profile update runs first, followed by the configuration update only if the profile update succeeds. Each write first reads the customer's role, making a full administrator save four round trips.
+
+`updateCompanyConfig` returns the updated company model, where the settings are exposed as the camelCase fields `addressBookEnabled` and `customShippingAddressEnabled`. Although the raw GraphQL response contains the corresponding snake_case fields under `company.config`, that is not the shape the function returns.
 
 ### Integration example
 
