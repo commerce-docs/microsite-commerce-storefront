@@ -12,8 +12,7 @@ on:
     inputs:
       branch:
         description: 'Branch to build into the /preview2/ subpath'
-        required: false
-        default: 'docs-reorg'
+        required: true
 permissions:
   contents: read
   pages: write
@@ -70,10 +69,10 @@ jobs:
     needs: configure
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ${{ github.event.inputs.branch || 'docs-reorg' }}
+      - name: Checkout ${{ github.event.inputs.branch }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch || 'docs-reorg' }}
+          ref: ${{ github.event.inputs.branch }}
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node
@@ -84,7 +83,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install
-      - name: Build ${{ github.event.inputs.branch || 'docs-reorg' }} (/preview2/ subpath)
+      - name: Build ${{ github.event.inputs.branch }} (/preview2/ subpath)
         env:
           NODE_ENV: github
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
