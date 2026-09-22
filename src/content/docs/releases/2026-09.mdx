@@ -7,7 +7,7 @@ import Aside from '@components/Aside.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
 
-Shoppers can pick their own free gift in the cart and complete it at checkout, instead of a promotional item being added for them automatically. Checkout gains two new payment options, Google Pay and PayPal Buttons, alongside Apple Pay coupon code support. On the B2B side, buyers get a company-wide address book they can use across account management, checkout, and quotes. See the [changelog](/releases/changelog/) for the full list of changes.
+Shoppers can pick their own free gift in the cart and complete their order at checkout, instead of a promotional item being added for them automatically. Checkout gains two new payment options, Google Pay and PayPal Buttons, alongside Apple Pay coupon code support. Shoppers can also organize saved items across more than one wishlist. On the B2B side, buyers get a company-wide address book they can use across account management, checkout, and quotes. See the [changelog](/releases/changelog/) for the full list of changes.
 
 <Aside type="caution" title="Breaking changes">
 There are no breaking changes in this release suite.
@@ -15,25 +15,31 @@ There are no breaking changes in this release suite.
 
 ## Highlights
 
+These highlights describe the shopper- and merchant-facing changes. Developers can find the matching APIs, props, and versions in [Updated Drop-in SDK](#updated-drop-in-sdk) and the [B2C](#updated-b2c-drop-in-components) and [B2B](#updated-b2b-drop-in-components) component tables.
+
 ### Free gift selection in cart and checkout
 
-Shoppers who qualify for a "Free Gift" cart price rule can now choose which gift they want, instead of one being added to their cart automatically. The Cart drop-in exposes a new `selectFreeGiftForCart` API and `FreeGiftSelection` container for this ([#109](https://github.com/adobe-commerce/storefront-cart/pull/109)). Checkout now accepts the selection and completes the order instead of rejecting it ([#324](https://github.com/adobe-commerce/storefront-checkout/pull/324)). Order history and returns show the gift at zero price with a "Free Gift" label, so it doesn't look like a pricing error ([#93](https://github.com/adobe-commerce/storefront-order/pull/93)).
+Shoppers who qualify for a "Free Gift" cart price rule can now choose which gift they want, instead of one being added to their cart automatically. They pick the gift in the cart and complete the order at checkout. Order history and returns show the gift at zero price with a "Free Gift" label, so it doesn't look like a pricing error.
 
 ### New payment options: Google Pay and PayPal Buttons
 
-Shoppers can now complete checkout with Google Pay or PayPal Buttons, in addition to credit cards and Apple Pay ([#53](https://github.com/adobe-commerce/storefront-payment-services/pull/53), [#63](https://github.com/adobe-commerce/storefront-payment-services/pull/63)). Apple Pay also supports coupon codes from the Payments JS SDK ([#56](https://github.com/adobe-commerce/storefront-payment-services/pull/56)). The Payment Services drop-in moves to a new major version, 4.2.1, to reflect these additions — existing Credit Card and Apple Pay integrations don't need any changes.
+Shoppers can now complete checkout with Google Pay or PayPal Buttons, in addition to credit cards and Apple Pay. Apple Pay also supports coupon codes. The Payment Services drop-in moves to a new major version, 4.2.1 (up from 3.1.2) — existing credit card and Apple Pay integrations don't need any changes.
 
 ### Multiple named wishlists per shopper
 
-Shoppers can now create more than one wishlist, for example a gift list kept separate from a save-for-later list, and add products to a specific list instead of only the default one ([#113](https://github.com/adobe-commerce/storefront-wishlist/pull/113), [#114](https://github.com/adobe-commerce/storefront-wishlist/pull/114)). Implementers can render more than one wishlist widget on the same page without them interfering with each other, using a new `scope` prop ([#117](https://github.com/adobe-commerce/storefront-wishlist/pull/117)). Guest wishlists can now persist with an optional expiration, so a signed-out shopper's saved items survive a return visit ([#119](https://github.com/adobe-commerce/storefront-wishlist/pull/119)).
+Shoppers can now create more than one wishlist and add products to specific lists instead of only the default one, for example, a gift list kept separate from a save-for-later list. Guest wishlists can also persist with an optional expiration, so a signed-out shopper's saved items survive a return visit.
 
 ### B2B Company Address Book
 
-B2B buyers can manage a shared company address book and use those saved addresses throughout account management, checkout, and quotes, instead of only their own personal addresses ([#131](https://github.com/adobe-commerce/storefront-account/pull/131)). Company Administrators turn the feature on or off, and choose whether custom shipping addresses are still allowed, from the Company Profile page ([#118](https://github.com/adobe-commerce/storefront-company-management/pull/118)), with role-based permissions controlling who can view, add, edit, or delete company addresses. Checkout and Quote Management were updated so orders and quotes using a company address complete successfully instead of being rejected ([#358](https://github.com/adobe-commerce/storefront-checkout/pull/358), [#128](https://github.com/adobe-commerce/storefront-quote-management/pull/128)).
+B2B buyers can manage a shared [company address book](/dropins-b2b/company-management/company-address-book/) and use those saved addresses throughout account management, checkout, and quotes, instead of only their own personal addresses. Company Administrators turn the feature on or off from the Company Profile page and choose whether custom shipping addresses are still allowed. Role-based permissions control who can view, add, edit, or delete company addresses.
 
 ### B2B reCAPTCHA protection for company registration
 
-reCAPTCHA verification on the company registration ("create company") form now requires an explicit opt-in instead of running by default, fixing a bug where the always-on check could error out on non-B2B backends. B2B storefronts must pass `{ b2bEnabled: true }` to the reCAPTCHA `setConfig()` call to keep verifying company registration submissions after upgrading ([#287](https://github.com/adobe-commerce/StorefrontSDK/pull/287)).
+reCAPTCHA verification on the company registration ("create company") form now requires an explicit opt-in instead of running by default. This fixes a bug where the always-on check could error out on non-B2B backends.
+
+<Aside type="note" title="Action required (B2B)">
+After upgrading, B2B storefronts must pass `{ b2bEnabled: true }` to the reCAPTCHA `setConfig()` call to keep verifying company registration submissions.
+</Aside>
 
 ## Updated boilerplate
 
@@ -41,19 +47,15 @@ reCAPTCHA verification on the company registration ("create company") form now r
 
 - **Drop-in SDK**: `@dropins/tools` upgraded to 2.1.0. See [Updated Drop-in SDK](#updated-drop-in-sdk) for sub-package versions.
 
-### Document Authoring
-
-No Document Authoring changes in this release suite.
-
 ### Fixes and improvements
 
-- **Mini cart**: Defers loading the mini cart's fragment and its dependent containers until a shopper actually opens the cart panel, instead of on every page load, cutting unnecessary requests and reducing rate-limit errors ([#1387](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1387), B2C) ([#1389](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1389), B2B).
-- **Product recommendations**: Fixed a bug where adding a recommended item to cart could overwrite the "current SKU" anchor used to generate recommendations, keeping suggestions accurate after cart interactions ([#1403](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1403)).
+- **Mini cart**: Defers loading the mini cart's fragment until a shopper opens the cart panel, reducing unnecessary requests and rate-limit errors ([#1387](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1387), B2C) ([#1389](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1389), B2B).
+- **Product recommendations**: Fixed a bug where adding a recommended item to the cart overwrote the "current SKU" anchor used to generate recommendations, so suggestions stay accurate after a shopper updates the cart ([#1403](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1403)).
 
 ## Updated Drop-in SDK
 
-<Aside type="note" title="Internal Links">
-Links to the StorefrontSDK repository do not resolve unless you have access to that repository.
+<Aside type="note" title="Internal links">
+Many links on this page point to private Adobe Commerce repositories, such as `adobe-commerce/storefront-cart` and `adobe-commerce/StorefrontSDK`. Those links resolve only if you have access to the repository.
 </Aside>
 
 The Drop-in SDK (`@dropins/tools`) was upgraded to 2.1.0 in this release. The following sub-packages were also updated:
