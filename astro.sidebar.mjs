@@ -234,12 +234,12 @@ export function generateSidebar() {
               link: '/merchants/quick-start/document-authoring/',
             },
             {
-              label: 'Create your first commerce page',
-              link: '/merchants/quick-start/your-first-page/',
+              label: 'Using the Experience Workspace tool',
+              link: '/merchants/quick-start/experience-workspace/',
             },
             {
-              label: 'Using Experience Workspace',
-              link: '/merchants/quick-start/experience-workspace/',
+              label: 'Create your first commerce page',
+              link: '/merchants/quick-start/your-first-page/',
             },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
