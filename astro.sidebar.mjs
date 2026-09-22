@@ -192,6 +192,7 @@ export function generateSidebar() {
             { label: 'Vaulted cards in checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-in-checkout/' },
             { label: 'Implement order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
             { label: 'Add a Notify Me CTA to the PDP', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+            { label: 'Render an additional wishlist', link: '/dropins/wishlist/tutorials/render-additional-wishlist/' },
             { label: 'Federated search', link: '/how-tos/federated-search/' },
             { label: 'Search redirects', link: '/how-tos/search-redirects/' },
             { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
