@@ -7,6 +7,7 @@ sidebar:
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
 
 The Company Address Book feature lets a company share one address book across company users. Buyers can then select those shared addresses during checkout.
 
@@ -34,7 +35,7 @@ The Company Address Book feature is intended for organizations where addresses b
 
 ## Core settings
 
-Company-level settings control Company Address Book behavior as described below.
+Company-level settings control Company Address Book behavior.
 
 <TableWrapper>
 
@@ -53,10 +54,14 @@ Input and output field names are not symmetrical. Mutation input can use `custom
 
 Use this flow to enable the feature and verify shopper behavior.
 
+<Steps>
+
 1. Enable company address book in your company profile settings.
 1. Configure whether one-time shipping addresses are allowed.
 1. Confirm company roles have the address permissions your shoppers need.
 1. Validate shopper behavior in both Account and Checkout.
+
+</Steps>
 
 Turning the feature on has an order dependency: the Company Addresses branch appears in role permissions only after the address book is enabled.
 
@@ -72,7 +77,7 @@ In Account, the `Addresses` container switches to company address data only when
 1. The shopper is resolved as a company customer.
 1. The active company has address book enabled.
 
-This design allows a storefront to pass one B2B-capable setup and let the container resolve the active mode.
+This design lets a storefront pass one B2B-capable setup and have the container resolve the active mode.
 
 ## Event communication
 
@@ -84,7 +89,7 @@ The feature defines no events of its own. It relies on events from neighboring d
 | ----- | ------ | ----------------------- |
 | `auth/permissions` | Auth drop-in | Used by storefront navigation and guards. Payload is replayed by reference, so consumers should copy before mutating. |
 | `companyContext/changed` | Company Switcher drop-in | Active company changes are emitted here. Addresses behavior does not auto-refresh from this event alone. |
-| `company/updated` | Company Management drop-in | Emitted after successful company profile/config updates with wrapper payload shape `{ company }`. |
+| `company/updated` | Company Management drop-in | Emitted after successful company profile/config updates with a wrapper payload shape `{ company }`. |
 | `error` | Account drop-in | Network-level failures are emitted. Some config-read failures can resolve silently as disabled states. |
 
 </TableWrapper>
@@ -124,7 +129,7 @@ Primary permission resources are:
 1. `Magento_CompanyAddressStorefrontCompatibility::delete`
 1. `Magento_CompanyAddressStorefrontCompatibility::default`
 
-Legacy aliases can still be accepted by compatibility resolution, but new integrations should use the constant contract instead of hardcoded legacy strings.
+Legacy aliases can still be accepted by compatibility resolution, but new integrations should use the `COMPANY_ADDRESS_PERMISSIONS` constant instead of hardcoded legacy strings.
 
 <figure class="screenshot" style="--shot-h: 170px">
 
@@ -134,7 +139,7 @@ Legacy aliases can still be accepted by compatibility resolution, but new integr
 
 ## Company context and scoping
 
-Address Book data is scoped to the active company context. If your storefront supports company switching, cache and in-memory keys must include active company identity. Otherwise, one company's answer can leak into another company's UI state.
+Address Book data is scoped to the active company context. If your storefront supports company switching, cache and in-memory keys must include active company identity. Otherwise, one company's data can leak into another company's UI state.
 
 ## Checkout behavior
 
@@ -186,8 +191,8 @@ The `Addresses` container from the Account drop-in (`@dropins/storefront-account
 
 ### What changes when the book is enabled
 
-- **The dataset changes.** The container fetches the company address book instead of the customer's personal addresses, in a single request that also returns the two settings. If that request fails, or access is denied, it falls back to the personal address flow rather than rendering an error.
-- **The heading changes.** A storefront is expected to title the page Company Addresses rather than Addresses, deciding from the setting and the view permission together.
+- **The dataset changes.** The container fetches the company address book instead of the customer's personal addresses, in a single request that also returns the two settings. If that request fails or access is denied, it falls back to the personal-address flow rather than rendering an error.
+- **The heading changes.** A storefront is expected to title the page Company Addresses rather than Addresses, based on the setting and the view permission together.
 - **The default tags change.** On the company card they read DEFAULT SHIPPING and DEFAULT BILLING. A personal list keeps the shorter SHIPPING and BILLING. In a selectable checkout list covering only one purpose, the tag collapses to DEFAULT.
 - **The form changes.** Instead of the two personal default checkboxes, it carries a Shipping Address and a Billing Address checkbox that fix the address type, plus a single default checkbox whose label follows the chosen type. Because a company address is either the default shipping or the default billing address, only one type can be chosen. The container also injects a Nickname field when the store's attribute form does not already render one.
 
@@ -205,7 +210,7 @@ Each action is available only with the matching ACL permission.
 
 | Action | Behavior without the permission |
 | ------ | ------------------------------- |
-| View | The address list is returned empty, in the address book context. |
+| View | The address list is returned empty in the address book context. |
 | Create | The customer sees a message in place of the create button. |
 | Edit | Opens the address form pre-populated with the address data (edit requires the permission). |
 | Delete | Removes the address (delete requires the permission). |
@@ -406,9 +411,9 @@ Use this checklist before release:
 1. Verify role permissions for view/add/edit/delete/default.
 1. Test with at least two companies to validate context switching.
 1. Test checkout combinations:
-  - Saved billing + saved shipping.
-  - Saved billing + one-time shipping (when enabled).
-  - Missing required default addresses.
+   - Saved billing + saved shipping.
+   - Saved billing + one-time shipping (when enabled).
+   - Missing required default addresses.
 1. Test non-company shoppers to confirm personal-address behavior is unchanged.
 1. Verify fallback behavior under network/API error paths.
 
