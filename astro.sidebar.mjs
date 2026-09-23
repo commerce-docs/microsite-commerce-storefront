@@ -878,9 +878,10 @@ export function generateSidebar() {
             { label: 'Overview', link: '/dropins-b2b/' },
             {
               label: 'Company Management',
-              collapsed: true,
+              collapsed: false,
               items: [
                 { label: 'Overview', link: '/dropins-b2b/company-management/' },
+                { label: 'Company Address Book', link: '/dropins-b2b/company-management/company-address-book/' },
                 { label: 'Quick Start', link: '/dropins-b2b/company-management/quick-start/' },
                 { label: 'Initialization', link: '/dropins-b2b/company-management/initialization/' },
                 { label: 'Functions', link: '/dropins-b2b/company-management/functions/' },
