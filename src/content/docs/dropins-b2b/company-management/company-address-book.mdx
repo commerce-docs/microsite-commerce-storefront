@@ -35,12 +35,12 @@ The Company Address Book feature is intended for organizations where addresses b
 
 ## Core settings
 
-Company-level settings control Company Address Book behavior.
+Two company-level configuration settings control Company Address Book behavior. The backend stores them, the drop-ins read them at runtime, and you change them through the CompanyProfile container or in the Admin panel. They are not props you pass to a container.
 
 <TableWrapper>
 
-| Setting | Drop-in prop names | Behavior |
-| ------- | ------------------ | -------- |
+| Setting | Field name exposed by the drop-in | Behavior |
+| ------- | --------------------------------- | -------- |
 | `address_book_enabled` | `addressBookEnabled` in Account and Company Management | Switches address management from personal addresses to company-shared addresses. |
 | `address_book_custom_shipping_address_enabled` | `addressBookCustomShippingAddressEnabled` in Account, `customShippingAddressEnabled` in Company Management | Allows or blocks one-time shipping addresses during checkout. |
 
@@ -143,13 +143,12 @@ Address Book data is scoped to the active company context. If your storefront su
 
 ## Checkout behavior
 
-With Company Address Book enabled, billing and shipping are intentionally asymmetric:
+With Company Address Book enabled, billing and shipping are gated differently:
 
-1. Billing requires a saved company billing address.
-1. Shipping can use a saved company shipping address.
-1. One-time shipping entry depends on the custom-shipping setting.
+1. Billing always requires a saved company billing address. Without one, checkout cannot proceed.
+1. Shipping requires a saved company shipping address only when custom shipping is disabled. With custom shipping enabled, a buyer can complete checkout with no saved shipping address by entering a one-time one.
 
-This asymmetry is why checkout gating logic should evaluate shipping and billing separately.
+Because the two rules differ, evaluate shipping and billing separately when you gate the Place Order button.
 
 ```js
 import { getCompanyAddressBook } from '@dropins/storefront-account/api.js';
