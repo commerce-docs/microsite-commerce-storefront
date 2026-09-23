@@ -11,7 +11,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit and listen for events, enabling communication between drop-ins and external integrations.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.1.0</strong>
+<strong>Version: 5.0</strong>
 </div>
 
 ## Events reference
@@ -25,6 +25,8 @@ The Payment Services drop-in uses the [event bus](/sdk/reference/events) to emit
 | [checkout/updated](#checkoutupdated-listens) | Listens | Fired by the [Checkout](/dropins/checkout/events/) drop-in when the checkout state is updated. Read by the `GooglePay` container at button click time to determine the selected shipping method and billing address. |
 | [payment-services/initialized/checkout](#payment-servicesinitializedcheckout-emits) | Emits | Emitted when the drop-in finishes initializing for the `CHECKOUT` location. |
 | [payment-services/initialized/product-detail](#payment-servicesinitializedproduct-detail-emits) | Emits | Emitted when the drop-in finishes initializing for the `PRODUCT_DETAIL` location. |
+| [pdp/data](#pdpdata-listens) | Listens | Fired by the [Product Details](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpdata-emits-and-listens) drop-in with product data for the page. Used by the `GooglePay` container on the `PRODUCT_DETAIL` location to build the shadow cart. |
+| [pdp/values](#pdpvalues-listens) | Listens | Fired by the [Product Details](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpvalues-emits-and-listens) drop-in with the shopper's selected product SKU, quantity, and options. Used by the `GooglePay` container on the `PRODUCT_DETAIL` location to build the shadow cart. |
 </TableWrapper>
 
 ## Event details
@@ -134,3 +136,55 @@ See [Payment method availability](/dropins/payment-services/initialization/#paym
 
 ### `payment-services/initialized/product-detail` (emits)
 See [Payment method availability](/dropins/payment-services/initialization/#payment-method-availability).
+
+---
+
+### `pdp/data` (listens)
+
+Fired by the [Product Details](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpdata-emits-and-listens) drop-in with product data for the page. The `GooglePay` container listens to this event, together with [`pdp/values`](#pdpvalues-listens), to build a shadow cart when the shopper clicks the Google Pay button on the `PRODUCT_DETAIL` location.
+
+Both events must have been emitted at least once on the event bus before clicking the Google Pay button.
+
+#### Event payload
+
+```typescript
+PdpDataModel
+```
+
+See [`PdpDataModel`](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpdata-emits-and-listens) for the full type definition.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('pdp/data', (payload) => {
+  console.log('pdp/data event received:', payload);
+});
+```
+
+---
+
+### `pdp/values` (listens)
+
+Fired by the [Product Details](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpvalues-emits-and-listens) drop-in with the shopper's currently selected product SKU, quantity, and options. The `GooglePay` container listens to this event, together with [`pdp/data`](#pdpdata-listens), to build a shadow cart when the shopper clicks the Google Pay button on the `PRODUCT_DETAIL` location.
+
+Both events must have been emitted at least once on the event bus before clicking the Google Pay button.
+
+#### Event payload
+
+```typescript
+PdpValuesModel
+```
+
+See [`PdpValuesModel`](https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpvalues-emits-and-listens) for the full type definition.
+
+#### Example
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('pdp/values', (payload) => {
+  console.log('pdp/values event received:', payload);
+});
+```

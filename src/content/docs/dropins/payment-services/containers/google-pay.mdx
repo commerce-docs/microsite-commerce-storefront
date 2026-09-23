@@ -7,11 +7,12 @@ sidebar:
 
 import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
+import { Aside } from '@astrojs/starlight/components';
 
 The `GooglePay` container renders a checkout button that enables shoppers to pay using <Link href="https://pay.google.com/about/" text="Google Pay" />.
 
 <div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.1.0</strong>
+<strong>Version: 5.0</strong>
 </div>
 
 ## Configuration
@@ -21,6 +22,7 @@ The `GooglePay` container provides the following configuration options:
 <TableWrapper nowrap={[0, 1, 2]}>
 | Option | Type | Req? | Description |
 |--------|------|------|-------------|
+| `location` | string | Yes | Location where the Google Pay button is rendered. Must be either `CHECKOUT` or `PRODUCT_DETAIL`. |
 | `onButtonClick` | function | No | Called when the shopper clicks the Google Pay button. Receives a `showPaymentSheet` function, which must be called synchronously to begin the Google Pay checkout and show the payment sheet. If not provided, clicking the button automatically triggers the payment sheet. |
 | `onSuccess` | function | No | Called when the payment completes successfully. Receives `{ cartId: string }`. If the function returns a promise, it is awaited before marking the payment as successful. If the promise rejects, the payment is marked as failed and the error is passed to `onError` (if provided). |
 | `onError` | function | No | Called when the payment flow fails or is aborted. Receives `{ name: string, message: string }`, containing localized, user-facing error details. These values can be translated using `PaymentServices.GooglePay.errors` [language definitions](/dropins/payment-services/dictionary/). |
@@ -42,9 +44,33 @@ The following example demonstrates how to use the `GooglePay` container on the c
 import GooglePay from '@dropins/storefront-payment-services/containers/GooglePay.js';
 import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
 import * as orderApi from '@dropins/storefront-order/api.js';
+import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
 
 const $content = document.createElement('div');
 PaymentServices.render(GooglePay, {
+  location: PaymentLocation.CHECKOUT,
+  onSuccess: ({ cartId }) => orderApi.placeOrder(cartId),
+  onError: (error) => { console.error(error) },
+})($content);
+```
+
+### Product details page example
+
+On the product details page, the `GooglePay` container builds its own shadow cart from the product details drop-in's <Link href="https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpdata-emits-and-listens" text="pdp/data" /> and <Link href="https://experienceleague.adobe.com/en/tools/commerce-storefront/dropins/product-details/events/#pdpvalues-emits-and-listens" text="pdp/values" /> events.
+
+<Aside type="note">
+  On the product details page, the `GooglePay` container currently only supports non-virtual and non-downloadable products.
+</Aside>
+
+```js
+import GooglePay from '@dropins/storefront-payment-services/containers/GooglePay.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+import * as orderApi from '@dropins/storefront-order/api.js';
+import { PaymentLocation } from '@dropins/storefront-payment-services/api.js';
+
+const $content = document.createElement('div');
+PaymentServices.render(GooglePay, {
+  location: PaymentLocation.PRODUCT_DETAIL,
   onSuccess: ({ cartId }) => orderApi.placeOrder(cartId),
   onError: (error) => { console.error(error) },
 })($content);
