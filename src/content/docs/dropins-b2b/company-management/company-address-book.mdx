@@ -1,0 +1,444 @@
+---
+title: Company Address Book feature
+description: Learn how the Company Address Book feature works across Company Management, Account, and Checkout, including settings, permissions, data flows, and checkout behavior.
+sidebar:
+  label: Company Address Book
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Aside from '@components/Aside.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+The Company Address Book feature lets a company share one address book across company users. Buyers can then select those shared addresses during checkout.
+
+<Aside type="note">
+Company Address Book is a B2B feature, not a standalone drop-in. It is delivered through existing Company Management, Account, and Checkout components.
+</Aside>
+
+## What you can do
+
+<TableWrapper>
+
+| Role | What they can now do |
+| ---- | -------------------- |
+| Shoppers and buyers | Choose a shared company address at checkout instead of retyping it, and enter a one-time shipping address when the company allows it. |
+| Company administrators | Turn the shared address book on or off, decide whether one-time shipping addresses are allowed, and control who can view, add, edit, or delete addresses. |
+| Developers | Turn the feature on through the existing Account and Company Management containers. There is no separate drop-in to install. |
+
+</TableWrapper>
+
+![Company Addresses page in My Account, showing shared company shipping and billing addresses](@images/dropins-b2b/company-management/company-address-book/account-company-addresses.png)
+
+## Where the feature appears
+
+The feature spans multiple components:
+
+<TableWrapper>
+
+| Area | Component | What it controls |
+| ---- | --------- | ---------------- |
+| Company Management | [CompanyProfile container](/dropins-b2b/company-management/containers/company-profile/) | Company-level settings that enable shared addresses and optional one-time shipping addresses. |
+| User Account | [Addresses container](/dropins/user-account/containers/addresses/) | Buyer view and management of addresses when company address book is enabled. |
+| Checkout | [Validate a shipping address](/dropins/checkout/tutorials/validate-shipping-address/) | Checkout address behavior when buyers choose a saved address or enter a one-time shipping address. |
+
+</TableWrapper>
+
+The Company Address Book feature is intended for organizations where addresses belong to the business rather than to individual buyers, such as warehouses, branch offices, and legal billing addresses.
+
+## Core settings
+
+Company-level settings control Company Address Book behavior.
+
+<TableWrapper>
+
+| Setting | Drop-in prop names | Behavior |
+| ------- | ------------------ | -------- |
+| `address_book_enabled` | `addressBookEnabled` in Account and Company Management | Switches address management from personal addresses to company-shared addresses. |
+| `address_book_custom_shipping_address_enabled` | `addressBookCustomShippingAddressEnabled` in Account, `customShippingAddressEnabled` in Company Management | Allows or blocks one-time shipping addresses during checkout. |
+
+</TableWrapper>
+
+<Aside type="note">
+Input and output field names are not symmetrical. Mutation input can use `custom_shipping_address_enabled`, while company config responses can return `address_book_custom_shipping_address_enabled`.
+</Aside>
+
+## Enablement flow
+
+Use this flow to enable the feature and verify shopper behavior.
+
+<Steps>
+
+1. Enable company address book in your company profile settings.
+1. Configure whether one-time shipping addresses are allowed.
+1. Confirm company roles have the address permissions your shoppers need.
+1. Validate shopper behavior in both Account and Checkout.
+
+</Steps>
+
+Turning the feature on has an order dependency: the Company Addresses branch appears in role permissions only after the address book is enabled.
+
+Turning the feature off is reversible: personal and company address datasets remain separate, so personal addresses can reappear when the setting is disabled.
+
+<Aside type="note">
+The rest of this page is implementation reference for developers integrating the feature.
+</Aside>
+
+## Architecture and runtime behavior
+
+Company Address Book is not a standalone container. It is a feature that changes data source and behavior in existing containers.
+
+In Account, the `Addresses` container switches to company address data only when all three conditions are true:
+
+1. The `b2bEnabled` prop is true.
+1. The shopper is resolved as a company customer.
+1. The active company has address book enabled.
+
+This design lets a storefront pass one B2B-capable setup and have the container resolve the active mode.
+
+## Event communication
+
+The feature defines no events of its own. It relies on events from neighboring drop-ins.
+
+<TableWrapper>
+
+| Event | Source | Behavior to account for |
+| ----- | ------ | ----------------------- |
+| `auth/permissions` | Auth drop-in | Used by storefront navigation and guards. Payload is replayed by reference, so consumers should copy before mutating. |
+| `companyContext/changed` | Company Switcher drop-in | Active company changes are emitted here. Addresses behavior does not auto-refresh from this event alone. |
+| `company/updated` | Company Management drop-in | Emitted after successful company profile/config updates with a wrapper payload shape `{ company }`. |
+| `error` | Account drop-in | Network-level failures are emitted. Some config-read failures can resolve silently as disabled states. |
+
+</TableWrapper>
+
+## Data access model
+
+The feature exposes two key read patterns:
+
+1. `getCompanyAddressBookConfig`: returns only feature settings used for feature gates and navigation checks.
+1. `getCompanyAddressBook`: returns settings plus the address list used by checkout and address-aware flows.
+
+Write operations are separate from personal-address writes and include `createCompanyAddress`, `updateCompanyAddress`, `deleteCompanyAddress`, and `setDefaultCompanyAddress`.
+
+Both reads are issued as GraphQL GET requests, so their operation names travel in the URL. One name is a prefix of the other (`GET_COMPANY_ADDRESS_BOOK` and `GET_COMPANY_ADDRESS_BOOK_CONFIG`), so a prefix filter matches both.
+
+## Permission model
+
+Address Book actions map to explicit permissions surfaced by the Account drop-in constant `COMPANY_ADDRESS_PERMISSIONS`.
+
+<TableWrapper>
+
+| Permission intent | User experience |
+| ----------------- | --------------- |
+| View | Allows seeing company addresses in account/selection flows. |
+| Add | Allows creating a company-owned address. |
+| Edit | Allows editing an existing company-owned address. |
+| Delete | Allows removing an address from the company book. |
+| Set default | Allows assigning default shipping/billing addresses. |
+
+</TableWrapper>
+
+Primary permission resources are:
+
+1. `Magento_CompanyAddressStorefrontCompatibility::company_address`
+1. `Magento_CompanyAddressStorefrontCompatibility::add`
+1. `Magento_CompanyAddressStorefrontCompatibility::edit`
+1. `Magento_CompanyAddressStorefrontCompatibility::delete`
+1. `Magento_CompanyAddressStorefrontCompatibility::default`
+
+Legacy aliases can still be accepted by compatibility resolution, but new integrations should use the `COMPANY_ADDRESS_PERMISSIONS` constant instead of hardcoded legacy strings.
+
+<figure class="screenshot" style="--shot-h: 170px">
+
+![Company Addresses branch in the company role permission tree, with Add, Edit, Delete, and Set Default Address](@images/dropins-b2b/company-management/company-address-book/company-address-permission-tree.png)
+
+</figure>
+
+## Company context and scoping
+
+Address Book data is scoped to the active company context. If your storefront supports company switching, cache and in-memory keys must include active company identity. Otherwise, one company's data can leak into another company's UI state.
+
+## Checkout behavior
+
+With Company Address Book enabled, billing and shipping are intentionally asymmetric:
+
+1. Billing requires a saved company billing address.
+1. Shipping can use a saved company shipping address.
+1. One-time shipping entry depends on the custom-shipping setting.
+
+This asymmetry is why checkout gating logic should evaluate shipping and billing separately.
+
+```js
+import { getCompanyAddressBook } from '@dropins/storefront-account/api.js';
+
+const book = await getCompanyAddressBook();
+const items = book?.addresses?.items ?? [];
+
+const hasShippingAddress = items.some((item) => item.addressType === 'SHIPPING');
+const hasBillingAddress = items.some((item) => item.addressType === 'BILLING');
+const customShippingAllowed = Boolean(book?.addressBookCustomShippingAddressEnabled);
+
+const shippingMissing = !hasShippingAddress && !customShippingAllowed;
+const shouldDisablePlaceOrder = Boolean(book?.addressBookEnabled) && (shippingMissing || !hasBillingAddress);
+```
+
+<Aside type="tip">
+Resolve Address Book state before final place-order gating. A billing-only fallback is not equivalent to shipping behavior when one-time shipping is enabled.
+</Aside>
+
+## Guarding account access
+
+A common storefront pattern is to guard both navigation visibility and direct-route access for shoppers without view-level permission.
+
+1. Hide address-related navigation entry points.
+1. Protect direct URL access with route guards.
+1. Keep summary widgets safe from redirect loops when they are rendered on a landing page.
+
+## Extensibility notes
+
+The feature adds no new slot family. It reuses existing `Addresses` and `CompanyProfile` slot extension points. If you override `CompanyData`, your slot content replaces the Address Book Configuration block, so custom slot implementations should preserve required configuration visibility.
+
+## Addresses container
+
+The sections above describe the feature as a whole. The rest of this page documents the two containers it changes, starting with the buyer-facing one.
+
+The `Addresses` container from the Account drop-in (`@dropins/storefront-account`) is the buyer-facing surface for the feature. Only the behavior that the company address book changes is described here. Everything else behaves as documented on the [Addresses container](/dropins/user-account/containers/addresses/) page.
+
+![Addresses container rendering the company address book with company shipping and billing cards](@images/dropins-b2b/company-management/company-address-book/company-addresses-list.png)
+
+### What changes when the book is enabled
+
+- **The dataset changes.** The container fetches the company address book instead of the customer's personal addresses, in a single request that also returns the two settings. If that request fails or access is denied, it falls back to the personal-address flow rather than rendering an error.
+- **The heading changes.** A storefront is expected to title the page Company Addresses rather than Addresses, based on the setting and the view permission together.
+- **The default tags change.** On the company card they read DEFAULT SHIPPING and DEFAULT BILLING. A personal list keeps the shorter SHIPPING and BILLING. In a selectable checkout list covering only one purpose, the tag collapses to DEFAULT.
+- **The form changes.** Instead of the two personal default checkboxes, it carries a Shipping Address and a Billing Address checkbox that fix the address type, plus a single default checkbox whose label follows the chosen type. Because a company address is either the default shipping or the default billing address, only one type can be chosen. The container also injects a Nickname field when the store's attribute form does not already render one.
+
+<figure class="screenshot" style="--shot-h: 250px">
+
+![Address form with Shipping Address and Billing Address type checkboxes and a single default checkbox](@images/dropins-b2b/company-management/company-address-book/address-form-type-checkboxes.png)
+
+</figure>
+
+### Actions by permission
+
+Each action is available only with the matching ACL (access control list) permission.
+
+<TableWrapper>
+
+| Action | Behavior without the permission |
+| ------ | ------------------------------- |
+| View | The address list is returned empty in the address book context. |
+| Create | The customer sees a message in place of the create button. |
+| Edit | Opens the address form pre-populated with the address data (edit requires the permission). |
+| Delete | Removes the address (delete requires the permission). |
+| Set Default | The default checkbox is rendered disabled, not removed. |
+
+</TableWrapper>
+
+### Checkout selection behavior
+
+In a selectable checkout list, the container renders and filters addresses as described below. For the place-order gating rule and the billing/shipping asymmetry, see [Checkout behavior](#checkout-behavior).
+
+- The list is filtered by address type. A shipping selection shows only SHIPPING addresses, and a billing selection shows only BILLING ones. A list marked as both, or as neither, is not filtered.
+- When custom addresses are allowed and the filtered shipping list is empty, the address form opens so the buyer can enter a one-time address. A billing-only list never offers this.
+- The selected address is handed to the consumer with its `id` renamed to `companyAddressId`, so checkout sends a company address reference rather than a new address.
+- A typed checkout address is one-time only when the buyer lacks the create permission. A buyer who holds that permission has the typed address saved into the company book.
+
+![Checkout shipping step showing a selected company shipping address and the option to use a different address](@images/dropins-b2b/company-management/company-address-book/checkout-company-shipping-selection.png)
+
+### Integration examples
+
+```js
+import Addresses from '@dropins/storefront-account/containers/Addresses.js';
+import { render as accountProvider } from '@dropins/storefront-account/render.js';
+
+// Company address book, full management view on the account addresses page
+accountProvider.render(Addresses, {
+  title: 'Company Addresses',
+  b2bEnabled: true,
+  minifiedView: false,
+  withActionsInFullSizeView: true,
+  routeAddressesPage: () => rootLink('/customer/address'),
+})(addressesContainer);
+
+// Summary view on the account overview page, without actions
+accountProvider.render(Addresses, {
+  title: 'Company Addresses',
+  b2bEnabled: true,
+  minifiedView: true,
+  withActionsInMinifiedView: false,
+  routeAddressesPage: () => rootLink('/customer/address'),
+})(addressesSummaryContainer);
+
+// Checkout, shipping address selection with a one-time address form
+accountProvider.render(Addresses, {
+  title: placeholders?.Checkout?.Addresses?.shippingAddressTitle,
+  b2bEnabled: true,
+  minifiedView: false,
+  selectable: true,
+  selectShipping: true,
+  showSaveCheckBox: true,
+  showShippingCheckBox: false,
+  showBillingCheckBox: false,
+  hideActionFormButtons: true,
+  formName: 'selectedShippingAddress',
+  fieldIdPrefix: 'shipping',
+  forwardFormRef: shippingFormRef,
+  inputsDefaultValueSet: cartShippingAddress,
+  defaultSelectAddressId: shippingAddressId,
+  onAddressData: ({ data, isDataValid }) => {
+    if (!isDataValid) return;
+    // data carries companyAddressId for a saved company address,
+    // or the typed address fields for a one-time one
+    setShippingAddressOnCart({ data, isDataValid });
+  },
+})(shippingAddressContainer);
+
+// Checkout, billing address selection, always locked to saved company addresses
+accountProvider.render(Addresses, {
+  title: placeholders?.Checkout?.Addresses?.billingAddressTitle,
+  b2bEnabled: true,
+  minifiedView: false,
+  selectable: true,
+  selectBilling: true,
+  showSaveCheckBox: false,
+  showShippingCheckBox: false,
+  showBillingCheckBox: false,
+  hideActionFormButtons: true,
+  formName: 'selectedBillingAddress',
+  forwardFormRef: billingFormRef,
+  inputsDefaultValueSet: cartBillingAddress,
+  defaultSelectAddressId: billingAddressId,
+  onAddressData: ({ data, isDataValid }) => {
+    if (!isDataValid) return;
+    setBillingAddressOnCart({ data, isDataValid });
+  },
+})(billingAddressContainer);
+```
+
+### Properties changed by the feature
+
+Only the properties whose behavior the company address book changes are listed here. The container's remaining properties are unaffected by the feature and are documented on the [Addresses container](/dropins/user-account/containers/addresses/) page.
+
+<TableWrapper>
+
+| Prop | Type | Default | Behavior with the feature |
+| ---- | ---- | ------- | ------------------------- |
+| `b2bEnabled` | `boolean` | `false` | Opts the container into the company address book flow. Not sufficient on its own: the container also resolves the customer type and reads the company setting. Pass it unconditionally, since a B2C customer keeps the personal flow regardless. |
+| `contextMode` | `'addressBook' \| 'checkout'` | Derived | Decides whether company address permissions are enforced. When omitted it is derived from `selectable`, becoming `checkout` when `selectable` is set and `addressBook` when it is not, which is why most integrations never pass it. Use `addressBook` on the account addresses page (permissions enforced) and `checkout` in the checkout flow (not enforced). |
+| `title` | `string` | — | With the address book on, this is what makes the page read Company Addresses. Decide the value from the company setting and the view permission together, not from either alone. |
+| `selectShipping` | `boolean` | `false` | In the company flow it additionally filters the list to SHIPPING addresses. Expect an empty list when the book holds only billing addresses, and the one-time form in its place when custom addresses are allowed. |
+| `selectBilling` | `boolean` | `false` | In the company flow it additionally filters the list to BILLING addresses. Selection stays locked to saved company addresses, since a billing-only list never offers the one-time form. Setting both `selectShipping` and `selectBilling`, or neither, disables the filter. |
+| `defaultSelectAddressId` | `number \| string` | — | Behaves as documented, with one hazard: do not derive it as `0` from a one-time address, which has no id, or the default company address is silently re-selected over what was typed. |
+| `onAddressData` | `(values) => void` | — | In the company flow the payload's id is renamed to `companyAddressId` for a saved company address. Send `companyAddressId` as a company address reference when present, and the address fields when it is not. |
+| `showSaveCheckBox` | `boolean` | `false` | In a B2B checkout instance the checkbox is suppressed regardless of this value. Do not rely on it to keep a company address one-time: only the absence of the create permission does that. |
+
+</TableWrapper>
+
+### Admin configuration
+
+The Company (B2B) feature must be enabled at store level, and the address book must be enabled on the company itself. The two company settings can be managed from the storefront through the CompanyProfile container or in the Admin panel.
+
+<TableWrapper>
+
+| Scope | Admin path |
+| ----- | ---------- |
+| Store level | Stores > Settings > Configuration > General > B2B Features > Enable Company |
+| Company level | Customers > Companies > Edit Company > Advanced Settings > Enable Company Address Book |
+| Company level | Customers > Companies > Edit Company > Advanced Settings > Allow Custom Shipping Address |
+
+</TableWrapper>
+
+<Aside type="note">
+The second setting is labeled Allow Custom Shipping Address in the Admin panel and Allow Custom Company Address on the storefront. Both write `address_book_custom_shipping_address_enabled`.
+</Aside>
+
+<figure class="screenshot" style="--shot-h: 100px">
+
+![Admin toggles for Enable Company Address Book and Allow Custom Shipping Address set to Yes](@images/dropins-b2b/company-management/company-address-book/admin-enable-company-address-book.png)
+
+</figure>
+
+## CompanyProfile container
+
+The `CompanyProfile` container from the Company Management drop-in (`@dropins/storefront-company-management`) is where an administrator turns the feature on. Only the behavior the company address book changes is described here. Everything else behaves as documented on the [CompanyProfile container](/dropins-b2b/company-management/containers/company-profile/) page.
+
+### What changes when the book is enabled
+
+The feature adds an Address Book Configuration section to the company profile, on the read-only card and in the edit form alike.
+
+- On the card, both settings show as Enabled or Disabled: Enable Company Address Book and Allow Custom Company Address. The value is rendered with a plain truthiness check, so a missing value is indistinguishable from an explicit false.
+- In the edit form, the same two settings render as checkboxes, positioned between the account fields and the legal address. The Edit action does not replace the card. The form is added below it.
+- The section is visible only to a Company Administrator, on the card and in the form alike. It is gated on the administrator role itself rather than on any ACL permission, and the two configuration fields are not requested from the backend for other users.
+
+<figure class="screenshot" style="--shot-h: 148px">
+
+![Address Book Configuration on the read-only company profile card, showing both settings enabled](@images/dropins-b2b/company-management/company-address-book/company-profile-address-book-card.png)
+
+</figure>
+
+<figure class="screenshot" style="--shot-h: 123px">
+
+![Address Book Configuration in the company profile edit form, with Enable Company Address Book and Allow Custom Company Address checkboxes](@images/dropins-b2b/company-management/company-address-book/company-profile-address-book-edit.png)
+
+</figure>
+
+Submitting the form persists the settings through the `updateCompanyConfig` mutation, which accepts `addressBookEnabled` and `customShippingAddressEnabled` as a partial payload. In practice the form always writes both settings, so the mutation runs on every administrator save, even when neither checkbox changed. Both settings apply to every user in the company.
+
+The profile and configuration are updated separately and sequentially: the profile update runs first, followed by the configuration update only if the profile update succeeds. Each write first reads the customer's role, making a full administrator save four round trips.
+
+`updateCompanyConfig` returns the updated company model, where the settings are exposed as the camelCase fields `addressBookEnabled` and `customShippingAddressEnabled`. Although the raw GraphQL response contains the corresponding snake_case fields under `company.config`, that is not the shape the function returns.
+
+### Integration example
+
+```js
+import { CompanyProfile } from '@dropins/storefront-company-management/containers/CompanyProfile.js';
+import { render as companyProvider } from '@dropins/storefront-company-management/render.js';
+
+// Basic integration - the Address Book Configuration section is rendered for administrators
+companyProvider.render(CompanyProfile, {})(companyProfileContainer);
+```
+
+### Slot consequence
+
+The container's properties are unchanged by the feature. One slot carries a consequence worth stating here.
+
+<TableWrapper>
+
+| Slot | Context | Consequence |
+| ---- | ------- | ----------- |
+| `slots.CompanyData` | `{ companyData, Default }` | Supplying this slot replaces the whole card body, so the Address Book Configuration block disappears with it. `companyData` carries the account rows only and does not include the two settings. |
+
+</TableWrapper>
+
+### Admin configuration
+
+The Company (B2B) feature must be enabled at store level. The two settings this container edits are the company-level ones listed under the Addresses container's [Admin configuration](#admin-configuration).
+
+<TableWrapper>
+
+| Scope | Admin path |
+| ----- | ---------- |
+| Store level | Stores > Settings > Configuration > General > B2B Features > Enable Company |
+
+</TableWrapper>
+
+## Implementation checklist
+
+Use this checklist before release:
+
+1. Confirm company settings are exposed in your Company Management experience.
+1. Verify role permissions for view/add/edit/delete/default.
+1. Test with at least two companies to validate context switching.
+1. Test checkout combinations:
+   - Saved billing + saved shipping.
+   - Saved billing + one-time shipping (when enabled).
+   - Missing required default addresses.
+1. Test non-company shoppers to confirm personal-address behavior is unchanged.
+1. Verify fallback behavior under network/API error paths.
+
+## More help on this topic
+
+- [Company Management overview](/dropins-b2b/company-management/)
+- [CompanyProfile container](/dropins-b2b/company-management/containers/company-profile/)
+- [Addresses container](/dropins/user-account/containers/addresses/)
+- [Validate a shipping address](/dropins/checkout/tutorials/validate-shipping-address/)
