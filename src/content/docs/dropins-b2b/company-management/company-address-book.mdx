@@ -169,6 +169,20 @@ const shouldDisablePlaceOrder = Boolean(book?.addressBookEnabled) && (shippingMi
 Resolve Address Book state before final place-order gating. A billing-only fallback is not equivalent to shipping behavior when one-time shipping is enabled.
 </Aside>
 
+Two more constraints prevent a rejected order or a silently overwritten address.
+
+### Pass isBillToShipping: false at initialization
+
+When the bill-to-shipping checkbox is hidden for B2B customers, the Checkout drop-in keeps its built-in default of `true` and routes the shipping address through the billing mutation with `sameAsShipping: true`. The backend rejects that once custom shipping addresses are allowed. Pass `isBillToShipping: false` as an initialize-time default for companies running an address book. Because this default applies at initialization, resolve the address book answer before you mount the Checkout drop-in.
+
+<Aside type="caution">
+Disabling the Place Order button is not enough on its own. Without `isBillToShipping: false`, the drop-in still routes shipping through the billing mutation, and the backend rejects the order for a reason nothing else on the page explains.
+</Aside>
+
+### Select billing before one-time shipping
+
+Select the billing address before the buyer enters a one-time shipping address. A one-time address has no `id`, so a consumer that derives its selection ID from the cart resolves it to `0`. Any later cart update re-runs the selection effect, falls back to the default company address, and silently replaces what the buyer typed. Selecting billing is such an update, so do it first.
+
 ## Guarding account access
 
 A common storefront pattern is to guard both navigation visibility and direct-route access for shoppers without view-level permission.
@@ -179,7 +193,7 @@ A common storefront pattern is to guard both navigation visibility and direct-ro
 
 ## Extensibility notes
 
-The feature adds no new slot family. It reuses existing `Addresses` and `CompanyProfile` slot extension points. If you override `CompanyData`, your slot content replaces the Address Book Configuration block, so custom slot implementations should preserve required configuration visibility.
+The feature adds no new slot family. It reuses existing `Addresses` and `CompanyProfile` slot extension points. If you override `CompanyData`, your slot content replaces the Address Book Configuration block, so custom slot implementations preserve required configuration visibility.
 
 ## Addresses container
 
@@ -194,7 +208,7 @@ The `Addresses` container from the Account drop-in (`@dropins/storefront-account
 - **The dataset changes.** The container fetches the company address book instead of the customer's personal addresses, in a single request that also returns the two settings. If that request fails or access is denied, it falls back to the personal-address flow rather than rendering an error.
 - **The heading changes.** A storefront is expected to title the page Company Addresses rather than Addresses, based on the setting and the view permission together.
 - **The default tags change.** On the company card they read DEFAULT SHIPPING and DEFAULT BILLING. A personal list keeps the shorter SHIPPING and BILLING. In a selectable checkout list covering only one purpose, the tag collapses to DEFAULT.
-- **The form changes.** Instead of the two personal default checkboxes, it carries a Shipping Address and a Billing Address checkbox that fix the address type, plus a single default checkbox whose label follows the chosen type. Because a company address is either the default shipping or the default billing address, only one type can be chosen. The container also injects a Nickname field when the store's attribute form does not already render one.
+- **The form changes.** Instead of the two personal default checkboxes, it carries a Shipping Address and a Billing Address checkbox that fix the address type, plus a single default checkbox whose label follows the chosen type. Because a company address is either the default shipping or the default billing address, only one type can be chosen. The type checkboxes fix the address type at creation and are disabled on edit, because the type cannot be changed afterward. An address created without a type is treated as SHIPPING. The container also injects a Nickname field when the store's attribute form does not already render one.
 
 <figure class="screenshot" style="--shot-h: 250px">
 
@@ -304,12 +318,12 @@ Only the properties whose behavior the company address book changes are listed h
 
 | Prop | Type | Default | Behavior with the feature |
 | ---- | ---- | ------- | ------------------------- |
-| `b2bEnabled` | `boolean` | `false` | Opts the container into the company address book flow. Not sufficient on its own: the container also resolves the customer type and reads the company setting. Pass it unconditionally, since a B2C customer keeps the personal flow regardless. |
+| `b2bEnabled` | `boolean` | `false` | Opts the container into the company address book flow. Not sufficient on its own: the container also resolves the customer type and reads the company setting. Pass it unconditionally, because a B2C customer keeps the personal flow regardless. |
 | `contextMode` | `'addressBook' \| 'checkout'` | Derived | Decides whether company address permissions are enforced. When omitted it is derived from `selectable`, becoming `checkout` when `selectable` is set and `addressBook` when it is not, which is why most integrations never pass it. Use `addressBook` on the account addresses page (permissions enforced) and `checkout` in the checkout flow (not enforced). |
 | `title` | `string` | — | With the address book on, this is what makes the page read Company Addresses. Decide the value from the company setting and the view permission together, not from either alone. |
 | `selectShipping` | `boolean` | `false` | In the company flow it additionally filters the list to SHIPPING addresses. Expect an empty list when the book holds only billing addresses, and the one-time form in its place when custom addresses are allowed. |
-| `selectBilling` | `boolean` | `false` | In the company flow it additionally filters the list to BILLING addresses. Selection stays locked to saved company addresses, since a billing-only list never offers the one-time form. Setting both `selectShipping` and `selectBilling`, or neither, disables the filter. |
-| `defaultSelectAddressId` | `number \| string` | — | Behaves as documented, with one hazard: do not derive it as `0` from a one-time address, which has no id, or the default company address is silently re-selected over what was typed. |
+| `selectBilling` | `boolean` | `false` | In the company flow it additionally filters the list to BILLING addresses. Selection stays locked to saved company addresses, because a billing-only list never offers the one-time form. Setting both `selectShipping` and `selectBilling`, or neither, disables the filter. |
+| `defaultSelectAddressId` | `number \| string` | — | Behaves as documented, with one hazard: do not derive it as `0` from a one-time address, which has no id, or the default company address is silently re-selected over what was typed. Select the billing address before the buyer enters a one-time shipping address, because selecting billing re-runs the selection effect. See [Select billing before one-time shipping](#select-billing-before-one-time-shipping). |
 | `onAddressData` | `(values) => void` | — | In the company flow the payload's id is renamed to `companyAddressId` for a saved company address. Send `companyAddressId` as a company address reference when present, and the address fields when it is not. |
 | `showSaveCheckBox` | `boolean` | `false` | In a B2B checkout instance the checkbox is suppressed regardless of this value. Do not rely on it to keep a company address one-time: only the absence of the create permission does that. |
 
@@ -363,7 +377,7 @@ The feature adds an Address Book Configuration section to the company profile, o
 
 </figure>
 
-Submitting the form persists the settings through the `updateCompanyConfig` mutation, which accepts `addressBookEnabled` and `customShippingAddressEnabled` as a partial payload. In practice the form always writes both settings, so the mutation runs on every administrator save, even when neither checkbox changed. Both settings apply to every user in the company.
+Submitting the form persists the settings through the `updateCompanyConfig` mutation, which accepts `addressBookEnabled` and `customShippingAddressEnabled` as a partial payload. In practice the form always writes both settings, so the mutation runs on every administrator save, even when neither checkbox has changed. Both settings apply to every user in the company.
 
 The profile and configuration are updated separately and sequentially: the profile update runs first, followed by the configuration update only if the profile update succeeds. Each write first reads the customer's role, making a full administrator save four round trips.
 
