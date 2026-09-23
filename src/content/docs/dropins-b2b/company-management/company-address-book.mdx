@@ -87,10 +87,10 @@ The feature defines no events of its own. It relies on events from neighboring d
 
 | Event | Source | Behavior to account for |
 | ----- | ------ | ----------------------- |
-| `auth/permissions` | Auth drop-in | Used by storefront navigation and guards. Payload is replayed by reference, so consumers should copy before mutating. |
-| `companyContext/changed` | Company Switcher drop-in | Active company changes are emitted here. Addresses behavior does not auto-refresh from this event alone. |
-| `company/updated` | Company Management drop-in | Emitted after successful company profile/config updates with a wrapper payload shape `{ company }`. |
-| `error` | Account drop-in | Network-level failures are emitted. Some config-read failures can resolve silently as disabled states. |
+| `auth/permissions` | Auth drop-in | Payload is the customer's resolved ACL permissions, including the company address permissions, used by storefront navigation to decide which account entries to render. It is the drop-in's own cached object, replayed by reference, so consumers must copy it before adding or overriding keys. |
+| `companyContext/changed` | Company Switcher drop-in | Payload is the active company id, or null. The Account drop-in does not subscribe to it for addresses, so a company switch does not by itself re-resolve the address book. |
+| `company/updated` | Company Management drop-in | Emitted after a successful profile or configuration save. Payload is a wrapper object, `{ company }`, not the company itself. Lets a storefront react to a change of the two settings without polling. |
+| `error` | Account drop-in | Emitted only on a network-level failure, when the request itself rejects, with payload `{ source, type, error }` where `source` is the literal `'auth'`. A GraphQL error such as a permission denial is thrown rather than emitted here, and `getCompanyAddressBookConfig` swallows failures silently. |
 
 </TableWrapper>
 
@@ -98,8 +98,8 @@ The feature defines no events of its own. It relies on events from neighboring d
 
 The feature exposes two key read patterns:
 
-1. `getCompanyAddressBookConfig`: returns only feature settings used for feature gates and navigation checks.
-1. `getCompanyAddressBook`: returns settings plus the address list used by checkout and address-aware flows.
+1. `getCompanyAddressBookConfig`: returns only the two settings, without the address list. It never throws; any failure resolves to both settings `false`. Use it when you only need to know whether the address book is on, such as navigation, page titles, and feature gates.
+1. `getCompanyAddressBook`: returns the two settings together with the address list in one request. It throws on network and GraphQL errors, apart from a missing company default address, which it tolerates. Use it when you also need the addresses, such as a checkout gate that counts shipping and billing addresses.
 
 Write operations are separate from personal-address writes and include `createCompanyAddress`, `updateCompanyAddress`, `deleteCompanyAddress`, and `setDefaultCompanyAddress`.
 
@@ -131,6 +131,10 @@ Primary permission resources are:
 
 Legacy aliases can still be accepted by compatibility resolution, but new integrations should use the `COMPANY_ADDRESS_PERMISSIONS` constant instead of hardcoded legacy strings.
 
+A Company Administrator is granted every one of these permissions before the checks run, so it always holds full access. The role is recognized by an id of `0` or `MA==`, or by the name Company Administrator, so a custom role carrying that name unlocks the same access.
+
+The container resolves permissions itself, per instance, with its own role query. It does not consume the `auth/permissions` event, so two `Addresses` instances on one page issue two role queries. Permissions are enforced in the address book context only. In the checkout context the container does not gate the UI on them, because address selection there is part of placing an order rather than managing the book. Two reads still apply at checkout: deletion still requires the delete permission, and the absence of the create permission is what keeps a typed checkout address one-time.
+
 <figure class="screenshot" style="--shot-h: 170px">
 
 ![Company Addresses branch in the company role permission tree, with Add, Edit, Delete, and Set Default Address](@images/dropins-b2b/company-management/company-address-book/company-address-permission-tree.png)
@@ -139,14 +143,14 @@ Legacy aliases can still be accepted by compatibility resolution, but new integr
 
 ## Company context and scoping
 
-Address Book data is scoped to the active company context. If your storefront supports company switching, cache and in-memory keys must include active company identity. Otherwise, one company's data can leak into another company's UI state.
+Address Book data is scoped to the active company, held in session storage under `DROPIN__COMPANYSWITCHER__COMPANY__CONTEXT` and sent as the `X-Adobe-Company` request header. Any cache of the address book configuration that outlives a single page must therefore be keyed on the active company, or a company switch serves the previous company's answer. Caching per page load is safe where a navigation is a full page reload.
 
 ## Checkout behavior
 
 With Company Address Book enabled, billing and shipping are gated differently:
 
-1. Billing always requires a saved company billing address. Without one, checkout cannot proceed.
-1. Shipping requires a saved company shipping address only when custom shipping is disabled. With custom shipping enabled, a buyer can complete checkout with no saved shipping address by entering a one-time one.
+1. Billing always requires a saved company billing address. Without one, the order cannot be placed.
+1. Shipping requires a saved company shipping address only when custom shipping is disabled. With custom shipping enabled, a buyer can place the order with no saved shipping address by entering a one-time one.
 
 Because the two rules differ, evaluate shipping and billing separately when you gate the Place Order button.
 
@@ -164,15 +168,19 @@ const shippingMissing = !hasShippingAddress && !customShippingAllowed;
 const shouldDisablePlaceOrder = Boolean(book?.addressBookEnabled) && (shippingMissing || !hasBillingAddress);
 ```
 
+The `!customShippingAllowed` check is an escape clause that only `hasShippingAddress` needs. `hasBillingAddress` has no equivalent, because a billing-only selection is always locked to saved company addresses regardless of the custom-shipping setting. Leave the escape clause out and the order becomes unplaceable: the one-time shipping form is offered and filled in, but the button stays disabled anyway.
+
 <Aside type="tip">
 Resolve Address Book state before final place-order gating. A billing-only fallback is not equivalent to shipping behavior when one-time shipping is enabled.
+
+Disable the Place Order button synchronously before the request resolves, and re-enable it once the answer arrives, so no order is placed against an unknown state. If the request fails, fail open rather than gating a storefront that has no address book at all.
 </Aside>
 
 Two more constraints prevent a rejected order or a silently overwritten address.
 
 ### Pass isBillToShipping: false at initialization
 
-When the bill-to-shipping checkbox is hidden for B2B customers, the Checkout drop-in keeps its built-in default of `true` and routes the shipping address through the billing mutation with `sameAsShipping: true`. The backend rejects that once custom shipping addresses are allowed. Pass `isBillToShipping: false` as an initialize-time default for companies running an address book. Because this default applies at initialization, resolve the address book answer before you mount the Checkout drop-in.
+When the bill-to-shipping checkbox is hidden for B2B customers, the Checkout drop-in keeps its built-in default of `true` and routes the shipping address through the billing mutation with `same_as_shipping: true`. The backend rejects that once custom shipping addresses are allowed. Pass `isBillToShipping: false` as an initialize-time default for companies running an address book. Because this default applies at initialization, resolve the address book answer before you mount the Checkout drop-in.
 
 <Aside type="caution">
 Disabling the Place Order button is not enough on its own. Without `isBillToShipping: false`, the drop-in still routes shipping through the billing mutation, and the backend rejects the order for a reason nothing else on the page explains.
@@ -184,11 +192,11 @@ Select the billing address before the buyer enters a one-time shipping address. 
 
 ## Guarding account access
 
-A common storefront pattern is to guard both navigation visibility and direct-route access for shoppers without view-level permission.
+A company user without the view permission should neither see an address entry in the account navigation nor reach the address page by URL. The container does neither: with the book on and no view permission it returns an empty list, so the page still renders, titled and empty. Hiding the navigation entry and guarding the route are the storefront's own work.
 
 1. Hide address-related navigation entry points.
 1. Protect direct URL access with route guards.
-1. Keep summary widgets safe from redirect loops when they are rendered on a landing page.
+1. Skip the redirect for an address summary rendered on the account page itself. The account page is the natural redirect target, so an unguarded redirect there sends the page to itself and it reloads forever.
 
 ## Extensibility notes
 
