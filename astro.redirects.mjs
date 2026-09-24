@@ -139,7 +139,6 @@ export function generateRedirects(basePath) {
         '/dropins/all/build-custom-features': `${basePath}/blocks/build-custom-features`,
         '/boilerplate/create-commerce-blocks': `${basePath}/blocks/create-commerce-blocks`,
         '/boilerplate/customizing-blocks': `${basePath}/blocks/customize-blocks`,
-        '/boilerplate/universal-editor': `${basePath}/merchants/quick-start/experience-workspace`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
         '/config': `${basePath}/setup/configuration/commerce-configuration`,
