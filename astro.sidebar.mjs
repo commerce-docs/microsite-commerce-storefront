@@ -39,6 +39,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/boilerplate/' },
+                { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
                 { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
               ],
             },
@@ -236,6 +237,10 @@ export function generateSidebar() {
             {
               label: 'Using the Experience Workspace tool',
               link: '/merchants/quick-start/experience-workspace/',
+            },
+            {
+              label: 'Using the Universal Editor (deprecated)',
+              link: '/merchants/quick-start/universal-editor/',
             },
             {
               label: 'Create your first commerce page',
