@@ -39,6 +39,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Overview', link: '/boilerplate/' },
+                { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
                 { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
               ],
             },
@@ -188,8 +189,11 @@ export function generateSidebar() {
             { label: 'Validate a shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
             { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
             { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
+            { label: 'Add buttons to checkout', link: '/dropins/payment-services/tutorials/add-buttons-to-checkout/' },
+            { label: 'Vaulted cards in checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-in-checkout/' },
             { label: 'Implement order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
             { label: 'Add a Notify Me CTA to the PDP', link: '/dropins/product-details/tutorials/notify-me-cta/' },
+            { label: 'Render an additional wishlist', link: '/dropins/wishlist/tutorials/render-additional-wishlist/' },
             { label: 'Federated search', link: '/how-tos/federated-search/' },
             { label: 'Search redirects', link: '/how-tos/search-redirects/' },
             { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
@@ -233,6 +237,10 @@ export function generateSidebar() {
             {
               label: 'Using the Experience Workspace tool',
               link: '/merchants/quick-start/experience-workspace/',
+            },
+            {
+              label: 'Using the Universal Editor (deprecated)',
+              link: '/merchants/quick-start/universal-editor/',
             },
             {
               label: 'Create your first commerce page',
@@ -845,6 +853,7 @@ export function generateSidebar() {
                 { label: 'Overview', link: '/dropins/wishlist/' },
                 { label: 'Quick Start', link: '/dropins/wishlist/quick-start/' },
                 { label: 'Initialization', link: '/dropins/wishlist/initialization/' },
+                { label: 'Multistore', link: '/dropins/wishlist/multistore/' },
                 { label: 'Functions', link: '/dropins/wishlist/functions/' },
                 { label: 'Events', link: '/dropins/wishlist/events/' },
                 { label: 'Slots', link: '/dropins/wishlist/slots/' },
@@ -1183,6 +1192,7 @@ export function generateSidebar() {
           label: 'Release Notes',
           items: [
             { label: 'Overview', link: '/releases/' },
+            { label: 'September 2026 suite', link: '/releases/2026-09/' },
             { label: 'July 2026 suite', link: '/releases/2026-07/' },
             { label: 'June 2026 suite', link: '/releases/2026-06/' },
             { label: 'April 2026 suite', link: '/releases/2026-04/' },
