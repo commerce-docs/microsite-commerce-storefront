@@ -77,18 +77,6 @@ export function replaceContentBetweenMarkers(content, startMarker, endMarker, ne
 }
 
 /**
- * Generate a version badge for MDX
- * 
- * @param {string} version - Version string (e.g., '1.0.0')
- * @returns {string} MDX for version badge
- */
-export function generateVersionBadge(version) {
-    return `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version}</strong>
-</div>`;
-}
-
-/**
  * Generate auto-generation notice
  * 
  * @param {string} date - Date string (e.g., '2025-01-20')

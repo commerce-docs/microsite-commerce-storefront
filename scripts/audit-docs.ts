@@ -36,54 +36,6 @@ import { isSdkEvent } from './audit-docs/mdx-parsers.js';
 import { auditDropin, auditSdkEvents, readJson, DROPIN_PATH_MAP } from './audit-docs/audit.js';
 import { hasGaps, renderGapsReport } from './audit-docs/report.js';
 
-const NPM_FETCH_RETRIES = 3;
-const NPM_FETCH_RETRY_DELAY_MS = 500;
-
-/**
- * Fetch the latest published version of a single @dropins/{key} package from npm.
- * Retries up to NPM_FETCH_RETRIES times (with linear backoff) before giving up.
- * Returns null when all attempts fail so the caller can fall back gracefully.
- */
-async function fetchNpmVersion(key: string): Promise<string | null> {
-  const url = `https://registry.npmjs.org/@dropins/${key}/latest`;
-  for (let attempt = 1; attempt <= NPM_FETCH_RETRIES; attempt++) {
-    try {
-      // The dist-tag endpoint returns 406 for npm's abbreviated metadata media type.
-      // Request regular JSON so version checks use the live package instead of
-      // silently falling back to the version bundled with @dropins/mcp.
-      const res = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (res.ok) {
-        const data = (await res.json()) as { version?: string };
-        return data.version ?? null;
-      }
-    } catch {
-      // network error — fall through to retry
-    }
-    if (attempt < NPM_FETCH_RETRIES) {
-      await new Promise((resolve) => setTimeout(resolve, attempt * NPM_FETCH_RETRY_DELAY_MS));
-    }
-  }
-  return null;
-}
-
-/**
- * Fetch the latest published version of each @dropins/{key} package from npm.
- * All packages are queried in parallel (each with its own retry budget) so the
- * total wait time is bounded by one round-trip rather than one per package.
- * Packages that exhaust their retries are omitted from the result so the caller
- * can fall back to the @dropins/mcp registry version for those entries.
- */
-async function fetchNpmVersions(dropinKeys: string[]): Promise<Map<string, string>> {
-  const versions = new Map<string, string>();
-  await Promise.all(
-    dropinKeys.map(async (key) => {
-      const version = await fetchNpmVersion(key);
-      if (version) versions.set(key, version);
-    })
-  );
-  return versions;
-}
-
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(SCRIPT_DIR, '..');
 
@@ -156,20 +108,14 @@ async function main(): Promise<void> {
   const allGaps: Record<string, DropinGaps> = {};
   let totalDropinsAudited = 0;
 
-  log('Fetching latest versions from npm registry…');
-  const npmVersions = await fetchNpmVersions(Object.keys(DROPIN_PATH_MAP));
-  log(`npm versions resolved for: ${[...npmVersions.keys()].join(', ') || 'none'}`);
-
   for (const [dropinKey] of Object.entries(DROPIN_PATH_MAP)) {
     const dropinContainers = containersRegistry.dropins[dropinKey];
     const containers = dropinContainers?.containers ?? [];
-    // Prefer the live npm version; fall back to the version bundled in @dropins/mcp.
-    const registryVersion = npmVersions.get(dropinKey) ?? dropinContainers?.version;
     const functions = apiFunctionsRegistry.dropins[dropinKey]?.functions ?? [];
     const i18nKeys = i18nRegistry.dropins[dropinKey]?.keys ?? {};
 
     log(
-      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${Object.keys(i18nKeys).length} i18n keys, npm v${registryVersion ?? 'unknown'})`
+      `Auditing ${dropinKey} (${containers.length} containers, ${functions.length} functions, ${Object.keys(i18nKeys).length} i18n keys)`
     );
 
     allGaps[dropinKey] = auditDropin(
@@ -179,8 +125,7 @@ async function main(): Promise<void> {
       functions,
       allEvents,
       sdkEvents,
-      i18nKeys,
-      registryVersion
+      i18nKeys
     );
     totalDropinsAudited++;
   }

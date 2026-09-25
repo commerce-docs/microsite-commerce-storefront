@@ -78,10 +78,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 The **${config.name}** drop-in provides **${config.containers}** pre-built container component${config.containers > 1 ? 's' : ''} for integrating into your storefront.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version}</strong>
-</div>
-
 ## What are Containers?
 
 Containers are pre-built UI components that combine functionality, state management, and presentation. They provide a complete solution for specific features and can be customized through props, slots, and CSS.

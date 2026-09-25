@@ -283,7 +283,6 @@ function generateOverview(blocks, initializers, boilerplateVersion, outputPath) 
 
     // Replace placeholders
     content = content
-        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
         .replace(/BLOCK_COUNT/g, blocks.length.toString())
         .replace(/COMMERCE_BLOCKS_TABLE/g, tableContent)
         .replace(/INITIALIZERS_LIST/g, initializersList);
@@ -582,7 +581,6 @@ function generateBlockDocs(block, boilerplateVersion, outputDir) {
         .replace(/SIDEBAR_LABEL/g, block.sidebarLabel)
         .replace(/BLOCK_NAME/g, block.name)
         .replace(/BLOCK_DESCRIPTION/g, description)
-        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
         .replace(/QUICK_START_SECTION/g, quickStartSection)
         .replace(/INTEGRATION_SECTION/g, integrationSection)
         .replace(/CUSTOMIZATION_SECTION/g, customizationSection);
@@ -752,7 +750,6 @@ function generateStructureDocs(boilerplateVersion, outputPath) {
 
     // Replace placeholders
     content = content
-        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
         .replace(/FILE_TREE_CONTENT/g, fileTreeContent);
 
     ensureParentDirectoryExists(outputPath);
@@ -772,7 +769,6 @@ function generateBuildDocs(boilerplateVersion, outputPath) {
 
     // Replace placeholders
     content = content
-        .replace(/BOILERPLATE_VERSION/g, boilerplateVersion)
         .replace(/TOOLS_VERSION/g, boilerplateVersion); // Use same version
 
     ensureParentDirectoryExists(outputPath);
