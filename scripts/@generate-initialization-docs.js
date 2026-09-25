@@ -821,7 +821,6 @@ ${configType.definition}
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_KEY': repoName,  // kebab-case for URLs
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': versionDisplay,
         'VERSION_WARNING': versionWarning,
         'INTRO_PARAGRAPH': introParagraph,
         'CONFIG_OPTIONS_TABLE': optionsTable,
@@ -879,10 +878,6 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 ${introText}
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${versionDisplay}</strong>
-</div>
 
 ## Basic initialization
 
