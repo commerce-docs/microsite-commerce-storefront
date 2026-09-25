@@ -59,11 +59,16 @@ function showCopiedFeedback(anchor: HTMLElement): void {
   }, 1200);
 }
 
-// Rewrites same-page links from a bare `#id` to `<pathname>#id`, so they
-// resolve against the current page even when a `<base>` tag points elsewhere.
+// Rewrites heading permalinks and desktop/mobile table-of-contents links from a
+// bare `#id` to `<pathname>#id`, so they resolve against the current page even
+// when a `<base>` tag points elsewhere.
 function fixSamePageHrefs(): void {
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    'a[href^="#"]:not([data-href-fixed])',
+    [
+      'a.sl-anchor-link:not([data-href-fixed])',
+      'starlight-toc a:not([data-href-fixed])',
+      'mobile-starlight-toc a:not([data-href-fixed])',
+    ].join(', '),
   );
   anchors.forEach((anchor) => {
     const hash = anchor.getAttribute('href');
