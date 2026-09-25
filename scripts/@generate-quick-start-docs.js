@@ -201,7 +201,6 @@ function generateInstallationMDX(repoName, repoConfig, installationData, version
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_SLUG': repoName,
         'DROPIN_PACKAGE': packageName,
-        'DROPIN_VERSION': cleanVersion(version),
         'CONTAINER_EXAMPLE': containerExample,
         'IMPORT_EXAMPLE': importExample,
         'INITIALIZER_NAME': initializerName,

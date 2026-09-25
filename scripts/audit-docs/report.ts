@@ -12,8 +12,7 @@ export function hasGaps(gaps: DropinGaps): boolean {
     gaps.missingI18nKeys.length > 0 ||
     gaps.phantomI18nKeys.length > 0 ||
     gaps.missingSlots.length > 0 ||
-    gaps.phantomSlots.length > 0 ||
-    gaps.versionMismatch !== null
+    gaps.phantomSlots.length > 0
   );
 }
 
@@ -40,7 +39,7 @@ export function renderGapsReport(
     if (sdkGaps.missingFromDocs.length > 0) {
       lines.push('### Missing SDK Events');
       lines.push(
-        'Events present in the registry (no storefront-* emitter) but absent from `dropins/all/common-events.mdx`.'
+        'Events present in the registry (no storefront-* emitter) but absent from `events/common-events.mdx`.'
       );
       lines.push('');
       lines.push('| Event |');
@@ -63,7 +62,6 @@ export function renderGapsReport(
     if (!hasGaps(gaps)) continue;
 
     const dropinTotal =
-      (gaps.versionMismatch !== null ? 1 : 0) +
       gaps.missingContainerPages.length +
       gaps.missingProps.length +
       gaps.phantomProps.length +
@@ -79,25 +77,6 @@ export function renderGapsReport(
     totalGaps += dropinTotal;
     lines.push(`## ${dropin} (${dropinTotal} gaps)`);
     lines.push('');
-
-    if (gaps.versionMismatch !== null) {
-      const { registryVersion, docVersion, reason } = gaps.versionMismatch;
-      lines.push('### Version Mismatch');
-      if (reason === 'missing') {
-        lines.push(
-          `The \`initialization.mdx\` file does not contain a version badge. Expected \`${registryVersion}\`.`
-        );
-      } else {
-        lines.push(
-          `The documented version does not match the registry version. Update \`initialization.mdx\` to \`${registryVersion}\`.`
-        );
-        lines.push('');
-        lines.push('| Documented | Registry |');
-        lines.push('|---|---|');
-        lines.push(`| \`${docVersion}\` | \`${registryVersion}\` |`);
-      }
-      lines.push('');
-    }
 
     if (gaps.missingContainerPages.length > 0) {
       lines.push('### Missing Container Pages');

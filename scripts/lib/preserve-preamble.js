@@ -193,12 +193,6 @@ export function mergePreservingPreamble(filePath, generatedContent, options = {}
       );
     }
   }
-  const versionMatch = body.match(/\*\*Version:\*\* (\d+\.\d+\.\d+)/);
-  const syncVersionInPreamble = (p) => {
-    if (!versionMatch) return p;
-    return p.replace(/<strong>Version: \d+\.\d+\.\d+<\/strong>/, `<strong>Version: ${versionMatch[1]}</strong>`);
-  };
-
   if (!extracted) {
     // Fallback: preserve everything before anchor heading or first ##
     let fallbackPreamble;
@@ -211,13 +205,11 @@ export function mergePreservingPreamble(filePath, generatedContent, options = {}
       const firstH2 = existingContent.search(/\n## /);
       fallbackPreamble = firstH2 >= 0 ? existingContent.slice(0, firstH2 + 1) : existingContent;
     }
-    fallbackPreamble = syncVersionInPreamble(fallbackPreamble);
     const sep = fallbackPreamble.endsWith('\n') ? '' : '\n';
     merged = fallbackPreamble + (body ? sep + body : '');
   } else {
     const sep = extracted.preamble.endsWith('\n') ? '' : '\n';
-    const preamble = syncVersionInPreamble(extracted.preamble);
-    merged = preamble + (body ? sep + body : '');
+    merged = extracted.preamble + (body ? sep + body : '');
   }
 
   // Preserve TableWrapper nowrap parameters from existing content (full file, not just body—
