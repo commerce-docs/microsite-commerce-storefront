@@ -122,7 +122,6 @@ export function generateRedirects(basePath) {
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
         '/get-started/seo': `${basePath}/setup/seo/`,
-        '/get-started/seo/': `${basePath}/setup/seo/`,
         '/get-started/dropins-mcp': `${basePath}/ai/`,
 
         // ========= BOILERPLATE REDIRECTS =========
@@ -147,17 +146,11 @@ export function generateRedirects(basePath) {
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
         '/boilerplate/configuration': `${basePath}/setup/configuration/commerce-configuration`,
-        '/boilerplate/configuration/': `${basePath}/setup/configuration/commerce-configuration`,
         '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/setup/configuration/storefront-compatibility/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/resources/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/resources/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/resources/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/resources/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/setup/configuration/storefront-compatibility-b2b': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
-        '/setup/configuration/storefront-compatibility-b2b/': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
         '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
@@ -188,9 +181,7 @@ export function generateRedirects(basePath) {
         '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
-        '/merchants/storefront-builder/page-metadata/': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
-        '/merchants/storefront-builder/section-metadata/': `${basePath}/merchants/quick-start/section-metadata`,
         '/merchants/storefront-builder/your-first-page': `${basePath}/merchants/quick-start/your-first-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
@@ -209,9 +200,7 @@ export function generateRedirects(basePath) {
 
         // Personalization and Product Recommendations setup guides (blocks → content-customizations)
         '/merchants/blocks/personalization': `${basePath}/merchants/content-customizations/personalization`,
-        '/merchants/blocks/personalization/': `${basePath}/merchants/content-customizations/personalization`,
         '/merchants/blocks/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
-        '/merchants/blocks/product-recommendations/': `${basePath}/merchants/content-customizations/product-recommendations`,
 
         // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
         // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
@@ -224,7 +213,6 @@ export function generateRedirects(basePath) {
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
         // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
         '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
-        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -239,19 +227,15 @@ export function generateRedirects(basePath) {
 
         // Commerce localization tasks moved out of Merchants (developer procedure) into Drop-ins reference
         '/merchants/quick-start/content-localization-commerce-tasks': `${basePath}/dropins/all/commerce-tasks`,
-        '/merchants/quick-start/content-localization-commerce-tasks/': `${basePath}/dropins/all/commerce-tasks/`,
 
         // Placeholder sheets reference moved out of API Reference (resources) into Merchants
         '/resources/placeholders': `${basePath}/merchants/blocks/placeholder-sheets`,
-        '/resources/placeholders/': `${basePath}/merchants/blocks/placeholder-sheets/`,
         // Resources index removed (API Reference); its only content already lived in Merchants
         '/resources': `${basePath}/merchants/blocks/placeholder-sheets`,
-        '/resources/': `${basePath}/merchants/blocks/placeholder-sheets/`,
 
         // ========= MISC REDIRECTS =========
         // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
         '/create': `${basePath}/get-started/create-storefront`,
-        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
