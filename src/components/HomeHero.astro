@@ -1,0 +1,544 @@
+---
+import HomeSearch from '@components/HomeSearch.astro';
+import { setBasePath } from '@utils/basePath';
+
+// Developer directory: six task/topic groups that tile as a clean 3x2 grid.
+// Each group title links to that section's overview, so the overview no longer
+// repeats as a list item. setBasePath keeps each link correct under the
+// production base path, the same helper the site's LinkCard uses. Every path is
+// verified in the build.
+const sections = [
+  {
+    title: 'Developer quick start',
+    link: '/get-started/',
+    links: [
+      { title: 'Prerequisites', link: '/get-started/before-you-start/' },
+      { title: 'Backend options', link: '/get-started/backends/' },
+      { title: 'Plan your project', link: '/setup/' },
+      { title: 'Create a storefront', link: '/get-started/create-storefront/' },
+    ],
+  },
+  {
+    title: 'Architecture',
+    link: '/get-started/architecture/',
+    links: [
+      { title: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
+      { title: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
+      { title: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
+      { title: 'Event bus', link: '/dropins/all/events/' },
+    ],
+  },
+  {
+    title: 'Creating blocks',
+    link: '/blocks/',
+    links: [
+      { title: 'Blocks and drop-ins', link: '/blocks/blocks-and-dropins/' },
+      { title: 'Customize blocks', link: '/blocks/customize-blocks/' },
+      { title: 'Arrange block layouts', link: '/blocks/arrange-block-layouts/' },
+      { title: 'Create commerce blocks', link: '/blocks/create-commerce-blocks/' },
+      { title: 'Build custom features', link: '/blocks/build-custom-features/' },
+    ],
+  },
+  {
+    title: 'Drop-ins',
+    link: '/dropins/all/introduction/',
+    links: [
+      { title: 'Containers', link: '/dropins/all/containers/' },
+      { title: 'Slots', link: '/dropins/all/slots/' },
+      { title: 'Extend a drop-in', link: '/dropins/all/extending/' },
+      { title: 'Create a drop-in', link: '/dropins/all/creating/' },
+    ],
+  },
+  {
+    title: 'Configuration',
+    link: '/setup/configuration/',
+    links: [
+      { title: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+      { title: 'Compatibility Package', link: '/setup/configuration/storefront-compatibility/' },
+      { title: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
+      { title: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
+    ],
+  },
+  {
+    title: 'Production',
+    link: '/setup/launch/',
+    links: [
+      { title: 'Performance best practices', link: '/get-started/performance/' },
+      { title: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
+      { title: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+      { title: 'SEO', link: '/setup/seo/' },
+    ],
+  },
+] as const;
+
+// Content authors are a co-equal audience, so their links get the same grouped
+// grid as the developer directory rather than a single afterthought row. Group
+// titles link to each section overview; every path is verified in the build.
+const authorSections = [
+  {
+    title: 'Author quick start',
+    link: '/merchants/quick-start/',
+    links: [
+      { title: 'What is a storefront?', link: '/merchants/quick-start/create-content/' },
+      { title: 'Build a storefront page', link: '/merchants/quick-start/content-model/' },
+      { title: 'Your first commerce page', link: '/merchants/quick-start/your-first-page/' },
+      { title: 'Document authoring', link: '/merchants/quick-start/document-authoring/' },
+    ],
+  },
+  {
+    title: 'Build pages',
+    link: '/merchants/authoring/',
+    links: [
+      { title: 'Content and Commerce blocks', link: '/merchants/blocks/content-commerce-blocks/' },
+      { title: 'Page metadata', link: '/merchants/blocks/page-metadata/' },
+      { title: 'Section metadata', link: '/merchants/blocks/section-metadata/' },
+      { title: 'Block table structure', link: '/merchants/blocks/block-tables/' },
+    ],
+  },
+  {
+    title: 'Using blocks',
+    link: '/merchants/blocks/',
+    links: [
+      { title: 'Product Details', link: '/merchants/blocks/product-details/' },
+      { title: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
+      { title: 'Cart', link: '/merchants/blocks/commerce-cart/' },
+      { title: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
+    ],
+  },
+  {
+    title: 'Enhance the storefront',
+    link: '/merchants/content-customizations/',
+    links: [
+      { title: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
+      { title: 'Experiments', link: '/merchants/content-customizations/experiments/' },
+      { title: 'Personalization', link: '/merchants/content-customizations/personalization/' },
+      {
+        title: 'Product Recommendations',
+        link: '/merchants/content-customizations/product-recommendations/',
+      },
+    ],
+  },
+  {
+    title: 'Manage and publish',
+    link: '/merchants/edge-delivery-services/',
+    links: [
+      { title: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+      { title: 'Content migration', link: '/merchants/edge-delivery-services/content-migration/' },
+      { title: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
+      { title: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
+    ],
+  },
+] as const;
+
+// Both audience directories share one render below: developer groups first,
+// author groups second, each shown as an equal labeled band.
+const directories = [
+  { label: 'For developers', aria: 'Developer documentation', groups: sections },
+  { label: 'For authors', aria: 'Content author documentation', groups: authorSections },
+] as const;
+
+// Two co-equal audience entries. Developers and content authors are peers here,
+// so each gets a matching primary button rather than one funnel favoring a
+// single audience. Both paths are verified in the build.
+const audienceActions = [
+  { title: 'Developers', link: '/get-started/' },
+  { title: 'Authors', link: '/merchants/quick-start/' },
+] as const;
+
+// Secondary destinations that follow the primary audience buttons: reference
+// material and the release notes. Paths verified in the build.
+const audiencePaths = [
+  { title: 'API Reference', link: '/reference/' },
+  { title: 'Releases', link: '/releases/' },
+] as const;
+---
+
+<section class='home-hero'>
+  <div class='home-hero__intro'>
+    <p class='home-hero__eyebrow'>Documentation</p>
+    <h1 class='home-hero__title'>
+      Create the fastest <span class='home-hero__title-line'
+        ><span class='home-hero__title-accent'>storefronts on the web</span></span
+      >
+    </h1>
+    <p class='home-hero__tagline'>
+      Learn to build Adobe Commerce storefronts using Edge Delivery Services, Commerce blocks, and
+      Commerce drop-in components.
+    </p>
+    <div class='home-hero__lead'>
+      <nav class='home-hero__actions' aria-label='Browse by audience'>
+        {
+          audienceActions.map((action) => (
+            <a class='home-hero__cta home-hero__cta--primary' href={setBasePath(action.link)}>
+              {action.title}
+            </a>
+          ))
+        }
+        {
+          audiencePaths.map((path) => (
+            <a class='home-hero__cta home-hero__cta--secondary' href={setBasePath(path.link)}>
+              {path.title}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </div>
+
+  <HomeSearch />
+
+  <div class='home-hero__directories'>
+    {
+      directories.map((dir, i) => (
+        <section class='home-hero__band' aria-labelledby={`home-hero-band-${i}`}>
+          <h2 class='home-hero__band-title' id={`home-hero-band-${i}`}>
+            {dir.label}
+          </h2>
+          <nav class='home-hero__directory' aria-label={dir.aria}>
+            {dir.groups.map((section) => (
+              <div class='home-hero__group'>
+                <h3 class='home-hero__group-title'>
+                  <a href={setBasePath(section.link)}>{section.title}</a>
+                </h3>
+                <ul class='home-hero__group-list'>
+                  {section.links.map((item) => (
+                    <li>
+                      <a href={setBasePath(item.link)}>{item.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </section>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .home-hero {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.75rem;
+    /* Pull up under the fixed header so the wash fills the gap above the hero. */
+    margin-top: -3.5rem;
+    padding: calc(clamp(1.5rem, 4vw, 3rem) + 3.5rem) 1.25rem 4.5rem;
+    text-align: center;
+  }
+
+  /* Full-bleed Adobe-spectrum wash behind the hero's top region. */
+  .home-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: calc(clamp(28rem, 48vw, 42rem) + 3.5rem);
+    transform: translateX(-50%);
+    z-index: -1;
+    pointer-events: none;
+    /* Solid fallback first, spectrum second. */
+    background: radial-gradient(50% 60% at 50% 0%, var(--sl-color-accent-low) 0%, transparent 72%);
+    background:
+      radial-gradient(
+        38% 52% at 18% 0%,
+        color-mix(in oklch, var(--sl-color-accent) 22%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        40% 54% at 84% 0%,
+        color-mix(in oklch, #7c6cff 26%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(60% 62% at 50% 0%, var(--sl-color-accent-low) 0%, transparent 74%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 52%, transparent 92%);
+    mask-image: linear-gradient(to bottom, #000 52%, transparent 92%);
+  }
+
+  .home-hero__intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 68rem;
+  }
+
+  /* Scoped under .home-hero to outrank Starlight's `.sl-markdown-content :is(h1)`
+     rule, which would otherwise force the title line-height to 1.25. */
+  .home-hero .home-hero__title {
+    margin: 0;
+    font-size: clamp(2.75rem, 6.5vw, 4.75rem);
+    line-height: 0.98;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: var(--sl-color-white);
+  }
+
+  /* Force the sentence onto two lines: label on line 1, accent phrase whole on
+     line 2, so the last word never orphans onto a third line. The period sits
+     inside the block wrapper but outside the accent span so it stays uncolored. */
+  .home-hero__title-line {
+    display: block;
+  }
+
+  .home-hero__title-accent {
+    color: var(--sl-color-accent);
+  }
+
+  /* Small accent eyebrow above the hero title. line-height:1 and a negative
+     bottom margin pull it tight to the title, overriding the intro's 1.25rem
+     row gap. */
+  .home-hero__eyebrow {
+    margin: 0 0 -1.25rem;
+    font-size: 1.25rem !important;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--sl-color-accent);
+  }
+
+  /* Scoped under .home-hero to outrank Starlight's `.sl-markdown-content :is(p)`
+     rule, which would otherwise force the tagline down to 17px. */
+  .home-hero .home-hero__tagline {
+    max-width: 54ch;
+    margin: 0;
+    color: var(--sl-color-gray-3);
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+
+  /* Column that groups the audience actions with the What's new pill and shrinks
+     to the button row's width, so the pill can stretch to match it exactly. */
+  .home-hero__lead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  /* One-line audience action bar: Developers and Authors are the filled primary
+     CTAs; Reference and Releases follow as outlined secondaries. Wraps only on
+     narrow screens. */
+  .home-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .home-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .home-hero__cta--primary {
+    background: var(--sl-color-accent);
+    /* Literal white: the accent fill stays blue in both themes, but
+       --sl-color-white flips to near-black in light mode. */
+    color: #fff;
+  }
+
+  .home-hero__cta--primary:hover {
+    background: var(--sl-color-accent-high);
+  }
+
+  /* Secondary CTA (API Reference): a tonal, soft-filled button. The accent-tinted
+     fill reads as an intentional, quieter button rather than an empty outline,
+     while staying subordinate to the solid-accent audience primaries. */
+  .home-hero__cta--secondary {
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-white);
+  }
+
+  .home-hero__cta--secondary:hover {
+    background: color-mix(in oklch, var(--sl-color-accent-low) 70%, var(--sl-color-accent) 30%);
+    color: var(--sl-color-text-accent);
+  }
+
+  .home-hero__cta:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 2px;
+  }
+
+  /* Curated link directory reused by both audience panels: plain headings + text
+     link lists, no boxes. The parent panel owns width and spacing; this rule
+     lays each panel's groups into two columns. */
+  .home-hero__directory {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem 2rem;
+    text-align: start;
+    align-items: start;
+  }
+
+  /* Neutralize the global sibling top-margin so grid row-gap alone controls
+     spacing and every column heading aligns to the row top. */
+  .home-hero__group {
+    margin-top: 0;
+  }
+
+  /* Section headings out-rank their link lists: full white and larger than the
+     blue child links, so the vivid link color no longer out-pops the heading
+     that owns it. Scoped under .home-hero to win over Starlight's global heading
+     color. */
+  .home-hero .home-hero__group-title {
+    margin: 0 0 0.875rem;
+    font-size: 1.375rem;
+    /* Set explicitly to override Starlight's global `h3` line-height of
+       0.25rem, which would collapse a two-line heading onto itself. */
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--sl-color-white);
+  }
+
+  /* Persistent underline marks the heading as a link to the section overview, so
+     its affordance no longer depends on hover. */
+  .home-hero .home-hero__group-title a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition:
+      color 0.15s ease,
+      text-decoration-color 0.15s ease;
+  }
+
+  .home-hero .home-hero__group-title a:hover {
+    color: var(--sl-color-accent);
+    text-decoration-color: currentColor;
+  }
+
+  .home-hero__group-title a:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  .home-hero__group-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Neutralize Starlight's global `.sl-markdown-content ul li` bottom margin so
+     the link rhythm matches Stripe's 30px top-to-top exactly. */
+  .home-hero .home-hero__group-list li {
+    margin: 0;
+  }
+
+  .home-hero__group-list a {
+    display: block;
+    padding: 0.125rem 0;
+    color: #06c;
+    font-weight: 500;
+    line-height: 1.625;
+    text-decoration: none;
+    transition: color 0.15s ease;
+    font-size: 17px;
+  }
+
+  .home-hero__group-list a:hover {
+    color: var(--sl-color-white);
+  }
+
+  /* Stripe's #5469d4 clears WCAG AA on white (4.83:1) but only reaches 3.6:1 on
+     the dark background; use a brighter indigo in dark mode for a livelier link
+     color that still passes 4.5:1. */
+  :global([data-theme='dark']) .home-hero__group-list a {
+    color: rgb(49, 152, 255);
+  }
+
+  .home-hero__group-list a:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Two co-equal audience panels side by side, so developers and content authors
+     share the fold with equal footing. The section is wider than the hero copy
+     to fit both; each panel lays its own groups into two columns. */
+  .home-hero__directories {
+    width: 100%;
+    max-width: 68rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+    align-items: start;
+  }
+
+  /* Neutralize Starlight's global sibling top-margin so the second band isn't
+     pushed down; align-items:start then aligns both band titles to the row top. */
+  .home-hero__band {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  /* Vertical divider between the developer and author panels. */
+  .home-hero__band + .home-hero__band {
+    border-inline-start: 1px solid var(--sl-color-gray-5);
+    padding-inline-start: 3rem;
+  }
+
+  /* Small accent eyebrow above each panel's grid. */
+  .home-hero__band-title {
+    margin: 0 0 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sl-color-accent);
+    text-align: start;
+  }
+
+  @media (max-width: 60rem) {
+    /* Stack the two audience panels; each reverts to a top divider instead of
+       the vertical one. */
+    .home-hero__directories {
+      grid-template-columns: 1fr;
+      max-width: 52rem;
+      gap: 0;
+    }
+
+    .home-hero__band + .home-hero__band {
+      border-inline-start: 0;
+      padding-inline-start: 0;
+      margin-top: 3rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--sl-color-gray-6);
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .home-hero__directory {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
