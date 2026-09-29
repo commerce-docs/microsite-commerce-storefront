@@ -2,20 +2,20 @@
 /**
  * audit-docs.ts
  *
- * Diffs the dropins-mcp registry (containers.json, api-functions.json,
+ * Diffs the Dropins AI Tools registry (containers.json, api-functions.json,
  * events.json) against the microsite MDX documentation files and writes a
  * DOCS-GAPS.md report to the microsite root.
  *
  * Usage:
  *   npx tsx scripts/audit-docs.ts [--microsite-path <path>] [--registry-path <path>]
  *
- * --registry-path  Path to the dropins-mcp registry directory.
- *                  Defaults to node_modules/@dropins/mcp/dist/registry
+ * --registry-path  Path to the Dropins AI Tools registry directory.
+ *                  Defaults to node_modules/@dropins/ai-tools/dist/registry
  *                  (i.e. the installed npm package).
  *
  * Version comparisons use the live npm registry as the source of truth so that
- * docs updated ahead of the next @dropins/mcp release are not flagged as
- * mismatches. The version bundled in @dropins/mcp is used as a fallback when
+ * docs updated ahead of the next @dropins/ai-tools release are not flagged as
+ * mismatches. The version bundled in @dropins/ai-tools is used as a fallback when
  * a package cannot be reached.
  *
  * Exits 1 when gaps are found, 0 when documentation is in sync.
@@ -58,7 +58,7 @@ function requireArg(flag: string): string | undefined {
 const MICROSITE_PATH = resolve(requireArg('--microsite-path') ?? PROJECT_ROOT);
 const REGISTRY_PATH = resolve(
   requireArg('--registry-path') ??
-    join(PROJECT_ROOT, 'node_modules', '@dropins', 'mcp', 'dist', 'registry')
+    join(PROJECT_ROOT, 'node_modules', '@dropins', 'ai-tools', 'dist', 'registry')
 );
 const OUTPUT_PATH = resolve(requireArg('--output-path') ?? join(MICROSITE_PATH, 'DOCS-GAPS.md'));
 
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
   if (!existsSync(REGISTRY_PATH)) {
     process.stderr.write(
       `[audit-docs] ERROR: Registry not found at ${REGISTRY_PATH}\n` +
-        `Pass --registry-path <path> to override, or install @dropins/mcp as a devDependency.\n`
+        `Pass --registry-path <path> to override, or install @dropins/ai-tools as a devDependency.\n`
     );
     process.exit(2);
   }
