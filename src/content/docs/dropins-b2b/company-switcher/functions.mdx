@@ -19,12 +19,93 @@ The Company Switcher drop-in provides API functions for managing company context
 
 | Function | Description |
 | --- | --- |
+| [`getCatalogViewContext`](#getcatalogviewcontext) | Retrieves the catalog view context for the current company, including the catalog view ID and optional access token. |
+| [`getCatalogViewHeaderManager`](#getcatalogviewheadermanager) | Returns the singleton `CatalogViewHeaderManager` instance that manages catalog-view headers for all configured `GraphQL` modules. |
 | [`getCompanyHeaderManager`](#getcompanyheadermanager) | Returns the singleton `CompanyHeaderManager` instance that manages company-specific headers for all configured `GraphQL` modules. |
 | [`getCustomerCompanyInfo`](#getcustomercompanyinfo) | Retrieves the customer's current company context information including the active company ID, company name, and list of available companies for the user. |
 | [`getGroupHeaderManager`](#getgroupheadermanager) | Returns the singleton `GroupHeaderManager` instance that manages customer group headers for all configured `GraphQL` modules. |
 | [`updateCustomerGroup`](#updatecustomergroup) | Updates the customer group context for the current shopper. |
 
 </TableWrapper>
+
+## getCatalogViewContext
+
+Retrieves the catalog view context for the current company. The catalog view context identifies which catalog view the shopper sees and, when present, the access token used to fetch it. Use it together with [`getCatalogViewHeaderManager`](#getcatalogviewheadermanager) to apply the correct catalog-view headers to GraphQL requests.
+
+```typescript
+function getCatalogViewContext(): Promise<CatalogViewContext | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CatalogViewContext` object, or `null` when no catalog view context is available:
+
+```typescript
+interface CatalogViewContext {
+  catalogViewId: string;
+  accessToken: string | null;
+}
+```
+
+## getCatalogViewHeaderManager
+
+Returns the singleton `CatalogViewHeaderManager` instance that manages catalog-view headers for all configured GraphQL modules. Use the returned manager to apply, remove, or check the catalog-view headers that control which catalog view a shopper sees.
+
+```typescript
+function getCatalogViewHeaderManager(): any
+```
+
+<Aside type="tip">
+The `CatalogViewHeaderManager` is a singleton. Calling `getCatalogViewHeaderManager()` multiple times returns the same instance, ensuring consistent header management across your application.
+</Aside>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CatalogViewHeaderManager` instance with the following methods:
+
+```typescript
+{
+  setCatalogViewHeaders(context: CatalogViewContext | null): void;
+  removeCatalogViewHeaders(): void;
+  isCatalogViewHeaderSet(): boolean;
+  setViewIdHeaderKey(headerKey: string): void;
+  setAccessTokenHeaderKey(headerKey: string): void;
+  setViewIdDefault(defaultViewId: string): void;
+  setFetchGraphQlModules(modules: FetchGraphQL[]): void;
+}
+```
+
+### Example
+
+```js
+import { getCatalogViewContext, getCatalogViewHeaderManager } from '@dropins/storefront-company-switcher/api.js';
+
+// Get the manager instance
+const manager = getCatalogViewHeaderManager();
+
+// Fetch the current catalog view context and apply its headers
+const context = await getCatalogViewContext();
+manager.setCatalogViewHeaders(context);
+
+// Subsequent requests use the catalog view headers
+await loadProducts();
+
+// Remove catalog view headers (resets to the default/public view)
+manager.removeCatalogViewHeaders();
+
+// Check if headers are set
+if (manager.isCatalogViewHeaderSet()) {
+  console.log('Catalog view context is active');
+}
+```
 
 ## getCompanyHeaderManager
 
