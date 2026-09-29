@@ -15,10 +15,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 The Cart drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.3.0</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
@@ -27,6 +23,7 @@ The Cart drop-in provides API functions that enable you to programmatically cont
 | [`applyCouponsToCart`](#applycouponstocart) | Applies or replaces one or more coupons to the cart. |
 | [`applyGiftCardToCart`](#applygiftcardtocart) | Apply a gift card to the current shopping cart. |
 | [`createGuestCart`](#createguestcart) | Creates a new empty cart for a guest user. |
+| [`getAvailableFreeGiftsForCart`](#getavailablefreegiftsforcart) | Fetches the available free-gift offers for the current cart. |
 | [`getCartData`](#getcartdata) | Is mainly used internally by the `initializeCart`() and `refreshCart`() functions. |
 | [`getCartDataFromCache`](#getcartdatafromcache) | Returns the current cart data from local storage without making an API call. |
 | [`getCountries`](#getcountries) | API function for the drop-in. |
@@ -41,6 +38,7 @@ The Cart drop-in provides API functions that enable you to programmatically cont
 | [`refreshCart`](#refreshcart) | Refreshes the cart data. |
 | [`removeGiftCardFromCart`](#removegiftcardfromcart) | This function removes a single gift card from the cart. |
 | [`resetCart`](#resetcart) | This function resets the cart drop-in. |
+| [`selectFreeGiftForCart`](#selectfreegiftforcart) | Adds a chosen free gift to the cart for one promotion rule. |
 | [`setGiftOptionsOnCart`](#setgiftoptionsoncart) | `setGiftOptionsOnCart` is a function that sets gift options on the cart. |
 | [`updateProductsFromCart`](#updateproductsfromcart) | Updates cart items by either changing the quantity or removing and adding an item in one step. |
 
@@ -146,6 +144,22 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns the cart ID for the newly created guest cart: `cartId: string | null`
+
+## getAvailableFreeGiftsForCart
+
+The `getAvailableFreeGiftsForCart` function fetches the available free-gift offers for the current cart. The payload is requested separately from the main cart data, so the heavier product details load only when the cart has free gifts available.
+
+```ts
+const getAvailableFreeGiftsForCart = async (): Promise<AvailableFreeGiftRule[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of `AvailableFreeGiftRule` objects. Returns an empty array when no free gifts are available.
 
 ## getCartData
 
@@ -356,6 +370,42 @@ const resetCart = async (): Promise<CartModel | null>
 ### Events
 
 Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## selectFreeGiftForCart
+
+The `selectFreeGiftForCart` function adds a chosen free gift to the cart for one promotion rule. Use it after presenting the shopper with the offers returned by [`getAvailableFreeGiftsForCart`](#getavailablefreegiftsforcart). If the shopper has no cart yet, the function creates a guest cart first.
+
+```ts
+const selectFreeGiftForCart = async (
+  input: {
+    ruleId: number;
+    sku: string;
+    quantity?: number;
+    enteredOptions?: { uid: string; value: string }[];
+    selectedOptions?: string[];
+  }
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `ruleId` | `number` | Yes | The identifier of the sales rule that grants the free gift. |
+| `sku` | `string` | Yes | The SKU of the gift product the shopper selected. |
+| `quantity` | `number` | No | The quantity of the gift to add. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | Customer-entered option values, such as a personalized message. |
+| `selectedOptions` | `string[]` | No | Selected option value UIDs. For configurable products, pass the configurable option UIDs. For bundle products, pass one `BundleItemOption.uid` per bundle slot. |
+
+</TableWrapper>
+
+### Events
+
+Emits `cart/updated` and `cart/data` with the updated cart. When the gift adds new lines to the cart, also emits `cart/product/added`.
 
 ### Returns
 

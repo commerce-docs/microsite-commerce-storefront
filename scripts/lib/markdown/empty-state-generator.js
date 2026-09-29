@@ -44,7 +44,6 @@ tableOfContents:
   Placeholders used in this template:
   - DROPIN_NAME → Display name (e.g., "Cart", "Checkout")
   - DROPIN_DISPLAY_NAME → Display name for use in text (e.g., "Cart", "Checkout")
-  - DROPIN_VERSION → Version number (e.g., "1.5.1")
   - FUNCTIONS_TABLE → Table listing all functions with brief descriptions
   - FUNCTIONS_CONTENT → All function documentation (generated from source .mdx files)
   
@@ -67,10 +66,6 @@ import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
 This drop-in currently has no functions defined.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersionStr}</strong>
-</div>
 
 {/* AUTO-GENERATED CONTENT - Do not edit below this line */}
 
@@ -105,9 +100,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 This drop-in does not emit or listen to any drop-in-specific events.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersionStr}</strong>
-</div>
 `;
 }
 
@@ -133,9 +125,6 @@ sidebar:
 
 This drop-in currently has no containers defined.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersionStr}</strong>
-</div>
 `;
 }
 
@@ -160,10 +149,6 @@ sidebar:
 ---
 
 This drop-in currently has no customizable slots defined.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersionStr}</strong>
-</div>
 
 For information about slots in general, see the [slots documentation](/customize/slots/).
 `;
@@ -191,9 +176,6 @@ sidebar:
 
 This drop-in currently has no dictionary defined.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${cleanVersionStr}</strong>
-</div>
 `;
 }
 
