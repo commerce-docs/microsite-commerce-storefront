@@ -14,15 +14,12 @@ import { Aside } from '@astrojs/starlight/components';
 
 The Wishlist drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.3.0</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Container | Slots |
 |-----------|-------|
-| [`Wishlist`](#wishlist-slots) | `image` |
+| [`Wishlist`](#wishlist-slots) | `image`, `actions` |
+| [`WishlistItem`](#wishlistitem-slots) | `actions` |
 
 </TableWrapper>
 
@@ -39,6 +36,7 @@ interface WishlistProps {
     defaultImageProps: ImageProps;
     item: Item;
     }>;
+    actions?: SlotProps<ProductItemActionsContext>;
   };
 }
 ```
@@ -65,5 +63,63 @@ await provider.render(Wishlist, {
 })(block);
 ```
 
+### actions slot
+
+The `actions` slot replaces the action buttons (such as move-to-cart and remove) for each product in the Wishlist container. The slot context provides `item` (the wishlisted product) and the optional `onMoveToCart` and `onRemove` callbacks.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-wishlist/render.js';
+import { Wishlist } from '@dropins/storefront-wishlist/containers/Wishlist.js';
+
+await provider.render(Wishlist, {
+  slots: {
+    actions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('button');
+      element.innerText = 'Move to cart';
+      element.addEventListener('click', () => ctx.onMoveToCart?.());
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+## WishlistItem slots
+
+The slots for the WishlistItem container allow you to customize a single wishlist product.
+
+```typescript
+interface WishlistItemProps {
+  slots?: {
+    actions?: SlotProps<ProductItemActionsContext>;
+  };
+}
+```
+
+### actions slot
+
+The `actions` slot replaces the action buttons for a single wishlist item. The slot context provides `item` (the wishlisted product) and the optional `onMoveToCart` and `onRemove` callbacks.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-wishlist/render.js';
+import { WishlistItem } from '@dropins/storefront-wishlist/containers/WishlistItem.js';
+
+await provider.render(WishlistItem, {
+  item: sampleWishlistItem,
+  slots: {
+    actions: (ctx) => {
+      // Your custom implementation
+      const element = document.createElement('button');
+      element.innerText = 'Move to cart';
+      element.addEventListener('click', () => ctx.onMoveToCart?.());
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
 
 

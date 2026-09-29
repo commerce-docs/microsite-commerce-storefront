@@ -667,88 +667,6 @@ npm run regenerate-b2b-overviews
 
 ---
 
-### Boilerplate Version Updater
-
-Updates version numbers in manually-maintained boilerplate documentation files while preserving all other content.
-
-```bash
-# Update all boilerplate documentation versions
-npm run update-boilerplate-versions
-```
-
-**Output**: Updates version numbers in `src/content/docs/boilerplate/*.mdx` files
-
-**Features**:
-- Extracts current version from boilerplate's `package.json`
-- Updates only version numbers, leaving all other content unchanged
-- Reports which files were updated
-- Runs automatically as part of `generate-all-docs`
-
-**When to Use**:
-- After a boilerplate release to update version badges
-- Manually when you want to update only versions (not regenerate full docs)
-- Automatically runs when you execute `npm run generate-all-docs`
-
-**Files Updated**:
-- `/boilerplate/index.mdx` (Overview)
-- `/boilerplate/getting-started.mdx`
-- `/boilerplate/configuration.mdx`
-- `/boilerplate/blocks-reference.mdx`
-- `/boilerplate/customizing-blocks.mdx`
-- `/boilerplate/updates.mdx`
-
----
-
-**⚠️ Important: Overview Pages Require Manual Completion**
-
-The bootstrap script creates overview pages (`index.mdx`) using `_dropin-templates/dropin-overview-minimal.mdx`. These pages are **intentionally incomplete** and require the drop-in developer to:
-
-1. **Add drop-in description** - Explain what the drop-in does, what problems it solves, and who should use it
-2. **List supported features** - Complete the features table with all Adobe Commerce features the drop-in supports
-3. **Describe each section** - Add brief descriptions for Initialization, Containers, Functions, Events, Slots, Dictionary, and Styles sections
-
-**The template includes:**
-- A visible warning callout that content needs completion
-- Clear instructions with `[Drop-in developer: ...]` placeholders
-- Real-world examples for each section
-- Link to the Cart drop-in overview as a reference
-
-**✅ Protected from Overwriting:**
-- The bootstrap script checks if `index.mdx` exists before creating it
-- No generators write to the root `index.mdx` file
-- Once you edit the overview, it's safe - generators will never overwrite it
-- Generators only update specific files: `functions.mdx`, `events.mdx`, `containers/*.mdx`, `slots.mdx`, `styles.mdx`, `dictionary.mdx`, `quick-start.mdx`, `initialization.mdx`
-
-**Example workflow:**
-```bash
-# 1. Bootstrap a new B2B drop-in
-npm run bootstrap-b2b-dropin
-# Creates structure with placeholder overview
-
-# 2. Generate documentation from source code
-npm run generate-b2b-docs
-# Populates Functions, Events, Containers, etc.
-
-# 3. Complete the overview page manually
-# Edit src/content/docs/dropins-b2b/{dropin-name}/index.mdx
-# Replace placeholders with actual content
-# See Cart overview for reference: src/content/docs/dropins/cart/index.mdx
-```
-## Enrichment System
-
-Enrichment files allow you to preserve high-quality, manually written documentation while benefiting from automated generation.
-
-**Location**: `_dropin-enrichments/{dropin-name}/`
-
-**Supported Files**:
-- `functions.json` - Function descriptions, metadata, and **accurate type signatures**
-- `events.json` - Event descriptions and use cases
-- `containers.json` - Container descriptions and configuration
-- `slots.json` - Slot descriptions and customization examples
-- `dictionary.json` - Additional documentation for i18n keys
-- `quick-start.json` - Custom introductions and quick start content
-- `initialization.json` - Additional configuration documentation
-
 ### Signature Enrichment (Type Accuracy)
 
 When TypeScript source files lack explicit return type annotations, the generator infers `Promise<any>` or `any` as a safe fallback. For accurate documentation, you can override these with correct types in enrichment files.
@@ -1466,7 +1384,6 @@ function generateContainersMDX(repoName, repoConfig, containers, version, enrich
     // Replace placeholders
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
-        'DROPIN_VERSION': version,
         'CONTAINERS_CONTENT': containersContent
     });
 }
@@ -1523,7 +1440,6 @@ function generateContainersMDX(repoName, repoConfig, containers, version, enrich
     
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
-        'DROPIN_VERSION': version,
         'CONTAINERS_CONTENT': containersContent
     });
 }

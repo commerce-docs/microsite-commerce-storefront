@@ -15,15 +15,12 @@ import { Aside } from '@astrojs/starlight/components';
 
 The Recommendations drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.0.4</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
 | --- | --- |
 | [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids) | Retrieves product recommendations based on various parameters such as current SKU, recommendation ID, and user history. |
+| [`getRecommendationsByUnits`](#getrecommendationsbyunits) | Retrieves product recommendations for one or more units, selected by unit IDs or labels. |
 | [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | Publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance. |
 
 </TableWrapper>
@@ -43,6 +40,32 @@ const getRecommendationsByUnitIds = async (
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`recommendations/data`](/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
+
+### Returns
+
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+
+## getRecommendationsByUnits
+
+The `getRecommendationsByUnits` function retrieves product recommendations for one or more recommendation units, selected by unit IDs or labels. It calls the recommendations GraphQL query and transforms the response into a standardized format.
+
+```ts
+const getRecommendationsByUnits = async (
+  params: GetRecommendationsByUnitsProps
+): Promise<RecommendationUnitModel[] | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `GetRecommendationsByUnitsProps` | Yes | Parameters for retrieving recommendations. Includes `selector` (required, an object with `unitIds` and/or `labels` that identifies the units to fetch) and optional context: `currentSku`, `cartSkus`, `userPurchaseHistory`, `userViewHistory`, and `currentProduct`. |
 
 </TableWrapper>
 
@@ -103,7 +126,7 @@ The following data models are used by functions in this drop-in.
 
 ### RecommendationUnitModel
 
-The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids).
+The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendationsByUnitIds`](#getrecommendationsbyunitids), [`getRecommendationsByUnits`](#getrecommendationsbyunits).
 
 ```ts
 interface RecommendationUnitModel {

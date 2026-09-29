@@ -27,6 +27,8 @@ compact
         ['routeProdDetailPage', 'function', 'Yes', 'A function that returns the URL for the product details page.'],
         ['getProductData', 'function', 'No', 'A function that is executed to retrieve product information when rendering the wishlist.'],
         ['getRefinedProduct', 'function', 'No', 'A function that is executed to retrieve complex product information (such as product options) when rendering the wishlist.'],
+        ['wishlistId', 'string', 'No', 'Renders a specific wishlist instead of the shopper\'s active one. When set, the container loads and mutates that list and does not touch the active-list state. Pair it with scope.'],
+        ['scope', 'string', 'No', 'Event channel this instance emits and listens on, so multiple wishlist containers on the same page stay isolated. Use the same value across the functions that load or mutate this list.'],
     ]}
 />
 
@@ -42,3 +44,18 @@ provider.render(Wishlist, {
     getRefinedProduct: pdpApi.getRefinedProduct,
   });
 ```
+
+To render an additional wishlist (for example, a "Save for Later" list) beside the active one, pass `wishlistId` and a matching `scope`:
+
+```javascript
+provider.render(Wishlist, {
+    wishlistId: myListId,
+    scope: 'my-list',
+    moveProdToCart: cartApi.addProductsToCart,
+    routeProdDetailPage: (product) => rootLink(`/products/${product.urlKey}/${product.sku}`),
+    getProductData: pdpApi.getProductData,
+    getRefinedProduct: pdpApi.getRefinedProduct,
+  })(document.getElementById('my-list'));
+```
+
+See [Render an additional wishlist](/dropins/wishlist/tutorials/render-additional-wishlist/) for the complete walkthrough.

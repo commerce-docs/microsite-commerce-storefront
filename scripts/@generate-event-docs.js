@@ -830,7 +830,6 @@ function generateEventsMDX(dropinName, repoConfig, eventsData, version) {
     // Replace global placeholders
     template = template.replace(/DROPIN_NAME/g, repoConfig.displayName);
     template = template.replace(/DROPIN_DISPLAY_NAME/g, repoConfig.displayName);
-    template = template.replace(/DROPIN_VERSION/g, cleanVersion(version));
 
     // Replace overview with enriched content or fallback to generic
     const dropinOverview = enrichments?.overview ||

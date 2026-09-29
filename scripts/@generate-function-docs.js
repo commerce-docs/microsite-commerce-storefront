@@ -2305,7 +2305,6 @@ function generateFunctionsMDX(repoName, repoConfig, scannedData, versionInfo, en
     return replacePlaceholders(template, {
         DROPIN_NAME: repoConfig.displayName,
         DROPIN_DISPLAY_NAME: repoConfig.displayName,
-        DROPIN_VERSION: cleanVersion(version),
         INTRO_TEXT: introText,
         FUNCTIONS_TABLE: functionsTable,
         FUNCTIONS_CONTENT: fullContent
