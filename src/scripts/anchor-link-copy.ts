@@ -3,8 +3,8 @@
 // hash navigation still runs, so the URL bar updates and the page scrolls to the
 // heading as before; this only adds the copy that readers expect from the icon.
 //
-// Starlight renders heading links and table-of-contents links as bare `#id`
-// fragments. The published site wraps every page in a `<base href>` pointing at
+// Starlight renders heading links, table-of-contents links, and in-content
+// `[text](#id)` links as bare `#id` fragments. The published site wraps every page in a `<base href>` pointing at
 // the site root (injected outside this repo, by the experienceleague.adobe.com
 // publishing layer), so those fragments resolve against that root instead of the
 // current page. `fixSamePageHrefs` rewrites them to `<current pathname>#id` using
@@ -59,16 +59,13 @@ function showCopiedFeedback(anchor: HTMLElement): void {
   }, 1200);
 }
 
-// Rewrites heading permalinks and desktop/mobile table-of-contents links from a
-// bare `#id` to `<pathname>#id`, so they resolve against the current page even
-// when a `<base>` tag points elsewhere.
+// Rewrites every same-page link (heading permalinks, table of contents, and
+// in-content `[text](#id)` links) from a bare `#id` to `<pathname>#id`, so they
+// resolve against the current page even when a `<base>` tag points elsewhere.
+// Starlight tab controls are skipped because their own script handles clicks.
 function fixSamePageHrefs(): void {
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    [
-      'a.sl-anchor-link:not([data-href-fixed])',
-      'starlight-toc a:not([data-href-fixed])',
-      'mobile-starlight-toc a:not([data-href-fixed])',
-    ].join(', '),
+    'a[href^="#"]:not([href="#"]):not([role="tab"]):not([data-href-fixed])',
   );
   anchors.forEach((anchor) => {
     const hash = anchor.getAttribute('href');
