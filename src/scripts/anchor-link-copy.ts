@@ -59,13 +59,17 @@ function showCopiedFeedback(anchor: HTMLElement): void {
   }, 1200);
 }
 
-// Rewrites every same-page link (heading permalinks, table of contents, and
-// in-content `[text](#id)` links) from a bare `#id` to `<pathname>#id`, so they
-// resolve against the current page even when a `<base>` tag points elsewhere.
-// Starlight tab controls are skipped because their own script handles clicks.
+// Rewrites heading permalinks and desktop/mobile table-of-contents links from a
+// bare `#id` to `<pathname>#id`, so they resolve against the current page even
+// when a `<base>` tag points elsewhere. In-content `[text](#id)` links are made
+// absolute at build time by remarkBasePathLinks, so they are not handled here.
 function fixSamePageHrefs(): void {
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    'a[href^="#"]:not([href="#"]):not([role="tab"]):not([data-href-fixed])'
+    [
+      'a.sl-anchor-link:not([data-href-fixed])',
+      'starlight-toc a:not([data-href-fixed])',
+      'mobile-starlight-toc a:not([data-href-fixed])',
+    ].join(', ')
   );
   anchors.forEach((anchor) => {
     const hash = anchor.getAttribute('href');
