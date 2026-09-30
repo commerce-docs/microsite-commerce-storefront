@@ -140,7 +140,6 @@ async function config() {
             content: `
               /* Critical mobile-first styles for instant LCP */
               @media (max-width:50rem){
-                body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
                 .page{display:flex;flex-direction:column;min-height:100vh}
                 .hero{display:flex;justify-content:center;align-items:center;padding:1.5rem 1rem;width:100%}
                 .hero .stack{flex-direction:column;gap:2rem;text-align:center;align-items:center}

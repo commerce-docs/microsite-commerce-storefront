@@ -24,7 +24,7 @@ export function renderGapsReport(
   const lines: string[] = [
     `# Documentation Gaps — Storefront Drop-ins`,
     `> Generated: ${date}`,
-    `> Source: dropins-mcp registry vs microsite MDX files`,
+    `> Source: Dropins AI Tools registry vs microsite MDX files`,
     '',
   ];
 

@@ -579,6 +579,7 @@ export function generateSidebar() {
                     { label: 'Coupons', link: '/dropins/cart/containers/coupons/' },
                     { label: 'EmptyCart', link: '/dropins/cart/containers/empty-cart/' },
                     { label: 'EstimateShipping', link: '/dropins/cart/containers/estimate-shipping/' },
+                    { label: 'FreeGiftSelection', link: '/dropins/cart/containers/free-gift-selection/' },
                     { label: 'GiftCards', link: '/dropins/cart/containers/gift-cards/' },
                     { label: 'GiftOptions', link: '/dropins/cart/containers/gift-options/' },
                     { label: 'MiniCart', link: '/dropins/cart/containers/mini-cart/' },
