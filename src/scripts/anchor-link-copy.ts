@@ -65,13 +65,34 @@ function showCopiedFeedback(anchor: HTMLElement): void {
 // Starlight tab controls are skipped because their own script handles clicks.
 function fixSamePageHrefs(): void {
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    'a[href^="#"]:not([href="#"]):not([role="tab"]):not([data-href-fixed])',
+    'a[href^="#"]:not([href="#"]):not([role="tab"]):not([data-href-fixed])'
   );
   anchors.forEach((anchor) => {
     const hash = anchor.getAttribute('href');
     if (!hash?.startsWith('#')) return;
     anchor.dataset.hrefFixed = '';
     anchor.setAttribute('href', `${location.pathname}${hash}`);
+  });
+}
+
+// Native fragment scrolling can run before Astro finishes rendering or swapping
+// the page content. Retry it after two frames so direct links reach their heading.
+function scrollToCurrentHash(): void {
+  const hash = location.hash;
+  if (!hash || hash === '#') return;
+
+  try {
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({
+      block: 'start',
+    });
+  } catch {
+    // Ignore malformed URL fragments.
+  }
+}
+
+function scheduleHashScroll(): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(scrollToCurrentHash);
   });
 }
 
@@ -82,7 +103,7 @@ function fixSamePageHrefs(): void {
 function annotateAnchors(): void {
   fixSamePageHrefs();
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    'a.sl-anchor-link:not([data-copy-annotated])',
+    'a.sl-anchor-link:not([data-copy-annotated])'
   );
   anchors.forEach((anchor) => {
     anchor.dataset.copyAnnotated = '';
@@ -106,8 +127,13 @@ function initAnchorLinkCopy(): void {
   });
 
   annotateAnchors();
-  // Re-annotate after Starlight client-side navigations swap in new content.
-  document.addEventListener('astro:page-load', annotateAnchors);
+  scheduleHashScroll();
+  // Re-annotate and resolve fragment links after Starlight swaps in new content.
+  document.addEventListener('astro:page-load', () => {
+    annotateAnchors();
+    scheduleHashScroll();
+  });
+  window.addEventListener('hashchange', scheduleHashScroll);
 }
 
 initAnchorLinkCopy();
