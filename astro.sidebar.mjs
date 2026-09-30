@@ -46,7 +46,7 @@ export function generateSidebar() {
           items: [
             { label: 'Install the integrations', link: '/ai/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Drop-in helper', link: '/ai/dropins-helper/' },
+            { label: 'Drop-in helper', link: '/ai/dropins-ai-tools/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
             { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
@@ -223,7 +223,7 @@ export function generateSidebar() {
 
         // ---------- REFERENCE ----------
         { label: 'Reference', link: '/reference/', attrs: { class: 'sidebar-section-label large' } },
-        { label: 'Drop-in helper', link: '/reference/dropins-helper/' },
+        { label: 'Drop-in helper', link: '/reference/dropins-ai-tools/' },
 
         // ---------- B2C DROP-INS ----------
         {
