@@ -54,14 +54,14 @@ export function generateSidebar() {
               ],
             },
           ],
-          label: 'Architecture',
         },
         {
+          label: 'Architecture',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Drop-in helper', link: '/ai/dropins-ai-tools/' },
+            { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
             { label: 'Fallback docs', link: '/ai/static-text-files/' },
           ],
@@ -559,7 +559,8 @@ export function generateSidebar() {
       label: 'API Reference',
       link: '/reference/',
       icon: 'open-book',
-        { label: 'Drop-in helper', link: '/reference/dropins-ai-tools/' },
+      items: [
+        { label: 'Dropins AI tools', link: '/reference/dropins-ai-tools/' },
         // ---------- B2C DROP-INS ----------
         {
           label: 'B2C Drop-Ins',
