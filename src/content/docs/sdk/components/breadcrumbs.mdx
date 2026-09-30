@@ -1,11 +1,58 @@
 ---
 title: Breadcrumbs
-description: Render hierarchical breadcrumbs with customizable separators and links so shoppers always know where they are in catalog navigation.
-tableOfContents: false
-iframe:
-  src: "components-breadcrumbs--overview"
+description: Render a hierarchical breadcrumb trail with linked categories and a customizable separator so shoppers always know where they are in the catalog.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/breadcrumbs.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `Breadcrumbs` to show a shopper where they are in the catalog hierarchy. Pass an array of category nodes, such as links; the trail renders only when you supply more than one category.
+
+<ComponentPreview src={previewImage} alt="The SDK Breadcrumbs showing a category trail." />
+
+## Import
+
+```js
+import { Breadcrumbs } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `categories` | `VNode[]` | Yes | The categories to display in the breadcrumb trail. |
+| `separator` | `VNode<HTMLAttributes<SVGSVGElement>>` | No | Icon used to separate items. Defaults to a slash. |
+
+</TableWrapper>
+
+`Breadcrumbs` also accepts standard HTML attributes (for example, `className` and `aria-label`).
+
+## Example
+
+Render a breadcrumb trail of category links, with a custom separator icon.
+
+```js
+import { Breadcrumbs, Icon, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+await provider.render(Breadcrumbs, {
+  // Pass each category as an anchor VNode, not a plain string
+  categories: [
+    h('a', { href: '/' }, 'Home'),
+    h('a', { href: '/men' }, 'Men'),
+    h('a', { href: '/men/shoes' }, 'Shoes'),
+  ],
+  // Optional: omit separator to fall back to the default slash
+  separator: h(Icon, { source: 'ChevronRight' }),
+})(document.querySelector('.breadcrumbs'));
+```
+
+On a storefront, the product and category pages already render this trail, so you usually customize the shipped breadcrumbs instead of mounting the component yourself. See [Breadcrumbs for PLP and PDP](/how-tos/breadcrumbs-plp-pdp/).
+
+## Related
+
+- [Icon](/sdk/components/icon/) — pass an `Icon` as the `separator` prop.
+- [Design tokens](/sdk/design/) — the colors, spacing, and typography the trail uses.

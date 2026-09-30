@@ -331,7 +331,6 @@ function generateSlotsMDX(repoName, repoConfig, containers, versionInfo, enrichm
     return replacePlaceholders(template, {
         'DROPIN_NAME': repoConfig.displayName,
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(version),
         'INTRO_TEXT': introText,
         'SUMMARY_TABLE': summaryTable,
         'SIMPLE_EXAMPLE': '', // Removed - each slot now has its own example

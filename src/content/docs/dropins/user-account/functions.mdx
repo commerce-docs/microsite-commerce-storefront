@@ -15,32 +15,62 @@ import { Aside } from '@astrojs/starlight/components';
 
 The User Account drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 4.0.0</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
 | --- | --- |
+| [`createCompanyAddress`](#createcompanyaddress) | Creates a company address in the company address book using the `CustomerAddressesModel` object. |
 | [`createCustomerAddress`](#createcustomeraddress) | Creates an address for an existing customer using the `CustomerAddressesModel` object as an argument. |
+| [`deleteCompanyAddress`](#deletecompanyaddress) | Deletes a company address by ID. |
 | [`getAdminAssistanceActions`](#getadminassistanceactions) | Fetches a paginated list of administrator actions recorded during seller-assisted buying sessions. |
 | [`getAttributesForm`](#getattributesform) | Calls the `attributesForm` query to retrieve EAV attributes associated with customer and customer address frontend forms. |
+| [`getCompanyAddressBook`](#getcompanyaddressbook) | Retrieves the company address book for the current customer. |
+| [`getCompanyAddressBookConfig`](#getcompanyaddressbookconfig) | Retrieves the company address book configuration. |
 | [`getCountries`](#getcountries) | Calls the countries query to retrieve a list of countries. |
 | [`getCustomer`](#getcustomer) | Retrieves the customer information for the logged-in customer. |
 | [`getCustomerAddress`](#getcustomeraddress) | Returns an array of addresses associated with the current customer. |
+| [`getCustomerCompanyContext`](#getcustomercompanycontext) | Determines whether the customer has a company context. |
 | [`getCustomerPaymentTokens`](#getcustomerpaymenttokens) | Retrieves stored payment tokens for the logged-in customer via the `customerPaymentTokens query`. |
+| [`getCustomerRolePermissions`](#getcustomerrolepermissions) | Retrieves and resolves the customer's company address role permissions. |
 | [`deletePaymentToken`](#deletepaymenttoken) | Removes a stored payment token using the `deletePaymentToken mutation`. |
 | [`getOrderHistoryList`](#getorderhistorylist) | Retrieves a list of customer orders asynchronously using the customer query. |
 | [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country. |
 | [`getStoreConfig`](#getstoreconfig) | Calls the `storeConfig` query to retrieve password requirements and the seller-assisted buying feature flag and consent checkbox settings. |
 | [`removeCustomerAddress`](#removecustomeraddress) | Removes an address associated with the current customer. |
+| [`setDefaultCompanyAddress`](#setdefaultcompanyaddress) | Sets a company address as the default by ID. |
+| [`updateCompanyAddress`](#updatecompanyaddress) | Updates a company address by ID. |
 | [`updateCustomer`](#updatecustomer) | Updates the logged-in customer. |
 | [`updateCustomerAddress`](#updatecustomeraddress) | Updates an address associated with the current customer. |
 | [`updateCustomerEmail`](#updatecustomeremail) | Updates the email address of the logged-in customer. |
 | [`updateCustomerPassword`](#updatecustomerpassword) | Updates the password of the logged-in customer. |
 
 </TableWrapper>
+
+## createCompanyAddress
+
+The `createCompanyAddress` function creates a company address in the company address book using the `CustomerAddressesModel` object as an argument. Use it in B2B flows where the customer manages company addresses.
+
+```ts
+const createCompanyAddress = async (
+  address: CustomerAddressesModel
+): Promise<CreateCompanyAddressResult>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `address` | `CustomerAddressesModel` | Yes | The company address details, including street, city, region, country, postal code, and optional fields such as company name and phone number. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CompanyAddressModel` for the created company address.
 
 ## createCustomerAddress
 
@@ -67,6 +97,32 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `string`.
+
+## deleteCompanyAddress
+
+The `deleteCompanyAddress` function deletes a company address from the company address book. Pass the ID of the address to remove.
+
+```ts
+const deleteCompanyAddress = async (
+  id: string
+): Promise<DeleteCompanyAddressResult>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The ID of the company address to delete. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `boolean` that is `true` when the company address is deleted.
 
 ## getAdminAssistanceActions
 
@@ -139,6 +195,38 @@ Does not emit any drop-in events.
 
 Returns `AttributesFormModel[]`.
 
+## getCompanyAddressBook
+
+The `getCompanyAddressBook` function retrieves the company address book for the current customer.
+
+```ts
+const getCompanyAddressBook = async (): Promise<CompanyAddressBookModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CompanyAddressBookModel`.
+
+## getCompanyAddressBookConfig
+
+The `getCompanyAddressBookConfig` function retrieves the company address book configuration, such as whether the company address book and custom company addresses are enabled.
+
+```ts
+const getCompanyAddressBookConfig = async (): Promise<CompanyAddressBookConfigModel>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CompanyAddressBookConfigModel`.
+
 ## getCountries
 
 The `getCountries` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/countries/" text="countries" /> query to retrieve a list of countries.
@@ -207,6 +295,22 @@ Promise<
 
 See [`CustomerAddressesModel`](#customeraddressesmodel).
 
+## getCustomerCompanyContext
+
+The `getCustomerCompanyContext` function determines whether the customer has a company context. Use it to detect B2B customers before showing company-specific features.
+
+```ts
+const getCustomerCompanyContext = async (): Promise<boolean>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `boolean` that is `true` when the customer has a company context.
+
 ## getCustomerPaymentTokens
 
 The `getCustomerPaymentTokens` function retrieves saved payment methods (vault tokens) for the logged-in customer. It calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/checkout/queries/customer-payment-tokens/" text="`customerPaymentTokens`" /> query via the drop-in GraphQL client (GET, no cache), then transforms the results into display rows for the `PaymentMethods` container.
@@ -232,6 +336,22 @@ Does not emit any drop-in events. To populate the `PaymentMethods` list from cli
 ### Returns
 
 Returns [`StoredPaymentMethodDisplay[]`](#storedpaymentmethoddisplay).
+
+## getCustomerRolePermissions
+
+The `getCustomerRolePermissions` function retrieves and resolves the customer's role permissions for company address management.
+
+```ts
+const getCustomerRolePermissions = async (): Promise<ResolvedCompanyAddressPermissions>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `ResolvedCompanyAddressPermissions` object describing which company address actions the customer can perform.
 
 ## deletePaymentToken
 
@@ -356,6 +476,60 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `boolean`.
+
+## setDefaultCompanyAddress
+
+The `setDefaultCompanyAddress` function sets a company address as the default. Pass the ID of the address to set as the default.
+
+```ts
+const setDefaultCompanyAddress = async (
+  id: string
+): Promise<SetDefaultCompanyAddressResult>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The ID of the company address to set as the default. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CompanyAddressModel` for the updated company address.
+
+## updateCompanyAddress
+
+The `updateCompanyAddress` function updates a company address in the company address book. Pass the address ID and the updated `CustomerAddressesModel` values.
+
+```ts
+const updateCompanyAddress = async (
+  id: string,
+  input: CustomerAddressesModel
+): Promise<UpdateCompanyAddressResult>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | The ID of the company address to update. |
+| `input` | `CustomerAddressesModel` | Yes | The updated company address details. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns a `CompanyAddressModel` for the updated company address.
 
 ## updateCustomer
 

@@ -1,11 +1,59 @@
 ---
 title: Product Item Card
-description: Use Product Item Cards to display product information.
-tableOfContents: false
-iframe:
-    src: "components-productitemcard--overview"
+description: Display product recommendations with an image, title, price, SKU, swatches, and an action button.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/productitemcard.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `ProductItemCard` to display a product recommendation with an image, title, price, SKU, swatches, and an action button. Each region is a node you pass in, so you control what renders in every slot. Until you set `initialized` to `true`, the card renders a loading skeleton.
+
+<ComponentPreview src={previewImage} alt="The SDK ProductItemCard showing a product with image, title, price, and an action button." />
+
+## Import
+
+```js
+import { ProductItemCard } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `image` | `VNode` | No | Product image node. |
+| `titleNode` | `VNode` | No | Product title node. |
+| `price` | `VNode` | No | Product price node. |
+| `sku` | `VNode` | No | Product SKU node. |
+| `swatches` | `VNode` | No | Product swatches node. |
+| `actionButton` | `VNode` | No | Action button node. |
+| `initialized` | `boolean` | No | Render the card content when true; otherwise render a loading skeleton. Defaults to false. |
+
+</TableWrapper>
+
+`ProductItemCard` also accepts standard HTML attributes (for example, `onClick`, `className`), except `loading`.
+
+## Example
+
+Build each region with `h`, then pass the nodes as props. `Image`, `Price`, and `Button` are exported from the same package.
+
+```js
+import { ProductItemCard, Image, Price, Button, provider } from '@dropins/tools/components.js';
+import { h } from '@dropins/tools/preact.js';
+
+await provider.render(ProductItemCard, {
+  initialized: true,
+  image: h(Image, { src: '/media/sweatshirt.jpg', alt: 'Backyard Sweatshirt', width: '300', height: '375' }),
+  titleNode: h('div', {}, 'Hollister Backyard Sweatshirt'),
+  sku: h('div', {}, 'SKU: 123456789'),
+  price: h(Price, { amount: 49.99 }),
+  actionButton: h(Button, { children: 'Add to Cart' }),
+})(document.querySelector('.product-item-card'));
+```
+
+## Related
+
+- [Button](/sdk/components/button/) — commonly passed as the `actionButton` node.
+- [Skeleton](/sdk/components/skeleton/) — the placeholder shown before the card is initialized.

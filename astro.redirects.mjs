@@ -89,6 +89,7 @@ export function generateRedirects(basePath) {
         '/product-details/pdp-slots': `${basePath}/dropins/product-details/slots`,
         '/product-details/pdp-styles': `${basePath}/dropins/product-details/styles`,
         '/dropins/product-details/installation': `${basePath}/dropins/product-details/quick-start`,
+        '/dropins/product-details/containers/product-giftcard-options': `${basePath}/dropins/product-details/containers/product-gift-card-options`,
 
         // Product Discovery drop-in
         '/dropins/product-discovery/containers/product-list': `${basePath}/dropins/product-discovery/containers/search-results`,
@@ -113,8 +114,8 @@ export function generateRedirects(basePath) {
         // ========= GET STARTED REDIRECTS =========
         '/get-started/launch-checklist': `${basePath}/launch`,
         '/get-started/requirements': `${basePath}/get-started/architecture`,
-        '/get-started/boilerplate-project': `${basePath}/boilerplate/getting-started`,
-        '/get-started/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/get-started/boilerplate-project': `${basePath}/boilerplate`,
+        '/get-started/working-with-boilerplate': `${basePath}/boilerplate`,
         '/get-started/update-boilerplate': `${basePath}/boilerplate/updates`,
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
@@ -129,26 +130,32 @@ export function generateRedirects(basePath) {
         '/reference/dropins-helper': `${basePath}/reference/dropins-ai-tools`,
 
         // ========= BOILERPLATE REDIRECTS =========
-        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate/getting-started`,
+        '/boilerplate/getting-started': `${basePath}/boilerplate`,
+        '/boilerplate/working-with-boilerplate': `${basePath}/boilerplate`,
         '/boilerplate/update-boilerplate': `${basePath}/boilerplate/updates`,
-        '/boilerplate/blocks': `${basePath}/boilerplate/blocks-reference`,
+        '/boilerplate/blocks': `${basePath}/blocks`,
+        '/dropins/all/commerce-blocks': `${basePath}/blocks`,
+
+        // Blocks folder consolidation (blocks physically moved into src/content/docs/blocks/)
+        '/get-started/architecture/blocks-and-repo': `${basePath}/blocks/blocks-and-dropins`,
+        '/boilerplate/blocks-reference': `${basePath}/blocks`,
+        '/dropins/all/layouts': `${basePath}/blocks/arrange-block-layouts`,
+        '/dropins/all/build-custom-features': `${basePath}/blocks/build-custom-features`,
+        '/boilerplate/create-commerce-blocks': `${basePath}/blocks/create-commerce-blocks`,
+        '/boilerplate/customizing-blocks': `${basePath}/blocks/customize-blocks`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
-        '/config': `${basePath}/setup/configuration`,
+        '/config': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/commerce-configuration': `${basePath}/setup/configuration/commerce-configuration`,
         '/config/content-delivery-network': `${basePath}/setup/configuration/content-delivery-network`,
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
+        '/boilerplate/configuration': `${basePath}/setup/configuration/commerce-configuration`,
         '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/setup/configuration/storefront-compatibility/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/resources/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/resources/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/resources/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/resources/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/setup/configuration/storefront-compatibility-b2b': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
-        '/setup/configuration/storefront-compatibility-b2b/': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
         '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
@@ -170,20 +177,16 @@ export function generateRedirects(basePath) {
         '/sdk/get-started': `${basePath}/sdk/get-started/cli`,
         '/sdk/reference/initialize': `${basePath}/sdk/reference/initializer`,
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events': `${basePath}/dropins/all/events`,
-        '/dropins/all/common-events/': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
         // Quick start redirects (storefront-builder → quick-start)
         '/merchants/get-started/': `${basePath}/merchants/quick-start`,
         '/merchants/storefront-builder/create-content': `${basePath}/merchants/quick-start/create-content`,
         '/merchants/storefront-builder/document-authoring': `${basePath}/merchants/quick-start/document-authoring`,
-        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
+        '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
-        '/merchants/storefront-builder/page-metadata/': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
-        '/merchants/storefront-builder/section-metadata/': `${basePath}/merchants/quick-start/section-metadata`,
         '/merchants/storefront-builder/your-first-page': `${basePath}/merchants/quick-start/your-first-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
@@ -202,9 +205,7 @@ export function generateRedirects(basePath) {
 
         // Personalization and Product Recommendations setup guides (blocks → content-customizations)
         '/merchants/blocks/personalization': `${basePath}/merchants/content-customizations/personalization`,
-        '/merchants/blocks/personalization/': `${basePath}/merchants/content-customizations/personalization`,
         '/merchants/blocks/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
-        '/merchants/blocks/product-recommendations/': `${basePath}/merchants/content-customizations/product-recommendations`,
 
         // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
         // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
@@ -217,7 +218,6 @@ export function generateRedirects(basePath) {
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
         // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
         '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
-        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -228,18 +228,25 @@ export function generateRedirects(basePath) {
         '/merchants/multistore/commerce-localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/localization': `${basePath}/merchants/quick-start/content-localization`,
         '/merchants/multistore/content-localization': `${basePath}/merchants/quick-start/content-localization`,
-        '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization-universal-editor`,
+        '/merchants/multistore/content-localization-universal-editor': `${basePath}/merchants/quick-start/content-localization`,
+
+        // Commerce localization tasks moved out of Merchants (developer procedure) into Drop-ins reference
+        '/merchants/quick-start/content-localization-commerce-tasks': `${basePath}/dropins/all/commerce-tasks`,
+
+        // Placeholder sheets reference moved out of API Reference (resources) into Merchants
+        '/resources/placeholders': `${basePath}/merchants/blocks/placeholder-sheets`,
+        // Resources index removed (API Reference); its only content already lived in Merchants
+        '/resources': `${basePath}/merchants/blocks/placeholder-sheets`,
 
         // ========= MISC REDIRECTS =========
         // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
         '/create': `${basePath}/get-started/create-storefront`,
-        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,
         '/resources/product-discovery-diagrams': `${basePath}/dropins/product-discovery`,
-        '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/universal-editor`,
-        '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/universal-editor`,
+        '/merchants/quick-start/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
+        '/setup/aem-assets-integration': `${basePath}/merchants/quick-start/create-content`,
         '/boilerplate/ai-agent-skills': `${basePath}/ai/boilerplate-skills`,
         '/build-with-ai': `${basePath}/get-started/build-with-ai`,
         '/resources/build-with-ai': `${basePath}/get-started/build-with-ai`,

@@ -23,6 +23,12 @@ const glossaryEntries: GlossaryEntry[] = [
     aliases: ['DA.live', 'Document Author'],
   },
   {
+    term: 'Experience Workspace',
+    definition:
+      "Adobe's recommended visual editor for Document Authoring (DA.live) projects. It lets you edit text and images directly on a page's rendered preview or live URL, without opening the underlying document.",
+    aliases: ['EW'],
+  },
+  {
     term: 'GraphQL',
     definition:
       'A query language that drop-in components use to request and update data from Adobe Commerce APIs. Catalog Service, Live Search, and the core Commerce API all expose GraphQL endpoints.',
