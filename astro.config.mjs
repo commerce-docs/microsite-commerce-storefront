@@ -64,7 +64,7 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
-      inlineStylesheets: 'always',
+      inlineStylesheets: 'auto',
     },
 
     redirects: generateRedirects(basePath),
@@ -103,6 +103,7 @@ async function config() {
             tag: 'script',
             attrs: {
               defer: true,
+              fetchpriority: 'low',
               'data-rate': 'high',
               type: 'text/javascript',
               src: 'https://rum.hlx.page/.rum/@adobe/helix-rum-js@^2/dist/rum-standalone.js',
@@ -175,12 +176,20 @@ async function config() {
                     var s = document.createElement('script');
                     s.src = 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js';
                     s.async = true;
+                    s.fetchPriority = 'low';
                     document.head.appendChild(s);
                   }
-                  if ('requestIdleCallback' in window) {
-                    requestIdleCallback(loadLaunch, { timeout: 3000 });
+                  function scheduleLaunch(){
+                    if ('requestIdleCallback' in window) {
+                      requestIdleCallback(loadLaunch, { timeout: 3000 });
+                    } else {
+                      setTimeout(loadLaunch, 2000);
+                    }
+                  }
+                  if (document.readyState === 'complete') {
+                    scheduleLaunch();
                   } else {
-                    setTimeout(loadLaunch, 2000);
+                    window.addEventListener('load', scheduleLaunch, { once: true });
                   }
                   ['pointerdown','keydown','scroll','touchstart'].forEach(function(evt){
                     window.addEventListener(evt, loadLaunch, { once: true, passive: true });
