@@ -49,6 +49,7 @@ export function generateSidebar() {
               items: [
                 { label: 'Install the integrations', link: '/ai/' },
                 { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
                 { label: 'Wayfinder', link: '/ai/wayfinder/' },
                 { label: 'Fallback docs', link: '/ai/static-text-files/' },
               ],
@@ -57,19 +58,9 @@ export function generateSidebar() {
         },
         {
           label: 'Architecture',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/get-started/architecture/' },
-            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-            { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
-            { label: 'Wayfinder', link: '/ai/wayfinder/' },
-            { label: 'Fallback docs', link: '/ai/static-text-files/' },
-          ],
-        },
-        {
-          label: 'Storefront Architecture',
           collapsed: false,
           items: [
+            { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
             { label: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
             { label: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
