@@ -42,6 +42,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { mergePreservingPreamble } from './lib/preserve-preamble.js';
+import { isPathPreserved } from './lib/preserve-paths.js';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execSync, execFileSync } from 'child_process';
@@ -1361,6 +1362,11 @@ async function main() {
                 repoName
             );
             const outputPath = join(outputDir, 'events.mdx');
+
+            if (isPathPreserved(outputPath)) {
+                console.log(`  Preserving manual event documentation: ${outputPath}`);
+                continue;
+            }
 
             // Create directory if it doesn't exist
             if (!existsSync(outputDir)) {

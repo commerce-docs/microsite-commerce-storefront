@@ -1,0 +1,101 @@
+---
+title: ProductCustomizableOptions Container
+description: Learn about the ProductCustomizableOptions container in the Product Details drop-in.
+sidebar:
+  label: ProductCustomizableOptions
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import Aside from '@components/Aside.astro';
+
+The `ProductCustomizableOptions` container renders selectable choices and shopper-input fields for the current product's customizable options. Supported controls include drop-down lists, radio buttons, checkboxes, text fields, multiline text fields, dates, local date-times, and times.
+
+The container receives initial product data during [initialization](/dropins/product-details/initialization/) to preload the component. Once loaded, it operates in an event-driven manner, updating with data emitted to `pdp/data` within the event scope, and listens to `pdp/values` to keep its displayed selections in sync with the current configuration.
+
+<Aside type="note">
+
+- Rendering is conditional. The container renders when the product's `ac_customizable_options` attribute has entries in `selectable` or `shopperInput`. See [`ac_customizable_options`](/dropins/product-details/events/#ac_customizable_options) for the attribute shape. A product with no customizable options renders nothing extra.
+- Selecting a value toggles its `custom-option/<optionId>/<valueId>` UID in the PDP configuration's `optionsUIDs` (deselecting removes it); `checkbox` and `multiple` options support more than one selected value per option.
+- Entering a value updates `enteredOptions` with the encoded option UID and its string value. Clearing a field removes only that option's entry. Other entered values and selected options are preserved.
+- Required options are shown with a "Required" label. This container does not currently enforce required-option selection or gate **Add to Cart** on it, and it does not display a live price-delta preview — see the [Overview](/dropins/product-details/#supported-commerce-features) for roadmap status.
+
+</Aside>
+
+## Selectable controls
+
+<TableWrapper>
+
+| Render type | Control            | Selection                                                   |
+| ----------- | ------------------ | ----------------------------------------------------------- |
+| `drop_down` | Drop-down list     | One value per option.                                       |
+| `radio`     | Radio button group | One value per option.                                       |
+| `checkbox`  | Checkbox group     | Multiple values per option.                                 |
+| `multiple`  | Checkbox group     | Multiple values per option; not a native multi-select list. |
+
+</TableWrapper>
+
+Each selected value adds its encoded `selectable[].values[].id` to `optionsUIDs`. Fixed surcharges are formatted in the product's currency; percentage surcharges are shown as percentages. These labels do not update the displayed product total.
+
+## Shopper-input controls
+
+<TableWrapper>
+
+| Render type | Control               | Metadata                                                                                 |
+| ----------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `field`     | Text input            | Positive integer `range.from` and `range.to` values specify minimum and maximum lengths. |
+| `area`      | Multiline text input  | Same length constraints; line breaks are preserved.                                      |
+| `date`      | Date input            | Local calendar date.                                                                     |
+| `date_time` | Local date-time input | No timezone conversion.                                                                  |
+| `time`      | Time input            | Local time.                                                                              |
+| `file`      | Disabled file input   | Displays a localized unsupported message. Upload is not implemented.                     |
+
+</TableWrapper>
+
+Labels include the required flag, and nonzero option prices are displayed in the product's currency. Invalid length bounds are ignored; a maximum of `0` means unlimited. Maximum length is enforced when entering or pasting text. Minimum length is exposed on the control but does not gate Add to Cart. If the minimum exceeds the maximum, the minimum is ignored.
+
+Keep the encoded `shopperInput[].id` unchanged when passing `{ uid, value }` entries to the cart. Do not decode or encode it again. The container preserves whitespace and multiline text.
+
+Date and time controls store cart-compatible strings in `enteredOptions` without timezone conversion:
+
+<TableWrapper>
+
+| Render type | Shopper input      | Stored value          |
+| ----------- | ------------------ | --------------------- |
+| `date`      | `2026-10-02`       | `2026-10-02 00:00:00` |
+| `date_time` | `2026-10-02T14:30` | `2026-10-02 14:30:00` |
+| `time`      | `14:30`            | `1970-01-01 14:30:00` |
+
+</TableWrapper>
+
+The embedded `ProductDetails` container renders these controls too. Use either the standalone container or the embedded rendering path, not both on the same PDP.
+
+## ProductCustomizableOptions configurations
+
+The `ProductCustomizableOptions` container provides the following configuration options:
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter     | Type           | Req? | Description                                                                                                     |
+| ------------- | -------------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| `scope`       | `string`       | No   | Unique identifier for the PDP context. Only containers rendered with this scope will respond to product events. |
+| `initialData` | `ProductModel` | No   | Initial product data used before scoped `pdp/data` events arrive.                                               |
+| `className`   | `string`       | No   | Additional CSS class applied to the container wrapper.                                                          |
+
+</TableWrapper>
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example demonstrates how to render the `ProductCustomizableOptions` container:
+
+```js
+import { render as provider } from '@dropins/storefront-pdp/render.js';
+import ProductCustomizableOptions from '@dropins/storefront-pdp/containers/ProductCustomizableOptions.js';
+
+await provider.render(ProductCustomizableOptions, {
+  scope: 'example', // optional
+})(block);
+```
