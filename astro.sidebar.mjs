@@ -226,26 +226,36 @@ export function generateSidebar() {
               label: 'What is Commerce Storefront?',
               link: '/merchants/quick-start/create-content/',
             },
-            { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
+            { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
             {
               label: 'Author and developer tasks',
               link: '/merchants/blocks/author-and-developer-tasks/',
             },
             {
-              label: 'Using the Document Authoring tool',
+              label: 'Document Authoring',
               link: '/merchants/quick-start/document-authoring/',
-            },
-            {
-              label: 'Using the Experience Workspace tool',
-              link: '/merchants/quick-start/experience-workspace/',
-            },
-            {
-              label: 'Using the Universal Editor (deprecated)',
-              link: '/merchants/quick-start/universal-editor/',
             },
             {
               label: 'Create your first commerce page',
               link: '/merchants/quick-start/your-first-page/',
+            },
+            {
+              label: 'Visual editing',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Overview',
+                  link: '/merchants/quick-start/choose-visual-editor/',
+                },
+                {
+                  label: 'Experience Workspace',
+                  link: '/merchants/quick-start/experience-workspace/',
+                },
+                {
+                  label: 'Universal Editor (deprecated)',
+                  link: '/merchants/quick-start/universal-editor/',
+                },
+              ],
             },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
