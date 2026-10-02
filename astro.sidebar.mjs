@@ -146,6 +146,11 @@ export function generateSidebar() {
           ],
         },
         {
+          label: 'Launch checklist',
+          link: '/setup/launch/launch-checklist/',
+          attrs: { class: 'sidebar-launch-checklist' },
+        },
+        {
           label: 'Production',
           collapsed: true,
           items: [
