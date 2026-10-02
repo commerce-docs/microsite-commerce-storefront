@@ -1,0 +1,123 @@
+---
+title: Render customizable options
+description: Customize selectable choices and shopper-input fields on the product details page with ProductCustomizableOptions.
+---
+
+import Link from '@components/Link.astro';
+import Aside from '@components/Aside.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+
+Customizable options let shoppers choose add-ons or enter information such as a monogram, instructions, or a preferred date. The [`ProductCustomizableOptions`](/dropins/product-details/containers/product-customizable-options/) container renders selectable choices and shopper-input fields from the product's [`ac_customizable_options`](/dropins/product-details/events/#ac_customizable_options) attribute.
+
+<Aside type="note">
+  The standard storefront already mounts this container. Use these steps when customizing the PDP
+  layout or adding it to a custom block, not to install another instance. File upload,
+  required-option enforcement, and live updates to the displayed product total are not implemented.
+</Aside>
+
+## Prerequisites
+
+Before following these steps, you should understand:
+
+- [Events](/dropins/product-details/events/) — `pdp/data` and the [`ac_customizable_options`](/dropins/product-details/events/#ac_customizable_options) attribute shape
+- [Containers](/dropins/product-details/containers/) — how PDP containers are rendered into a block
+- **Product Details block layout**: Identify the existing custom-options slot before changing your layout. See <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.js" text="the storefront Product Details block" /> for the full layout.
+
+## Overview
+
+You'll import the `ProductCustomizableOptions` container, add a mount element to your custom Product Details block, and render it alongside the other PDP containers. In an existing storefront block, reuse its customizable-options mount element instead of adding another one.
+
+## Implementation steps
+
+Place the imports at the top of your block's JavaScript file. Run the mounting and rendering code inside its `decorate(block)` function, after the PDP initializer has loaded product data.
+
+<Tasks>
+<Task>
+### Import the container
+
+```js
+import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
+import ProductCustomizableOptions from '@dropins/storefront-pdp/containers/ProductCustomizableOptions.js';
+```
+
+</Task>
+<Task>
+### Add a markup slot to your layout fragment
+
+Add a wrapper element for the container, alongside your existing Product Details markup (for example, next to the gift card options slot):
+
+```js
+const fragment = document.createRange().createContextualFragment(`
+  <div class="product-details__right-column">
+    <div class="product-details__gift-card-options"></div>
+    <div class="product-details__customizable-options"></div>
+    <div class="product-details__configuration">
+      <!-- ...options, quantity, buttons... -->
+    </div>
+  </div>
+`);
+
+const $customizableOptions = fragment.querySelector('.product-details__customizable-options');
+block.append(fragment);
+```
+
+</Task>
+<Task>
+### Render the container
+
+Render `ProductCustomizableOptions` into the slot alongside your other containers. It's safe to include in the same `Promise.all` batch as the rest of your Product Details containers.
+
+```js
+await Promise.all([
+  // ...other containers (gallery, header, price, options, quantity)...
+  pdpRendered.render(ProductCustomizableOptions, {})($customizableOptions),
+]);
+```
+
+The container renders when either `selectable` or `shopperInput` contains options. If both are empty, the slot stays empty. See the [container reference](/dropins/product-details/containers/product-customizable-options/#productcustomizableoptions-configurations) for configuration options.
+
+</Task>
+</Tasks>
+
+## What happens next
+
+When a shopper selects a value, the container toggles that value's `custom-option/<optionId>/<valueId>` UID in the PDP configuration's `optionsUIDs` (see [`getProductConfigurationValues`](/dropins/product-details/functions/#getproductconfigurationvalues)). Because Customizable Option UIDs use the same `optionsUIDs` mechanism the cart drop-in already reads from, no extra mapping step is required before calling [`addProductsToCart`](/dropins/cart/functions/#addproductstocart).
+
+Text and temporal inputs update `enteredOptions` instead of `optionsUIDs`:
+
+```js
+const enteredOption = {
+  uid: 'Y3VzdG9tLW9wdGlvbi80',
+  value: 'My monogram',
+};
+```
+
+Use the encoded UID from `shopperInput[].id` without changing it. Clearing the input removes its entry; other input values, selected options, and quantity remain unchanged. The cart API accepts these entries as `enteredOptions` and forwards them as GraphQL `entered_options`.
+
+The standard storefront already forwards the PDP configuration to the cart. In a custom add-to-cart handler, use the same configuration rather than reconstructing option UIDs:
+
+```js
+import * as pdpApi from '@dropins/storefront-pdp/api.js';
+import { addProductsToCart } from '@dropins/storefront-cart/api.js';
+
+const values = pdpApi.getProductConfigurationValues();
+if (values && pdpApi.isProductConfigurationValid()) {
+  await addProductsToCart([{ ...values }]);
+}
+```
+
+The configuration check does not enforce required customizable options. Do not rely on it to prevent submission of an empty required field.
+
+For text fields and multiline text, positive integer `range.from` and `range.to` values set length constraints. A maximum of `0` is unlimited. Date, local date-time, and time controls do not apply text length limits or timezone conversion; they use the [cart-compatible formats](/dropins/product-details/containers/product-customizable-options/#shopper-input-controls) documented in the container reference. File options appear disabled with an unsupported message.
+
+Do not mount the standalone container when your page already renders customizable options through `ProductDetails`.
+
+For a full integration reference, see <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/product-details/product-details.js" text="the storefront Product Details block" />.
+
+## Verify the customization
+
+1. Open a product that has customizable options. Confirm that each configured option appears once and that a product without options leaves the mount element empty.
+2. Select a drop-down or radio value, then select several checkbox values. Confirm that `getProductConfigurationValues().optionsUIDs` contains their encoded value UIDs.
+3. Enter text and a date or time. Confirm that `enteredOptions` contains the encoded option UIDs and the expected string values. Clear one field and confirm that only its entry disappears.
+4. Add the configured product to the cart and confirm that its selected and entered options are retained. Check that file controls remain disabled.
