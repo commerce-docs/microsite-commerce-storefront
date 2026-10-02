@@ -122,7 +122,12 @@ export function generateRedirects(basePath) {
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
         '/get-started/seo': `${basePath}/setup/seo/`,
-        '/get-started/dropins-mcp': `${basePath}/ai/`,
+        '/get-started/seo/': `${basePath}/setup/seo/`,
+        '/get-started/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
+        '/ai/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
+        '/reference/dropins-mcp': `${basePath}/reference/dropins-ai-tools`,
+        '/ai/dropins-helper': `${basePath}/ai/dropins-ai-tools`,
+        '/reference/dropins-helper': `${basePath}/reference/dropins-ai-tools`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/getting-started': `${basePath}/boilerplate`,
