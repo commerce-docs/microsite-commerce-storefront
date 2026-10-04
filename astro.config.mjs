@@ -238,6 +238,7 @@ async function config() {
         // Component overrides
         components: {
           CallToAction: './src/components/overrides/CallToAction.astro',
+          Head: './src/components/overrides/Head.astro',
           Footer: './src/components/overrides/Footer.astro',
           Icon: './src/components/overrides/Icon.astro',
           Header: './src/components/overrides/Header.astro',
