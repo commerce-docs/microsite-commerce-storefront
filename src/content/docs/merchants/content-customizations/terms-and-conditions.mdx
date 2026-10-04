@@ -1,6 +1,7 @@
 ---
-title: Terms & Conditions setup
-description: Learn how to enable and set up the Terms & Conditions feature.
+slug: how-tos/add-terms-and-conditions
+title: Add terms and conditions to checkout
+description: Publish agreement documents and configure checkout labels that link to them, with your administrator and developer.
 ---
 import Link from '@components/Link.astro';
 
@@ -11,18 +12,27 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import Tasks from '@components/Tasks.astro';
 import Task from '@components/Task.astro';
 
-The Terms & Conditions feature must be enabled and configured to be available during the checkout process before placing an order.
-The configured terms and conditions will appear in the Checkout component as specific checkboxes. Each checkbox will display a label with text and links, directing users to the corresponding agreement pages configured at store-view level.
+Publish agreement documents and link them from the checkbox labels shoppers see at checkout. Work with your administrator and developer to confirm how your storefront defines its agreements before changing their configuration.
+
+## Before you begin
+
+- Obtain approved agreement text and the languages or store views that need it.
+- Check that you can author and publish documents and update the storefront's placeholders sheet.
+- Ask your developer whether the storefront uses its default agreement, custom agreements, or Admin-managed Commerce agreements, and which Admin settings apply.
+
+<Aside type="note">
+The default storefront defines a manually accepted agreement with the label key `Checkout.TermsAndConditions.label`. Adding agreement records in Admin does not automatically replace that code-defined agreement. Additional agreements or a different agreement source require developer configuration; see the [TermsAndConditions reference](/dropins/checkout/containers/terms-and-conditions/).
+</Aside>
 
 <Aside type="tip" title="TermsAndConditions configurable on a per store-view basis">
-  Merchants can add as many agreements as they want for a specific store-view; this allows merchants to provide different documents for each language and other needs.
+  For a storefront configured to use store-view-specific agreements, prepare the corresponding documents and labels for each language. Ask your developer to confirm that checkout uses the intended agreement source for each store view.
 
   Visit the [Multi-store setup](/setup/configuration/multistore-setup/) documentation for more information on how to build blocks and configure the storefront structure based on **Edge Delivery Services (EDS)**.
 </Aside>
 
 ## How to enable and configure the Terms and Conditions
 
-This checkout component is configurable on a per store-view basis on EDS, but a merchant can also rely on the Admin Panel's configuration. Follow the next step-by-step guide to enable and configure the Terms and Conditions:
+Confirm the applicable Admin configuration with your developer, publish the agreement documents, and update the labels for the agreement source your storefront uses.
 
 <Tasks>
 
@@ -30,7 +40,7 @@ This checkout component is configurable on a per store-view basis on EDS, but a 
 
 ### Enable the component
 
-The merchant has to enable the component in the Admin Panel as follows:
+If your developer confirms that your checkout requires the Commerce Admin setting, ask an administrator to enable it as follows:
 
 <Steps>
 
@@ -56,7 +66,16 @@ See <Link href={"https://experienceleague.adobe.com/en/docs/commerce-admin/store
 
 ### Create the agreement document
 
-The agreements pages will be created **ONLY** using _document-based authoring (DBA)_ within EDS instead of using the Admin Panel, allowing the merchant to create and manage as many agreements pages and content as required for each store-view and language.
+For agreement labels that link to storefront documents, create the content in Document Authoring:
+
+<Steps>
+
+1. Create an agreement document at the intended path, such as `/terms-and-conditions` or a locale-specific path.
+1. Add the approved agreement text and any required links.
+1. Preview and publish the document.
+1. Open its published URL and confirm that shoppers can read it without an authoring login. Keep this URL for the checkbox label.
+
+</Steps>
 
 </Task>
 
@@ -68,29 +87,33 @@ Use the **EDS placeholders** or the **Admin Panel** instructions in the followin
 
 <Tabs>
   <TabItem label="Using EDS placeholders" default>
-    For each agreement, the merchant has to update the **`placeholders`** sheet with the following information:
+    For the default storefront agreement, update the **`placeholders`** sheet using the existing label key and the following information. For additional agreements, ask your developer which label keys their configuration uses.
 
     - An **_identifier_**:
       It's the reference that identifies the label translated
     - A **_label_**:
-      It's the text to display next to the checkbox, and will be directly retrieved from the Boilerplate translations for a specific store-view and language. This data accepts HTML with links to a specific page in EDS
+      The text displayed next to the checkbox comes from the storefront placeholders for the shopper's language. It accepts HTML links to your published agreement documents.
 
     Similarly, the merchant can configure the translation for the validation error that appears when the user clicks the `Place Order` button and an agreement is not checked, using the **"Checkout.TermsAndConditions.error"** identifier.
 
     Sample of **placeholders** sheet:
     ```txt
     "Checkout.TermsAndConditions.label", "I have read, understand, and accept the <a href='/en/privacy-policy' target='_blank'>Terms of Use, Terms of Sales, Privacy Policy, and Return Policy</a>."
-    "Checkout.TermsAndConditions.terms_label", "By placing an order, you are agreeing to be bound by our <a href='/en/terms-and-conditions' target='_blank'>Terms And Conditions</a>."
-    "Checkout.TermsAndConditions.privacy_label", "By placing an order, you acknowledge our <a href='/en/privacy-policy' target='_blank'>Privacy Policy</a>."
     "Checkout.TermsAndConditions.error", "Please accept the Terms and Conditions to continue."
     ```
+
+    Replace the example wording with approved text and the example link with the published URL of your agreement document. Follow [Change labels and placeholders](/how-tos/change-labels-and-placeholders/) to preview and publish the updated sheet.
 
     These labels are used to render the `TermsAndConditions` container in the **commerce-checkout.js** block file.
 
     Refer to the Adobe Commerce documentation for examples on how to use these labels.
   </TabItem>
   <TabItem label="Using the Admin Panel">
+  Use this option only when your developer has configured checkout to use Admin-managed Commerce agreements. It does not automatically change the default code-defined agreement.
+
   The merchant has to configure the checkbox label for each agreement using the Admin Panel. As mentioned before, the Admin Panel allows merchants to create configurations per store-view level as follows:
+
+  <Steps>
 
   1. Log in to the Admin Panel.
 
@@ -125,6 +148,8 @@ Use the **EDS placeholders** or the **Admin Panel** instructions in the followin
 
   1. Click **Save Condition**.
 
+  </Steps>
+
       These entries are used to render the `TermsAndConditions` container in the **commerce-checkout.js** block file.
 
     Refer to the Adobe Commerce documentation for examples of this feature.
@@ -133,9 +158,13 @@ Use the **EDS placeholders** or the **Admin Panel** instructions in the followin
   </TabItem>
 </Tabs>
 
-:::note
-Because the agreements pages will be created using DBA within EDS, the agreements checkbox label should provide links to the relevant agreements pages for each store-view.
-:::
+<Aside type="note">
+For storefront-authored agreement documents, the checkbox label must link to the relevant published document for the shopper's language or store view.
+</Aside>
 
 </Task>
 </Tasks>
+
+## Check the result
+
+Preview checkout for each affected store view. Confirm that the intended agreement appears, its links open the published documents, and any required manual acceptance is enforced before an order can be placed. Use your team's test-order process rather than placing an unintended live order.
