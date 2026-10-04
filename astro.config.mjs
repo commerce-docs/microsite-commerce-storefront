@@ -215,6 +215,9 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
+              topics: {
+                developers: ['/tutorials/**', '/how-tos/**', '/dropins/*/tutorials/**'],
+              },
               exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
             }
           ),

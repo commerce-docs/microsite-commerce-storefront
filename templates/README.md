@@ -30,6 +30,14 @@ This directory contains templates and resources for creating consistent, high-qu
 - Learning-oriented content
 - Has a clear end goal
 
+### Making how-tos discoverable
+
+Add each new storefront how-to to `src/content/docs/tutorials/index.mdx`. Choose a topic by the shopper experience or developer goal, not by whether the implementation uses blocks or drop-ins. Use an outcome-focused link title and a one-sentence description of the result.
+
+Keep the article at its existing URL when reorganizing navigation. Link to the catalog or a relevant how-to from related block and drop-in documentation. The Developers sidebar links to catalog topics, not to individual how-tos.
+
+Start each tutorial with the result, prerequisites, and the files or components the reader will change. Verify exact file paths against the target source version. Explain technical terms in the tutorial rather than requiring readers to know them before choosing a topic.
+
 ### Customizing Templates
 
 Templates are starting points - customize them for your specific content:
