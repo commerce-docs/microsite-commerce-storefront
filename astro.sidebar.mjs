@@ -148,11 +148,6 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Launch checklist',
-          link: '/setup/launch/launch-checklist/',
-          attrs: { class: 'sidebar-launch-checklist' },
-        },
-        {
           label: 'Production',
           collapsed: true,
           items: [
@@ -182,17 +177,9 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'How-tos',
-          collapsed: true,
-          items: [
-            { label: 'Browse All', link: '/tutorials/' },
-            { label: 'Product and category pages', link: '/tutorials/#product-and-category-pages' },
-            { label: 'Cart and checkout', link: '/tutorials/#cart-and-checkout' },
-            { label: 'Accounts and wishlist', link: '/tutorials/#accounts-and-wishlist' },
-            { label: 'Orders', link: '/tutorials/#orders' },
-            { label: 'Search', link: '/tutorials/#search' },
-            { label: 'Analytics', link: '/tutorials/#analytics' },
-          ],
+          label: 'Launch checklist',
+          link: '/setup/launch/launch-checklist/',
+          attrs: { class: 'sidebar-launch-checklist' },
         },
       ],
     },
@@ -220,10 +207,6 @@ export function generateSidebar() {
             {
               label: 'Document Authoring',
               link: '/merchants/quick-start/document-authoring/',
-            },
-            {
-              label: 'Create your first commerce page',
-              link: '/merchants/quick-start/your-first-page/',
             },
             {
               label: 'Visual editing',
@@ -259,10 +242,6 @@ export function generateSidebar() {
             { label: 'Block table structure', link: '/merchants/blocks/block-tables/' },
             { label: 'Page metadata', link: '/merchants/blocks/page-metadata/' },
             { label: 'Section metadata', link: '/merchants/blocks/section-metadata/' },
-            {
-              label: 'Labels and placeholders',
-              link: '/merchants/blocks/labels-and-placeholders/',
-            },
             { label: 'Placeholder sheets', link: '/merchants/blocks/placeholder-sheets/' },
           ],
         },
@@ -272,7 +251,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
             {
-              label: 'Browse and discover',
+              label: 'Product details and lists',
               collapsed: true,
               items: [
                 { label: 'Product Details', link: '/merchants/blocks/product-details/' },
@@ -495,18 +474,6 @@ export function generateSidebar() {
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
-            {
-              label: 'Personalization',
-              link: '/merchants/content-customizations/personalization/',
-            },
-            {
-              label: 'Product Recommendations',
-              link: '/merchants/content-customizations/product-recommendations/',
-            },
-            {
-              label: 'Terms and conditions',
-              link: '/merchants/content-customizations/terms-and-conditions/',
-            },
           ],
         },
         {
@@ -515,11 +482,6 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
             { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-            { label: 'Localization', link: '/merchants/quick-start/content-localization/' },
-            {
-              label: 'Content migration',
-              link: '/merchants/edge-delivery-services/content-migration/',
-            },
             { label: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
             { label: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
             {
@@ -529,6 +491,134 @@ export function generateSidebar() {
             {
               label: 'File and content limits',
               link: '/merchants/edge-delivery-services/file-limits/',
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: 'how-tos',
+      label: 'How-tos',
+      link: '/how-tos/',
+      icon: 'pencil',
+      items: [
+        { label: 'Overview', link: '/how-tos/' },
+        {
+          label: 'Author how-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            {
+              label: 'Pages and blocks',
+              collapsed: true,
+              items: [
+                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
+                { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
+                { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
+                { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
+                { label: 'Apply section styling', link: '/how-tos/apply-section-styling/' },
+              ],
+            },
+            {
+              label: 'Products and campaigns',
+              collapsed: true,
+              items: [
+                { label: 'Preview a product', link: '/how-tos/preview-product/' },
+                { label: 'Feature a product on a campaign page', link: '/how-tos/feature-product-on-campaign-page/' },
+                { label: 'Add supporting content to product pages', link: '/how-tos/add-supporting-content-to-product-pages/' },
+                { label: 'Show enrichment content', link: '/how-tos/show-enrichment-content/' },
+                { label: 'Show targeted content', link: '/how-tos/show-targeted-content/' },
+                { label: 'Add product recommendations', link: '/how-tos/add-product-recommendations/' },
+              ],
+            },
+            {
+              label: 'Labels and experiments',
+              collapsed: true,
+              items: [
+                { label: 'Change labels and placeholders', link: '/how-tos/change-labels-and-placeholders/' },
+                { label: 'Create a page experiment', link: '/how-tos/create-page-experiment/' },
+                { label: 'Test alternate storefront labels', link: '/how-tos/test-alternate-storefront-labels/' },
+              ],
+            },
+            {
+              label: 'Publishing and translation',
+              collapsed: true,
+              items: [
+                { label: 'Copy content between projects', link: '/how-tos/copy-content-between-projects/' },
+                { label: 'Translate storefront content', link: '/how-tos/translate-storefront-content/' },
+                { label: 'Submit a storefront sitemap', link: '/how-tos/submit-storefront-sitemap/' },
+              ],
+            },
+            { label: 'Add terms and conditions to checkout', link: '/how-tos/add-terms-and-conditions/' },
+          ],
+        },
+        {
+          label: 'Developer how-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            {
+              label: 'Product and category pages',
+              collapsed: true,
+              items: [
+                { label: 'Add breadcrumbs to product and category pages', link: '/how-tos/breadcrumbs-plp-pdp/' },
+                { label: 'Add gift options to a product page', link: '/how-tos/gift-options/' },
+                { label: 'Add a Notify Me button', link: '/how-tos/notify-me-cta/' },
+                { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
+              ],
+            },
+            {
+              label: 'Cart and checkout',
+              collapsed: true,
+              items: [
+                { label: 'Add a custom payment method', link: '/how-tos/add-payment-method/' },
+                { label: 'Add custom product lines to the cart summary', link: '/how-tos/add-product-lines-to-cart-summary/' },
+                { label: 'Add messages to the mini cart', link: '/how-tos/add-messages-to-mini-cart/' },
+                { label: 'Add payment buttons to checkout', link: '/how-tos/add-buttons-to-checkout/' },
+                { label: 'Configure buy online, pick up in store', link: '/how-tos/buy-online-pickup-in-store/' },
+                { label: 'Configure the cart summary', link: '/how-tos/configure-cart-summary/' },
+                { label: 'Customize order summary lines', link: '/how-tos/order-summary-lines/' },
+                { label: 'Enable product variation updates in the cart', link: '/how-tos/enable-product-variation-updates-in-cart/' },
+                { label: 'Implement multi-step checkout', link: '/how-tos/multi-step/' },
+                { label: 'Integrate address verification', link: '/how-tos/address-integration/' },
+                { label: 'Use saved cards in checkout', link: '/how-tos/vaulted-cards-in-checkout/' },
+                { label: 'Validate a shipping address', link: '/how-tos/validate-shipping-address/' },
+              ],
+            },
+            {
+              label: 'Accounts and wishlist',
+              collapsed: true,
+              items: [
+                { label: 'Add stored payment methods to My Account', link: '/how-tos/payment-services-my-account/' },
+                { label: 'Customize the address form layout', link: '/how-tos/customize-layout/' },
+                { label: 'Display an additional wishlist', link: '/how-tos/render-additional-wishlist/' },
+                { label: 'Validate a saved address', link: '/how-tos/validate-address/' },
+              ],
+            },
+            {
+              label: 'Orders',
+              collapsed: true,
+              items: [
+                { label: 'Implement order cancellation', link: '/how-tos/order-cancellation/' },
+              ],
+            },
+            {
+              label: 'Search',
+              collapsed: true,
+              items: [
+                { label: 'Combine content and product search results', link: '/how-tos/federated-search/' },
+                { label: 'Configure search redirects', link: '/how-tos/search-redirects/' },
+              ],
+            },
+            {
+              label: 'Analytics',
+              collapsed: true,
+              items: [
+                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
+                { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+              ],
             },
           ],
         },

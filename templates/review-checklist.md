@@ -127,7 +127,7 @@ git diff --name-only --diff-filter=ACMR HEAD -- '*.md' '*.mdx'
 ### Navigation & Discoverability
 
 - [ ] Page is linked from relevant overview/index pages
-- [ ] New how-tos appear in `src/content/docs/tutorials/index.mdx` under an outcome-based topic, with a clear link title and one-sentence result.
+- [ ] New how-tos appear in `src/content/docs/how-tos/index.mdx` under an outcome-based topic, with a clear link title and one-sentence result.
 - [ ] How-to sidebar navigation points to the catalog and its topic sections, not an expanding list of individual articles.
 - [ ] Unlisted pages are associated with the correct Starlight topic; catalog shortcuts match the generated heading anchors.
 - [ ] Page appears in site search results
