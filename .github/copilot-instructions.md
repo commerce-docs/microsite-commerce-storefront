@@ -22,6 +22,10 @@ This is an Astro/Starlight documentation repository. Documentation pages live in
 
 ## Verify documentation claims
 
+- Do not invent checklist items or operational requirements. Before adding or changing a factual claim, record the exact live source URL and supporting passage or implementation lines in the review evidence. A plausible recommendation, a link, or a previous AI audit is not verification.
+- Preserve the source's product, deployment, version, and applicability scope. Do not turn a scoped recommendation into a universal Adobe requirement.
+- Keep unresolved claims out of published requirements. Report missing evidence to the user; do not replace an unsupported claim with an invented "confirm with Adobe" task.
+- Never claim a fetch, edit, audit count, or validation command succeeded unless its actual tool result establishes that outcome. Distinguish documentation/build checks from merchant implementation certification.
 - Verify API signatures, props, events, file paths, and behavior against live stable source listed in `.cursor/data/code-sources.json`. Follow `.claude/skills/source-repos/SKILL.md`; do not rely on README text or assumptions.
 - Verify published product or concept claims against a deep link from `.cursor/data/documentation-sources.json`. Do not invent supporting URLs.
 - For a full documentation fact check, use `.github/skills/verify-storefront-docs/SKILL.md` before editing factual claims.
