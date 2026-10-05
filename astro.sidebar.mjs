@@ -1289,7 +1289,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Changelog',
+          label: 'Changelogs',
           collapsed: false,
           items: [
             { label: 'Overview', link: '/releases/changelog/' },
