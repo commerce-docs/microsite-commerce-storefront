@@ -1,175 +1,173 @@
 ---
 import HomeSearch from '@components/HomeSearch.astro';
+import Icon from '@components/overrides/Icon.astro';
+import { Icons } from '@components/overrides/Icons';
 import { setBasePath } from '@utils/basePath';
+import { generateSidebar } from '../../astro.sidebar.mjs';
 
-// Developer directory: six task/topic groups that tile as a clean 3x2 grid.
-// Each group title links to that section's overview, so the overview no longer
-// repeats as a list item. setBasePath keeps each link correct under the
-// production base path, the same helper the site's LinkCard uses. Every path is
-// verified in the build.
-const sections = [
-  {
-    title: 'Getting started',
-    link: '/get-started/',
-    links: [
-      { title: 'Prerequisites', link: '/get-started/before-you-start/' },
-      { title: 'Backend options', link: '/get-started/backends/' },
-      { title: 'Plan your storefront project', link: '/setup/' },
-      { title: 'Create a storefront', link: '/get-started/create-storefront/' },
-    ],
-  },
-  {
-    title: 'Architecture',
-    link: '/get-started/architecture/',
-    links: [
-      { title: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
-      { title: 'Drop-ins at a glance', link: '/get-started/architecture/drop-ins-at-a-glance/' },
-      { title: 'How drop-ins coordinate', link: '/get-started/architecture/drop-ins-on-a-page/' },
-      {
-        title: 'Commerce services at a glance',
-        link: '/get-started/architecture/commerce-services-and-backends/',
-      },
-    ],
-  },
-  {
-    title: 'Blocks',
-    link: '/blocks/',
-    links: [
-      { title: 'Blocks and drop-ins', link: '/blocks/blocks-and-dropins/' },
-      { title: 'Customize blocks', link: '/blocks/customize-blocks/' },
-      { title: 'Create commerce blocks', link: '/blocks/create-commerce-blocks/' },
-      { title: 'Build custom features', link: '/blocks/build-custom-features/' },
-    ],
-  },
-  {
-    title: 'Drop-ins',
-    link: '/dropins/all/introduction/',
-    links: [
-      { title: 'Drop-in containers', link: '/dropins/all/containers/' },
-      { title: 'Container slots', link: '/dropins/all/slots/' },
-      { title: 'Extend a drop-in', link: '/dropins/all/extending/' },
-      { title: 'Event bus', link: '/dropins/all/events/' },
-    ],
-  },
-  {
-    title: 'Configuration',
-    link: '/setup/configuration/',
-    links: [
-      { title: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
-      { title: 'Compatibility Package', link: '/setup/configuration/storefront-compatibility/' },
-      { title: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
-      { title: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
-    ],
-  },
-  {
-    title: 'Production',
-    link: '/setup/launch/',
-    links: [
-      { title: 'Performance best practices', link: '/get-started/performance/' },
-      { title: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
-      { title: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-      { title: 'SEO overview', link: '/setup/seo/' },
-    ],
-  },
-] as const;
+const menuIcons = Object.fromEntries(
+  generateSidebar().map(({ label, icon }) => [label, icon])
+) as Record<string, keyof typeof Icons>;
 
-// Content authors are a co-equal audience, so their links get the same grouped
-// grid as the developer directory rather than a single afterthought row. Group
-// titles link to each section overview; every path is verified in the build.
-const authorSections = [
-  {
-    title: 'Getting started',
-    link: '/merchants/quick-start/',
-    links: [
-      { title: 'What is a storefront?', link: '/merchants/quick-start/create-content/' },
-      { title: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
-      { title: 'Your first commerce page', link: '/how-tos/create-commerce-page/' },
-      { title: 'Document Authoring', link: '/merchants/quick-start/document-authoring/' },
-    ],
-  },
-  {
-    title: 'Authoring',
-    link: '/merchants/authoring/',
-    links: [
-      { title: 'Block types', link: '/merchants/blocks/content-commerce-blocks/' },
-      { title: 'Page metadata', link: '/merchants/blocks/page-metadata/' },
-      { title: 'Block table structure', link: '/merchants/blocks/block-tables/' },
-      { title: 'Labels and placeholders', link: '/how-tos/change-labels-and-placeholders/' },
-    ],
-  },
-  {
-    title: 'B2C blocks',
-    link: '/merchants/blocks/b2c/',
-    links: [
-      { title: 'Product Details', link: '/merchants/blocks/product-details/' },
-      { title: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
-      { title: 'Commerce Cart', link: '/merchants/blocks/commerce-cart/' },
-      { title: 'Commerce Checkout', link: '/merchants/blocks/commerce-checkout/' },
-    ],
-  },
-  {
-    title: 'B2B blocks',
-    link: '/merchants/blocks/b2b/',
-    links: [
-      { title: 'Company Profile', link: '/merchants/blocks/commerce-company-profile/' },
-      {
-        title: 'Company Purchase Orders',
-        link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/',
-      },
-      { title: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
-      { title: 'Requisition Lists', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
-    ],
-  },
-  {
-    title: 'Customization',
-    link: '/merchants/content-customizations/',
-    links: [
-      { title: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
-      {
-        title: 'Drop-in experiments',
-        link: '/merchants/content-customizations/experiments/',
-      },
-      {
-        title: 'Personalization setup',
-        link: '/merchants/content-customizations/personalization/',
-      },
-      {
-        title: 'Product recommendations',
-        link: '/merchants/content-customizations/product-recommendations/',
-      },
-    ],
-  },
-  {
-    title: 'Publishing',
-    link: '/merchants/edge-delivery-services/',
-    links: [
-      { title: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-      { title: 'Localization', link: '/merchants/quick-start/content-localization/' },
-      { title: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
-      { title: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
-    ],
-  },
-] as const;
-
-// Both audience directories share one render below: developer groups first,
-// author groups second, each shown as an equal labeled band.
 const directories = [
-  { label: 'For developers', aria: 'Developer documentation', groups: sections },
-  { label: 'For authors', aria: 'Content author documentation', groups: authorSections },
+  {
+    label: 'For developers',
+    aria: 'Developer documentation',
+    categories: [
+      {
+        title: 'Getting started',
+        links: [
+          { title: 'Prerequisites', link: '/get-started/before-you-start/' },
+          { title: 'Backend options', link: '/get-started/backends/' },
+          { title: 'Plan your storefront project', link: '/setup/' },
+          { title: 'Create a storefront', link: '/get-started/create-storefront/' },
+        ],
+      },
+      {
+        title: 'Architecture',
+        links: [
+          { title: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
+          {
+            title: 'Drop-ins at a glance',
+            link: '/get-started/architecture/drop-ins-at-a-glance/',
+          },
+          {
+            title: 'How drop-ins coordinate',
+            link: '/get-started/architecture/drop-ins-on-a-page/',
+          },
+          {
+            title: 'Commerce services at a glance',
+            link: '/get-started/architecture/commerce-services-and-backends/',
+          },
+        ],
+      },
+      {
+        title: 'Blocks',
+        links: [
+          { title: 'Blocks and drop-ins', link: '/blocks/blocks-and-dropins/' },
+          { title: 'Customize blocks', link: '/blocks/customize-blocks/' },
+          { title: 'Arrange block layouts', link: '/blocks/arrange-block-layouts/' },
+          { title: 'Create commerce blocks', link: '/blocks/create-commerce-blocks/' },
+        ],
+      },
+      {
+        title: 'Drop-ins',
+        links: [
+          { title: 'Drop-in containers', link: '/dropins/all/containers/' },
+          { title: 'Container slots', link: '/dropins/all/slots/' },
+          { title: 'Extend a drop-in', link: '/dropins/all/extending/' },
+          { title: 'Event bus', link: '/dropins/all/events/' },
+        ],
+      },
+      {
+        title: 'Configuration',
+        links: [
+          {
+            title: 'Storefront configuration',
+            link: '/setup/configuration/commerce-configuration/',
+          },
+          {
+            title: 'Compatibility Package',
+            link: '/setup/configuration/storefront-compatibility/',
+          },
+          { title: 'CORS setup', link: '/setup/configuration/cors-setup/' },
+          { title: 'Multistore setup', link: '/setup/configuration/multistore-setup/' },
+        ],
+      },
+      {
+        title: 'Production',
+        links: [
+          { title: 'Launch checklist', link: '/setup/launch/launch-checklist/' },
+          { title: 'Performance best practices', link: '/get-started/performance/' },
+          { title: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+          { title: 'SEO overview', link: '/setup/seo/' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'For authors',
+    aria: 'Content author documentation',
+    categories: [
+      {
+        title: 'Getting started',
+        links: [
+          { title: 'What is a storefront?', link: '/merchants/quick-start/create-content/' },
+          { title: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
+          { title: 'Your first commerce page', link: '/how-tos/create-commerce-page/' },
+          { title: 'Document Authoring', link: '/merchants/quick-start/document-authoring/' },
+        ],
+      },
+      {
+        title: 'Authoring',
+        links: [
+          { title: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
+          { title: 'Block table structure', link: '/merchants/blocks/block-tables/' },
+          { title: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
+          {
+            title: 'Labels and placeholders',
+            link: '/how-tos/change-labels-and-placeholders/',
+          },
+        ],
+      },
+      {
+        title: 'B2C blocks',
+        links: [
+          { title: 'Product Details', link: '/merchants/blocks/product-details/' },
+          { title: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
+          { title: 'Commerce Cart', link: '/merchants/blocks/commerce-cart/' },
+          { title: 'Commerce Checkout', link: '/merchants/blocks/commerce-checkout/' },
+        ],
+      },
+      {
+        title: 'B2B blocks',
+        links: [
+          { title: 'Company Profile', link: '/merchants/blocks/commerce-company-profile/' },
+          {
+            title: 'Company Purchase Orders',
+            link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/',
+          },
+          { title: 'Negotiable Quote', link: '/merchants/blocks/commerce-b2b-negotiable-quote/' },
+          { title: 'Requisition Lists', link: '/merchants/blocks/commerce-b2b-requisition-list/' },
+        ],
+      },
+      {
+        title: 'Customization',
+        links: [
+          { title: 'Show enrichment content', link: '/how-tos/show-enrichment-content/' },
+          { title: 'Create a page experiment', link: '/how-tos/create-page-experiment/' },
+          { title: 'Show targeted content', link: '/how-tos/show-targeted-content/' },
+          { title: 'Product recommendations', link: '/how-tos/add-product-recommendations/' },
+        ],
+      },
+      {
+        title: 'Publishing',
+        links: [
+          { title: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
+          { title: 'Translate content', link: '/how-tos/translate-storefront-content/' },
+          { title: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
+          { title: 'Submit a sitemap', link: '/how-tos/submit-storefront-sitemap/' },
+        ],
+      },
+    ],
+  },
 ] as const;
 
-// Two co-equal audience entries. Developers and content authors are peers here,
-// so each gets a matching primary button rather than one funnel favoring a
-// single audience. Both paths are verified in the build.
 const audienceActions = [
   { title: 'Developers', link: '/get-started/' },
   { title: 'Authors', link: '/merchants/quick-start/' },
 ] as const;
 
-// Secondary destinations that follow the primary audience buttons: reference
-// material and the release notes. Paths verified in the build.
 const audiencePaths = [
+  { title: 'How-tos', link: '/how-tos/' },
   { title: 'API Reference', link: '/reference/' },
+  { title: 'Releases', link: '/releases/' },
+] as const;
+
+const sharedPaths = [
+  { title: 'Drop-ins', link: '/dropins/all/introduction/' },
+  { title: 'Storefront SDK', link: '/sdk/' },
+  { title: 'Team responsibilities', link: '/merchants/blocks/author-and-developer-tasks/' },
   { title: 'Release suites', link: '/releases/' },
 ] as const;
 ---
@@ -187,17 +185,19 @@ const audiencePaths = [
       Commerce drop-in components.
     </p>
     <div class='home-hero__lead'>
-      <nav class='home-hero__actions' aria-label='Browse by audience'>
+      <nav class='home-hero__actions' aria-label='Browse documentation'>
         {
           audienceActions.map((action) => (
-            <a class='home-hero__cta home-hero__cta--primary' href={setBasePath(action.link)}>
+            <a class='home-hero__cta' href={setBasePath(action.link)}>
+              <Icon name={menuIcons[action.title]} class='home-hero__cta-icon' />
               {action.title}
             </a>
           ))
         }
         {
           audiencePaths.map((path) => (
-            <a class='home-hero__cta home-hero__cta--secondary' href={setBasePath(path.link)}>
+            <a class='home-hero__cta' href={setBasePath(path.link)}>
+              <Icon name={menuIcons[path.title]} class='home-hero__cta-icon' />
               {path.title}
             </a>
           ))
@@ -208,45 +208,59 @@ const audiencePaths = [
 
   <HomeSearch />
 
-  <div class='home-hero__directories'>
+  <div class='home-hero__directory'>
     {
       directories.map((dir, i) => (
-        <section class='home-hero__band' aria-labelledby={`home-hero-band-${i}`}>
-          <h2 class='home-hero__band-title' id={`home-hero-band-${i}`}>
+        <section class='home-hero__audience' aria-labelledby={`home-hero-audience-${i}`}>
+          <h2 class='home-hero__audience-title' id={`home-hero-audience-${i}`}>
             {dir.label}
           </h2>
-          <nav
-            class:list={[
-              'home-hero__directory',
-              { 'home-hero__directory--authors': dir.groups === authorSections },
-            ]}
-            aria-label={dir.aria}>
-            {dir.groups.map((section) => (
-              <div class='home-hero__group'>
-                <h3 class='home-hero__group-title'>
-                  <a href={setBasePath(section.link)}>{section.title}</a>
+          <nav class='home-hero__categories' aria-label={dir.aria}>
+            {dir.categories.map((category, j) => (
+              <section class='home-hero__category' aria-labelledby={`home-hero-category-${i}-${j}`}>
+                <h3 class='home-hero__category-title' id={`home-hero-category-${i}-${j}`}>
+                  {category.title}
                 </h3>
-                <ul class='home-hero__group-list'>
-                  {section.links.map((item) => (
+                <ul class='home-hero__link-list'>
+                  {category.links.map((item) => (
                     <li>
-                      <a href={setBasePath(item.link)}>{item.title}</a>
+                      <a class='home-hero__category-link' href={setBasePath(item.link)}>
+                        {item.title}
+                      </a>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </section>
             ))}
           </nav>
         </section>
       ))
     }
   </div>
+
+  <nav class='home-hero__reference' aria-label='Shared reference documentation'>
+    <ul class='home-hero__reference-list'>
+      {
+        sharedPaths.map((path) => (
+          <li>
+            <a class='home-hero__link' href={setBasePath(path.link)}>
+              <span>{path.title}</span>
+              <span class='home-hero__link-icon' aria-hidden='true'>
+                <Icon name='right-arrow' size='1rem' />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
 </section>
 
 <style>
   @font-face {
     font-family: adobe-clean-home;
     src: url('../fonts/adobe-clean-400.woff2') format('woff2');
-    font-display: swap;
+    font-display: block;
     font-style: normal;
     font-weight: 400;
     size-adjust: 105%;
@@ -258,7 +272,7 @@ const audiencePaths = [
   @font-face {
     font-family: adobe-clean-home;
     src: url('../fonts/adobe-clean-700.woff2') format('woff2');
-    font-display: swap;
+    font-display: block;
     font-style: normal;
     font-weight: 700;
     size-adjust: 105%;
@@ -270,7 +284,7 @@ const audiencePaths = [
   @font-face {
     font-family: adobe-clean-home;
     src: url('../fonts/adobe-clean-900.woff2') format('woff2');
-    font-display: swap;
+    font-display: block;
     font-style: normal;
     font-weight: 900;
     size-adjust: 105%;
@@ -281,7 +295,8 @@ const audiencePaths = [
 
   :global(html:has(.home-hero)) {
     --sl-font-system:
-      adobe-clean-home, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      adobe-clean-home, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial,
+      sans-serif;
     --sl-font: var(--sl-font-system);
     --sl-font-system-mono: var(--sl-font-system);
     --sl-font-mono: var(--sl-font-system);
@@ -384,8 +399,6 @@ const audiencePaths = [
     text-wrap: balance;
   }
 
-  /* Column that groups the audience actions with the What's new pill and shrinks
-     to the button row's width, so the pill can stretch to match it exactly. */
   .home-hero__lead {
     display: flex;
     flex-wrap: wrap;
@@ -396,9 +409,6 @@ const audiencePaths = [
     max-width: 100%;
   }
 
-  /* One-line audience action bar: Developers and Authors are the filled primary
-     CTAs; Reference and Releases follow as outlined secondaries. Wraps only on
-     narrow screens. */
   .home-hero__actions {
     display: flex;
     flex-wrap: wrap;
@@ -410,39 +420,26 @@ const audiencePaths = [
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
     padding: 0.6rem 1.25rem;
     border-radius: 0.5rem;
     font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
+    background: #06c;
+    color: #fff;
     transition:
       background-color 0.15s ease,
       color 0.15s ease,
       border-color 0.15s ease;
   }
 
-  .home-hero__cta--primary {
-    background: var(--sl-color-accent);
-    /* Literal white: the accent fill stays blue in both themes, but
-       --sl-color-white flips to near-black in light mode. */
-    color: #fff;
+  .home-hero__cta :global(.home-hero__cta-icon) {
+    flex-shrink: 0;
   }
 
-  .home-hero__cta--primary:hover {
-    background: var(--sl-color-accent-high);
-  }
-
-  /* Secondary CTA (API Reference): a tonal, soft-filled button. The accent-tinted
-     fill reads as an intentional, quieter button rather than an empty outline,
-     while staying subordinate to the solid-accent audience primaries. */
-  .home-hero__cta--secondary {
-    background: var(--sl-color-accent-low);
-    color: var(--sl-color-white);
-  }
-
-  .home-hero__cta--secondary:hover {
-    background: color-mix(in oklch, var(--sl-color-accent-low) 70%, var(--sl-color-accent) 30%);
-    color: var(--sl-color-text-accent);
+  .home-hero__cta:hover {
+    background: #0052a3;
   }
 
   .home-hero__cta:focus-visible {
@@ -450,177 +447,200 @@ const audiencePaths = [
     outline-offset: 2px;
   }
 
-  /* Curated link directory reused by both audience panels: plain headings + text
-     link lists, no boxes. The parent panel owns width and spacing; this rule
-     lays each panel's groups into two columns. */
   .home-hero__directory {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.5rem 2rem;
-    text-align: start;
-    align-items: start;
-  }
-
-  .home-hero__directory--authors {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  }
-
-  .home-hero__directory--authors .home-hero__group-list a {
-    white-space: nowrap;
-  }
-
-  /* Neutralize the global sibling top-margin so grid row-gap alone controls
-     spacing and every column heading aligns to the row top. */
-  .home-hero__group {
-    margin-top: 0;
-  }
-
-  /* Section headings out-rank their link lists: full white and larger than the
-     blue child links, so the vivid link color no longer out-pops the heading
-     that owns it. Scoped under .home-hero to win over Starlight's global heading
-     color. */
-  .home-hero .home-hero__group-title {
-    margin: 0 0 0.875rem;
-    font-family: var(--sl-font);
-    font-size: 1.25rem;
-    /* Set explicitly to override Starlight's global `h3` line-height of
-       0.25rem, which would collapse a two-line heading onto itself. */
-    line-height: 1.25;
-    font-weight: 700;
-    letter-spacing: 0;
-    color: var(--sl-color-white);
-  }
-
-  /* Persistent underline marks the heading as a link to the section overview, so
-     its affordance no longer depends on hover. */
-  .home-hero .home-hero__group-title a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: color-mix(in oklch, currentColor 50%, transparent);
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    transition:
-      color 0.15s ease,
-      text-decoration-color 0.15s ease;
-  }
-
-  .home-hero .home-hero__group-title a:hover {
-    color: var(--sl-color-accent);
-    text-decoration-color: currentColor;
-  }
-
-  .home-hero__group-title a:focus-visible {
-    outline: 2px solid var(--sl-color-text-accent);
-    outline-offset: 2px;
-    border-radius: 0.25rem;
-  }
-
-  .home-hero__group-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* Neutralize Starlight's global `.sl-markdown-content ul li` bottom margin so
-     the link rhythm matches Stripe's 30px top-to-top exactly. */
-  .home-hero .home-hero__group-list li {
-    margin: 0;
-  }
-
-  .home-hero__group-list a {
-    display: block;
-    padding: 0.125rem 0;
-    color: #06c;
-    font-family: var(--sl-font);
-    font-weight: 400;
-    line-height: 1.625;
-    text-decoration: none;
-    transition: color 0.15s ease;
-    font-size: 17px;
-  }
-
-  .home-hero__group-list a:hover {
-    color: var(--sl-color-white);
-  }
-
-  /* Stripe's #5469d4 clears WCAG AA on white (4.83:1) but only reaches 3.6:1 on
-     the dark background; use a brighter indigo in dark mode for a livelier link
-     color that still passes 4.5:1. */
-  :global([data-theme='dark']) .home-hero__group-list a {
-    color: rgb(49, 152, 255);
-  }
-
-  .home-hero__group-list a:focus-visible {
-    outline: 2px solid var(--sl-color-text-accent);
-    outline-offset: 2px;
-    border-radius: 0.25rem;
-  }
-
-  /* Two co-equal audience panels side by side, so developers and content authors
-     share the fold with equal footing. The section is wider than the hero copy
-     to fit both; each panel lays its own groups into two columns. */
-  .home-hero__directories {
     width: 100%;
     max-width: 68rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 3rem;
-    padding-top: 3rem;
-    border-top: 1px solid var(--sl-color-gray-5);
-    align-items: start;
+    padding-top: 2rem;
+    text-align: start;
   }
 
-  /* Neutralize Starlight's global sibling top-margin so the second band isn't
-     pushed down; align-items:start then aligns both band titles to the row top. */
-  .home-hero__band {
-    width: 100%;
+  .home-hero .home-hero__audience {
     min-width: 0;
     margin-top: 0;
   }
 
-  /* Vertical divider between the developer and author panels. */
-  .home-hero__band + .home-hero__band {
-    border-inline-start: 1px solid var(--sl-color-gray-5);
-    padding-inline-start: 3rem;
+  .home-hero__audience + .home-hero__audience {
+    padding-left: 3rem;
+    border-left: 1px solid var(--sl-color-gray-5);
   }
 
-  /* Small accent eyebrow above each panel's grid. */
-  .home-hero .home-hero__band-title {
-    margin: 0 0 1.5rem;
+  .home-hero .home-hero__audience-title {
+    margin: 0 0 2rem;
+    padding: 0;
     font-family: var(--sl-font);
     font-size: 1.125rem;
+    line-height: 1.5;
     font-weight: 700;
     letter-spacing: 0;
     text-transform: uppercase;
     color: var(--sl-color-white);
-    text-align: start;
+  }
+
+  .home-hero .home-hero__categories {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4.25rem 3rem;
+    margin: 0;
+  }
+
+  .home-hero .home-hero__category {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .home-hero .home-hero__category-title {
+    margin: 0 0 1rem;
+    padding: 0;
+    color: var(--sl-color-white);
+    font-family: var(--sl-font);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--sl-color-gray-4);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .home-hero__link-list,
+  .home-hero__reference-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .home-hero .home-hero__link-list li,
+  .home-hero .home-hero__reference-list li {
+    margin: 0;
+  }
+
+  .home-hero .home-hero__link-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin: 0;
+  }
+
+  .home-hero .home-hero__category-link {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    color: var(--sl-color-text-accent);
+    font-family: var(--sl-font);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .home-hero .home-hero__category-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .home-hero .home-hero__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.5rem;
+    padding: 0.875rem 0;
+    color: var(--sl-color-text-accent);
+    font-family: var(--sl-font);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .home-hero__link > span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .home-hero__link-icon {
+    display: flex;
+    flex: 0 0 auto;
+    color: var(--sl-color-gray-3);
+  }
+
+  .home-hero .home-hero__link:hover {
+    color: var(--sl-color-white);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .home-hero__link:hover .home-hero__link-icon {
+    color: var(--sl-color-text-accent);
+  }
+
+  .home-hero__link:focus-visible,
+  .home-hero__category-link:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  .home-hero__reference {
+    width: 100%;
+    max-width: 68rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  .home-hero__reference-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0 2rem;
+  }
+
+  .home-hero__reference .home-hero__link {
+    font-size: 0.9375rem;
+    font-weight: 400;
   }
 
   @media (max-width: 60rem) {
-    /* Stack the two audience panels; each reverts to a top divider instead of
-       the vertical one. */
-    .home-hero__directories {
+    .home-hero__directory {
       grid-template-columns: 1fr;
-      max-width: 52rem;
-      gap: 0;
+      gap: 3rem;
     }
 
-    .home-hero__band + .home-hero__band {
-      border-inline-start: 0;
-      padding-inline-start: 0;
-      margin-top: 3rem;
-      padding-top: 3rem;
-      border-top: 1px solid var(--sl-color-gray-6);
+    .home-hero__audience + .home-hero__audience {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .home-hero__reference-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 30rem) {
-    .home-hero__directory {
+    .home-hero .home-hero__categories {
       grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .home-hero__reference-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-hero .home-hero__link,
+    .home-hero .home-hero__category-link {
+      transition: none;
     }
   }
 </style>

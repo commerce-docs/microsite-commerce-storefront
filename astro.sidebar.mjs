@@ -188,7 +188,7 @@ export function generateSidebar() {
     {
       label: 'Authors',
       link: '/merchants/quick-start/',
-      icon: 'seti:svg',
+      icon: 'document',
       items: [
         {
           label: 'Getting started',
@@ -501,11 +501,11 @@ export function generateSidebar() {
       id: 'how-tos',
       label: 'How-tos',
       link: '/how-tos/',
-      icon: 'pencil',
+      icon: 'lightbulb',
       items: [
         { label: 'Overview', link: '/how-tos/' },
         {
-          label: 'Author how-tos',
+          label: 'Author How-tos',
           collapsed: false,
           items: [
             { label: 'Browse All', link: '/how-tos/#for-authors' },
@@ -554,7 +554,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Developer how-tos',
+          label: 'Developer How-tos',
           collapsed: false,
           items: [
             { label: 'Browse All', link: '/how-tos/#for-developers' },

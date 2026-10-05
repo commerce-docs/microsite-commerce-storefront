@@ -238,6 +238,7 @@ async function config() {
         // Component overrides
         components: {
           CallToAction: './src/components/overrides/CallToAction.astro',
+          Head: './src/components/overrides/Head.astro',
           Footer: './src/components/overrides/Footer.astro',
           Icon: './src/components/overrides/Icon.astro',
           Header: './src/components/overrides/Header.astro',
@@ -295,6 +296,18 @@ async function config() {
 
     vite: {
       plugins: [
+        {
+          name: 'sidebar-topics-custom-icons',
+          enforce: 'pre',
+          resolveId(source, importer) {
+            if (
+              source === '@astrojs/starlight/components' &&
+              importer?.split('?')[0].endsWith('/starlight-sidebar-topics/components/Topics.astro')
+            ) {
+              return path.resolve('./src/components/overrides/SidebarTopicComponents.ts');
+            }
+          },
+        },
         {
           // Patch the Vite logger after config is resolved so the filter applies
           // to all logging paths, including environment-level loggers in Vite 6+.
