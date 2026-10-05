@@ -29,11 +29,16 @@ export function generateSidebar() {
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Plan your storefront project', link: '/setup/' },
             {
-              label: 'Licensing',
+              label: 'AI tools',
               collapsed: true,
-              autogenerate: { directory: '/licensing/' },
+              items: [
+                { label: 'Install the AI tools', link: '/ai/' },
+                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
+                { label: 'Wayfinder', link: '/ai/wayfinder/' },
+                { label: 'LLM files', link: '/ai/static-text-files/' },
+              ],
             },
             {
               label: 'Boilerplate',
@@ -45,15 +50,9 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'AI tools',
+              label: 'Licensing',
               collapsed: true,
-              items: [
-                { label: 'Install the integrations', link: '/ai/' },
-                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
-                { label: 'Wayfinder', link: '/ai/wayfinder/' },
-                { label: 'Fallback docs', link: '/ai/static-text-files/' },
-              ],
+              autogenerate: { directory: '/licensing/' },
             },
           ],
         },
