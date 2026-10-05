@@ -297,6 +297,18 @@ async function config() {
     vite: {
       plugins: [
         {
+          name: 'sidebar-topics-custom-icons',
+          enforce: 'pre',
+          resolveId(source, importer) {
+            if (
+              source === '@astrojs/starlight/components' &&
+              importer?.split('?')[0].endsWith('/starlight-sidebar-topics/components/Topics.astro')
+            ) {
+              return path.resolve('./src/components/overrides/SidebarTopicComponents.ts');
+            }
+          },
+        },
+        {
           // Patch the Vite logger after config is resolved so the filter applies
           // to all logging paths, including environment-level loggers in Vite 6+.
           name: 'suppress-known-build-warnings',
