@@ -24,6 +24,8 @@ The Recommendations drop-in provides API functions that enable you to programmat
 | Function | Description |
 | --- | --- |
 | [`getRecommendations`](#getrecommendations) | Retrieves product recommendations based on various parameters such as page type, current SKU, cart items, and user history. |
+| [`recommendationsByUnitIds`](#recommendationsbyunitids) | Retrieves product recommendations for one or more preconfigured recommendation units, selected by unit ID. |
+| [`recommendationsByUnits`](#recommendationsbyunits) | Retrieves product recommendations for one or more preconfigured recommendation units, selected by unit ID, label, or both. |
 | [`publishRecsItemAddToCartClick`](#publishrecsitemaddtocartclick) | Publishes an event when a user adds a recommended product to their cart, used for tracking recommendation performance.. |
 
 </TableWrapper>
@@ -43,6 +45,58 @@ const getRecommendations = async (
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
 | `params` | `GetRecommendationsProps` | Yes | Parameters for retrieving recommendations including \`pageType\` (where recommendations are shown), \`currentSku\` (product being viewed), \`cartSkus\` (items in cart), \`userPurchaseHistory\` (previous purchases), and \`userViewHistory\` (previously viewed products). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`recommendations/data`](/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
+
+### Returns
+
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+
+## recommendationsByUnitIds
+
+The `recommendationsByUnitIds` function retrieves product recommendations for one or more preconfigured recommendation units by their unit IDs.
+
+```ts
+const recommendationsByUnitIds = async (
+  params: RecommendationsByUnitIdsProps
+): Promise<RecommendationUnitModel[] | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `RecommendationsByUnitIdsProps` | Yes | Parameters for retrieving recommendations by unit ID, including `unitIds` (the recommendation units to retrieve), `currentSku` (product being viewed), `currentProduct` (current product context), `cartSkus` (items in cart), `userPurchaseHistory` (previous purchases), and `userViewHistory` (previously viewed products). |
+
+</TableWrapper>
+
+### Events
+
+Emits the [`recommendations/data`](/dropins/recommendations/events/#recommendationsdata-emits-and-listens) event with the transformed recommendations data as the payload.
+
+### Returns
+
+Returns an array of [`RecommendationUnitModel`](#recommendationunitmodel) objects or `null`.
+
+## recommendationsByUnits
+
+The `recommendationsByUnits` function extends [`recommendationsByUnitIds`](#recommendationsbyunitids) by also accepting `labels`, so recommendation units can be selected by unit ID, label, or both.
+
+```ts
+const recommendationsByUnits = async (
+  params: RecommendationsByUnitsProps
+): Promise<RecommendationUnitModel[] | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `params` | `RecommendationsByUnitsProps` | Yes | Accepts the same parameters as `RecommendationsByUnitIdsProps`, plus `labels` (the recommendation unit labels to retrieve). |
 
 </TableWrapper>
 
@@ -103,7 +157,7 @@ The following data models are used by functions in this drop-in.
 
 ### RecommendationUnitModel
 
-The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendations`](#getrecommendations).
+The `RecommendationUnitModel` object is returned by the following functions: [`getRecommendations`](#getrecommendations), [`recommendationsByUnitIds`](#recommendationsbyunitids), and [`recommendationsByUnits`](#recommendationsbyunits).
 
 ```ts
 interface RecommendationUnitModel {
@@ -115,6 +169,7 @@ interface RecommendationUnitModel {
   typeId: string;
   unitId: string;
   unitName: string;
+  label: string;
 }
 ```
 
