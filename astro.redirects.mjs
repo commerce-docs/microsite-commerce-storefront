@@ -14,6 +14,34 @@
  */
 export function generateRedirects(basePath) {
     return {
+        '/merchants/edge-delivery-services/content-migration': `${basePath}/how-tos/copy-content-between-projects`,
+        '/merchants/quick-start/content-localization': `${basePath}/how-tos/translate-storefront-content`,
+        '/merchants/content-customizations/personalization': `${basePath}/how-tos/show-targeted-content`,
+        '/merchants/content-customizations/product-recommendations': `${basePath}/how-tos/add-product-recommendations`,
+        '/merchants/content-customizations/terms-and-conditions': `${basePath}/how-tos/add-terms-and-conditions`,
+        '/tutorials': `${basePath}/how-tos`,
+        '/dropins/cart/tutorials/gift-options': `${basePath}/how-tos/gift-options`,
+        '/dropins/cart/tutorials/add-product-lines-to-cart-summary': `${basePath}/how-tos/add-product-lines-to-cart-summary`,
+        '/dropins/cart/tutorials/add-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
+        '/dropins/cart/tutorials/configure-cart-summary': `${basePath}/how-tos/configure-cart-summary`,
+        '/dropins/cart/tutorials/order-summary-lines': `${basePath}/how-tos/order-summary-lines`,
+        '/dropins/cart/tutorials/enable-product-variation-updates-in-cart': `${basePath}/how-tos/enable-product-variation-updates-in-cart`,
+        '/dropins/checkout/tutorials/add-payment-method': `${basePath}/how-tos/add-payment-method`,
+        '/dropins/checkout/tutorials/buy-online-pickup-in-store': `${basePath}/how-tos/buy-online-pickup-in-store`,
+        '/dropins/checkout/tutorials/multi-step': `${basePath}/how-tos/multi-step`,
+        '/dropins/checkout/tutorials/address-integration': `${basePath}/how-tos/address-integration`,
+        '/dropins/checkout/tutorials/validate-shipping-address': `${basePath}/how-tos/validate-shipping-address`,
+        '/dropins/payment-services/tutorials/add-buttons-to-checkout': `${basePath}/how-tos/add-buttons-to-checkout`,
+        '/dropins/payment-services/tutorials/vaulted-cards-in-checkout': `${basePath}/how-tos/vaulted-cards-in-checkout`,
+        '/dropins/product-details/tutorials/notify-me-cta': `${basePath}/how-tos/notify-me-cta`,
+        '/dropins/user-account/tutorials/payment-services-my-account': `${basePath}/how-tos/payment-services-my-account`,
+        '/dropins/user-account/tutorials/customize-layout': `${basePath}/how-tos/customize-layout`,
+        '/dropins/user-account/tutorials/validate-address': `${basePath}/how-tos/validate-address`,
+        '/dropins/wishlist/tutorials/render-additional-wishlist': `${basePath}/how-tos/render-additional-wishlist`,
+        '/dropins/order/tutorials/order-cancellation': `${basePath}/how-tos/order-cancellation`,
+        '/merchants/quick-start/your-first-page': `${basePath}/how-tos/create-commerce-page`,
+        '/merchants/blocks/labels-and-placeholders': `${basePath}/how-tos/change-labels-and-placeholders`,
+
         // ========= CUSTOMIZE REDIRECTS =========
         '/customize/design-tokens': `${basePath}/dropins/all/branding`,
         '/customize/enrich': `${basePath}/dropins/all/enriching`,
@@ -68,9 +96,9 @@ export function generateRedirects(basePath) {
         '/dropins/cart/cart-dictionary': `${basePath}/dropins/cart/dictionary`,
         '/dropins/cart/installation': `${basePath}/dropins/cart/quick-start`,
 
-        // Cart tutorials
-        '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
-        '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
+        // Cart how-tos
+        '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
+        '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
 
         // Checkout drop-in
         '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
@@ -187,7 +215,7 @@ export function generateRedirects(basePath) {
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
-        '/merchants/storefront-builder/your-first-page': `${basePath}/merchants/quick-start/your-first-page`,
+        '/merchants/storefront-builder/your-first-page': `${basePath}/how-tos/create-commerce-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
 

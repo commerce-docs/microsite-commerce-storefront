@@ -15,6 +15,7 @@ export function generateSidebar() {
   return [
     // ========= STORE FRONT DEVELOPERS =========
     {
+      id: 'developers',
       label: 'Developers',
       link: '/get-started/',
       icon: 'seti:json',
@@ -28,11 +29,16 @@ export function generateSidebar() {
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Plan your storefront project', link: '/setup/' },
             {
-              label: 'Licensing',
+              label: 'AI tools',
               collapsed: true,
-              autogenerate: { directory: '/licensing/' },
+              items: [
+                { label: 'Install the AI tools', link: '/ai/' },
+                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
+                { label: 'Wayfinder', link: '/ai/wayfinder/' },
+                { label: 'LLM files', link: '/ai/static-text-files/' },
+              ],
             },
             {
               label: 'Boilerplate',
@@ -44,15 +50,9 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'AI tools',
+              label: 'Licensing',
               collapsed: true,
-              items: [
-                { label: 'Install the integrations', link: '/ai/' },
-                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
-                { label: 'Wayfinder', link: '/ai/wayfinder/' },
-                { label: 'Fallback docs', link: '/ai/static-text-files/' },
-              ],
+              autogenerate: { directory: '/licensing/' },
             },
           ],
         },
@@ -133,6 +133,7 @@ export function generateSidebar() {
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
               ],
             },
+            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
             { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
             { label: 'Commerce Picker configuration', link: '/setup/configuration/commerce-picker/' },
@@ -175,38 +176,9 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Tutorials',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/tutorials/' },
-            { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
-            { label: 'Add custom product lines to cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
-            { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
-            { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
-            { label: 'Enable product variation updates in cart', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
-            { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
-            { label: 'Add a custom payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-            { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
-            { label: 'Validate a shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
-            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-            { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
-            { label: 'Add buttons to checkout', link: '/dropins/payment-services/tutorials/add-buttons-to-checkout/' },
-            { label: 'Vaulted cards in checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-in-checkout/' },
-            { label: 'Implement order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
-            { label: 'Add a Notify Me CTA to the PDP', link: '/dropins/product-details/tutorials/notify-me-cta/' },
-            { label: 'Render an additional wishlist', link: '/dropins/wishlist/tutorials/render-additional-wishlist/' },
-            { label: 'Federated search', link: '/how-tos/federated-search/' },
-            { label: 'Search redirects', link: '/how-tos/search-redirects/' },
-            { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
-            { label: 'Add stored payment methods to My Account', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
-            { label: 'Validate a saved address', link: '/dropins/user-account/tutorials/validate-address/' },
-            { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
-            { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
-            { label: 'Add breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
-            { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
-            { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
-            { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
-          ],
+          label: 'Launch checklist',
+          link: '/setup/launch/launch-checklist/',
+          attrs: { class: 'sidebar-launch-checklist' },
         },
       ],
     },
@@ -215,7 +187,7 @@ export function generateSidebar() {
     {
       label: 'Authors',
       link: '/merchants/quick-start/',
-      icon: 'seti:svg',
+      icon: 'document',
       items: [
         {
           label: 'Getting started',
@@ -226,26 +198,32 @@ export function generateSidebar() {
               label: 'What is Commerce Storefront?',
               link: '/merchants/quick-start/create-content/',
             },
-            { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
+            { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
             {
               label: 'Author and developer tasks',
               link: '/merchants/blocks/author-and-developer-tasks/',
             },
             {
-              label: 'Using the Document Authoring tool',
+              label: 'Document Authoring',
               link: '/merchants/quick-start/document-authoring/',
             },
             {
-              label: 'Using the Experience Workspace tool',
-              link: '/merchants/quick-start/experience-workspace/',
-            },
-            {
-              label: 'Using the Universal Editor (deprecated)',
-              link: '/merchants/quick-start/universal-editor/',
-            },
-            {
-              label: 'Create your first commerce page',
-              link: '/merchants/quick-start/your-first-page/',
+              label: 'Visual editing',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Overview',
+                  link: '/merchants/quick-start/choose-visual-editor/',
+                },
+                {
+                  label: 'Experience Workspace',
+                  link: '/merchants/quick-start/experience-workspace/',
+                },
+                {
+                  label: 'Universal Editor (deprecated)',
+                  link: '/merchants/quick-start/universal-editor/',
+                },
+              ],
             },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
@@ -263,10 +241,6 @@ export function generateSidebar() {
             { label: 'Block table structure', link: '/merchants/blocks/block-tables/' },
             { label: 'Page metadata', link: '/merchants/blocks/page-metadata/' },
             { label: 'Section metadata', link: '/merchants/blocks/section-metadata/' },
-            {
-              label: 'Labels and placeholders',
-              link: '/merchants/blocks/labels-and-placeholders/',
-            },
             { label: 'Placeholder sheets', link: '/merchants/blocks/placeholder-sheets/' },
           ],
         },
@@ -276,7 +250,7 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2c/' },
             {
-              label: 'Browse and discover',
+              label: 'Product details and lists',
               collapsed: true,
               items: [
                 { label: 'Product Details', link: '/merchants/blocks/product-details/' },
@@ -499,18 +473,6 @@ export function generateSidebar() {
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
-            {
-              label: 'Personalization',
-              link: '/merchants/content-customizations/personalization/',
-            },
-            {
-              label: 'Product Recommendations',
-              link: '/merchants/content-customizations/product-recommendations/',
-            },
-            {
-              label: 'Terms and conditions',
-              link: '/merchants/content-customizations/terms-and-conditions/',
-            },
           ],
         },
         {
@@ -519,11 +481,6 @@ export function generateSidebar() {
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
             { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-            { label: 'Localization', link: '/merchants/quick-start/content-localization/' },
-            {
-              label: 'Content migration',
-              link: '/merchants/edge-delivery-services/content-migration/',
-            },
             { label: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
             { label: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
             {
@@ -533,6 +490,134 @@ export function generateSidebar() {
             {
               label: 'File and content limits',
               link: '/merchants/edge-delivery-services/file-limits/',
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: 'how-tos',
+      label: 'How-tos',
+      link: '/how-tos/',
+      icon: 'lightbulb',
+      items: [
+        { label: 'Overview', link: '/how-tos/' },
+        {
+          label: 'Author How-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            {
+              label: 'Pages and blocks',
+              collapsed: true,
+              items: [
+                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
+                { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
+                { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
+                { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
+                { label: 'Apply section styling', link: '/how-tos/apply-section-styling/' },
+              ],
+            },
+            {
+              label: 'Products and campaigns',
+              collapsed: true,
+              items: [
+                { label: 'Preview a product', link: '/how-tos/preview-product/' },
+                { label: 'Feature a product on a campaign page', link: '/how-tos/feature-product-on-campaign-page/' },
+                { label: 'Add supporting content to product pages', link: '/how-tos/add-supporting-content-to-product-pages/' },
+                { label: 'Show enrichment content', link: '/how-tos/show-enrichment-content/' },
+                { label: 'Show targeted content', link: '/how-tos/show-targeted-content/' },
+                { label: 'Add product recommendations', link: '/how-tos/add-product-recommendations/' },
+              ],
+            },
+            {
+              label: 'Labels and experiments',
+              collapsed: true,
+              items: [
+                { label: 'Change labels and placeholders', link: '/how-tos/change-labels-and-placeholders/' },
+                { label: 'Create a page experiment', link: '/how-tos/create-page-experiment/' },
+                { label: 'Test alternate storefront labels', link: '/how-tos/test-alternate-storefront-labels/' },
+              ],
+            },
+            {
+              label: 'Publishing and translation',
+              collapsed: true,
+              items: [
+                { label: 'Copy content between projects', link: '/how-tos/copy-content-between-projects/' },
+                { label: 'Translate storefront content', link: '/how-tos/translate-storefront-content/' },
+                { label: 'Submit a storefront sitemap', link: '/how-tos/submit-storefront-sitemap/' },
+              ],
+            },
+            { label: 'Add terms and conditions to checkout', link: '/how-tos/add-terms-and-conditions/' },
+          ],
+        },
+        {
+          label: 'Developer How-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            {
+              label: 'Product and category pages',
+              collapsed: true,
+              items: [
+                { label: 'Add breadcrumbs to product and category pages', link: '/how-tos/breadcrumbs-plp-pdp/' },
+                { label: 'Add gift options to a product page', link: '/how-tos/gift-options/' },
+                { label: 'Add a Notify Me button', link: '/how-tos/notify-me-cta/' },
+                { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
+              ],
+            },
+            {
+              label: 'Cart and checkout',
+              collapsed: true,
+              items: [
+                { label: 'Add a custom payment method', link: '/how-tos/add-payment-method/' },
+                { label: 'Add custom product lines to the cart summary', link: '/how-tos/add-product-lines-to-cart-summary/' },
+                { label: 'Add messages to the mini cart', link: '/how-tos/add-messages-to-mini-cart/' },
+                { label: 'Add payment buttons to checkout', link: '/how-tos/add-buttons-to-checkout/' },
+                { label: 'Configure buy online, pick up in store', link: '/how-tos/buy-online-pickup-in-store/' },
+                { label: 'Configure the cart summary', link: '/how-tos/configure-cart-summary/' },
+                { label: 'Customize order summary lines', link: '/how-tos/order-summary-lines/' },
+                { label: 'Enable product variation updates in the cart', link: '/how-tos/enable-product-variation-updates-in-cart/' },
+                { label: 'Implement multi-step checkout', link: '/how-tos/multi-step/' },
+                { label: 'Integrate address verification', link: '/how-tos/address-integration/' },
+                { label: 'Use saved cards in checkout', link: '/how-tos/vaulted-cards-in-checkout/' },
+                { label: 'Validate a shipping address', link: '/how-tos/validate-shipping-address/' },
+              ],
+            },
+            {
+              label: 'Accounts and wishlist',
+              collapsed: true,
+              items: [
+                { label: 'Add stored payment methods to My Account', link: '/how-tos/payment-services-my-account/' },
+                { label: 'Customize the address form layout', link: '/how-tos/customize-layout/' },
+                { label: 'Display an additional wishlist', link: '/how-tos/render-additional-wishlist/' },
+                { label: 'Validate a saved address', link: '/how-tos/validate-address/' },
+              ],
+            },
+            {
+              label: 'Orders',
+              collapsed: true,
+              items: [
+                { label: 'Implement order cancellation', link: '/how-tos/order-cancellation/' },
+              ],
+            },
+            {
+              label: 'Search',
+              collapsed: true,
+              items: [
+                { label: 'Combine content and product search results', link: '/how-tos/federated-search/' },
+                { label: 'Configure search redirects', link: '/how-tos/search-redirects/' },
+              ],
+            },
+            {
+              label: 'Analytics',
+              collapsed: true,
+              items: [
+                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
+                { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+              ],
             },
           ],
         },
@@ -1204,7 +1289,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Changelog',
+          label: 'Changelogs',
           collapsed: false,
           items: [
             { label: 'Overview', link: '/releases/changelog/' },
