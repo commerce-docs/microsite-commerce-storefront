@@ -27,38 +27,23 @@ export function generateSidebar() {
             { label: 'Overview', link: '/get-started/' },
             { label: 'Prerequisites', link: '/get-started/before-you-start/' },
             { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            {
-              label: 'AI tools',
-              collapsed: true,
-              items: [
-                { label: 'Install the AI tools', link: '/ai/' },
-                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
-                { label: 'Wayfinder', link: '/ai/wayfinder/' },
-                { label: 'LLM files', link: '/ai/static-text-files/' },
-              ],
-            },
-            {
-              label: 'Boilerplate',
-              collapsed: true,
-              items: [
-                { label: 'Overview', link: '/boilerplate/' },
-                { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
-                { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-              ],
-            },
-            {
-              label: 'Licensing',
-              collapsed: true,
-              autogenerate: { directory: '/licensing/' },
-            },
+          ],
+        },
+        {
+          label: 'AI tools',
+          collapsed: false,
+          items: [
+            { label: 'Install the AI tools', link: '/ai/' },
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+            { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'LLM files', link: '/ai/static-text-files/' },
           ],
         },
         {
           label: 'Architecture',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
@@ -69,6 +54,15 @@ export function generateSidebar() {
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
             { label: 'Event bus', link: '/dropins/all/events/' },
+          ],
+        },
+        {
+          label: 'Boilerplate',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/boilerplate/' },
+            { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },
         {
@@ -88,6 +82,14 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
+            {
+              label: 'Licensing',
+              collapsed: false,
+              items: [
+                { label: 'Licensing requirements', link: '/licensing/' },
+                { label: 'License agreement', link: '/licensing/license-agreement/' },
+              ],
+            },
             { label: 'Containers', link: '/dropins/all/containers/' },
             { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
