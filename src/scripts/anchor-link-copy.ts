@@ -3,8 +3,8 @@
 // hash navigation still runs, so the URL bar updates and the page scrolls to the
 // heading as before; this only adds the copy that readers expect from the icon.
 //
-// Starlight renders heading links and table-of-contents links as bare `#id`
-// fragments. The published site wraps every page in a `<base href>` pointing at
+// Starlight renders heading links, table-of-contents links, and in-content
+// `[text](#id)` links as bare `#id` fragments. The published site wraps every page in a `<base href>` pointing at
 // the site root (injected outside this repo, by the experienceleague.adobe.com
 // publishing layer), so those fragments resolve against that root instead of the
 // current page. `fixSamePageHrefs` rewrites them to `<current pathname>#id` using
@@ -61,20 +61,42 @@ function showCopiedFeedback(anchor: HTMLElement): void {
 
 // Rewrites heading permalinks and desktop/mobile table-of-contents links from a
 // bare `#id` to `<pathname>#id`, so they resolve against the current page even
-// when a `<base>` tag points elsewhere.
+// when a `<base>` tag points elsewhere. In-content `[text](#id)` links are made
+// absolute at build time by remarkBasePathLinks, so they are not handled here.
 function fixSamePageHrefs(): void {
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
     [
       'a.sl-anchor-link:not([data-href-fixed])',
       'starlight-toc a:not([data-href-fixed])',
       'mobile-starlight-toc a:not([data-href-fixed])',
-    ].join(', '),
+    ].join(', ')
   );
   anchors.forEach((anchor) => {
     const hash = anchor.getAttribute('href');
     if (!hash?.startsWith('#')) return;
     anchor.dataset.hrefFixed = '';
     anchor.setAttribute('href', `${location.pathname}${hash}`);
+  });
+}
+
+// Native fragment scrolling can run before Astro finishes rendering or swapping
+// the page content. Retry it after two frames so direct links reach their heading.
+function scrollToCurrentHash(): void {
+  const hash = location.hash;
+  if (!hash || hash === '#') return;
+
+  try {
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({
+      block: 'start',
+    });
+  } catch {
+    // Ignore malformed URL fragments.
+  }
+}
+
+function scheduleHashScroll(): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(scrollToCurrentHash);
   });
 }
 
@@ -85,7 +107,7 @@ function fixSamePageHrefs(): void {
 function annotateAnchors(): void {
   fixSamePageHrefs();
   const anchors = document.querySelectorAll<HTMLAnchorElement>(
-    'a.sl-anchor-link:not([data-copy-annotated])',
+    'a.sl-anchor-link:not([data-copy-annotated])'
   );
   anchors.forEach((anchor) => {
     anchor.dataset.copyAnnotated = '';
@@ -109,8 +131,13 @@ function initAnchorLinkCopy(): void {
   });
 
   annotateAnchors();
-  // Re-annotate after Starlight client-side navigations swap in new content.
-  document.addEventListener('astro:page-load', annotateAnchors);
+  scheduleHashScroll();
+  // Re-annotate and resolve fragment links after Starlight swaps in new content.
+  document.addEventListener('astro:page-load', () => {
+    annotateAnchors();
+    scheduleHashScroll();
+  });
+  window.addEventListener('hashchange', scheduleHashScroll);
 }
 
 initAnchorLinkCopy();

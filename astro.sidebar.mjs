@@ -15,6 +15,7 @@ export function generateSidebar() {
   return [
     // ========= STORE FRONT DEVELOPERS =========
     {
+      id: 'developers',
       label: 'Developers',
       link: '/get-started/',
       icon: 'seti:json',
@@ -28,11 +29,16 @@ export function generateSidebar() {
             { label: 'Backend options', link: '/get-started/backends/' },
             { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            { label: 'Plan your storefront project', link: '/setup/' },
             {
-              label: 'Licensing',
+              label: 'AI tools',
               collapsed: true,
-              autogenerate: { directory: '/licensing/' },
+              items: [
+                { label: 'Install the AI tools', link: '/ai/' },
+                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
+                { label: 'Wayfinder', link: '/ai/wayfinder/' },
+                { label: 'LLM files', link: '/ai/static-text-files/' },
+              ],
             },
             {
               label: 'Boilerplate',
@@ -44,20 +50,15 @@ export function generateSidebar() {
               ],
             },
             {
-              label: 'AI tools',
+              label: 'Licensing',
               collapsed: true,
-              items: [
-                { label: 'Install the integrations', link: '/ai/' },
-                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-                { label: 'Wayfinder', link: '/ai/wayfinder/' },
-                { label: 'Fallback docs', link: '/ai/static-text-files/' },
-              ],
+              autogenerate: { directory: '/licensing/' },
             },
           ],
         },
         {
           label: 'Architecture',
-          collapsed: true,
+          collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
@@ -132,6 +133,7 @@ export function generateSidebar() {
                 { label: 'B2B Compatibility Package', link: '/setup/configuration/storefront-compatibility/b2b/' },
               ],
             },
+            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
             { label: 'AEM Assets integration', link: '/setup/configuration/aem-assets-configuration/' },
             { label: 'CDN configuration', link: '/setup/configuration/content-delivery-network/' },
             { label: 'Commerce Picker configuration', link: '/setup/configuration/commerce-picker/' },
@@ -174,38 +176,9 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Tutorials',
-          collapsed: true,
-          items: [
-            { label: 'Overview', link: '/tutorials/' },
-            { label: 'Configure cart summary', link: '/dropins/cart/tutorials/configure-cart-summary/' },
-            { label: 'Add custom product lines to cart summary', link: '/dropins/cart/tutorials/add-product-lines-to-cart-summary/' },
-            { label: 'Customize order summary lines', link: '/dropins/cart/tutorials/order-summary-lines/' },
-            { label: 'Add messages to mini cart', link: '/dropins/cart/tutorials/add-messages-to-mini-cart/' },
-            { label: 'Enable product variation updates in cart', link: '/dropins/cart/tutorials/enable-product-variation-updates-in-cart/' },
-            { label: 'Add gift options to PDP', link: '/dropins/cart/tutorials/gift-options/' },
-            { label: 'Add a custom payment method', link: '/dropins/checkout/tutorials/add-payment-method/' },
-            { label: 'Integrate address verification', link: '/dropins/checkout/tutorials/address-integration/' },
-            { label: 'Validate a shipping address', link: '/dropins/checkout/tutorials/validate-shipping-address/' },
-            { label: 'Buy online, pickup in store', link: '/dropins/checkout/tutorials/buy-online-pickup-in-store/' },
-            { label: 'Implement multi-step checkout', link: '/dropins/checkout/tutorials/multi-step/' },
-            { label: 'Add buttons to checkout', link: '/dropins/payment-services/tutorials/add-buttons-to-checkout/' },
-            { label: 'Vaulted cards in checkout', link: '/dropins/payment-services/tutorials/vaulted-cards-in-checkout/' },
-            { label: 'Implement order cancellation', link: '/dropins/order/tutorials/order-cancellation/' },
-            { label: 'Add a Notify Me CTA to the PDP', link: '/dropins/product-details/tutorials/notify-me-cta/' },
-            { label: 'Render an additional wishlist', link: '/dropins/wishlist/tutorials/render-additional-wishlist/' },
-            { label: 'Federated search', link: '/how-tos/federated-search/' },
-            { label: 'Search redirects', link: '/how-tos/search-redirects/' },
-            { label: 'Customize AddressForm layout', link: '/dropins/user-account/tutorials/customize-layout/' },
-            { label: 'Add stored payment methods to My Account', link: '/dropins/user-account/tutorials/payment-services-my-account/' },
-            { label: 'Validate a saved address', link: '/dropins/user-account/tutorials/validate-address/' },
-            { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
-            { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
-            { label: 'Add breadcrumbs for PLP and PDP', link: '/how-tos/breadcrumbs-plp-pdp/' },
-            { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
-            { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
-            { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
-          ],
+          label: 'Launch checklist',
+          link: '/setup/launch/launch-checklist/',
+          attrs: { class: 'sidebar-launch-checklist' },
         },
       ],
     },
@@ -214,7 +187,7 @@ export function generateSidebar() {
     {
       label: 'Authors',
       link: '/merchants/quick-start/',
-      icon: 'seti:svg',
+      icon: 'document',
       items: [
         {
           label: 'Getting started',
@@ -225,35 +198,42 @@ export function generateSidebar() {
               label: 'What is Commerce Storefront?',
               link: '/merchants/quick-start/create-content/',
             },
-            { label: 'Building a storefront page', link: '/merchants/quick-start/content-model/' },
+            { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
             {
               label: 'Author and developer tasks',
               link: '/merchants/blocks/author-and-developer-tasks/',
             },
             {
-              label: 'Using the Document Authoring tool',
+              label: 'Document Authoring',
               link: '/merchants/quick-start/document-authoring/',
             },
             {
-              label: 'Using the Experience Workspace tool',
-              link: '/merchants/quick-start/experience-workspace/',
-            },
-            {
-              label: 'Using the Universal Editor (deprecated)',
-              link: '/merchants/quick-start/universal-editor/',
-            },
-            {
-              label: 'Create your first commerce page',
-              link: '/merchants/quick-start/your-first-page/',
+              label: 'Visual editing',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Overview',
+                  link: '/merchants/quick-start/choose-visual-editor/',
+                },
+                {
+                  label: 'Experience Workspace',
+                  link: '/merchants/quick-start/experience-workspace/',
+                },
+                {
+                  label: 'Universal Editor (deprecated)',
+                  link: '/merchants/quick-start/universal-editor/',
+                },
+              ],
             },
             // { label: 'Using Digital Assets Management', link: '/merchants/quick-start/digital-assets-management/' },
           ],
         },
         {
-          label: 'Build pages',
+          label: 'Authoring',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/authoring/' },
+            { label: 'Commerce block reference', link: '/merchants/blocks/' },
             {
               label: 'Content and Commerce blocks',
               link: '/merchants/blocks/content-commerce-blocks/',
@@ -261,274 +241,246 @@ export function generateSidebar() {
             { label: 'Block table structure', link: '/merchants/blocks/block-tables/' },
             { label: 'Page metadata', link: '/merchants/blocks/page-metadata/' },
             { label: 'Section metadata', link: '/merchants/blocks/section-metadata/' },
-            {
-              label: 'Labels and placeholders',
-              link: '/merchants/blocks/labels-and-placeholders/',
-            },
             { label: 'Placeholder sheets', link: '/merchants/blocks/placeholder-sheets/' },
           ],
         },
         {
-          label: 'Commerce block reference',
+          label: 'B2C blocks',
           collapsed: true,
           items: [
-            { label: 'Overview', link: '/merchants/blocks/' },
+            { label: 'Overview', link: '/merchants/blocks/b2c/' },
             {
-              label: 'B2C blocks',
+              label: 'Product details and lists',
               collapsed: true,
               items: [
-                { label: 'Overview', link: '/merchants/blocks/b2c/' },
+                { label: 'Product Details', link: '/merchants/blocks/product-details/' },
+                { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
+              ],
+            },
+            {
+              label: 'Cart and checkout',
+              collapsed: true,
+              items: [
+                { label: 'Cart', link: '/merchants/blocks/commerce-cart/' },
+                { label: 'Mini Cart', link: '/merchants/blocks/commerce-mini-cart/' },
+                { label: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
+                { label: 'Gift Options', link: '/merchants/blocks/commerce-gift-options/' },
+              ],
+            },
+            {
+              label: 'Accounts',
+              collapsed: true,
+              items: [
+                { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
                 {
-                  label: 'Browse and discover',
-                  collapsed: true,
-                  items: [
-                    { label: 'Product Details', link: '/merchants/blocks/product-details/' },
-                    { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
-                  ],
+                  label: 'Account Sidebar',
+                  link: '/merchants/blocks/commerce-account-sidebar/',
+                },
+                { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
+                {
+                  label: 'Confirm Account',
+                  link: '/merchants/blocks/commerce-confirm-account/',
+                },
+                { label: 'Create Account', link: '/merchants/blocks/commerce-create-account/' },
+                {
+                  label: 'Create Password',
+                  link: '/merchants/blocks/commerce-create-password/',
                 },
                 {
-                  label: 'Cart and checkout',
-                  collapsed: true,
-                  items: [
-                    { label: 'Cart', link: '/merchants/blocks/commerce-cart/' },
-                    { label: 'Mini Cart', link: '/merchants/blocks/commerce-mini-cart/' },
-                    { label: 'Checkout', link: '/merchants/blocks/commerce-checkout/' },
-                    { label: 'Gift Options', link: '/merchants/blocks/commerce-gift-options/' },
-                  ],
+                  label: 'Customer Details',
+                  link: '/merchants/blocks/commerce-customer-details/',
                 },
                 {
-                  label: 'Accounts',
-                  collapsed: true,
-                  items: [
-                    { label: 'Account Header', link: '/merchants/blocks/commerce-account-header/' },
-                    {
-                      label: 'Account Sidebar',
-                      link: '/merchants/blocks/commerce-account-sidebar/',
-                    },
-                    { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
-                    {
-                      label: 'Confirm Account',
-                      link: '/merchants/blocks/commerce-confirm-account/',
-                    },
-                    { label: 'Create Account', link: '/merchants/blocks/commerce-create-account/' },
-                    {
-                      label: 'Create Password',
-                      link: '/merchants/blocks/commerce-create-password/',
-                    },
-                    {
-                      label: 'Customer Details',
-                      link: '/merchants/blocks/commerce-customer-details/',
-                    },
-                    {
-                      label: 'Customer Information',
-                      link: '/merchants/blocks/commerce-customer-information/',
-                    },
-                    {
-                      label: 'Forgot Password',
-                      link: '/merchants/blocks/commerce-forgot-password/',
-                    },
-                    { label: 'Login', link: '/merchants/blocks/commerce-login/' },
-                    {
-                      label: 'Seller-Assisted Buying',
-                      link: '/merchants/blocks/seller-assisted-buying/',
-                    },
-                    { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
-                  ],
+                  label: 'Customer Information',
+                  link: '/merchants/blocks/commerce-customer-information/',
                 },
                 {
-                  label: 'Orders and returns',
-                  collapsed: true,
-                  items: [
-                    { label: 'Orders List', link: '/merchants/blocks/commerce-orders-list/' },
-                    { label: 'Search Order', link: '/merchants/blocks/commerce-search-order/' },
-                    { label: 'Order Header', link: '/merchants/blocks/commerce-order-header/' },
-                    { label: 'Order Status', link: '/merchants/blocks/commerce-order-status/' },
-                    {
-                      label: 'Order Product List',
-                      link: '/merchants/blocks/commerce-order-product-list/',
-                    },
-                    {
-                      label: 'Order Cost Summary',
-                      link: '/merchants/blocks/commerce-order-cost-summary/',
-                    },
-                    { label: 'Order Comments', link: '/merchants/blocks/commerce-order-comments/' },
-                    {
-                      label: 'Shipping Status',
-                      link: '/merchants/blocks/commerce-shipping-status/',
-                    },
-                    { label: 'Create Return', link: '/merchants/blocks/commerce-create-return/' },
-                    { label: 'Order Returns', link: '/merchants/blocks/commerce-order-returns/' },
-                    { label: 'Return Header', link: '/merchants/blocks/commerce-return-header/' },
-                    { label: 'Returns List', link: '/merchants/blocks/commerce-returns-list/' },
-                  ],
+                  label: 'Forgot Password',
+                  link: '/merchants/blocks/commerce-forgot-password/',
+                },
+                { label: 'Login', link: '/merchants/blocks/commerce-login/' },
+                {
+                  label: 'Seller-Assisted Buying',
+                  link: '/merchants/blocks/seller-assisted-buying/',
+                },
+                { label: 'Wishlist', link: '/merchants/blocks/commerce-wishlist/' },
+              ],
+            },
+            {
+              label: 'Orders and returns',
+              collapsed: true,
+              items: [
+                { label: 'Orders List', link: '/merchants/blocks/commerce-orders-list/' },
+                { label: 'Search Order', link: '/merchants/blocks/commerce-search-order/' },
+                { label: 'Order Header', link: '/merchants/blocks/commerce-order-header/' },
+                { label: 'Order Status', link: '/merchants/blocks/commerce-order-status/' },
+                {
+                  label: 'Order Product List',
+                  link: '/merchants/blocks/commerce-order-product-list/',
+                },
+                {
+                  label: 'Order Cost Summary',
+                  link: '/merchants/blocks/commerce-order-cost-summary/',
+                },
+                { label: 'Order Comments', link: '/merchants/blocks/commerce-order-comments/' },
+                {
+                  label: 'Shipping Status',
+                  link: '/merchants/blocks/commerce-shipping-status/',
+                },
+                { label: 'Create Return', link: '/merchants/blocks/commerce-create-return/' },
+                { label: 'Order Returns', link: '/merchants/blocks/commerce-order-returns/' },
+                { label: 'Return Header', link: '/merchants/blocks/commerce-return-header/' },
+                { label: 'Returns List', link: '/merchants/blocks/commerce-returns-list/' },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'B2B blocks',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/merchants/blocks/b2b/' },
+            {
+              label: 'Company management',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Accept Company Invitation',
+                  link: '/merchants/blocks/commerce-company-accept-invitation/',
+                },
+                { label: 'Create Company', link: '/merchants/blocks/commerce-company-create/' },
+                { label: 'Company Credit', link: '/merchants/blocks/commerce-company-credit/' },
+                {
+                  label: 'Company Profile',
+                  link: '/merchants/blocks/commerce-company-profile/',
+                },
+                {
+                  label: 'Company Roles and Permissions',
+                  link: '/merchants/blocks/commerce-company-roles-permissions/',
+                },
+                {
+                  label: 'Company Structure',
+                  link: '/merchants/blocks/commerce-company-structure/',
+                },
+                { label: 'Company Users', link: '/merchants/blocks/commerce-company-users/' },
+                {
+                  label: 'Customer Company',
+                  link: '/merchants/blocks/commerce-customer-company/',
                 },
               ],
             },
             {
-              label: 'B2B blocks',
+              label: 'Purchase orders',
               collapsed: true,
               items: [
-                { label: 'Overview', link: '/merchants/blocks/b2b/' },
                 {
-                  label: 'Company management',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Accept Company Invitation',
-                      link: '/merchants/blocks/commerce-company-accept-invitation/',
-                    },
-                    { label: 'Create Company', link: '/merchants/blocks/commerce-company-create/' },
-                    { label: 'Company Credit', link: '/merchants/blocks/commerce-company-credit/' },
-                    {
-                      label: 'Company Profile',
-                      link: '/merchants/blocks/commerce-company-profile/',
-                    },
-                    {
-                      label: 'Company Roles and Permissions',
-                      link: '/merchants/blocks/commerce-company-roles-permissions/',
-                    },
-                    {
-                      label: 'Company Structure',
-                      link: '/merchants/blocks/commerce-company-structure/',
-                    },
-                    { label: 'Company Users', link: '/merchants/blocks/commerce-company-users/' },
-                    {
-                      label: 'Customer Company',
-                      link: '/merchants/blocks/commerce-customer-company/',
-                    },
-                  ],
+                  label: 'Approval Flow',
+                  link: '/merchants/blocks/commerce-b2b-po-approval-flow/',
                 },
                 {
-                  label: 'Purchase orders',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Approval Flow',
-                      link: '/merchants/blocks/commerce-b2b-po-approval-flow/',
-                    },
-                    {
-                      label: 'Approval Rule Details',
-                      link: '/merchants/blocks/commerce-b2b-po-approval-rule-details/',
-                    },
-                    {
-                      label: 'Approval Rule Form',
-                      link: '/merchants/blocks/commerce-b2b-po-approval-rule-form/',
-                    },
-                    {
-                      label: 'Approval Rules List',
-                      link: '/merchants/blocks/commerce-b2b-po-approval-rules-list/',
-                    },
-                    {
-                      label: 'Checkout Success',
-                      link: '/merchants/blocks/commerce-b2b-po-checkout-success/',
-                    },
-                    {
-                      label: 'Comment Form',
-                      link: '/merchants/blocks/commerce-b2b-po-comment-form/',
-                    },
-                    {
-                      label: 'Comments List',
-                      link: '/merchants/blocks/commerce-b2b-po-comments-list/',
-                    },
-                    {
-                      label: 'Company Purchase Orders',
-                      link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/',
-                    },
-                    {
-                      label: 'Customer Purchase Orders',
-                      link: '/merchants/blocks/commerce-b2b-po-customer-purchase-orders/',
-                    },
-                    { label: 'Header', link: '/merchants/blocks/commerce-b2b-po-header/' },
-                    {
-                      label: 'History Log',
-                      link: '/merchants/blocks/commerce-b2b-po-history-log/',
-                    },
-                    {
-                      label: 'Require Approval',
-                      link: '/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/',
-                    },
-                    { label: 'Status', link: '/merchants/blocks/commerce-b2b-po-status/' },
-                  ],
+                  label: 'Approval Rule Details',
+                  link: '/merchants/blocks/commerce-b2b-po-approval-rule-details/',
                 },
                 {
-                  label: 'Quotes',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Negotiable Quote',
-                      link: '/merchants/blocks/commerce-b2b-negotiable-quote/',
-                    },
-                    {
-                      label: 'Negotiable Quote Template',
-                      link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/',
-                    },
-                    {
-                      label: 'Quote Checkout',
-                      link: '/merchants/blocks/commerce-b2b-quote-checkout/',
-                    },
-                  ],
+                  label: 'Approval Rule Form',
+                  link: '/merchants/blocks/commerce-b2b-po-approval-rule-form/',
                 },
                 {
-                  label: 'Requisition lists',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Requisition List',
-                      link: '/merchants/blocks/commerce-b2b-requisition-list/',
-                    },
-                    {
-                      label: 'Requisition List View',
-                      link: '/merchants/blocks/commerce-b2b-requisition-list-view/',
-                    },
-                  ],
+                  label: 'Approval Rules List',
+                  link: '/merchants/blocks/commerce-b2b-po-approval-rules-list/',
                 },
                 {
-                  label: 'Shared account and checkout',
-                  collapsed: true,
-                  items: [
-                    { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
-                    {
-                      label: 'Checkout Success',
-                      link: '/merchants/blocks/commerce-checkout-success/',
-                    },
-                  ],
+                  label: 'Checkout Success',
+                  link: '/merchants/blocks/commerce-b2b-po-checkout-success/',
+                },
+                {
+                  label: 'Comment Form',
+                  link: '/merchants/blocks/commerce-b2b-po-comment-form/',
+                },
+                {
+                  label: 'Comments List',
+                  link: '/merchants/blocks/commerce-b2b-po-comments-list/',
+                },
+                {
+                  label: 'Company Purchase Orders',
+                  link: '/merchants/blocks/commerce-b2b-po-company-purchase-orders/',
+                },
+                {
+                  label: 'Customer Purchase Orders',
+                  link: '/merchants/blocks/commerce-b2b-po-customer-purchase-orders/',
+                },
+                { label: 'Header', link: '/merchants/blocks/commerce-b2b-po-header/' },
+                {
+                  label: 'History Log',
+                  link: '/merchants/blocks/commerce-b2b-po-history-log/',
+                },
+                {
+                  label: 'Require Approval',
+                  link: '/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/',
+                },
+                { label: 'Status', link: '/merchants/blocks/commerce-b2b-po-status/' },
+              ],
+            },
+            {
+              label: 'Quotes',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Negotiable Quote',
+                  link: '/merchants/blocks/commerce-b2b-negotiable-quote/',
+                },
+                {
+                  label: 'Negotiable Quote Template',
+                  link: '/merchants/blocks/commerce-b2b-negotiable-quote-template/',
+                },
+                {
+                  label: 'Quote Checkout',
+                  link: '/merchants/blocks/commerce-b2b-quote-checkout/',
+                },
+              ],
+            },
+            {
+              label: 'Requisition lists',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Requisition List',
+                  link: '/merchants/blocks/commerce-b2b-requisition-list/',
+                },
+                {
+                  label: 'Requisition List View',
+                  link: '/merchants/blocks/commerce-b2b-requisition-list-view/',
+                },
+              ],
+            },
+            {
+              label: 'Shared account and checkout',
+              collapsed: true,
+              items: [
+                { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
+                {
+                  label: 'Checkout Success',
+                  link: '/merchants/blocks/commerce-checkout-success/',
                 },
               ],
             },
           ],
         },
         {
-          label: 'Enhance the storefront',
+          label: 'Customization',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/content-customizations/' },
             { label: 'Enrichment', link: '/merchants/content-customizations/enrichment/' },
             { label: 'Experiments', link: '/merchants/content-customizations/experiments/' },
-            {
-              label: 'Personalization',
-              link: '/merchants/content-customizations/personalization/',
-            },
-            {
-              label: 'Product Recommendations',
-              link: '/merchants/content-customizations/product-recommendations/',
-            },
-            {
-              label: 'Terms and conditions',
-              link: '/merchants/content-customizations/terms-and-conditions/',
-            },
           ],
         },
         {
-          label: 'Manage and publish',
+          label: 'Publishing',
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/edge-delivery-services/' },
             { label: 'Scheduling options', link: '/merchants/edge-delivery-services/scheduling/' },
-            { label: 'Localization', link: '/merchants/quick-start/content-localization/' },
-            {
-              label: 'Content migration',
-              link: '/merchants/edge-delivery-services/content-migration/',
-            },
             { label: 'Redirects', link: '/merchants/edge-delivery-services/redirects/' },
             { label: 'Sitemaps', link: '/merchants/edge-delivery-services/sitemaps/' },
             {
@@ -538,6 +490,134 @@ export function generateSidebar() {
             {
               label: 'File and content limits',
               link: '/merchants/edge-delivery-services/file-limits/',
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: 'how-tos',
+      label: 'How-tos',
+      link: '/how-tos/',
+      icon: 'lightbulb',
+      items: [
+        { label: 'Overview', link: '/how-tos/' },
+        {
+          label: 'Author How-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            {
+              label: 'Pages and blocks',
+              collapsed: true,
+              items: [
+                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
+                { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
+                { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
+                { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
+                { label: 'Apply section styling', link: '/how-tos/apply-section-styling/' },
+              ],
+            },
+            {
+              label: 'Products and campaigns',
+              collapsed: true,
+              items: [
+                { label: 'Preview a product', link: '/how-tos/preview-product/' },
+                { label: 'Feature a product on a campaign page', link: '/how-tos/feature-product-on-campaign-page/' },
+                { label: 'Add supporting content to product pages', link: '/how-tos/add-supporting-content-to-product-pages/' },
+                { label: 'Show enrichment content', link: '/how-tos/show-enrichment-content/' },
+                { label: 'Show targeted content', link: '/how-tos/show-targeted-content/' },
+                { label: 'Add product recommendations', link: '/how-tos/add-product-recommendations/' },
+              ],
+            },
+            {
+              label: 'Labels and experiments',
+              collapsed: true,
+              items: [
+                { label: 'Change labels and placeholders', link: '/how-tos/change-labels-and-placeholders/' },
+                { label: 'Create a page experiment', link: '/how-tos/create-page-experiment/' },
+                { label: 'Test alternate storefront labels', link: '/how-tos/test-alternate-storefront-labels/' },
+              ],
+            },
+            {
+              label: 'Publishing and translation',
+              collapsed: true,
+              items: [
+                { label: 'Copy content between projects', link: '/how-tos/copy-content-between-projects/' },
+                { label: 'Translate storefront content', link: '/how-tos/translate-storefront-content/' },
+                { label: 'Submit a storefront sitemap', link: '/how-tos/submit-storefront-sitemap/' },
+              ],
+            },
+            { label: 'Add terms and conditions to checkout', link: '/how-tos/add-terms-and-conditions/' },
+          ],
+        },
+        {
+          label: 'Developer How-tos',
+          collapsed: false,
+          items: [
+            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            {
+              label: 'Product and category pages',
+              collapsed: true,
+              items: [
+                { label: 'Add breadcrumbs to product and category pages', link: '/how-tos/breadcrumbs-plp-pdp/' },
+                { label: 'Add gift options to a product page', link: '/how-tos/gift-options/' },
+                { label: 'Add a Notify Me button', link: '/how-tos/notify-me-cta/' },
+                { label: 'Generate category pages programmatically', link: '/how-tos/automatic-category-page/' },
+              ],
+            },
+            {
+              label: 'Cart and checkout',
+              collapsed: true,
+              items: [
+                { label: 'Add a custom payment method', link: '/how-tos/add-payment-method/' },
+                { label: 'Add custom product lines to the cart summary', link: '/how-tos/add-product-lines-to-cart-summary/' },
+                { label: 'Add messages to the mini cart', link: '/how-tos/add-messages-to-mini-cart/' },
+                { label: 'Add payment buttons to checkout', link: '/how-tos/add-buttons-to-checkout/' },
+                { label: 'Configure buy online, pick up in store', link: '/how-tos/buy-online-pickup-in-store/' },
+                { label: 'Configure the cart summary', link: '/how-tos/configure-cart-summary/' },
+                { label: 'Customize order summary lines', link: '/how-tos/order-summary-lines/' },
+                { label: 'Enable product variation updates in the cart', link: '/how-tos/enable-product-variation-updates-in-cart/' },
+                { label: 'Implement multi-step checkout', link: '/how-tos/multi-step/' },
+                { label: 'Integrate address verification', link: '/how-tos/address-integration/' },
+                { label: 'Use saved cards in checkout', link: '/how-tos/vaulted-cards-in-checkout/' },
+                { label: 'Validate a shipping address', link: '/how-tos/validate-shipping-address/' },
+              ],
+            },
+            {
+              label: 'Accounts and wishlist',
+              collapsed: true,
+              items: [
+                { label: 'Add stored payment methods to My Account', link: '/how-tos/payment-services-my-account/' },
+                { label: 'Customize the address form layout', link: '/how-tos/customize-layout/' },
+                { label: 'Display an additional wishlist', link: '/how-tos/render-additional-wishlist/' },
+                { label: 'Validate a saved address', link: '/how-tos/validate-address/' },
+              ],
+            },
+            {
+              label: 'Orders',
+              collapsed: true,
+              items: [
+                { label: 'Implement order cancellation', link: '/how-tos/order-cancellation/' },
+              ],
+            },
+            {
+              label: 'Search',
+              collapsed: true,
+              items: [
+                { label: 'Combine content and product search results', link: '/how-tos/federated-search/' },
+                { label: 'Configure search redirects', link: '/how-tos/search-redirects/' },
+              ],
+            },
+            {
+              label: 'Analytics',
+              collapsed: true,
+              items: [
+                { label: 'Instrument analytics events', link: '/how-tos/instrument-analytics-events/' },
+                { label: 'Publish an add-to-cart event', link: '/how-tos/instrument-add-to-cart-event/' },
+                { label: 'Publish a product page view event', link: '/how-tos/instrument-product-page-view-event/' },
+              ],
             },
           ],
         },
@@ -1160,6 +1240,7 @@ export function generateSidebar() {
             { label: 'SDK CLI', link: '/sdk/cli/' },
           ],
         },
+        { label: 'Dropins AI tools', link: '/reference/dropins-ai-tools/' },
         // ---------- API PLAYGROUNDS ----------
         {
           label: 'API Playgrounds',
@@ -1208,7 +1289,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'Changelog',
+          label: 'Changelogs',
           collapsed: false,
           items: [
             { label: 'Overview', link: '/releases/changelog/' },
