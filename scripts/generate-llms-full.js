@@ -156,7 +156,7 @@ const LLMS_TXT_BUNDLES = [
     slug: 'get-started',
     label: 'Get started',
     blurb: 'Onboarding, architecture, backend options, performance, Lighthouse, and browser compatibility',
-    filter: p => p.startsWith('get-started/')
+    filter: p => p.startsWith('get-started/') || p.startsWith('architecture/')
   },
   {
     slug: 'ai',
@@ -168,7 +168,8 @@ const LLMS_TXT_BUNDLES = [
     slug: 'boilerplate',
     label: 'Boilerplate',
     blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, and updates',
-    filter: p => p.startsWith('boilerplate/')
+    filter: p =>
+      p.startsWith('boilerplate/') || p.startsWith('blocks/') || p.startsWith('custom-features/')
   },
   {
     slug: 'how-tos',
@@ -186,20 +187,25 @@ const LLMS_TXT_BUNDLES = [
     slug: 'setup-configuration',
     label: 'Setup — configuration',
     blurb: 'Configuration: endpoints, headers, CORS, gated content, multistore, prerender, CDN, AEM Assets, Storefront Compatibility Package',
-    filter: p => p.startsWith('setup/configuration/')
+    filter: p => p.startsWith('setup/configuration/') || p.startsWith('commerce-backend/')
   },
   {
     slug: 'setup-go-live',
     label: 'Setup — go live',
     blurb: 'Discovery, Luma Bridge, analytics, AEP, SEO, launch checklist, and data export validation',
-    filter: p => p.startsWith('setup/') && !p.startsWith('setup/configuration/')
+    filter: p =>
+      (p.startsWith('setup/') && !p.startsWith('setup/configuration/')) ||
+      p.startsWith('launch/')
   },
   {
     slug: 'dropins-intro',
     label: 'Drop-ins overview',
-    blurb: 'Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins',
+    blurb: 'Cross-drop-in concepts, shared APIs, events, and indexes for B2C and B2B drop-ins',
     filter: p =>
-      (p.startsWith('dropins/all/') || p === 'dropins/index' || p === 'dropins-b2b/index') &&
+      (p.startsWith('dropins/all/') ||
+        (p.startsWith('dropins/') && p.split('/').length === 2) ||
+        p.startsWith('events/') ||
+        p === 'dropins-b2b/index') &&
       !p.includes('/how-tos/')
   },
   {
@@ -292,8 +298,8 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'sdk-reference',
     label: 'Storefront SDK',
-    blurb: 'UI components, design system, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
-    filter: p => p.startsWith('sdk/')
+    blurb: 'UI components, design system, styling, localization, reference APIs (Event Bus, GraphQL, slots), CLI, and utilities',
+    filter: p => p.startsWith('sdk/') || p.startsWith('styling/') || p.startsWith('localization/')
   },
   // Excluded: videos/ pages are descriptions of video content with no actionable text for AI tools;
   // the corresponding step-by-step content lives in how-tos.
@@ -306,8 +312,8 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'releases',
     label: 'Releases',
-    blurb: 'Release notes, changelog, and hotfixes',
-    filter: p => p.startsWith('releases/')
+    blurb: 'Release notes, changelog, hotfixes, and package archives',
+    filter: p => p.startsWith('releases/') || p.startsWith('package-archive/')
   },
   {
     slug: 'troubleshooting',
