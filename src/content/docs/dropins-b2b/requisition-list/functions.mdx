@@ -13,7 +13,7 @@ import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Requisition List drop-in provides **18 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, managing list metadata, and sharing lists with company colleagues.
+The Requisition List drop-in provides **22 API functions** for managing requisition lists and their items, including creating lists, adding/removing products, managing list metadata, sharing lists with company colleagues, and sharing public lists with anyone by email or link.
 
 <TableWrapper nowrap={[0]}>
 
@@ -37,6 +37,10 @@ The Requisition List drop-in provides **18 API functions** for managing requisit
 | [`importSharedRequisitionList`](#importsharedrequisitionlist) | Imports a shared requisition list into the current customer's account using a share token. |
 | [`shareRequisitionListByEmail`](#sharerequisitionlistbyemail) | Shares a requisition list with one or more company users by email. |
 | [`shareRequisitionListByToken`](#sharerequisitionlistbytoken) | Generates a shareable token for a requisition list. |
+| [`getPublicRequisitionList`](#getpublicrequisitionlist) | Retrieves a public requisition list by its share token, without requiring authentication. |
+| [`getPublicRequisitionListToken`](#getpublicrequisitionlisttoken) | Retrieves the owner's reusable public share token for a requisition list. |
+| [`sharePublicRequisitionList`](#sharepublicrequisitionlist) | Emails the public share link of a requisition list to any email addresses. |
+| [`addPublicRequisitionListItemsToCart`](#addpublicrequisitionlistitemstocart) | Adds items from a public requisition list to a guest or customer cart. |
 
 </TableWrapper>
 
@@ -103,7 +107,8 @@ Creates a new requisition list with the name and description provided for the lo
 ```ts
 const createRequisitionList = async (
   name: string,
-  description?: string
+  description?: string,
+  isPublic?: boolean
 ): Promise<RequisitionList | null>
 ```
 
@@ -113,6 +118,7 @@ const createRequisitionList = async (
 |---|---|---|---|
 | `name` | `string` | Yes | The display name for the new requisition list. This helps users identify and organize their lists (for example, `Office Supplies Q1`, `Weekly Inventory Restock`). |
 | `description` | `string` | No | An optional text description providing additional context about the requisition list's purpose or contents (for example, `Monthly recurring orders for maintenance supplies`). |
+| `isPublic` | `boolean` | No | Marks the new list as public so that it can be shared with anyone by link or email. Use it only when `requisition_list_public_sharing_enabled` is `true` in the store configuration. |
 
 </TableWrapper>
 
@@ -298,7 +304,7 @@ Does not emit any drop-in events.
 
 ### Returns
 
-Returns `void`.
+Returns [`StoreConfig`](#storeconfig). If the configuration query returns errors or the request fails, the function returns the default configuration, in which every feature flag is off. If the backend does not support `is_requisition_list_active` or `company_enabled`, it returns `false`.
 
 ## updateRequisitionList
 
@@ -311,7 +317,8 @@ const updateRequisitionList = async (
   description?: string,
   pageSize?: number,
   currentPage?: number,
-  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>,
+  isPublic?: boolean
 ): Promise<RequisitionList | null>
 ```
 
@@ -325,6 +332,7 @@ const updateRequisitionList = async (
 | `pageSize` | `number` | No | The number of items to return per page in the updated requisition list response. |
 | `currentPage` | `number` | No | The page number for pagination (1-indexed) in the updated requisition list response. |
 | `enrichConfigurableProducts` | `items: Item[]` | No | See function signature above |
+| `isPublic` | `boolean` | No | Sets whether the list is public. Pass `true` to make the list public and `false` to make it private. Use it only when `requisition_list_public_sharing_enabled` is `true` in the store configuration. To set it, pass `undefined` for the optional parameters that come before it. |
 
 </TableWrapper>
 
@@ -622,6 +630,166 @@ interface ShareRequisitionListByTokenResult {
 }
 ```
 
+## getPublicRequisitionList
+
+Retrieves a public requisition list by its share token. Unlike [`getSharedRequisitionList`](#getsharedrequisitionlist), the caller does not need to be signed in or belong to a company. Anyone who has the token can view the list. Returns the owner's display name alongside the read-only requisition list data, including the product name, thumbnail, and `url_key` for each item.
+
+```ts
+const getPublicRequisitionList = async (
+  token: string,
+  currentPage?: number,
+  pageSize?: number,
+  enrichConfigurableProducts?: (items: Item[]) => Promise<Item[]>
+): Promise<SharedRequisitionListResult | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The public share token from the URL (for example, from `?requisition_id=<token>`). |
+| `currentPage` | `number` | No | The page number for pagination (1-indexed). Defaults to page 1 if not specified. |
+| `pageSize` | `number` | No | The number of items to return per page. |
+| `enrichConfigurableProducts` | `(items: Item[]) => Promise<Item[]>` | No | Optional function to enrich configurable product items with variant data before returning. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `SharedRequisitionListResult | null`. Returns `null` if the token is valid but the requisition list cannot be resolved. Throws an error if the server returns GraphQL errors, for example when the token is invalid or the list is no longer public.
+
+```ts
+interface SharedRequisitionListResult {
+  senderName: string;
+  requisitionList: RequisitionList;
+}
+```
+
+## getPublicRequisitionListToken
+
+Retrieves the signed-in owner's reusable public share token for a requisition list. The same token is used for the share link, the share email, and the add-to-cart action. Use it to build a public share link or to reopen the sharing modal.
+
+```ts
+const getPublicRequisitionListToken = async (
+  requisitionListUid: string
+): Promise<GetPublicRequisitionListTokenResult>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | The unique identifier of the requisition list to get the public share token for. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `GetPublicRequisitionListTokenResult`. The function never throws. It catches GraphQL and network errors and returns them in `errorMessage`. The `token` is `null` when the list has no public token yet, for example when it is not marked public.
+
+```ts
+interface GetPublicRequisitionListTokenResult {
+  token: string | null;
+  errorMessage: string | null;
+}
+```
+
+## sharePublicRequisitionList
+
+Emails the public share link of a requisition list to any email addresses. Unlike [`shareRequisitionListByEmail`](#sharerequisitionlistbyemail), recipients do not need to be registered company users. Only the list owner can call this function.
+
+```ts
+const sharePublicRequisitionList = async (
+  requisitionListUid: string,
+  emails: string[]
+): Promise<PublicRequisitionListUserError[] | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `requisitionListUid` | `string` | Yes | The unique identifier of the public requisition list to share. |
+| `emails` | `string[]` | Yes | The email addresses that receive the share link. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `null` when the share succeeds. Otherwise returns an array of `PublicRequisitionListUserError` objects, for example with the code `NOT_PUBLIC` when the list is not marked public. Throws an error if the server returns GraphQL errors. If the response is malformed, the array contains an entry with the code `UNKNOWN_ERROR`.
+
+```ts
+interface PublicRequisitionListUserError {
+  code: string;
+  message: string;
+}
+```
+
+## addPublicRequisitionListItemsToCart
+
+Adds items from a public requisition list to a cart. The function identifies the list by its share token and the cart by an explicit cart ID. Unlike [`addRequisitionListItemsToCart`](#addrequisitionlistitemstocart), it does not require authentication, so the cart can belong to a guest or a signed-in customer.
+
+```ts
+const addPublicRequisitionListItemsToCart = async (
+  token: string,
+  cartId: string,
+  itemUids?: string[]
+): Promise<AddPublicRequisitionListItemsToCartResult>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `token` | `string` | Yes | The public share token of the requisition list. |
+| `cartId` | `string` | Yes | The ID of the cart that receives the items. |
+| `itemUids` | `string[]` | No | The UIDs of the list items to add. Omit this parameter to add every item in the list. |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns `AddPublicRequisitionListItemsToCartResult`. An empty `userErrors` array means every item was added. Possible error codes include `NOT_PUBLIC`, `INVALID_TOKEN`, and `OUT_OF_STOCK`. Throws an error if the server returns GraphQL errors. If the response is malformed, `userErrors` contains an entry with the code `UNKNOWN_ERROR`.
+
+```ts
+interface AddPublicRequisitionListItemsToCartResult {
+  cart: { id: string } | null;
+  userErrors: PublicRequisitionListUserError[];
+}
+```
+
+The following example adds only the selected items to a cart:
+
+```js
+import { addPublicRequisitionListItemsToCart } from '@dropins/storefront-requisition-list/api.js';
+
+const { userErrors } = await addPublicRequisitionListItemsToCart(
+  'abc123token',
+  cartId,
+  ['item-uid-1', 'item-uid-2']
+);
+
+if (userErrors.length > 0) {
+  userErrors.forEach(({ code, message }) => console.error(code, message));
+}
+```
+
 ## Data Models
 
 The following data models are used by functions in this drop-in.
@@ -639,6 +807,27 @@ interface RequisitionList {
   items_count: number;
   items: Item[];
   page_info?: PageInfo;
+  is_public?: boolean;
+}
+```
+
+### StoreConfig
+
+The `StoreConfig` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
+
+```ts
+interface StoreConfig {
+  is_requisition_list_active?: string;
+  company_enabled?: boolean;
+  requisition_list_sharing_enabled?: boolean;
+  requisition_list_share_max_recipients?: number | null;
+  requisition_list_share_storefront_path?: string | null;
+  configurable_thumbnail_source?: string | null;
+  requisition_list_public_sharing_enabled?: boolean;
+  requisition_list_public_share_link_validity_days?: number | null;
+  requisition_list_public_share_max_recipients?: number | null;
+  requisition_list_public_share_storefront_path?: string | null;
+  [key: string]: any;
 }
 ```
 

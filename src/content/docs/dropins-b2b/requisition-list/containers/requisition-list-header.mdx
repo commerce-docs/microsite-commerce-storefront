@@ -24,7 +24,7 @@ The `RequisitionListHeader` container provides the following configuration optio
 | `onAlert` | `function` | No | Callback function to handle alert notifications when alerts are displayed. |
 | `enrichConfigurableProducts` | `function` | No | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
 | `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. When provided, this user is excluded from the list of selectable share recipients inside the share modal. |
-| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Called with the relative share URL to format the final share link. The URL is built as `/<storefront_path>?requisition_id=<token>`, using the `requisition_list_share_storefront_path` store configuration (default: `customer/requisition-list-sharing`). Sharing is available only when `requisition_list_sharing_enabled` is `true`. Use this callback to prepend the domain, modify the path, or apply custom formatting. By default, the relative URL is used as-is. Example: `(url) => window.location.origin + url` for absolute URLs, or `(url) => url` to keep relative URLs. |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Called with the relative share URL to format the final share link. The URL is built as `/<storefront_path>?requisition_id=<token>`, using the `requisition_list_share_storefront_path` store configuration (default: `customer/requisition-list-sharing`). Sharing is available only when `requisition_list_sharing_enabled` is `true`. Use this callback to prepend the domain, modify the path, or apply custom formatting. By default, the relative URL is used as-is. Example: `(url) => window.location.origin + url` for absolute URLs, or `(url) => url` to keep relative URLs. For public lists, the URL uses `requisition_list_public_share_storefront_path` instead, and sharing is available only when `requisition_list_public_sharing_enabled` is `true`. |
 
 </TableWrapper>
 
@@ -49,3 +49,13 @@ await provider.render(RequisitionListHeader, {
 })(block);
 ```
 
+<Aside type="note" title="Public requisition lists">
+When `requisition_list_public_sharing_enabled` is `true` in the store configuration, the header also does the following:
+
+- Shows a **Make Public** or **Make Private** button that changes the list's status through [`updateRequisitionList`](/dropins-b2b/requisition-list/functions/#updaterequisitionlist). After the change, the container calls `onUpdate` and `onAlert`.
+- Shows a read-only **Public** tag next to the list name while the list is public.
+- Opens the **Share** modal in public mode for public lists. See [`ShareRequisitionListContent`](/dropins-b2b/requisition-list/containers/share-requisition-list-content/).
+- Adds the **Make this requisition list public** checkbox to the rename modal.
+
+When the setting is `false`, none of these controls appear.
+</Aside>
