@@ -148,6 +148,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/launch/' },
+            { label: 'Consent and CMP integration', link: '/setup/analytics/consent/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
